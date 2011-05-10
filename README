@@ -1,0 +1,13 @@
+This is the beginning of a python-based host software for reprap printers.
+
+Currently contains printcore.py, which requires pyserial to be installed.
+
+Using printcore:
+
+p=printcore('/dev/ttyUSB0',115200)
+p.startprint(data) # data is an array of gcode lines
+p.send_now("M105") # sends M105 as soon as possible
+p.pause()
+p.resume()
+p.disconnect()
+
