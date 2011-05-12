@@ -54,7 +54,8 @@ class printcore():
             if(not self.printer or not self.printer.isOpen):
                 break
             line=self.printer.readline()
-            print "RECV:",line
+            if(len(line)>1):
+                print "RECV:",line
             if(line.startswith('start')):
                 self.clear=True
                 self.online=True
