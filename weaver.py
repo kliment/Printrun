@@ -15,7 +15,7 @@ try:
 
     class AppWindow(wx.Frame):
         def __init__(self):
-            wx.Frame.__init__(self, None, title="Weaver - [UI Template]")
+            wx.Frame.__init__(self, None, title="Weaver", style=wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX)
             self.menustrip = wx.MenuBar()
             m = wx.Menu()
             self.Bind(wx.EVT_MENU, self.OnOther, m.Append(wx.ID_ANY," "," "))
@@ -34,12 +34,16 @@ try:
             self.SetMenuBar(self.menustrip)
 
             self.vroot = wx.BoxSizer(wx.VERTICAL)
+            self.vroot.Append(self.hSettings = wx.BoxSizer(wx.HORIZONTAL))
+            self.vroot.Append(self.hControls = wx.BoxSizer(wx.HORIZONTAL))
+
+            self.PrintCancel = wx.Button()
 
             self.CreateStatusBar()
             self.Show(True)
 
         def OnAbout(self,event):
-            dlg = wx.MessageDialog( self, "Prusa - Mendel - RAMPS/Sanguinololu - Sprinter", "Weaver", wx.OK)
+            dlg = wx.MessageDialog( self, "Prusa - Mendel - RAMPS - Sprinter", "About Weaver", wx.OK)
             dlg.ShowModal()
             dlg.Destroy()
 
