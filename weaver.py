@@ -48,15 +48,18 @@ try:
             hbox.Add(self.SerialSpeed, 0, wx.ALL, 1)
             self.vlayout.Add(hbox, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL, 1)
             self.hlayout = wx.BoxSizer(wx.HORIZONTAL)
-            vbox = wx.BoxSizer(wx.VERTICAL, )
+            vbox = wx.BoxSizer(wx.VERTICAL)
             # GCode Shell
             self.ShellHistory = []
-            self.ShellView = wx.TextCtrl(self)
+            # Tweak This for improved Response Display
+            self.ShellView = wx.TextCtrl(self, size=(200, 80))
             vbox.Add(self.ShellView, 0, wx.ALL, 0)
+            # Using a ComboBox selection for History
             self.ShellProc = wx.ComboBox(self, -1,
                 choices = self.ShellHistory,
                 style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT)
             vbox.Add(self.ShellProc, 0, wx.ALL, 1)
+            # Clear or Send Command String
             hbox = wx.BoxSizer(wx.HORIZONTAL)
             self.ShellClear = wx.Button(self, wx.ID_ANY, 'Clear')
             hbox.Add(self.ShellClear, 0, wx.ALL, 1)
@@ -64,20 +67,39 @@ try:
             hbox.Add(self.ShellSend, 0, wx.ALL, 1)
             vbox.Add(hbox, 1, wx.ALL, 1)
             self.hlayout.Add(vbox, 1, wx.ALL, 1)
+            #
             vbox = wx.BoxSizer(wx.VERTICAL)
+            # Workflow
+            hbox = wx.BoxSizer(wx.HORIZONTAL)
+            self.LoadSTL = wx.Button(self, wx.ID_ANY, 'Load STL')
+            hbox.Add(self.LoadSTL, 0, wx.ALL, 0)
+            self.LoadGCode = wx.Button(self, wx.ID_ANY, 'Load GCode')
+            hbox.Add(self.LoadGCode, 0, wx.ALL, 0)
+            vbox.Add(hbox, 0, wx.ALL, 1)
+            hbox = wx.BoxSizer(wx.HORIZONTAL)
+            self.PrintCancel = wx.Button(self, wx.ID_ANY, 'Print')
+            hbox.Add(self.PrintCancel, 0, wx.ALL, 0)
+            self.PauseResume = wx.Button(self, wx.ID_ANY, 'Pause')
+            hbox.Add(self.PauseResume, 0, wx.ALL, 0)
+            vbox.Add(hbox, 0, wx.ALL, 1)
             hbox = wx.BoxSizer(wx.HORIZONTAL)
             vbox.Add(hbox, 0, wx.ALL, 1)
-            # Workflow
             self.hlayout.Add(vbox, 1, wx.ALL, 1)
+
+            #
             vbox = wx.BoxSizer(wx.VERTICAL)
             # Wxyz
             self.hlayout.Add(vbox, 1, wx.ALL, 1)
+
             self.vlayout.Add(self.hlayout, 1, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL, 1)
+            self.CreateStatusBar()
+
             self.SetSizer(self.vlayout)
             self.vlayout.Fit(self)
             self.Layout()
+
             self.EventBinding()
-            self.CreateStatusBar()
+
             self.Centre()
             self.Show(True)
 
