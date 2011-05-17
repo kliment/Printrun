@@ -17,6 +17,7 @@ try:
         def __init__(self):
             wx.Frame.__init__(self, None, title="Weaver")
 
+            # Menus and Items
             self.menustrip = wx.MenuBar()
             m = wx.Menu()
             self.Bind(wx.EVT_MENU, self.OnLoadOpts, m.Append(wx.ID_ANY,"&Load Options"," Load Configuration Settings"))
@@ -34,6 +35,7 @@ try:
             self.menustrip.Append(m,"&Help")
             self.SetMenuBar(self.menustrip)
 
+            # Displayed Layout Follows
             self.vlayout = wx.BoxSizer(wx.VERTICAL)
             hbox = wx.BoxSizer(wx.HORIZONTAL)
             hbox.Add(wx.StaticText(self, -1, "Device :", style=wx.ALIGN_CENTRE), 0, wx.ALL, 1)
@@ -92,19 +94,26 @@ try:
             self.hlayout.Add(vbox, 1, wx.ALL, 1)
 
             self.vlayout.Add(self.hlayout, 1, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL, 1)
-            self.CreateStatusBar()
 
+            # Need to correct EVT_ codes for button types
+            self.Bind(wx.EVT_BUTTON, self.OnSerialPort, self.SerialPort)
+            self.Bind(wx.EVT_BUTTON, self.OnSerialSpeed, self.SerialPort)
+            self.Bind(wx.EVT_BUTTON, self.OnShellProc, self.ShellProc)
+            self.Bind(wx.EVT_BUTTON, self.OnSendClear, self.ShellClear)
+            self.Bind(wx.EVT_BUTTON, self.OnShellSend, self.ShellSend)
+            self.Bind(wx.EVT_BUTTON, self.OnLoadSTL, self.LoadSTL)
+            self.Bind(wx.EVT_BUTTON, self.OnLoadGCode, self.LoadGCode)
+            self.Bind(wx.EVT_BUTTON, self.OnPrintCancel, self.PrintCancel)
+            self.Bind(wx.EVT_BUTTON, self.OnPauseResume, self.PauseResume)
+#            self.Bind(wx.EVT_BUTTON, self.OnSkeinForge, self.SkeinForge)
+
+            self.CreateStatusBar()
             self.SetSizer(self.vlayout)
             self.vlayout.Fit(self)
             self.Layout()
 
-            self.EventBinding()
-
             self.Centre()
             self.Show(True)
-
-        def EventBinding(self):
-            pass
 
         def OnAbout(self,event):
             dlg = wx.MessageDialog( self, "Prusa - Mendel - RAMPS - Sprinter", "About Weaver", wx.OK)
@@ -126,6 +135,12 @@ try:
         def OnExit(self,event):
             self.Close(True)
 
+        def OnSerialPort(self,event):
+            pass
+
+        def OnSerialSpeed(self,event):
+            pass
+
         def OnShellProc(self,event):
             pass
 
@@ -133,6 +148,21 @@ try:
             pass
 
         def OnShellSend(self,event):
+            pass
+
+        def OnLoadSTL(self,event):
+            pass
+
+        def OnLoadGCode(self,event):
+            pass
+
+        def OnPrintCancel(self,event):
+            pass
+
+        def OnPauseResume(self,event):
+            pass
+
+        def OnSkeinForge(self,event):
             pass
 
 except:
