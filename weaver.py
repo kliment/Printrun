@@ -99,7 +99,7 @@ try:
             self.Bind(wx.EVT_BUTTON, self.OnSerialPort, self.SerialPort)
             self.Bind(wx.EVT_BUTTON, self.OnSerialSpeed, self.SerialPort)
             self.Bind(wx.EVT_BUTTON, self.OnShellProc, self.ShellProc)
-            self.Bind(wx.EVT_BUTTON, self.OnSendClear, self.ShellClear)
+            self.Bind(wx.EVT_BUTTON, self.OnShellClear, self.ShellClear)
             self.Bind(wx.EVT_BUTTON, self.OnShellSend, self.ShellSend)
             self.Bind(wx.EVT_BUTTON, self.OnLoadSTL, self.LoadSTL)
             self.Bind(wx.EVT_BUTTON, self.OnLoadGCode, self.LoadGCode)
