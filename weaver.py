@@ -84,8 +84,8 @@ try:
             self.PauseResume = wx.ToggleButton(self, wx.ID_ANY, 'Pause')
             hbox.Add(self.PauseResume, 0, wx.ALL, 0)
             vbox.Add(hbox, 0, wx.ALL, 1)
-            hbox = wx.BoxSizer(wx.HORIZONTAL)
-            vbox.Add(hbox, 0, wx.ALL, 1)
+            self.SkeinForge = wx.Button(self, wx.ID_ANY, 'Edit in SkeinForge')
+            vbox.Add(self.SkeinForge, 0, wx.ALL, 1)
             self.hlayout.Add(vbox, 1, wx.ALL, 1)
 
             #
@@ -105,7 +105,7 @@ try:
             self.Bind(wx.EVT_BUTTON, self.OnLoadGCode, self.LoadGCode)
             self.Bind(wx.EVT_BUTTON, self.OnPrintCancel, self.PrintCancel)
             self.Bind(wx.EVT_BUTTON, self.OnPauseResume, self.PauseResume)
-#            self.Bind(wx.EVT_BUTTON, self.OnSkeinForge, self.SkeinForge)
+            self.Bind(wx.EVT_BUTTON, self.OnSkeinForge, self.SkeinForge)
 
             self.CreateStatusBar()
             self.SetSizer(self.vlayout)
