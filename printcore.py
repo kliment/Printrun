@@ -1,7 +1,9 @@
+#!/usr/bin/python
 from serial import Serial
 from threading import Thread
 import time
-
+import getopt, sys
+loud=False
 class printcore():
     def __init__(self,port=None,baud=None):
         """Initializes a printcore instance. Pass the port and baud rate to connect immediately
@@ -61,6 +63,8 @@ class printcore():
             line=self.printer.readline()
             if(len(line)>1):
                 self.log+=[line]
+                if loud:
+                    print "RECV: ",line
             if(line.startswith('start')):
                 self.clear=True
                 self.online=True
@@ -76,7 +80,6 @@ class printcore():
             if "Resend" in line or "rs" in line:
                 toresend=int(line.replace(":"," ").split()[-1])
                 self.resendfrom=toresend
-                print "TORESEND:",self.resendfrom
                 self.clear=True
         self.clear=True
         #callback for disconnect
@@ -183,17 +186,29 @@ class printcore():
                 self.sentlines[lineno]=command
         if(self.printer):
             self.sent+=[command]
+            print "SENT: ",command
             self.printer.write(command+"\n")
 
 if __name__ == '__main__':
+    #print "Usage: python printcore.py filename.gcode"
+    filename="../prusamendel/sellsx_export.gcode"
+    if len(sys.argv)>1:
+        filename=sys.argv[1]
+        print "Printing: "+filename
+    else:
+        print "Usage: python printcore.py filename.gcode"
+    loud=True
     p=printcore('/dev/ttyUSB0',115200)
     time.sleep(2)
-    testdata=[i.replace("\n","") for i in open("../prusamendel/sellsx_export.gcode")]
+    testdata=[i.replace("\n","") for i in open(filename)]
     p.startprint(testdata)
-    time.sleep(1)
-    p.pause()
-    print "pause"
-    time.sleep(5)
-    p.resume()
-    time.sleep(1)
-    p.disconnect()
+    #time.sleep(1)
+    #p.pause()
+    #print "pause"
+    #time.sleep(5)
+    #p.resume()
+    try:
+        while(p.printing):
+            time.sleep(1)
+    except:
+        p.disconnect()
