@@ -12,10 +12,6 @@ class printcore():
         self.clear=0
         self.mainqueue=[]
         self.priqueue=[]
-        if port is not None and baud is not None:
-            #print port, baud
-            self.connect(port, baud)
-            #print "connected\n"
         self.readthread=None
         self.queueindex=0
         self.lineno=0
@@ -23,6 +19,13 @@ class printcore():
         self.online=False
         self.printing=False
         self.sentlines={}
+        self.log=[]
+        self.sent=[]
+        if port is not None and baud is not None:
+            #print port, baud
+            self.connect(port, baud)
+            #print "connected\n"
+        
         
     def disconnect(self):
         """Disconnects from printer and pauses the print
@@ -49,27 +52,35 @@ class printcore():
     def _listen(self):
         """This function acts on messages from the firmware
         """
+        self.clear=True
         time.sleep(1)
+        self.send_now("M105")
         while(True):
             if(not self.printer or not self.printer.isOpen):
                 break
             line=self.printer.readline()
             if(len(line)>1):
-                print "RECV:",line
+                self.log+=[line]
             if(line.startswith('start')):
                 self.clear=True
                 self.online=True
             elif(line.startswith('ok')):
                 self.clear=True
+                self.online=True
                 self.resendfrom=-1
                 #put temp handling here
+                #callback for temp, status, whatever
             elif(line.startswith('Error')):
+                #callback for errors
                 pass
             if "Resend" in line or "rs" in line:
                 toresend=int(line.replace(":"," ").split()[-1])
                 self.resendfrom=toresend
+                print "TORESEND:",self.resendfrom
                 self.clear=True
-            
+        self.clear=True
+        #callback for disconnect
+        
     def _checksum(self,command):
         return reduce(lambda x,y:x^y, map(ord,command))
         
@@ -79,7 +90,7 @@ class printcore():
         The print queue will be replaced with the contents of the data array, the next line will be set to 0 and the firmware notified.
         Printing will then start in a parallel thread.
         """
-        if(self.printing):
+        if(self.printing or not self.online or not self.printer):
             return False
         self.printing=True
         self.mainqueue=[]+data
@@ -87,6 +98,7 @@ class printcore():
         self.queueindex=0
         self.resendfrom=-1
         self._send("M110",-1, True)
+        self.clear=False
         Thread(target=self._print).start()
         return True
         
@@ -94,12 +106,13 @@ class printcore():
         """Pauses the print, saving the current position.
         """
         self.printing=False
+        time.sleep(1)
         
     def resume(self):
         """Resumes a paused print.
         """
         self.printing=True
-        threading.Thread(target=self._print).start()
+        Thread(target=self._print).start()
     
     def send(self,command):
         """Adds a command to the checksummed main command queue if printing, or sends the command immediately if not printing
@@ -123,36 +136,38 @@ class printcore():
             while not self.clear:
                 time.sleep(0.001)
             self._send(command)
+        #callback for command sent
         
     def _print(self):
-        while(self.printing and self.printer):
+        #callback for printing started
+        while(self.printing and self.printer and self.online):
             self._sendnext()
+        #callback for printing done
         
     def _sendnext(self):
         if(not self.printer):
             return
-        if(self.resendfrom>-1):
-            while(self.resendfrom<self.lineno):
-                while not self.clear:
-                    time.sleep(0.001)
-                self.clear=False
-                self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
-                self.resendfrom+=1
-            self.resendfrom=-1
+        while not self.clear:
+            time.sleep(0.001)
+        self.clear=False
+        if not (self.printing and self.printer and self.online):
+            return
+        if(self.resendfrom<self.lineno and self.resendfrom>-1):
+            self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
+            self.resendfrom+=1
+            return
+        self.resendfrom=-1
         for i in self.priqueue[:]:
-            while not self.clear:
-                time.sleep(0.001)
-            self.clear=False
             self._send(i)
-            del(self.preque[0])
+            del(self.priqueue[0])
+            return
         if(self.printing and self.queueindex<len(self.mainqueue)):
             tline=self.mainqueue[self.queueindex]
             if(not tline.startswith(';') and len(tline)>0):
-                while not self.clear:
-                    time.sleep(0.001)
-                self.clear=False
                 self._send(tline,self.lineno,True)
-            self.lineno+=1
+                self.lineno+=1
+            else:
+                self.clear=True
             self.queueindex+=1
         else:
             self.printing=False
@@ -164,20 +179,21 @@ class printcore():
         if(calcchecksum):
             prefix="N"+str(lineno)+" "+command
             command=prefix+"*"+str(self._checksum(prefix))
-            self.sentlines[lineno]=command
+            if("M110" not in command):
+                self.sentlines[lineno]=command
         if(self.printer):
-            print "sending: "+command+"\n"
+            self.sent+=[command]
             self.printer.write(command+"\n")
 
 if __name__ == '__main__':
     p=printcore('/dev/ttyUSB0',115200)
+    time.sleep(2)
+    testdata=[i.replace("\n","") for i in open("../prusamendel/sellsx_export.gcode")]
+    p.startprint(testdata)
+    time.sleep(1)
+    p.pause()
+    print "pause"
     time.sleep(5)
-    testdata="""G28
-G1 X0 Y0
-G1 X10 Y10
-G1 X0 Y0
-;
-"""
-    p.startprint(testdata.split('\n'))
-    time.sleep(10)
+    p.resume()
+    time.sleep(1)
     p.disconnect()
