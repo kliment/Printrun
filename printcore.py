@@ -3,26 +3,26 @@ from serial import Serial
 from threading import Thread
 import time
 import getopt, sys
-loud=False
+
 class printcore():
     def __init__(self,port=None,baud=None):
         """Initializes a printcore instance. Pass the port and baud rate to connect immediately
         """
         self.baud=None
         self.port=None
-        self.printer=None
-        self.clear=0
-        self.mainqueue=[]
+        self.printer=None #Serial instance connected to the printer, None when disconnected
+        self.clear=0 #clear to send, enabled after responses
+        self.online=False #The printer has responded to the initial command and is active
+        self.printing=False #is a print currently running, true if printing, false if paused
+        self.mainqueue=[] 
         self.priqueue=[]
-        self.readthread=None
         self.queueindex=0
         self.lineno=0
         self.resendfrom=-1
-        self.online=False
-        self.printing=False
         self.sentlines={}
         self.log=[]
         self.sent=[]
+        self.loud=False#emit sent and received lines to terminal
         if port is not None and baud is not None:
             #print port, baud
             self.connect(port, baud)
@@ -63,7 +63,7 @@ class printcore():
             line=self.printer.readline()
             if(len(line)>1):
                 self.log+=[line]
-                if loud:
+                if self.loud:
                     print "RECV: ",line
             if(line.startswith('start')):
                 self.clear=True
@@ -186,7 +186,8 @@ class printcore():
                 self.sentlines[lineno]=command
         if(self.printer):
             self.sent+=[command]
-            print "SENT: ",command
+            if self.loud:
+                print "SENT: ",command
             self.printer.write(command+"\n")
 
 if __name__ == '__main__':
@@ -197,8 +198,10 @@ if __name__ == '__main__':
         print "Printing: "+filename
     else:
         print "Usage: python printcore.py filename.gcode"
-    loud=True
+        #sys.exit(2)
     p=printcore('/dev/ttyUSB0',115200)
+    p.loud=True
+    statusreport=False
     time.sleep(2)
     testdata=[i.replace("\n","") for i in open(filename)]
     p.startprint(testdata)
@@ -208,7 +211,14 @@ if __name__ == '__main__':
     #time.sleep(5)
     #p.resume()
     try:
+        if statusreport:
+            p.loud=False
+            sys.stdout.write("Progress: 00.0%")
+            sys.stdout.flush()
         while(p.printing):
             time.sleep(1)
+            if statusreport:
+                sys.stdout.write("\b\b\b\b%02.1f%%" % (100*float(p.queueindex)/len(p.mainqueue),) )
+                sys.stdout.flush()
     except:
         p.disconnect()
