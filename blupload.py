@@ -1,7 +1,7 @@
 import printcore,time,sys,os
 
 def dosify(name):
-    return name[:8]+".g"
+    return name.split(".")[0][:8]+".g"
 
 def blupload(printer,filename,path):
     printer.send_now("M28 "+dosify(filename))
