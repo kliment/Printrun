@@ -32,7 +32,7 @@ if __name__ == '__main__':
         tfilename=os.path.basename(sys.argv[1])
         print "Uploading: "+filename," as "+dosify(tfilename)
         p=printcore.printcore('/dev/ttyUSB0',115200)
-        p.loud=True
+        p.loud=False
         time.sleep(2)
         blupload(p,tfilename,filename)
         
