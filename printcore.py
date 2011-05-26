@@ -22,6 +22,13 @@ class printcore():
         self.sentlines={}
         self.log=[]
         self.sent=[]
+        self.tempcb=None#impl (wholeline)
+        self.recvcb=None#impl (wholeline)
+        self.sendcb=None#impl (wholeline)
+        self.errorcb=None#impl (wholeline)
+        self.startcb=None#impl ()
+        self.endcb=None#impl ()
+        self.onlinecb=None#impl ()
         self.loud=False#emit sent and received lines to terminal
         if port is not None and baud is not None:
             #print port, baud
@@ -63,18 +70,30 @@ class printcore():
             line=self.printer.readline()
             if(len(line)>1):
                 self.log+=[line]
+                if self.recvcb is not None:
+                    self.recvcb(line)
+                
                 if self.loud:
                     print "RECV: ",line
             if(line.startswith('start')):
                 self.clear=True
+                if not self.online and self.onlinecb is not None:
+                    self.onlinecb()
                 self.online=True
             elif(line.startswith('ok')):
                 self.clear=True
+                if not self.online and self.onlinecb is not None:
+                    self.onlinecb()
                 self.online=True
                 self.resendfrom=-1
                 #put temp handling here
+                if "T:" in line and self.tempcb is not None:
+                    self.tempcb(line)
+                
                 #callback for temp, status, whatever
             elif(line.startswith('Error')):
+                if self.errorcb is not None:
+                    self.errorcb(line)
                 #callback for errors
                 pass
             if "Resend" in line or "rs" in line:
@@ -143,8 +162,12 @@ class printcore():
         
     def _print(self):
         #callback for printing started
+        if self.startcb is not None:
+            self.startcb()
         while(self.printing and self.printer and self.online):
             self._sendnext()
+        if self.endcb is not None:
+            self.endcb()
         #callback for printing done
         
     def _sendnext(self):
@@ -188,6 +211,8 @@ class printcore():
             self.sent+=[command]
             if self.loud:
                 print "SENT: ",command
+            if self.sendcb is not None:
+                self.sendcb(command)
             self.printer.write(command+"\n")
 
 if __name__ == '__main__':
