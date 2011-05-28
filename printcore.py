@@ -120,6 +120,8 @@ class printcore():
         self.queueindex=0
         self.resendfrom=-1
         self._send("M110",-1, True)
+        if len(data)==0:
+            return True
         self.clear=False
         Thread(target=self._print).start()
         return True
