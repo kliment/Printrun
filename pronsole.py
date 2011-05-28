@@ -46,7 +46,9 @@ class pronsole(cmd.Cmd):
     def do_connect(self,l):
         a=l.split()
         p=self.scanserial()
-        port=p[0] 
+        port=None
+        if len(p)>0:
+            port=p[0] 
         baud=115200
         if(len(a)>1):
             port=a[0]
