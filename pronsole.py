@@ -1,7 +1,19 @@
 import cmd, printcore, sys 
 #help(cmd)
 import glob, os, time
-
+if os.name=="nt":
+    try:
+        import _winreg
+    except:
+        pass
+READLINE=True
+try:
+    import readline
+except:
+    try:
+        import pyreadline
+    except:
+        READLINE=False #neither readline module is available
 
 def dosify(name):
     return name.split(".")[0][:8]+".g"
@@ -10,6 +22,8 @@ def dosify(name):
 class pronsole(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
+        if not READLINE:
+            self.completekey=None
         self.p=printcore.printcore()
         self.prompt="PC>"
         self.p.onlinecb=self.online
@@ -18,8 +32,18 @@ class pronsole(cmd.Cmd):
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
-        #TODO: Add windows port detection
-        return glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
+        baselist=[]
+        if os.name=="nt":
+            try:
+                key=_winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,"HARDWARE\\DEVICEMAP\\SERIALCOMM")
+                i=0
+                while(1):
+                    baselist+=[_winreg.EnumValue(key,i)[1]]
+                    i+=1
+            except:
+                pass
+
+        return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
 
     def online(self):
         print "Printer is now online"
@@ -105,6 +129,7 @@ class pronsole(cmd.Cmd):
                 
     def help_load(self):
         print "Loads a gcode file (with tab-completion)"
+    
     
     def do_upload(self,l):
         if len(l)==0:
@@ -241,6 +266,9 @@ class pronsole(cmd.Cmd):
     
     def do_EOF(self,l):
         print "Use ^C to exit."
+    
+    def help_eof(self):
+        self.do_EOF("")
     
     def help_help(self):
         self.do_help("")
