@@ -26,9 +26,13 @@ class pronsole(cmd.Cmd):
         if not READLINE:
             self.completekey=None
         self.p=printcore.printcore()
+        self.p.recvcb=self.recvcb
+        self.recvlisteners=[]
         self.prompt="PC>"
         self.p.onlinecb=self.online
         self.f=None
+        self.listing=0
+        self.sdfiles=[]
         self.paused=False
         
     def scanserial(self):
@@ -170,6 +174,11 @@ class pronsole(cmd.Cmd):
                 sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100*float(self.p.queueindex)/len(self.p.mainqueue),) )
                 sys.stdout.flush()
             self.p.send_now("M29 "+tname)
+            self.listing=0
+            self.sdfiles=[]
+            self.recvlisteners+=[self.listfiles]
+            self.p.send_now("M20")
+            time.sleep(0.5)
             self.p.startprint([])
             print "\b\b\b\b\b100%. Upload completed. ",tname," should now be on the card."
             return
@@ -246,7 +255,57 @@ class pronsole(cmd.Cmd):
         
     def do_shell(self,l):
         exec(l)
+    
+    def listfiles(self,line):
+        if "Begin file list" in line:
+            self.listing=1
+        elif "End file list" in line:
+            self.listing=0
+            self.recvlisteners.remove(self.listfiles)
+        elif self.listing:
+            self.sdfiles+=[line.replace("\n","").replace("\r","").lower()]
         
+    def do_ls(self,l):
+        self.listing=0
+        self.sdfiles=[]
+        self.recvlisteners+=[self.listfiles]
+        self.p.send_now("M20")
+        time.sleep(0.5)
+        print " ".join(self.sdfiles)
+    
+    def help_ls(self):
+        print "lists files on the SD card"
+        
+    def do_sdprint(self,l):
+        self.listing=0
+        self.sdfiles=[]
+        self.recvlisteners+=[self.listfiles]
+        self.p.send_now("M20")
+        time.sleep(0.5)
+        if not (l.lower() in self.sdfiles):
+            print "File is not present on card. Upload it first"
+            return
+        self.p.send_now("M23 "+l.lower())
+        self.p.send_now("M24")
+        print "Printing file: "+l.lower()+" from SD card."
+        
+    def help_sdprint(self):
+        print "Print a file from the SD card. Tabcompletes with available file names."
+        print "sdprint filename.g"
+        
+    def complete_sdprint(self, text, line, begidx, endidx):
+        if self.sdfiles==[]:
+            self.listing=0
+            self.recvlisteners+=[self.listfiles]
+            self.p.send_now("M20")
+            time.sleep(0.5)
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in self.sdfiles if i.startswith(text)]
+            
+    def recvcb(self,l):
+        for i in self.recvlisteners:
+            i(l)
+    
     def help_shell(self):
         print "Executes a python command. Example:"
         print "! os.listdir('.')"
@@ -272,7 +331,7 @@ class pronsole(cmd.Cmd):
     def do_EOF(self,l):
         print "Use ^C to exit."
     
-    def help_eof(self):
+    def help_EOF(self):
         self.do_EOF("")
     
     def help_help(self):
