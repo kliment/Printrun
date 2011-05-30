@@ -9,11 +9,12 @@ if os.name=="nt":
 READLINE=True
 try:
     import readline
-except:
     try:
-        import pyreadline
+        readline.rl.mode.show_all_if_ambiguous="on" #config pyreadline on windows
     except:
-        READLINE=False #neither readline module is available
+        pass
+except:
+    READLINE=False #neither readline module is available
 
 def dosify(name):
     return name.split(".")[0][:8]+".g"
@@ -89,7 +90,11 @@ class pronsole(cmd.Cmd):
         print "Connect to printer"
         print "connect <port> <baudrate>"
         print "If port and baudrate are not specified, connects to first detected port at 115200bps"
-         
+        ports=self.scanserial()
+        if(len(ports)):
+            print "Available ports: ", " ".join(ports)
+        else:
+            print "No serial ports were automatically found."
     
     def complete_connect(self, text, line, begidx, endidx):
         if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
