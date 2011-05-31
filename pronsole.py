@@ -266,6 +266,9 @@ class pronsole(cmd.Cmd):
             self.sdfiles+=[line.replace("\n","").replace("\r","").lower()]
         
     def do_ls(self,l):
+        if not self.p.online:
+            print "Printer is not online. Try connect to it first."
+            return
         self.listing=0
         self.sdfiles=[]
         self.recvlisteners+=[self.listfiles]
@@ -276,7 +279,27 @@ class pronsole(cmd.Cmd):
     def help_ls(self):
         print "lists files on the SD card"
         
+    def waitforsdresponse(self,l):
+        if "file.open failed" in l:
+            print "Opening file failed."
+            self.recvlisteners.remove(self.waitforsdresponse)
+            return
+        if "File opened" in l:
+            print l
+        if "File selected" in l:
+            print "Starting print"
+            self.p.send_now("M24")
+            #self.recvlisteners.remove(self.waitforsdresponse)
+            return
+        if "Done printing file" in l:
+            print l
+            self.recvlisteners.remove(self.waitforsdresponse)
+            return
+        
     def do_sdprint(self,l):
+        if not self.p.online:
+            print "Printer is not online. Try connect to it first."
+            return
         self.listing=0
         self.sdfiles=[]
         self.recvlisteners+=[self.listfiles]
@@ -285,16 +308,18 @@ class pronsole(cmd.Cmd):
         if not (l.lower() in self.sdfiles):
             print "File is not present on card. Upload it first"
             return
+        self.recvlisteners+=[self.waitforsdresponse]
         self.p.send_now("M23 "+l.lower())
-        self.p.send_now("M24")
         print "Printing file: "+l.lower()+" from SD card."
+        print "Requesting SD print..."
+        time.sleep(1)
         
     def help_sdprint(self):
         print "Print a file from the SD card. Tabcompletes with available file names."
         print "sdprint filename.g"
         
     def complete_sdprint(self, text, line, begidx, endidx):
-        if self.sdfiles==[]:
+        if self.sdfiles==[] and self.p.online:
             self.listing=0
             self.recvlisteners+=[self.listfiles]
             self.p.send_now("M20")
@@ -336,6 +361,61 @@ class pronsole(cmd.Cmd):
     
     def help_help(self):
         self.do_help("")
+    
+    def tempcb(self,l):
+        if "ok T:" in l:
+            print l.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ","")
+            self.recvlisteners.remove(self.tempcb)
+        
+    def do_gettemp(self,l):
+        if self.p.online:
+            self.recvlisteners+=[self.tempcb]
+            self.p.send_now("M105")
+    
+    def help_gettemp(self):
+        print "Read the extruder and bed temperature."
+    
+    def do_settemp(self,l):
+        try:
+            l=l.lower().replace(",",".").replace("abs","230").replace("pla","210").replace("off","0")
+            f=float(l)
+            if f>=0:
+                if self.p.online:
+                    self.p.send_now("M104 S"+l)
+                    print "Setting hotend temperature to ",f," degrees Celsius."
+                else:
+                    print "Printer is not online."
+            else:
+                print "You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."
+        except:
+            print "You must enter a temperature."
+            
+    def help_settemp(self):
+        print "Sets the hotend temperature to the value entered."
+        print "Enter either a temperature in celsius or one of the following keywords"
+        print "abs (230), pla (210), off (0)"
+        
+    def do_bedtemp(self,l):
+        try:
+            l=l.lower().replace(",",".").replace("abs","110").replace("pla","65").replace("off","0")
+            f=float(l)
+            if f>=0:
+                if self.p.online:
+                    self.p.send_now("M140 S"+l)
+                    print "Setting bed temperature to ",f," degrees Celsius."
+                else:
+                    print "Printer is not online."
+            else:
+                print "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
+        except:
+            print "You must enter a temperature."
+            
+    def help_bedtemp(self):
+        print "Sets the bed temperature to the value entered."
+        print "Enter either a temperature in celsius or one of the following keywords"
+        print "abs (110), pla (65), off (0)"
+        
+    
     
 interp=pronsole()
 interp.cmdloop()
