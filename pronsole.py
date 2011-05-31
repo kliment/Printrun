@@ -17,7 +17,7 @@ except:
     READLINE=False #neither readline module is available
 
 def dosify(name):
-    return name.split(".")[0][:8]+".g"
+    return os.path.split(name)[1].split(".")[0][:8]+".g"
 
 
 class pronsole(cmd.Cmd):
@@ -34,6 +34,8 @@ class pronsole(cmd.Cmd):
         self.listing=0
         self.sdfiles=[]
         self.paused=False
+        self.temps={"pla":"210","abs":"230","off":"0"}
+        self.bedtemps={"pla":"60","abs":"110","off":"0"}
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -174,6 +176,8 @@ class pronsole(cmd.Cmd):
                 sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100*float(self.p.queueindex)/len(self.p.mainqueue),) )
                 sys.stdout.flush()
             self.p.send_now("M29 "+tname)
+            self.sleep(0.2)
+            self.p.clear=1
             self.listing=0
             self.sdfiles=[]
             self.recvlisteners+=[self.listfiles]
@@ -186,6 +190,8 @@ class pronsole(cmd.Cmd):
             print "...interrupted!"
             self.p.pause()
             self.p.send_now("M29 "+tname)
+            self.sleep(0.2)
+            self.p.clear=1
             self.p.startprint([])
             print "A partial file named ",tname," may have been written to the sd card."
     
@@ -365,6 +371,8 @@ class pronsole(cmd.Cmd):
     def tempcb(self,l):
         if "ok T:" in l:
             print l.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ","")
+            sys.stdout.write(self.prompt)
+            sys.stdout.flush()
             self.recvlisteners.remove(self.tempcb)
         
     def do_gettemp(self,l):
@@ -393,8 +401,12 @@ class pronsole(cmd.Cmd):
     def help_settemp(self):
         print "Sets the hotend temperature to the value entered."
         print "Enter either a temperature in celsius or one of the following keywords"
-        print "abs (230), pla (210), off (0)"
-        
+        print ", ".join([i+"("+self.temps[i]+")" for i in self.temps.keys()])
+    
+    def complete_settemp(self, text, line, begidx, endidx):
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in self.temps.keys() if i.startswith(text)]
+    
     def do_bedtemp(self,l):
         try:
             l=l.lower().replace(",",".").replace("abs","110").replace("pla","65").replace("off","0")
@@ -413,8 +425,11 @@ class pronsole(cmd.Cmd):
     def help_bedtemp(self):
         print "Sets the bed temperature to the value entered."
         print "Enter either a temperature in celsius or one of the following keywords"
-        print "abs (110), pla (65), off (0)"
+        print ", ".join([i+"("+self.bedtemps[i]+")" for i in self.bedtemps.keys()])
         
+    def complete_bedtemp(self, text, line, begidx, endidx):
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in self.bedtemps.keys() if i.startswith(text)]
     
     
 interp=pronsole()
