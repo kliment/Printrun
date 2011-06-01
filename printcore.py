@@ -75,22 +75,17 @@ class printcore():
                 
                 if self.loud:
                     print "RECV: ",line
-            if(line.startswith('start')):
+            if(line.startswith('start') or line.startswith('ok') or "T:" in line):
                 self.clear=True
                 if not self.online and self.onlinecb is not None:
                     self.onlinecb()
                 self.online=True
-            elif(line.startswith('ok')):
-                self.clear=True
-                if not self.online and self.onlinecb is not None:
-                    self.onlinecb()
-                self.online=True
-                self.resendfrom=-1
-                #put temp handling here
-                if "T:" in line and self.tempcb is not None:
-                    self.tempcb(line)
-                
-                #callback for temp, status, whatever
+                if(line.startswith('ok')):
+                    self.resendfrom=-1
+                    #put temp handling here
+                    if "T:" in line and self.tempcb is not None:
+                        self.tempcb(line)
+                    #callback for temp, status, whatever
             elif(line.startswith('Error')):
                 if self.errorcb is not None:
                     self.errorcb(line)
