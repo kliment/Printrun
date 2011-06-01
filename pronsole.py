@@ -251,14 +251,13 @@ class pronsole(cmd.Cmd):
             self.recvlisteners+=[self.listfiles]
             self.p.send_now("M20")
             time.sleep(0.5)
-            self.p.startprint([])
             print "\b\b\b\b\b100%. Upload completed. ",tname," should now be on the card."
             return
         except:
             print "...interrupted!"
             self.p.pause()
             self.p.send_now("M29 "+tname)
-            self.sleep(0.2)
+            time.sleep(0.2)
             self.p.clear=1
             self.p.startprint([])
             print "A partial file named ",tname," may have been written to the sd card."
@@ -412,7 +411,7 @@ class pronsole(cmd.Cmd):
             return [i for i in self.sdfiles if i.startswith(text)]
             
     def recvcb(self,l):
-        if "ok T:" in l:
+        if "T:" in l:
             self.tempreadings=l
         for i in self.recvlisteners:
             i(l)
@@ -693,7 +692,6 @@ class pronsole(cmd.Cmd):
             self.do_load(l[0].replace(".stl","_export.gcode"))
         except:
             print "Skeinforge execution failed."
-            raise
         
     def complete_skein(self, text, line, begidx, endidx):
         s=line.split()
