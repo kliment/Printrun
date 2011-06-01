@@ -34,8 +34,11 @@ class pronsole(cmd.Cmd):
         self.listing=0
         self.sdfiles=[]
         self.paused=False
+        self.sdprinting=0
         self.temps={"pla":"210","abs":"230","off":"0"}
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
+        self.percentdone=0
+        self.tempreadings=""
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -71,7 +74,7 @@ class pronsole(cmd.Cmd):
         cmd.Cmd.postloop(self)
     
     def preloop(self):
-        #self.p.disconnect()
+        print "Welcome to the printer console! Type \"help\" for a list of available commands."
         cmd.Cmd.preloop(self)
     
     def do_connect(self,l):
@@ -295,12 +298,22 @@ class pronsole(cmd.Cmd):
         if "File selected" in l:
             print "Starting print"
             self.p.send_now("M24")
+            self.sdprinting=1
             #self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "Done printing file" in l:
             print l
+            self.sdprinting=0
             self.recvlisteners.remove(self.waitforsdresponse)
             return
+        if "SD printing byte" in l:
+            #M27 handler
+            try:
+                resp=l.split()
+                vals=resp[-1].split("/")
+                self.percentdone=100.0*int(vals[0])/int(vals[1])
+            except:
+                pass
         
     def do_sdprint(self,l):
         if not self.p.online:
@@ -334,6 +347,8 @@ class pronsole(cmd.Cmd):
             return [i for i in self.sdfiles if i.startswith(text)]
             
     def recvcb(self,l):
+        if "ok T:" in l:
+            self.tempreadings=l
         for i in self.recvlisteners:
             i(l)
     
@@ -359,26 +374,19 @@ class pronsole(cmd.Cmd):
         else:
             cmd.Cmd.default(self,l)
     
-    def do_EOF(self,l):
-        print "Use ^C to exit."
-    
-    def help_EOF(self):
-        self.do_EOF("")
-    
     def help_help(self):
         self.do_help("")
     
     def tempcb(self,l):
         if "ok T:" in l:
             print l.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ","")
-            sys.stdout.write(self.prompt)
-            sys.stdout.flush()
             self.recvlisteners.remove(self.tempcb)
         
     def do_gettemp(self,l):
         if self.p.online:
             self.recvlisteners+=[self.tempcb]
             self.p.send_now("M105")
+            time.sleep(0.5)
     
     def help_gettemp(self):
         print "Read the extruder and bed temperature."
@@ -431,6 +439,168 @@ class pronsole(cmd.Cmd):
         if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
             return [i for i in self.bedtemps.keys() if i.startswith(text)]
     
+    def do_move(self,l):
+        if(len(l.split())<2):
+            print "No move specified."
+            return
+        if self.p.printing:
+            print "Printer is currently printing. Please pause the print before you issue manual commands."
+            return
+        if not self.p.online:
+            print "Printer is not online. Unable to move."
+            return
+        feed=300
+        axis="E"
+        l=l.split()
+        if(l[0].lower()=="x"):
+            feed=3000
+            axis="X"
+        elif(l[0].lower()=="y"):
+            feed=3000
+            axis="Y"
+        elif(l[0].lower()=="z"):
+            feed=200
+            axis="Z"
+        elif(l[0].lower()=="e"):
+            feed=300
+            axis="E"
+        else:
+            print "Unknown axis."
+            return
+        dist=0
+        try:
+            dist=float(l[1])
+        except:
+            print "Invalid number"
+            return
+        self.p.send_now("G91")
+        self.p.send_now("G1 "+axis+str(l[1])+" F"+str(feed))
+        self.p.send_now("G90")
+        
+    def help_move(self):
+        print "Move an axis. Specify the name of the axis and the amount. "
+        print "move X 10 will move the X axis forward by 10mm"
+        print "move Z -1 will move the Z axis down by 1mm"
+        print "Common amounts are in the tabcomplete list."
+    
+    def complete_move(self, text, line, begidx, endidx):
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in ["X ","Y ","Z ","E "] if i.lower().startswith(text)]
+        elif(len(line.split())==3 or (len(line.split())==2 and line[-1]==" ")):
+            base=line.split()[-1]
+            rlen=0
+            if base.startswith("-"):
+                rlen=1
+            if line[-1]==" ":
+                base=""
+            return [i[rlen:] for i in ["-100","-10","-1","-0.1","100","10","1","0.1","-50","-5","-0.5","50","5","0.5","-200","-20","-2","-0.2","200","20","2","0.2"] if i.startswith(base)]
+        else:
+            return []
+    
+    def do_extrude(self,l,override=None,overridefeed=300):
+        length=5#default extrusion length
+        feed=300#default speed
+        if not self.p.online:
+            print "Printer is not online. Unable to move."
+            return
+        if self.p.printing:
+            print "Printer is currently printing. Please pause the print before you issue manual commands."
+            return
+        ls=l.split()
+        if len(ls):
+            try:
+                length=float(ls[0])
+            except:
+                print "Invalid length given."
+        if override is not None:
+            length=override
+            feed=overridefeed
+        if length > 0:
+            print "Extruding %fmm of filament."%(length,)
+        elif length <0:
+            print "Reversing %fmm of filament."%(-1*length,)
+        else:
+            "Length is 0, not doing anything."
+        self.p.send_now("G91")
+        self.p.send_now("G1 E"+str(length)+" F"+str(feed))
+        self.p.send_now("G90")
+        
+    def help_extrude(self):
+        print "Extrudes a length of filament, 5mm by default, or the number of mm given as a parameter"
+        print "extrude - extrudes 5mm of filament at 300mm/min (5mm/s)"
+        print "extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)"
+        print "extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)"
+        print "extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
+        
+    def do_reverse(self, l):
+        length=5#default extrusion length
+        feed=300#default speed
+        if not self.p.online:
+            print "Printer is not online. Unable to move."
+            return
+        if self.p.printing:
+            print "Printer is currently printing. Please pause the print before you issue manual commands."
+            return
+        ls=l.split()
+        if len(ls):
+            try:
+                length=float(ls[0])
+            except:
+                print "Invalid length given."
+        if len(ls)>1:
+            try:
+                feed=int(ls[1])
+            except:
+                print "Invalid speed given."
+        self.do_extrude("",length*-1.0,feed)
+        
+    def help_reverse(self):
+        print "Reverses the extruder, 5mm by default, or the number of mm given as a parameter"
+        print "reverse - reverses 5mm of filament at 300mm/min (5mm/s)"
+        print "reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)"
+        print "reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
+        print "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
+    
+    def do_exit(self,l):
+        print "Disconnecting from printer..."
+        self.p.disconnect()
+        print "Exiting program. Goodbye!"
+        return True
+        
+    def help_exit(self):
+        print "Disconnects from the printer and exits the program."
+    
+    def do_monitor(self,l):
+        interval=5
+        if not self.p.online:
+            print "Printer is not online. Please connect first."
+            return
+        print "Monitoring printer, use ^C to interrupt."
+        if len(l):
+            try:
+                interval=float(l)
+            except:
+                print "Invalid period given."
+        print "Updating values every %f seconds."%(interval,)
+        try:
+            while(1):
+                self.p.send_now("M105")
+                if(self.sdprinting):
+                    self.p.send_now("M27")
+                print (self.tempreadings.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))
+                if(self.sdprinting):
+                    print "SD print progress: ", self.percentdone,"%"
+                time.sleep(interval)
+        except:
+            print "Done monitoring."
+            pass
+            
+    def help_monitor(self):
+        print "Monitor a machine's temperatures and an SD print's status."
     
 interp=pronsole()
-interp.cmdloop()
+try:
+    interp.cmdloop()
+except:
+    interp.p.disconnect()
+    raise
