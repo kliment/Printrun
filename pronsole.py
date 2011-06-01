@@ -39,7 +39,7 @@ class pronsole(cmd.Cmd):
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.percentdone=0
         self.tempreadings=""
-        self.aliases=[]
+        self.aliases={}
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -74,7 +74,7 @@ class pronsole(cmd.Cmd):
         if l == "":
             # list aliases
             if len(self.aliases):
-                self.print_topics("Aliases, to display type: alias <name>",self.aliases,15,80)
+                self.print_topics("Aliases, to display type: alias <name>",self.aliases.keys(),15,80)
             else:
                 print "No aliases defined, to define see: help alias"
             return
@@ -82,17 +82,17 @@ class pronsole(cmd.Cmd):
         alias_name = alias_l[0]
         if len(alias_l) < 2:
             # display alias
-            if alias_name in self.aliases:
-                print self.__dict__["do_"+alias_name].func_doc
+            if alias_name in self.aliases.keys():
+                print "Alias '"+alias_name+"' stands for '"+self.aliases[alias_name]+"'"
             else:
                 print "Alias '"+alias_name+"' is not defined"
             return
         alias_name,alias_def = alias_l
         if alias_def.lower() == "/d":
             # delete alias
-            if alias_name in self.aliases:
+            if alias_name in self.aliases.keys():
                 delattr(self,"do_"+alias_name)
-                self.aliases.remove(alias_name)
+                del self.aliases[alias_name]
                 print "Alias '"+alias_name+"' removed"
                 return
             else:
@@ -100,10 +100,8 @@ class pronsole(cmd.Cmd):
             return
         # (re)define an alias
         func = lambda args,self=self,alias_def=alias_def: self.onecmd(" ".join((alias_def,args)))
-        func.func_doc = "Alias '"+alias_name+"' stands for '"+alias_def+"'"
+        self.aliases[alias_name] = alias_def
         setattr(self,"do_"+alias_name,func)
-        if alias_name not in self.aliases:
-            self.aliases.append(alias_name)
     
     def help_alias(self):
         print "Create/modify/view aliases: alias <name> [<command>]"
