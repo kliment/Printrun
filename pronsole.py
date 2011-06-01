@@ -74,6 +74,13 @@ class pronsole(cmd.Cmd):
         cmd.Cmd.postloop(self)
     
     def preloop(self):
+        try:
+            with open(os.path.join(os.path.expanduser("~"),".pronsolerc")) as rc:
+                for rc_cmd in rc:
+                    if rc_cmd.lstrip()[0] != "#":
+                        self.onecmd(rc_cmd.rstrip(r"\r\n"))
+        except IOError:
+            pass
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
         cmd.Cmd.preloop(self)
     
