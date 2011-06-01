@@ -39,6 +39,7 @@ class pronsole(cmd.Cmd):
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.percentdone=0
         self.tempreadings=""
+        self.aliases={}
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -68,6 +69,60 @@ class pronsole(cmd.Cmd):
     
     def help_gcodes(self):
         print "Gcodes are passed through to the printer as they are"
+    
+    def do_alias(self,l):
+        if l == "":
+            # list aliases
+            if len(self.aliases):
+                self.print_topics("Aliases, to display type: alias <name>",self.aliases.keys(),15,80)
+            else:
+                print "No aliases defined, to define see: help alias"
+            return
+        alias_l = l.split(None,1)
+        alias_name = alias_l[0]
+        if len(alias_l) < 2:
+            # display alias
+            if alias_name in self.aliases.keys():
+                print "Alias '"+alias_name+"' stands for '"+self.aliases[alias_name]+"'"
+            else:
+                print "Alias '"+alias_name+"' is not defined"
+            return
+        alias_name,alias_def = alias_l
+        if alias_def.lower() == "/d":
+            # delete alias
+            if alias_name in self.aliases.keys():
+                delattr(self.__class__,"do_"+alias_name)
+                del self.aliases[alias_name]
+                print "Alias '"+alias_name+"' removed"
+                return
+            else:
+                print "Alias '"+alias_name+"' is not defined"
+            return
+        # (re)define an alias
+        if alias_name not in self.aliases.keys() and hasattr(self.__class__,"do_"+alias_name):
+            print "Name '"+alias_name+"' is already being used by built-in command"
+            return
+        func = lambda self,args,alias_def=alias_def: self.onecmd(" ".join((alias_def,args)))
+        self.aliases[alias_name] = alias_def
+        setattr(self.__class__,"do_"+alias_name,func)
+        setattr(self.__class__,"help_"+alias_name,lambda self=self,alias_name=alias_name: self.subhelp_alias(alias_name))
+    
+    def help_alias(self):
+        print "Create/modify/view aliases: alias <name> [<command>]"
+        print "if <command> is not specified, displays the alias definition"
+        print "without arguments, displays list of all defined aliases"
+        print "To remove an alias: alias <name> /d"
+        
+    def complete_alias(self,text,line,begidx,endidx):
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in self.aliases.keys() if i.startswith(text)]
+        elif(len(line.split())==3 or (len(line.split())==2 and line[-1]==" ")):
+            return self.completenames(text)
+        else:
+            return []
+    
+    def subhelp_alias(self,alias_name):
+        print "'"+alias_name+"' is alias for '"+self.aliases[alias_name]+"'"
     
     def postloop(self):
         self.p.disconnect()
