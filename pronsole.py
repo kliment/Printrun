@@ -597,6 +597,9 @@ class pronsole(cmd.Cmd):
             
     def help_monitor(self):
         print "Monitor a machine's temperatures and an SD print's status."
+        print "monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"
+        print "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"
+        
     
 interp=pronsole()
 try:
