@@ -610,6 +610,47 @@ class pronsole(cmd.Cmd):
         print "monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"
         print "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"
         
+    def do_skein(self,l):
+        l=l.split()
+        if len(l)==0:
+            print "No file name given."
+            return
+        print "Skeining file:"+l[0]
+        if not(os.path.exists(l[0])):
+            print "File not found!"
+            return
+        if not os.path.exists("skeinforge"):
+            print "Skeinforge not found. \nPlease copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
+            return
+        if not os.path.exists("skeinforge/__init__.py"):
+            with open("skeinforge/__init__.py","w"):
+                pass
+        try:
+            from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
+            if(len(l)>1):
+                if(l[1] == "view"):
+                    skeinforge_craft.writeOutput(l[0],True)
+                else:
+                    skeinforge_craft.writeOutput(l[0],False)
+        except:
+            print "Skeinforge execution failed."
+            raise
+        
+    def complete_skein(self, text, line, begidx, endidx):
+        s=line.split()
+        if len(s)>2:
+            return []
+        if (len(s)==1 and line[-1]==" ") or (len(s)==2 and line[-1]!=" "):
+            if len(s)>1:
+                return [i[len(s[1])-len(text):] for i in glob.glob(s[1]+"*/")+glob.glob(s[1]+"*.stl")]
+            else:
+                return glob.glob("*/")+glob.glob("*.stl")
+                
+    def help_skein(self):
+        print "Creates a gcode file from an stl model using skeinforge (with tab-completion)"
+        print "skein filename.stl - create gcode file"
+        print "skein filename.stl view - create gcode file and view using skeiniso"
+        
     
 interp=pronsole()
 try:
