@@ -1,0 +1,5 @@
+# Sample .pronsolerc file - copy this into your home directory
+!self.do_alias = lambda aarg,self=self: setattr(self,"do_"+aarg.split()[0],lambda arg,self=self,a=aarg.split(None,1)[1]:self.onecmd(" ".join((a,arg))))
+alias up move Z 10
+alias loud !self.loud = 1
+alias quiet !self.loud = 0
