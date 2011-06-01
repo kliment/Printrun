@@ -632,6 +632,10 @@ class pronsole(cmd.Cmd):
                     skeinforge_craft.writeOutput(l[0],True)
                 else:
                     skeinforge_craft.writeOutput(l[0],False)
+            else:
+                skeinforge_craft.writeOutput(l[0],False)
+            print "Loading skeined file."
+            self.do_load(l[0].replace(".stl","_export.gcode"))
         except:
             print "Skeinforge execution failed."
             raise
