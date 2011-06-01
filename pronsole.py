@@ -91,7 +91,7 @@ class pronsole(cmd.Cmd):
         if alias_def.lower() == "/d":
             # delete alias
             if alias_name in self.aliases.keys():
-                delattr(self,"do_"+alias_name)
+                delattr(self.__class__,"do_"+alias_name)
                 del self.aliases[alias_name]
                 print "Alias '"+alias_name+"' removed"
                 return
@@ -99,15 +99,27 @@ class pronsole(cmd.Cmd):
                 print "Alias '"+alias_name+"' is not defined"
             return
         # (re)define an alias
-        func = lambda args,self=self,alias_def=alias_def: self.onecmd(" ".join((alias_def,args)))
+        func = lambda self,args,alias_def=alias_def: self.onecmd(" ".join((alias_def,args)))
         self.aliases[alias_name] = alias_def
-        setattr(self,"do_"+alias_name,func)
+        setattr(self.__class__,"do_"+alias_name,func)
+        setattr(self.__class__,"help_"+alias_name,lambda self=self,alias_name=alias_name: self.subhelp_alias(alias_name))
     
     def help_alias(self):
         print "Create/modify/view aliases: alias <name> [<command>]"
         print "if <command> is not specified, displays the alias definition"
         print "without arguments, displays list of all defined aliases"
         print "To remove an alias: alias <name> /d"
+        
+    def complete_alias(self,text,line,begidx,endidx):
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in self.aliases.keys() if i.startswith(text)]
+        elif(len(line.split())==3 or (len(line.split())==2 and line[-1]==" ")):
+            return self.completenames(text)
+        else:
+            return []
+    
+    def subhelp_alias(self,alias_name):
+        print "'"+alias_name+"' is alias for '"+self.aliases[alias_name]+"'"
     
     def postloop(self):
         self.p.disconnect()
