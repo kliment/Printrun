@@ -78,7 +78,7 @@ class pronsole(cmd.Cmd):
             with open(os.path.join(os.path.expanduser("~"),".pronsolerc")) as rc:
                 for rc_cmd in rc:
                     if rc_cmd.lstrip()[0] != "#":
-                        self.onecmd(rc_cmd.rstrip(r"\r\n"))
+                        self.onecmd(rc_cmd)
         except IOError:
             pass
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
