@@ -99,6 +99,9 @@ class pronsole(cmd.Cmd):
                 print "Alias '"+alias_name+"' is not defined"
             return
         # (re)define an alias
+        if alias_name not in self.aliases.keys() and hasattr(self.__class__,"do_"+alias_name):
+            print "Name '"+alias_name+"' is already being used by built-in command"
+            return
         func = lambda self,args,alias_def=alias_def: self.onecmd(" ".join((alias_def,args)))
         self.aliases[alias_name] = alias_def
         setattr(self.__class__,"do_"+alias_name,func)
