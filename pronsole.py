@@ -146,9 +146,9 @@ class pronsole(cmd.Cmd):
         if len(p)>0:
             port=p[0] 
         baud=115200
-        if(len(a)>1):
+        if(len(a)>0):
             port=a[0]
-        if(len(a)>2):
+        if(len(a)>1):
             try:
                 baud=int(a[1])
             except:
