@@ -87,7 +87,10 @@ class pronsole(cmd.Cmd):
         if(len(a)>1):
             port=a[0]
         if(len(a)>2):
-            baud=a[1]
+            try:
+                baud=int(a[1])
+            except:
+                pass
         if len(p)==0 and port is None:
             print "No serial ports detected - please specify a port"
             return
