@@ -598,6 +598,11 @@ class pronsole(cmd.Cmd):
                 length=float(ls[0])
             except:
                 print "Invalid length given."
+        if len(ls)>1:
+            try:
+                feed=int(ls[1])
+            except:
+                print "Invalid speed given."
         if override is not None:
             length=override
             feed=overridefeed
