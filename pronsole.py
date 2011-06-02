@@ -291,17 +291,39 @@ class pronsole(cmd.Cmd):
             print "Not connected to printer."
             return
         print("Printing "+self.filename)
-        print("Press Ctrl-C to interrupt print (you can resume it with the resume command)")
+        print("You can monitor the print with the monitor command.")
         self.p.startprint(self.f)
-        self.p.pause()
+        #self.p.pause()
+        #self.paused=True
+        #self.do_resume(None)
+        
+    def do_pause(self,l):
+        if self.sdprinting:
+            self.p.send_now("M25")
+        else:
+            if(not self.p.printing):
+                print "Not printing, cannot pause."
+                return
+            self.p.pause()
+            self.p.connect()# This seems to work, but is not a good solution. 
         self.paused=True
-        self.do_resume(None)
+        
+        #self.do_resume(None)
+        
+    def help_pause(self,l):
+        print "Pauses a running print"
         
     def do_resume(self,l):
         if not self.paused:
             print "Not paused, unable to resume. Start a print first."
             return
         self.paused=False
+        if self.sdprinting:
+            self.p.send_now("M24")
+            return
+        else:
+            self.p.resume()
+        return
         try:
             self.p.resume()
             #print self.p.printing
@@ -652,6 +674,9 @@ class pronsole(cmd.Cmd):
                 if(self.sdprinting):
                     self.p.send_now("M27")
                 print (self.tempreadings.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))
+                if(self.p.printing):
+                    print "Print progress: ", 100*float(self.p.queueindex)/len(self.p.mainqueue), "%"
+                
                 if(self.sdprinting):
                     print "SD print progress: ", self.percentdone,"%"
                 time.sleep(interval)
@@ -669,10 +694,14 @@ class pronsole(cmd.Cmd):
         if len(l)==0:
             print "No file name given."
             return
-        print "Skeining file:"+l[0]
-        if not(os.path.exists(l[0])):
-            print "File not found!"
-            return
+        settings=0
+        if(l[0]=="set"):
+            settings=1
+        else:
+            print "Skeining file:"+l[0]
+            if not(os.path.exists(l[0])):
+                print "File not found!"
+                return
         if not os.path.exists("skeinforge"):
             print "Skeinforge not found. \nPlease copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
             return
@@ -681,15 +710,19 @@ class pronsole(cmd.Cmd):
                 pass
         try:
             from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
-            if(len(l)>1):
-                if(l[1] == "view"):
-                    skeinforge_craft.writeOutput(l[0],True)
+            from skeinforge.skeinforge_application import skeinforge
+            if(settings):
+                skeinforge.main()
+            else:
+                if(len(l)>1):
+                    if(l[1] == "view"):
+                        skeinforge_craft.writeOutput(l[0],True)
+                    else:
+                        skeinforge_craft.writeOutput(l[0],False)
                 else:
                     skeinforge_craft.writeOutput(l[0],False)
-            else:
-                skeinforge_craft.writeOutput(l[0],False)
-            print "Loading skeined file."
-            self.do_load(l[0].replace(".stl","_export.gcode"))
+                print "Loading skeined file."
+                self.do_load(l[0].replace(".stl","_export.gcode"))
         except:
             print "Skeinforge execution failed."
         
@@ -707,6 +740,7 @@ class pronsole(cmd.Cmd):
         print "Creates a gcode file from an stl model using skeinforge (with tab-completion)"
         print "skein filename.stl - create gcode file"
         print "skein filename.stl view - create gcode file and view using skeiniso"
+        print "skein set - adjust skeinforge settings"
         
     
 interp=pronsole()

@@ -19,6 +19,7 @@ class printcore():
         self.queueindex=0
         self.lineno=0
         self.resendfrom=-1
+        self.paused=False
         self.sentlines={}
         self.log=[]
         self.sent=[]
@@ -62,7 +63,7 @@ class printcore():
         """This function acts on messages from the firmware
         """
         self.clear=True
-        time.sleep(1)
+        time.sleep(0.5)
         self.send_now("M105")
         while(True):
             if(not self.printer or not self.printer.isOpen):
@@ -124,12 +125,14 @@ class printcore():
     def pause(self):
         """Pauses the print, saving the current position.
         """
+        self.paused=True
         self.printing=False
         time.sleep(1)
         
     def resume(self):
         """Resumes a paused print.
         """
+        self.paused=False
         self.printing=True
         Thread(target=self._print).start()
     
@@ -194,9 +197,11 @@ class printcore():
             self.queueindex+=1
         else:
             self.printing=False
-            self.queueindex=0
-            self.lineno=0
-            self._send("M110",-1, True)
+            self.clear=True
+            if(not self.paused):
+                self.queueindex=0
+                self.lineno=0
+                self._send("M110",-1, True)
             
     def _send(self, command, lineno=0, calcchecksum=False):
         if(calcchecksum):
