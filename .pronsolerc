@@ -1,5 +1,5 @@
 # Sample .pronsolerc file - copy this into your home directory
 alias up move Z 10
-alias loud !self.loud = 1
-alias quiet !self.loud = 0
+alias loud !self.p.loud = 1
+alias quiet !self.p.loud = 0
 alias home_all G28
