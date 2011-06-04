@@ -132,7 +132,7 @@ class pronsole(cmd.Cmd):
         try:
             with open(os.path.join(os.path.expanduser("~"),".pronsolerc")) as rc:
                 for rc_cmd in rc:
-                    if rc_cmd.lstrip()[0] != "#":
+                    if not rc_cmd.lstrip().startswith("#"):
                         self.onecmd(rc_cmd)
         except IOError:
             pass
