@@ -464,7 +464,7 @@ class pronsole(cmd.Cmd):
         self.do_help("")
     
     def tempcb(self,l):
-        if "ok T:" in l:
+        if "T:" in l:
             print l.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ","")
             self.recvlisteners.remove(self.tempcb)
         
