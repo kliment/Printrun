@@ -59,6 +59,14 @@ class printcore():
             self.printer=Serial(self.port,self.baud,timeout=5)
             Thread(target=self._listen).start()
             
+    def reset(self):
+        """Reset the printer
+        """
+        if(self.printer):
+            self.printer.setDTR(1)
+            self.printer.setDTR(0)
+            
+            
     def _listen(self):
         """This function acts on messages from the firmware
         """
@@ -78,7 +86,7 @@ class printcore():
                     print "RECV: ",line
             if(line.startswith('start') or line.startswith('ok') or "T:" in line):
                 self.clear=True
-                if not self.online and self.onlinecb is not None:
+                if (not self.online or line.startswith('start')) and self.onlinecb is not None:
                     self.onlinecb()
                 self.online=True
                 if(line.startswith('ok')):

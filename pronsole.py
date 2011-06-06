@@ -401,6 +401,12 @@ class pronsole(cmd.Cmd):
             except:
                 pass
         
+    def do_reset(self,l):
+        self.p.reset()
+        
+    def help_reset(self):
+        print "Resets the printer."
+        
     def do_sdprint(self,l):
         if not self.p.online:
             print "Printer is not online. Try connect to it first."
@@ -466,14 +472,14 @@ class pronsole(cmd.Cmd):
     def tempcb(self,l):
         if "T:" in l:
             print l.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ","")
-            self.recvlisteners.remove(self.tempcb)
-        
+            
     def do_gettemp(self,l):
         if self.p.online:
             self.recvlisteners+=[self.tempcb]
             self.p.send_now("M105")
-            time.sleep(0.5)
-    
+            time.sleep(0.75)
+            self.recvlisteners.remove(self.tempcb)
+        
     def help_gettemp(self):
         print "Read the extruder and bed temperature."
     
@@ -678,13 +684,14 @@ class pronsole(cmd.Cmd):
                 self.p.send_now("M105")
                 if(self.sdprinting):
                     self.p.send_now("M27")
+                time.sleep(interval)
                 print (self.tempreadings.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))
                 if(self.p.printing):
                     print "Print progress: ", 100*float(self.p.queueindex)/len(self.p.mainqueue), "%"
                 
                 if(self.sdprinting):
                     print "SD print progress: ", self.percentdone,"%"
-                time.sleep(interval)
+                
         except:
             print "Done monitoring."
             pass
