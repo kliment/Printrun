@@ -40,6 +40,7 @@ class pronsole(cmd.Cmd):
         self.percentdone=0
         self.tempreadings=""
         self.aliases={}
+        self.macros=[]
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -123,6 +124,56 @@ class pronsole(cmd.Cmd):
     
     def subhelp_alias(self,alias_name):
         print "'"+alias_name+"' is alias for '"+self.aliases[alias_name]+"'"
+    
+    def hook_macro(self,l):
+        ls = l.lstrip()
+        ws = l[:len(l)-len(ls)] # just leading whitespace
+        if len(ws)==0:
+            del self.onecmd # remove override
+            print "Macro '"+self.cur_macro_name+"' defined"
+            print self.cur_macro # debug
+            print "------------" # debug
+            self.prompt="PC>"
+            exec self.cur_macro
+            if self.cur_macro_name not in self.macros:
+	            self.macros.append(self.cur_macro_name)
+            #global macro
+            setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,largs.split()))
+            setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
+            #del self.cur_macro
+            # pass the unprocessed line to regular command processor
+            return self.onecmd(l)
+        if ls.startswith('#'): return
+        if ls.startswith('!'):
+            self.cur_macro += ws + ls[1:] + "\n" # python mode
+        else:
+            self.cur_macro += ws + 'self.onecmd("'+ls+'".format(args))\n' # parametric command mode
+    
+    def do_macro(self,l):
+        if len(l.strip())==0:
+            self.print_topics("User-defined macros",self.macros,15,80)
+            return
+        self.cur_macro_name = l.strip()
+        if self.cur_macro_name.lower().endswith("/d"):
+            self.cur_macro_name = self.cur_macro_name.split()[0]
+            self.macros.remove(self.cur_macro_name)
+            delattr(self.__class__,"do_"+self.cur_macro_name)
+            delattr(self.__class__,"help_"+self.cur_macro_name)
+            return
+        if self.cur_macro_name not in self.macros and hasattr(self.__class__,"do_"+self.cur_macro_name):
+            print "Name '"+self.cur_macro_name+"' is already being used by built-in command or alias"
+            return
+        print "Enter macro using indented lines, end with empty line"
+        self.onecmd = self.hook_macro # override onecmd temporarily
+        self.cur_macro = "def macro(self,*args):\n"
+        self.prompt="..>"
+    
+    def help_macro(self):
+        print "Define macro: macro <name>"
+        print "Enter macro definition in indented lines. Use {0} .. {N} to substitute macro arguments"
+    
+    def subhelp_macro(self,macro):
+        print "'"+macro+"' is an user-defined macro."
     
     def postloop(self):
         self.p.disconnect()
