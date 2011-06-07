@@ -144,7 +144,7 @@ class pronsole(cmd.Cmd):
         a=l.split()
         p=self.scanserial()
         port=self.lastport[0]
-        if port is None and len(p)>0:
+        if (port is None or port not in p) and len(p)>0:
             port=p[0] 
         baud=self.lastport[1] or 115200
         if(len(a)>0):
