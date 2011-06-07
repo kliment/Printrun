@@ -305,12 +305,12 @@ class pronsole(cmd.Cmd):
                 print "Not printing, cannot pause."
                 return
             self.p.pause()
-            self.p.connect()# This seems to work, but is not a good solution. 
+            #self.p.connect()# This seems to work, but is not a good solution. 
         self.paused=True
         
         #self.do_resume(None)
         
-    def help_pause(self,l):
+    def help_pause(self):
         print "Pauses a running print"
         
     def do_resume(self,l):
@@ -323,24 +323,6 @@ class pronsole(cmd.Cmd):
             return
         else:
             self.p.resume()
-        return
-        try:
-            self.p.resume()
-            #print self.p.printing
-            sys.stdout.write("Progress: 00.0%")
-            sys.stdout.flush()
-            time.sleep(1)
-            while self.p.printing:
-                time.sleep(1)
-                sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100*float(self.p.queueindex)/len(self.p.mainqueue),) )
-                sys.stdout.flush()
-            print "\b\b\b\b\b100%. Print completed."
-            return
-        except:
-            print "...interrupted!"
-            self.paused=True
-            self.p.pause()
-            print "Use the resume command to resume this print"
     
     def help_resume(self):
         print "Resumes a paused print."

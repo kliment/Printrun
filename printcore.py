@@ -185,6 +185,7 @@ class printcore():
             time.sleep(0.001)
         self.clear=False
         if not (self.printing and self.printer and self.online):
+            self.clear=True
             return
         if(self.resendfrom<self.lineno and self.resendfrom>-1):
             self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
