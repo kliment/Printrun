@@ -97,7 +97,7 @@ class pronsole(cmd.Cmd):
         if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
         if not self.processing_rc:
             print "Macro '"+self.cur_macro_name+"' defined"
-            print self.cur_macro+"------------" # debug
+            #print self.cur_macro+"------------" # debug
         self.prompt="PC>"
         if self.cur_macro_def=="":
             print "Empty macro - cancelled"
