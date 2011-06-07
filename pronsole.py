@@ -39,8 +39,8 @@ class pronsole(cmd.Cmd):
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.percentdone=0
         self.tempreadings=""
-        self.aliases={}
-        self.macros=[]
+        self.macros={}
+        self.processing_rc=False
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -129,57 +129,96 @@ class pronsole(cmd.Cmd):
         ls = l.lstrip()
         ws = l[:len(l)-len(ls)] # just leading whitespace
         if len(ws)==0:
-            del self.onecmd # remove override
-            print "Macro '"+self.cur_macro_name+"' defined"
-            print self.cur_macro # debug
-            print "------------" # debug
-            self.prompt="PC>"
-            exec self.cur_macro
-            if self.cur_macro_name not in self.macros:
-	            self.macros.append(self.cur_macro_name)
-            #global macro
-            setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,largs.split()))
-            setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
-            #del self.cur_macro
-            # pass the unprocessed line to regular command processor
+            self.end_macro()
+            # pass the unprocessed line to regular command processor to not require empty line in .pronsolerc
             return self.onecmd(l)
         if ls.startswith('#'): return
         if ls.startswith('!'):
             self.cur_macro += ws + ls[1:] + "\n" # python mode
         else:
-            self.cur_macro += ws + 'self.onecmd("'+ls+'".format(args))\n' # parametric command mode
+            self.cur_macro += ws + 'self.onecmd("'+ls+'".format(arg))\n' # parametric command mode
+        self.cur_macro_def += l + "\n"
     
-    def do_macro(self,l):
-        if len(l.strip())==0:
-            self.print_topics("User-defined macros",self.macros,15,80)
+    def end_macro(self):    
+        if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
+        if not self.processing_rc:
+            print "Macro '"+self.cur_macro_name+"' defined"
+            print self.cur_macro+"------------" # debug
+        self.prompt="PC>"
+        if self.cur_macro_def=="":
+            print "Empty macro - cancelled"
+            del self.cur_macro,self.cur_macro_name,self.cur_macro_def
             return
-        self.cur_macro_name = l.strip()
-        if self.cur_macro_name.lower().endswith("/d"):
-            self.cur_macro_name = self.cur_macro_name.split()[0]
-            self.macros.remove(self.cur_macro_name)
-            delattr(self.__class__,"do_"+self.cur_macro_name)
-            delattr(self.__class__,"help_"+self.cur_macro_name)
+        self.macros[self.cur_macro_name] = self.cur_macro_def
+        exec self.cur_macro
+        setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,*largs.split()))
+        setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
+        del self.cur_macro,self.cur_macro_name,self.cur_macro_def
+        
+    def do_macro(self,args):
+        if args.strip()=="":
+            self.print_topics("User-defined macros",self.macros.keys(),15,80)
             return
-        if self.cur_macro_name not in self.macros and hasattr(self.__class__,"do_"+self.cur_macro_name):
-            print "Name '"+self.cur_macro_name+"' is already being used by built-in command or alias"
+        arglist = args.split(None,1)
+        macro_name = arglist[0]
+        if macro_name not in self.macros and hasattr(self.__class__,"do_"+macro_name):
+            print "Name '"+macro_name+"' is being used by built-in command"
             return
-        print "Enter macro using indented lines, end with empty line"
+        if len(arglist) == 2:
+            macro_def = arglist[1]
+            if macro_def.lower() == "/d":
+                if macro_name in self.macros.keys():
+                    delattr(self.__class__,"do_"+macro_name)
+                    del self.macros[macro_name]
+                    print "Macro '"+macro_name+"' removed"
+                else:
+                    print "Macro '"+macro_name+"' is not defined"
+                return
+            if macro_def.lower() == "/s":
+                self.subhelp_macro(macro_name)
+                return
+            self.cur_macro_def = macro_def
+            self.cur_macro_name = macro_name
+            if macro_def.startswith("!"):
+                self.cur_macro = "def macro(self,*arg):\n  "+macro_def[1:]+"\n"
+            else:
+                self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(arg))\n"
+            self.end_macro()
+            return
+        if not self.processing_rc:
+            print "Enter macro using indented lines, end with empty line"
+        self.cur_macro_name = macro_name
+        self.cur_macro_def = ""
+        self.cur_macro = "def macro(self,*arg):\n"
         self.onecmd = self.hook_macro # override onecmd temporarily
-        self.cur_macro = "def macro(self,*args):\n"
         self.prompt="..>"
     
     def help_macro(self):
-        print "Define macro: macro <name>"
+        print "Define single-line macro: macro <name> <definition>"
+        print "Define multi-line macro:  macro <name>"
         print "Enter macro definition in indented lines. Use {0} .. {N} to substitute macro arguments"
+        print "Enter python code, prefixed with !  Use arg[0] .. arg[N] to substitute macro arguments"
+        print "Delete macro:             macro <name> /d"
+        print "Show macro definition:    macro <name> /s"
+        print "'macro' without arguments displays list of defined macros"
     
-    def subhelp_macro(self,macro):
-        print "'"+macro+"' is an user-defined macro."
+    def subhelp_macro(self,macro_name):
+        if macro_name in self.macros.keys():
+            macro_def = self.macros[macro_name]
+            if "\n" in macro_def:
+                print "Macro '"+macro_name+"' defined as:"
+                print self.macros[macro_name]+"----------------"
+            else:
+                print "Macro '"+macro_name+"' defined as: '"+macro_def+"'"
+        else:
+            print "Macro '"+macro_name+"' is not defined"
     
     def postloop(self):
         self.p.disconnect()
         cmd.Cmd.postloop(self)
     
     def preloop(self):
+        self.processing_rc=True
         try:
             with open(os.path.join(os.path.expanduser("~"),".pronsolerc")) as rc:
                 for rc_cmd in rc:
@@ -187,6 +226,7 @@ class pronsole(cmd.Cmd):
                         self.onecmd(rc_cmd)
         except IOError:
             pass
+        self.processing_rc=False
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
         cmd.Cmd.preloop(self)
     
