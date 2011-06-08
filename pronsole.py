@@ -81,6 +81,7 @@ class pronsole(cmd.Cmd):
             return []
     
     def hook_macro(self,l):
+        l = l.rstrip()
         ls = l.lstrip()
         ws = l[:len(l)-len(ls)] # just leading whitespace
         if len(ws)==0:
@@ -100,14 +101,13 @@ class pronsole(cmd.Cmd):
             print "Macro '"+self.cur_macro_name+"' defined"
             #print self.cur_macro+"------------" # debug
         self.prompt="PC>"
-        if self.cur_macro_def=="":
+        if self.cur_macro_def!="":
+            self.macros[self.cur_macro_name] = self.cur_macro_def
+            exec self.cur_macro
+            setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,*largs.split()))
+            setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
+        else:
             print "Empty macro - cancelled"
-            del self.cur_macro,self.cur_macro_name,self.cur_macro_def
-            return
-        self.macros[self.cur_macro_name] = self.cur_macro_def
-        exec self.cur_macro
-        setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,*largs.split()))
-        setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
         del self.cur_macro,self.cur_macro_name,self.cur_macro_def
         
     def do_macro(self,args):
