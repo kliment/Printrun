@@ -40,6 +40,7 @@ class pronsole(cmd.Cmd):
         self.percentdone=0
         self.tempreadings=""
         self.aliases={}
+        self.lastport = (None,None)
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -142,22 +143,23 @@ class pronsole(cmd.Cmd):
     def do_connect(self,l):
         a=l.split()
         p=self.scanserial()
-        port=None
-        if len(p)>0:
+        port=self.lastport[0]
+        if (port is None or port not in p) and len(p)>0:
             port=p[0] 
-        baud=115200
+        baud=self.lastport[1] or 115200
         if(len(a)>0):
             port=a[0]
         if(len(a)>1):
             try:
                 baud=int(a[1])
             except:
-                pass
+                print "Bad baud value '"+a[1]+"' ignored"
         if len(p)==0 and port is None:
             print "No serial ports detected - please specify a port"
             return
         if len(a)==0:
             print "No port specified - connecting to %s at %dbps" % (port,baud)
+        self.lastport = (port, baud)
         self.p.connect(port, baud)
     
     def help_connect(self):
