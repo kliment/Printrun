@@ -39,7 +39,8 @@ class pronsole(cmd.Cmd):
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.percentdone=0
         self.tempreadings=""
-        self.aliases={}
+        self.macros={}
+        self.processing_rc=False
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -70,65 +71,108 @@ class pronsole(cmd.Cmd):
     def help_gcodes(self):
         print "Gcodes are passed through to the printer as they are"
     
-    def do_alias(self,l):
-        if l == "":
-            # list aliases
-            if len(self.aliases):
-                self.print_topics("Aliases, to display type: alias <name>",self.aliases.keys(),15,80)
-            else:
-                print "No aliases defined, to define see: help alias"
-            return
-        alias_l = l.split(None,1)
-        alias_name = alias_l[0]
-        if len(alias_l) < 2:
-            # display alias
-            if alias_name in self.aliases.keys():
-                print "Alias '"+alias_name+"' stands for '"+self.aliases[alias_name]+"'"
-            else:
-                print "Alias '"+alias_name+"' is not defined"
-            return
-        alias_name,alias_def = alias_l
-        if alias_def.lower() == "/d":
-            # delete alias
-            if alias_name in self.aliases.keys():
-                delattr(self.__class__,"do_"+alias_name)
-                del self.aliases[alias_name]
-                print "Alias '"+alias_name+"' removed"
-                return
-            else:
-                print "Alias '"+alias_name+"' is not defined"
-            return
-        # (re)define an alias
-        if alias_name not in self.aliases.keys() and hasattr(self.__class__,"do_"+alias_name):
-            print "Name '"+alias_name+"' is already being used by built-in command"
-            return
-        func = lambda self,args,alias_def=alias_def: self.onecmd(" ".join((alias_def,args)))
-        self.aliases[alias_name] = alias_def
-        setattr(self.__class__,"do_"+alias_name,func)
-        setattr(self.__class__,"help_"+alias_name,lambda self=self,alias_name=alias_name: self.subhelp_alias(alias_name))
-    
-    def help_alias(self):
-        print "Create/modify/view aliases: alias <name> [<command>]"
-        print "if <command> is not specified, displays the alias definition"
-        print "without arguments, displays list of all defined aliases"
-        print "To remove an alias: alias <name> /d"
-        
-    def complete_alias(self,text,line,begidx,endidx):
+    def complete_macro(self,text,line,begidx,endidx):
         if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
-            return [i for i in self.aliases.keys() if i.startswith(text)]
+            return [i for i in self.macros.keys() if i.startswith(text)]
         elif(len(line.split())==3 or (len(line.split())==2 and line[-1]==" ")):
-            return self.completenames(text)
+            return ["/D", "/S"] + self.completenames(text)
         else:
             return []
     
-    def subhelp_alias(self,alias_name):
-        print "'"+alias_name+"' is alias for '"+self.aliases[alias_name]+"'"
+    def hook_macro(self,l):
+        ls = l.lstrip()
+        ws = l[:len(l)-len(ls)] # just leading whitespace
+        if len(ws)==0:
+            self.end_macro()
+            # pass the unprocessed line to regular command processor to not require empty line in .pronsolerc
+            return self.onecmd(l)
+        if ls.startswith('#'): return
+        if ls.startswith('!'):
+            self.cur_macro += ws + ls[1:] + "\n" # python mode
+        else:
+            self.cur_macro += ws + 'self.onecmd("'+ls+'".format(arg))\n' # parametric command mode
+        self.cur_macro_def += l + "\n"
+    
+    def end_macro(self):    
+        if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
+        if not self.processing_rc:
+            print "Macro '"+self.cur_macro_name+"' defined"
+            #print self.cur_macro+"------------" # debug
+        self.prompt="PC>"
+        if self.cur_macro_def=="":
+            print "Empty macro - cancelled"
+            del self.cur_macro,self.cur_macro_name,self.cur_macro_def
+            return
+        self.macros[self.cur_macro_name] = self.cur_macro_def
+        exec self.cur_macro
+        setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,*largs.split()))
+        setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
+        del self.cur_macro,self.cur_macro_name,self.cur_macro_def
+        
+    def do_macro(self,args):
+        if args.strip()=="":
+            self.print_topics("User-defined macros",self.macros.keys(),15,80)
+            return
+        arglist = args.split(None,1)
+        macro_name = arglist[0]
+        if macro_name not in self.macros and hasattr(self.__class__,"do_"+macro_name):
+            print "Name '"+macro_name+"' is being used by built-in command"
+            return
+        if len(arglist) == 2:
+            macro_def = arglist[1]
+            if macro_def.lower() == "/d":
+                if macro_name in self.macros.keys():
+                    delattr(self.__class__,"do_"+macro_name)
+                    del self.macros[macro_name]
+                    print "Macro '"+macro_name+"' removed"
+                else:
+                    print "Macro '"+macro_name+"' is not defined"
+                return
+            if macro_def.lower() == "/s":
+                self.subhelp_macro(macro_name)
+                return
+            self.cur_macro_def = macro_def
+            self.cur_macro_name = macro_name
+            if macro_def.startswith("!"):
+                self.cur_macro = "def macro(self,*arg):\n  "+macro_def[1:]+"\n"
+            else:
+                self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(arg))\n"
+            self.end_macro()
+            return
+        if not self.processing_rc:
+            print "Enter macro using indented lines, end with empty line"
+        self.cur_macro_name = macro_name
+        self.cur_macro_def = ""
+        self.cur_macro = "def macro(self,*arg):\n"
+        self.onecmd = self.hook_macro # override onecmd temporarily
+        self.prompt="..>"
+    
+    def help_macro(self):
+        print "Define single-line macro: macro <name> <definition>"
+        print "Define multi-line macro:  macro <name>"
+        print "Enter macro definition in indented lines. Use {0} .. {N} to substitute macro arguments"
+        print "Enter python code, prefixed with !  Use arg[0] .. arg[N] to substitute macro arguments"
+        print "Delete macro:             macro <name> /d"
+        print "Show macro definition:    macro <name> /s"
+        print "'macro' without arguments displays list of defined macros"
+    
+    def subhelp_macro(self,macro_name):
+        if macro_name in self.macros.keys():
+            macro_def = self.macros[macro_name]
+            if "\n" in macro_def:
+                print "Macro '"+macro_name+"' defined as:"
+                print self.macros[macro_name]+"----------------"
+            else:
+                print "Macro '"+macro_name+"' defined as: '"+macro_def+"'"
+        else:
+            print "Macro '"+macro_name+"' is not defined"
     
     def postloop(self):
         self.p.disconnect()
         cmd.Cmd.postloop(self)
     
     def preloop(self):
+        self.processing_rc=True
         try:
             with open(os.path.join(os.path.expanduser("~"),".pronsolerc")) as rc:
                 for rc_cmd in rc:
@@ -136,6 +180,7 @@ class pronsole(cmd.Cmd):
                         self.onecmd(rc_cmd)
         except IOError:
             pass
+        self.processing_rc=False
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
         cmd.Cmd.preloop(self)
     
