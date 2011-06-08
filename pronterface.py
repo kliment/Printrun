@@ -12,6 +12,10 @@ if os.name=="nt":
     except:
         pass
 
+def dosify(name):
+    return os.path.split(name)[1].split(".")[0][:8]+".g"
+
+
 class PronterWindow(wx.Frame):
     def __init__(self, filename=None,size=(800,500)):
         self.filename=filename
@@ -37,7 +41,6 @@ class PronterWindow(wx.Frame):
         
     #Commands to implement:
     #gcodes(console)   move/extrude/settemp/bedtemp/extrude/reverse(control panel)
-    #upload
     #help        
         
     def scanserial(self):
@@ -296,7 +299,31 @@ class PronterWindow(wx.Frame):
             return
         self.p.startprint(self.f)
         
+    def endupload(self):
+        self.p.send_now("M29 ")
+        wx.CallAfter(self.status.SetStatusText,"File upload complete")
+        time.sleep(0.5)
+        self.p.clear=True
+        self.uploading=False
+        
+    def uploadtrigger(self,l):
+        if "Writing to file" in l:
+            self.uploading=True
+            self.p.startprint(self.f)
+            self.p.endcb=self.endupload
+            self.recvlisteners.remove(self.uploadtrigger)
+        elif "open failed, File" in l:
+            self.recvlisteners.remove(self.uploadtrigger)
+        
     def upload(self,event):
+        if not len(self.f):
+            return
+        if not self.p.online:
+            return
+        dlg=wx.TextEntryDialog(self,"Enter a target filename in 8.3 format:","Pick SD filename",dosify(self.filename))
+        if dlg.ShowModal()==wx.ID_OK:
+            self.p.send_now("M28 "+dlg.GetValue())
+            self.recvlisteners+=[self.uploadtrigger]
         pass
         
     def pause(self,event):
