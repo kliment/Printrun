@@ -192,7 +192,7 @@ class pronsole(cmd.Cmd):
         if not(os.path.exists(l)):
             print "File not found!"
             return
-        self.f=[i.replace("\n","") for i in open(l)]
+        self.f=[i.replace("\n","").replace("\r","") for i in open(l)]
         self.filename=l
         print "Loaded ",l,", ",len(self.f)," lines."
         
