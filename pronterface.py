@@ -91,9 +91,11 @@ class PronterWindow(wx.Frame):
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
         self.sdprintbtn=wx.Button(self.panel,-1,"SD Print",pos=(180,75))
         self.sdprintbtn.Bind(wx.EVT_BUTTON,self.sdprintfile)
-        self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(300,75),style = wx.TE_PROCESS_ENTER)
+        self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(400,400),style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
-        self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(560,75))
+        self.logbox=wx.TextCtrl(self.panel,size=(350,300),pos=(400,75),style = wx.TE_MULTILINE)
+        self.logbox.Disable()
+        self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(660,400))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
         self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor",pos=(10,430))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
@@ -113,7 +115,13 @@ class PronterWindow(wx.Frame):
         self.monitor=self.monitorbox.GetValue()
         
     def sendline(self,e):
-        self.p.send_now(self.commandbox.GetValue())
+        command=self.commandbox.GetValue()
+        if not len(command):
+            return
+        if(command[0]=="g" or command[0]=="m"):
+            command=command.upper()
+        wx.CallAfter(self.logbox.AppendText,">>>"+command+"\n")
+        self.p.send_now(command)
         
     def statuschecker(self):
         try:
@@ -123,7 +131,7 @@ class PronterWindow(wx.Frame):
                     string+="Printer is online."
                 string+=(self.tempreport.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))+" "
                 if self.sdprinting:
-                    string+= "SD printing:%04.2f %%",(self.spercentdone,)
+                    string+= "SD printing:%04.2f %%"%(self.percentdone,)
                 if self.p.printing:
                     string+= "printing:%04.2f %%"%(100*float(self.p.queueindex)/len(self.p.mainqueue),)
                 wx.CallAfter(self.status.SetStatusText,string)
@@ -157,7 +165,10 @@ class PronterWindow(wx.Frame):
     def recvcb(self,l):
         if "T:" in l:
             self.tempreport=l
-        print l
+        tstring=l.replace("\n","").replace("\r","")
+        print tstring
+        if(tstring!="ok"):
+            wx.CallAfter(self.logbox.AppendText,tstring+"\n")
         for i in self.recvlisteners:
             i(l)
     
@@ -180,8 +191,8 @@ class PronterWindow(wx.Frame):
             wx.CallAfter(self.status.SetStatusText,l)
         if "File selected" in l:
             wx.CallAfter(self.status.SetStatusText,"Starting print")
-            self.p.send_now("M24")
             self.sdprinting=1
+            self.p.send_now("M24")
             return
         if "Done printing file" in l:
             wx.CallAfter(self.status.SetStatusText,l)
@@ -201,7 +212,7 @@ class PronterWindow(wx.Frame):
         
     def filesloaded(self):
         dlg=wx.SingleChoiceDialog(self, "Select the file to print", "Pick SD file", self.sdfiles)
-        if(dlg.ShowModal==wx.ID_OK):
+        if(dlg.ShowModal()==wx.ID_OK):
             target=dlg.GetStringSelection()
             if len(target):
                 self.recvlisteners+=[self.waitforsdresponse]
