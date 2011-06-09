@@ -793,24 +793,24 @@ class pronsole(cmd.Cmd):
             return
         if "x" in l.lower():
             self.do_move("X -250")
-            send_now("G92 X0")
+            self.p.send_now("G92 X0")
             self.do_move("X 1")
             self.do_move("X -1")
-            send_now("G92 X0")
+            self.p.send_now("G92 X0")
         if "y" in l.lower():
             self.do_move("Y -250")
-            send_now("G92 Y0")
+            self.p.send_now("G92 Y0")
             self.do_move("Y 1")
             self.do_move("Y -1")
-            send_now("G92 Y0")
+            self.p.send_now("G92 Y0")
         if "z" in l.lower():
             self.do_move("Z -250")
             send_now("G92 Z0")
             self.do_move("Z 1")
             self.do_move("Z -1")
-            send_now("G92 Z0")
+            self.p.send_now("G92 Z0")
         if not len(l):
-            send_now("G28")
+            self.p.send_now("G28")
             
     def help_home(self):
         print "Homes the printer"
