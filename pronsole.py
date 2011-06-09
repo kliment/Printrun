@@ -92,7 +92,7 @@ class pronsole(cmd.Cmd):
         if ls.startswith('!'):
             self.cur_macro += ws + ls[1:] + "\n" # python mode
         else:
-            self.cur_macro += ws + 'self.onecmd("'+ls+'".format(arg))\n' # parametric command mode
+            self.cur_macro += ws + 'self.onecmd("'+ls+'".format(*arg))\n' # parametric command mode
         self.cur_macro_def += l + "\n"
     
     def end_macro(self):    
@@ -137,7 +137,7 @@ class pronsole(cmd.Cmd):
             if macro_def.startswith("!"):
                 self.cur_macro = "def macro(self,*arg):\n  "+macro_def[1:]+"\n"
             else:
-                self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(arg))\n"
+                self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(*arg))\n"
             self.end_macro()
             return
         if not self.processing_rc:
