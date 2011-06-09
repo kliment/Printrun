@@ -66,14 +66,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Y-1",("move Y -1"),(55,260),ycol,(55,25)],
         ["Y-10",("move Y -10"),(55,285),ycol,(55,25)],
         ["Y-100",("move Y -100"),(55,310),ycol,(55,25)],
-        ["Z+10",("move Z 10"),(110,110),zcol,(55,25)],
-        ["Z+1",("move Z 1"),(110,135),zcol,(55,25)],
-        ["Z+0.1",("move Z 0.1"),(110,160),zcol,(55,25)],
-        ["HomeZ",("home Z"),(110,185),zcol,(55,25)],
-        ["Z-0.1",("move Z -0.1"),(110,210),zcol,(55,25)],
-        ["Z-1",("move Z -1"),(110,235),zcol,(55,25)],
-        ["Z-10",("move Z -10"),(110,260),zcol,(55,25)],
-        ["Home\nall",("home"),(110,310-25),(250,250,250),(55,50)],
+        ["Z+10",("move Z 10"),(110,110+25),zcol,(55,25)],
+        ["Z+1",("move Z 1"),(110,135+25),zcol,(55,25)],
+        ["Z+0.1",("move Z 0.1"),(110,160+25),zcol,(55,25)],
+        ["HomeZ",("home Z"),(110,185+25),zcol,(55,25)],
+        ["Z-0.1",("move Z -0.1"),(110,210+25),zcol,(55,25)],
+        ["Z-1",("move Z -1"),(110,235+25),zcol,(55,25)],
+        ["Z-10",("move Z -10"),(110,260+25),zcol,(55,25)],
+        ["Home",("home"),(110,310),(250,250,250),(55,25)],
         ["Extrude",("extrude"),(0,397+1),(200,200,200),(65,25)],
         ["Reverse",("reverse"),(0,397+28),(200,200,200),(65,25)],
         ]
@@ -212,7 +212,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
         self.logbox=wx.TextCtrl(self.panel,size=(350,340),pos=(440,75),style = wx.TE_MULTILINE)
-        self.logbox.Disable()
+        self.logbox.SetEditable(0)
         self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
         self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor printer",pos=(500,40))
@@ -328,7 +328,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def recvcb(self,l):
         if "T:" in l:
             self.tempreport=l
-        tstring=l.replace("\n","").replace("\r","")
+        tstring=l.rstrip()
         #print tstring
         if(tstring!="ok"):
             print tstring

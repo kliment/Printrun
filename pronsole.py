@@ -472,7 +472,7 @@ class pronsole(cmd.Cmd):
     def recvcb(self,l):
         if "T:" in l:
             self.tempreadings=l
-        tstring=l.replace("\r","").replace("\n","")
+        tstring=l.rstrip()
         if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
             print tstring
             sys.stdout.write(self.prompt)
