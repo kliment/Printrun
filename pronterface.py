@@ -12,11 +12,24 @@ if os.name=="nt":
     except:
         pass
 
+import pronsole
+
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
+class Tee(object):
+    def __init__(self, target):
+        self.stdout = sys.stdout
+        sys.stdout = self
+        self.target=target
+    def __del__(self):
+        sys.stdout = self.stdout
+    def write(self, data):
+        self.target(data)
+        self.stdout.write(data)
 
-class PronterWindow(wx.Frame):
+
+class PronterWindow(wx.Frame,pronsole.pronsole):
     def __init__(self, filename=None,size=(800,500)):
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
@@ -27,6 +40,38 @@ class PronterWindow(wx.Frame):
         self.tempreport=""
         self.monitor=0
         self.paused=False
+        xcol=(255,255,128)
+        ycol=(180,180,255)
+        zcol=(180,255,180)
+        self.cpbuttons=[
+        ["X+100",("move X 100"),(0,110),xcol,(55,25)],
+        ["X+10",("move X 10"),(0,135),xcol,(55,25)],
+        ["X+1",("move X 1"),(0,160),xcol,(55,25)],
+        ["X+0.1",("move X 0.1"),(0,185),xcol,(55,25)],
+        ["HomeX",("home X"),(0,210),xcol,(55,25)],
+        ["X-0.1",("move X -0.1"),(0,235),xcol,(55,25)],
+        ["X-1",("move X -1"),(0,260),xcol,(55,25)],
+        ["X-10",("move X -10"),(0,285),xcol,(55,25)],
+        ["X-100",("move X -100"),(0,310),xcol,(55,25)],
+        ["Y+100",("move Y 100"),(55,110),ycol,(55,25)],
+        ["Y+10",("move Y 10"),(55,135),ycol,(55,25)],
+        ["Y+1",("move Y 1"),(55,160),ycol,(55,25)],
+        ["Y+0.1",("move Y 0.1"),(55,185),ycol,(55,25)],
+        ["HomeY",("home Y"),(55,210),ycol,(55,25)],
+        ["Y-0.1",("move Y -0.1"),(55,235),ycol,(55,25)],
+        ["Y-1",("move Y -1"),(55,260),ycol,(55,25)],
+        ["Y-10",("move Y -10"),(55,285),ycol,(55,25)],
+        ["Y-100",("move Y -100"),(55,310),ycol,(55,25)],
+        ["Z+10",("move Z 10"),(110,110),zcol,(55,25)],
+        ["Z+1",("move Z 1"),(110,135),zcol,(55,25)],
+        ["Z+0.1",("move Z 0.1"),(110,160),zcol,(55,25)],
+        ["HomeZ",("home Z"),(110,185),zcol,(55,25)],
+        ["Z-0.1",("move Z -0.1"),(110,210),zcol,(55,25)],
+        ["Z-1",("move Z -1"),(110,235),zcol,(55,25)],
+        ["Z-10",("move Z -10"),(110,260),zcol,(55,25)],
+        ["Home",("move Z -10"),(110,310),(250,250,250),(55,25)],
+        ]
+        self.btndict={}
         self.popmenu()
         self.popwindow()
         self.recvlisteners=[]
@@ -37,11 +82,14 @@ class PronterWindow(wx.Frame):
         self.temps={"pla":"210","abs":"230","off":"0"}
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.percentdone=0
-        
+        self.t=Tee(self.catchprint)
+        self.stdout=sys.stdout
         
     #Commands to implement:
-    #gcodes(console)   move/extrude/settemp/bedtemp/extrude/reverse(control panel)
-    #help        
+    #settemp/bedtemp/extrude/reverse(control panel)
+    
+    def catchprint(self,l):
+        wx.CallAfter(self.logbox.AppendText,l)
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -70,13 +118,19 @@ class PronterWindow(wx.Frame):
         
     def popwindow(self):
         wx.StaticText(self.panel,-1,"Port:",pos=(0,5))
+        scan=self.scanserial()
         self.serialport = wx.ComboBox(self.panel, -1,
-                choices=self.scanserial(),
+                choices=scan,
                 style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
+        try:
+            self.serialport.SetValue(scan[0])
+        except:
+            pass
         wx.StaticText(self.panel,-1,"@",pos=(250,5))
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200"],
                 style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(275,0))
+        self.baud.SetValue("115200")
         self.connectbtn=wx.Button(self.panel,-1,"Connect",pos=(380,0))
         self.connectbtn.SetToolTipString("Connect to the printer")
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
@@ -100,12 +154,26 @@ class PronterWindow(wx.Frame):
         self.logbox.Disable()
         self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(660,400))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
-        self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor",pos=(10,430))
+        self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor printer",pos=(10,430))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
         self.status=self.CreateStatusBar()
         self.status.SetStatusText("Not connected to printer.")
         self.Bind(wx.EVT_CLOSE, self.kill)
+        for i in self.cpbuttons:
+            btn=wx.Button(self.panel,-1,i[0],pos=i[2],size=i[4])
+            btn.SetBackgroundColour(i[3])
+            btn.SetForegroundColour("black")
+            btn.properties=i
+            btn.Bind(wx.EVT_BUTTON,self.procbutton)
+            self.btndict[i[1]]=btn
         pass
+        
+    def procbutton(self,e):
+        try:
+            self.onecmd(e.GetEventObject().properties[1])
+        except:
+            print "event object missing"
+            raise
         
     def kill(self,e):
         self.statuscheck=0
@@ -121,10 +189,8 @@ class PronterWindow(wx.Frame):
         command=self.commandbox.GetValue()
         if not len(command):
             return
-        if(command[0]=="g" or command[0]=="m"):
-            command=command.upper()
         wx.CallAfter(self.logbox.AppendText,">>>"+command+"\n")
-        self.p.send_now(command)
+        self.onecmd(command)
         
     def statuschecker(self):
         try:
