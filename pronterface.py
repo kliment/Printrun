@@ -43,6 +43,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         xcol=(255,255,128)
         ycol=(180,180,255)
         zcol=(180,255,180)
+        self.temps={"pla":"210","abs":"230","off":"0"}
+        self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.cpbuttons=[
         ["X+100",("move X 100"),(0,110),xcol,(55,25)],
         ["X+10",("move X 10"),(0,135),xcol,(55,25)],
@@ -69,24 +71,63 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Z-0.1",("move Z -0.1"),(110,210),zcol,(55,25)],
         ["Z-1",("move Z -1"),(110,235),zcol,(55,25)],
         ["Z-10",("move Z -10"),(110,260),zcol,(55,25)],
-        ["Home",("move Z -10"),(110,310),(250,250,250),(55,25)],
+        ["Home",("home"),(110,310),(250,250,250),(55,25)],
         ]
         self.btndict={}
         self.popmenu()
         self.popwindow()
         self.recvlisteners=[]
-        self.p.recvcb=self.recvcb
+        #self.p.recvcb=self.recvcb
         self.sdfiles=[]
         self.listing=0
         self.sdprinting=0
-        self.temps={"pla":"210","abs":"230","off":"0"}
-        self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.percentdone=0
         self.t=Tee(self.catchprint)
         self.stdout=sys.stdout
         
     #Commands to implement:
     #settemp/bedtemp/extrude/reverse(control panel)
+    
+    def do_settemp(self,l=""):
+        try:
+            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
+                l=self.htemp.GetValue().split()[0]
+            l=l.lower().replace(",",".")
+            for i in self.temps.keys():
+                l=l.replace(i,self.temps[i])
+            f=float(l)
+            if f>=0:
+                if self.p.online:
+                    self.p.send_now("M104 S"+l)
+                    print "Setting hotend temperature to ",f," degrees Celsius."
+                    self.htemp.SetValue(l)
+                else:
+                    print "Printer is not online."
+            else:
+                print "You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."
+        except:
+            print "You must enter a temperature."
+    
+    def do_bedtemp(self,l=""):
+        try:
+            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
+                l=self.btemp.GetValue().split()[0]
+            l=l.lower().replace(",",".")
+            for i in self.bedtemps.keys():
+                l=l.replace(i,self.bedtemps[i])
+            f=float(l)
+            if f>=0:
+                if self.p.online:
+                    self.p.send_now("M140 S"+l)
+                    print "Setting bed temperature to ",f," degrees Celsius."
+                    self.btemp.SetValue(l)
+                else:
+                    print "Printer is not online."
+            else:
+                print "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
+        except:
+            print "You must enter a temperature."
+            
     
     def catchprint(self,l):
         wx.CallAfter(self.logbox.AppendText,l)
@@ -166,6 +207,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btn.properties=i
             btn.Bind(wx.EVT_BUTTON,self.procbutton)
             self.btndict[i[1]]=btn
+        wx.StaticText(self.panel,-1,"Heater:",pos=(0,345))
+        self.htemp=wx.ComboBox(self.panel, -1,
+                choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
+                style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(50,337))
+        self.htemp.SetValue("0")
+        self.settbtn=wx.Button(self.panel,-1,"Set",size=(40,-1),pos=(150,337))
+        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
+        
+        wx.StaticText(self.panel,-1,"Bed:",pos=(0,375))
+        self.btemp=wx.ComboBox(self.panel, -1,
+                choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
+                style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(50,367))
+        self.btemp.SetValue("0")
+        self.setbbtn=wx.Button(self.panel,-1,"Set",size=(40,-1),pos=(150,367))
+        self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
+        
         pass
         
     def procbutton(self,e):

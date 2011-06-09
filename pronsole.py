@@ -514,7 +514,9 @@ class pronsole(cmd.Cmd):
     
     def do_settemp(self,l):
         try:
-            l=l.lower().replace(",",".").replace("abs","230").replace("pla","210").replace("off","0")
+            l=l.lower().replace(",",".")
+            for i in self.temps.keys():
+                l=l.replace(i,self.temps[i])
             f=float(l)
             if f>=0:
                 if self.p.online:
@@ -538,7 +540,9 @@ class pronsole(cmd.Cmd):
     
     def do_bedtemp(self,l):
         try:
-            l=l.lower().replace(",",".").replace("abs","110").replace("pla","65").replace("off","0")
+            l=l.lower().replace(",",".")
+            for i in self.bedtemps.keys():
+                l=l.replace(i,self.bedtemps[i])
             f=float(l)
             if f>=0:
                 if self.p.online:
