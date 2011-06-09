@@ -1,4 +1,4 @@
 # Sample .pronsolerc file - copy this into your home directory
-alias up move Z 10
-alias loud !self.p.loud = 1
-alias quiet !self.p.loud = 0
+macro up move Z 10
+macro loud !self.p.loud = 1
+macro quiet !self.p.loud = 0
