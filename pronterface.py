@@ -185,7 +185,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         scan=self.scanserial()
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=scan,
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
+                style=wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
         try:
             self.serialport.SetValue(scan[0])
         except:
