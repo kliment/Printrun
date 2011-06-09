@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 import cmd, printcore, sys 
-#help(cmd)
 import glob, os, time
 if os.name=="nt":
     try:

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from serial import Serial
 from threading import Thread
 import time

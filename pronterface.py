@@ -437,7 +437,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         thread(target=self.skein_monitor).start()
         
     def loadfile(self,event):
-        dlg=wx.FileDialog(self,"Open file to print")
+        dlg=wx.FileDialog(self,"Open file to print",style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST|wx.FD_CHANGE_DIR)
         dlg.SetWildcard("STL and GCODE files (;*.gcode;*.g;*.stl;)")
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
