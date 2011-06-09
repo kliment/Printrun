@@ -42,6 +42,8 @@ class pronsole(cmd.Cmd):
         self.macros={}
         self.processing_rc=False
         self.lastport = (None,None)
+        self.monitoring=0
+        
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -393,7 +395,7 @@ class pronsole(cmd.Cmd):
         if not self.p.online:
             print "Printer is not online. Try connect to it first."
             return
-        self.listing=0
+        self.listing=2
         self.sdfiles=[]
         self.recvlisteners+=[self.listfiles]
         self.p.send_now("M20")
@@ -440,7 +442,7 @@ class pronsole(cmd.Cmd):
         if not self.p.online:
             print "Printer is not online. Try connect to it first."
             return
-        self.listing=0
+        self.listing=2
         self.sdfiles=[]
         self.recvlisteners+=[self.listfiles]
         self.p.send_now("M20")
@@ -460,7 +462,7 @@ class pronsole(cmd.Cmd):
         
     def complete_sdprint(self, text, line, begidx, endidx):
         if self.sdfiles==[] and self.p.online:
-            self.listing=0
+            self.listing=2
             self.recvlisteners+=[self.listfiles]
             self.p.send_now("M20")
             time.sleep(0.5)
@@ -470,6 +472,11 @@ class pronsole(cmd.Cmd):
     def recvcb(self,l):
         if "T:" in l:
             self.tempreadings=l
+        tstring=l.replace("\r","").replace("\n","")
+        if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
+            print tstring
+            sys.stdout.write(self.prompt)
+            sys.stdout.flush()
         for i in self.recvlisteners:
             i(l)
     
@@ -712,6 +719,7 @@ class pronsole(cmd.Cmd):
             except:
                 print "Invalid period given."
         print "Updating values every %f seconds."%(interval,)
+        self.monitoring=1
         try:
             while(1):
                 self.p.send_now("M105")
@@ -728,6 +736,7 @@ class pronsole(cmd.Cmd):
         except:
             print "Done monitoring."
             pass
+        self.monitoring=0
             
     def help_monitor(self):
         print "Monitor a machine's temperatures and an SD print's status."

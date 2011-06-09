@@ -90,8 +90,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.stdout=sys.stdout
         self.mini=False
         
-    #Commands to implement:
-    #settemp/bedtemp/extrude/reverse(control panel)
     
     def do_extrude(self,l=""):
         try:
