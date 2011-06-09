@@ -218,7 +218,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.logbox.SetEditable(0)
         self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
-        self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor printer",pos=(500,40))
+        self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor\nprinter",pos=(450,37))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
         self.status=self.CreateStatusBar()
         self.status.SetStatusText("Not connected to printer.")
@@ -462,8 +462,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             print "Skeinforge not found. \nPlease copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
             return
         if not os.path.exists("skeinforge/__init__.py"):
-            with open("skeinforge/__init__.py","w"):
-                pass
+            f=open("skeinforge/__init__.py","w")
+            f.close()
         self.cout=StringIO.StringIO()
         self.filename=filename
         self.stopsf=0

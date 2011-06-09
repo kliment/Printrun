@@ -180,10 +180,11 @@ class pronsole(cmd.Cmd):
     def preloop(self):
         self.processing_rc=True
         try:
-            with open(os.path.join(os.path.expanduser("~"),".pronsolerc")) as rc:
-                for rc_cmd in rc:
-                    if not rc_cmd.lstrip().startswith("#"):
-                        self.onecmd(rc_cmd)
+            rc=open(os.path.join(os.path.expanduser("~"),".pronsolerc"))
+            for rc_cmd in rc:
+                if not rc_cmd.lstrip().startswith("#"):
+                    self.onecmd(rc_cmd)
+            rc.close()
         except IOError:
             pass
         self.processing_rc=False
@@ -768,8 +769,8 @@ class pronsole(cmd.Cmd):
             print "Skeinforge not found. \nPlease copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
             return
         if not os.path.exists("skeinforge/__init__.py"):
-            with open("skeinforge/__init__.py","w"):
-                pass
+            f=open("skeinforge/__init__.py","w")
+            f.close()
         try:
             from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
             from skeinforge.skeinforge_application import skeinforge
