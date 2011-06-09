@@ -27,6 +27,8 @@ class Tee(object):
     def write(self, data):
         self.target(data)
         self.stdout.write(data)
+    def flush(self):
+        self.stdout.flush()
 
 
 class PronterWindow(wx.Frame,pronsole.pronsole):
@@ -71,22 +73,42 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Z-0.1",("move Z -0.1"),(110,210),zcol,(55,25)],
         ["Z-1",("move Z -1"),(110,235),zcol,(55,25)],
         ["Z-10",("move Z -10"),(110,260),zcol,(55,25)],
-        ["Home",("home"),(110,310),(250,250,250),(55,25)],
+        ["Home\nall",("home"),(110,310-25),(250,250,250),(55,50)],
+        ["Extrude",("extrude"),(0,397+1),(200,200,200),(65,25)],
+        ["Reverse",("reverse"),(0,397+28),(200,200,200),(65,25)],
         ]
         self.btndict={}
         self.popmenu()
         self.popwindow()
         self.recvlisteners=[]
-        #self.p.recvcb=self.recvcb
+        self.p.recvcb=self.recvcb
         self.sdfiles=[]
         self.listing=0
         self.sdprinting=0
         self.percentdone=0
         self.t=Tee(self.catchprint)
         self.stdout=sys.stdout
+        self.mini=False
         
     #Commands to implement:
     #settemp/bedtemp/extrude/reverse(control panel)
+    
+    def do_extrude(self,l=""):
+        try:
+            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
+                l=str(self.edist.GetValue())
+            pronsole.pronsole.do_extrude(self,l)
+        except:
+            raise
+    
+    def do_reverse(self,l=""):
+        try:
+            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
+                l=str(self.edist.GetValue())
+            pronsole.pronsole.do_extrude(self,l)
+        except:
+            pass
+    
     
     def do_settemp(self,l=""):
         try:
@@ -181,21 +203,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
         self.loadbtn=wx.Button(self.panel,-1,"Load file",pos=(0,40))
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
-        self.printbtn=wx.Button(self.panel,-1,"Print",pos=(90,40))
+        self.printbtn=wx.Button(self.panel,-1,"Print",pos=(270,40))
         self.printbtn.Bind(wx.EVT_BUTTON,self.printfile)
-        self.uploadbtn=wx.Button(self.panel,-1,"SD Upload",pos=(90,75))
+        self.uploadbtn=wx.Button(self.panel,-1,"SD Upload",pos=(90,40))
         self.uploadbtn.Bind(wx.EVT_BUTTON,self.upload)
-        self.pausebtn=wx.Button(self.panel,-1,"Pause",pos=(180,40))
+        self.pausebtn=wx.Button(self.panel,-1,"Pause",pos=(360,40))
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
-        self.sdprintbtn=wx.Button(self.panel,-1,"SD Print",pos=(180,75))
+        self.sdprintbtn=wx.Button(self.panel,-1,"SD Print",pos=(180,40))
         self.sdprintbtn.Bind(wx.EVT_BUTTON,self.sdprintfile)
-        self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(400,400),style = wx.TE_PROCESS_ENTER)
+        self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
-        self.logbox=wx.TextCtrl(self.panel,size=(350,300),pos=(400,75),style = wx.TE_MULTILINE)
+        self.logbox=wx.TextCtrl(self.panel,size=(350,340),pos=(440,75),style = wx.TE_MULTILINE)
         self.logbox.Disable()
-        self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(660,400))
+        self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
-        self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor printer",pos=(10,430))
+        self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor printer",pos=(500,40))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
         self.status=self.CreateStatusBar()
         self.status.SetStatusText("Not connected to printer.")
@@ -210,20 +232,37 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.StaticText(self.panel,-1,"Heater:",pos=(0,345))
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(50,337))
+                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,30),pos=(45,337))
         self.htemp.SetValue("0")
-        self.settbtn=wx.Button(self.panel,-1,"Set",size=(40,-1),pos=(150,337))
+        self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,337))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         
         wx.StaticText(self.panel,-1,"Bed:",pos=(0,375))
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(50,367))
+                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,30),pos=(45,367))
         self.btemp.SetValue("0")
-        self.setbbtn=wx.Button(self.panel,-1,"Set",size=(40,-1),pos=(150,367))
+        self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,367))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         
+        self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,30),pos=(70,397+10))
+        wx.StaticText(self.panel,-1,"mm",pos=(130,407+10))
+        self.minibtn=wx.Button(self.panel,-1,"Mini mode",pos=(690,0))
+        self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
+        
         pass
+        
+    def toggleview(self,e):
+        if(self.mini):
+            self.mini=False
+            self.SetSize((800,500))
+            self.minibtn.SetLabel("Mini mode")
+            
+        else:
+            self.mini=True
+            self.SetSize((800,120))
+            self.minibtn.SetLabel("Full mode")
+                
         
     def procbutton(self,e):
         try:
@@ -254,12 +293,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             while(self.statuscheck):
                 string=""
                 if(self.p.online):
-                    string+="Printer is online."
+                    string+="Printer is online. "
                 string+=(self.tempreport.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))+" "
                 if self.sdprinting:
-                    string+= "SD printing:%04.2f %%"%(self.percentdone,)
+                    string+= " SD printing:%04.2f %%"%(self.percentdone,)
                 if self.p.printing:
-                    string+= "printing:%04.2f %%"%(100*float(self.p.queueindex)/len(self.p.mainqueue),)
+                    string+= " Printing:%04.2f %%"%(100*float(self.p.queueindex)/len(self.p.mainqueue),)
                 wx.CallAfter(self.status.SetStatusText,string)
                 if(self.monitor and self.p.online):
                     if self.sdprinting:
@@ -292,9 +331,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if "T:" in l:
             self.tempreport=l
         tstring=l.replace("\n","").replace("\r","")
-        print tstring
+        #print tstring
         if(tstring!="ok"):
-            wx.CallAfter(self.logbox.AppendText,tstring+"\n")
+            print tstring
+            #wx.CallAfter(self.logbox.AppendText,tstring+"\n")
         for i in self.recvlisteners:
             i(l)
     
@@ -361,7 +401,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
             from skeinforge.skeinforge_application import skeinforge
             from skeinforge.fabmetheus_utilities import settings
-            (self.capture(skeinforge_craft.writeOutput,self.filename,False))
+            skeinforge_craft.writeOutput(self.filename,False)
             #print len(self.cout.getvalue().split())
             self.stopsf=1
         except:
@@ -372,7 +412,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def skein_monitor(self):
         while(not self.stopsf):
             try:
-                wx.CallAfter(self.status.SetStatusText,"Skeining "+self.cout.getvalue().split("\n")[-1])
+                wx.CallAfter(self.status.SetStatusText,"Skeining...")#+self.cout.getvalue().split("\n")[-1])
             except:
                 pass
             time.sleep(0.1)
