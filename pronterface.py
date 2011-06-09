@@ -6,7 +6,11 @@ except:
     raise
 import printcore, os, sys, glob, time, threading, traceback, StringIO
 thread=threading.Thread
+winsize=(800,500)
+winssize=(800,120)
 if os.name=="nt":
+    winsize=(800,530)
+    winssize=(800,140)
     try:
         import _winreg
     except:
@@ -32,7 +36,7 @@ class Tee(object):
 
 
 class PronterWindow(wx.Frame,pronsole.pronsole):
-    def __init__(self, filename=None,size=(800,500)):
+    def __init__(self, filename=None,size=winsize):
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
@@ -287,12 +291,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def toggleview(self,e):
         if(self.mini):
             self.mini=False
-            self.SetSize((800,500))
+            self.SetSize(winsize)
             self.minibtn.SetLabel("Mini mode")
             
         else:
             self.mini=True
-            self.SetSize((800,120))
+            self.SetSize(winssize)
             self.minibtn.SetLabel("Full mode")
                 
         
