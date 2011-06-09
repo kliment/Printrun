@@ -49,7 +49,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.feedz=200
         self.feede=300
         self.paused=False
-        xcol=(255,255,128)
+        xcol=(245,245,108)
         ycol=(180,180,255)
         zcol=(180,255,180)
         self.temps={"pla":"210","abs":"230","off":"0"}
@@ -59,7 +59,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["X+10",("move X 10"),(0,135),xcol,(55,25)],
         ["X+1",("move X 1"),(0,160),xcol,(55,25)],
         ["X+0.1",("move X 0.1"),(0,185),xcol,(55,25)],
-        ["HomeX",("home X"),(0,210),xcol,(55,25)],
+        ["HomeX",("home X"),(0,210),(205,205,78),(55,25)],
         ["X-0.1",("move X -0.1"),(0,235),xcol,(55,25)],
         ["X-1",("move X -1"),(0,260),xcol,(55,25)],
         ["X-10",("move X -10"),(0,285),xcol,(55,25)],
@@ -68,7 +68,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Y+10",("move Y 10"),(55,135),ycol,(55,25)],
         ["Y+1",("move Y 1"),(55,160),ycol,(55,25)],
         ["Y+0.1",("move Y 0.1"),(55,185),ycol,(55,25)],
-        ["HomeY",("home Y"),(55,210),ycol,(55,25)],
+        ["HomeY",("home Y"),(55,210),(150,150,205),(55,25)],
         ["Y-0.1",("move Y -0.1"),(55,235),ycol,(55,25)],
         ["Y-1",("move Y -1"),(55,260),ycol,(55,25)],
         ["Y-10",("move Y -10"),(55,285),ycol,(55,25)],
@@ -76,7 +76,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Z+10",("move Z 10"),(110,110+25),zcol,(55,25)],
         ["Z+1",("move Z 1"),(110,135+25),zcol,(55,25)],
         ["Z+0.1",("move Z 0.1"),(110,160+25),zcol,(55,25)],
-        ["HomeZ",("home Z"),(110,185+25),zcol,(55,25)],
+        ["HomeZ",("home Z"),(110,185+25),(150,205,150),(55,25)],
         ["Z-0.1",("move Z -0.1"),(110,210+25),zcol,(55,25)],
         ["Z-1",("move Z -1"),(110,235+25),zcol,(55,25)],
         ["Z-10",("move Z -10"),(110,260+25),zcol,(55,25)],
