@@ -193,7 +193,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.StaticText(self.panel,-1,"@",pos=(250,5))
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200"],
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(275,0))
+                style=wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(275,0))
         self.baud.SetValue("115200")
         self.connectbtn=wx.Button(self.panel,-1,"Connect",pos=(380,0))
         self.connectbtn.SetToolTipString("Connect to the printer")
@@ -233,7 +233,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.StaticText(self.panel,-1,"Heater:",pos=(0,343))
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
+                style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
         self.htemp.SetValue("0")
         self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
@@ -241,7 +241,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.StaticText(self.panel,-1,"Bed:",pos=(0,373))
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
+                style=wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
         self.btemp.SetValue("0")
         self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,365))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
