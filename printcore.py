@@ -101,7 +101,7 @@ class printcore():
                 #callback for errors
                 pass
             if "Resend" in line or "rs" in line:
-                toresend=int(line.replace(":"," ").split()[-1])
+                toresend=int(line.replace("N:"," ").replace("N"," ").split()[-1])
                 self.resendfrom=toresend
                 self.clear=True
         self.clear=True
