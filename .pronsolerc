@@ -2,4 +2,3 @@
 alias up move Z 10
 alias loud !self.p.loud = 1
 alias quiet !self.p.loud = 0
-alias home_all G28

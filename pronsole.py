@@ -783,10 +783,49 @@ class pronsole(cmd.Cmd):
         print "skein filename.stl view - create gcode file and view using skeiniso"
         print "skein set - adjust skeinforge settings"
         
+        
+    def do_home(self,l):
+        if not self.p.online:
+            print "Printer is not online. Unable to move."
+            return
+        if self.p.printing:
+            print "Printer is currently printing. Please pause the print before you issue manual commands."
+            return
+        if "x" in l.lower():
+            self.do_move("X -250")
+            send_now("G92 X0")
+            self.do_move("X 1")
+            self.do_move("X -1")
+            send_now("G92 X0")
+        if "y" in l.lower():
+            self.do_move("Y -250")
+            send_now("G92 Y0")
+            self.do_move("Y 1")
+            self.do_move("Y -1")
+            send_now("G92 Y0")
+        if "z" in l.lower():
+            self.do_move("Z -250")
+            send_now("G92 Z0")
+            self.do_move("Z 1")
+            self.do_move("Z -1")
+            send_now("G92 Z0")
+        if not len(l):
+            send_now("G28")
+            
+    def help_home(self):
+        print "Homes the printer"
+        print "home - homes all axes (Using G28)"
+        print "home xy - homes x and y axes (Using G1 and G92)"
+        print "home z - homes z axis only (Using G1 and G92)"
+        print "home xyz - homes all axes (Using G1 and G92)"
+        
+
+if __name__=="__main__":
     
-interp=pronsole()
-try:
-    interp.cmdloop()
-except:
-    interp.p.disconnect()
-    raise
+    interp=pronsole()
+    try:
+        interp.cmdloop()
+    except:
+        interp.p.disconnect()
+        raise
+    
