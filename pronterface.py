@@ -41,6 +41,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
+        self.feedxy=3000
+        self.feedz=200
+        self.feede=300
         self.paused=False
         xcol=(255,255,128)
         ycol=(180,180,255)
@@ -74,8 +77,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Z-1",("move Z -1"),(110,235+25),zcol,(55,25)],
         ["Z-10",("move Z -10"),(110,260+25),zcol,(55,25)],
         ["Home",("home"),(110,310),(250,250,250),(55,25)],
-        ["Extrude",("extrude"),(0,397+1),(200,200,200),(65,25)],
-        ["Reverse",("reverse"),(0,397+28),(200,200,200),(65,25)],
+        ["Extrude",("extrude"),(0,397+1),(225,200,200),(65,25)],
+        ["Reverse",("reverse"),(0,397+28),(225,200,200),(65,25)],
         ]
         self.btndict={}
         self.popmenu()
@@ -227,28 +230,59 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btn.properties=i
             btn.Bind(wx.EVT_BUTTON,self.procbutton)
             self.btndict[i[1]]=btn
-        wx.StaticText(self.panel,-1,"Heater:",pos=(0,345))
+        wx.StaticText(self.panel,-1,"Heater:",pos=(0,343))
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,30),pos=(45,337))
+                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
         self.htemp.SetValue("0")
-        self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,337))
+        self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         
-        wx.StaticText(self.panel,-1,"Bed:",pos=(0,375))
+        wx.StaticText(self.panel,-1,"Bed:",pos=(0,373))
         self.btemp=wx.ComboBox(self.panel, -1,
-                choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,30),pos=(45,367))
+                choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
+                style=wx.CB_SIMPLE|wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
         self.btemp.SetValue("0")
-        self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,367))
+        self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,365))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         
-        self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,30),pos=(70,397+10))
-        wx.StaticText(self.panel,-1,"mm",pos=(130,407+10))
+        self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,25),pos=(70,398))
+        self.edist.SetBackgroundColour((225,200,200))
+        self.edist.SetForegroundColour("black")
+        wx.StaticText(self.panel,-1,"mm",pos=(130,407))
         self.minibtn=wx.Button(self.panel,-1,"Mini mode",pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
+        self.xyfeedc=wx.SpinCtrl(self.panel,-1,"3000",min=0,max=50000,size=(60,25),pos=(25,83))
+        wx.StaticText(self.panel,-1,"mm/min",pos=(130,407+27))
+        wx.StaticText(self.panel,-1,"mm/min",pos=(60,69))
+        wx.StaticText(self.panel,-1,"XY:",pos=(2,90-2))
+        wx.StaticText(self.panel,-1,"Z:",pos=(90,90-2))
+        self.zfeedc=wx.SpinCtrl(self.panel,-1,"200",min=0,max=50000,size=(60,25),pos=(105,83))
+        self.efeedc=wx.SpinCtrl(self.panel,-1,"300",min=0,max=50000,size=(60,25),pos=(70,397+28))
+        self.efeedc.SetBackgroundColour((225,200,200))
+        self.efeedc.SetForegroundColour("black")
+        self.efeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
+        self.xyfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
+        self.zfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
+        self.zfeedc.SetBackgroundColour((180,255,180))
+        self.zfeedc.SetForegroundColour("black")
         
         pass
+        
+    def setfeeds(self,e):
+        try:
+            self.feede=int(self.efeedc.GetValue())
+        except:
+            pass
+        try:
+            self.feedz=int(self.zfeedc.GetValue())
+        except:
+            pass
+        try:
+            self.feedxy=int(self.xyfeedc.GetValue())
+        except:
+            pass
+        
         
     def toggleview(self,e):
         if(self.mini):
