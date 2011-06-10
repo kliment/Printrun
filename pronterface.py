@@ -222,7 +222,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.logbox.SetEditable(0)
         self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
-        self.monitorbox=wx.CheckBox(self.panel,-1,"Monitor\nprinter",pos=(450,37))
+        self.monitorbox=wx.CheckBox(self.panel,-1,"",pos=(450,37))
+        wx.StaticText(self.panel,-1,"Monitor\nprinter",pos=(470,37))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
         self.status=self.CreateStatusBar()
         self.status.SetStatusText("Not connected to printer.")
@@ -499,12 +500,24 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
                 
     def printfile(self,event):
+        if self.paused:
+            self.p.paused=0
+            self.pausebtn.SetLabel("Pause")
+            self.printbtn.SetLabel("Print")
+            self.paused=0
+            if self.sdprinting:
+                self.p.send_now("M26 S0")
+                self.p.send_now("M24")
+                return
+        
         if self.f is None or not len(self.f):
             wx.CallAfter(self.status.SetStatusText,"No file loaded. Please use load first.")
             return
         if not self.p.online:
             wx.CallAfter(self.status.SetStatusText,"Not connected to printer.")
             return
+        self.pausebtn.Enable()
+        self.printbtn.SetLabel("Restart")
         self.p.startprint(self.f)
         
     def endupload(self):
@@ -571,18 +584,43 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             baud=int(self.baud.GetValue())
         except:
             pass
+        if self.paused:
+            self.p.paused=0
+            self.p.printing=0
+            self.pausebtn.SetLabel("Pause")
+            self.printbtn.SetLabel("Print")
+            self.paused=0
+            if self.sdprinting:
+                self.p.send_now("M26 S0")
         self.p.connect(port,baud)
         self.statuscheck=True
         threading.Thread(target=self.statuschecker).start()
         
+        
     def disconnect(self,event):
         self.p.disconnect()
         self.statuscheck=False
+        if self.paused:
+            self.p.paused=0
+            self.p.printing=0
+            self.pausebtn.SetLabel("Pause")
+            self.printbtn.SetLabel("Print")
+            self.paused=0
+            if self.sdprinting:
+                self.p.send_now("M26 S0")
+                
     
     def reset(self,event):
         dlg=wx.MessageDialog(self,"Are you sure you want to reset the printer?","Reset?",wx.YES|wx.NO)
         if dlg.ShowModal()==wx.ID_YES:
             self.p.reset()
+            if self.paused:
+                self.p.paused=0
+                self.p.printing=0
+                self.pausebtn.SetLabel("Pause")
+                self.printbtn.SetLabel("Print")
+                self.paused=0
+            
         
         
 if __name__ == '__main__':
