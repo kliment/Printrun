@@ -331,7 +331,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if(self.p.online):
                     string+="Printer is online. "
                 try:
-                    string+="Loaded "+os.path.split(self.name)[1]+" "
+                    string+="Loaded "+os.path.split(self.filename)[1]+" "
                 except:
                     pass
                 string+=(self.tempreport.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))+" "
