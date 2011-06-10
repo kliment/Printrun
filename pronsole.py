@@ -831,7 +831,7 @@ class pronsole(cmd.Cmd):
             self.p.send_now("G92 Y0")
         if "z" in l.lower():
             self.do_move("Z -250")
-            send_now("G92 Z0")
+            self.p.send_now("G92 Z0")
             self.do_move("Z 2")
             self.do_move("Z -3")
             self.p.send_now("G92 Z0")
