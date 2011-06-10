@@ -816,14 +816,18 @@ class pronsole(cmd.Cmd):
         if "x" in l.lower():
             self.do_move("X -250")
             self.p.send_now("G92 X0")
-            self.do_move("X 1")
-            self.do_move("X -1")
+            self.do_move("X 1 200")
+            self.do_move("X -1 200")
+            self.do_move("X 0.1")
+            self.do_move("X -0.1")
             self.p.send_now("G92 X0")
         if "y" in l.lower():
             self.do_move("Y -250")
             self.p.send_now("G92 Y0")
-            self.do_move("Y 1")
-            self.do_move("Y -1")
+            self.do_move("Y 1 200")
+            self.do_move("Y -1 200")
+            self.do_move("Y 0.1")
+            self.do_move("Y -0.1")
             self.p.send_now("G92 Y0")
         if "z" in l.lower():
             self.do_move("Z -250")

@@ -330,6 +330,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 string=""
                 if(self.p.online):
                     string+="Printer is online. "
+                try:
+                    string+="Loaded "+os.path.split(self.name)[1]+" "
+                except:
+                    pass
                 string+=(self.tempreport.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))+" "
                 if self.sdprinting:
                     string+= " SD printing:%04.2f %%"%(self.percentdone,)
