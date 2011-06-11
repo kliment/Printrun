@@ -6,10 +6,10 @@ except:
     raise
 import printcore, os, sys, glob, time, threading, traceback, StringIO
 thread=threading.Thread
-winsize=(800,500)
+winsize=(800,560)
 winssize=(800,120)
 if os.name=="nt":
-    winsize=(800,530)
+    winsize=(800,550)
     winssize=(800,140)
     try:
         import _winreg
@@ -52,35 +52,36 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         xcol=(245,245,108)
         ycol=(180,180,255)
         zcol=(180,255,180)
-        self.temps={"pla":"210","abs":"230","off":"0"}
+        self.temps={"pla":"200","abs":"230","off":"0"}
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.cpbuttons=[
-        ["X+100",("move X 100"),(0,110),xcol,(55,25)],
-        ["X+10",("move X 10"),(0,135),xcol,(55,25)],
-        ["X+1",("move X 1"),(0,160),xcol,(55,25)],
-        ["X+0.1",("move X 0.1"),(0,185),xcol,(55,25)],
-        ["HomeX",("home X"),(0,210),(205,205,78),(55,25)],
-        ["X-0.1",("move X -0.1"),(0,235),xcol,(55,25)],
-        ["X-1",("move X -1"),(0,260),xcol,(55,25)],
-        ["X-10",("move X -10"),(0,285),xcol,(55,25)],
-        ["X-100",("move X -100"),(0,310),xcol,(55,25)],
-        ["Y+100",("move Y 100"),(55,110),ycol,(55,25)],
-        ["Y+10",("move Y 10"),(55,135),ycol,(55,25)],
-        ["Y+1",("move Y 1"),(55,160),ycol,(55,25)],
-        ["Y+0.1",("move Y 0.1"),(55,185),ycol,(55,25)],
-        ["HomeY",("home Y"),(55,210),(150,150,205),(55,25)],
-        ["Y-0.1",("move Y -0.1"),(55,235),ycol,(55,25)],
-        ["Y-1",("move Y -1"),(55,260),ycol,(55,25)],
-        ["Y-10",("move Y -10"),(55,285),ycol,(55,25)],
-        ["Y-100",("move Y -100"),(55,310),ycol,(55,25)],
-        ["Z+10",("move Z 10"),(110,110+25),zcol,(55,25)],
-        ["Z+1",("move Z 1"),(110,135+25),zcol,(55,25)],
-        ["Z+0.1",("move Z 0.1"),(110,160+25),zcol,(55,25)],
-        ["HomeZ",("home Z"),(110,185+25),(150,205,150),(55,25)],
-        ["Z-0.1",("move Z -0.1"),(110,210+25),zcol,(55,25)],
-        ["Z-1",("move Z -1"),(110,235+25),zcol,(55,25)],
-        ["Z-10",("move Z -10"),(110,260+25),zcol,(55,25)],
-        ["Home",("home"),(110,310),(250,250,250),(55,25)],
+        ["Home\nX",("home X"),(0,203),(205,205,78),(40,40)],
+        ["-100",("move X -100"),(40,210),xcol,(40,25)],
+        ["-10",("move X -10"),(80,210),xcol,(40,25)],
+        ["-1",("move X -1"),(120,210),xcol,(40,25)],
+        ["-0.1",("move X -0.1"),(160,210),xcol,(40,25)],
+        ["+0.1",("move X 0.1"),(240,210),xcol,(40,25)],
+        ["+1",("move X 1"),(280,210),xcol,(40,25)],
+        ["+10",("move X 10"),(320,210),xcol,(40,25)],
+        ["+100",("move X 100"),(360,210),xcol,(40,25)],
+        ["+100",("move Y 100"),(200,110),ycol,(40,25)],
+        ["+10",("move Y 10"),(200,135),ycol,(40,25)],
+        ["+1",("move Y 1"),(200,160),ycol,(40,25)],
+        ["+0.1",("move Y 0.1"),(200,185),ycol,(40,25)],
+        ["-0.1",("move Y -0.1"),(200,235),ycol,(40,25)],
+        ["-1",("move Y -1"),(200,260),ycol,(40,25)],
+        ["-10",("move Y -10"),(200,285),ycol,(40,25)],
+        ["-100",("move Y -100"),(200,310),ycol,(40,25)],
+        ["Home\nY",("home Y"),(195,335),(150,150,205),(50,40)],
+        ["+10",("move Z 10"),(385,135),zcol,(40,25)],
+        ["+1",("move Z 1"),(385,160),zcol,(40,25)],
+        ["+0.1",("move Z 0.1"),(385,185),zcol,(40,25)],
+        ["-0.1",("move Z -0.1"),(385,235),zcol,(40,25)],
+        ["-1",("move Z -1"),(385,260),zcol,(40,25)],
+        ["-10",("move Z -10"),(385,285),zcol,(40,25)],
+        ["Home\nZ",("home Z"),(380,335),(150,205,150),(50,40)],
+       
+        ["Home\nALL",("home"),(5,330),(250,250,250),(60,60)],
         ["Extrude",("extrude"),(0,397+1),(225,200,200),(65,25)],
         ["Reverse",("reverse"),(0,397+28),(225,200,200),(65,25)],
         ]
@@ -198,7 +199,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200"],
                 style=wx.CB_DROPDOWN|wx.CB_SORT, size=(90,30),pos=(275,0))
-        self.baud.SetValue("115200")
+        self.baud.SetValue("57600")
         self.connectbtn=wx.Button(self.panel,-1,"Connect",pos=(380,0))
         self.connectbtn.SetToolTipString("Connect to the printer")
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
@@ -235,20 +236,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btn.properties=i
             btn.Bind(wx.EVT_BUTTON,self.procbutton)
             self.btndict[i[1]]=btn
-        wx.StaticText(self.panel,-1,"Heater:",pos=(0,343))
+        wx.StaticText(self.panel,-1,"Temperatures: (oC)",pos=(15,118))
+        wx.StaticText(self.panel,-1,"Extruder:",pos=(2,143))
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
+                style=wx.CB_DROPDOWN, size=(90,25),pos=(52,138))
         self.htemp.SetValue("0")
-        self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,335))
+        self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(142,137))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         
-        wx.StaticText(self.panel,-1,"Bed:",pos=(0,373))
+        wx.StaticText(self.panel,-1,"Bed:",pos=(2,170))
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
+                style=wx.CB_DROPDOWN, size=(90,25),pos=(52,165))
         self.btemp.SetValue("0")
-        self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,365))
+        self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(142,164))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         
         self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,25),pos=(70,398))
@@ -257,12 +259,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.StaticText(self.panel,-1,"mm",pos=(130,407))
         self.minibtn=wx.Button(self.panel,-1,"Mini mode",pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
-        self.xyfeedc=wx.SpinCtrl(self.panel,-1,"3000",min=0,max=50000,size=(60,25),pos=(25,83))
+        self.xyfeedc=wx.SpinCtrl(self.panel,-1,"3000",min=0,max=50000,size=(60,25),pos=(25,88))
         wx.StaticText(self.panel,-1,"mm/min",pos=(130,407+27))
-        wx.StaticText(self.panel,-1,"mm/min",pos=(60,69))
-        wx.StaticText(self.panel,-1,"XY:",pos=(2,90-2))
-        wx.StaticText(self.panel,-1,"Z:",pos=(90,90-2))
-        self.zfeedc=wx.SpinCtrl(self.panel,-1,"200",min=0,max=50000,size=(60,25),pos=(105,83))
+        wx.StaticText(self.panel,-1,"Feedrate (mm/min)",pos=(15,69))
+        wx.StaticText(self.panel,-1,"XY:",pos=(2,88+3))
+        wx.StaticText(self.panel,-1,"Z:",pos=(90,88+3))
+        self.zfeedc=wx.SpinCtrl(self.panel,-1,"200",min=0,max=50000,size=(60,25),pos=(105,88))
         self.efeedc=wx.SpinCtrl(self.panel,-1,"300",min=0,max=50000,size=(60,25),pos=(70,397+28))
         self.efeedc.SetBackgroundColour((225,200,200))
         self.efeedc.SetForegroundColour("black")
