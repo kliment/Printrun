@@ -109,7 +109,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def do_reverse(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
-                l=str(self.edist.GetValue())
+                l=str(self.edist.GetValue()*-1)
             pronsole.pronsole.do_extrude(self,l)
         except:
             pass
