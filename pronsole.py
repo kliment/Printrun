@@ -670,6 +670,8 @@ class pronsole(cmd.Cmd):
         self.p.send_now("G91")
         self.p.send_now("G1 E"+str(length)+" F"+str(feed))
         self.p.send_now("G90")
+        self.p.send_now("G92 E0")
+
         
     def help_extrude(self):
         print "Extrudes a length of filament, 5mm by default, or the number of mm given as a parameter"
