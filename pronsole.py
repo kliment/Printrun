@@ -858,5 +858,5 @@ if __name__=="__main__":
         interp.cmdloop()
     except:
         interp.p.disconnect()
-        raise
+        #raise
     

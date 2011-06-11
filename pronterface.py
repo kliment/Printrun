@@ -118,7 +118,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def do_settemp(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
-                l=self.htemp.GetValue().split()[0]
+                l=str(self.htemp.GetValue().split()[0])
             l=l.lower().replace(",",".")
             for i in self.temps.keys():
                 l=l.replace(i,self.temps[i])
@@ -138,7 +138,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def do_bedtemp(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
-                l=self.btemp.GetValue().split()[0]
+                l=str(self.btemp.GetValue().split()[0])
             l=l.lower().replace(",",".")
             for i in self.bedtemps.keys():
                 l=l.replace(i,self.bedtemps[i])
@@ -323,7 +323,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if not len(command):
             return
         wx.CallAfter(self.logbox.AppendText,">>>"+command+"\n")
-        self.onecmd(command)
+        self.onecmd(str(command))
         
     def statuschecker(self):
         try:
@@ -543,7 +543,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             return
         dlg=wx.TextEntryDialog(self,"Enter a target filename in 8.3 format:","Pick SD filename",dosify(self.filename))
         if dlg.ShowModal()==wx.ID_OK:
-            self.p.send_now("M28 "+dlg.GetValue())
+            self.p.send_now("M28 "+str(dlg.GetValue()))
             self.recvlisteners+=[self.uploadtrigger]
         pass
         
@@ -578,7 +578,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         if self.serialport.GetValue()!="":
-            port=self.serialport.GetValue()
+            port=str(self.serialport.GetValue())
         baud=115200
         try:
             baud=int(self.baud.GetValue())
