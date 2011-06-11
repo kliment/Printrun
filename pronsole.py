@@ -835,15 +835,20 @@ class pronsole(cmd.Cmd):
             self.do_move("Z 2")
             self.do_move("Z -3")
             self.p.send_now("G92 Z0")
+        if "e" in l.lower():
+            self.p.send_now("G92 E0")
         if not len(l):
             self.p.send_now("G28")
+            self.p.send_now("G92 E0")
             
     def help_home(self):
         print "Homes the printer"
-        print "home - homes all axes (Using G28)"
+        print "home - homes all axes and zeroes the extruder(Using G28)"
         print "home xy - homes x and y axes (Using G1 and G92)"
         print "home z - homes z axis only (Using G1 and G92)"
+        print "home e - set extruder position to zero (Using G92)"
         print "home xyz - homes all axes (Using G1 and G92)"
+        print "home xyze - homes all axes and zeroes the extruder (Using G1 and G92)"
         
 
 if __name__=="__main__":
