@@ -15,6 +15,9 @@ if os.name=="nt":
         import _winreg
     except:
         pass
+if sys.platform=="darwin":
+    winssize=(800,110)        
+
 
 import pronsole
 
@@ -109,7 +112,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def do_reverse(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
-                l=str(self.edist.GetValue()*-1)
+                l=str(float(self.edist.GetValue())*-1.0)
             pronsole.pronsole.do_extrude(self,l)
         except:
             pass
@@ -176,6 +179,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def popmenu(self):
         self.menustrip = wx.MenuBar()
         m = wx.Menu()
+        self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"Skeinforge settings"," Adjust skeinforge settings"))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"Close"," Closes the Window"))
         self.menustrip.Append(m,"&Print")
         self.SetMenuBar(self.menustrip)

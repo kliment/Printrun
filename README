@@ -5,6 +5,24 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
 printcore.py is a library that makes writing reprap hosts easy
 pronsole.py is an interactive command-line host software with tabcompletion goodness
 pronterface.py is a graphical host software with the same functionality as pronsole
+INSTALLING DEPENDENCIES
+
+On Windows, download the following:
+http://python.org/ftp/python/2.7.2/python-2.7.2.msi
+http://pypi.python.org/packages/any/p/pyserial/pyserial-2.5.win32.exe
+http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py27.exe
+http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.win32.exe
+
+On Ubuntu/debian, do:
+apt-get install python-serial python-wxgtk2.8
+
+On Mac OS X, download and install:
+http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
+Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
+Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
+defaults write com.apple.versioner.python Prefer-32-Bit -bool yes
+sudo python setup.py install
+Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.zip
 
 USING PRONTERFACE
 
