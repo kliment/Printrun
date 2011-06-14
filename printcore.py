@@ -84,7 +84,7 @@ class printcore():
                 
                 if self.loud:
                     print "RECV: ",line.rstrip()
-            if(line.startswith('start') or line.startswith('ok') or "T:" in line):
+            if(line.startswith('start') or line.startswith('ok')):
                 self.clear=True
                 if (not self.online or line.startswith('start')) and self.onlinecb is not None:
                     self.onlinecb()
