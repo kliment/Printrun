@@ -40,6 +40,7 @@ class Tee(object):
 
 class PronterWindow(wx.Frame,pronsole.pronsole):
     def __init__(self, filename=None,size=winsize):
+        pronsole.pronsole.__init__(self)
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
@@ -99,6 +100,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.t=Tee(self.catchprint)
         self.stdout=sys.stdout
         self.mini=False
+        self.load_rc(".pronsolerc")
         
     
     def do_extrude(self,l=""):
