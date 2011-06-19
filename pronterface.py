@@ -399,6 +399,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             return
         wx.CallAfter(self.logbox.AppendText,">>>"+command+"\n")
         self.onecmd(str(command))
+        self.commandbox.SetSelection(0,len(command))
         
     def statuschecker(self):
         try:
