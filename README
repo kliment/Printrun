@@ -21,6 +21,10 @@ http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-unive
 Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
 Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
 defaults write com.apple.versioner.python Prefer-32-Bit -bool yes
+
+Alternatively, you can run python in 32 bit mode by setting the following environment variable before running:
+export VERSIONER_PYTHON_PREFER_32_BIT=yes
+
 sudo python setup.py install
 Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.zip
 
