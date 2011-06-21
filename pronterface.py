@@ -4,7 +4,7 @@ try:
 except:
     print "WX is not installed. This program requires WX to run."
     raise
-import printcore, os, sys, glob, time, threading, traceback, StringIO
+import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz
 thread=threading.Thread
 winsize=(800,500)
 winssize=(800,120)
@@ -319,8 +319,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.SetBackgroundColour((180,255,180))
         self.zfeedc.SetForegroundColour("black")
-        lls.Add((150,0),pos=(0,12),span=(14,1))
-        
+        lls.Add((10,0),pos=(0,11),span=(1,1))
+        self.gviz=gviz.gviz(self.panel,(200,200),(200,200))
+        lls.Add(self.gviz,pos=(0,10),span=(9,1))
         
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
         self.uppersizer.Add(self.uppertopsizer)
@@ -417,6 +418,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.printing:
                     string+= " Printing:%04.2f %%"%(100*float(self.p.queueindex)/len(self.p.mainqueue),)
                 wx.CallAfter(self.status.SetStatusText,string)
+                wx.CallAfter(self.gviz.Refresh)
                 if(self.monitor and self.p.online):
                     if self.sdprinting:
                         self.p.send_now("M27")
@@ -538,6 +540,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.filename=self.filename.replace(".stl","_export.gcode")
             self.f=[i.replace("\n","").replace("\r","") for i in open(self.filename)]
             wx.CallAfter(self.status.SetStatusText,"Loaded "+self.filename+", %d lines"%(len(self.f),))
+            threading.Thread(target=self.loadviz).start()
         except:
             self.filename=fn
         
@@ -574,6 +577,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.f=[i.replace("\n","").replace("\r","") for i in open(name)]
                 self.filename=name
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
+                threading.Thread(target=self.loadviz).start()
+                
+    def loadviz(self):
+        self.gviz.clear()
+        for i in self.f:
+            self.gviz.addgcode(i)
+        self.gviz.showall=1
+        wx.CallAfter(self.gviz.Refresh)
                 
     def printfile(self,event):
         if self.paused:
