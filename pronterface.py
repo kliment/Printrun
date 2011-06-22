@@ -7,16 +7,12 @@ except:
 import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz
 thread=threading.Thread
 winsize=(800,500)
-winssize=(800,120)
 if os.name=="nt":
     winsize=(800,530)
-    winssize=(800,140)
     try:
         import _winreg
     except:
         pass
-if sys.platform=="darwin":
-    winssize=(800,110)        
 
 
 import pronsole
@@ -112,6 +108,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 except:
                     pass
             self.gviz.addgcode(line,hilight=1)
+            self.gwindow.p.addgcode(line,hilight=1)
     
     def do_extrude(self,l=""):
         try:
@@ -333,6 +330,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.SetForegroundColour("black")
         lls.Add((10,0),pos=(0,11),span=(1,1))
         self.gviz=gviz.gviz(self.panel,(200,200),(200,200))
+        self.gwindow=gviz.window([])
+        self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
+        self.gwindow.Bind(wx.EVT_CLOSE,lambda x:self.gwindow.Hide())
         lls.Add(self.gviz,pos=(0,10),span=(9,1))
         
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
@@ -355,8 +355,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.panel.Fit()
         #uts.Layout()
         
-        
-        pass
+    def showwin(self,event):
+        self.gwindow.Show()
         
     def setfeeds(self,e):
         try:
@@ -400,6 +400,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=0
         self.p.recvcb=None
         self.p.disconnect()
+        try:
+            self.gwindow.Destroy()
+        except:
+            pass
         self.Destroy()
         
         
@@ -595,6 +599,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.gviz.clear()
         for i in self.f:
             self.gviz.addgcode(i)
+            self.gwindow.p.addgcode(i)
         self.gviz.showall=1
         wx.CallAfter(self.gviz.Refresh)
                 

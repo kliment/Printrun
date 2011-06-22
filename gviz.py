@@ -1,13 +1,13 @@
 import wx,time
 
 class window(wx.Frame):
-    def __init__(self):
-        wx.Frame.__init__(self,None,title="Slicetest",size=(600,600))
-        self.p=gviz(self,size=(600,600),bedsize=(200,200))
+    def __init__(self,f,size=(600,600),bedsize=(200,200)):
+        wx.Frame.__init__(self,None,title="Slicetest",size=(size[0],size[1]))
+        self.p=gviz(self,size=size,bedsize=bedsize)
         s=time.time()
-        for i in open("/home/kliment/designs/spinner/gearend_export.gcode"):
+        for i in f:
             self.p.addgcode(i)
-        print time.time()-s
+        #print time.time()-s
         self.p.Bind(wx.EVT_KEY_DOWN,self.key)
     def key(self, event):
         x=event.GetKeyCode()
@@ -21,7 +21,8 @@ class window(wx.Frame):
         
 class gviz(wx.Panel):
     def __init__(self,parent,size=(200,200),bedsize=(200,200)):
-        wx.Panel.__init__(self,parent,-1,size=size)
+        wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
+        self.size=size
         self.bedsize=bedsize
         self.lastpos=[0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
@@ -69,6 +70,11 @@ class gviz(wx.Panel):
         dc=wx.PaintDC(self)
         dc.SetBackground(wx.Brush((250,250,200)))
         dc.Clear()
+        dc.SetBrush(wx.Brush((0,0,0)))
+        dc.DrawRectangle(self.size[0]-15,0,15,self.size[1])
+        dc.SetBrush(wx.Brush((0,255,0)))
+        if len(self.layers):
+            dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*self.layerindex)/len(self.layers))*self.size[1],13,self.size[1]-1)
         if self.showall:
             l=[]
             for i in self.layers:
@@ -86,10 +92,6 @@ class gviz(wx.Panel):
         l=map(lambda x:(self.scale[0]*x[0],self.scale[1]*x[1],self.scale[0]*x[2],self.scale[1]*x[3],) ,self.hilight)
         dc.DrawLineList(l,self.hlpen)
         del dc
-        
-    def showall(self,v):
-        self.showall=v
-        self.Refresh()
         
     def addgcode(self,gcode="M105",hilight=0):
         gcode=gcode.split("*")[0]
@@ -126,7 +128,7 @@ class gviz(wx.Panel):
             
 if __name__ == '__main__':
     app = wx.App(False)
-    main = window()
+    main = window(open("/home/kliment/designs/spinner/gearend_export.gcode"))
     main.Show()
     app.MainLoop()
 
