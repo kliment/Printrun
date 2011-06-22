@@ -97,7 +97,7 @@ class gviz(wx.Panel):
                 self.lines[target[2]]=[]
                 self.pens[target[2]]=[]
                 self.layers+=[target[2]]
-            self.lines[target[2]]+=[(self.lastpos[0],self.lastpos[1],target[0],target[1])]
+            self.lines[target[2]]+=[(self.lastpos[0],self.bedsize[1]-self.lastpos[1],target[0],self.bedsize[1]-target[1])]
             self.pens[target[2]]+=[self.mainpen]
             self.lastpos=target
             

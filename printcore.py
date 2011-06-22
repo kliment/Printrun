@@ -199,7 +199,8 @@ class printcore():
             return
         if(self.printing and self.queueindex<len(self.mainqueue)):
             tline=self.mainqueue[self.queueindex]
-            if(not tline.startswith(';') and len(tline)>0):
+            tline=tline.split(";")[0]
+            if(len(tline)>0):
                 self._send(tline,self.lineno,True)
                 self.lineno+=1
             else:
