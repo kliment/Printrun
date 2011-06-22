@@ -95,18 +95,23 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.mini=False
         self.load_rc(".pronsolerc")
         self.p.sendcb=self.sentcb
-        
+        self.curlayer=0
     
     def online(self):
         print "Printer is now online"
     
     def sentcb(self,line):
-        if("Z" in line and "G1" in line):
-            try:
-                layer=float(line.split("Z")[1].split()[0])
-                wx.CallAfter(self.gviz.setlayer,layer)
-            except:
-                pass
+        if("G1" in line):
+            if("Z" in line):
+                try:
+                    layer=float(line.split("Z")[1].split()[0])
+                    if(layer!=self.curlayer):
+                        self.curlayer=layer
+                        self.gviz.hilight=[]
+                        wx.CallAfter(self.gviz.setlayer,layer)
+                except:
+                    pass
+            self.gviz.addgcode(line,hilight=1)
     
     def do_extrude(self,l=""):
         try:

@@ -24,6 +24,7 @@ class gviz(wx.Panel):
         wx.Panel.__init__(self,parent,-1,size=size)
         self.bedsize=bedsize
         self.lastpos=[0,0,0,0,0]
+        self.hilightpos=self.lastpos[:]
         self.Bind(wx.EVT_PAINT,self.paint)
         self.lines={}
         self.pens={}
@@ -31,6 +32,7 @@ class gviz(wx.Panel):
         self.layerindex=0
         self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
         self.mainpen=wx.Pen(wx.Colour(0,0,0))
+        self.hlpen=wx.Pen(wx.Colour(200,50,50))
         self.fades=[wx.Pen(wx.Colour(150+20*i,150+20*i,150+20*i)) for i in xrange(6)]
         self.showall=0
         self.hilight=[]
@@ -81,16 +83,21 @@ class gviz(wx.Panel):
                 dc.DrawLineList(l,self.fades[i])
             l=map(lambda x:(self.scale[0]*x[0],self.scale[1]*x[1],self.scale[0]*x[2],self.scale[1]*x[3],) ,self.lines[self.layers[self.layerindex]])
             dc.DrawLineList(l,self.pens[self.layers[self.layerindex]])
+        l=map(lambda x:(self.scale[0]*x[0],self.scale[1]*x[1],self.scale[0]*x[2],self.scale[1]*x[3],) ,self.hilight)
+        dc.DrawLineList(l,self.hlpen)
         del dc
         
     def showall(self,v):
         self.showall=v
         self.Refresh()
         
-    def addgcode(self,gcode="M105"):
+    def addgcode(self,gcode="M105",hilight=0):
+        gcode=gcode.split("*")[0]
         if "g1" in gcode.lower():
             gcode=gcode.lower().split()
             target=self.lastpos[:]
+            if hilight:
+                target=self.hilightpos[:]
             for i in gcode:
                 if i[0]=="x":
                     target[0]=float(i[1:])
@@ -103,13 +110,18 @@ class gviz(wx.Panel):
                 elif i[0]=="f":
                     target[4]=float(i[1:])
             #draw line
-            if not target[2] in self.lines.keys():
-                self.lines[target[2]]=[]
-                self.pens[target[2]]=[]
-                self.layers+=[target[2]]
-            self.lines[target[2]]+=[(self.lastpos[0],self.bedsize[1]-self.lastpos[1],target[0],self.bedsize[1]-target[1])]
-            self.pens[target[2]]+=[self.mainpen]
-            self.lastpos=target
+            if not hilight:
+                if not target[2] in self.lines.keys():
+                    self.lines[target[2]]=[]
+                    self.pens[target[2]]=[]
+                    self.layers+=[target[2]]
+                self.lines[target[2]]+=[(self.lastpos[0],self.bedsize[1]-self.lastpos[1],target[0],self.bedsize[1]-target[1])]
+                self.pens[target[2]]+=[self.mainpen]
+                self.lastpos=target
+            else:
+                self.hilight+=[(self.hilightpos[0],self.bedsize[1]-self.hilightpos[1],target[0],self.bedsize[1]-target[1])]
+                self.hilightpos=target
+                
             
             
 if __name__ == '__main__':
