@@ -45,7 +45,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
         self.panel=wx.Panel(self,-1,size=size)
-        self.p=printcore.printcore()
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
@@ -91,17 +90,23 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.btndict={}
         self.popmenu()
         self.popwindow()
-        self.recvlisteners=[]
-        self.p.recvcb=self.recvcb
-        self.sdfiles=[]
-        self.listing=0
-        self.sdprinting=0
-        self.percentdone=0
         self.t=Tee(self.catchprint)
         self.stdout=sys.stdout
         self.mini=False
         self.load_rc(".pronsolerc")
+        self.p.sendcb=self.sentcb
         
+    
+    def online(self):
+        print "Printer is now online"
+    
+    def sentcb(self,line):
+        if("Z" in line and "G1" in line):
+            try:
+                layer=float(line.split("Z")[1].split()[0])
+                wx.CallAfter(self.gviz.setlayer,layer)
+            except:
+                pass
     
     def do_extrude(self,l=""):
         try:

@@ -2,8 +2,8 @@ import wx,time
 
 class window(wx.Frame):
     def __init__(self):
-        wx.Frame.__init__(self,None,title="Slicetest",size=(200,200))
-        self.p=gviz(self,size=(200,200),bedsize=(200,200))
+        wx.Frame.__init__(self,None,title="Slicetest",size=(600,600))
+        self.p=gviz(self,size=(600,600),bedsize=(200,200))
         s=time.time()
         for i in open("/home/kliment/designs/spinner/gearend_export.gcode"):
             self.p.addgcode(i)
@@ -33,6 +33,7 @@ class gviz(wx.Panel):
         self.mainpen=wx.Pen(wx.Colour(0,0,0))
         self.fades=[wx.Pen(wx.Colour(150+20*i,150+20*i,150+20*i)) for i in xrange(6)]
         self.showall=0
+        self.hilight=[]
         
     def clear(self):
         self.lastpos=[0,0,0,0,0]
@@ -52,6 +53,15 @@ class gviz(wx.Panel):
         if(self.layerindex>0):
             self.layerindex-=1
             self.Refresh()
+    
+    def setlayer(self,layer):
+        try:
+            self.layerindex=self.layers.index(layer)
+            wx.CallAfter(self.Refresh)
+            self.showall=0
+        except:
+            pass
+
         
     def paint(self,event):
         dc=wx.PaintDC(self)
