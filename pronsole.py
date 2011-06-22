@@ -177,10 +177,10 @@ class pronsole(cmd.Cmd):
         self.p.disconnect()
         cmd.Cmd.postloop(self)
     
-    def preloop(self):
+    def load_rc(self,rc_filename=".pronsolerc"):
         self.processing_rc=True
         try:
-            rc=open(os.path.join(os.path.expanduser("~"),".pronsolerc"))
+            rc=open(os.path.join(os.path.expanduser("~"),rc_filename))
             for rc_cmd in rc:
                 if not rc_cmd.lstrip().startswith("#"):
                     self.onecmd(rc_cmd)
@@ -188,6 +188,9 @@ class pronsole(cmd.Cmd):
         except IOError:
             pass
         self.processing_rc=False
+    
+    def preloop(self):
+        self.load_rc()
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
         cmd.Cmd.preloop(self)
     
