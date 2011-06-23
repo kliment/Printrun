@@ -2,7 +2,7 @@ import wx,time
 
 class window(wx.Frame):
     def __init__(self,f,size=(600,600),bedsize=(200,200)):
-        wx.Frame.__init__(self,None,title="Slicetest",size=(size[0],size[1]))
+        wx.Frame.__init__(self,None,title="Layer view (Use arrow keys to switch layers)",size=(size[0],size[1]))
         self.p=gviz(self,size=size,bedsize=bedsize)
         s=time.time()
         for i in f:

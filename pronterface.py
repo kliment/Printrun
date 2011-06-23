@@ -108,7 +108,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 except:
                     pass
             self.gviz.addgcode(line,hilight=1)
-            self.gwindow.p.addgcode(line,hilight=1)
+            #self.gwindow.p.addgcode(line,hilight=1)
     
     def do_extrude(self,l=""):
         try:
