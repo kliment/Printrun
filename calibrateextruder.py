@@ -73,6 +73,9 @@ for o,a in opts:
 		if temp>=tempmax:
 			print (u'%d \xb0C? Are you insane?'.encode('utf-8')%temp)+(" That's over nine thousand!" if temp>9000 else '')
 			sys.exit(255)
+	elif o in ('-p','--port'):
+		port=a
+
 #Show initial parameters
 print "Initial parameters"
 print "Steps per mm:    %3d steps"%k
