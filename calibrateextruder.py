@@ -82,7 +82,11 @@ print "Serial port:     %s"%(port if port else 'auto')
 
 #Connect to printer
 w("Connecting to printer..")
-p=printcore(port,115200)
+try:
+	p=printcore(port,115200)
+except:
+	print 'Error.'
+	raise
 while not p.online:
 	time.sleep(1)
 	w('.')
