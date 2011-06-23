@@ -12,7 +12,7 @@ try:
 	from printdummy import printcore
 except ImportError:
 	from printcore import printcore
-import time,getopt,sys
+import time,getopt,sys,os
 
 def float_input(prompt=''):
 	import sys
@@ -36,6 +36,9 @@ def wait(t,m=''):
 			time.sleep(1.0/5)
 	print
 
+if not os.path.exists(port):
+	port=0
+
 #Parse options
 help="""
 %s [ -l DISTANCE ] [ -s STEPS ] [ -p PORT ]
@@ -43,7 +46,7 @@ help="""
 	-s	--steps		Initial amount of steps to use (default: %d steps)
 	-p	--port		Serial port the printer is connected to (default: %s)
 	-h	--help		This cruft.
-"""[1:-1]%(sys.argv[0],n,k,port)
+"""[1:-1]%(sys.argv[0],n,k,port if port else 'auto')
 try:
 	opts,args=getopt.getopt(sys.argv[1:],"hl:s:p:",["help","length=","steps=","port="])
 except getopt.GetoptError,err:
@@ -64,7 +67,7 @@ print "Initial parameters"
 print "Steps per mm:    %3d steps"%k
 print "Length extruded: %3d mm"%n
 print 
-print "Serial port:     %s"%port
+print "Serial port:     %s"%(port if port else 'auto')
 
 #Connect to printer
 print "Connecting to printer..",
