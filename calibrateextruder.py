@@ -7,6 +7,9 @@ n=100			#Default length to extrude
 m=  0			#User-entered measured extrusion length
 k=300			#Default amount of steps per mm
 port='/dev/ttyUSB0'	#Default serial port to connect to printer
+temp=210		#Default extrusion temperature
+
+tempmax=250		#Maximum extrusion temperature
 
 try:
 	from printdummy import printcore
@@ -35,20 +38,24 @@ def wait(t,m=''):
 			sys.stdout.flush()
 			time.sleep(1.0/5)
 	print
+def w(s):
+	sys.stdout.write(s)
+	sys.stdout.flush()
 
 if not os.path.exists(port):
 	port=0
 
 #Parse options
-help="""
-%s [ -l DISTANCE ] [ -s STEPS ] [ -p PORT ]
+help=u"""
+%s [ -l DISTANCE ] [ -s STEPS ] [ -t TEMP ] [ -p PORT ]
 	-l	--length	Length of filament to extrude for each calibration step (default: %d mm)
 	-s	--steps		Initial amount of steps to use (default: %d steps)
+	-t	--temp		Extrusion temperature in degrees Celsius (default: %d \xb0C, max %d \xb0C)
 	-p	--port		Serial port the printer is connected to (default: %s)
 	-h	--help		This cruft.
-"""[1:-1]%(sys.argv[0],n,k,port if port else 'auto')
+"""[1:-1].encode('utf-8')%(sys.argv[0],n,k,temp,tempmax,port if port else 'auto')
 try:
-	opts,args=getopt.getopt(sys.argv[1:],"hl:s:p:",["help","length=","steps=","port="])
+	opts,args=getopt.getopt(sys.argv[1:],"hl:s:t:p:",["help","length=","steps=","temp=","port="])
 except getopt.GetoptError,err:
 	print str(err)
 	print help
@@ -61,7 +68,11 @@ for o,a in opts:
 		n=float(a)
 	elif o in ('-s','--steps'):
 		k=int(a)
-
+	elif o in ('-t','--temp'):
+		temp=int(a)
+		if temp>=tempmax:
+			print (u'%d \xb0C? Are you insane?'.encode('utf-8')%temp)+(" That's over nine thousand!" if temp>9000 else '')
+			sys.exit(255)
 #Show initial parameters
 print "Initial parameters"
 print "Steps per mm:    %3d steps"%k
@@ -70,9 +81,24 @@ print
 print "Serial port:     %s"%(port if port else 'auto')
 
 #Connect to printer
-print "Connecting to printer..",
+w("Connecting to printer..")
 p=printcore(port,115200)
-print "connected."
+while not p.online:
+	time.sleep(1)
+	w('.')
+print " connected."
+
+def sendcb(self,l):
+	if l=='G92 E0':
+		self.hot=True
+w("Heating extruder up..")
+setattr(p,'hot',False)
+p.sendcb=sendcb
+p.send_now('M109 S%03d'%temp)
+while not p.hot:
+	time.sleep(1)
+	w('.')
+print " ready."
 
 #Calibration loop
 while n!=m:
