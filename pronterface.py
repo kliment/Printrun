@@ -83,13 +83,20 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Extrude",("extrude"),(13,0),(225,200,200),(1,2)],
         ["Reverse",("reverse"),(14,0),(225,200,200),(1,2)],
         ]
+        self.custombuttons=[]
         self.btndict={}
+        self.load_rc(".pronsolerc")
+        customdict={}
+        try:
+            execfile("custombtn.txt",customdict)
+            self.custombuttons=customdict["btns"]
+        except:
+            pass
         self.popmenu()
         self.popwindow()
         self.t=Tee(self.catchprint)
         self.stdout=sys.stdout
         self.mini=False
-        self.load_rc(".pronsolerc")
         self.p.sendcb=self.sentcb
         self.curlayer=0
     
@@ -257,7 +264,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ubs.Add(self.monitorbox)
         ubs.Add(wx.StaticText(self.panel,-1,"Monitor\nprinter",pos=(470,37)))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
-        
+        try:
+            for i in self.custombuttons[:3]:
+                if i is None:
+                    continue
+                b=wx.Button(self.panel,-1,i[0])
+                b.properties=i
+                b.SetBackgroundColour(i[2])
+                b.Bind(wx.EVT_BUTTON,self.procbutton)
+                ubs.Add(b)
+        except:
+            pass
         #Right full view
         lrs=self.lowerrsizer=wx.BoxSizer(wx.VERTICAL)
         self.logbox=wx.TextCtrl(self.panel,size=(350,340),pos=(440,75),style = wx.TE_MULTILINE)
@@ -329,11 +346,29 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.SetBackgroundColour((180,255,180))
         self.zfeedc.SetForegroundColour("black")
         lls.Add((10,0),pos=(0,11),span=(1,1))
-        self.gviz=gviz.gviz(self.panel,(200,200),(200,200))
+        self.gviz=gviz.gviz(self.panel,(300,300),(200,200))
+        self.gviz.showall=1
         self.gwindow=gviz.window([])
         self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
         self.gwindow.Bind(wx.EVT_CLOSE,lambda x:self.gwindow.Hide())
-        lls.Add(self.gviz,pos=(0,10),span=(9,1))
+        cs=wx.GridBagSizer()
+        cs.Add(self.gviz,pos=(0,0),span=(1,3))
+        posindex=0
+        try:
+            for i in self.custombuttons[3:]:
+                if i is None:
+                    continue
+                b=wx.Button(self.panel,-1,i[0])
+                b.properties=i
+                b.SetBackgroundColour(i[2])
+                b.Bind(wx.EVT_BUTTON,self.procbutton)
+                cs.Add(b,pos=(1+posindex/3,posindex%3),span=(1,1))
+                posindex+=1
+        except:
+            pass
+        lls.Add(cs,pos=(0,10),span=(15,1))
+        
+        
         
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
         self.uppersizer.Add(self.uppertopsizer)

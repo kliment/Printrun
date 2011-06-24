@@ -14,18 +14,18 @@ http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py2
 http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.win32.exe
 
 On Ubuntu/debian, do:
-apt-get install python-serial python-wxgtk2.8
+sudo apt-get install python-serial python-wxgtk2.8
 
 On Mac OS X, download and install:
 http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
 Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
 Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
 defaults write com.apple.versioner.python Prefer-32-Bit -bool yes
+sudo python setup.py install
 
-Alternatively, you can run python in 32 bit mode by setting the following environment variable before running:
+Alternatively, you can run python in 32 bit mode by setting the following environment variable before running the setup.py command:
 export VERSIONER_PYTHON_PREFER_32_BIT=yes
 
-sudo python setup.py install
 Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.zip
 
 USING PRONTERFACE

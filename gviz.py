@@ -9,6 +9,8 @@ class window(wx.Frame):
             self.p.addgcode(i)
         #print time.time()-s
         self.p.Bind(wx.EVT_KEY_DOWN,self.key)
+        self.Bind(wx.EVT_KEY_DOWN,self.key)
+        
     def key(self, event):
         x=event.GetKeyCode()
         #print x
@@ -70,11 +72,12 @@ class gviz(wx.Panel):
         dc=wx.PaintDC(self)
         dc.SetBackground(wx.Brush((250,250,200)))
         dc.Clear()
-        dc.SetBrush(wx.Brush((0,0,0)))
-        dc.DrawRectangle(self.size[0]-15,0,15,self.size[1])
-        dc.SetBrush(wx.Brush((0,255,0)))
-        if len(self.layers):
-            dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*self.layerindex)/len(self.layers))*self.size[1],13,self.size[1]-1)
+        if not self.showall:
+            dc.SetBrush(wx.Brush((43,144,255)))
+            dc.DrawRectangle(self.size[0]-15,0,15,self.size[1])
+            dc.SetBrush(wx.Brush((0,255,0)))
+            if len(self.layers):
+                dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1],13,self.size[1]-1)
         if self.showall:
             l=[]
             for i in self.layers:
