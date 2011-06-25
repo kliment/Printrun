@@ -180,7 +180,10 @@ class pronsole(cmd.Cmd):
     def load_rc(self,rc_filename=".pronsolerc"):
         self.processing_rc=True
         try:
-            rc=open(os.path.join(os.path.expanduser("~"),rc_filename))
+            try:
+                rc=open(os.path.join(os.path.expanduser("~"),rc_filename))
+            except IOError:
+                rc=open(rc_filename)
             for rc_cmd in rc:
                 if not rc_cmd.lstrip().startswith("#"):
                     self.onecmd(rc_cmd)
