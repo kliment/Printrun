@@ -202,7 +202,7 @@ class pronsole(cmd.Cmd):
             rc.close()
         except IOError:
             pass
-        if getattr(self,"cur_macro"):
+        if hasattr(self,"cur_macro"):
         	self.end_macro()
         self.processing_rc=False
     
