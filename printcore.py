@@ -91,7 +91,7 @@ class printcore():
                     self.onlinecb()
                 self.online=True
                 if(line.startswith('ok')):
-                    self.resendfrom=-1
+                    #self.resendfrom=-1
                     #put temp handling here
                     if "T:" in line and self.tempcb is not None:
                         self.tempcb(line)
