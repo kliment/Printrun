@@ -10,6 +10,8 @@ class window(wx.Frame):
         #print time.time()-s
         self.p.Bind(wx.EVT_KEY_DOWN,self.key)
         self.Bind(wx.EVT_KEY_DOWN,self.key)
+        self.p.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
+        self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         
     def key(self, event):
         x=event.GetKeyCode()
@@ -20,6 +22,14 @@ class window(wx.Frame):
             self.p.layerdown()
     
         #print p.lines.keys()
+    def zoom(self, event):
+    	z=event.GetWheelRotation()
+    	if event.ShiftDown():
+    		if z > 0:   self.p.layerdown()
+    		elif z < 0: self.p.layerup()
+    	else:
+    		if z > 0:   self.p.zoom(event.GetX(),event.GetY(),1.2)
+    		elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
         
 class gviz(wx.Panel):
     def __init__(self,parent,size=(200,200),bedsize=(200,200)):
@@ -34,6 +44,7 @@ class gviz(wx.Panel):
         self.layers=[]
         self.layerindex=0
         self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
+        self.translate=[0.0, 0.0]
         self.mainpen=wx.Pen(wx.Colour(0,0,0))
         self.hlpen=wx.Pen(wx.Colour(200,50,50))
         self.fades=[wx.Pen(wx.Colour(150+20*i,150+20*i,150+20*i)) for i in xrange(6)]
@@ -67,6 +78,11 @@ class gviz(wx.Panel):
         except:
             pass
 
+    def zoom(self,x,y,factor):
+    	self.scale = [s * factor for s in self.scale]
+    	self.translate = [ x - (x-self.translate[0]) * factor,
+    	                   y - (y-self.translate[1]) * factor]
+    	self.Refresh()
         
     def paint(self,event):
         dc=wx.PaintDC(self)
@@ -78,21 +94,26 @@ class gviz(wx.Panel):
             dc.SetBrush(wx.Brush((0,255,0)))
             if len(self.layers):
                 dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1],13,self.size[1]-1)
+        def scaler(x):
+            return (self.scale[0]*x[0]+self.translate[0],
+                    self.scale[1]*x[1]+self.translate[1],
+                    self.scale[0]*x[2]+self.translate[0],
+                    self.scale[1]*x[3]+self.translate[1],)
         if self.showall:
             l=[]
             for i in self.layers:
                 dc.DrawLineList(l,self.fades[0])
-                l=map(lambda x:(self.scale[0]*x[0],self.scale[1]*x[1],self.scale[0]*x[2],self.scale[1]*x[3],) ,self.lines[i])
+                l=map(scaler,self.lines[i])
                 dc.DrawLineList(l,self.pens[i])
             return
         if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
             for i in range(min(self.layerindex,6))[-6:]:
                 #print i, self.layerindex, self.layerindex-i
-                l=map(lambda x:(self.scale[0]*x[0],self.scale[1]*x[1],self.scale[0]*x[2],self.scale[1]*x[3],) ,self.lines[self.layers[self.layerindex-i-1]])
+                l=map(scaler,self.lines[self.layers[self.layerindex-i-1]])
                 dc.DrawLineList(l,self.fades[i])
-            l=map(lambda x:(self.scale[0]*x[0],self.scale[1]*x[1],self.scale[0]*x[2],self.scale[1]*x[3],) ,self.lines[self.layers[self.layerindex]])
+            l=map(scaler,self.lines[self.layers[self.layerindex]])
             dc.DrawLineList(l,self.pens[self.layers[self.layerindex]])
-        l=map(lambda x:(self.scale[0]*x[0],self.scale[1]*x[1],self.scale[0]*x[2],self.scale[1]*x[3],) ,self.hilight)
+        l=map(scaler,self.hilight)
         dc.DrawLineList(l,self.hlpen)
         del dc
         
