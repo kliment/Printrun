@@ -102,15 +102,23 @@ class pronsole(cmd.Cmd):
     
     def end_macro(self):    
         if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
-        if not self.processing_rc:
-            print "Macro '"+self.cur_macro_name+"' defined"
-            #print self.cur_macro+"------------" # debug
         self.prompt="PC>"
         if self.cur_macro_def!="":
             self.macros[self.cur_macro_name] = self.cur_macro_def
             exec self.cur_macro
             setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,*largs.split()))
             setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
+            if not self.processing_rc:
+            	print "Macro '"+self.cur_macro_name+"' defined"
+            	# save it
+            	macro_key = "macro "+self.cur_macro_name
+            	macro_def = macro_key
+            	if "\n" in self.cur_macro_def:
+            		macro_def += "\n"
+            	else:
+            		macro_def += " "
+            	macro_def += self.cur_macro_def
+            	self.save_in_rc(macro_key,macro_def)
         else:
             print "Empty macro - cancelled"
         del self.cur_macro,self.cur_macro_name,self.cur_macro_def
@@ -131,6 +139,8 @@ class pronsole(cmd.Cmd):
                     delattr(self.__class__,"do_"+macro_name)
                     del self.macros[macro_name]
                     print "Macro '"+macro_name+"' removed"
+                    if not self.processing_rc:
+                    	self.save_in_rc("macro "+macro_name,"")
                 else:
                     print "Macro '"+macro_name+"' is not defined"
                 return
@@ -181,16 +191,69 @@ class pronsole(cmd.Cmd):
         self.processing_rc=True
         try:
             try:
-                rc=open(os.path.join(os.path.expanduser("~"),rc_filename))
+                self.rc_filename = os.path.join(os.path.expanduser("~"),rc_filename)
+                rc=open(self.rc_filename)
             except IOError:
                 rc=open(rc_filename)
+                self.rc_filename = os.path.abspath(rc_filename)
             for rc_cmd in rc:
                 if not rc_cmd.lstrip().startswith("#"):
                     self.onecmd(rc_cmd)
             rc.close()
         except IOError:
             pass
+        if hasattr(self,"cur_macro"):
+        	self.end_macro()
         self.processing_rc=False
+    
+    def save_in_rc(self,key,definition):
+    	"""
+    	Saves or updates macro or other definitions in .pronsolerc 
+    	key is prefix that determines what is being defined/updated (e.g. 'macro foo')
+    	definition is the full definition (that is written to file). (e.g. 'macro foo move x 10')
+    	Set key as empty string to just add (and not overwrite)
+    	Set definition as empty string to remove it from .pronsolerc
+    	To delete line from .pronsolerc, set key as the line contents, and definition as empty string
+    	Only first definition with given key is overwritten.
+    	Updates are made in the same file position.
+    	Additions are made to the end of the file.
+    	"""
+    	rci,rco = None,None
+    	if definition != "" and not definition.endswith("\n"):
+    		definition += "\n"
+    	try:
+    		written = False
+    		rco=open(self.rc_filename+"~new","w")
+    		if os.path.exists(self.rc_filename):
+    			rci=open(self.rc_filename,"r")
+    			overwriting = False
+    			for rc_cmd in rci:
+    				l = rc_cmd.rstrip()
+    				ls = l.lstrip()
+    				ws = l[:len(l)-len(ls)] # just leading whitespace
+    				if overwriting and len(ws) == 0:
+    					overwriting = False
+    				if not written and key != "" and  rc_cmd.startswith(key) and (rc_cmd+"\n")[len(key)].isspace():
+    					overwriting = True
+    					written = True
+    					rco.write(definition)
+    				if not overwriting:
+    					rco.write(rc_cmd)
+    					if not rc_cmd.endswith("\n"): rco.write("\n")
+    		if not written:
+    			rco.write(definition)
+    		if rci is not None:
+	    		rci.close()
+	    		if os.path.exists(self.rc_filename+"~old"):
+	    			os.remove(rci.name+"~old")
+    			os.rename(rci.name,rci.name+"~old")
+    		rco.close()
+    		os.rename(rco.name,self.rc_filename)
+    		print "Saved '"+key+"' to '"+self.rc_filename+"'"
+    	except Exception as e:
+    		print "Saving failed for",key+":",str(e)
+    	finally:
+    		del rci,rco
     
     def preloop(self):
         self.load_rc()
