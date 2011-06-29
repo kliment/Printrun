@@ -29,15 +29,14 @@ class Settings:
         # defaults here.
         # the initial value determines the type
         self.port = ""
-        self.baudrate = 0
+        self.baudrate = 115200
         self.temperature_pla = 210.0
         self.temperature_abs = 230.0
         self.bedtemp_pla = 60.0
         self.bedtemp_abs = 110.0
-        self.x_feedrate = 3000.0
-        self.y_feedrate = 3000.0
-        self.z_feedrate = 200.0
-        self.e_feedrate = 300.0
+        self.xy_feedrate = 3000
+        self.z_feedrate = 200
+        self.e_feedrate = 300
     def _set(self,key,value):
         try:
             value = getattr(self,"_%s_alias"%key)()[value]
