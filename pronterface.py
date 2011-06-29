@@ -37,6 +37,7 @@ class Tee(object):
 class PronterWindow(wx.Frame,pronsole.pronsole):
     def __init__(self, filename=None,size=winsize):
         pronsole.pronsole.__init__(self)
+        self.settings.last_file_path = ""
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
@@ -616,11 +617,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         thread(target=self.skein_monitor).start()
         
     def loadfile(self,event):
-        basedir="."
-        try:
-            basedir=os.path.split(self.filename)[0]
-        except:
-            pass
+        basedir=self.settings.last_file_path
+        if not os.path.exists(basedir):
+            basedir = "."
+            try:
+                basedir=os.path.split(self.filename)[0]
+            except:
+                pass
         dlg=wx.FileDialog(self,"Open file to print",basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard("STL and GCODE files (;*.gcode;*.g;*.stl;)")
         if(dlg.ShowModal() == wx.ID_OK):
@@ -628,6 +631,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if not(os.path.exists(name)):
                 self.status.SetStatusText("File not found!")
                 return
+            path = os.path.split(name)[0]
+            if path != self.settings.last_file_path:
+	            self.set("last_file_path",path)
             if name.endswith(".stl"):
                 self.skein(name)
             else:
