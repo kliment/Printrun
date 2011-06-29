@@ -395,6 +395,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.gwindow.Show()
         
     def setfeeds(self,e):
+        self.feedrates_changed = True
         try:
             self.settings._set("e_feedrate",self.efeedc.GetValue())
         except:
@@ -436,9 +437,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=0
         self.p.recvcb=None
         self.p.disconnect()
-        self.save_in_rc("set xy_feedrate","set xy_feedrate %d" % self.settings.xy_feedrate)
-        self.save_in_rc("set z_feedrate","set z_feedrate %d" % self.settings.z_feedrate)
-        self.save_in_rc("set e_feedrate","set e_feedrate %d" % self.settings.e_feedrate)
+        if hasattr(self,"feedrates_changed"):
+            self.save_in_rc("set xy_feedrate","set xy_feedrate %d" % self.settings.xy_feedrate)
+            self.save_in_rc("set z_feedrate","set z_feedrate %d" % self.settings.z_feedrate)
+            self.save_in_rc("set e_feedrate","set e_feedrate %d" % self.settings.e_feedrate)
         try:
             self.gwindow.Destroy()
         except:
