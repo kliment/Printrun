@@ -19,6 +19,52 @@ except:
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
+class Settings:
+    #def _temperature_alias(self): return {"pla":210,"abs":230,"off":0}
+    #def _temperature_validate(self,v):
+    #    if v < 0: raise ValueError("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
+    #def _bedtemperature_alias(self): return {"pla":60,"abs":110,"off":0}
+    def _baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200"]
+    def __init__(self):
+        # defaults here.
+        # the initial value determines the type
+        self.port = ""
+        self.baudrate = 0
+        self.temperature_pla = 210.0
+        self.temperature_abs = 230.0
+        self.bedtemp_pla = 60.0
+        self.bedtemp_abs = 110.0
+        self.x_feedrate = 3000.0
+        self.y_feedrate = 3000.0
+        self.z_feedrate = 200.0
+        self.e_feedrate = 300.0
+    def _set(self,key,value):
+        try:
+            value = getattr(self,"_%s_alias"%key)()[value]
+        except KeyError:
+            pass
+        except AttributeError:
+            pass
+        try:
+            getattr(self,"_%s_validate"%key)(value)
+        except AttributeError:
+            pass
+        setattr(self,key,type(getattr(self,key))(value))
+        try:
+            getattr(self,"_%s_cb"%key)(key,value)
+        except AttributeError:
+            pass
+        return value
+    def _tabcomplete(self,key):
+        try:
+            return getattr(self,"_%s_list"%key)()
+        except AttributeError:
+            pass
+        try:
+            return getattr(self,"_%s_alias"%key)().keys()
+        except AttributeError:
+            pass
+        return []
 
 class pronsole(cmd.Cmd):
     def __init__(self):
@@ -41,12 +87,23 @@ class pronsole(cmd.Cmd):
         self.tempreadings=""
         self.macros={}
         self.processing_rc=False
-        self.lastport = (None,None)
+        self.settings = Settings()
+        self.settings._port_list = self.scanserial
+        self.settings._temperature_abs_cb = self.set_temp_preset
+        self.settings._temperature_pla_cb = self.set_temp_preset
+        self.settings._bedtemp_abs_cb = self.set_temp_preset
+        self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.monitoring=0
-        self.feedxy=3000
-        self.feedz=200
-        self.feede=300
-        
+    
+    def set_temp_preset(self,key,value):
+        if not key.startswith("bed"):
+            self.temps["pla"] = str(self.settings.temperature_pla)
+            self.temps["abs"] = str(self.settings.temperature_abs)
+            print "Hotend temperature presets updated, pla:%s, abs:%s" % (self.temps["pla"],self.temps["abs"])
+        else:
+            self.bedtemps["pla"] = str(self.settings.bedtemp_pla)
+            self.bedtemps["abs"] = str(self.settings.bedtemp_abs)
+            print "Bed temperature presets updated, pla:%s, abs:%s" % (self.bedtemps["pla"],self.bedtemps["abs"])
         
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -81,7 +138,7 @@ class pronsole(cmd.Cmd):
         if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
             return [i for i in self.macros.keys() if i.startswith(text)]
         elif(len(line.split())==3 or (len(line.split())==2 and line[-1]==" ")):
-            return ["/D", "/S"] + self.completenames(text)
+            return [i for i in ["/D", "/S"] + self.completenames(text) if i.startswith(text)]
         else:
             return []
     
@@ -109,16 +166,16 @@ class pronsole(cmd.Cmd):
             setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,*largs.split()))
             setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
             if not self.processing_rc:
-            	print "Macro '"+self.cur_macro_name+"' defined"
-            	# save it
-            	macro_key = "macro "+self.cur_macro_name
-            	macro_def = macro_key
-            	if "\n" in self.cur_macro_def:
-            		macro_def += "\n"
-            	else:
-            		macro_def += " "
-            	macro_def += self.cur_macro_def
-            	self.save_in_rc(macro_key,macro_def)
+                print "Macro '"+self.cur_macro_name+"' defined"
+                # save it
+                macro_key = "macro "+self.cur_macro_name
+                macro_def = macro_key
+                if "\n" in self.cur_macro_def:
+                    macro_def += "\n"
+                else:
+                    macro_def += " "
+                macro_def += self.cur_macro_def
+                self.save_in_rc(macro_key,macro_def)
         else:
             print "Empty macro - cancelled"
         del self.cur_macro,self.cur_macro_name,self.cur_macro_def
@@ -140,7 +197,7 @@ class pronsole(cmd.Cmd):
                     del self.macros[macro_name]
                     print "Macro '"+macro_name+"' removed"
                     if not self.processing_rc:
-                    	self.save_in_rc("macro "+macro_name,"")
+                        self.save_in_rc("macro "+macro_name,"")
                 else:
                     print "Macro '"+macro_name+"' is not defined"
                 return
@@ -182,6 +239,45 @@ class pronsole(cmd.Cmd):
                 print "Macro '"+macro_name+"' defined as: '"+macro_def+"'"
         else:
             print "Macro '"+macro_name+"' is not defined"
+
+    def set(self,var,str):
+        try:
+            t = type(getattr(self.settings,var))
+            value = self.settings._set(var,str)
+            if not self.processing_rc:
+                self.save_in_rc("set "+var,"set %s %s" % (var,value))
+        except AttributeError:
+            print "Unknown variable '%s'" % var
+        except ValueError as ve:
+            print "Bad value for variable '%s', expecting"%var,str(t)[1:-1],"(%s)"%ve.args[0]
+    
+    def do_set(self,argl):
+        args = argl.split(None,1)
+        if len(args) < 1:
+            for k in [kk for kk in dir(self.settings) if not kk.startswith("_")]:
+                print "%s = %s" % (k,str(getattr(self.settings,k)))
+            return
+            value = getattr(self.settings,args[0])
+        if len(args) < 2:
+            try:
+                print "%s = %s" % (args[0],getattr(self.settings,args[0]))
+            except AttributeError:
+                print "Unknown variable '%s'" % args[0]
+            return
+        self.set(args[0],args[1])
+    
+    def help_set(self):
+        print "Set variable:   set <variable> <value>"
+        print "Show variable:  set <variable>"
+        print "'set' without arguments displays all variables"
+
+    def complete_set(self, text, line, begidx, endidx):
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in dir(self.settings) if not i.startswith("_") and i.startswith(text)]
+        elif(len(line.split())==3 or (len(line.split())==2 and line[-1]==" ")):
+            return [i for i in self.settings._tabcomplete(line.split()[1]) if i.startswith(text)]
+        else:
+            return []
     
     def postloop(self):
         self.p.disconnect()
@@ -203,57 +299,57 @@ class pronsole(cmd.Cmd):
         except IOError:
             pass
         if hasattr(self,"cur_macro"):
-        	self.end_macro()
+            self.end_macro()
         self.processing_rc=False
     
     def save_in_rc(self,key,definition):
-    	"""
-    	Saves or updates macro or other definitions in .pronsolerc 
-    	key is prefix that determines what is being defined/updated (e.g. 'macro foo')
-    	definition is the full definition (that is written to file). (e.g. 'macro foo move x 10')
-    	Set key as empty string to just add (and not overwrite)
-    	Set definition as empty string to remove it from .pronsolerc
-    	To delete line from .pronsolerc, set key as the line contents, and definition as empty string
-    	Only first definition with given key is overwritten.
-    	Updates are made in the same file position.
-    	Additions are made to the end of the file.
-    	"""
-    	rci,rco = None,None
-    	if definition != "" and not definition.endswith("\n"):
-    		definition += "\n"
-    	try:
-    		written = False
-    		rco=open(self.rc_filename+"~new","w")
-    		if os.path.exists(self.rc_filename):
-    			rci=open(self.rc_filename,"r")
-    			overwriting = False
-    			for rc_cmd in rci:
-    				l = rc_cmd.rstrip()
-    				ls = l.lstrip()
-    				ws = l[:len(l)-len(ls)] # just leading whitespace
-    				if overwriting and len(ws) == 0:
-    					overwriting = False
-    				if not written and key != "" and  rc_cmd.startswith(key) and (rc_cmd+"\n")[len(key)].isspace():
-    					overwriting = True
-    					written = True
-    					rco.write(definition)
-    				if not overwriting:
-    					rco.write(rc_cmd)
-    					if not rc_cmd.endswith("\n"): rco.write("\n")
-    		if not written:
-    			rco.write(definition)
-    		if rci is not None:
-	    		rci.close()
-	    		if os.path.exists(self.rc_filename+"~old"):
-	    			os.remove(rci.name+"~old")
-    			os.rename(rci.name,rci.name+"~old")
-    		rco.close()
-    		os.rename(rco.name,self.rc_filename)
-    		print "Saved '"+key+"' to '"+self.rc_filename+"'"
-    	except Exception as e:
-    		print "Saving failed for",key+":",str(e)
-    	finally:
-    		del rci,rco
+        """
+        Saves or updates macro or other definitions in .pronsolerc 
+        key is prefix that determines what is being defined/updated (e.g. 'macro foo')
+        definition is the full definition (that is written to file). (e.g. 'macro foo move x 10')
+        Set key as empty string to just add (and not overwrite)
+        Set definition as empty string to remove it from .pronsolerc
+        To delete line from .pronsolerc, set key as the line contents, and definition as empty string
+        Only first definition with given key is overwritten.
+        Updates are made in the same file position.
+        Additions are made to the end of the file.
+        """
+        rci,rco = None,None
+        if definition != "" and not definition.endswith("\n"):
+            definition += "\n"
+        try:
+            written = False
+            rco=open(self.rc_filename+"~new","w")
+            if os.path.exists(self.rc_filename):
+                rci=open(self.rc_filename,"r")
+                overwriting = False
+                for rc_cmd in rci:
+                    l = rc_cmd.rstrip()
+                    ls = l.lstrip()
+                    ws = l[:len(l)-len(ls)] # just leading whitespace
+                    if overwriting and len(ws) == 0:
+                        overwriting = False
+                    if not written and key != "" and  rc_cmd.startswith(key) and (rc_cmd+"\n")[len(key)].isspace():
+                        overwriting = True
+                        written = True
+                        rco.write(definition)
+                    if not overwriting:
+                        rco.write(rc_cmd)
+                        if not rc_cmd.endswith("\n"): rco.write("\n")
+            if not written:
+                rco.write(definition)
+            if rci is not None:
+                rci.close()
+                if os.path.exists(self.rc_filename+"~old"):
+                    os.remove(rci.name+"~old")
+                os.rename(rci.name,rci.name+"~old")
+            rco.close()
+            os.rename(rco.name,self.rc_filename)
+            print "Saved '"+key+"' to '"+self.rc_filename+"'"
+        except Exception as e:
+            print "Saving failed for",key+":",str(e)
+        finally:
+            del rci,rco
     
     def preloop(self):
         self.load_rc()
@@ -263,10 +359,10 @@ class pronsole(cmd.Cmd):
     def do_connect(self,l):
         a=l.split()
         p=self.scanserial()
-        port=self.lastport[0]
-        if (port is None or port not in p) and len(p)>0:
+        port=self.settings.port
+        if (port == "" or port not in p) and len(p)>0:
             port=p[0] 
-        baud=self.lastport[1] or 115200
+        baud=self.settings.baudrate or 115200
         if(len(a)>0):
             port=a[0]
         if(len(a)>1):
@@ -274,12 +370,17 @@ class pronsole(cmd.Cmd):
                 baud=int(a[1])
             except:
                 print "Bad baud value '"+a[1]+"' ignored"
-        if len(p)==0 and port is None:
+        if len(p)==0 and not port:
             print "No serial ports detected - please specify a port"
             return
         if len(a)==0:
             print "No port specified - connecting to %s at %dbps" % (port,baud)
-        self.lastport = (port, baud)
+        if port != self.settings.port:
+            self.settings.port = port
+            self.save_in_rc("set port","set port %s" % port)
+        if baud != self.settings.baudrate:
+            self.settings.baudrate = baud
+            self.save_in_rc("set baudrate","set baudrate %d" % baud)
         self.p.connect(port, baud)
     
     def help_connect(self):
@@ -658,16 +759,16 @@ class pronsole(cmd.Cmd):
         axis="E"
         l=l.split()
         if(l[0].lower()=="x"):
-            feed=self.feedxy
+            feed=self.settings.x_feedrate
             axis="X"
         elif(l[0].lower()=="y"):
-            feed=self.feedxy
+            feed=self.settings.y_feedrate
             axis="Y"
         elif(l[0].lower()=="z"):
-            feed=self.feedz
+            feed=self.settings.z_feedrate
             axis="Z"
         elif(l[0].lower()=="e"):
-            feed=self.feede
+            feed=self.settings.e_feedrate
             axis="E"
         else:
             print "Unknown axis."
