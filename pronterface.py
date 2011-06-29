@@ -213,7 +213,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             self.serialport.SetValue(scan[0])
             if self.settings.port:
-            	self.serialport.SetValue(self.settings.port)
+                self.serialport.SetValue(self.settings.port)
         except:
             pass
         uts.Add(self.serialport)
@@ -396,15 +396,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
     def setfeeds(self,e):
         try:
-            self.feede=int(self.efeedc.GetValue())
+            self.settings._set("e_feedrate",self.efeedc.GetValue())
         except:
             pass
         try:
-            self.feedz=int(self.zfeedc.GetValue())
+            self.settings._set("z_feedrate",self.zfeedc.GetValue())
         except:
             pass
         try:
-            self.feedxy=int(self.xyfeedc.GetValue())
+            self.settings._set("xy_feedrate",self.xyfeedc.GetValue())
         except:
             pass
         
@@ -436,6 +436,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=0
         self.p.recvcb=None
         self.p.disconnect()
+        self.save_in_rc("set xy_feedrate","set xy_feedrate %d" % self.settings.xy_feedrate)
+        self.save_in_rc("set z_feedrate","set z_feedrate %d" % self.settings.z_feedrate)
+        self.save_in_rc("set e_feedrate","set e_feedrate %d" % self.settings.e_feedrate)
         try:
             self.gwindow.Destroy()
         except:
@@ -734,6 +737,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.p.send_now("M26 S0")
         self.p.connect(port,baud)
         self.statuscheck=True
+        if port != self.settings.port:
+            self.set("port",port)
+        if baud != self.settings.baudrate:
+            self.set("baudrate",str(baud))
         threading.Thread(target=self.statuschecker).start()
         
         
