@@ -212,6 +212,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 style=wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
         try:
             self.serialport.SetValue(scan[0])
+            if self.settings.port:
+            	self.serialport.SetValue(self.settings.port)
         except:
             pass
         uts.Add(self.serialport)
@@ -219,7 +221,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200"],
                 style=wx.CB_DROPDOWN|wx.CB_SORT, size=(110,30),pos=(275,0))
-        self.baud.SetValue("115200")
+        try:
+            self.baud.SetValue("115200")
+            self.baud.SetValue(str(self.settings.baudrate))
+        except:
+            pass
         uts.Add(self.baud)
         self.connectbtn=wx.Button(self.panel,-1,"Connect",pos=(380,0))
         uts.Add(self.connectbtn)
@@ -287,11 +293,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #left pane
         lls=self.lowerlsizer=wx.GridBagSizer()
         lls.Add(wx.StaticText(self.panel,-1,"mm/min",pos=(60,69)),pos=(0,4),span=(1,4))
-        self.xyfeedc=wx.SpinCtrl(self.panel,-1,"3000",min=0,max=50000,size=(60,25),pos=(25,83))
+        self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(60,25),pos=(25,83))
         lls.Add(wx.StaticText(self.panel,-1,"XY:",pos=(2,90-2)),pos=(1,0),span=(1,2))
         lls.Add(self.xyfeedc,pos=(1,2),span=(1,4))
         lls.Add(wx.StaticText(self.panel,-1,"Z:",pos=(90,90-2)),pos=(1,6),span=(1,2))
-        self.zfeedc=wx.SpinCtrl(self.panel,-1,"200",min=0,max=50000,size=(60,25),pos=(105,83))
+        self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(60,25),pos=(105,83))
         lls.Add(self.zfeedc,pos=(1,8),span=(1,4))
         
         #lls.Add((200,375))
@@ -330,7 +336,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.edist.SetForegroundColour("black")
         lls.Add(self.edist,pos=(13,3),span=(1,2))
         lls.Add(wx.StaticText(self.panel,-1,"mm",pos=(130,407)),pos=(13,5),span=(1,2))
-        self.efeedc=wx.SpinCtrl(self.panel,-1,"300",min=0,max=50000,size=(60,25),pos=(70,397+28))
+        self.efeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.e_feedrate),min=0,max=50000,size=(60,25),pos=(70,397+28))
         self.efeedc.SetBackgroundColour((225,200,200))
         self.efeedc.SetForegroundColour("black")
         self.efeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)

@@ -29,15 +29,14 @@ class Settings:
         # defaults here.
         # the initial value determines the type
         self.port = ""
-        self.baudrate = 0
+        self.baudrate = 115200
         self.temperature_pla = 210.0
         self.temperature_abs = 230.0
         self.bedtemp_pla = 60.0
         self.bedtemp_abs = 110.0
-        self.x_feedrate = 3000.0
-        self.y_feedrate = 3000.0
-        self.z_feedrate = 200.0
-        self.e_feedrate = 300.0
+        self.xy_feedrate = 3000
+        self.z_feedrate = 200
+        self.e_feedrate = 300
     def _set(self,key,value):
         try:
             value = getattr(self,"_%s_alias"%key)()[value]
@@ -755,14 +754,12 @@ class pronsole(cmd.Cmd):
         if not self.p.online:
             print "Printer is not online. Unable to move."
             return
-        feed=self.feedz
-        axis="E"
         l=l.split()
         if(l[0].lower()=="x"):
-            feed=self.settings.x_feedrate
+            feed=self.settings.xy_feedrate
             axis="X"
         elif(l[0].lower()=="y"):
-            feed=self.settings.y_feedrate
+            feed=self.settings.xy_feedrate
             axis="Y"
         elif(l[0].lower()=="z"):
             feed=self.settings.z_feedrate
@@ -789,9 +786,9 @@ class pronsole(cmd.Cmd):
         
     def help_move(self):
         print "Move an axis. Specify the name of the axis and the amount. "
-        print "move X 10 will move the X axis forward by 10mm at ",self.feedxy,"mm/min (default XY speed)"
+        print "move X 10 will move the X axis forward by 10mm at ",self.settings.xy_feedrate,"mm/min (default XY speed)"
         print "move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"
-        print "move Z -1 will move the Z axis down by 1mm at ",self.feedz,"mm/min (default Z speed)"
+        print "move Z -1 will move the Z axis down by 1mm at ",self.settings.z_feedrate,"mm/min (default Z speed)"
         print "Common amounts are in the tabcomplete list."
     
     def complete_move(self, text, line, begidx, endidx):
@@ -810,7 +807,7 @@ class pronsole(cmd.Cmd):
     
     def do_extrude(self,l,override=None,overridefeed=300):
         length=5#default extrusion length
-        feed=self.feede#default speed
+        feed=self.settings.e_feedrate#default speed
         if not self.p.online:
             print "Printer is not online. Unable to move."
             return
@@ -850,7 +847,7 @@ class pronsole(cmd.Cmd):
         
     def do_reverse(self, l):
         length=5#default extrusion length
-        feed=self.feede#default speed
+        feed=self.settings.e_feedrate#default speed
         if not self.p.online:
             print "Printer is not online. Unable to move."
             return
