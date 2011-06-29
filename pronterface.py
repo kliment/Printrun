@@ -44,12 +44,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
-        self.feedxy=3000
-        self.feedz=200
-        self.feede=300
         self.paused=False
-        self.temps={"pla":"210","abs":"230","off":"0"}
-        self.bedtemps={"pla":"60","abs":"110","off":"0"}
         xcol=(245,245,108)
         ycol=(180,180,255)
         zcol=(180,255,180)
@@ -89,7 +84,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         customdict={}
         try:
             execfile("custombtn.txt",customdict)
-            self.custombuttons=customdict["btns"]
+            self.custombuttons+=customdict["btns"]
         except:
             pass
         self.popmenu()
