@@ -50,6 +50,8 @@ class gviz(wx.Panel):
         self.fades=[wx.Pen(wx.Colour(150+20*i,150+20*i,150+20*i)) for i in xrange(6)]
         self.showall=0
         self.hilight=[]
+        self.dirty=1
+        self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
         
     def clear(self):
         self.lastpos=[0,0,0,0,0]
@@ -59,33 +61,43 @@ class gviz(wx.Panel):
         self.layers=[]
         self.layerindex=0
         self.showall=0
+        self.dirty=1
+        self.repaint()
         
     def layerup(self):
         if(self.layerindex+1<len(self.layers)):
             self.layerindex+=1
+            self.repaint()
             self.Refresh()
     
     def layerdown(self):
         if(self.layerindex>0):
             self.layerindex-=1
+            self.repaint()
             self.Refresh()
     
     def setlayer(self,layer):
         try:
             self.layerindex=self.layers.index(layer)
+            self.repaint()
             wx.CallAfter(self.Refresh)
             self.showall=0
         except:
             pass
+    
 
     def zoom(self,x,y,factor):
     	self.scale = [s * factor for s in self.scale]
     	self.translate = [ x - (x-self.translate[0]) * factor,
     	                   y - (y-self.translate[1]) * factor]
-    	self.Refresh()
+    	#self.dirty=1
+        self.repaint()
+        self.Refresh()
         
-    def paint(self,event):
-        dc=wx.PaintDC(self)
+    def repaint(self):
+        self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
+        dc=wx.MemoryDC()
+        dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250,250,200)))
         dc.Clear()
         if not self.showall:
@@ -115,6 +127,15 @@ class gviz(wx.Panel):
             dc.DrawLineList(l,self.pens[self.layers[self.layerindex]])
         l=map(scaler,self.hilight)
         dc.DrawLineList(l,self.hlpen)
+        dc.SelectObject(wx.NullBitmap)
+    
+    def paint(self,event):
+        dc=wx.PaintDC(self)
+        if(self.dirty):
+            self.repaint()
+        self.dirty=0
+        sz=self.GetClientSize()
+        dc.DrawBitmap(self.blitmap,0,0)
         del dc
         
     def addgcode(self,gcode="M105",hilight=0):
@@ -147,7 +168,7 @@ class gviz(wx.Panel):
             else:
                 self.hilight+=[(self.hilightpos[0],self.bedsize[1]-self.hilightpos[1],target[0],self.bedsize[1]-target[1])]
                 self.hilightpos=target
-                
+            self.dirty=1
             
             
 if __name__ == '__main__':
