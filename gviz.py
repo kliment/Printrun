@@ -139,6 +139,7 @@ class gviz(wx.Panel):
         
     def addgcode(self,gcode="M105",hilight=0):
         gcode=gcode.split("*")[0]
+        gcode=gcode.split(";")[0]
         if "g1" in gcode.lower():
             gcode=gcode.lower().split()
             target=self.lastpos[:]
