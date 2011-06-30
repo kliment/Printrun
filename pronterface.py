@@ -68,6 +68,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Y-1",("move Y -1"),(8,3),ycol,(1,3)],
         ["Y-10",("move Y -10"),(9,3),ycol,(1,3)],
         ["Y-100",("move Y -100"),(10,3),ycol,(1,3)],
+        ["Motors off",("M84"),(2,6),(250,250,250),(1,3)],
         ["Z+10",("move Z 10"),(3,6),zcol,(1,3)],
         ["Z+1",("move Z 1"),(4,6),zcol,(1,3)],
         ["Z+0.1",("move Z 0.1"),(5,6),zcol,(1,3)],
@@ -76,6 +77,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ["Z-1",("move Z -1"),(8,6),zcol,(1,3)],
         ["Z-10",("move Z -10"),(9,6),zcol,(1,3)],
         ["Home",("home"),(10,6),(250,250,250),(1,3)],
+        ["Check temp",("M105"),(11,6),(225,200,200),(1,3)],
         ["Extrude",("extrude"),(13,0),(225,200,200),(1,2)],
         ["Reverse",("reverse"),(14,0),(225,200,200),(1,2)],
         ]
@@ -240,7 +242,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.resetbtn)
         self.minibtn=wx.Button(self.panel,-1,"Mini mode",pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
-        uts.Add((100,-1),flag=wx.EXPAND)
+        uts.Add((10,-1))
+        self.monitorbox=wx.CheckBox(self.panel,-1,"",pos=(450,37))
+        uts.Add((15,-1))
+        uts.Add(self.monitorbox)
+        uts.Add(wx.StaticText(self.panel,-1,"Monitor\nprinter",pos=(470,37)))
+        self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
+        
+        uts.Add((15,-1),flag=wx.EXPAND)
         uts.Add(self.minibtn)
         
         #SECOND ROW
@@ -261,13 +270,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.pausebtn=wx.Button(self.panel,-1,"Pause",pos=(360,40))
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
         ubs.Add(self.pausebtn)
-        self.monitorbox=wx.CheckBox(self.panel,-1,"",pos=(450,37))
-        ubs.Add((15,-1))
-        ubs.Add(self.monitorbox)
-        ubs.Add(wx.StaticText(self.panel,-1,"Monitor\nprinter",pos=(470,37)))
-        self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
+        ubs.Add((50,-1),flag=wx.EXPAND)
         try:
-            for i in self.custombuttons[:3]:
+            for i in self.custombuttons[:4]:
                 if i is None:
                     continue
                 b=wx.Button(self.panel,-1,i[0])
@@ -331,6 +336,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,365))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         lls.Add(self.setbbtn,pos=(12,4),span=(1,2))
+        self.tempdisp=wx.StaticText(self.panel,-1,"")
+        lls.Add(self.tempdisp,pos=(12,6),span=(1,3))
         
         self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,25),pos=(70,398))
         self.edist.SetBackgroundColour((225,200,200))
@@ -357,7 +364,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         cs.Add(self.gviz,pos=(0,0),span=(1,3))
         posindex=0
         try:
-            for i in self.custombuttons[3:]:
+            for i in self.custombuttons[4:]:
                 if i is None:
                     continue
                 b=wx.Button(self.panel,-1,i[0])
