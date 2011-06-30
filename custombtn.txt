@@ -4,7 +4,7 @@ btns=[
 # ["button name","command",color(RGB)], <--That comma is important, do not forget it
 ###As an example: (Remove the # to try it out):
 ["Read temp","M105",(200,100,100)],
-["Release All Axes","M84",(300,100,100)],
+["Disable Axes","M84",(400,100,100)],
 ###You can use gcodes or any pronsole/pronterface commands
 ###The first three buttons will end up at the top of the window, visible in mini mode
 ###The rest of the buttons will be at the bottom of the gcode preview
