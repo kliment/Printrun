@@ -644,6 +644,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 
     def loadviz(self):
         self.gviz.clear()
+        self.gwindow.p.clear()
         for i in self.f:
             self.gviz.addgcode(i)
             self.gwindow.p.addgcode(i)
