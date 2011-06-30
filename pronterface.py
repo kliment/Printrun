@@ -478,6 +478,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 except:
                     pass
                 string+=(self.tempreport.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))+" "
+                wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 if self.sdprinting:
                     string+= " SD printing:%04.2f %%"%(self.percentdone,)
                 if self.p.printing:
@@ -514,6 +515,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def recvcb(self,l):
         if "T:" in l:
             self.tempreport=l
+            wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
         tstring=l.rstrip()
         #print tstring
         if(tstring!="ok"):
