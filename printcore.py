@@ -2,7 +2,7 @@
 from serial import Serial
 from threading import Thread
 import time
-import getopt, sys
+import sys
 
 class printcore():
     def __init__(self,port=None,baud=None):

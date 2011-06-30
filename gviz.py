@@ -55,7 +55,6 @@ class gviz(wx.Panel):
         
     def clear(self):
         self.lastpos=[0,0,0,0,0]
-        self.Bind(wx.EVT_PAINT,self.paint)
         self.lines={}
         self.pens={}
         self.layers=[]
