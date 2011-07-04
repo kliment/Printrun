@@ -85,7 +85,9 @@ class pronsole(cmd.Cmd):
         self.percentdone=0
         self.tempreadings=""
         self.macros={}
+        self.rc_loaded=False
         self.processing_rc=False
+        self.processing_args=False
         self.settings = Settings()
         self.settings._port_list = self.scanserial
         self.settings._temperature_abs_cb = self.set_temp_preset
@@ -167,14 +169,15 @@ class pronsole(cmd.Cmd):
             if not self.processing_rc:
                 print "Macro '"+self.cur_macro_name+"' defined"
                 # save it
-                macro_key = "macro "+self.cur_macro_name
-                macro_def = macro_key
-                if "\n" in self.cur_macro_def:
-                    macro_def += "\n"
-                else:
-                    macro_def += " "
-                macro_def += self.cur_macro_def
-                self.save_in_rc(macro_key,macro_def)
+                if not self.processing_args:
+                    macro_key = "macro "+self.cur_macro_name
+                    macro_def = macro_key
+                    if "\n" in self.cur_macro_def:
+                        macro_def += "\n"
+                    else:
+                        macro_def += " "
+                    macro_def += self.cur_macro_def
+                    self.save_in_rc(macro_key,macro_def)
         else:
             print "Empty macro - cancelled"
         del self.cur_macro,self.cur_macro_name,self.cur_macro_def
@@ -195,7 +198,7 @@ class pronsole(cmd.Cmd):
                     delattr(self.__class__,"do_"+macro_name)
                     del self.macros[macro_name]
                     print "Macro '"+macro_name+"' removed"
-                    if not self.processing_rc:
+                    if not self.processing_rc and not self.processing_args:
                         self.save_in_rc("macro "+macro_name,"")
                 else:
                     print "Macro '"+macro_name+"' is not defined"
@@ -243,7 +246,7 @@ class pronsole(cmd.Cmd):
         try:
             t = type(getattr(self.settings,var))
             value = self.settings._set(var,str)
-            if not self.processing_rc:
+            if not self.processing_rc and not self.processing_args:
                 self.save_in_rc("set "+var,"set %s %s" % (var,value))
         except AttributeError:
             print "Unknown variable '%s'" % var
@@ -282,24 +285,29 @@ class pronsole(cmd.Cmd):
         self.p.disconnect()
         cmd.Cmd.postloop(self)
     
-    def load_rc(self,rc_filename=".pronsolerc"):
+    def load_rc(self,rc_filename):
         self.processing_rc=True
         try:
-            try:
-                self.rc_filename = os.path.join(os.path.expanduser("~"),rc_filename)
-                rc=open(self.rc_filename)
-            except IOError:
-                rc=open(rc_filename)
-                self.rc_filename = os.path.abspath(rc_filename)
+            rc=open(rc_filename)
+            self.rc_filename = os.path.abspath(rc_filename)
             for rc_cmd in rc:
                 if not rc_cmd.lstrip().startswith("#"):
                     self.onecmd(rc_cmd)
             rc.close()
+            if hasattr(self,"cur_macro"):
+                self.end_macro()
+            self.rc_loaded = True
+        finally:
+            self.processing_rc=False
+    
+    def load_default_rc(self,rc_filename=".pronsolerc"):
+        try:
+            try:
+                self.load_rc(os.path.join(os.path.expanduser("~"),rc_filename))
+            except IOError:
+                self.load_rc(rc_filename)
         except IOError:
             pass
-        if hasattr(self,"cur_macro"):
-            self.end_macro()
-        self.processing_rc=False
     
     def save_in_rc(self,key,definition):
         """
@@ -351,7 +359,8 @@ class pronsole(cmd.Cmd):
             del rci,rco
     
     def preloop(self):
-        self.load_rc()
+        if not self.rc_loaded:
+            self.load_default_rc()
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
         cmd.Cmd.preloop(self)
     
@@ -1017,10 +1026,22 @@ class pronsole(cmd.Cmd):
         print "home xyz - homes all axes (Using G1 and G92)"
         print "home xyze - homes all axes and zeroes the extruder (Using G1 and G92)"
         
+    def parse_cmdline(self,args):
+        import getopt
+        opts,args = getopt.getopt(args, "c:e:", ["conf=","config="])
+        for o,a in opts:
+            #print repr((o,a))
+            if o in ("-c","--conf","--config"):
+                self.load_rc(a)
+            elif o == "-e":
+                self.processing_args = True
+                self.onecmd(a)
+                self.processing_args = False
 
 if __name__=="__main__":
     
     interp=pronsole()
+    interp.parse_cmdline(sys.argv[1:])
     try:
         interp.cmdloop()
     except:
