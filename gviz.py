@@ -61,7 +61,9 @@ class gviz(wx.Panel):
         self.layerindex=0
         self.showall=0
         self.dirty=1
+        self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
         self.repaint()
+        
         
     def layerup(self):
         if(self.layerindex+1<len(self.layers)):
@@ -173,7 +175,8 @@ class gviz(wx.Panel):
             
 if __name__ == '__main__':
     app = wx.App(False)
-    main = window(open("/home/kliment/designs/spinner/gearend_export.gcode"))
+    #main = window(open("/home/kliment/designs/spinner/gearend_export.gcode"))
+    main = window(open("jam.gcode"))
     main.Show()
     app.MainLoop()
 

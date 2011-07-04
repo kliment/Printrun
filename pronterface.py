@@ -642,7 +642,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 return
             path = os.path.split(name)[0]
             if path != self.settings.last_file_path:
-	            self.set("last_file_path",path)
+                self.set("last_file_path",path)
             if name.lower().endswith(".stl"):
                 self.skein(name)
             else:
