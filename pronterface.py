@@ -84,8 +84,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.custombuttons=[]
         self.btndict={}
         self.parse_cmdline(sys.argv[1:])
-        if not self.rc_loaded:
-            self.load_default_rc(".pronsolerc")
         customdict={}
         try:
             execfile("custombtn.txt",customdict)

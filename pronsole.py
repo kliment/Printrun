@@ -359,8 +359,6 @@ class pronsole(cmd.Cmd):
             del rci,rco
     
     def preloop(self):
-        if not self.rc_loaded:
-            self.load_default_rc()
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
         cmd.Cmd.preloop(self)
     
@@ -1028,12 +1026,22 @@ class pronsole(cmd.Cmd):
         
     def parse_cmdline(self,args):
         import getopt
-        opts,args = getopt.getopt(args, "c:e:", ["conf=","config="])
+        opts,args = getopt.getopt(args, "c:e:h", ["conf=","config=","help"])
         for o,a in opts:
             #print repr((o,a))
             if o in ("-c","--conf","--config"):
                 self.load_rc(a)
-            elif o == "-e":
+            elif o in ("-h","--help"):
+                print "Usage: "+sys.argv[0]+' [-c filename [-c filename2 ... ] ] [-e "command" ...]'
+                print "  -c | --conf | --config   - override startup .pronsolerc file"
+                print "     may chain config files, settings auto-save will go into last file in the chain"
+                print '  -e <command> - executes command after configuration/.pronsolerc is loaded'
+                print "     macros/settings from these commands are not autosaved"
+                sys.exit()
+        if not self.rc_loaded:
+            self.load_default_rc()
+        for o,a in opts:
+            if o == "-e":
                 self.processing_args = True
                 self.onecmd(a)
                 self.processing_args = False
