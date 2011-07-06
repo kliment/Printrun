@@ -172,6 +172,19 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             print "You must enter a temperature."
             
+    def start_macro(self,macro_name,old_macro_definition=""):
+        if not self.processing_rc:
+            import macroed
+            def cb(definition):
+                pronsole.pronsole.start_macro(self,macro_name)
+                for line in definition.split("\n"):
+                    if hasattr(self,"cur_macro_def"):
+                        self.hook_macro(line)
+                if hasattr(self,"cur_macro_def"):
+                    self.end_macro()
+            macroed.macroed(macro_name,old_macro_definition,cb)
+        else:
+            pronsole.pronsole.start_macro(self,macro_name,old_macro_definition)
     
     def catchprint(self,l):
         wx.CallAfter(self.logbox.AppendText,l)
@@ -786,6 +799,38 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.printbtn.SetLabel("Print")
                 self.paused=0
             
+class macroed(wx.Frame):
+    """Really simple editor to edit macro definitions"""
+    def __init__(self,macro_name,definition,callback):
+        # TBD: remove top-level indent from the definition (if any)
+        wx.Frame.__init__(self,None,title="macro %s" % macro_name)
+        self.callback = callback
+        self.panel=wx.Panel(self,-1)
+        titlesizer=wx.BoxSizer(wx.HORIZONTAL)
+        title = wx.StaticText(self.panel,-1,"  macro %s: "%macro_name)
+        title.SetFont(wx.Font(11,wx.NORMAL,wx.NORMAL,wx.BOLD))
+        titlesizer.Add(title,1)
+        self.okb = wx.Button(self.panel,-1,"Save")
+        self.okb.Bind(wx.EVT_BUTTON,self.save)
+        titlesizer.Add(self.okb)
+        self.cancelb = wx.Button(self.panel,-1,"Cancel")
+        self.cancelb.Bind(wx.EVT_BUTTON,self.close)
+        titlesizer.Add(self.cancelb)
+        topsizer=wx.BoxSizer(wx.VERTICAL)
+        topsizer.Add(titlesizer,0,wx.EXPAND)
+        self.e=wx.TextCtrl(self.panel,style=wx.TE_MULTILINE+wx.HSCROLL,size=(200,200))
+        self.e.SetValue(definition)
+        topsizer.Add(self.e,1,wx.ALL+wx.EXPAND)
+        self.panel.SetSizer(topsizer)
+        topsizer.Layout()
+        topsizer.Fit(self)
+        self.Show()
+    def save(self,ev):
+        self.Close()
+        # TBD: add back top-level indent unless single line.
+        self.callback(self.e.GetValue())
+    def close(self,ev):
+        self.Close()
         
         
 if __name__ == '__main__':
