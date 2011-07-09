@@ -649,6 +649,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.f=[i.replace("\n","").replace("\r","") for i in open(name)]
                 self.filename=name
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
+                self.printbtn.SetLabel("Print")
+                self.pausebtn.SetLabel("Pause")
                 threading.Thread(target=self.loadviz).start()
                 
     def loadviz(self):
