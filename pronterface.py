@@ -103,6 +103,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.connectbtn.Disable();
         for i in self.printerControls:
             i.Enable()
+        if self.filename:
+            self.printbtn.Enable()
         
     
     def sentcb(self,line):
@@ -248,7 +250,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.disconnectbtn)
         self.resetbtn=wx.Button(self.panel,-1,"Reset",pos=(560,0))
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
-        self.printerControls.append(self.resetbtn)
         uts.Add(self.resetbtn)
         self.minibtn=wx.Button(self.panel,-1,"Mini mode",pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
@@ -267,7 +268,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         self.loadbtn=wx.Button(self.panel,-1,"Load file",pos=(0,40))
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
-        self.printerControls.append(self.loadbtn)
         ubs.Add(self.loadbtn)
         self.uploadbtn=wx.Button(self.panel,-1,"SD Upload",pos=(90,40))
         self.uploadbtn.Bind(wx.EVT_BUTTON,self.upload)
@@ -675,7 +675,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
                 self.printbtn.SetLabel("Print")
                 self.pausebtn.SetLabel("Pause")
-                self.printbtn.Enable()
+                if self.p.online:
+                    self.printbtn.Enable()
                 threading.Thread(target=self.loadviz).start()
                 
     def loadviz(self):
@@ -690,9 +691,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def printfile(self,event):
         if self.paused:
             self.p.paused=0
-            self.pausebtn.SetLabel("Pause")
-            self.printbtn.SetLabel("Print")
             self.paused=0
+            self.on_startprint()
             if self.sdprinting:
                 self.p.send_now("M26 S0")
                 self.p.send_now("M24")
@@ -707,7 +707,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.pausebtn.Enable()
         self.printbtn.SetLabel("Restart")
         self.p.startprint(self.f)
-        
+    
+    def on_startprint(self):
+        self.pausebtn.SetLabel("Pause")
+        self.printbtn.SetLabel("Print")
+    
     def endupload(self):
         self.p.send_now("M29 ")
         wx.CallAfter(self.status.SetStatusText,"File upload complete")
@@ -756,6 +760,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
         
     def sdprintfile(self,event):
+        self.on_startprint()
         threading.Thread(target=self.getfiles).start()
         pass
         
@@ -794,6 +799,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         
         self.connectbtn.Enable();
+        self.printbtn.Disable();
+        self.pausebtn.Disable();
         for i in self.printerControls:
             i.Disable()
         
