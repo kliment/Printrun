@@ -266,9 +266,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ubs.Add(self.sdprintbtn)
         self.printbtn=wx.Button(self.panel,-1,"Print",pos=(270,40))
         self.printbtn.Bind(wx.EVT_BUTTON,self.printfile)
+        self.printbtn.Disable()
         ubs.Add(self.printbtn)
         self.pausebtn=wx.Button(self.panel,-1,"Pause",pos=(360,40))
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
+        self.pausebtn.Disable()
         ubs.Add(self.pausebtn)
         ubs.Add((50,-1),flag=wx.EXPAND)
         try:
@@ -651,6 +653,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
                 self.printbtn.SetLabel("Print")
                 self.pausebtn.SetLabel("Pause")
+                self.printbtn.Enable()
                 threading.Thread(target=self.loadviz).start()
                 
     def loadviz(self):
