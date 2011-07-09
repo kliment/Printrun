@@ -100,6 +100,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def online(self):
         print "Printer is now online"
+        self.connectbtn.Disable();
+        for i in self.printerControls:
+            i.Enable()
+        
     
     def sentcb(self,line):
         if("G1" in line):
@@ -203,6 +207,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Close()
         
     def popwindow(self):
+        # this list will contain all controls that should be only enabled
+        # when we're connected to a printer
+        self.printerControls = []
+        
         #sizer layout: topsizer is a column sizer containing two sections
         #upper section contains the mini view buttons
         #lower section contains the rest of the window - manual controls, console, visualizations
@@ -236,10 +244,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
         self.disconnectbtn=wx.Button(self.panel,-1,"Disconnect",pos=(470,0))
         self.disconnectbtn.Bind(wx.EVT_BUTTON,self.disconnect)
-        self.disconnectbtn.Disable();
+        self.printerControls.append(self.disconnectbtn)
         uts.Add(self.disconnectbtn)
         self.resetbtn=wx.Button(self.panel,-1,"Reset",pos=(560,0))
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
+        self.printerControls.append(self.resetbtn)
         uts.Add(self.resetbtn)
         self.minibtn=wx.Button(self.panel,-1,"Mini mode",pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
@@ -258,12 +267,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         self.loadbtn=wx.Button(self.panel,-1,"Load file",pos=(0,40))
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
+        self.printerControls.append(self.loadbtn)
         ubs.Add(self.loadbtn)
         self.uploadbtn=wx.Button(self.panel,-1,"SD Upload",pos=(90,40))
         self.uploadbtn.Bind(wx.EVT_BUTTON,self.upload)
+        self.printerControls.append(self.uploadbtn)
         ubs.Add(self.uploadbtn)
         self.sdprintbtn=wx.Button(self.panel,-1,"SD Print",pos=(180,40))
         self.sdprintbtn.Bind(wx.EVT_BUTTON,self.sdprintfile)
+        self.printerControls.append(self.sdprintbtn)
         ubs.Add(self.sdprintbtn)
         self.printbtn=wx.Button(self.panel,-1,"Print",pos=(270,40))
         self.printbtn.Bind(wx.EVT_BUTTON,self.printfile)
@@ -293,9 +305,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
         self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
+        self.printerControls.append(self.commandbox)
         lbrs.Add(self.commandbox)
         self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
+        self.printerControls.append(self.sendbtn)
         lbrs.Add(self.sendbtn)
         lrs.Add(lbrs)
         
@@ -318,6 +332,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btn.properties=i
             btn.Bind(wx.EVT_BUTTON,self.procbutton)
             self.btndict[i[1]]=btn
+            self.printerControls.append(btn)
             lls.Add(btn,pos=i[2],span=i[4])
         
         
@@ -329,6 +344,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(self.htemp,pos=(11,1),span=(1,3))
         self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
+        self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(11,4),span=(1,2))
         lls.Add(wx.StaticText(self.panel,-1,"Bed:",pos=(0,343)),pos=(12,0),span=(1,1))
         self.btemp=wx.ComboBox(self.panel, -1,
@@ -338,6 +354,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(self.btemp,pos=(12,1),span=(1,3))
         self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,365))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
+        self.printerControls.append(self.setbbtn)
         lls.Add(self.setbbtn,pos=(12,4),span=(1,2))
         self.tempdisp=wx.StaticText(self.panel,-1,"")
         lls.Add(self.tempdisp,pos=(12,6),span=(1,3))
@@ -398,6 +415,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_CLOSE, self.kill)
         self.topsizer.Layout()
         self.topsizer.Fit(self)
+        
+        # disable all printer controls until we connect to a printer
+        for i in self.printerControls:
+            i.Disable()
         
         #self.panel.Fit()
         #uts.Layout()
@@ -765,16 +786,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.set("port",port)
         if baud != self.settings.baudrate:
             self.set("baudrate",str(baud))
-        self.disconnectbtn.Enable();
-        self.connectbtn.Disable();
         threading.Thread(target=self.statuschecker).start()
         
         
     def disconnect(self,event):
         self.p.disconnect()
         self.statuscheck=False
-        self.disconnectbtn.Disable();
+        
         self.connectbtn.Enable();
+        for i in self.printerControls:
+            i.Disable()
+        
         if self.paused:
             self.p.paused=0
             self.p.printing=0
