@@ -236,6 +236,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
         self.disconnectbtn=wx.Button(self.panel,-1,"Disconnect",pos=(470,0))
         self.disconnectbtn.Bind(wx.EVT_BUTTON,self.disconnect)
+        self.disconnectbtn.Disable();
         uts.Add(self.disconnectbtn)
         self.resetbtn=wx.Button(self.panel,-1,"Reset",pos=(560,0))
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
@@ -764,12 +765,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.set("port",port)
         if baud != self.settings.baudrate:
             self.set("baudrate",str(baud))
+        self.disconnectbtn.Enable();
+        self.connectbtn.Disable();
         threading.Thread(target=self.statuschecker).start()
         
         
     def disconnect(self,event):
         self.p.disconnect()
         self.statuscheck=False
+        self.disconnectbtn.Disable();
+        self.connectbtn.Enable();
         if self.paused:
             self.p.paused=0
             self.p.printing=0
