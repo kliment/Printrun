@@ -283,7 +283,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ubs.Add(self.printbtn)
         self.pausebtn=wx.Button(self.panel,-1,"Pause",pos=(360,40))
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
-        self.pausebtn.Disable()
         ubs.Add(self.pausebtn)
         ubs.Add((50,-1),flag=wx.EXPAND)
         try:
@@ -417,6 +416,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.topsizer.Fit(self)
         
         # disable all printer controls until we connect to a printer
+        self.pausebtn.Hide()
         for i in self.printerControls:
             i.Disable()
         
@@ -675,6 +675,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
                 self.printbtn.SetLabel("Print")
                 self.pausebtn.SetLabel("Pause")
+                self.pausebtn.Hide()
                 if self.p.online:
                     self.printbtn.Enable()
                 threading.Thread(target=self.loadviz).start()
@@ -704,13 +705,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if not self.p.online:
             wx.CallAfter(self.status.SetStatusText,"Not connected to printer.")
             return
-        self.pausebtn.Enable()
-        self.printbtn.SetLabel("Restart")
+        self.on_startprint()
         self.p.startprint(self.f)
     
     def on_startprint(self):
         self.pausebtn.SetLabel("Pause")
-        self.printbtn.SetLabel("Print")
+        self.pausebtn.Show()
+        self.printbtn.SetLabel("Restart")
     
     def endupload(self):
         self.p.send_now("M29 ")
@@ -800,7 +801,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         self.connectbtn.Enable();
         self.printbtn.Disable();
-        self.pausebtn.Disable();
+        self.pausebtn.Hide();
         for i in self.printerControls:
             i.Disable()
         
