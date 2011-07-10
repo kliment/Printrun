@@ -23,13 +23,13 @@ class window(wx.Frame):
     
         #print p.lines.keys()
     def zoom(self, event):
-    	z=event.GetWheelRotation()
-    	if event.ShiftDown():
-    		if z > 0:   self.p.layerdown()
-    		elif z < 0: self.p.layerup()
-    	else:
-    		if z > 0:   self.p.zoom(event.GetX(),event.GetY(),1.2)
-    		elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
+        z=event.GetWheelRotation()
+        if event.ShiftDown():
+            if z > 0:   self.p.layerdown()
+            elif z < 0: self.p.layerup()
+        else:
+            if z > 0:   self.p.zoom(event.GetX(),event.GetY(),1.2)
+            elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
         
 class gviz(wx.Panel):
     def __init__(self,parent,size=(200,200),bedsize=(200,200)):
@@ -61,10 +61,7 @@ class gviz(wx.Panel):
         self.layerindex=0
         self.showall=0
         self.dirty=1
-        self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
-        self.repaint()
-        
-        
+        #self.repaint()        
     def layerup(self):
         if(self.layerindex+1<len(self.layers)):
             self.layerindex+=1
@@ -88,10 +85,10 @@ class gviz(wx.Panel):
     
 
     def zoom(self,x,y,factor):
-    	self.scale = [s * factor for s in self.scale]
-    	self.translate = [ x - (x-self.translate[0]) * factor,
-    	                   y - (y-self.translate[1]) * factor]
-    	#self.dirty=1
+        self.scale = [s * factor for s in self.scale]
+        self.translate = [ x - (x-self.translate[0]) * factor,
+                            y - (y-self.translate[1]) * factor]
+        #self.dirty=1
         self.repaint()
         self.Refresh()
         

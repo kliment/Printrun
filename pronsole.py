@@ -620,7 +620,7 @@ class pronsole(cmd.Cmd):
         
     def do_sdprint(self,l):
         if not self.p.online:
-            print "Printer is not online. Try connect to it first."
+            print   "Printer is not online. Try connect to it first."
             return
         self.listing=2
         self.sdfiles=[]
