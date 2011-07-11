@@ -437,7 +437,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #uts.Layout()
         
     def showwin(self,event):
-        self.gwindow.Show()
+        if(self.f is not None):
+            self.gwindow.Show()
         
     def setfeeds(self,e):
         self.feedrates_changed = True
