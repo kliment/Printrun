@@ -86,6 +86,8 @@ class printcore():
                         pass
                 if self.loud:
                     print "RECV: ",line.rstrip()
+            if(line.startswith('DEBUG_')):
+                continue
             if(line.startswith('start') or line.startswith('ok')):
                 self.clear=True
             if(line.startswith('start') or line.startswith('ok') or "T:" in line):
