@@ -37,6 +37,10 @@ class Settings:
         self.xy_feedrate = 3000
         self.z_feedrate = 200
         self.e_feedrate = 300
+        self.updates = 0
+        self.git_path = ""
+        self.git_branch = "master"
+        
     def _set(self,key,value):
         try:
             value = getattr(self,"_%s_alias"%key)()[value]

@@ -4,7 +4,7 @@ try:
 except:
     print "WX is not installed. This program requires WX to run."
     raise
-import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz
+import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, subprocess, re
 thread=threading.Thread
 winsize=(800,500)
 if os.name=="nt":
@@ -16,6 +16,14 @@ if os.name=="nt":
 
 
 import pronsole
+
+try:
+    from lib.pygithub import github
+    github_present = 1
+except:
+    print "W: Update option active, but github library not found. Disabling feature"
+    github_present = 0
+    pass
 
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
@@ -97,6 +105,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.mini=False
         self.p.sendcb=self.sentcb
         self.curlayer=0
+        if self.settings.updates == 1 and github_present == 1:
+            self.find_installed_version()
+            self.checkUpdate()
     
     def online(self):
         print "Printer is now online"
@@ -178,7 +189,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             print "You must enter a temperature."
             
-    
     def catchprint(self,l):
         wx.CallAfter(self.logbox.AppendText,l)
         
@@ -199,12 +209,108 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def popmenu(self):
         self.menustrip = wx.MenuBar()
         m = wx.Menu()
+        o = wx.Menu()
+        self.Opt = o.AppendCheckItem(1, "Updates", "Check for updates on startup")
+        o.Check(1, self.settings.updates)
+        self.Bind(wx.EVT_MENU, self.onUpdates, id=1)
         self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"Skeinforge settings"," Adjust skeinforge settings"))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"Close"," Closes the Window"))
         self.menustrip.Append(m,"&Print")
+        self.menustrip.Append(o,"&Options")
         self.SetMenuBar(self.menustrip)
         pass
-    
+
+    def onUpdates(self, event):
+        if self.Opt.IsChecked():
+            print "Checking for updates on startup"
+            self.save_in_rc("set updates", "set updates 1")
+        else:
+            print "Not checking for updates on startup"
+            self.save_in_rc("set updates", "set updates 0")
+
+    def run_git(self, args):
+        
+        if self.settings.git_path:
+            git_locations = ['"'+self.settings.git_path+'"']
+        else:
+            git_locations = ['git']
+        
+        output = err = None
+
+        for cur_git in git_locations:
+
+            cmd = cur_git+' '+args
+        
+            try:
+                p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True )
+                output, err = p.communicate()
+            except OSError:
+                print "Command "+cmd+" didn't work, couldn't find git."
+                continue
+            
+            if 'not found' in output or "not recognized as an internal or external command" in output:
+                print "Unable to find git with command "+cmd
+                output = None
+            elif 'fatal:' in output or err:
+                print "Git returned bad info, are you sure this is a git installation?"
+                output = None
+            elif output:
+                break
+
+        return (output, err)
+
+    def find_installed_version(self):
+        """
+        Attempts to find the currently installed version of Printrun.
+
+        Uses git show to get commit version.
+
+        Returns: True for success or False for failure
+        """
+
+        output, err = self.run_git('rev-parse HEAD') 
+
+        if not output:
+            return "Error calling git"
+
+        cur_commit_hash = output.strip()
+
+        if not re.match('^[a-z0-9]+$', cur_commit_hash):
+            return self._git_error()
+        
+        self._cur_commit_hash = cur_commit_hash
+        print "Git hash is "+cur_commit_hash
+            
+        return True
+
+    def checkUpdate(self):
+        """
+        Uses pygithub to ask github if there is a newer version than the provided
+        commit hash.
+        
+        commit_hash: hash that we're checking against
+        """
+
+        if self.settings.updates==1 and github_present==1:
+            self._newest_commit_hash = None
+            self._num_commits_behind = 0
+
+            gh = github.GitHub()
+
+            # find newest commit
+            for curCommit in gh.commits.forBranch('kliment', 'Printrun', 'master'):
+                if not self._newest_commit_hash:
+                    self._newest_commit_hash = curCommit.id
+                    if not self._cur_commit_hash:
+                        break
+
+                if curCommit.id == self._cur_commit_hash:
+                    break
+
+                self._num_commits_behind += 1
+            if self._num_commits_behind != 0:
+                print "There are "+str(self._num_commits_behind)+" new updates. Please upgrade Printrun"
+
     def OnExit(self, event):
         self.Close()
         
