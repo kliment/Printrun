@@ -12,10 +12,12 @@ class stlwrap:
         return self.name
     
 
-class showstl(wx.Frame):
+class showstl(wx.Window):
     def __init__(self,parent,size,pos):
         wx.Window.__init__(self,parent,size=size,pos=pos)
         self.l=wx.ListCtrl(self,size=(300,100),pos=(0,size[1]-100))
+        self.b=wx.Button(self,label="Export",pos=(300,size[1]-100))
+        self.b.Bind(wx.EVT_BUTTON,self.export)
         #self.SetBackgroundColour((0,0,0))
         wx.FutureCall(200,self.paint)
         self.i=0
@@ -29,6 +31,18 @@ class showstl(wx.Frame):
         self.basedir="."
         self.initpos=None
         self.prevsel=-1
+        
+    def export(self,event):
+        dlg=wx.FileDialog(self,"Pick file to save to",self.basedir,style=wx.FD_SAVE)
+        dlg.SetWildcard("STL files (;*.stl;)")
+        if(dlg.ShowModal() == wx.ID_OK):
+            name=dlg.GetPath()
+            facets=[]
+            for i in self.models.values():
+                facets+=i.facets
+            stltool.emitstl(name,facets,"plater_export")
+            print "wrote ",name
+        
         
     def right(self,event):
         dlg=wx.FileDialog(self,"Open file to print",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
@@ -120,7 +134,7 @@ class showstl(wx.Frame):
         
 class stlwin(wx.Frame):
     def __init__(self,size=(500,600)):
-        wx.Frame.__init__(self,None,size=size)
+        wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
         self.s=showstl(self,(500,600),(100,100))
         
 if __name__ == '__main__':
