@@ -843,7 +843,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 class macroed(wx.Frame):
     """Really simple editor to edit macro definitions"""
     def __init__(self,macro_name,definition,callback):
-        # TBD: remove top-level indent from the definition (if any)
+        self.indent_chars = "  "
         wx.Frame.__init__(self,None,title="macro %s" % macro_name)
         self.callback = callback
         self.panel=wx.Panel(self,-1)
@@ -860,7 +860,7 @@ class macroed(wx.Frame):
         topsizer=wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(titlesizer,0,wx.EXPAND)
         self.e=wx.TextCtrl(self.panel,style=wx.TE_MULTILINE+wx.HSCROLL,size=(200,200))
-        self.e.SetValue(definition)
+        self.e.SetValue(self.unindent(definition))
         topsizer.Add(self.e,1,wx.ALL+wx.EXPAND)
         self.panel.SetSizer(topsizer)
         topsizer.Layout()
@@ -868,10 +868,30 @@ class macroed(wx.Frame):
         self.Show()
     def save(self,ev):
         self.Close()
-        # TBD: add back top-level indent unless single line.
-        self.callback(self.e.GetValue())
+        self.callback(self.reindent(self.e.GetValue()))
     def close(self,ev):
         self.Close()
+    def unindent(self,text):
+        import re
+        self.indent_chars = text[:len(text)-len(text.lstrip())]
+        unindented = ""
+        lines = re.split(r"(\r\n?|\n)",text)
+        if len(lines) <= 1:
+            return text
+        for line in lines:
+            if line.startswith(self.indent_chars):
+                unindented += line[len(self.indent_chars):] + "\n"
+            else:
+                unindented += line + "\n"
+        return unindented
+    def reindent(self,text):
+        lines = re.split(r"(\r\n?|\n)",text)
+        if len(lines) <= 1:
+            return text
+        reindented = ""
+        for line in lines:
+            reindented += self.indent_chars + line + "\n"
+        return reindented
         
         
 if __name__ == '__main__':
