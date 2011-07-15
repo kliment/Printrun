@@ -182,6 +182,15 @@ class pronsole(cmd.Cmd):
             print "Empty macro - cancelled"
         del self.cur_macro,self.cur_macro_name,self.cur_macro_def
         
+    def start_macro(self,macro_name,prev_definition="",suppress_instructions=False):
+        if not self.processing_rc and not suppress_instructions:
+            print "Enter macro using indented lines, end with empty line"
+        self.cur_macro_name = macro_name
+        self.cur_macro_def = ""
+        self.cur_macro = "def macro(self,*arg):\n"
+        self.onecmd = self.hook_macro # override onecmd temporarily
+        self.prompt="..>"
+        
     def do_macro(self,args):
         if args.strip()=="":
             self.print_topics("User-defined macros",self.macros.keys(),15,80)
@@ -214,13 +223,10 @@ class pronsole(cmd.Cmd):
                 self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(*arg))\n"
             self.end_macro()
             return
-        if not self.processing_rc:
-            print "Enter macro using indented lines, end with empty line"
-        self.cur_macro_name = macro_name
-        self.cur_macro_def = ""
-        self.cur_macro = "def macro(self,*arg):\n"
-        self.onecmd = self.hook_macro # override onecmd temporarily
-        self.prompt="..>"
+        if self.macros.has_key(macro_name):
+            self.start_macro(macro_name,self.macros[macro_name])
+        else:
+            self.start_macro(macro_name)
     
     def help_macro(self):
         print "Define single-line macro: macro <name> <definition>"
