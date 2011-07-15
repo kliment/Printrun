@@ -182,8 +182,8 @@ class pronsole(cmd.Cmd):
             print "Empty macro - cancelled"
         del self.cur_macro,self.cur_macro_name,self.cur_macro_def
         
-    def start_macro(self,macro_name,prev_definition=""):
-        if not self.processing_rc:
+    def start_macro(self,macro_name,prev_definition="",suppress_instructions=False):
+        if not self.processing_rc and not suppress_instructions:
             print "Enter macro using indented lines, end with empty line"
         self.cur_macro_name = macro_name
         self.cur_macro_def = ""

@@ -180,15 +180,24 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             
     def start_macro(self,macro_name,old_macro_definition=""):
         if not self.processing_rc:
-            import macroed
             def cb(definition):
-                pronsole.pronsole.start_macro(self,macro_name)
+                if "\n" not in definition and len(definition.strip())>0:
+                    macro_def = definition.strip()
+                    self.cur_macro_def = macro_def
+                    self.cur_macro_name = macro_name
+                    if macro_def.startswith("!"):
+                        self.cur_macro = "def macro(self,*arg):\n  "+macro_def[1:]+"\n"
+                    else:
+                        self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(*arg))\n"
+                    self.end_macro()
+                    return
+                pronsole.pronsole.start_macro(self,macro_name,True)
                 for line in definition.split("\n"):
                     if hasattr(self,"cur_macro_def"):
                         self.hook_macro(line)
                 if hasattr(self,"cur_macro_def"):
                     self.end_macro()
-            macroed.macroed(macro_name,old_macro_definition,cb)
+            macroed(macro_name,old_macro_definition,cb)
         else:
             pronsole.pronsole.start_macro(self,macro_name,old_macro_definition)
     
@@ -875,7 +884,8 @@ class macroed(wx.Frame):
         import re
         self.indent_chars = text[:len(text)-len(text.lstrip())]
         unindented = ""
-        lines = re.split(r"(\r\n?|\n)",text)
+        lines = re.split(r"(?:\r\n?|\n)",text)
+        #print lines
         if len(lines) <= 1:
             return text
         for line in lines:
@@ -885,7 +895,8 @@ class macroed(wx.Frame):
                 unindented += line + "\n"
         return unindented
     def reindent(self,text):
-        lines = re.split(r"(\r\n?|\n)",text)
+        import re
+        lines = re.split(r"(?:\r\n?|\n)",text)
         if len(lines) <= 1:
             return text
         reindented = ""
