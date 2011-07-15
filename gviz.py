@@ -8,11 +8,32 @@ class window(wx.Frame):
         for i in f:
             self.p.addgcode(i)
         #print time.time()-s
+        self.initpos=[0,0]
         self.p.Bind(wx.EVT_KEY_DOWN,self.key)
         self.Bind(wx.EVT_KEY_DOWN,self.key)
         self.p.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
+        self.p.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
+        self.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
         
+    def mouse(self,event):
+        if event.ButtonUp(wx.MOUSE_BTN_LEFT):
+            if(self.initpos is not None):
+                self.initpos=None
+        elif event.Dragging():
+            e=event.GetPositionTuple()
+            if(self.initpos is None):
+                self.initpos=e
+                self.basetrans=self.p.translate
+            #print self.p.translate,e,self.initpos
+            self.p.translate = [ self.basetrans[0]+(e[0]-self.initpos[0]),
+                            self.basetrans[1]+(e[1]-self.initpos[1]) ]
+            self.p.repaint()
+            self.p.Refresh()
+        
+        else:
+            event.Skip()
+    
     def key(self, event):
         x=event.GetKeyCode()
         #print x
