@@ -53,10 +53,15 @@ class showstl(wx.Window):
                 return
             path = os.path.split(name)[0]
             self.basedir=path
+            t=time.time()
+            #print name
             if name.lower().endswith(".stl"):
                 self.models[name]=stltool.stl(name)
+                self.models[name].offsets=[0,0,0]
+                #print time.time()-t
                 self.l.Append([stlwrap(self.models[name],name)])
             self.Refresh()
+            #print time.time()-t
         
     def move(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
@@ -65,7 +70,11 @@ class showstl(wx.Window):
                 if i != -1:
                     p=event.GetPositionTuple()
                     #print (p[0]-self.initpos[0]),(p[1]-self.initpos[1])
-                    self.models[self.l.GetItemText(i)]=self.models[self.l.GetItemText(i)].translate([0.5*(p[0]-self.initpos[0]),0.5*(p[1]-self.initpos[1]),0])
+                    t=time.time()
+                    m=self.models[self.l.GetItemText(i)]
+                    m.offsets=[m.offsets[0]+0.5*(p[0]-self.initpos[0]),m.offsets[1]+0.5*(p[1]-self.initpos[1]),m.offsets[2]]
+                    #self.models[self.l.GetItemText(i)]=self.models[self.l.GetItemText(i)].translate([0.5*(p[0]-self.initpos[0]),0.5*(p[1]-self.initpos[1]),0])
+                    #print time.time()-t
                 self.Refresh()
                 self.initpos=None
         elif event.ButtonDown(wx.MOUSE_BTN_RIGHT):
@@ -84,7 +93,7 @@ class showstl(wx.Window):
             event.Skip()
         
     def cr(self):
-        time.sleep(0.1)
+        time.sleep(0.01)
         if(self.i!=self.previ):
             i=self.l.GetFirstSelected()
             if i != -1:
@@ -98,7 +107,6 @@ class showstl(wx.Window):
         s=self.l.GetFirstSelected()
         if self.prevsel!=s:
             self.i=0
-            print "reset"
             self.prevsel=s
         if z > 0:
             self.i-=1
@@ -114,28 +122,26 @@ class showstl(wx.Window):
         
     def paint(self,coord1="x",coord2="y",dc=None):
         coords={"x":0,"y":1,"z":2}
-        #s=stltool.stl("20cube.stl")
-        #print s.facets[0]
-        #s=self.s
-        #print self.i
-        #print s.facets[0]
         if dc is None:
             dc=wx.ClientDC(self)
-        #self.facet=[normal,[[0,0,0],[0,0,0],[0,0,0]]]
-        offset=200
-        scale=2
+        offset=[0,0]
+        scale=3
+        dc.SetBrush(wx.Brush(wx.Colour(128,255,128)))
+        dc.SetPen(wx.Pen(wx.Colour(128,255,128)))
+        t=time.time()
         for m in self.models.values():
-            for i in random.sample(m.facets,min(1000,len(m.facets))):
-                dc.DrawLine(offset+scale*i[1][0][coords[coord1]],offset+scale*i[1][0][coords[coord2]],offset+scale*i[1][1][coords[coord1]],offset+scale*i[1][1][coords[coord2]])
-                dc.DrawLine(offset+scale*i[1][2][coords[coord1]],offset+scale*i[1][2][coords[coord2]],offset+scale*i[1][1][coords[coord1]],offset+scale*i[1][1][coords[coord2]])
-                dc.DrawLine(offset+scale*i[1][0][coords[coord1]],offset+scale*i[1][0][coords[coord2]],offset+scale*i[1][2][coords[coord1]],offset+scale*i[1][2][coords[coord2]])
+            for i in m.facets:#random.sample(m.facets,min(100000,len(m.facets))):
+                dc.DrawPolygon([wx.Point(offset[0]+scale*m.offsets[0]+scale*p[0],0-(offset[1]+scale*m.offsets[1]+scale*p[1])) for p in i[1]])
+                #if(time.time()-t)>5:
+                #    break
         del dc
+        print time.time()-t
         #s.export()
         
 class stlwin(wx.Frame):
-    def __init__(self,size=(500,600)):
+    def __init__(self,size=(600,700)):
         wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
-        self.s=showstl(self,(500,600),(100,100))
+        self.s=showstl(self,(600,700),(0,0))
         
 if __name__ == '__main__':
     app = wx.App(False)

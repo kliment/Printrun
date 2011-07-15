@@ -304,11 +304,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
         self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
-        self.printerControls.append(self.commandbox)
+        #self.printerControls.append(self.commandbox)
         lbrs.Add(self.commandbox)
         self.sendbtn=wx.Button(self.panel,-1,"Send",pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
-        self.printerControls.append(self.sendbtn)
+        #self.printerControls.append(self.sendbtn)
         lbrs.Add(self.sendbtn)
         lrs.Add(lbrs)
         
