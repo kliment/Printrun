@@ -24,6 +24,22 @@ m=[
     [0,0,0,1]
 ]
 
+def emitstl(filename,facets=[],objname="stltool_export"):
+    if filename is None:
+        return
+    f=open(filename,"w")
+    f.write("solid "+objname+"\n")
+    for i in facets:
+        f.write("  facet normal "+" ".join(map(str,i[0]))+"\n   outer loop\n")
+        for j in i[1]:
+            f.write("    vertex "+" ".join(map(str,j))+"\n")
+        f.write("   endloop"+"\n")
+        f.write("  endfacet"+"\n")
+    f.write("endsolid "+objname+"\n")
+    f.close()
+        
+        
+
 class stl:
     def __init__(self, filename=None):
         self.facet=[[0,0,0],[[0,0,0],[0,0,0],[0,0,0]]]
@@ -112,7 +128,7 @@ class stl:
                 f.write("    vertex "+" ".join(map(str,j))+"\n")
             f.write("   endloop"+"\n")
             f.write("  endfacet"+"\n")
-        f.write("endsolid exported"+"\n")
+        f.write("endsolid "+self.name+"\n")
         f.flush()
         
     def parseline(self,l):
@@ -156,5 +172,5 @@ if __name__=="__main__" and 0:
                 break
         
         print i,len(working)
-                
+    emitstl("sphereout.stl",s.facets,"emitted_object")
 #stl("../prusamendel/stl/mendelplate.stl")
