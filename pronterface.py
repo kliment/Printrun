@@ -631,7 +631,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             self.filename=self.filename.replace(".stl","_export.gcode")
             self.f=[i.replace("\n","").replace("\r","") for i in open(self.filename)]
+            if self.p.online:
+                    wx.CallAfter(self.printbtn.Enable)
+                    
             wx.CallAfter(self.status.SetStatusText,"Loaded "+self.filename+", %d lines"%(len(self.f),))
+                
             threading.Thread(target=self.loadviz).start()
         except:
             self.filename=fn
