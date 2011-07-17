@@ -97,7 +97,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.mini=False
         self.p.sendcb=self.sentcb
         self.p.startcb=self.startcb
-        self.p.endcb=self.endcb
+        #self.p.endcb=self.endcb
         self.starttime=0
         self.curlayer=0
     
