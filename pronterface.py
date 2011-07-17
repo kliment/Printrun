@@ -671,7 +671,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     wx.CallAfter(self.printbtn.Enable)
                     
             wx.CallAfter(self.status.SetStatusText,"Loaded "+self.filename+", %d lines"%(len(self.f),))
-                
+            wx.CallAfter(self.pausebtn.Hide)
+            wx.CallAfter(self.printbtn.SetLabel,"Print")
+
             threading.Thread(target=self.loadviz).start()
         except:
             self.filename=fn
@@ -699,7 +701,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
         dlg=wx.FileDialog(self,"Open file to print",basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard("STL and GCODE files (;*.gcode;*.g;*.stl;)")
+        dlg.SetWildcard("STL and GCODE files (;*.gcode;*.g;*.stl;*.STL;)")
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
             if not(os.path.exists(name)):
