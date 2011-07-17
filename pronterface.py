@@ -96,7 +96,19 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.stdout=sys.stdout
         self.mini=False
         self.p.sendcb=self.sentcb
+        self.p.startcb=self.startcb
+        self.p.endcb=self.endcb
+        self.starttime=0
         self.curlayer=0
+    
+    def startcb(self):
+        self.starttime=time.time()
+        
+    def endcb(self):
+        print "Print took "+str(int(time.time()-self.starttime))+" seconds."
+        wx.CallAfter(self.pausebtn.Hide)
+        wx.CallAfter(self.printbtn.SetLabel,"Print")
+
     
     def online(self):
         print "Printer is now online"
@@ -592,11 +604,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.status.SetStatusText,"Starting print")
             self.sdprinting=1
             self.p.send_now("M24")
+            self.startcb()
             return
         if "Done printing file" in l:
             wx.CallAfter(self.status.SetStatusText,l)
             self.sdprinting=0
             self.recvlisteners.remove(self.waitforsdresponse)
+            self.endcb()
             return
         if "SD printing byte" in l:
             #M27 handler
