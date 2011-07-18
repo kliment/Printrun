@@ -313,7 +313,8 @@ class pronsole(cmd.Cmd):
             except IOError:
                 self.load_rc(rc_filename)
         except IOError:
-            pass
+            # make sure the filename is initialized
+            self.rc_filename = os.path.abspath(os.path.join(os.path.expanduser("~"),rc_filename))
     
     def save_in_rc(self,key,definition):
         """
