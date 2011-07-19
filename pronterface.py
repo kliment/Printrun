@@ -38,6 +38,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def __init__(self, filename=None,size=winsize):
         pronsole.pronsole.__init__(self)
         self.settings.last_file_path = ""
+        self.settings.last_temperature = 0.0
+        self.settings.last_bed_temperature = 0.0
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
@@ -163,6 +165,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.p.send_now("M104 S"+l)
                     print "Setting hotend temperature to ",f," degrees Celsius."
                     self.htemp.SetValue(l)
+                    self.set("last_temperature",str(f))
                 else:
                     print "Printer is not online."
             else:
@@ -183,6 +186,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.p.send_now("M140 S"+l)
                     print "Setting bed temperature to ",f," degrees Celsius."
                     self.btemp.SetValue(l)
+                    self.set("last_bed_temperature",str(f))
                 else:
                     print "Printer is not online."
             else:
@@ -370,9 +374,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         
         lls.Add(wx.StaticText(self.panel,-1,"Heater:",pos=(0,343)),pos=(11,0),span=(1,1))
+        htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
+        if self.settings.last_temperature not in map(float,self.temps.values()):
+            htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
-                choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
+                choices=htemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
         self.htemp.SetValue("0")
         lls.Add(self.htemp,pos=(11,1),span=(1,3))
         self.settbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,335))
@@ -380,9 +386,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(11,4),span=(1,2))
         lls.Add(wx.StaticText(self.panel,-1,"Bed:",pos=(0,343)),pos=(12,0),span=(1,1))
+        btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.bedtemps[x])]
+        if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
+            btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
-                choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.temps.keys())],
-                style=wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
+                choices=btemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
         self.btemp.SetValue("0")
         lls.Add(self.btemp,pos=(12,1),span=(1,3))
         self.setbbtn=wx.Button(self.panel,-1,"Set",size=(30,-1),pos=(135,365))
