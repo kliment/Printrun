@@ -237,7 +237,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def popmenu(self):
         self.menustrip = wx.MenuBar()
         m = wx.Menu()
-        self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"Skeinforge settings"," Adjust skeinforge settings"))
+        if sys.platform != 'darwin':
+            self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"Skeinforge settings"," Adjust skeinforge settings"))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"Close"," Closes the Window"))
         self.menustrip.Append(m,"&Print")
         self.SetMenuBar(self.menustrip)
