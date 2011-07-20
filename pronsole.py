@@ -995,27 +995,11 @@ class pronsole(cmd.Cmd):
             print "Printer is currently printing. Please pause the print before you issue manual commands."
             return
         if "x" in l.lower():
-            self.do_move("X -250")
-            self.p.send_now("G92 X0")
-            self.do_move("X 5 200")
-            self.do_move("X -10 200")
-            self.do_move("X 0.1")
-            self.do_move("X -0.1")
-            self.p.send_now("G92 X0")
+            self.p.send_now("G28 X")
         if "y" in l.lower():
-            self.do_move("Y -250")
-            self.p.send_now("G92 Y0")
-            self.do_move("Y 5 200")
-            self.do_move("Y -10 200")
-            self.do_move("Y 0.1")
-            self.do_move("Y -0.1")
-            self.p.send_now("G92 Y0")
+            self.p.send_now("G28 Y")
         if "z" in l.lower():
-            self.do_move("Z -250")
-            self.p.send_now("G92 Z0")
-            self.do_move("Z 2")
-            self.do_move("Z -3")
-            self.p.send_now("G92 Z0")
+            self.p.send_now("G28 Z")
         if "e" in l.lower():
             self.p.send_now("G92 E0")
         if not len(l):
@@ -1024,12 +1008,11 @@ class pronsole(cmd.Cmd):
             
     def help_home(self):
         print "Homes the printer"
-        print "home - homes all axes and zeroes the extruder(Using G28)"
-        print "home xy - homes x and y axes (Using G1 and G92)"
-        print "home z - homes z axis only (Using G1 and G92)"
+        print "home - homes all axes and zeroes the extruder(Using G28 and G92)"
+        print "home xy - homes x and y axes (Using G28)"
+        print "home z - homes z axis only (Using G28)"
         print "home e - set extruder position to zero (Using G92)"
-        print "home xyz - homes all axes (Using G1 and G92)"
-        print "home xyze - homes all axes and zeroes the extruder (Using G1 and G92)"
+        print "home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"
         
     def parse_cmdline(self,args):
         import getopt
