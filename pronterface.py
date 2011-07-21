@@ -5,6 +5,11 @@ except:
     print "WX is not installed. This program requires WX to run."
     raise
 import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz
+try:
+    os.chdir(os.path.split(__file__)[0])
+except:
+    pass
+    
 thread=threading.Thread
 winsize=(800,500)
 if os.name=="nt":
