@@ -679,7 +679,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             time.sleep(0.1)
         fn=self.filename
         try:
-            self.filename=self.filename.replace(".stl","_export.gcode")
+            self.filename=self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")
             self.f=[i.replace("\n","").replace("\r","") for i in open(self.filename)]
             if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
