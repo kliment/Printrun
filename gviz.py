@@ -22,7 +22,7 @@ class window(wx.Frame):
                 self.initpos=None
         elif event.Dragging():
             e=event.GetPositionTuple()
-            if(self.initpos is None):
+            if self.initpos is None or not hasattr(self,"basetrans"):
                 self.initpos=e
                 self.basetrans=self.p.translate
             #print self.p.translate,e,self.initpos
@@ -60,15 +60,19 @@ class gviz(wx.Panel):
         self.lastpos=[0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
         self.Bind(wx.EVT_PAINT,self.paint)
+        self.Bind(wx.EVT_SIZE,lambda *e:(wx.CallAfter(self.repaint),wx.CallAfter(self.Refresh)))
         self.lines={}
         self.pens={}
         self.layers=[]
         self.layerindex=0
+        self.filament_width=0.5 # set it to 0 to disable scaling lines with zoom
         self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
-        self.translate=[0.0, 0.0]
-        self.mainpen=wx.Pen(wx.Colour(0,0,0))
-        self.hlpen=wx.Pen(wx.Colour(200,50,50))
-        self.fades=[wx.Pen(wx.Colour(150+20*i,150+20*i,150+20*i)) for i in xrange(6)]
+        penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
+        self.translate=[0.0,0.0]
+        self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
+        self.hlpen=wx.Pen(wx.Colour(200,50,50),penwidth)
+        self.fades=[wx.Pen(wx.Colour(250-0.6**i*100,250-0.6**i*100,200-0.4**i*50),penwidth) for i in xrange(6)]
+        self.penslist=[self.mainpen,self.hlpen]+self.fades
         self.showall=0
         self.hilight=[]
         self.dirty=1
@@ -109,6 +113,9 @@ class gviz(wx.Panel):
         self.scale = [s * factor for s in self.scale]
         self.translate = [ x - (x-self.translate[0]) * factor,
                             y - (y-self.translate[1]) * factor]
+        penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
+        for pen in self.penslist:
+            pen.SetWidth(penwidth)
         #self.dirty=1
         self.repaint()
         self.Refresh()
@@ -120,6 +127,7 @@ class gviz(wx.Panel):
         dc.SetBackground(wx.Brush((250,250,200)))
         dc.Clear()
         if not self.showall:
+            self.size = self.GetSize()
             dc.SetBrush(wx.Brush((43,144,255)))
             dc.DrawRectangle(self.size[0]-15,0,15,self.size[1])
             dc.SetBrush(wx.Brush((0,255,0)))
