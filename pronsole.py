@@ -191,6 +191,15 @@ class pronsole(cmd.Cmd):
         self.onecmd = self.hook_macro # override onecmd temporarily
         self.prompt="..>"
         
+    def delete_macro(self,macro_name):
+        if macro_name in self.macros.keys():
+            delattr(self.__class__,"do_"+macro_name)
+            del self.macros[macro_name]
+            print "Macro '"+macro_name+"' removed"
+            if not self.processing_rc and not self.processing_args:
+                self.save_in_rc("macro "+macro_name,"")
+        else:
+            print "Macro '"+macro_name+"' is not defined"
     def do_macro(self,args):
         if args.strip()=="":
             self.print_topics("User-defined macros",self.macros.keys(),15,80)
@@ -203,14 +212,7 @@ class pronsole(cmd.Cmd):
         if len(arglist) == 2:
             macro_def = arglist[1]
             if macro_def.lower() == "/d":
-                if macro_name in self.macros.keys():
-                    delattr(self.__class__,"do_"+macro_name)
-                    del self.macros[macro_name]
-                    print "Macro '"+macro_name+"' removed"
-                    if not self.processing_rc and not self.processing_args:
-                        self.save_in_rc("macro "+macro_name,"")
-                else:
-                    print "Macro '"+macro_name+"' is not defined"
+                self.delete_macro(macro_name)
                 return
             if macro_def.lower() == "/s":
                 self.subhelp_macro(macro_name)

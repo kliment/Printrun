@@ -199,10 +199,26 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             print "You must enter a temperature."
             
+    def end_macro(self):
+        pronsole.pronsole.end_macro(self)
+        self.update_macros_menu()
+    
+    def delete_macro(self,macro_name):
+        pronsole.pronsole.delete_macro(self,macro_name)
+        self.update_macros_menu()
+    
     def start_macro(self,macro_name,old_macro_definition=""):
         if not self.processing_rc:
             def cb(definition):
-                if "\n" not in definition and len(definition.strip())>0:
+                if len(definition.strip())==0:
+                    if old_macro_definition!="":
+                        dialog = wx.MessageDialog(self,"Do you want to erase the macro?",style=wx.YES_NO|wx.YES_DEFAULT|wx.ICON_QUESTION)
+                        if dialog.ShowModal()==wx.ID_YES:
+                            self.delete_macro(macro_name)
+                            return
+                    print "Cancelled."
+                    return
+                if "\n" not in definition:
                     macro_def = definition.strip()
                     self.cur_macro_def = macro_def
                     self.cur_macro_name = macro_name
@@ -215,7 +231,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 pronsole.pronsole.start_macro(self,macro_name,True)
                 for line in definition.split("\n"):
                     if hasattr(self,"cur_macro_def"):
-                        self.hook_macro(line)
+                        self.hook_macro("  "+line)
                 if hasattr(self,"cur_macro_def"):
                     self.end_macro()
             macroed(macro_name,old_macro_definition,cb)
@@ -242,13 +258,60 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def popmenu(self):
         self.menustrip = wx.MenuBar()
         m = wx.Menu()
+        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1,"&Open..."," Opens file"))
         if sys.platform != 'darwin':
             self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"Skeinforge settings"," Adjust skeinforge settings"))
-        self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"Close"," Closes the Window"))
+        self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"E&xit"," Closes the Window"))
         self.menustrip.Append(m,"&Print")
+        m = wx.Menu()
+        self.macros_menu = wx.Menu()
+        m.AppendSubMenu(self.macros_menu, "&Macros")
+        self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, "<&New...>"))
+        self.menustrip.Append(m,"&Settings")
+        self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
-        pass
     
+    def new_macro_named(self,dialog,e):
+        #dialog = e.GetEventObject().GetParent()
+        macro = dialog.namectrl.GetValue()
+        if self.macros.has_key(macro):
+            old_def = self.macros[macro]
+        else:
+            old_def = ""
+        wx.CallAfter(self.start_macro,macro,old_def)
+        dialog.Show(False)
+    
+    def new_macro(self,e):
+        dialog = wx.Dialog(self,-1,"Enter macro name",size=(200,100))
+        panel = wx.Panel(dialog,-1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        wx.StaticText(panel,-1,"Macro name:",(8,14))
+        dialog.namectrl = wx.TextCtrl(panel,-1,'',(80,8),size=(100,24),style=wx.TE_PROCESS_ENTER)
+        dialog.Bind(wx.EVT_TEXT_ENTER,lambda e:self.new_macro_named(dialog,e),dialog.namectrl)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        okb = wx.Button(dialog,wx.ID_OK,"Ok",size=(50,24))
+        dialog.Bind(wx.EVT_BUTTON,lambda e:self.new_macro_named(dialog,e),okb)
+        hbox.Add(okb)
+        hbox.Add(wx.Button(dialog,wx.ID_CANCEL,"Cancel",size=(50,24)))
+        vbox.Add(panel)
+        vbox.Add(hbox,1,wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,10)
+        dialog.SetSizer(vbox)
+        dialog.Centre()
+        dialog.Show(True)
+        
+    def update_macros_menu(self):
+        if not hasattr(self,"macros_menu"):
+            return # too early, menu not yet built
+        try:
+            while True:
+                item = self.macros_menu.FindItemByPosition(1)
+                if item is None: return
+                self.macros_menu.DeleteItem(item)
+        except:
+            pass
+        for macro in self.macros.keys():
+            self.Bind(wx.EVT_MENU, lambda x,m=macro:self.start_macro(m,self.macros[m]), self.macros_menu.Append(-1, macro))
+
     def OnExit(self, event):
         self.Close()
         
@@ -909,6 +972,7 @@ class macroed(wx.Frame):
         topsizer.Layout()
         topsizer.Fit(self)
         self.Show()
+        self.e.SetFocus()
     def save(self,ev):
         self.Close()
         self.callback(self.reindent(self.e.GetValue()))
