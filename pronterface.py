@@ -946,11 +946,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.printbtn.SetLabel("Print")
                 self.paused=0
             
-class macroed(wx.Frame):
+class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
     def __init__(self,macro_name,definition,callback):
         self.indent_chars = "  "
-        wx.Frame.__init__(self,None,title="macro %s" % macro_name)
+        wx.Dialog.__init__(self,None,title="macro %s" % macro_name)
         self.callback = callback
         self.panel=wx.Panel(self,-1)
         titlesizer=wx.BoxSizer(wx.HORIZONTAL)
@@ -974,10 +974,10 @@ class macroed(wx.Frame):
         self.Show()
         self.e.SetFocus()
     def save(self,ev):
-        self.Close()
+        self.Destroy()
         self.callback(self.reindent(self.e.GetValue()))
     def close(self,ev):
-        self.Close()
+        self.Destroy()
     def unindent(self,text):
         import re
         self.indent_chars = text[:len(text)-len(text.lstrip())]
