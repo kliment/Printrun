@@ -64,6 +64,8 @@ class Settings:
         except AttributeError:
             pass
         return []
+    def _all_settings(self):
+        return dict([(k,getattr(self,k)) for k in self.__dict__.keys() if not k.startswith("_")])
 
 class pronsole(cmd.Cmd):
     def __init__(self):
@@ -259,7 +261,7 @@ class pronsole(cmd.Cmd):
         except AttributeError:
             print "Unknown variable '%s'" % var
         except ValueError as ve:
-            print "Bad value for variable '%s', expecting"%var,str(t)[1:-1],"(%s)"%ve.args[0]
+            print "Bad value for variable '%s', expecting %s (%s)" % (var,repr(t)[1:-1],ve.args[0])
     
     def do_set(self,argl):
         args = argl.split(None,1)

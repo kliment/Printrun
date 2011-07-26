@@ -267,6 +267,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.macros_menu = wx.Menu()
         m.AppendSubMenu(self.macros_menu, "&Macros")
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, "<&New...>"))
+        self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,"&Options"," Options dialog"))
         self.menustrip.Append(m,"&Settings")
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
@@ -950,7 +951,7 @@ class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
     def __init__(self,macro_name,definition,callback):
         self.indent_chars = "  "
-        wx.Dialog.__init__(self,None,title="macro %s" % macro_name)
+        wx.Dialog.__init__(self,None,title="macro %s" % macro_name,style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.callback = callback
         self.panel=wx.Panel(self,-1)
         titlesizer=wx.BoxSizer(wx.HORIZONTAL)
@@ -1002,6 +1003,29 @@ class macroed(wx.Dialog):
             reindented += self.indent_chars + line + "\n"
         return reindented
         
+class options(wx.Dialog):
+    """Options editor"""
+    def __init__(self,pronterface):
+        wx.Dialog.__init__(self,None,title="Edit settings")
+        topsizer=wx.BoxSizer(wx.VERTICAL)
+        vbox=wx.StaticBoxSizer(wx.StaticBox(self,label="Defaults"),wx.VERTICAL)
+        topsizer.Add(vbox,1,wx.ALL+wx.EXPAND)
+        grid=wx.GridSizer(rows=0,cols=2,hgap=8,vgap=2)
+        vbox.Add(grid,0,wx.EXPAND)
+        ctrls = {}
+        for k,v in pronterface.settings._all_settings().items():
+            grid.Add(wx.StaticText(self,-1,k),0,wx.BOTTOM+wx.RIGHT)
+            ctrls[k] = wx.TextCtrl(self,-1,str(v))
+            grid.Add(ctrls[k],1,wx.EXPAND)
+        topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0,wx.EXPAND)
+        self.SetSizer(topsizer)        
+        topsizer.Layout()
+        topsizer.Fit(self)
+        if self.ShowModal()==wx.ID_OK:
+            for k,v in pronterface.settings._all_settings().items():
+                if ctrls[k].GetValue() != str(v):
+                    pronterface.set(k,str(ctrls[k].GetValue()))
+        self.Destroy()
         
 if __name__ == '__main__':
     app = wx.App(False)
