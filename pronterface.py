@@ -119,11 +119,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def online(self):
         print "Printer is now online"
-        self.connectbtn.Disable();
+        wx.CallAfter(self.connectbtn.Disable)
         for i in self.printerControls:
-            i.Enable()
+            wx.CallAfter(i.Enable)
         if self.filename:
-            self.printbtn.Enable()
+            wx.CallAfter(self.printbtn.Enable)
         
     
     def sentcb(self,line):
@@ -561,14 +561,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.topsizer.Fit(self)
         
             #self.SetSize(winsize)
-            self.minibtn.SetLabel("Mini mode")
+            wx.CallAfter(self.minibtn.SetLabel, "Mini mode")
             
         else:
             self.mini=True
             self.uppersizer.Fit(self)
         
             #self.SetSize(winssize)
-            self.minibtn.SetLabel("Full mode")
+            wx.CallAfter(self.minibtn.SetLabel, "Full mode")
                 
         
     def procbutton(self,e):
@@ -794,11 +794,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.f=[i.replace("\n","").replace("\r","") for i in open(name)]
                 self.filename=name
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
-                self.printbtn.SetLabel("Print")
-                self.pausebtn.SetLabel("Pause")
-                self.pausebtn.Hide()
+                wx.CallAfter(self.printbtn.SetLabel, "Print")
+                wx.CallAfter(self.pausebtn.SetLabel, "Pause")
+                wx.CallAfter(self.pausebtn.Hide)
                 if self.p.online:
-                    self.printbtn.Enable()
+                    wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target=self.loadviz).start()
                 
     def loadviz(self):
@@ -830,9 +830,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.p.startprint(self.f)
     
     def on_startprint(self):
-        self.pausebtn.SetLabel("Pause")
-        self.pausebtn.Show()
-        self.printbtn.SetLabel("Restart")
+        wx.CallAfter(self.pausebtn.SetLabel, "Pause")
+        wx.CallAfter(self.pausebtn.Show)
+        wx.CallAfter(self.printbtn.SetLabel, "Restart")
     
     def endupload(self):
         self.p.send_now("M29 ")
@@ -871,14 +871,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     return
                 self.p.pause()
             self.paused=True
-            self.pausebtn.SetLabel("Resume")
+            wx.CallAfter(self.pausebtn.SetLabel, "Resume")
         else:
             self.paused=False
             if self.sdprinting:
                 self.p.send_now("M24")
             else:
                 self.p.resume()
-            self.pausebtn.SetLabel("Pause")
+            wx.CallAfter(self.pausebtn.SetLabel, "Pause")
     
         
     def sdprintfile(self,event):
@@ -902,8 +902,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if self.paused:
             self.p.paused=0
             self.p.printing=0
-            self.pausebtn.SetLabel("Pause")
-            self.printbtn.SetLabel("Print")
+            wx.CallAfter(self.pausebtn.SetLabel, "Pause")
+            wx.CallAfter(self.printbtn.SetLabel, "Print")
             self.paused=0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
@@ -920,17 +920,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.p.disconnect()
         self.statuscheck=False
         
-        self.connectbtn.Enable();
-        self.printbtn.Disable();
-        self.pausebtn.Hide();
+        wx.CallAfter(self.connectbtn.Enable);
+        wx.CallAfter(self.printbtn.Disable);
+        wx.CallAfter(self.pausebtn.Hide);
         for i in self.printerControls:
-            i.Disable()
+            wx.CallAfter(i.Disable)
         
         if self.paused:
             self.p.paused=0
             self.p.printing=0
-            self.pausebtn.SetLabel("Pause")
-            self.printbtn.SetLabel("Print")
+            wx.CallAfter(self.pausebtn.SetLabel, "Pause")
+            wx.CallAfter(self.printbtn.SetLabel, "Print")
             self.paused=0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
@@ -943,8 +943,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if self.paused:
                 self.p.paused=0
                 self.p.printing=0
-                self.pausebtn.SetLabel("Pause")
-                self.printbtn.SetLabel("Print")
+                wx.CallAfter(self.pausebtn.SetLabel, "Pause")
+                wx.CallAfter(self.printbtn.SetLabel, "Print")
                 self.paused=0
             
 class macroed(wx.Dialog):
