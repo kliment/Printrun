@@ -146,10 +146,10 @@ class gviz(wx.Panel):
                 dc.DrawLineList(l,self.pens[i])
             return
         if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
-            for i in range(min(self.layerindex,6))[-6:]:
+            for layer_i in xrange(max(0,self.layerindex-6),self.layerindex):
                 #print i, self.layerindex, self.layerindex-i
-                l=map(scaler,self.lines[self.layers[self.layerindex-i-1]])
-                dc.DrawLineList(l,self.fades[i])
+                l=map(scaler,self.lines[self.layers[layer_i]])
+                dc.DrawLineList(l,self.fades[self.layerindex-layer_i-1])
             l=map(scaler,self.lines[self.layers[self.layerindex]])
             dc.DrawLineList(l,self.pens[self.layers[self.layerindex]])
         l=map(scaler,self.hilight)
