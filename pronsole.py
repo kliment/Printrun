@@ -260,7 +260,7 @@ class pronsole(cmd.Cmd):
                 self.save_in_rc("set "+var,"set %s %s" % (var,value))
         except AttributeError:
             print "Unknown variable '%s'" % var
-        except ValueError as ve:
+        except ValueError, ve:
             print "Bad value for variable '%s', expecting %s (%s)" % (var,repr(t)[1:-1],ve.args[0])
     
     def do_set(self,argl):
@@ -364,7 +364,7 @@ class pronsole(cmd.Cmd):
             rco.close()
             os.rename(rco.name,self.rc_filename)
             print "Saved '"+key+"' to '"+self.rc_filename+"'"
-        except Exception as e:
+        except Exception, e:
             print "Saving failed for",key+":",str(e)
         finally:
             del rci,rco
