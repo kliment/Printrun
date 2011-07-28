@@ -999,11 +999,11 @@ class pronsole(cmd.Cmd):
             print "Printer is currently printing. Please pause the print before you issue manual commands."
             return
         if "x" in l.lower():
-            self.p.send_now("G28 X")
+            self.p.send_now("G28 X0")
         if "y" in l.lower():
-            self.p.send_now("G28 Y")
+            self.p.send_now("G28 Y0")
         if "z" in l.lower():
-            self.p.send_now("G28 Z")
+            self.p.send_now("G28 Z0")
         if "e" in l.lower():
             self.p.send_now("G92 E0")
         if not len(l):
