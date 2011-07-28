@@ -4,7 +4,7 @@ try:
 except:
     print "WX is not installed. This program requires WX to run."
     raise
-import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz
+import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, traceback
 try:
     os.chdir(os.path.split(__file__)[0])
 except:
@@ -732,7 +732,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             print "Skeinforge execution failed."
             self.stopsf=1
-            raise
+            traceback.print_exc(file=sys.stdout)
         
     def skein_monitor(self):
         while(not self.stopsf):
