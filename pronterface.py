@@ -52,6 +52,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
+        self.monitor_interval=3
         self.paused=False
         xcol=(245,245,108)
         ycol=(180,180,255)
@@ -155,7 +156,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pronsole.pronsole.do_extrude(self,l)
         except:
             pass
-    
     
     def do_settemp(self,l=""):
         try:
@@ -592,6 +592,23 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pass
         self.Destroy()
         
+    def do_monitor(self,l=""):
+        if l.strip()=="":
+            self.monitorbox.SetValue(not self.monitorbox.GetValue())
+        elif l.strip()=="off":
+            self.monitorbox.SetValue(False)
+        else:
+            try:
+                self.monitor_interval=float(l)
+                self.monitorbox.SetValue(self.monitor_interval>0)
+            except:
+                print "Invalid period given."
+        self.setmonitor(None)
+        if self.monitor:
+            print "Monitoring printer."
+        else:
+            print "Done monitoring."
+            
         
     def setmonitor(self,e):
         self.monitor=self.monitorbox.GetValue()
@@ -626,7 +643,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     if self.sdprinting:
                         self.p.send_now("M27")
                     self.p.send_now("M105")
-                time.sleep(3)
+                time.sleep(self.monitor_interval)
             wx.CallAfter(self.status.SetStatusText,"Not connected to printer.")
         except:
             pass #if window has been closed
