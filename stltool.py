@@ -73,7 +73,7 @@ class stl:
                     if not len(newdata):
                         break
                     buf+=newdata
-                fd=facetformat.unpack(buf)
+                fd=list(facetformat.unpack(buf))
                 self.name="binary soloid"
                 self.facet=[fd[:3],[fd[3:6],fd[6:9],fd[9:12]]]
                 self.facets+=[self.facet]
