@@ -113,7 +113,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.starttime=time.time()
         
     def endcb(self):
-        print "Print took "+str(int(time.time()-self.starttime))+" seconds."
+        print "Print took "+str(int((time.time()-self.starttime)/60))+" minutes."
         wx.CallAfter(self.pausebtn.Hide)
         wx.CallAfter(self.printbtn.SetLabel,"Print")
 
@@ -634,9 +634,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 string+=(self.tempreport.replace("\r","").replace("T","Hotend").replace("B","Bed").replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 if self.sdprinting:
-                    string+= " SD printing:%04.2f %%"%(self.percentdone,)
+                    string+= " SD printing:%04.2f %%"%(self.percentdone,)+ "Elapsed Time: " +str(int((time.time()-self.starttime)/60))+" minutes."
                 if self.p.printing:
-                    string+= " Printing:%04.2f %%"%(100*float(self.p.queueindex)/len(self.p.mainqueue),)
+                    string+= " Printing:%04.2f %%"%(100*float(self.p.queueindex)/len(self.p.mainqueue),)+ "Elapsed Time: " +str(int((time.time()-self.starttime)/60))+" minutes."
                 wx.CallAfter(self.status.SetStatusText,string)
                 wx.CallAfter(self.gviz.Refresh)
                 if(self.monitor and self.p.online):
@@ -1052,4 +1052,3 @@ if __name__ == '__main__':
         app.MainLoop()
     except:
         pass
-
