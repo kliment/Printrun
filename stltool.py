@@ -1,4 +1,4 @@
-import sys
+import sys, struct
 
 I=[
     [1,0,0,0],
@@ -56,7 +56,31 @@ class stl:
             return
         self.f=list(open(filename))
         if not self.f[0].startswith("solid"):
-            print "Not an ascii stl solid"
+            print "Not an ascii stl solid - attempting to parse as binary"
+            f=open(filename,"rb")
+            buf=f.read(84)
+            while(len(buf)<84):
+                newdata=f.read(84-len(buf))
+                if not len(newdata):
+                    break
+                buf+=newdata
+            facetcount=struct.unpack_from("<I",buf,80)
+            facetformat=struct.Struct("<ffffffffffffH")
+            for i in xrange(facetcount[0]):
+                buf=f.read(50)
+                while(len(buf)<50):
+                    newdata=f.read(50-len(buf))
+                    if not len(newdata):
+                        break
+                    buf+=newdata
+                fd=facetformat.unpack(buf)
+                self.name="binary soloid"
+                self.facet=[fd[:3],[fd[3:6],fd[6:9],fd[9:12]]]
+                self.facets+=[self.facet]
+                facet=self.facet
+                self.facetsminz+=[(min(map(lambda x:x[2], facet[1])),facet)]
+                self.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])),facet)]
+            f.close()
             return
         for i in self.f:
             if not self.parseline(i):
