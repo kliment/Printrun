@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import wx,time,random,threading,os,math
 import stltool
 
