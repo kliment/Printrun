@@ -87,6 +87,7 @@ class showstl(wx.Window):
                 self.models[newname].offsets=[0,0,0]
                 #print time.time()-t
                 self.l.Append([stlwrap(self.models[newname],newname)])
+                self.l.Select(self.l.GetItemCount()-1)
             self.Refresh()
             #print time.time()-t
         
@@ -125,7 +126,7 @@ class showstl(wx.Window):
             i=self.l.GetFirstSelected()
             if i != -1:
                 o=self.models[self.l.GetItemText(i)].offsets
-                self.models[self.l.GetItemText(i)]=self.models[self.l.GetItemText(i)].rotate([0,0,self.i-self.previ])
+                self.models[self.l.GetItemText(i)]=self.models[self.l.GetItemText(i)].rotate([0,0,5*(self.i-self.previ)])
                 self.models[self.l.GetItemText(i)].offsets=o
             self.previ=self.i
             wx.CallAfter(self.Refresh)
