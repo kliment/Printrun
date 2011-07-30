@@ -87,6 +87,10 @@ class showstl(wx.Window):
                 self.models[newname].offsets=[0,0,0]
                 #print time.time()-t
                 self.l.Append([stlwrap(self.models[newname],newname)])
+                i=self.l.GetFirstSelected()
+                if i != -1:
+                    self.l.Select(i,0)
+            
                 self.l.Select(self.l.GetItemCount()-1)
             self.Refresh()
             #print time.time()-t
