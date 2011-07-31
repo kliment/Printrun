@@ -110,12 +110,12 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
                 for setting in settings.getReadRepository(repo).preferences:
                     if setting.name == settingName:
                         if setting.value == None or str(x.GetValue()) != str(setting.value):
-                            print('saving ... ' + settingName + ' = ' + str(x.GetValue()))
+                            print('Saving ... ' + settingName + ' = ' + str(x.GetValue()))
                             setting.value = x.GetValue()
                             isDirty = True
                 if isDirty:
                     settings.saveRepository(repo)
-        print("Settings Saved")
+        print("Skeinforge settings have been saved.")
         self.Destroy()
 
 class SkeinforgeQuickEditApp(wx.App):
