@@ -4,11 +4,16 @@ try:
 except:
     print "WX is not installed. This program requires WX to run."
     raise
-import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, traceback
+import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, traceback, cStringIO
 try:
     os.chdir(os.path.split(__file__)[0])
 except:
     pass
+
+from skeinforge.fabmetheus_utilities import archive
+from skeinforge.fabmetheus_utilities import settings
+from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
+from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
     
 thread=threading.Thread
 winsize=(800,500)
@@ -262,6 +267,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1,"&Open..."," Opens file"))
         if sys.platform != 'darwin':
             self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"Skeinforge settings"," Adjust skeinforge settings"))
+            self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,"Skeinforge Quick Edit"," Quickly adjust skeinforge settings for active profile"))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"E&xit"," Closes the Window"))
         self.menustrip.Append(m,"&Print")
         m = wx.Menu()
@@ -648,6 +654,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.status.SetStatusText,"Not connected to printer.")
         except:
             pass #if window has been closed
+        
     def capture(self, func, *args, **kwargs):
         stdout=sys.stdout
         cout=None
@@ -773,7 +780,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             threading.Thread(target=self.loadviz).start()
         except:
             self.filename=fn
-        
+    
     def skein(self,filename):
         print "Skeining "+filename
         if not os.path.exists("skeinforge"):
@@ -1044,7 +1051,7 @@ class options(wx.Dialog):
                 if ctrls[k].GetValue() != str(v):
                     pronterface.set(k,str(ctrls[k].GetValue()))
         self.Destroy()
-        
+
 if __name__ == '__main__':
     app = wx.App(False)
     main = PronterWindow()
