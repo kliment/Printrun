@@ -1,0 +1,11 @@
+Format is tab separated stretch settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Stretch	
+Activate Stretch to correct for diameter shrink in small diameter holes	False
+Cross Limit Distance Over Perimeter Width (ratio):	5.0
+Loop Stretch Over Perimeter Width (ratio):	0.11
+Path Stretch Over Perimeter Width (ratio):	0.0
+Perimeter Inside Stretch Over Perimeter Width (ratio):	0.32
+Perimeter Outside Stretch Over Perimeter Width (ratio):	0.1
+Stretch From Distance Over Perimeter Width (ratio):	2.0

@@ -1,0 +1,8 @@
+Format is tab separated chamber settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Chamber	
+Activate Chamber:	False
+Bed Temperature (Celcius):	60.0
+Chamber Temperature (Celcius):	30.0
+Holding Force (bar):	0.0

@@ -1,0 +1,11 @@
+_Name                          	Value
+Format is tab separated preface settings.
+Home before Print	False
+Meta:
+Name of End File:	end.gmc
+Name of Start File:	start.gmc
+Open File for Preface
+Reset Extruder before Print	True
+Set Positioning to Absolute	True
+Set Units to Millimeters	True
+WindowPosition	700+0

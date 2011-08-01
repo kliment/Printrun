@@ -1,0 +1,8 @@
+Format is tab separated scale settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Scale	
+Activate Scale to finetune print size (try to find the fault somewhere else..):	False
+XY Plane Scale (ratio):	1.0
+Z Axis Scale (ratio):	1.0
+SVG Viewer:	webbrowser

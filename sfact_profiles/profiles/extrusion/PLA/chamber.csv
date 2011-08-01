@@ -1,0 +1,8 @@
+Format is tab separated chamber settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Chamber	
+Activate Chamber..if you want below functions to work	False
+Heated PrintBed Temperature (Celcius):	60.0
+Turn print Bed Heater Off at Shut Down	True
+Turn Extruder Heater Off at Shut Down	True

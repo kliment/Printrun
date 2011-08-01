@@ -1,0 +1,27 @@
+Format is tab separated skeinforge craft settings.
+_Name                          	Value
+WindowPosition	600+0
+Open File for Craft	
+bottom	False
+carve	False
+chamber	False
+clip	False
+comb	False
+cool	False
+dimension	False
+export	False
+fill	False
+inset	False
+jitter	False
+lash	False
+limit	False
+multiply	False
+preface	False
+raft	True
+scale	False
+skin	False
+skirt	False
+speed	False
+stretch	False
+temperature	False
+wipe	False

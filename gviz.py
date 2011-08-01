@@ -2,7 +2,7 @@ import wx,time
 
 class window(wx.Frame):
     def __init__(self,f,size=(600,600),bedsize=(200,200)):
-        wx.Frame.__init__(self,None,title="Layer view (Use arrow keys to switch layers)",size=(size[0],size[1]))
+        wx.Frame.__init__(self,None,title="Layer view (Use shift+mousewheel to switch layers)",size=(size[0],size[1]))
         self.p=gviz(self,size=size,bedsize=bedsize)
         s=time.time()
         for i in f:
@@ -126,6 +126,14 @@ class gviz(wx.Panel):
         dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250,250,200)))
         dc.Clear()
+        dc.SetPen(wx.Pen(wx.Colour(100,100,100)))
+        for i in xrange(max(self.bedsize)/10):
+            dc.DrawLine(self.translate[0],self.translate[1]+i*self.scale[1]*10,self.translate[0]+self.scale[0]*max(self.bedsize),self.translate[1]+i*self.scale[1]*10)
+            dc.DrawLine(self.translate[0]+i*self.scale[0]*10,self.translate[1],self.translate[0]+i*self.scale[0]*10,self.translate[1]+self.scale[1]*max(self.bedsize))
+        dc.SetPen(wx.Pen(wx.Colour(0,0,0)))
+        for i in xrange(max(self.bedsize)/50):
+            dc.DrawLine(self.translate[0],self.translate[1]+i*self.scale[1]*50,self.translate[0]+self.scale[0]*max(self.bedsize),self.translate[1]+i*self.scale[1]*50)
+            dc.DrawLine(self.translate[0]+i*self.scale[0]*50,self.translate[1],self.translate[0]+i*self.scale[0]*50,self.translate[1]+self.scale[1]*max(self.bedsize))
         if not self.showall:
             self.size = self.GetSize()
             dc.SetBrush(wx.Brush((43,144,255)))
@@ -201,7 +209,7 @@ class gviz(wx.Panel):
             
 if __name__ == '__main__':
     app = wx.App(False)
-    #main = window(open("/home/kliment/designs/spinner/gearend_export.gcode"))
+    #main = window(open("/home/kliment/designs/spinner/arm_export.gcode"))
     main = window(open("jam.gcode"))
     main.Show()
     app.MainLoop()

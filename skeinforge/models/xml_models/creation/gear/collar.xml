@@ -1,0 +1,4 @@
+<?xml version='1.0' ?>
+<fabmetheus>
+	<gear complementCollarHeightOverHeight='1' pinionCollarHeightOverHeight='1' shaftRadius='5'/>
+</fabmetheus>

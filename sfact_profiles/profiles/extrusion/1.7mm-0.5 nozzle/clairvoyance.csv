@@ -1,0 +1,6 @@
+Format is tab separated clairvoyance settings.
+_Name                          	Value
+WindowPosition	700+0
+Activate Clairvoyance	False
+Open File to Generate Clairvoyances for	
+Gcode Program:	webbrowser

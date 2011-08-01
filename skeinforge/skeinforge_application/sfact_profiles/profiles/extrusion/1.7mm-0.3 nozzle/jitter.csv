@@ -1,0 +1,6 @@
+Format is tab separated jitter settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Jitter	
+Activate Jitter to have your perimeter and loop endpoints scattered	False
+Jitter Over Perimeter Width (ratio):	2.0

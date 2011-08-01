@@ -4,7 +4,7 @@ try:
 except:
     print "WX is not installed. This program requires WX to run."
     raise
-import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, traceback
+import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, traceback, cStringIO
 try:
     os.chdir(os.path.split(__file__)[0])
 except:
@@ -48,6 +48,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
+        self.SetIcon(wx.Icon("P-face.ico",wx.BITMAP_TYPE_ICO))
         self.panel=wx.Panel(self,-1,size=size)
         self.statuscheck=False
         self.tempreport=""
@@ -113,7 +114,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.starttime=time.time()
         
     def endcb(self):
-        print "Print took "+str(int(time.time()-self.starttime))+" seconds."
+        print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes."
         wx.CallAfter(self.pausebtn.Hide)
         wx.CallAfter(self.printbtn.SetLabel,"Print")
 
@@ -260,7 +261,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1,"&Open..."," Opens file"))
         if sys.platform != 'darwin':
-            self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"Skeinforge settings"," Adjust skeinforge settings"))
+            self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"SFACT Settings"," Adjust SFACT settings"))
+            try:
+                from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
+                self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,"SFACT Quick Settings"," Quickly adjust SFACT settings for active profile"))
+            except:
+                pass
+
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"E&xit"," Closes the Window"))
         self.menustrip.Append(m,"&Print")
         m = wx.Menu()

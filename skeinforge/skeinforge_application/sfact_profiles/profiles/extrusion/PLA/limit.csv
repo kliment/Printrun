@@ -1,0 +1,7 @@
+Format is tab separated limit settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Limit	
+Activate Limit if your Firmware is unable to Limiting your Z-Speed.	False
+Maximum Initial Feed Rate (mm/s):	5.0
+Maximum Z Feed Rate (mm/s):	5.0

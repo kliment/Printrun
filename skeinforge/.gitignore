@@ -1,0 +1,4 @@
+*.pyc
+*.gcode
+priv_*
+zzz*

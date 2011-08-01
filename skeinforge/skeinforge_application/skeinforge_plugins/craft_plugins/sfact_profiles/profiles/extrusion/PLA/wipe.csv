@@ -1,0 +1,15 @@
+Format is tab separated wipe settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Wipe	
+Activate Wipe	False
+Location Arrival X (mm):	-70.0
+Location Arrival Y (mm):	-50.0
+Location Arrival Z (mm):	50.0
+Location Departure X (mm):	-70.0
+Location Departure Y (mm):	-40.0
+Location Departure Z (mm):	50.0
+Location Wipe X (mm):	-70.0
+Location Wipe Y (mm):	-70.0
+Location Wipe Z (mm):	50.0
+Wipe Period (layers):	3
