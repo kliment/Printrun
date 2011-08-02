@@ -1,0 +1,34 @@
+Format is tab separated fill settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Fill	
+Activate Fill:	True
+Infill Solidity (ratio):	0.35
+Extrusion Lines extra Spacing (Scaler):	1.0
+Infill Overlap over Perimeter (Scaler):	1.0
+Extra Shells on Alternating Solid Layer (layers):	0
+Extra Shells on Base (layers):	1
+Extra Shells on Sparse Layer (layers):	1
+Fully filled Layers (each top and bottom):	2
+Lower Left	True
+Nearest	False
+Infill > Loops > Perimeter	False
+Infill > Perimeter > Loops	False
+Loops > Infill > Perimeter	False
+Loops > Perimeter > Infill	False
+Perimeter > Infill > Loops	False
+Perimeter > Loops > Infill	True
+Line	True
+Grid Circular	False
+Grid Hexagonal	False
+Grid Rectangular	False
+Diaphragm at every ...th Layer:	100
+Diaphragm Thickness (layers):	0
+Grid Circle Separation over Perimeter Width (ratio):	0.2
+Grid Extra Overlap (ratio):	0.1
+Grid Junction Separation Band Height (layers):	10
+Grid Junction Separation over Octogon Radius At End (ratio):	0.0
+Grid Junction Separation over Octogon Radius At Middle (ratio):	0.0
+Infill Begin Rotation (degrees):	45.0
+Infill Begin Rotation Repeat (layers):	1
+Infill Odd Layer Extra Rotation (degrees):	90.0

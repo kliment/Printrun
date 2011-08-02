@@ -1,0 +1,14 @@
+Format is tab separated speed settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Speed	
+Activate Speed:	True
+Add Flow Rate:	True
+Main Feed Rate (mm/s):	75.0
+Main Flow Rate  (scaler):	1.0
+Feed Rate ratio for Orbiting move (ratio):	0.5
+Perimeter Feed Rate (mm/s):	30.0
+Perimeter Flow Rate (scaler):	1.0
+Bridge Feed Rate (ratio):	1.0
+Bridge Flow Rate (scaler):	1.0
+Travel Feed Rate (mm/s):	130.0

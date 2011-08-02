@@ -1,0 +1,9 @@
+Format is tab separated comb settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Comb	
+Activate Comb if you cant stop the extruder stringing by retraction 
+it will avoid moving over loops so the strings will be there 
+but not visible anymore. 
+Comb bends the extruder travel paths around holes in the slices, to avoid stringing.  
+so any start up ooze will be inside the shape.	True

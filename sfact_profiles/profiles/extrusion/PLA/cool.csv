@@ -1,0 +1,15 @@
+Format is tab separated cool settings.
+_Name                          	Value
+WindowPosition	700+0
+Open File for Cool	
+Activate Cool.. but use with a fan!	False
+Use Cool if layer takes shorter than(seconds):	10.0
+Turn Fan On at Beginning	True
+Turn Fan Off at Ending	True
+Execute when Cool starts:	cool_start.gmc
+Execute when Cool ends:	cool_end.gmc
+Orbiting around Object	False
+Slow Down during print	True
+Maximum Cool (Celcius):	2.0
+Bridge Cool (Celcius):	1.0
+Minimum Orbital Radius (millimeters):	10.0

@@ -1,0 +1,10 @@
+<?xml version='1.0' ?>
+<fabmetheus>
+	<gear shaftRadiusOverPitchRadius='0.5' thickness='1'/>
+	<!--
+		<gear id='gear' creationType='b' complementCollarHeight='0' gearHolePaths='[[[15, -10],[19, -19],[11, -19]], [[-15, -10],[-11, -19],[-19, -19]]]' name='write_test' helixAngle='20' helixPath='[[], [1,2]]' helixType='b' moveType='m' qqqoperatingAngle='90' pinionCollarHeight='0' pitchRadius='20.0' qqqplateHeight='0' pressureAngle='20' rackWidth='20' shaftDepthBottomOverRadius='0.2' rackLength='200' shaftPath='[[0, 5],[4, -4],[-4, -4]]' shaftRadius='6' shaftSides='10' teeth='7' teethGear='-17' thickness='1.0'/>
+		<gear id='gear' creationType='b' complementCollarHeight='20' qqqgearHolePaths='[[[15, -10],[19, -19],[11, -19]], [[-15, -10],[-11, -19],[-19, -19]]]' name='write_test' helixAngle='20' qqqhelixPath='[[], [1,2]]' helixType='b' moveType='m' qqqoperatingAngle='90' qqqpinionCollarHeight='0' pitchRadius='20.0' qqqplateHeight='0' pressureAngle='20' rackWidth='20' shaftDepthBottomOverRadius='0.2' rackLength='200' qqqshaftPath='[[0, 5],[4, -4],[-4, -4]]' shaftRadius='6' shaftSides='10' teeth='7' teethGear='-29' thickness='20.0'/>
+	<extrude target='=document.getElementByID(gear)'/>
+	<extrude id='inset_extrude' name='write_test' target='=document.getElementByID(gear)'/>
+	-->
+</fabmetheus>
