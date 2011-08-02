@@ -184,6 +184,7 @@ class showstl(wx.Window):
 class stlwin(wx.Frame):
     def __init__(self,size=(400,500)):
         wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
+        self.SetIcon(wx.Icon("plater.ico",wx.BITMAP_TYPE_ICO))
         self.s=showstl(self,(400,500),(0,0))
         
 if __name__ == '__main__':
