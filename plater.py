@@ -16,7 +16,7 @@ class stlwrap:
 class showstl(wx.Window):
     def __init__(self,parent,size,pos):
         wx.Window.__init__(self,parent,size=size,pos=pos)
-        self.l=wx.ListCtrl(self,size=(300,100),pos=(0,size[1]-100))
+        self.l=wx.ListCtrl(self,style=wx.LC_LIST,size=(300,100),pos=(0,size[1]-100))
         self.eb=wx.Button(self,label="Export",pos=(300,size[1]-100))
         self.sb=wx.Button(self,label="Snap to Z=0",pos=(300,size[1]-70))
         self.cb=wx.Button(self,label="Put at 100,100",pos=(300,size[1]-40))
