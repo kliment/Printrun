@@ -1,8 +1,0 @@
-Format is tab separated lash settings.
-_Name                          	Value
-WindowPosition	700+0
-Open File for Lash	
-Activate Lash if you have backlash in your axes. 
-But its better to fix the mechanical problem!	False
-X Backlash (mm):	0.0
-Y Backlash (mm):	0.0

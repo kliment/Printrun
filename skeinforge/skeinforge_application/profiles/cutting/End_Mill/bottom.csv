@@ -1,8 +1,0 @@
-Format is tab separated bottom settings.
-_Name                          	Value
-WindowPosition	700+0
-Open File for Bottom	
-Activate Bottom	True
-Additional Height over Layer Thickness (ratio):	0.5
-Altitude (mm):	0.0
-SVG Viewer:	webbrowser

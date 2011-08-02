@@ -1,5 +1,0 @@
-<?xml version='1.0' ?>
-<fabmetheus>
-	<gear id='spurProfile' thickness='0'/>
-	<extrude target='=document.getElementByID(spurProfile)'/>
-</fabmetheus>

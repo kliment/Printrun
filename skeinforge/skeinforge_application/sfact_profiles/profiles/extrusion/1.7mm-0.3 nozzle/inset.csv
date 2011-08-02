@@ -1,8 +1,0 @@
-Format is tab separated inset settings.
-_Name                          	Value
-WindowPosition	700+0
-Open File for Inset	
-Bridge Width Multiplier (ratio):	1.0
-Prefer Loops	False
-Prefer Perimeter	True
-Overlap Removal(Scaler):	1.0

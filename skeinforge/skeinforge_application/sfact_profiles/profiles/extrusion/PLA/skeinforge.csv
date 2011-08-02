@@ -1,9 +1,0 @@
-Format is tab separated skeinforge settings.
-_Name                          	Value
-WindowPosition	1187+2
-Open File for Skeinforge	C:/Users/Ahmet/STL/Calibration/ohtest.STL
-analyze	False
-craft	True
-help	False
-meta	False
-profile	False

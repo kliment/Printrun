@@ -1,7 +1,0 @@
-Format is tab separated clip settings.
-_Name                          	Value
-WindowPosition	700+0
-Open File for Clip	
-Activate Clip	True
-Clip Over Perimeter Width (ratio):	0.5
-Maximum Connection Distance Over Perimeter Width (ratio):	10.0

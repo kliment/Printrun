@@ -1,8 +1,0 @@
-Format is tab separated skin settings.
-_Name                          	Value
-WindowPosition	700+0
-Open File for Skin	
-Activate Skin: this is experimental.  
-It prints the perimeters and loops only at half the layer height that is specified under carve.	False
-Clip Over Perimeter Width (scaler):	1.0
-Do Not Skin the first ... Layers:	3

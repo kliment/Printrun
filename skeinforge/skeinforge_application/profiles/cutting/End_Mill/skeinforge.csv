@@ -1,9 +1,0 @@
-Format is tab separated skeinforge settings.
-_Name                          	Value
-WindowPosition	889+32
-Open File for Skeinforge	C:/Users/Ahmet/STL/10in (fixed).stl
-analyze	False
-craft	False
-help	False
-meta	False
-profile	True

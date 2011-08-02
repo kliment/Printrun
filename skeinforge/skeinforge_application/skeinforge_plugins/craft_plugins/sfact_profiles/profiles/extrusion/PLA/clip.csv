@@ -1,7 +1,0 @@
-Format is tab separated clip settings.
-_Name                          	Value
-WindowPosition	700+0
-Open File for Clip	C:/Users/Ahmet/Desktop/SF-ACT/skeinforge_application/test.stl
-Activate Clip..to clip the extrusion that overlaps when printing perimeters	True
-Clip Over Perimeter Width adjuster (decrease for bigger gap):	1.0
-Threshold for connecting inner loops (ratio):	2.5
