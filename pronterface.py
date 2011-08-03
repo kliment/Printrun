@@ -638,7 +638,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.save_in_rc(("button %d" % n),'')
         elif len(bdef)>2:
             colour=bdef[2]
-            if not isinstance(colour,str):
+            if type(colour) not in (str,unicode):
+                print type(colour)
+                if type(colour)==tuple and map(type,colour)==(int,int,int):
+                    colour = map(lambda x:x%256,colour)
                 colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
             self.save_in_rc(("button %d" % n),'button %d "%s" /c "%s" %s' % (new_n,bdef[0],colour,bdef[1]))
         else:
@@ -652,7 +655,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             bedit.command.SetValue(button.properties[1])
             if len(button.properties)>2:
                 colour=button.properties[2]
-                if not isinstance(colour,str):
+                if type(colour) not in (str,unicode):
+                    print type(colour)
+                    if type(colour)==tuple and map(type,colour)==(int,int,int):
+                        colour = map(lambda x:x%256,colour)
                     colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
                 bedit.color.SetValue(colour)
         else:
