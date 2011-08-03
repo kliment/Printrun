@@ -282,8 +282,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def new_macro_named(self,dialog,e):
         #dialog = e.GetEventObject().GetParent()
         macro = dialog.namectrl.GetValue()
+        if macro == "": return
         if self.macros.has_key(macro):
             old_def = self.macros[macro]
+        elif hasattr(self.__class__,"do_"+macro):
+            print "Name '"+macro+"' is being used by built-in command"
+            return
+        elif len([c for c in macro if not c.isalnum() and c != "_"]):
+            print "Macro name may contain only alphanumeric symbols and underscores"
+            return
         else:
             old_def = ""
         wx.CallAfter(self.start_macro,macro,old_def)
@@ -400,17 +407,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
         ubs.Add(self.pausebtn)
         ubs.Add((50,-1),flag=wx.EXPAND)
-        try:
-            for i in self.custombuttons[:4]:
-                if i is None:
-                    continue
-                b=wx.Button(self.panel,-1,i[0])
-                b.properties=i
-                b.SetBackgroundColour(i[2])
-                b.Bind(wx.EVT_BUTTON,self.procbutton)
-                ubs.Add(b)
-        except:
-            pass
         #Right full view
         lrs=self.lowerrsizer=wx.BoxSizer(wx.VERTICAL)
         self.logbox=wx.TextCtrl(self.panel,size=(350,340),pos=(440,75),style = wx.TE_MULTILINE)
@@ -498,24 +494,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.gwindow=gviz.window([])
         self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
         self.gwindow.Bind(wx.EVT_CLOSE,lambda x:self.gwindow.Hide())
-        cs=wx.GridBagSizer()
+        cs=self.centersizer=wx.GridBagSizer()
         cs.Add(self.gviz,pos=(0,0),span=(1,3))
-        posindex=0
-        try:
-            for i in self.custombuttons[4:]:
-                if i is None:
-                    continue
-                b=wx.Button(self.panel,-1,i[0])
-                b.properties=i
-                b.SetBackgroundColour(i[2])
-                b.Bind(wx.EVT_BUTTON,self.procbutton)
-                cs.Add(b,pos=(1+posindex/3,posindex%3),span=(1,1))
-                posindex+=1
-        except:
-            pass
         lls.Add(cs,pos=(0,10),span=(15,1))
-        
-        
         
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
         self.uppersizer.Add(self.uppertopsizer)
@@ -530,6 +511,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.panel.SetSizer(self.topsizer)
         self.status=self.CreateStatusBar()
         self.status.SetStatusText("Not connected to printer.")
+        self.panel.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
         self.topsizer.Layout()
         self.topsizer.Fit(self)
@@ -541,6 +523,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         #self.panel.Fit()
         #uts.Layout()
+        self.cbuttons_reload()
         
     def showwin(self,event):
         if(self.f is not None):
@@ -576,8 +559,160 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
             #self.SetSize(winssize)
             wx.CallAfter(self.minibtn.SetLabel, "Full mode")
-                
+    
+    def cbuttons_reload(self):
+        allcbs = []
+        ubs=self.upperbottomsizer
+        cs=self.centersizer
+        for item in ubs.GetChildren():
+            if hasattr(item.GetWindow(),"custombutton"):
+                allcbs += [(ubs,item.GetWindow())]
+        for item in cs.GetChildren():
+            if hasattr(item.GetWindow(),"custombutton"):
+                allcbs += [(cs,item.GetWindow())]
+        for sizer,button in allcbs:
+            #sizer.Remove(button)
+            button.Destroy()
+        for i in xrange(len(self.custombuttons)):
+            btndef = self.custombuttons[i]
+            try:
+                b=wx.Button(self.panel,-1,btndef[0])
+                if len(btndef)>2:
+                    b.SetBackgroundColour(btndef[2])
+                    rr,gg,bb=b.GetBackgroundColour().Get()
+                    if 0.3*rr+0.59*gg+0.11*bb < 60:
+                        b.SetForegroundColour("#ffffff")
+            except:
+                b=wx.Button(self.panel,-1,"")
+                b.Freeze()
+            b.custombutton=i
+            b.properties=btndef
+            b.Bind(wx.EVT_BUTTON,self.procbutton)
+            b.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
+            if i<4:
+                ubs.Add(b)
+            else:
+                cs.Add(b,pos=(1+(i-4)/3,(i-4)%3),span=(1,1))
+        self.topsizer.Layout()
+    
+    def help_button(self):
+        print 'Defines custom button. Usage: button <num> "title" [/c "colour"] command'
+    
+    def do_button(self,argstr):
+        def nextarg(rest):
+            rest=rest.lstrip()
+            if rest.startswith('"'):
+               return rest[1:].split('"',1)
+            else:
+               return rest.split(None,1)
+        #try:
+        num,argstr=nextarg(argstr)
+        num=int(num)
+        title,argstr=nextarg(argstr)
+        colour=None
+        try:
+            c1,c2=nextarg(argstr)
+            if c1=="/c":
+                colour,argstr=nextarg(c2)
+        except:
+            pass
+        command=argstr.strip()
+        if num<0 or num>=64:
+            print "Custom button number should be between 0 and 63"
+            return
+        while num >= len(self.custombuttons):
+            self.custombuttons+=[None]
+        self.custombuttons[num]=[title,command]
+        if colour is not None:
+            self.custombuttons[num]+=[colour]
+        if not self.processing_rc:
+            self.cbuttons_reload()
+        #except Exception,x:
+        #    print "Bad syntax for button definition, see 'help button'"
+        #    print x
         
+
+    def cbutton_save(self,n,bdef,new_n=None):
+        if new_n is None: new_n=n
+        if bdef is None or bdef == "":
+            self.save_in_rc(("button %d" % n),'')
+        elif len(bdef)>2:
+            colour=bdef[2]
+            if not isinstance(colour,str):
+                colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
+            self.save_in_rc(("button %d" % n),'button %d "%s" /c "%s" %s' % (new_n,bdef[0],colour,bdef[1]))
+        else:
+            self.save_in_rc(("button %d" % n),'button %d "%s" %s' % (new_n,bdef[0],bdef[1]))
+
+    def cbutton_edit(self,e,button=None):
+        bedit=ButtonEdit(self)
+        if button is not None:
+            n = button.custombutton
+            bedit.name.SetValue(button.properties[0])
+            bedit.command.SetValue(button.properties[1])
+            if len(button.properties)>2:
+                colour=button.properties[2]
+                if not isinstance(colour,str):
+                    colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
+                bedit.color.SetValue(colour)
+        else:
+            n = len(self.custombuttons)
+        if bedit.ShowModal()==wx.ID_OK:
+            if n==len(self.custombuttons):
+                self.custombuttons+=[None]
+            self.custombuttons[n]=[bedit.name.GetValue().strip(),bedit.command.GetValue().strip()]
+            if bedit.color.GetValue().strip()!="":
+                self.custombuttons[n]+=[bedit.color.GetValue()]
+            self.cbutton_save(n,self.custombuttons[n])
+        bedit.Destroy()
+        self.cbuttons_reload()
+
+    def cbutton_remove(self,e,button):
+        n = button.custombutton
+        self.custombuttons[n]=None
+        self.cbutton_save(n,None)
+        while self.custombuttons[-1] is None:
+            del self.custombuttons[-1]
+        self.cbuttons_reload()
+    
+    def cbutton_order(self,e,button,dir):
+        n = button.custombutton
+        if dir<0:
+            n=n-1
+        if n+1 >= len(self.custombuttons):
+            self.custombuttons+=[None] # pad
+        # swap
+        self.custombuttons[n],self.custombuttons[n+1] = self.custombuttons[n+1],self.custombuttons[n]
+        self.cbutton_save(n,self.custombuttons[n])
+        self.cbutton_save(n+1,self.custombuttons[n+1])
+        if self.custombuttons[-1] is None:
+            del self.custombuttons[-1]
+        self.cbuttons_reload()
+    
+    def editbutton(self,e):
+        if e.ButtonUp(wx.MOUSE_BTN_RIGHT):
+            pos = e.GetPosition()
+            popupmenu = wx.Menu()
+            obj = e.GetEventObject()
+            if hasattr(obj,"custombutton"):
+                item = popupmenu.Append(-1,"Edit custom button '%s'" % e.GetEventObject().GetLabelText())
+                self.Bind(wx.EVT_MENU,lambda e,button=e.GetEventObject():self.cbutton_edit(e,button),item)
+                item = popupmenu.Append(-1,"Move left <<")
+                self.Bind(wx.EVT_MENU,lambda e,button=e.GetEventObject():self.cbutton_order(e,button,-1),item)
+                if obj.custombutton == 0: item.Enable(False)
+                item = popupmenu.Append(-1,"Move right >>")
+                self.Bind(wx.EVT_MENU,lambda e,button=e.GetEventObject():self.cbutton_order(e,button,1),item)
+                if obj.custombutton == 63: item.Enable(False)
+                pos = self.panel.ScreenToClient(e.GetEventObject().ClientToScreen(pos))
+                item = popupmenu.Append(-1,"Remove custom button '%s'" % e.GetEventObject().GetLabelText())
+                self.Bind(wx.EVT_MENU,lambda e,button=e.GetEventObject():self.cbutton_remove(e,button),item)
+            else:
+                item = popupmenu.Append(-1,"Add custom button")
+                self.Bind(wx.EVT_MENU,self.cbutton_edit,item)
+            self.panel.PopupMenu(popupmenu, pos)
+        else:
+           e.Skip()
+    
     def procbutton(self,e):
         try:
             self.onecmd(e.GetEventObject().properties[1])
@@ -1051,6 +1186,30 @@ class options(wx.Dialog):
                     pronterface.set(k,str(ctrls[k].GetValue()))
         self.Destroy()
         
+class ButtonEdit(wx.Dialog):
+    """Custom button edit dialog"""
+    def __init__(self,pronterface):
+        wx.Dialog.__init__(self,None,title="Custom button",style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        topsizer=wx.BoxSizer(wx.VERTICAL)
+        vbox=wx.StaticBoxSizer(wx.StaticBox(self,label=""),wx.VERTICAL)
+        topsizer.Add(vbox,1,wx.ALL+wx.EXPAND)
+        grid=wx.FlexGridSizer(rows=0,cols=2,hgap=4,vgap=2)
+        grid.AddGrowableCol(1,1)
+        vbox.Add(grid,0,wx.EXPAND)
+        grid.Add(wx.StaticText(self,-1,"Button title"),0,wx.BOTTOM+wx.RIGHT)
+        self.name=wx.TextCtrl(self,-1,"")
+        grid.Add(self.name)
+        grid.Add(wx.StaticText(self,-1,"Command"),0,wx.BOTTOM+wx.RIGHT)
+        self.command=wx.TextCtrl(self,-1,"")
+        grid.Add(self.command)
+        grid.Add(wx.StaticText(self,-1,"Color"),0,wx.BOTTOM+wx.RIGHT)
+        self.color=wx.TextCtrl(self,-1,"")
+        grid.Add(self.color)
+        topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0,wx.EXPAND)
+        self.SetSizer(topsizer)        
+        topsizer.Layout()
+        topsizer.Fit(self)
+    
 if __name__ == '__main__':
     app = wx.App(False)
     main = PronterWindow()
