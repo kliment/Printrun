@@ -96,7 +96,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         customdict={}
         try:
             execfile("custombtn.txt",customdict)
-            self.custombuttons+=customdict["btns"]
+            if len(customdict["btns"]): 
+                if not len(self.custombuttons):
+                    try:
+                        self.custombuttons = customdict["btns"]
+                        for n in xrange(len(self.custombuttons)):
+                            self.cbutton_save(n,self.custombuttons[n])
+                        os.rename("custombtn.txt","custombtn.old")
+                        rco=open("custombtn.txt","w")
+                        rco.write("# I moved all your custom buttons into .pronsolerc.\n# Please don't add them here any more.\n# Backup of your old buttons is in custombtn.old\n")
+                        rco.close()
+                    except IOError,x:
+                        print str(x)
+                else:
+                    print "Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"
+                    print "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
+                    
         except:
             pass
         self.popmenu()
@@ -109,6 +124,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.p.endcb=self.endcb
         self.starttime=0
         self.curlayer=0
+        self.cur_button=None
     
     def startcb(self):
         self.starttime=time.time()
@@ -219,22 +235,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                             return
                     print "Cancelled."
                     return
-                if "\n" not in definition:
-                    macro_def = definition.strip()
-                    self.cur_macro_def = macro_def
-                    self.cur_macro_name = macro_name
-                    if macro_def.startswith("!"):
-                        self.cur_macro = "def macro(self,*arg):\n  "+macro_def[1:]+"\n"
-                    else:
-                        self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(*arg))\n"
-                    self.end_macro()
-                    return
-                pronsole.pronsole.start_macro(self,macro_name,True)
-                for line in definition.split("\n"):
-                    if hasattr(self,"cur_macro_def"):
-                        self.hook_macro("  "+line)
-                if hasattr(self,"cur_macro_def"):
-                    self.end_macro()
+                self.cur_macro_name = macro_name
+                self.cur_macro_def = definition
+                self.end_macro()
             macroed(macro_name,old_macro_definition,cb)
         else:
             pronsole.pronsole.start_macro(self,macro_name,old_macro_definition)
@@ -279,10 +282,32 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
     
-    def new_macro_named(self,dialog,e):
-        #dialog = e.GetEventObject().GetParent()
-        macro = dialog.namectrl.GetValue()
-        if macro == "": return
+    def new_macro(self,e=None):
+        dialog = wx.Dialog(self,-1,"Enter macro name",size=(200,100))
+        panel = wx.Panel(dialog,-1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        wx.StaticText(panel,-1,"Macro name:",(8,14))
+        dialog.namectrl = wx.TextCtrl(panel,-1,'',(80,8),size=(100,24),style=wx.TE_PROCESS_ENTER)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        okb = wx.Button(dialog,wx.ID_OK,"Ok",size=(50,24))
+        dialog.Bind(wx.EVT_TEXT_ENTER,lambda e:dialog.EndModal(wx.ID_OK),dialog.namectrl)
+        #dialog.Bind(wx.EVT_BUTTON,lambda e:self.new_macro_named(dialog,e),okb)
+        hbox.Add(okb)
+        hbox.Add(wx.Button(dialog,wx.ID_CANCEL,"Cancel",size=(50,24)))
+        vbox.Add(panel)
+        vbox.Add(hbox,1,wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,10)
+        dialog.SetSizer(vbox)
+        dialog.Centre()
+        macro = ""
+        if dialog.ShowModal()==wx.ID_OK:
+            macro = dialog.namectrl.GetValue()
+            if macro != "":
+                wx.CallAfter(self.edit_macro,macro)
+        dialog.Destroy()
+        return macro
+        
+    def edit_macro(self,macro):
+        if macro == "": return self.new_macro()
         if self.macros.has_key(macro):
             old_def = self.macros[macro]
         elif hasattr(self.__class__,"do_"+macro):
@@ -293,26 +318,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             return
         else:
             old_def = ""
-        wx.CallAfter(self.start_macro,macro,old_def)
-        dialog.Show(False)
-    
-    def new_macro(self,e):
-        dialog = wx.Dialog(self,-1,"Enter macro name",size=(200,100))
-        panel = wx.Panel(dialog,-1)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        wx.StaticText(panel,-1,"Macro name:",(8,14))
-        dialog.namectrl = wx.TextCtrl(panel,-1,'',(80,8),size=(100,24),style=wx.TE_PROCESS_ENTER)
-        dialog.Bind(wx.EVT_TEXT_ENTER,lambda e:self.new_macro_named(dialog,e),dialog.namectrl)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        okb = wx.Button(dialog,wx.ID_OK,"Ok",size=(50,24))
-        dialog.Bind(wx.EVT_BUTTON,lambda e:self.new_macro_named(dialog,e),okb)
-        hbox.Add(okb)
-        hbox.Add(wx.Button(dialog,wx.ID_CANCEL,"Cancel",size=(50,24)))
-        vbox.Add(panel)
-        vbox.Add(hbox,1,wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM,10)
-        dialog.SetSizer(vbox)
-        dialog.Centre()
-        dialog.Show(True)
+        self.start_macro(macro,old_def)
+        return macro
         
     def update_macros_menu(self):
         if not hasattr(self,"macros_menu"):
@@ -639,10 +646,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         elif len(bdef)>2:
             colour=bdef[2]
             if type(colour) not in (str,unicode):
-                print type(colour)
-                if type(colour)==tuple and map(type,colour)==(int,int,int):
+                #print type(colour),map(type,colour)
+                if type(colour)==tuple and tuple(map(type,colour))==(int,int,int):
                     colour = map(lambda x:x%256,colour)
-                colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
+                    colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
+                else:
+                    colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
             self.save_in_rc(("button %d" % n),'button %d "%s" /c "%s" %s' % (new_n,bdef[0],colour,bdef[1]))
         else:
             self.save_in_rc(("button %d" % n),'button %d "%s" %s' % (new_n,bdef[0],bdef[1]))
@@ -656,10 +665,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if len(button.properties)>2:
                 colour=button.properties[2]
                 if type(colour) not in (str,unicode):
-                    print type(colour)
-                    if type(colour)==tuple and map(type,colour)==(int,int,int):
+                    #print type(colour)
+                    if type(colour)==tuple and tuple(map(type,colour))==(int,int,int):
                         colour = map(lambda x:x%256,colour)
-                    colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
+                        colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
+                    else:
+                        colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
                 bedit.color.SetValue(colour)
         else:
             n = len(self.custombuttons)
@@ -721,9 +732,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def procbutton(self,e):
         try:
+            if hasattr(e.GetEventObject(),"custombutton"):
+                self.cur_button=e.GetEventObject().custombutton
             self.onecmd(e.GetEventObject().properties[1])
+            self.cur_button=None
         except:
             print "event object missing"
+            self.cur_button=None
             raise
         
     def kill(self,e):
@@ -1196,6 +1211,7 @@ class ButtonEdit(wx.Dialog):
     """Custom button edit dialog"""
     def __init__(self,pronterface):
         wx.Dialog.__init__(self,None,title="Custom button",style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self.pronterface=pronterface
         topsizer=wx.BoxSizer(wx.VERTICAL)
         vbox=wx.StaticBoxSizer(wx.StaticBox(self,label=""),wx.VERTICAL)
         topsizer.Add(vbox,1,wx.ALL+wx.EXPAND)
@@ -1204,17 +1220,43 @@ class ButtonEdit(wx.Dialog):
         vbox.Add(grid,0,wx.EXPAND)
         grid.Add(wx.StaticText(self,-1,"Button title"),0,wx.BOTTOM+wx.RIGHT)
         self.name=wx.TextCtrl(self,-1,"")
-        grid.Add(self.name)
+        grid.Add(self.name,1,wx.EXPAND)
         grid.Add(wx.StaticText(self,-1,"Command"),0,wx.BOTTOM+wx.RIGHT)
         self.command=wx.TextCtrl(self,-1,"")
-        grid.Add(self.command)
+        xbox=wx.BoxSizer(wx.HORIZONTAL)
+        xbox.Add(self.command,1,wx.EXPAND)
+        self.command.Bind(wx.EVT_TEXT,self.macrob_enabler)
+        self.macrob=wx.Button(self,-1,"..",style=wx.BU_EXACTFIT)
+        self.macrob.Bind(wx.EVT_BUTTON,self.macrob_handler)
+        xbox.Add(self.macrob,0)
+        grid.Add(xbox)
         grid.Add(wx.StaticText(self,-1,"Color"),0,wx.BOTTOM+wx.RIGHT)
         self.color=wx.TextCtrl(self,-1,"")
-        grid.Add(self.color)
+        grid.Add(self.color,1,wx.EXPAND)
         topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0,wx.EXPAND)
         self.SetSizer(topsizer)        
         topsizer.Layout()
         topsizer.Fit(self)
+    def macrob_enabler(self,e):
+        macro = self.command.GetValue()
+        valid = False
+        if macro == "":
+            valid = True
+        elif self.pronterface.macros.has_key(macro):
+            valid = True
+        elif hasattr(self.pronterface.__class__,"do_"+macro):
+            valid = False
+        elif len([c for c in macro if not c.isalnum() and c != "_"]):
+            valid = False
+        else:
+            valid = True
+        self.macrob.Enable(valid)
+    def macrob_handler(self,e):
+        macro = self.command.GetValue()
+        macro = self.pronterface.edit_macro(macro)
+        self.command.SetValue(macro)
+        if self.name.GetValue()=="":
+            self.name.SetValue(macro)
     
 if __name__ == '__main__':
     app = wx.App(False)

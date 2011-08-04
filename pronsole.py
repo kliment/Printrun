@@ -153,11 +153,6 @@ class pronsole(cmd.Cmd):
             self.end_macro()
             # pass the unprocessed line to regular command processor to not require empty line in .pronsolerc
             return self.onecmd(l)
-        if ls.startswith('#'): return
-        if ls.startswith('!'):
-            self.cur_macro += ws + ls[1:] + "\n" # python mode
-        else:
-            self.cur_macro += ws + 'self.onecmd("'+ls+'".format(*arg))\n' # parametric command mode
         self.cur_macro_def += l + "\n"
     
     def end_macro(self):    
@@ -165,7 +160,7 @@ class pronsole(cmd.Cmd):
         self.prompt="PC>"
         if self.cur_macro_def!="":
             self.macros[self.cur_macro_name] = self.cur_macro_def
-            exec self.cur_macro
+            macro = self.compile_macro(self.cur_macro_name,self.cur_macro_def)
             setattr(self.__class__,"do_"+self.cur_macro_name,lambda self,largs,macro=macro:macro(self,*largs.split()))
             setattr(self.__class__,"help_"+self.cur_macro_name,lambda self,macro_name=self.cur_macro_name: self.subhelp_macro(macro_name))
             if not self.processing_rc:
@@ -182,14 +177,37 @@ class pronsole(cmd.Cmd):
                     self.save_in_rc(macro_key,macro_def)
         else:
             print "Empty macro - cancelled"
-        del self.cur_macro,self.cur_macro_name,self.cur_macro_def
+        del self.cur_macro_name,self.cur_macro_def
+    
+    def compile_macro_line(self,line):
+        line = line.rstrip()
+        ls = line.lstrip()
+        ws = line[:len(line)-len(ls)] # just leading whitespace
+        if ls=="" or ls.startswith('#'): return "" # no code
+        if ls.startswith('!'):
+            return ws + ls[1:] + "\n" # python mode
+        else:
+            return ws + 'self.onecmd("'+ls+'".format(*arg))\n' # parametric command mode
+    
+    def compile_macro(self,macro_name,macro_def):
+        if macro_def.strip() == "":
+            print "Empty macro - cancelled"
+            return
+        pycode = "def macro(self,*arg):\n"
+        if "\n" not in macro_def.strip():
+            pycode += self.compile_macro_line("  "+macro_def.strip())
+        else:
+            lines = macro_def.split("\n")
+            for l in lines:
+                pycode += self.compile_macro_line(l)
+        exec pycode
+        return macro
         
     def start_macro(self,macro_name,prev_definition="",suppress_instructions=False):
         if not self.processing_rc and not suppress_instructions:
             print "Enter macro using indented lines, end with empty line"
         self.cur_macro_name = macro_name
         self.cur_macro_def = ""
-        self.cur_macro = "def macro(self,*arg):\n"
         self.onecmd = self.hook_macro # override onecmd temporarily
         self.prompt="..>"
         
@@ -221,10 +239,6 @@ class pronsole(cmd.Cmd):
                 return
             self.cur_macro_def = macro_def
             self.cur_macro_name = macro_name
-            if macro_def.startswith("!"):
-                self.cur_macro = "def macro(self,*arg):\n  "+macro_def[1:]+"\n"
-            else:
-                self.cur_macro = "def macro(self,*arg):\n  self.onecmd('"+macro_def+"'.format(*arg))\n"
             self.end_macro()
             return
         if self.macros.has_key(macro_name):
@@ -304,7 +318,7 @@ class pronsole(cmd.Cmd):
                 if not rc_cmd.lstrip().startswith("#"):
                     self.onecmd(rc_cmd)
             rc.close()
-            if hasattr(self,"cur_macro"):
+            if hasattr(self,"cur_macro_def"):
                 self.end_macro()
             self.rc_loaded = True
         finally:
