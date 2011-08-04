@@ -54,6 +54,7 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
             self.SetSize(wx.DLG_SZE(self, (465, 325)))
             
         self.SetPosition((0, 0))
+        self.CenterOnParent()
         self.scrollbarPanel.SetScrollRate(10, 10)
         
     def __do_layout(self):
