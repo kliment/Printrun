@@ -707,8 +707,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cbuttons_reload()
     
     def editbutton(self,e):
-        if e.ButtonUp(wx.MOUSE_BTN_RIGHT) or (e.ButtonUp(wx.MOUSE_BTN_LEFT) and (e.AltDown() or e.ControlDown())):
-            pos = e.GetPosition()
+        if e.IsCommandEvent() or e.ButtonUp(wx.MOUSE_BTN_RIGHT):
+            if e.IsCommandEvent():
+                pos = (0,0)
+            else:
+                pos = e.GetPosition()
             popupmenu = wx.Menu()
             obj = e.GetEventObject()
             if hasattr(obj,"custombutton"):
@@ -733,6 +736,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def procbutton(self,e):
         try:
             if hasattr(e.GetEventObject(),"custombutton"):
+                if wx.GetKeyState(wx.WXK_CONTROL) or wx.GetkeyState(wx.WXK_ALT):
+                    return self.editbutton(e)
                 self.cur_button=e.GetEventObject().custombutton
             self.onecmd(e.GetEventObject().properties[1])
             self.cur_button=None
