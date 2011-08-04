@@ -16,13 +16,15 @@ class stlwrap:
 class showstl(wx.Window):
     def __init__(self,parent,size,pos):
         wx.Window.__init__(self,parent,size=size,pos=pos)
-        self.l=wx.ListCtrl(self,style=wx.LC_LIST,size=(300,100),pos=(0,size[1]-100))
-        self.eb=wx.Button(self,label="Export",pos=(300,size[1]-100))
-        self.sb=wx.Button(self,label="Snap to Z=0",pos=(300,size[1]-70))
-        self.cb=wx.Button(self,label="Put at 100,100",pos=(300,size[1]-40))
+        self.l=wx.ListCtrl(self,style=wx.LC_LIST,size=(300,130),pos=(0,size[1]-130))
+        self.eb=wx.Button(self,label="Export",pos=(300,size[1]-130))
+        self.sb=wx.Button(self,label="Snap to Z=0",pos=(300,size[1]-100))
+        self.cb=wx.Button(self,label="Put at 100,100",pos=(300,size[1]-70))
+        self.db=wx.Button(self,label="Delete",pos=(300,size[1]-40))
         self.eb.Bind(wx.EVT_BUTTON,self.export)
         self.sb.Bind(wx.EVT_BUTTON,self.snap)
         self.cb.Bind(wx.EVT_BUTTON,self.center)
+        self.db.Bind(wx.EVT_BUTTON,self.delete)
         #self.SetBackgroundColour((0,0,0))
         #wx.FutureCall(200,self.paint)
         self.i=0
@@ -36,14 +38,14 @@ class showstl(wx.Window):
         self.basedir="."
         self.initpos=None
         self.prevsel=-1
-        
+
     def center(self,event):
         i=self.l.GetFirstSelected()
         if i != -1:
                 m=self.models[self.l.GetItemText(i)]
                 m.offsets=[100,100,m.offsets[2]]
                 self.Refresh()
-                
+
     def snap(self,event):
         i=self.l.GetFirstSelected()
         if i != -1:
@@ -51,8 +53,15 @@ class showstl(wx.Window):
                 m.offsets[2]=-1.0*min(m.facetsminz)[0]
                 #print m.offsets[2]
                 self.Refresh()
-        
-        
+
+    def delete(self,event):
+        i=self.l.GetFirstSelected()
+        if i != -1:
+                del self.models[self.l.GetItemText(i)]
+                self.l.DeleteItem(i)
+                self.l.Select(self.l.GetItemCount()-1)
+                self.Refresh()
+
     def export(self,event):
         dlg=wx.FileDialog(self,"Pick file to save to",self.basedir,style=wx.FD_SAVE)
         dlg.SetWildcard("STL files (;*.stl;)")
@@ -182,11 +191,11 @@ class showstl(wx.Window):
         #s.export()
         
 class stlwin(wx.Frame):
-    def __init__(self,size=(400,500)):
+    def __init__(self,size=(400,530)):
         wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
         self.SetIcon(wx.Icon("plater.ico",wx.BITMAP_TYPE_ICO))
         self.SetClientSize(size)
-        self.s=showstl(self,(400,500),(0,0))
+        self.s=showstl(self,(400,530),(0,0))
         
 if __name__ == '__main__':
     app = wx.App(False)
