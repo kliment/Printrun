@@ -707,7 +707,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cbuttons_reload()
     
     def editbutton(self,e):
-        if e.ButtonUp(wx.MOUSE_BTN_RIGHT):
+        if e.ButtonUp(wx.MOUSE_BTN_RIGHT) or (e.ButtonUp(wx.MOUSE_BTN_LEFT) and (e.AltDown() or e.ControlDown())):
             pos = e.GetPosition()
             popupmenu = wx.Menu()
             obj = e.GetEventObject()
