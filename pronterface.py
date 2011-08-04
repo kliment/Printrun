@@ -736,7 +736,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def procbutton(self,e):
         try:
             if hasattr(e.GetEventObject(),"custombutton"):
-                if wx.GetKeyState(wx.WXK_CONTROL) or wx.GetkeyState(wx.WXK_ALT):
+                if wx.GetKeyState(wx.WXK_CONTROL) or wx.GetKeyState(wx.WXK_ALT):
                     return self.editbutton(e)
                 self.cur_button=e.GetEventObject().custombutton
             self.onecmd(e.GetEventObject().properties[1])
