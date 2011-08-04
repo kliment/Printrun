@@ -377,7 +377,10 @@ class pronsole(cmd.Cmd):
                 os.rename(rci.name,rci.name+"~old")
             rco.close()
             os.rename(rco.name,self.rc_filename)
-            print "Saved '"+key+"' to '"+self.rc_filename+"'"
+            if definition != "":
+                print "Saved '"+key+"' to '"+self.rc_filename+"'"
+            else:
+                print "Removed '"+key+"' from '"+self.rc_filename+"'"
         except Exception, e:
             print "Saving failed for",key+":",str(e)
         finally:
