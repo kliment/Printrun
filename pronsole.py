@@ -19,6 +19,20 @@ except:
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
+def totalelength(g):
+    tot=0
+    cur=0
+    for i in g:
+        if "E" in i and ("G1" in i or "G0" in i):
+            try:
+                cur=float(i.split("E")[1].split(" ")[0])
+            except:
+                pass
+        elif "G92" in i and "E0" in i:
+            tot+=cur
+    return tot
+
+
 class Settings:
     #def _temperature_alias(self): return {"pla":210,"abs":230,"off":0}
     #def _temperature_validate(self,v):

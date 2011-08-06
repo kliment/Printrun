@@ -121,7 +121,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.mini=False
         self.p.sendcb=self.sentcb
         self.p.startcb=self.startcb
-        #self.p.endcb=self.endcb
+        self.p.endcb=self.endcb
         self.starttime=0
         self.curlayer=0
         self.cur_button=None
@@ -130,9 +130,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.starttime=time.time()
         
     def endcb(self):
-        print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes."
-        wx.CallAfter(self.pausebtn.Hide)
-        wx.CallAfter(self.printbtn.SetLabel,"Print")
+        if(self.p.queueindex==0):
+            print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds"
+            wx.CallAfter(self.pausebtn.Disable)
+            wx.CallAfter(self.printbtn.SetLabel,"Print")
+            
 
     
     def online(self):
@@ -524,7 +526,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.topsizer.Fit(self)
         
         # disable all printer controls until we connect to a printer
-        self.pausebtn.Hide()
+        self.pausebtn.Disable()
         for i in self.printerControls:
             i.Disable()
         
@@ -934,7 +936,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     wx.CallAfter(self.printbtn.Enable)
                     
             wx.CallAfter(self.status.SetStatusText,"Loaded "+self.filename+", %d lines"%(len(self.f),))
-            wx.CallAfter(self.pausebtn.Hide)
+            wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,"Print")
 
             threading.Thread(target=self.loadviz).start()
@@ -981,12 +983,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.status.SetStatusText("Loaded "+name+", %d lines"%(len(self.f),))
                 wx.CallAfter(self.printbtn.SetLabel, "Print")
                 wx.CallAfter(self.pausebtn.SetLabel, "Pause")
-                wx.CallAfter(self.pausebtn.Hide)
+                wx.CallAfter(self.pausebtn.Disable)
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target=self.loadviz).start()
                 
     def loadviz(self):
+        print pronsole.totalelength(self.f),"mm of filament used in this print"
         self.gviz.clear()
         self.gwindow.p.clear()
         for i in self.f:
@@ -1107,7 +1110,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         wx.CallAfter(self.connectbtn.Enable);
         wx.CallAfter(self.printbtn.Disable);
-        wx.CallAfter(self.pausebtn.Hide);
+        wx.CallAfter(self.pausebtn.Disable);
         for i in self.printerControls:
             wx.CallAfter(i.Disable)
         
