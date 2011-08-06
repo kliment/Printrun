@@ -264,13 +264,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.menustrip = wx.MenuBar()
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1,"&Open..."," Opens file"))
+        self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1,"&Edit..."," Edit open file"))
         if sys.platform != 'darwin':
             self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,"SFACT Settings"," Adjust SFACT settings"))
-            try:
-                from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
-                self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,"SFACT Quick Settings"," Quickly adjust SFACT settings for active profile"))
-            except:
-                pass
+        try:
+            from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
+            self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,"SFACT Quick Settings"," Quickly adjust SFACT settings for active profile"))
+        except:
+            pass
 
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,"E&xit"," Closes the Window"))
         self.menustrip.Append(m,"&Print")
@@ -282,6 +283,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.menustrip.Append(m,"&Settings")
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
+    
+    
+    def doneediting(self,gcode):
+        f=open(self.filename,"w")
+        f.write("\n".join(gcode))
+        f.close()
+        wx.CallAfter(self.loadfile,None,self.filename)
+    
+    def do_editgcode(self,e=None):
+        if(self.filename is not None):
+            macroed(self.filename,self.f,self.doneediting,1)
     
     def new_macro(self,e=None):
         dialog = wx.Dialog(self,-1,"Enter macro name",size=(200,100))
@@ -956,7 +968,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         thread(target=self.skein_func).start()
         thread(target=self.skein_monitor).start()
         
-    def loadfile(self,event):
+    def loadfile(self,event,filename=None):
         basedir=self.settings.last_file_path
         if not os.path.exists(basedir):
             basedir = "."
@@ -966,8 +978,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 pass
         dlg=wx.FileDialog(self,"Open file to print",basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard("STL and GCODE files (;*.gcode;*.g;*.stl;*.STL;)")
-        if(dlg.ShowModal() == wx.ID_OK):
-            name=dlg.GetPath()
+        if(filename is not None or dlg.ShowModal() == wx.ID_OK):
+            if filename is not None:
+                name=filename
+            else:
+                name=dlg.GetPath()
             if not(os.path.exists(name)):
                 self.status.SetStatusText("File not found!")
                 return
@@ -1136,13 +1151,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             
 class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
-    def __init__(self,macro_name,definition,callback):
+    def __init__(self,macro_name,definition,callback,gcode=False):
         self.indent_chars = "  "
-        wx.Dialog.__init__(self,None,title="macro %s" % macro_name,style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        title="  macro %s"
+        if gcode:
+            title="  %s"
+        self.gcode=gcode
+        wx.Dialog.__init__(self,None,title=title % macro_name,style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.callback = callback
         self.panel=wx.Panel(self,-1)
         titlesizer=wx.BoxSizer(wx.HORIZONTAL)
-        title = wx.StaticText(self.panel,-1,"  macro %s: "%macro_name)
+        title = wx.StaticText(self.panel,-1,title%macro_name)
         title.SetFont(wx.Font(11,wx.NORMAL,wx.NORMAL,wx.BOLD))
         titlesizer.Add(title,1)
         self.okb = wx.Button(self.panel,-1,"Save")
@@ -1154,7 +1173,10 @@ class macroed(wx.Dialog):
         topsizer=wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(titlesizer,0,wx.EXPAND)
         self.e=wx.TextCtrl(self.panel,style=wx.TE_MULTILINE+wx.HSCROLL,size=(200,200))
-        self.e.SetValue(self.unindent(definition))
+        if not self.gcode:
+            self.e.SetValue(self.unindent(definition))
+        else:
+            self.e.SetValue("\n".join(definition))
         topsizer.Add(self.e,1,wx.ALL+wx.EXPAND)
         self.panel.SetSizer(topsizer)
         topsizer.Layout()
@@ -1163,7 +1185,10 @@ class macroed(wx.Dialog):
         self.e.SetFocus()
     def save(self,ev):
         self.Destroy()
-        self.callback(self.reindent(self.e.GetValue()))
+        if not self.gcode:
+            self.callback(self.reindent(self.e.GetValue()))
+        else:
+            self.callback(self.e.GetValue().split("\n"))
     def close(self,ev):
         self.Destroy()
     def unindent(self,text):
