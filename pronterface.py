@@ -135,7 +135,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,"Print")
             
-
     
     def online(self):
         print "Printer is now online"
@@ -1019,7 +1018,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def on_startprint(self):
         wx.CallAfter(self.pausebtn.SetLabel, "Pause")
-        wx.CallAfter(self.pausebtn.Show)
+        wx.CallAfter(self.pausebtn.Enable)
         wx.CallAfter(self.printbtn.SetLabel, "Restart")
     
     def endupload(self):
