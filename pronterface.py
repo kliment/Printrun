@@ -49,6 +49,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.settings.bed_size_y = 200.
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
+        self.settings.preview_extrusion_width = 0.5
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
@@ -515,11 +516,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add((10,0),pos=(0,11),span=(1,1))
         self.gviz=gviz.gviz(self.panel,(300,300),
             bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
-            grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2))
+            grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
+            extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.showall=1
         self.gwindow=gviz.window([],
             bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
-            grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2))
+            grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
+            extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
         self.gwindow.Bind(wx.EVT_CLOSE,lambda x:self.gwindow.Hide())
         cs=self.centersizer=wx.GridBagSizer()

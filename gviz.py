@@ -1,9 +1,9 @@
 import wx,time
 
 class window(wx.Frame):
-    def __init__(self,f,size=(600,600),bedsize=(200,200),grid=(10,50)):
+    def __init__(self,f,size=(600,600),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
         wx.Frame.__init__(self,None,title="Layer view (Use shift+mousewheel to switch layers)",size=(size[0],size[1]))
-        self.p=gviz(self,size=size,bedsize=bedsize,grid=grid)
+        self.p=gviz(self,size=size,bedsize=bedsize,grid=grid,extrusion_width=extrusion_width)
         s=time.time()
         for i in f:
             self.p.addgcode(i)
@@ -53,7 +53,7 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
         
 class gviz(wx.Panel):
-    def __init__(self,parent,size=(200,200),bedsize=(200,200),grid=(10,50)):
+    def __init__(self,parent,size=(200,200),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
         wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
         self.size=size
         self.bedsize=bedsize
@@ -66,7 +66,7 @@ class gviz(wx.Panel):
         self.pens={}
         self.layers=[]
         self.layerindex=0
-        self.filament_width=0.5 # set it to 0 to disable scaling lines with zoom
+        self.filament_width=extrusion_width # set it to 0 to disable scaling lines with zoom
         self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate=[0.0,0.0]
