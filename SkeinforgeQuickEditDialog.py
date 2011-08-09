@@ -138,11 +138,10 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
     def saveSetting(self, repo, name, oldValue, newValue):
         repoSettingsFilename = os.path.join(archive.getProfilesPath() , settings.getProfileBaseName(repo))
         if (type(oldValue).__name__ == 'float'):
-            newValue = "%.1f" % float(newValue)
-
+            newValue = '{0:g}'.format(float(newValue))
         for line in fileinput.FileInput(repoSettingsFilename, inplace=1):
-            if name + "\t" + str(oldValue) in line:
-                line = line.replace(str(oldValue), str(newValue))
+            if line.startswith(name + "\t"):
+                line = "{0}\t{1}\n".format(name, str(newValue))
             sys.stdout.write(line)
         print('Saved: ' + name + ' = ' + str(newValue) + ' (was: ' + str(oldValue) + ')')
 
