@@ -1,0 +1,556 @@
+# Pronterface Message Catalog Template
+# Copyright (C) 2011 Jonathan Marsden
+# Jonathan Marsden <jmarsden@fastmail.fm>, 2011.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Pronterface jm1\n"
+"POT-Creation-Date: 2011-08-06 13:27+PDT\n"
+"PO-Revision-Date: 2011-08-06 13:27+PDT\n"
+"Last-Translator: Jonathan Marsden <jmarsden@fastmail.fm>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: UTF-8\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: pronterface.py:10
+msgid "WX is not installed. This program requires WX to run."
+msgstr ""
+
+#: pronterface.py:55
+msgid "Printer Interface"
+msgstr ""
+
+#: pronterface.py:67
+msgid "X+100"
+msgstr ""
+
+#: pronterface.py:68
+msgid "X+10"
+msgstr ""
+
+#: pronterface.py:69
+msgid "X+1"
+msgstr ""
+
+#: pronterface.py:70
+msgid "X+0.1"
+msgstr ""
+
+#: pronterface.py:71
+msgid "HomeX"
+msgstr ""
+
+#: pronterface.py:72
+msgid "X-0.1"
+msgstr ""
+
+#: pronterface.py:73
+msgid "X-1"
+msgstr ""
+
+#: pronterface.py:74
+msgid "X-10"
+msgstr ""
+
+#: pronterface.py:75
+msgid "X-100"
+msgstr ""
+
+#: pronterface.py:76
+msgid "Y+100"
+msgstr ""
+
+#: pronterface.py:77
+msgid "Y+10"
+msgstr ""
+
+#: pronterface.py:78
+msgid "Y+1"
+msgstr ""
+
+#: pronterface.py:79
+msgid "Y+0.1"
+msgstr ""
+
+#: pronterface.py:80
+msgid "HomeY"
+msgstr ""
+
+#: pronterface.py:81
+msgid "Y-0.1"
+msgstr ""
+
+#: pronterface.py:82
+msgid "Y-1"
+msgstr ""
+
+#: pronterface.py:83
+msgid "Y-10"
+msgstr ""
+
+#: pronterface.py:84
+msgid "Y-100"
+msgstr ""
+
+#: pronterface.py:85
+msgid "Motors off"
+msgstr ""
+
+#: pronterface.py:86
+msgid "Z+10"
+msgstr ""
+
+#: pronterface.py:87
+msgid "Z+1"
+msgstr ""
+
+#: pronterface.py:88
+msgid "Z+0.1"
+msgstr ""
+
+#: pronterface.py:89
+msgid "HomeZ"
+msgstr ""
+
+#: pronterface.py:90
+msgid "Z-0.1"
+msgstr ""
+
+#: pronterface.py:91
+msgid "Z-1"
+msgstr ""
+
+#: pronterface.py:92
+msgid "Z-10"
+msgstr ""
+
+#: pronterface.py:93
+msgid "Home"
+msgstr ""
+
+#: pronterface.py:94
+msgid "Check temp"
+msgstr ""
+
+#: pronterface.py:95
+msgid "Extrude"
+msgstr ""
+
+#: pronterface.py:96
+msgid "Reverse"
+msgstr ""
+
+#: pronterface.py:112
+msgid ""
+"# I moved all your custom buttons into .pronsolerc.\n"
+"# Please don't add them here any more.\n"
+"# Backup of your old buttons is in custombtn.old\n"
+msgstr ""
+
+#: pronterface.py:117
+msgid "Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"
+msgstr ""
+
+#: pronterface.py:118
+msgid "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
+msgstr ""
+
+#: pronterface.py:141 pronterface.py:427 pronterface.py:956
+#: pronterface.py:1003 pronterface.py:1113 pronterface.py:1140
+#: pronterface.py:1154
+msgid "Print"
+msgstr ""
+
+#: pronterface.py:145
+msgid "Printer is now online"
+msgstr ""
+
+#: pronterface.py:194
+msgid "Setting hotend temperature to "
+msgstr ""
+
+#: pronterface.py:194 pronterface.py:215
+msgid " degrees Celsius."
+msgstr ""
+
+#: pronterface.py:198 pronterface.py:219
+msgid "Printer is not online."
+msgstr ""
+
+#: pronterface.py:200
+msgid "You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."
+msgstr ""
+
+#: pronterface.py:202 pronterface.py:223
+msgid "You must enter a temperature."
+msgstr ""
+
+#: pronterface.py:215
+msgid "Setting bed temperature to "
+msgstr ""
+
+#: pronterface.py:221
+msgid "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
+msgstr ""
+
+#: pronterface.py:238
+msgid "Do you want to erase the macro?"
+msgstr ""
+
+#: pronterface.py:242
+msgid "Cancelled."
+msgstr ""
+
+#: pronterface.py:271
+msgid " Opens file"
+msgstr ""
+
+#: pronterface.py:271
+msgid "&Open..."
+msgstr ""
+
+#: pronterface.py:272
+msgid " Edit open file"
+msgstr ""
+
+#: pronterface.py:272
+msgid "&Edit..."
+msgstr ""
+
+#: pronterface.py:274
+msgid " Adjust SFACT settings"
+msgstr ""
+
+#: pronterface.py:274
+msgid "SFACT Settings"
+msgstr ""
+
+#: pronterface.py:277
+msgid " Quickly adjust SFACT settings for active profile"
+msgstr ""
+
+#: pronterface.py:277
+msgid "SFACT Quick Settings"
+msgstr ""
+
+#: pronterface.py:281
+msgid " Closes the Window"
+msgstr ""
+
+#: pronterface.py:281
+msgid "E&xit"
+msgstr ""
+
+#: pronterface.py:282
+msgid "&Print"
+msgstr ""
+
+#: pronterface.py:285
+msgid "&Macros"
+msgstr ""
+
+#: pronterface.py:286
+msgid "<&New...>"
+msgstr ""
+
+#: pronterface.py:287
+msgid " Options dialog"
+msgstr ""
+
+#: pronterface.py:287
+msgid "&Options"
+msgstr ""
+
+#: pronterface.py:288
+msgid "&Settings"
+msgstr ""
+
+#: pronterface.py:304
+msgid "Enter macro name"
+msgstr ""
+
+#: pronterface.py:307
+msgid "Macro name:"
+msgstr ""
+
+#: pronterface.py:310
+msgid "Ok"
+msgstr ""
+
+#: pronterface.py:314
+msgid "Cancel"
+msgstr ""
+
+#: pronterface.py:332
+msgid "' is being used by built-in command"
+msgstr ""
+
+#: pronterface.py:332
+msgid "Name '"
+msgstr ""
+
+#: pronterface.py:368
+msgid "Port:"
+msgstr ""
+
+#: pronterface.py:390
+msgid "Connect"
+msgstr ""
+
+#: pronterface.py:392
+msgid "Connect to the printer"
+msgstr ""
+
+#: pronterface.py:394
+msgid "Disconnect"
+msgstr ""
+
+#: pronterface.py:398
+msgid "Reset"
+msgstr ""
+
+#: pronterface.py:401 pronterface.py:579
+msgid "Mini mode"
+msgstr ""
+
+#: pronterface.py:407
+msgid ""
+"Monitor\n"
+"printer"
+msgstr ""
+
+#: pronterface.py:416
+msgid "Load file"
+msgstr ""
+
+#: pronterface.py:419
+msgid "SD Upload"
+msgstr ""
+
+#: pronterface.py:423
+msgid "SD Print"
+msgstr ""
+
+#: pronterface.py:431 pronterface.py:1004 pronterface.py:1040
+#: pronterface.py:1088 pronterface.py:1112 pronterface.py:1139
+#: pronterface.py:1153
+msgid "Pause"
+msgstr ""
+
+#: pronterface.py:445
+msgid "Send"
+msgstr ""
+
+#: pronterface.py:453 pronterface.py:511
+msgid "mm/min"
+msgstr ""
+
+#: pronterface.py:455
+msgid "XY:"
+msgstr ""
+
+#: pronterface.py:457
+msgid "Z:"
+msgstr ""
+
+#: pronterface.py:474
+msgid "Heater:"
+msgstr ""
+
+#: pronterface.py:482 pronterface.py:494
+msgid "Set"
+msgstr ""
+
+#: pronterface.py:486
+msgid "Bed:"
+msgstr ""
+
+#: pronterface.py:505
+msgid "mm"
+msgstr ""
+
+#: pronterface.py:538 pronterface.py:833 pronterface.py:1034
+msgid "Not connected to printer."
+msgstr ""
+
+#: pronterface.py:586
+msgid "Full mode"
+msgstr ""
+
+#: pronterface.py:624
+msgid "Defines custom button. Usage: button <num> \"title\" [/c \"colour\"] command"
+msgstr ""
+
+#: pronterface.py:646
+msgid "Custom button number should be between 0 and 63"
+msgstr ""
+
+#: pronterface.py:736
+msgid "Edit custom button '%s'"
+msgstr ""
+
+#: pronterface.py:738
+msgid "Move left <<"
+msgstr ""
+
+#: pronterface.py:741
+msgid "Move right >>"
+msgstr ""
+
+#: pronterface.py:745
+msgid "Remove custom button '%s'"
+msgstr ""
+
+#: pronterface.py:748
+msgid "Add custom button"
+msgstr ""
+
+#: pronterface.py:763
+msgid "event object missing"
+msgstr ""
+
+#: pronterface.py:791
+msgid "Invalid period given."
+msgstr ""
+
+#: pronterface.py:794
+msgid "Monitoring printer."
+msgstr ""
+
+#: pronterface.py:796
+msgid "Done monitoring."
+msgstr ""
+
+#: pronterface.py:815
+msgid "Printer is online. "
+msgstr ""
+
+#: pronterface.py:817 pronterface.py:954 pronterface.py:1002
+msgid "Loaded "
+msgstr ""
+
+#: pronterface.py:820
+msgid "Bed"
+msgstr ""
+
+#: pronterface.py:820
+msgid "Hotend"
+msgstr ""
+
+#: pronterface.py:823
+msgid " SD printing:%04.2f %%"
+msgstr ""
+
+#: pronterface.py:825
+msgid " Printing:%04.2f %%"
+msgstr ""
+
+#: pronterface.py:879
+msgid "Opening file failed."
+msgstr ""
+
+#: pronterface.py:885
+msgid "Starting print"
+msgstr ""
+
+#: pronterface.py:908
+msgid "Pick SD file"
+msgstr ""
+
+#: pronterface.py:908
+msgid "Select the file to print"
+msgstr ""
+
+#: pronterface.py:936
+msgid "Skeinforge execution failed."
+msgstr ""
+
+#: pronterface.py:943
+msgid "Skeining..."
+msgstr ""
+
+#: pronterface.py:954 pronterface.py:1002
+msgid ", %d lines"
+msgstr ""
+
+#: pronterface.py:963
+msgid "Skeining "
+msgstr ""
+
+#: pronterface.py:965
+msgid ""
+"Skeinforge not found. \n"
+"Please copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
+msgstr ""
+
+#: pronterface.py:984
+msgid "Open file to print"
+msgstr ""
+
+#: pronterface.py:985
+msgid "STL and GCODE files (;*.gcode;*.g;*.stl;*.STL;)"
+msgstr ""
+
+#: pronterface.py:992
+msgid "File not found!"
+msgstr ""
+
+#: pronterface.py:1011
+msgid "mm of filament used in this print"
+msgstr ""
+
+#: pronterface.py:1031
+msgid "No file loaded. Please use load first."
+msgstr ""
+
+#: pronterface.py:1042
+msgid "Restart"
+msgstr ""
+
+#: pronterface.py:1046
+msgid "File upload complete"
+msgstr ""
+
+#: pronterface.py:1065
+msgid "Pick SD filename"
+msgstr ""
+
+#: pronterface.py:1081
+msgid "Resume"
+msgstr ""
+
+#: pronterface.py:1147
+msgid "Are you sure you want to reset the printer?"
+msgstr ""
+
+#: pronterface.py:1147
+msgid "Reset?"
+msgstr ""
+
+#: pronterface.py:1226
+msgid "Edit settings"
+msgstr ""
+
+#: pronterface.py:1228
+msgid "Defaults"
+msgstr ""
+
+#: pronterface.py:1250
+msgid "Custom button"
+msgstr ""
+
+#: pronterface.py:1258
+msgid "Button title"
+msgstr ""
+
+#: pronterface.py:1261
+msgid "Command"
+msgstr ""
+
+#: pronterface.py:1270
+msgid "Color"
+msgstr ""
+

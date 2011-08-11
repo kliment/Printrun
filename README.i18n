@@ -1,0 +1,43 @@
+
+Printrun Internationalization
+
+Date: 06 August 2011
+Author: Jonathan Marsden <jmarsden@.fastmail.fm>
+
+Printrun is in the very early stages of being internationalized.
+
+The pronterface.py now uses gettext for the messages it generates.
+The corresponding pronterface.pot file is at locale/pronterface.pot
+and was generated using 
+
+  pygettext -o locale/pronterface.pot pronterface.py
+
+followed by minor edits to the generated header.
+
+This template is the basis for all pronterface mesage catalogs.  Right
+now there is only one, for German.  New ones can be created:
+
+  # Create new pronterface message catalog for a different language
+  newlang="es"  # use the correct code for your language
+  mkdir -p locale/${newlang}/LC_MESSAGES
+  cp locale/pronterface.pot locale/${newlanguage}/LC_MESSAGES/${newlang}.po
+  cd locale/${newlanguage}/LC_MESSAGES/${newlang}
+  # Edit the .po file to add messages for newlang
+  msgfmt -o ${newlang}.mo ${newlang}.po
+
+As currently coded, the default location for these message catalogs is
+
+  /usr/share/pronterface/locale/
+
+So, to install the catalogs, copy them to there:
+
+  sudo cp -a locale /usr/share/pronterface/
+
+To test pronterface in a new language, you can temporarily set LANG to
+the language you are testing, for example
+
+  LANG=de python pronterface.py
+
+Further automation for localization and packaging of Printrun would be
+nice to see, but is not here yet.
+
