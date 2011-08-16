@@ -8,6 +8,7 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
 
 ## Windows
 Download the following, and install in this order:
+
   1. http://python.org/ftp/python/2.7.2/python-2.7.2.msi
   2. http://pypi.python.org/packages/any/p/pyserial/pyserial-2.5.win32.exe
   3. http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py27.exe
@@ -21,25 +22,25 @@ Download the following, and install in this order:
 
 ## Mac OS X Lion
 
-  1. Ensure that the active Python is the system version.
-     (`brew uninstall python` or other appropriate incantations)
-  2. Download an install wxPython version 2.9-Carbon (its the Cocoa
-     version doesn't work)
+  1. Ensure that the active Python is the system version. (`brew uninstall python` or other appropriate incantations)
+  2. Download an install [wxPython version 2.9-Carbon](http://wxpython.org/download.php#unstable) (the Cocoa version doesn't work)
   3. Download and unpack pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
-  4.  in a terminal, change to the folder you unzipped to, then type in:
-     `sudo python setup.py install`
+  4. In a terminal, change to the folder you unzipped to, then type in: `sudo python setup.py install`
 
 The tools will run just fine in 64bit on Lion, you don't need to mess
-with any of the 32bit settings
+with any of the 32bit settings.
 
 ## Mac OS X (pre Lion)
   1. Download and install http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
   2. Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
   3. Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
+     
      `defaults write com.apple.versioner.python Prefer-32-Bit -bool yes`
+     
      `sudo python setup.py install`
 
 Alternatively, you can run python in 32 bit mode by setting the following environment variable before running the setup.py command:
+
 `export VERSIONER_PYTHON_PREFER_32_BIT=yes`
 
 Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.zip
@@ -47,6 +48,7 @@ Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/py
 # USING PRONTERFACE
 
 To use pronterface, you need:
+
   * python (ideally 2.6.x or 2.7.x),
   * pyserial (or python-serial on ubuntu/debian),
   * pyreadline (not needed on Linux) and
@@ -64,6 +66,7 @@ The "skeinforge" folder must be in the same folder as pronterface.py
 # USING PRONSOLE
 
 To use pronsole, you need:
+
   * python (ideally 2.6.x or 2.7.x),
   * pyserial (or python-serial on ubuntu/debian) and
   * pyreadline (not needed on Linux)
