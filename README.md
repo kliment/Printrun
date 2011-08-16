@@ -33,25 +33,24 @@ The tools will run just fine in 64bit on Lion, you don't need to mess
 with any of the 32bit settings
 
 ## Mac OS X (pre Lion)
-Download and install:
-http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
-Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
-Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
-defaults write com.apple.versioner.python Prefer-32-Bit -bool yes
-sudo python setup.py install
+  1. Download and install http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
+  2. Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
+  3. Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
+     `defaults write com.apple.versioner.python Prefer-32-Bit -bool yes`
+     `sudo python setup.py install`
 
 Alternatively, you can run python in 32 bit mode by setting the following environment variable before running the setup.py command:
-export VERSIONER_PYTHON_PREFER_32_BIT=yes
+`export VERSIONER_PYTHON_PREFER_32_BIT=yes`
 
 Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.zip
 
 # USING PRONTERFACE
 
 To use pronterface, you need:
-python (ideally 2.6.x or 2.7.x),
-pyserial (or python-serial on ubuntu/debian),
-pyreadline (not needed on Linux) and
-wxPython
+  * python (ideally 2.6.x or 2.7.x),
+  * pyserial (or python-serial on ubuntu/debian),
+  * pyreadline (not needed on Linux) and
+  * wxPython
 
 Download and install the above, and start pronterface.py
 Select the port name you are using from the first drop-down, select your baud rate, and hit connect.
@@ -65,9 +64,9 @@ The "skeinforge" folder must be in the same folder as pronterface.py
 # USING PRONSOLE
 
 To use pronsole, you need:
-python (ideally 2.6.x or 2.7.x),
-pyserial (or python-serial on ubuntu/debian) and
-pyreadline (not needed on Linux)
+  * python (ideally 2.6.x or 2.7.x),
+  * pyserial (or python-serial on ubuntu/debian) and
+  * pyreadline (not needed on Linux)
 
 Start pronsole and you will be greeted with a command prompt. Type help to view the available commands.
 All commands have internal help, which you can access by typing "help commandname", for example "help connect"
@@ -81,11 +80,11 @@ To use printcore you need python (ideally 2.6.x or 2.7.x) and pyserial (or pytho
 See pronsole for an example of a full-featured host, the bottom of printcore.py for a simple command-line
 sender, or the following code example:
 
-p=printcore('/dev/ttyUSB0',115200)
-p.startprint(data) # data is an array of gcode lines
-p.send_now("M105") # sends M105 as soon as possible
-p.pause()
-p.resume()
-p.disconnect()
+    p=printcore('/dev/ttyUSB0',115200)
+    p.startprint(data) # data is an array of gcode lines
+    p.send_now("M105") # sends M105 as soon as possible
+    p.pause()
+    p.resume()
+    p.disconnect()
 
 
