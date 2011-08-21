@@ -4,7 +4,7 @@ try:
 except:
     print "WX is not installed. This program requires WX to run."
     raise
-import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, traceback, cStringIO
+import  os, sys, glob, time, threading, StringIO, gviz, traceback, cStringIO, operator
 try:
     os.chdir(os.path.split(__file__)[0])
 except:
@@ -45,6 +45,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.settings.last_file_path = ""
         self.settings.last_temperature = 0.0
         self.settings.last_bed_temperature = 0.0
+        
+        self.settings.xmpp_notification_jid = ""
+        self.settings.xmpp_notification_password = ""
+        self.settings.xmpp_notification_target_jid = ""
+        self.settings.xmpp_notification_server = ""
+        
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title="Printer Interface",size=size);
@@ -106,7 +112,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.mini=False
         self.p.sendcb=self.sentcb
         self.p.startcb=self.startcb
-        #self.p.endcb=self.endcb
+        self.p.endcb=self.endcb
         self.starttime=0
         self.curlayer=0
     
@@ -114,10 +120,24 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.starttime=time.time()
         
     def endcb(self):
-        print "Print took "+str(int(time.time()-self.starttime))+" seconds."
-        wx.CallAfter(self.pausebtn.Hide)
-        wx.CallAfter(self.printbtn.SetLabel,"Print")
-
+        msg = "Print has finished!"
+	msg += "\nFile: "+os.path.split(self.filename)[1]
+	msg += "\nDuration: "+str(int(time.time()-self.starttime))+" seconds."
+        print msg
+	if (self.settings.xmpp_notification_jid and self.settings.xmpp_notification_target_jid):
+		try:
+		    import xmpp
+		    jid=xmpp.protocol.JID(self.settings.xmpp_notification_jid)
+		    client = xmpp.Client(jid.getDomain(),debug=[])
+		    if client.connect(server=(self.settings.xmpp_notification_server,5222)):
+		        if client.auth(jid.getNode(), self.settings.xmpp_notification_password, 'pronterface'):
+				client.send(xmpp.Message(self.settings.xmpp_notification_target_jid, msg))
+			else:
+				print "Error authorising xmpp with jid: " + self.settings.xmpp_notification_jid			    
+		    else:
+			print "Error connecting to xmpp server: " + self.settings.xmpp_notification_server
+		except:
+		    pass
     
     def online(self):
         print "Printer is now online"
@@ -1058,7 +1078,7 @@ class options(wx.Dialog):
         grid=wx.GridSizer(rows=0,cols=2,hgap=8,vgap=2)
         vbox.Add(grid,0,wx.EXPAND)
         ctrls = {}
-        for k,v in pronterface.settings._all_settings().items():
+        for k,v in sorted(pronterface.settings._all_settings().items(), key=operator.itemgetter(0)):
             grid.Add(wx.StaticText(self,-1,k),0,wx.BOTTOM+wx.RIGHT)
             ctrls[k] = wx.TextCtrl(self,-1,str(v))
             grid.Add(ctrls[k],1,wx.EXPAND)
