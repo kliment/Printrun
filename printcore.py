@@ -115,7 +115,11 @@ class printcore():
                 #callback for errors
                 pass
             if "resend" in line.lower() or "rs" in line:
-                toresend=int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
+                try:
+                    toresend=int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
+                except:
+                    if "rs" in line:
+                        toresend=int(line.split()[1])
                 self.resendfrom=toresend
                 self.clear=True
         self.clear=True
