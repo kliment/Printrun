@@ -163,10 +163,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     if(layer!=self.curlayer):
                         self.curlayer=layer
                         self.gviz.hilight=[]
-                        wx.CallAfter(self.gviz.setlayer,layer)
+                        threading.Thread(target=wx.CallAfter,args=(self.gviz.setlayer,layer)).start()
                 except:
                     pass
-            self.gviz.addgcode(line,hilight=1)
+            threading.Thread(target=self.gviz.addgcode,args=(line,1)).start()
             #self.gwindow.p.addgcode(line,hilight=1)
     
     def do_extrude(self,l=""):
