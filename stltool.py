@@ -166,6 +166,7 @@ class stl:
             self.insolid=0
             return 0
         elif l.startswith("facet normal"):
+            l=l.replace(",",".")
             self.infacet=11
             self.facetloc=0
             self.facet=[[0,0,0],[[0,0,0],[0,0,0],[0,0,0]]]
@@ -177,6 +178,7 @@ class stl:
             self.facetsminz+=[(min(map(lambda x:x[2], facet[1])),facet)]
             self.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])),facet)]
         elif l.startswith("vertex"):
+            l=l.replace(",",".")
             self.facet[1][self.facetloc]=map(float,l.split()[1:])
             self.facetloc+=1
         return 1
