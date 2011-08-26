@@ -1023,7 +1023,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 threading.Thread(target=self.loadviz).start()
                 
     def loadviz(self):
-        print pronsole.totalelength(self.f), _("mm of filament used in this print")
+        Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
+        print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
+        Xtot,Ytot,Ztot= pronsole.measurements(self.f)
+        print _("the print goes from"),Xmin,_("mm to"),Xmax,_("mm in X\nand is"),Xtot,_("mm wide\n")
+        print _("the print goes from"),Ymin,_("mm to"),Ymax,_("mm in Y\nand is"),Ytot,_("mm wide\n")
+        print _("the print goes from"),Zmin,_("mm to"),Zmax,_("mm in Z\nand is"),Ztot,_("mm high\n")
         self.gviz.clear()
         self.gwindow.p.clear()
         for i in self.f:
