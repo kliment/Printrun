@@ -18,6 +18,88 @@ except:
 
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
+    
+def minmaxpoints(g):
+    Xcur=0.0
+	Ycur=0.0
+	Zcur=0.0
+	Xmin=1000000
+	Ymin=1000000
+	Zmin=1000000
+	Xmax=-1000000
+	Ymax=-1000000
+	Zmax=-1000000
+	for i in g:
+		if "X" in i and ("G1" in i or "G0" in i):
+			try:
+				Xcur = float(i.split("X")[1].split(" ")[0])
+				if Xcur<Xmin and Xcur>5.0: Xmin=Xcur
+				if Xcur>Xmax: Xmax=Xcur
+			except:
+				pass
+		if "Y" in i and ("G1" in i or "G0" in i):
+			try:
+				Ycur = float(i.split("Y")[1].split(" ")[0])
+				if Ycur<Ymin and Ycur>5.0: Ymin=Ycur
+				if Ycur>Ymax: Ymax=Ycur
+			except:
+				pass
+				
+		if "Z" in i and ("G1" in i or "G0" in i):
+			try:
+				Zcur = float(i.split("Z")[1].split(" ")[0])
+				if Zcur<Zmin: Zmin=Zcur
+				if Zcur>Zmax: Zmax=Zcur
+			except:
+				pass
+	return (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax)
+   
+def measurements(g):
+	Xcur=0.0
+	Ycur=0.0
+	Zcur=0.0
+	Xmin=1000000
+	Ymin=1000000
+	Zmin=1000000
+	Xmax=-1000000
+	Ymax=-1000000
+	Zmax=-1000000
+	Xtot=0
+	Ytot=0
+	Ztot=0
+	
+	
+	for i in g:
+		if "X" in i and ("G1" in i or "G0" in i):
+			try:
+				Xcur = float(i.split("X")[1].split(" ")[0])
+				if Xcur<Xmin and Xcur>5.0: Xmin=Xcur
+				if Xcur>Xmax: Xmax=Xcur
+			except:
+				pass
+		if "Y" in i and ("G1" in i or "G0" in i):
+			try:
+				Ycur = float(i.split("Y")[1].split(" ")[0])
+				if Ycur<Ymin and Ycur>5.0: Ymin=Ycur
+				if Ycur>Ymax: Ymax=Ycur
+			except:
+				pass
+				
+		if "Z" in i and ("G1" in i or "G0" in i):
+			try:
+				Zcur = float(i.split("Z")[1].split(" ")[0])
+				if Zcur<Zmin: Zmin=Zcur
+				if Zcur>Zmax: Zmax=Zcur
+			except:
+				pass
+				
+		
+		Xtot = Xmax - Xmin
+		Ytot = Ymax - Ymin
+		Ztot = Zmax - Zmin		
+		
+            
+	return (Xtot,Ytot,Ztot)
 
 def totalelength(g):
     tot=0
