@@ -1026,9 +1026,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
         Xtot,Ytot,Ztot= pronsole.measurements(self.f)
-        print ("the print goes from"),_(Xmin),("mm to"),_(Xmax),("mm in X\nand is"),_(Xtot),("mm wide\n")
-        print ("the print goes from"),_(Ymin),("mm to"),_(Ymax),("mm in Y\nand is"),_(Ytot),("mm wide\n")
-        print ("the print goes from"),_(Zmin),("mm to"),_(Zmax),("mm in Z\nand is"),_(Ztot),("mm high\n")
+        print ("the print goes from"),Xmin,("mm to"),Xmax,("mm in X\nand is"),Xtot,("mm wide\n")
+        print ("the print goes from"),Ymin,("mm to"),Ymax,("mm in Y\nand is"),Ytot,("mm wide\n")
+        print ("the print goes from"),Zmin,("mm to"),Zmax,("mm in Z\nand is"),Ztot,("mm high\n")
         self.gviz.clear()
         self.gwindow.p.clear()
         for i in self.f:
