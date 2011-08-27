@@ -91,7 +91,7 @@ class Settings:
         # the initial value determines the type
         self.port = ""
         self.baudrate = 115200
-        self.temperature_pla = 210.0
+        self.temperature_pla = 185
         self.temperature_abs = 230.0
         self.bedtemp_pla = 60.0
         self.bedtemp_abs = 110.0
@@ -143,7 +143,7 @@ class pronsole(cmd.Cmd):
         self.sdfiles=[]
         self.paused=False
         self.sdprinting=0
-        self.temps={"pla":"210","abs":"230","off":"0"}
+        self.temps={"pla":"185","abs":"230","off":"0"}
         self.bedtemps={"pla":"60","abs":"110","off":"0"}
         self.percentdone=0
         self.tempreadings=""
