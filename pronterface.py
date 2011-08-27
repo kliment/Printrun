@@ -1023,8 +1023,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 threading.Thread(target=self.loadviz).start()
                 
     def loadviz(self):
-        Xtot,Ytot,Ztot = pronsole.measurements(self.f)
-        Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.minmaxpoints(self.f)
+        Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
         Xtot,Ytot,Ztot= pronsole.measurements(self.f)
         print ("the print goes from"),_(Xmin),("mm to"),_(Xmax),("mm in X\nand is"),_(Xtot),("mm wide\n")
