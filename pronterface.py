@@ -368,7 +368,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #sizer layout: topsizer is a column sizer containing two sections
         #upper section contains the mini view buttons
         #lower section contains the rest of the window - manual controls, console, visualizations
-        #TOP button ROW:
+        #TOP ROW:
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
         uts.Add(wx.StaticText(self.panel,-1,_("Port:"),pos=(0,5)),wx.TOP|wx.LEFT,5)
         scan=self.scanserial()
@@ -415,8 +415,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add((15,-1),flag=wx.EXPAND)
         uts.Add(self.minibtn)
         
-        #SECOND button ROW
+        #SECOND ROW
         ubs=self.upperbottomsizer=wx.BoxSizer(wx.HORIZONTAL)
+        
         self.loadbtn=wx.Button(self.panel,-1,_("Load file"),pos=(0,40))
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
         ubs.Add(self.loadbtn)
@@ -436,31 +437,30 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
         ubs.Add(self.pausebtn)
         ubs.Add((50,-1),flag=wx.EXPAND)
-        
-        #Log panel full view
+        #Right full view
         lrs=self.lowerrsizer=wx.BoxSizer(wx.VERTICAL)
-        self.logbox=wx.TextCtrl(self.panel, style = wx.TE_MULTILINE) #,size=(350,340),pos=(440,75),style = wx.TE_MULTILINE)
+        self.logbox=wx.TextCtrl(self.panel,size=(350,340),pos=(440,75),style = wx.TE_MULTILINE)
         self.logbox.SetEditable(0)
-        lrs.Add(self.logbox, 1, flag=wx.EXPAND)
+        lrs.Add(self.logbox)
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
-        self.commandbox=wx.TextCtrl(self.panel, style = wx.TE_PROCESS_ENTER) #,size=(250,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
-        self.commandbox.Bind(wx.EVT_TEXT_ENTER, self.sendline)
+        self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
+        self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
         #self.printerControls.append(self.commandbox)
-        lbrs.Add(self.commandbox, 1, flag=wx.EXPAND)
-        self.sendbtn=wx.Button(self.panel, -1, _("Send")) #,pos=(700,420))
+        lbrs.Add(self.commandbox)
+        self.sendbtn=wx.Button(self.panel,-1,_("Send"),pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
         #self.printerControls.append(self.sendbtn)
         lbrs.Add(self.sendbtn)
-        lrs.Add(lbrs, flag=wx.EXPAND)
+        lrs.Add(lbrs)
         
         #left pane
         lls=self.lowerlsizer=wx.GridBagSizer()
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,4),span=(1,4))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm/min"),pos=(60,69)),pos=(0,4),span=(1,4))
         self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,25),pos=(25,83))
-        lls.Add(wx.StaticText(self.panel,-1,_("XY:")),pos=(1,0),span=(1,2))
+        lls.Add(wx.StaticText(self.panel,-1,_("XY:"),pos=(2,90-2)),pos=(1,0),span=(1,2))
         lls.Add(self.xyfeedc,pos=(1,2),span=(1,4))
-        lls.Add(wx.StaticText(self.panel,-1,_("Z:")),pos=(1,6),span=(1,2))
-        self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,pos=(105,83))
+        lls.Add(wx.StaticText(self.panel,-1,_("Z:"),pos=(90,90-2)),pos=(1,6),span=(1,2))
+        self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(70,25),pos=(105,83))
         lls.Add(self.zfeedc,pos=(1,8),span=(1,4))
         
         #lls.Add((200,375))
@@ -530,9 +530,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
         self.gwindow.Bind(wx.EVT_CLOSE,lambda x:self.gwindow.Hide())
-        cs=self.centersizer=wx.BoxSizer()
-        cs.Add(self.gviz, 1, flag=wx.EXPAND)
-        cs.Add((10,10))
+        cs=self.centersizer=wx.GridBagSizer()
+        cs.Add(self.gviz,pos=(0,0),span=(1,3))
+        lls.Add(cs,pos=(0,10),span=(15,1))
         
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
         self.uppersizer.Add(self.uppertopsizer)
@@ -540,11 +540,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         self.lowersizer=wx.BoxSizer(wx.HORIZONTAL)
         self.lowersizer.Add(lls)
-        self.lowersizer.Add(cs, 1, flag=wx.EXPAND)
-        self.lowersizer.Add(lrs, 1, flag=wx.EXPAND)
+        self.lowersizer.Add(lrs)
         self.topsizer=wx.BoxSizer(wx.VERTICAL)
         self.topsizer.Add(self.uppersizer)
-        self.topsizer.Add(self.lowersizer, 1, flag=wx.EXPAND)
+        self.topsizer.Add(self.lowersizer)
         self.panel.SetSizer(self.topsizer)
         self.status=self.CreateStatusBar()
         self.status.SetStatusText(_("Not connected to printer."))
@@ -1262,8 +1261,6 @@ class options(wx.Dialog):
             for k,v in pronterface.settings._all_settings().items():
                 if ctrls[k].GetValue() != str(v):
                     pronterface.set(k,str(ctrls[k].GetValue()))
-            pronterface.gviz.setBedsize(pronterface.settings.bed_size_x, 
-                                        pronterface.settings.bed_size_y)
         self.Destroy()
         
 class ButtonEdit(wx.Dialog):
