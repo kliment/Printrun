@@ -3,7 +3,7 @@ import wx,time
 class window(wx.Frame):
     def __init__(self,f,size=(600,600),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
         wx.Frame.__init__(self,None,title="Layer view (Use shift+mousewheel to switch layers)",size=(size[0],size[1]))
-        self.p=gviz(self, size=size, bedsize=bedsize, grid=grid, extrusion_width=extrusion_width, keepProportions=0)
+        self.p=gviz(self,size=size,bedsize=bedsize,grid=grid,extrusion_width=extrusion_width)
         s=time.time()
         for i in f:
             self.p.addgcode(i)
@@ -15,7 +15,7 @@ class window(wx.Frame):
         self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.p.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
         self.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
-
+        
     def mouse(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
@@ -53,12 +53,11 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
         
 class gviz(wx.Panel):
-    def __init__(self,parent,size=(200,200),bedsize=(200,200),grid=(10,50),extrusion_width=0.5,keepProportions=1):
-        wx.Panel.__init__(self,parent,-1)
+    def __init__(self,parent,size=(200,200),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
+        wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
         self.size=size
         self.bedsize=bedsize
         self.grid=grid
-        self.keepProportions = keepProportions 
         self.lastpos=[0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
         self.Bind(wx.EVT_PAINT,self.paint)
@@ -68,7 +67,7 @@ class gviz(wx.Panel):
         self.layers=[]
         self.layerindex=0
         self.filament_width=extrusion_width # set it to 0 to disable scaling lines with zoom
-        self.calculatScale()
+        self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate=[0.0,0.0]
         self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
@@ -121,30 +120,9 @@ class gviz(wx.Panel):
         #self.dirty=1
         self.repaint()
         self.Refresh()
-    
-    def calculatScale(self):
-        self.scale=[min(float(self.size[0])/self.bedsize[0],float(self.size[1])/self.bedsize[1])]*2
-    
-    def setBedsize(self, width, height):
-        self.bedsize = (width, height)
-        self.repaint()
-        self.Refresh()
-
-    def adjustSize(self):
-        width = self.size[0]
-        height = self.size[1]
-        wtoh = self.bedsize[1]/self.bedsize[0]
-        if(width * wtoh > height):
-            self.size[0] = height/wtoh
-        elif(height / wtoh > width):
-            self.size[1] = width*wtoh
-
+        
     def repaint(self):
-        self.size = self.GetSize()
-        if self.keepProportions:
-            self.adjustSize()
-        self.calculatScale()
-        self.blitmap=wx.EmptyBitmap(self.size[0],self.size[1],-1)
+        self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
         dc=wx.MemoryDC()
         dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250,250,200)))
