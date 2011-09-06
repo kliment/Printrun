@@ -2,7 +2,7 @@
 
 # Set up Internationalization using gettext
 import gettext
-gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
+gettext.install('pronterface', './locale', unicode=1)
 
 try:
     import wx
