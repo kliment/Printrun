@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2011-08-06 13:27+PDT\n"
-"PO-Revision-Date: 2011-08-06 13:27+PDT\n"
-"Last-Translator: Jonathan Marsden <jmarsden@fastmail.fm>\n"
+"PO-Revision-Date: 2011-09-05 18:02+GMT\n"
+"Last-Translator: Cyril Laguilhon-Debat <c.laguilhon.debat@gmail.com.fm>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -17,7 +17,7 @@ msgstr ""
 
 #: pronterface.py:10
 msgid "WX is not installed. This program requires WX to run."
-msgstr "WX n'est pas installé. Ce programme demande WX à courir."
+msgstr "wxWidgets n'est pas installé. Ce programme nécéssite la librairie wxWidgets pour fonctionner."
 
 #: pronterface.py:55
 msgid "Printer Interface"
@@ -141,7 +141,7 @@ msgstr "Extruder"
 
 #: pronterface.py:96
 msgid "Reverse"
-msgstr "Renverser"
+msgstr "Inverser"
 
 #: pronterface.py:112
 msgid ""
@@ -166,7 +166,7 @@ msgstr "Imprimer"
 
 #: pronterface.py:145
 msgid "Printer is now online"
-msgstr "L'imprimante est maintenant en ligne"
+msgstr "L'imprimante est connectée"
 
 #: pronterface.py:194
 msgid "Setting hotend temperature to "
@@ -178,23 +178,23 @@ msgstr " degrés Celsius."
 
 #: pronterface.py:198 pronterface.py:219
 msgid "Printer is not online."
-msgstr "L'imprimante n'est pas en ligne."
+msgstr "L'imprimante est déconnectée"
 
 #: pronterface.py:200
 msgid "You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."
-msgstr "On ne peut pas régler les températures négatives. Pour désactiver l'extrémité chaude entièrement, mis sa température à 0."
+msgstr "Vous ne pouvez pas régler une température négétive.Pour éteindre la résistante de votre extrudeur, réglez sa température à 0°c."
 
 #: pronterface.py:202 pronterface.py:223
 msgid "You must enter a temperature."
-msgstr "Il faut entrer une température."
+msgstr "Vous devez saisir une température."
 
 #: pronterface.py:215
 msgid "Setting bed temperature to "
-msgstr "Réglage de la température de la base à "
+msgstr "Réglage de la température du plateau chauffant à "
 
 #: pronterface.py:221
 msgid "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
-msgstr "On ne peut pas régler les températures négatives. Pour désactiver la base entièrement, mis sa température à 0"
+msgstr "Vous ne pouvez pas régler une température négétive. Pour désactiver votre plateau chauffant, réglez sa température à 0°c."
 
 #: pronterface.py:238
 msgid "Do you want to erase the macro?"
@@ -206,11 +206,11 @@ msgstr "Annulé."
 
 #: pronterface.py:271
 msgid " Opens file"
-msgstr " Ouvre le fichier"
+msgstr " Ouvrir un fichier"
 
 #: pronterface.py:271
 msgid "&Open..."
-msgstr "&Ouvre..."
+msgstr "&Ouvrir..."
 
 #: pronterface.py:272
 msgid " Edit open file"
@@ -222,23 +222,23 @@ msgstr "&Editer..."
 
 #: pronterface.py:274
 msgid " Adjust SFACT settings"
-msgstr " Réglez les paramètres du SFACT"
+msgstr " Régler les paramètres SFACT"
 
 #: pronterface.py:274
 msgid "SFACT Settings"
-msgstr "Paramètres du &SFACT"
+msgstr "Paramètres &SFACT..."
 
 #: pronterface.py:277
 msgid " Quickly adjust SFACT settings for active profile"
-msgstr " Régler rapidement les paramètres du SFACT pour le profil actif."
+msgstr " Réglages rapides des paramètres SFACT pour le profil actif."
 
 #: pronterface.py:277
 msgid "SFACT Quick Settings"
-msgstr "SFACT réglages rapides"
+msgstr "Réglages rapides SFACT"
 
 #: pronterface.py:281
 msgid " Closes the Window"
-msgstr " Ferme la fenêtre"
+msgstr " Quitter le programme"
 
 #: pronterface.py:281
 msgid "E&xit"
@@ -254,11 +254,11 @@ msgstr ""
 
 #: pronterface.py:286
 msgid "<&New...>"
-msgstr "<&Nouvelles...>"
+msgstr "<&Nouvelle...>"
 
 #: pronterface.py:287
 msgid " Options dialog"
-msgstr " Dialogue d'options"
+msgstr " Options"
 
 #: pronterface.py:287
 msgid "&Options"
@@ -274,7 +274,7 @@ msgstr "Entrez le nom de la macro"
 
 #: pronterface.py:307
 msgid "Macro name:"
-msgstr "Nom de la macro:"
+msgstr "Nom :"
 
 #: pronterface.py:310
 msgid "Ok"
@@ -298,15 +298,15 @@ msgstr ""
 
 #: pronterface.py:390
 msgid "Connect"
-msgstr "Rattacher"
+msgstr "Connecter"
 
 #: pronterface.py:392
 msgid "Connect to the printer"
-msgstr "Rattacher au imprimant"
+msgstr "Connecter l'imprimante"
 
 #: pronterface.py:394
 msgid "Disconnect"
-msgstr "Détacher"
+msgstr "Déconnecter"
 
 #: pronterface.py:398
 msgid "Reset"
@@ -314,29 +314,29 @@ msgstr "Réinitialiser"
 
 #: pronterface.py:401 pronterface.py:579
 msgid "Mini mode"
-msgstr "Mode mini"
+msgstr "Mode réduit"
 
 #: pronterface.py:407
 msgid "Monitor\nprinter"
-msgstr "Surveiller\nl'imprimante"
+msgstr " Loguer les messages\n de l'imprimante"
 
 #: pronterface.py:416
 msgid "Load file"
-msgstr "Charger le fichier"
+msgstr "Charger un fichier"
 
 #: pronterface.py:419
 msgid "SD Upload"
-msgstr "Télécharger SD"
+msgstr "Envoyer sur la carte SD"
 
 #: pronterface.py:423
 msgid "SD Print"
-msgstr "Imprimer SD"
+msgstr "Imprimer depuis la carte SD"
 
 #: pronterface.py:431 pronterface.py:1004 pronterface.py:1040
 #: pronterface.py:1088 pronterface.py:1112 pronterface.py:1139
 #: pronterface.py:1153
 msgid "Pause"
-msgstr "Pauser"
+msgstr "Pause"
 
 #: pronterface.py:445
 msgid "Send"
@@ -368,11 +368,11 @@ msgstr "Base:"
 
 #: pronterface.py:505
 msgid "mm"
-msgstr ""
+msgstr "mm"
 
 #: pronterface.py:538 pronterface.py:833 pronterface.py:1034
 msgid "Not connected to printer."
-msgstr "Pas rattaché à l'imprimante"
+msgstr "Imprimante non connectée"
 
 #: pronterface.py:586
 msgid "Full mode"
@@ -388,7 +388,7 @@ msgstr ""
 
 #: pronterface.py:736
 msgid "Edit custom button '%s'"
-msgstr ""
+msgstr "Editer le bouton personnalisé n°'%s'"
 
 #: pronterface.py:738
 msgid "Move left <<"
@@ -400,11 +400,11 @@ msgstr ""
 
 #: pronterface.py:745
 msgid "Remove custom button '%s'"
-msgstr ""
+msgstr "Supprimer le bouton personnalisé n°'%s'"
 
 #: pronterface.py:748
 msgid "Add custom button"
-msgstr ""
+msgstr "Ajouter un bouton personnalisé"
 
 #: pronterface.py:763
 msgid "event object missing"
@@ -424,11 +424,11 @@ msgstr ""
 
 #: pronterface.py:815
 msgid "Printer is online. "
-msgstr ""
+msgstr "L'imprimante est connectée"
 
 #: pronterface.py:817 pronterface.py:954 pronterface.py:1002
 msgid "Loaded "
-msgstr ""
+msgstr "Chargé "
 
 #: pronterface.py:820
 msgid "Bed"
@@ -436,7 +436,7 @@ msgstr "Base"
 
 #: pronterface.py:820
 msgid "Hotend"
-msgstr "Extrémité chaude"
+msgstr "Extrémité"
 
 #: pronterface.py:823
 msgid " SD printing:%04.2f %%"
@@ -456,7 +456,7 @@ msgstr ""
 
 #: pronterface.py:908
 msgid "Pick SD file"
-msgstr "Choisir un fichier SD"
+msgstr "Choisir un fichier sur la carte SD"
 
 #: pronterface.py:908
 msgid "Select the file to print"
@@ -482,7 +482,7 @@ msgstr ""
 msgid ""
 "Skeinforge not found. \n"
 "Please copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
-msgstr ""
+msgstr "Skeinforge non trouvé. \nVeuillez copier Skeinforge das un répertoire nommé \"skeinforge\" placé dans le repertoire de ce programme."
 
 #: pronterface.py:984
 msgid "Open file to print"
@@ -498,11 +498,11 @@ msgstr "Fichier non trouvé"
 
 #: pronterface.py:1011
 msgid "mm of filament used in this print"
-msgstr ""
+msgstr "longueur (en mm) de filament utilisés pour cette impression"
 
 #: pronterface.py:1031
 msgid "No file loaded. Please use load first."
-msgstr ""
+msgstr "Aucun fichier chargé. Veuillez charger un fichier avant."
 
 #: pronterface.py:1042
 msgid "Restart"
@@ -510,23 +510,23 @@ msgstr "Recommencer"
 
 #: pronterface.py:1046
 msgid "File upload complete"
-msgstr ""
+msgstr "Envoi du fichier terminé"
 
 #: pronterface.py:1065
 msgid "Pick SD filename"
-msgstr ""
+msgstr "Lister les fichiers sur la carte SD"
 
 #: pronterface.py:1081
 msgid "Resume"
-msgstr "Résumer"
+msgstr "Reprendre"
 
 #: pronterface.py:1147
 msgid "Are you sure you want to reset the printer?"
-msgstr "Etes-vous certain que vous souhaitez réinitialiser l'imprimante?"
+msgstr "Etes-vous sûrde vouloir réinitialiser l'imprimante?"
 
 #: pronterface.py:1147
 msgid "Reset?"
-msgstr "Réinitialiser?"
+msgstr "Réinitialiser ?"
 
 #: pronterface.py:1226
 msgid "Edit settings"
@@ -538,11 +538,11 @@ msgstr "Paramètres par défaut"
 
 #: pronterface.py:1250
 msgid "Custom button"
-msgstr ""
+msgstr "Commande personnalisée"
 
 #: pronterface.py:1258
 msgid "Button title"
-msgstr ""
+msgstr "Titre du bouton"
 
 #: pronterface.py:1261
 msgid "Command"
