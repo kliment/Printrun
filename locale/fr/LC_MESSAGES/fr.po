@@ -343,11 +343,11 @@ msgstr "Charger un fichier"
 
 #: pronterface.py:426
 msgid "SD Upload"
-msgstr "Copier sur la carte SD"
+msgstr "Copier sur SD"
 
 #: pronterface.py:430
 msgid "SD Print"
-msgstr "Imprimer depuis la carte SD"
+msgstr "Imprimer depuis SD"
 
 #: pronterface.py:438
 #: pronterface.py:1021
@@ -359,9 +359,13 @@ msgstr "Imprimer depuis la carte SD"
 msgid "Pause"
 msgstr "Pause"
 
-#: pronterface.py:452
+#: pronterface.py:458
 msgid "Send"
 msgstr "Envoyer"
+
+#: pronterface.py:462
+msgid "Clear"
+msgstr "Effacer"
 
 #: pronterface.py:460
 #: pronterface.py:518

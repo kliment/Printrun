@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 
 # Set up Internationalization using gettext
-import gettext
-gettext.install('pronterface', './locale', unicode=1)
+# searching for installed locales on /usr/share; uses relative folder if not found (windows)
+import os, gettext
+
+if os.path.exists('/usr/share/pronterface/locale'):
+    gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
+else: 
+    gettext.install('pronterface', './locale', unicode=1)
 
 try:
     import wx
 except:
     print _("WX is not installed. This program requires WX to run.")
     raise
-import printcore, os, sys, glob, time, threading, traceback, StringIO, gviz, traceback, cStringIO
+import printcore, sys, glob, time, threading, traceback, StringIO, gviz, traceback, cStringIO
 try:
     os.chdir(os.path.split(__file__)[0])
 except:
@@ -273,19 +278,20 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def popmenu(self):
         self.menustrip = wx.MenuBar()
         # File menu
-	m = wx.Menu()
+        m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1,_("&Open..."),_(" Opens file")))
         self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1,_("&Edit..."),_(" Edit open file")))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,_("E&xit"),_(" Closes the Window")))
         self.menustrip.Append(m,_("&File"))
         
-	# Settings menu
-	m = wx.Menu()
+        # Settings menu
+        m = wx.Menu()
         self.macros_menu = wx.Menu()
         m.AppendSubMenu(self.macros_menu, _("&Macros"))
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
-	if sys.platform != 'darwin':
+        
+        if sys.platform != 'darwin':
             self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("SFACT Settings"),_(" Adjust SFACT settings")))
         try:
             from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
@@ -445,14 +451,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.logbox.SetEditable(0)
         lrs.Add(self.logbox)
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
-        self.commandbox=wx.TextCtrl(self.panel,size=(250,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
+        self.commandbox=wx.TextCtrl(self.panel,size=(240,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
         #self.printerControls.append(self.commandbox)
         lbrs.Add(self.commandbox)
-        self.sendbtn=wx.Button(self.panel,-1,_("Send"),pos=(700,420))
+        self.sendbtn=wx.Button(self.panel,-1,_("Send"),size=(55,28), pos=(700,420))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
         #self.printerControls.append(self.sendbtn)
         lbrs.Add(self.sendbtn)
+        self.clearbtn=wx.Button(self.panel,-1,_("Clear"),size=(55,28), pos=(750,420))
+        self.clearbtn.Bind(wx.EVT_BUTTON,self.clearOutput)
+        lbrs.Add(self.clearbtn)
         lrs.Add(lbrs)
         
         #left pane
@@ -819,6 +828,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.logbox.AppendText,">>>"+command+"\n")
         self.onecmd(str(command))
         self.commandbox.SetSelection(0,len(command))
+
+    def clearOutput(self,e):
+        self.logbox.Clear()
         
     def statuschecker(self):
         try:
