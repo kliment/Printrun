@@ -239,6 +239,14 @@ msgstr " Quitter le programme"
 msgid "&File"
 msgstr "&Fichier"
 
+#: pronterface.py:284
+msgid "Clear console"
+msgstr "Effacer la console"
+
+#: pronterface.py:284
+msgid " Clear output console"
+msgstr "Effacer le contenu de la console de sortie"
+
 #: pronterface.py:285
 msgid "&Macros"
 msgstr "&Macros"
@@ -362,10 +370,6 @@ msgstr "Pause"
 #: pronterface.py:458
 msgid "Send"
 msgstr "Envoyer"
-
-#: pronterface.py:462
-msgid "Clear"
-msgstr "Effacer"
 
 #: pronterface.py:460
 #: pronterface.py:518

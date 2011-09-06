@@ -281,6 +281,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1,_("&Open..."),_(" Opens file")))
         self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1,_("&Edit..."),_(" Edit open file")))
+        self.Bind(wx.EVT_MENU, self.clearOutput, m.Append(-1,_("Clear console"),_(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,_("E&xit"),_(" Closes the Window")))
         self.menustrip.Append(m,_("&File"))
         
@@ -298,6 +299,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
         except:
             pass
+
         self.menustrip.Append(m,_("&Settings"))
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
@@ -451,7 +453,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.logbox.SetEditable(0)
         lrs.Add(self.logbox)
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
-        self.commandbox=wx.TextCtrl(self.panel,size=(240,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
+        self.commandbox=wx.TextCtrl(self.panel,size=(295,30),pos=(440,420),style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
         #self.printerControls.append(self.commandbox)
         lbrs.Add(self.commandbox)
@@ -459,9 +461,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
         #self.printerControls.append(self.sendbtn)
         lbrs.Add(self.sendbtn)
-        self.clearbtn=wx.Button(self.panel,-1,_("Clear"),size=(55,28), pos=(750,420))
-        self.clearbtn.Bind(wx.EVT_BUTTON,self.clearOutput)
-        lbrs.Add(self.clearbtn)
         lrs.Add(lbrs)
         
         #left pane
