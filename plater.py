@@ -53,7 +53,7 @@ class showstl(wx.Window):
         if i != -1:
                 m=self.models[self.l.GetItemText(i)]
                 m.offsets[2]=-1.0*min(m.facetsminz)[0]
-                #print m.offsets[2]
+                #print m.offsets[2] 
                 self.Refresh()
 
     def delete(self,event):
@@ -89,6 +89,7 @@ class showstl(wx.Window):
         newrow = 0
         max = [0,0]
         for i in self.models:
+            self.models[i].offsets[2]=-1.0*min(m.facetsminz)[0]
             x = abs(self.models[i].dims[0] - self.models[i].dims[1])
             y = abs(self.models[i].dims[2] - self.models[i].dims[3])
             centre = [x/2, y/2]
@@ -116,7 +117,6 @@ class showstl(wx.Window):
         for i in self.models:
             self.models[i].offsets[0] += centreoffset[0]
             self.models[i].offsets[1] += centreoffset[1]
-          
         self.Refresh()
         
     def right(self,event):
