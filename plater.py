@@ -53,7 +53,7 @@ class showstl(wx.Window):
         if i != -1:
                 m=self.models[self.l.GetItemText(i)]
                 m.offsets[2]=-1.0*min(m.facetsminz)[0]
-                #print m.offsets[2] 
+                #print m.offsets[2]
                 self.Refresh()
 
     def delete(self,event):
