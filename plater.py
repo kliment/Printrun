@@ -94,22 +94,24 @@ class showstl(wx.Window):
             centreoffset = [self.models[i].dims[0] + centre[0], self.models[i].dims[2] + centre[1]]
             if (newrow == 0) or (newrow < y):
                 newrow = y
+            if (cursor[0]+x+separation) >= bedsize[0]:
+                cursor[0] = 0
+                cursor[1] += newrow+separation
+                newrow = 0
             #To the person who works out why the offsets are applied differently here:
             # Good job, it confused the hell out of me.
             self.models[i].offsets[0] = cursor[0] + centre[0] - centreoffset[0]
             self.models[i].offsets[1] = cursor[1] + centre[1] + centreoffset[1]
             cursor[0] += x+separation
-            if cursor[0] >= bedsize[0]:
-                cursor[0] = 0
-                cursor[1] += newrow+separation
-                newrow = 0
-                self.models[i].offsets[0] = cursor[0] + centre[0] - centreoffset[0]
-                self.models[i].offsets[1] = cursor[1] + centre[1] + centreoffset[1]
-                cursor[0] += x+separation
             if (cursor[1]+y) >= bedsize[1]:
                 print "Bed full, sorry sir :("
                 self.Refresh()
                 return
+        centreoffset = [bedsize[0]-cursor[0],bedsize[1]-cursor[1]]
+        for i in self.models:
+            self.models[i].offsets[0] += centreoffset[0]
+            self.models[i].offsets[1] += centreoffset[1]
+            
         self.Refresh()
         
     def right(self,event):
