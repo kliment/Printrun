@@ -81,87 +81,8 @@ class showstl(wx.Window):
             stltool.emitstl(name,facets,"plater_export")
             print "wrote ",name
             
-    def testingloadfile(self,name):
-        print name
-        if not(os.path.exists(name)):
-            return
-        path = os.path.split(name)[0]
-        self.basedir=path
-        t=time.time()
-        #print name
-        if name.lower().endswith(".stl"):
-            newname=name
-            c=1
-            while newname in self.models:
-                newname=name+"(%d)"%c
-                c+=1
-            self.models[newname]=stltool.stl(name)
-            self.models[newname].offsets=[0,0,0]
-            self.models[newname].rot=0
-            minx,miny,minz,maxx,maxy,maxz=(10000,10000,10000,0,0,0)
-            for i in self.models[newname].facets:
-                for j in i[1]:
-                    if j[0]<minx:
-                        minx=j[0]
-                    if j[1]<miny:
-                        miny=j[1]
-                    if j[2]<minz:
-                        minz=j[2]
-                    if j[0]>maxx:
-                        maxx=j[0]
-                    if j[1]>maxy:
-                        maxy=j[1]
-                    if j[2]>maxz:
-                        maxz=j[2]
-            self.models[newname].dims=[minx,maxx,miny,maxy,minz,maxz]
-            #if minx<0:
-            #    self.models[newname].offsets[0]=-minx
-            #if miny<0:
-            #    self.models[newname].offsets[1]=-miny
-            self.models[newname].bitmap=wx.EmptyBitmap(800,800,32)
-            dc=wx.MemoryDC()
-            dc.SelectObject(self.models[newname].bitmap)
-            dc.SetBackground(wx.Brush((0,0,0,0)))
-            dc.SetBrush(wx.Brush((0,0,0,255)))
-            #dc.DrawRectangle(-1,-1,10000,10000)
-            dc.SetBrush(wx.Brush(wx.Colour(128,255,128)))
-            dc.SetPen(wx.Pen(wx.Colour(128,128,128)))
-            m=self.models[newname]
-            #m.offsets=[10,10,0]
-            print m.offsets,m.dims
-            scale=2
-            for i in m.facets:#random.sample(m.facets,min(100000,len(m.facets))):
-                dc.DrawPolygon([wx.Point(400+scale*p[0],(400+scale*p[1])) for p in i[1]])
-                #if(time.time()-t)>5:
-                #    break
-            dc.SelectObject(wx.NullBitmap)
-            m.bitmap.SetMask(wx.Mask(m.bitmap,wx.Colour(0,0,0,255)))
-            
-            #print time.time()-t
-            self.l.Append([stlwrap(self.models[newname],newname)])
-            i=self.l.GetFirstSelected()
-            if i != -1:
-                self.l.Select(i,0)
-        
-            self.l.Select(self.l.GetItemCount()-1)
-            self.Refresh()
-            
     def autoplate(self,event):
         print "Autoplating"
-        
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\big_gear.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\big_gear.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\big_gear.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\big_gear.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\prusabits\\stl\\x-end-idler.stl')
-        #self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\prusabits\\stl\\x-end-idler.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\prusabits\\stl\\x-end-idler.stl')
-        #self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\prusabits\\stl\\x-end-idler.stl')
-        #self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\prusabits\\stl\\pla-bushing.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\prusabits\\stl\\pla-bushing.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\top.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\top.stl')
-        self.testingloadfile('C:\\Users\\tjhowse\\reprap\\models\\top.stl')
         separation = 2
         bedsize = [200,200,100]
         cursor = [0,0,0]
