@@ -89,7 +89,7 @@ class showstl(wx.Window):
         newrow = 0
         max = [0,0]
         for i in self.models:
-            self.models[i].offsets[2]=-1.0*min(m.facetsminz)[0]
+            self.models[i].offsets[2]=-1.0*self.models[i].dims[4]
             x = abs(self.models[i].dims[0] - self.models[i].dims[1])
             y = abs(self.models[i].dims[2] - self.models[i].dims[3])
             centre = [x/2, y/2]
