@@ -727,7 +727,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         n = button.custombutton
         self.custombuttons[n]=None
         self.cbutton_save(n,None)
-        while self.custombuttons[-1] is None:
+        while len(self.custombuttons) and self.custombuttons[-1] is None:
             del self.custombuttons[-1]
         self.cbuttons_reload()
     
