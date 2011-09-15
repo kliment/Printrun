@@ -16,7 +16,7 @@ class stlwrap:
 class showstl(wx.Window):
     def __init__(self,parent,size,pos):
         wx.Window.__init__(self,parent,size=size,pos=pos)
-        self.l=wx.ListCtrl(self,style=wx.LC_LIST,size=(300,130),pos=(0,size[1]-130))
+        self.l=wx.ListBox(self,size=(300,130),pos=(0,size[1]-130))
         self.eb=wx.Button(self,label="Export",pos=(300,size[1]-130))
         self.sb=wx.Button(self,label="Snap to Z=0",pos=(300,size[1]-105))
         self.cb=wx.Button(self,label="Put at 100,100",pos=(300,size[1]-80))
@@ -42,26 +42,26 @@ class showstl(wx.Window):
         self.prevsel=-1
 
     def center(self,event):
-        i=self.l.GetFirstSelected()
+        i=self.l.GetSelection()
         if i != -1:
-                m=self.models[self.l.GetItemText(i)]
+                m=self.models[self.l.GetString(i)]
                 m.offsets=[100,100,m.offsets[2]]
                 self.Refresh()
 
     def snap(self,event):
-        i=self.l.GetFirstSelected()
+        i=self.l.GetSelection()
         if i != -1:
-                m=self.models[self.l.GetItemText(i)]
+                m=self.models[self.l.GetString(i)]
                 m.offsets[2]=-1.0*min(m.facetsminz)[0]
                 #print m.offsets[2]
                 self.Refresh()
 
     def delete(self,event):
-        i=self.l.GetFirstSelected()
+        i=self.l.GetSelection()
         if i != -1:
-                del self.models[self.l.GetItemText(i)]
-                self.l.DeleteItem(i)
-                self.l.Select(self.l.GetItemCount()-1)
+                del self.models[self.l.GetString(i)]
+                self.l.Delete(i)
+                self.l.Select(self.l.GetCount()-1)
                 self.Refresh()
 
     def export(self,event):
@@ -89,7 +89,7 @@ class showstl(wx.Window):
         newrow = 0
         max = [0,0]
         for i in self.models:
-            self.models[i].offsets[2]=-1.0*min(self.models[i].facetsminz)[0]
+            self.models[i].offsets[2]=-1.0*self.models[i].dims[4]
             x = abs(self.models[i].dims[0] - self.models[i].dims[1])
             y = abs(self.models[i].dims[2] - self.models[i].dims[3])
             centre = [x/2, y/2]
@@ -179,24 +179,24 @@ class showstl(wx.Window):
                 m.bitmap.SetMask(wx.Mask(m.bitmap,wx.Colour(0,0,0,255)))
                 
                 #print time.time()-t
-                self.l.Append([stlwrap(self.models[newname],newname)])
-                i=self.l.GetFirstSelected()
-                if i != -1:
-                    self.l.Select(i,0)
+                self.l.Append(newname)
+                i=self.l.GetSelection()
+                if i==wx.NOT_FOUND:
+                    self.l.Select(0)
             
-                self.l.Select(self.l.GetItemCount()-1)
+                self.l.Select(self.l.GetCount()-1)
             self.Refresh()
             #print time.time()-t
         
     def move(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
-                i=self.l.GetFirstSelected()
-                if i != -1:
+                i=self.l.GetSelection()
+                if i != wx.NOT_FOUND:
                     p=event.GetPositionTuple()
                     #print (p[0]-self.initpos[0]),(p[1]-self.initpos[1])
                     t=time.time()
-                    m=self.models[self.l.GetItemText(i)]
+                    m=self.models[self.l.GetString(i)]
                     m.offsets=[m.offsets[0]+0.5*(p[0]-self.initpos[0]),m.offsets[1]-0.5*(p[1]-self.initpos[1]),m.offsets[2]]
                     #self.models[self.l.GetItemText(i)]=self.models[self.l.GetItemText(i)].translate([0.5*(p[0]-self.initpos[0]),0.5*(p[1]-self.initpos[1]),0])
                     #print time.time()-t
@@ -220,10 +220,10 @@ class showstl(wx.Window):
         
     def rotateafter(self):
         if(self.i!=self.previ):
-            i=self.l.GetFirstSelected()
-            if i != -1:
+            i=self.l.GetSelection()
+            if i != wx.NOT_FOUND:
                 #o=self.models[self.l.GetItemText(i)].offsets
-                self.models[self.l.GetItemText(i)].rot+=5*(self.i-self.previ)
+                self.models[self.l.GetString(i)].rot+=5*(self.i-self.previ)
                 #self.models[self.l.GetItemText(i)].offsets=o
             self.previ=self.i
             self.Refresh()
@@ -234,7 +234,7 @@ class showstl(wx.Window):
         
     def rot(self, event):
         z=event.GetWheelRotation()
-        s=self.l.GetFirstSelected()
+        s=self.l.GetSelection()
         if self.prevsel!=s:
             self.i=0
             self.prevsel=s

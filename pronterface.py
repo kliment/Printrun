@@ -727,7 +727,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         n = button.custombutton
         self.custombuttons[n]=None
         self.cbutton_save(n,None)
-        while self.custombuttons[-1] is None:
+        while len(self.custombuttons) and self.custombuttons[-1] is None:
             del self.custombuttons[-1]
         self.cbuttons_reload()
     
@@ -1008,7 +1008,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
         dlg=wx.FileDialog(self,_("Open file to print"),basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("STL and GCODE files (;*.gcode;*.g;*.stl;*.STL;)"))
+        dlg.SetWildcard(_("STL and GCODE files (;*.gcode;*.gco;*.g;*.stl;*.STL;)"))
         if(filename is not None or dlg.ShowModal() == wx.ID_OK):
             if filename is not None:
                 name=filename
