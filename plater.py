@@ -132,7 +132,6 @@ class showstl(wx.Window):
             #print name
             if name.lower().endswith(".stl"):
                 #Filter out the path, just show the STL filename.
-                #newname=re.match(r".*[/\\](.*?\.stl)", name.lower()).group(1)
                 newname=os.path.split(name.lower())[1]
                 c=1
                 while newname in self.models:
