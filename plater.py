@@ -135,7 +135,8 @@ class showstl(wx.Window):
                 newname=os.path.split(name.lower())[1]
                 c=1
                 while newname in self.models:
-                    newname=os.path.split(name.lower()+"(%d)"%c)[1]
+                    newname=os.path.split(name.lower())[1]
+                    newname=newname+"(%d)"%c
                     c+=1
                 self.models[newname]=stltool.stl(name)
                 self.models[newname].offsets=[0,0,0]
