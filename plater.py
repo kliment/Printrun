@@ -9,10 +9,10 @@ class stlwrap:
         self.name=name
         if name is None:
             self.name=obj.name
-       
+        
     def __repr__(self):
         return self.name
-   
+    
 
 class showstl(wx.Window):
     def __init__(self,parent,size,pos):
@@ -81,7 +81,7 @@ class showstl(wx.Window):
                 facets+=i.facets
             stltool.emitstl(name,facets,"plater_export")
             print "wrote ",name
-           
+            
     def autoplate(self,event):
         print "Autoplating"
         separation = 2
@@ -119,7 +119,7 @@ class showstl(wx.Window):
             self.models[i].offsets[0] += centreoffset[0]
             self.models[i].offsets[1] += centreoffset[1]
         self.Refresh()
-       
+        
     def right(self,event):
         dlg=wx.FileDialog(self,"Open file to print",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard("STL files (;*.stl;)")
@@ -132,7 +132,7 @@ class showstl(wx.Window):
             t=time.time()
             #print name
             if name.lower().endswith(".stl"):
-                #Filter out the path, just show the STL filename.
+				#Filter out the path, just show the STL filename.
                 newname=re.match(r".*[/\\](.*?\.stl)", name.lower()).group(1)
                 c=1
                 while newname in self.models:
@@ -179,17 +179,17 @@ class showstl(wx.Window):
                     #    break
                 dc.SelectObject(wx.NullBitmap)
                 m.bitmap.SetMask(wx.Mask(m.bitmap,wx.Colour(0,0,0,255)))
-               
+                
                 #print time.time()-t
                 self.l.Append(newname)
                 i=self.l.GetSelection()
                 if i==wx.NOT_FOUND:
                     self.l.Select(0)
-           
+            
                 self.l.Select(self.l.GetCount()-1)
             self.Refresh()
             #print time.time()-t
-       
+        
     def move(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
@@ -214,12 +214,12 @@ class showstl(wx.Window):
             p=event.GetPositionTuple()
             dc.DrawLine(self.initpos[0],self.initpos[1],p[0],p[1])
             #print math.sqrt((p[0]-self.initpos[0])**2+(p[1]-self.initpos[1])**2)
-                   
+                    
             del dc
         else:
             event.Skip()
-       
-       
+        
+        
     def rotateafter(self):
         if(self.i!=self.previ):
             i=self.l.GetSelection()
@@ -233,7 +233,7 @@ class showstl(wx.Window):
         time.sleep(0.01)
         wx.CallAfter(self.rotateafter)
         self.triggered=0
-       
+        
     def rot(self, event):
         z=event.GetWheelRotation()
         s=self.l.GetSelection()
@@ -247,11 +247,11 @@ class showstl(wx.Window):
         if not self.triggered:
             self.triggered=1
             threading.Thread(target=self.cr).start()
-   
+    
     def repaint(self,event):
         dc=wx.PaintDC(self)
         self.paint(dc=dc)
-       
+        
     def paint(self,coord1="x",coord2="y",dc=None):
         coords={"x":0,"y":1,"z":2}
         if dc is None:
@@ -289,16 +289,17 @@ class showstl(wx.Window):
         del dc
         #print time.time()-t
         #s.export()
-       
+        
 class stlwin(wx.Frame):
     def __init__(self,size=(400,530)):
         wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
         self.SetIcon(wx.Icon("plater.ico",wx.BITMAP_TYPE_ICO))
         self.SetClientSize(size)
         self.s=showstl(self,(400,530),(0,0))
-       
+        
 if __name__ == '__main__':
     app = wx.App(False)
     main = stlwin()
     main.Show()
     app.MainLoop()
+
