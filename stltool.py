@@ -1,4 +1,15 @@
-import sys, struct
+import sys, struct, math
+
+def cross(v1,v2):
+    return [v1[1]*v2[2]-v1[2]*v2[1],v1[2]*v2[0]-v1[0]*v2[2],v1[0]*v2[1]-v1[1]*v2[0]]
+
+def genfacet(v):
+    veca=[v[1][0]-v[0][0],v[1][1]-v[0][1],v[1][2]-v[0][2]]
+    vecb=[v[2][0]-v[1][0],v[2][1]-v[1][1],v[2][2]-v[1][2]]
+    vecx=cross(veca,vecb)
+    vlen=math.sqrt(sum(map(lambda x:x*x,vecx)))
+    normal=map(lambda x:x/vlen, vecx)
+    return [normal,v]
 
 I=[
     [1,0,0,0],
@@ -8,13 +19,16 @@ I=[
 ]
 
 def transpose(matrix):
-    return [[v[i] for v in matrix] for i in xrange(len(matrix[0]))]
+    return zip(*matrix)
+    #return [[v[i] for v in matrix] for i in xrange(len(matrix[0]))]
     
 def multmatrix(vector,matrix):
     return map(sum, transpose(map(lambda x:[x[0]*p for p in x[1]], zip(vector, transpose(matrix)))))
     
 def applymatrix(facet,matrix=I):
-    return [multmatrix(facet[0]+[1],matrix)[:3],map(lambda x:multmatrix(x+[1],matrix)[:3],facet[1])]
+    #return facet
+    #return [map(lambda x:-1.0*x,multmatrix(facet[0]+[1],matrix)[:3]),map(lambda x:multmatrix(x+[1],matrix)[:3],facet[1])]
+    return genfacet(map(lambda x:multmatrix(x+[1],matrix)[:3],facet[1]))
     
 f=[[0,0,0],[[-3.022642, 0.642482, -9.510565],[-3.022642, 0.642482, -9.510565],[-3.022642, 0.642482, -9.510565]]]
 m=[
@@ -182,9 +196,9 @@ class stl:
             self.facet[1][self.facetloc]=map(float,l.split()[1:])
             self.facetloc+=1
         return 1
-if __name__=="__main__" and 0:
-    s=stl("sphere.stl")
-    for i in xrange(-10,11):
+if __name__=="__main__":
+    s=stl("../../Downloads/frame-vertex-neo-foot-x4.stl")
+    for i in xrange(11,11):
         working=s.facets[:]
         for j in reversed(sorted(s.facetsminz)):
             if(j[0]>i):
@@ -198,5 +212,5 @@ if __name__=="__main__" and 0:
                 break
         
         print i,len(working)
-    emitstl("sphereout.stl",s.facets,"emitted_object")
+    emitstl("../../Downloads/frame-vertex-neo-foot-x4-a.stl",s.facets,"emitted_object")
 #stl("../prusamendel/stl/mendelplate.stl")

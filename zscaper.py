@@ -1,19 +1,9 @@
-import stltool,wx,math
+import wx,math
+from stltool import *
 a=wx.App()
 
-def cross(v1,v2):
-    return [v1[1]*v2[2]-v1[2]*v2[1],v1[0]*v2[2]-v1[2]*v2[0],v1[0]*v2[1]-v1[1]*v2[0]]
-
-def genfacet(v):
-    veca=[v[1][0]-v[0][0],v[1][1]-v[0][1],v[1][2]-v[0][2]]
-    vecb=[v[2][0]-v[0][0],v[2][1]-v[0][1],v[2][2]-v[0][2]]
-    vecx=cross(veca,vecb)
-    vlen=math.sqrt(sum(map(lambda x:x*x,vecx)))
-    normal=map(lambda x:x/vlen, vecx)
-    return [normal,v]
-
 def genscape(data=[[0,1,0,0],[1,0,2,0],[1,0,0,0],[0,1,0,1]],pscale=1.0,bheight=1.0,zscale=1.0):
-    o=stltool.stl(None)
+    o=stl(None)
     datal=len(data)
     datah=len(data[0])
     #create bottom:
@@ -55,8 +45,8 @@ def zimage(name,out):
     data=[]
     for i in xrange(s[0]):
         data+=[b[i*s[1]:(i+1)*s[1]]]
-    data=[i[::5] for i in data[::5]]
-    stltool.emitstl(out,genscape(data,zscale=0.1).facets,name)
+    #data=[i[::5] for i in data[::5]]
+    emitstl(out,genscape(data,zscale=0.1).facets,name)
 
 """
 class scapewin(wx.Frame):
@@ -69,12 +59,12 @@ class scapewin(wx.Frame):
 
 """
 if __name__ == '__main__':
-"""
+    """
     app = wx.App(False)
     main = scapewin()
     main.Show()
     app.MainLoop()
 """
-    zimage("testimg.png","testobj.stl")
+    zimage("catposthtmap2.jpg","testobj.stl")
 del a
 
