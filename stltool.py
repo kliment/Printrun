@@ -38,9 +38,26 @@ m=[
     [0,0,0,1]
 ]
 
-def emitstl(filename,facets=[],objname="stltool_export"):
+def emitstl(filename,facets=[],objname="stltool_export",binary=1):
     if filename is None:
         return
+    if binary:
+        f=open(filename,"wb")
+        buf="".join(["\0"]*80)
+        buf+=struct.pack("<I",len(facets))
+        facetformat=struct.Struct("<ffffffffffffH")
+        for i in facets:
+            l=list(i[0][:])
+            for j in i[1]:
+                l+=j[:]
+            l+=[0]
+            #print len(l)
+            buf+=facetformat.pack(*l)
+        f.write(buf)
+        f.close()
+        return
+        
+
     f=open(filename,"w")
     f.write("solid "+objname+"\n")
     for i in facets:
