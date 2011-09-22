@@ -131,10 +131,12 @@ class showstl(wx.Window):
             t=time.time()
             #print name
             if name.lower().endswith(".stl"):
-                newname=name
+                #Filter out the path, just show the STL filename.
+                newname=os.path.split(name.lower())[1]
                 c=1
                 while newname in self.models:
-                    newname=name+"(%d)"%c
+                    newname=os.path.split(name.lower())[1]
+                    newname=newname+"(%d)"%c
                     c+=1
                 self.models[newname]=stltool.stl(name)
                 self.models[newname].offsets=[0,0,0]
