@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import cmd, printcore, sys 
 import glob, os, time
+import sys, subprocess 
 if os.name=="nt":
     try:
         import _winreg
@@ -1038,7 +1039,9 @@ class pronsole(cmd.Cmd):
             from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
             from skeinforge.skeinforge_application import skeinforge
             if(settings):
-                skeinforge.main()
+                param = "skeinforge/skeinforge_application/skeinforge.py"
+                print "Entering skeinforge settings: ",sys.executable," ",param
+                subprocess.call([sys.executable,param])
             else:
                 if(len(l)>1):
                     if(l[1] == "view"):
@@ -1049,8 +1052,8 @@ class pronsole(cmd.Cmd):
                     skeinforge_craft.writeOutput(l[0],False)
                 print "Loading skeined file."
                 self.do_load(l[0].replace(".stl","_export.gcode"))
-        except:
-            print "Skeinforge execution failed."
+        except Exception,e:
+            print "Skeinforge execution failed: ",e
         
     def complete_skein(self, text, line, begidx, endidx):
         s=line.split()
