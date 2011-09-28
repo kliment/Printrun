@@ -71,9 +71,10 @@ class gviz(wx.Panel):
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate=[0.0,0.0]
         self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
+        self.travelpen=wx.Pen(wx.Colour(10,80,80),penwidth)
         self.hlpen=wx.Pen(wx.Colour(200,50,50),penwidth)
         self.fades=[wx.Pen(wx.Colour(250-0.6**i*100,250-0.6**i*100,200-0.4**i*50),penwidth) for i in xrange(6)]
-        self.penslist=[self.mainpen,self.hlpen]+self.fades
+        self.penslist=[self.mainpen,self.travelpen,self.hlpen]+self.fades
         self.showall=0
         self.hilight=[]
         self.dirty=1
@@ -200,7 +201,10 @@ class gviz(wx.Panel):
                     self.pens[target[2]]=[]
                     self.layers+=[target[2]]
                 self.lines[target[2]]+=[(self.lastpos[0],self.bedsize[1]-self.lastpos[1],target[0],self.bedsize[1]-target[1])]
-                self.pens[target[2]]+=[self.mainpen]
+                if target[3] != self.lastpos[3]:
+                    self.pens[target[2]]+=[self.mainpen]
+                else:
+                    self.pens[target[2]]+=[self.travelpen]
                 self.lastpos=target
             else:
                 self.hilight+=[(self.hilightpos[0],self.bedsize[1]-self.hilightpos[1],target[0],self.bedsize[1]-target[1])]
