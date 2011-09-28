@@ -342,8 +342,8 @@ msgid ""
 "Monitor\n"
 "printer"
 msgstr ""
-" Loguer les messages\n"
-"de l'imprimante"
+"Surveiller\n"
+"l'imprimante"
 
 #: pronterface.py:423
 msgid "Load file"
