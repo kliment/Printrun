@@ -252,7 +252,7 @@ class printcore():
                     self.sendcb(command)
                 except:
                     pass
-            self.printer.write(command+"\n")
+            self.printer.write(str(command+"\n"))
 
 if __name__ == '__main__':
     #print "Usage: python printcore.py filename.gcode"
