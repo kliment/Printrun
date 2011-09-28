@@ -8,6 +8,8 @@ def genfacet(v):
     vecb=[v[2][0]-v[1][0],v[2][1]-v[1][1],v[2][2]-v[1][2]]
     vecx=cross(veca,vecb)
     vlen=math.sqrt(sum(map(lambda x:x*x,vecx)))
+    if vlen==0:
+        vlen=1
     normal=map(lambda x:x/vlen, vecx)
     return [normal,v]
 
