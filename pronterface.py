@@ -292,8 +292,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
         
-        if sys.platform != 'darwin':
-            self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("SFACT Settings"),_(" Adjust SFACT settings")))
+        self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("SFACT Settings"),_(" Adjust SFACT settings")))
         try:
             from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
             self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
