@@ -381,13 +381,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
         uts.Add(wx.StaticText(self.panel,-1,_("Port:"),pos=(0,5)),wx.TOP|wx.LEFT,5)
         scan=self.scanserial()
+        portslist=list(scan)
+        if self.settings.port != "" and self.settings.port not in portslist:
+            portslist += [self.settings.port]
         self.serialport = wx.ComboBox(self.panel, -1,
-                choices=scan,
+                choices=portslist,
                 style=wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
         try:
-            self.serialport.SetValue(scan[0])
-            if self.settings.port:
+            if self.settings.port in scan:
                 self.serialport.SetValue(self.settings.port)
+            elif len(portslist)>0:
+                self.serialport.SetValue(portslist[0])
         except:
             pass
         uts.Add(self.serialport)
@@ -1319,6 +1323,8 @@ class macroed(wx.Dialog):
     def unindent(self,text):
         import re
         self.indent_chars = text[:len(text)-len(text.lstrip())]
+        if len(self.indent_chars)==0:
+            self.indent_chars="  "
         unindented = ""
         lines = re.split(r"(?:\r\n?|\n)",text)
         #print lines
@@ -1337,7 +1343,8 @@ class macroed(wx.Dialog):
             return text
         reindented = ""
         for line in lines:
-            reindented += self.indent_chars + line + "\n"
+            if line.strip() != "":
+                reindented += self.indent_chars + line + "\n"
         return reindented
         
 class options(wx.Dialog):
