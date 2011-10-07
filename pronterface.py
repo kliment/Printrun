@@ -381,13 +381,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
         uts.Add(wx.StaticText(self.panel,-1,_("Port:"),pos=(0,5)),wx.TOP|wx.LEFT,5)
         scan=self.scanserial()
+        portslist=list(scan)
+        if self.settings.port != "" and self.settings.port not in portslist:
+            portslist += [self.settings.port]
         self.serialport = wx.ComboBox(self.panel, -1,
-                choices=scan,
+                choices=portslist,
                 style=wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
         try:
-            self.serialport.SetValue(scan[0])
-            if self.settings.port:
+            if self.settings.port in scan:
                 self.serialport.SetValue(self.settings.port)
+            elif len(portslist)>0:
+                self.serialport.SetValue(portslist[0])
         except:
             pass
         uts.Add(self.serialport)
