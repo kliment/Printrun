@@ -146,13 +146,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
     def endcb(self):
         if(self.p.queueindex==0):
-            print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds"
+            print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
             
     
     def online(self):
-        print _("Printer is now online")
+        print _("Printer is now online.")
         wx.CallAfter(self.connectbtn.Disable)
         for i in self.printerControls:
             wx.CallAfter(i.Enable)
@@ -381,17 +381,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
         uts.Add(wx.StaticText(self.panel,-1,_("Port:"),pos=(0,5)),wx.TOP|wx.LEFT,5)
         scan=self.scanserial()
-        portslist=list(scan)
-        if self.settings.port != "" and self.settings.port not in portslist:
-            portslist += [self.settings.port]
         self.serialport = wx.ComboBox(self.panel, -1,
-                choices=portslist,
+                choices=scan,
                 style=wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
         try:
-            if self.settings.port in scan:
+            self.serialport.SetValue(scan[0])
+            if self.settings.port:
                 self.serialport.SetValue(self.settings.port)
-            elif len(portslist)>0:
-                self.serialport.SetValue(portslist[0])
         except:
             pass
         uts.Add(self.serialport)
@@ -491,23 +487,45 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         lls.Add(wx.StaticText(self.panel,-1,_("Heater:"),pos=(0,343)),pos=(11,0),span=(1,1))
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
+        
         if self.settings.last_temperature not in map(float,self.temps.values()):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=htemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
-        self.htemp.SetValue("0")
+
+        
         lls.Add(self.htemp,pos=(11,1),span=(1,3))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(11,4),span=(1,2))
         lls.Add(wx.StaticText(self.panel,-1,_("Bed:"),pos=(0,343)),pos=(12,0),span=(1,1))
-        btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.bedtemps[x])]
+        btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=btemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
-        self.btemp.SetValue("0")
+        self.btemp.SetValue(str(self.settings.last_bed_temperature))
+        self.htemp.SetValue(str(self.settings.last_temperature))
+         
+        
+        ## added for an error where only the bed would get (pla) or (abs). 
+        #This ensures, if last temp is a default pla or abs, it will be marked so.
+        # if it is not, then a (user) remark is added. This denotes a manual entry
+
+        for i in btemp_choices:
+            if i.split()[0] == str(self.settings.last_bed_temperature).split('.')[0] or i.split()[0] == str(self.settings.last_bed_temperature):
+                self.btemp.SetValue(i)
+        for i in htemp_choices:
+            if i.split()[0] == str(self.settings.last_temperature).split('.')[0] or i.split()[0] == str(self.settings.last_temperature) :
+               self.htemp.SetValue(i)
+
+        if( '(' not in self.btemp.Value):
+            self.btemp.SetValue(self.btemp.Value + ' (user)')
+        if( '(' not in self.htemp.Value):
+            self.htemp.SetValue(self.htemp.Value + ' (user)')   
+
+
         lls.Add(self.btemp,pos=(12,1),span=(1,3))
         self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,365))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
@@ -1104,6 +1122,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         pass
         
     def pause(self,event):
+        print _("Paused.")
         if not self.paused:
             if self.sdprinting:
                 self.p.send_now("M25")
@@ -1129,6 +1148,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         pass
         
     def connect(self,event):
+        print _("Connecting...)
         port=None
         try:
             port=self.scanserial()[0]
@@ -1159,9 +1179,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         
     def disconnect(self,event):
+        print _("Disconnected.")
         self.p.disconnect()
         self.statuscheck=False
-        
+    
         wx.CallAfter(self.connectbtn.Enable);
         wx.CallAfter(self.printbtn.Disable);
         wx.CallAfter(self.pausebtn.Disable);
@@ -1179,6 +1200,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 
     
     def reset(self,event):
+        print _("Reset.")
         dlg=wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES|wx.NO)
         if dlg.ShowModal()==wx.ID_YES:
             self.p.reset()
@@ -1235,8 +1257,6 @@ class macroed(wx.Dialog):
     def unindent(self,text):
         import re
         self.indent_chars = text[:len(text)-len(text.lstrip())]
-        if len(self.indent_chars)==0:
-            self.indent_chars="  "
         unindented = ""
         lines = re.split(r"(?:\r\n?|\n)",text)
         #print lines
@@ -1255,8 +1275,7 @@ class macroed(wx.Dialog):
             return text
         reindented = ""
         for line in lines:
-            if line.strip() != "":
-                reindented += self.indent_chars + line + "\n"
+            reindented += self.indent_chars + line + "\n"
         return reindented
         
 class options(wx.Dialog):
