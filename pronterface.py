@@ -1235,6 +1235,8 @@ class macroed(wx.Dialog):
     def unindent(self,text):
         import re
         self.indent_chars = text[:len(text)-len(text.lstrip())]
+        if len(self.indent_chars)==0:
+            self.indent_chars="  "
         unindented = ""
         lines = re.split(r"(?:\r\n?|\n)",text)
         #print lines
@@ -1253,7 +1255,8 @@ class macroed(wx.Dialog):
             return text
         reindented = ""
         for line in lines:
-            reindented += self.indent_chars + line + "\n"
+            if line.strip() != "":
+                reindented += self.indent_chars + line + "\n"
         return reindented
         
 class options(wx.Dialog):
