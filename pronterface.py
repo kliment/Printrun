@@ -146,13 +146,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
     def endcb(self):
         if(self.p.queueindex==0):
-            print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds"
+            print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
             
     
     def online(self):
-        print _("Printer is now online")
+        print _("Printer is now online.")
         wx.CallAfter(self.connectbtn.Disable)
         for i in self.printerControls:
             wx.CallAfter(i.Enable)
@@ -381,17 +381,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
         uts.Add(wx.StaticText(self.panel,-1,_("Port:"),pos=(0,5)),wx.TOP|wx.LEFT,5)
         scan=self.scanserial()
-        portslist=list(scan)
-        if self.settings.port != "" and self.settings.port not in portslist:
-            portslist += [self.settings.port]
         self.serialport = wx.ComboBox(self.panel, -1,
-                choices=portslist,
+                choices=scan,
                 style=wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
         try:
-            if self.settings.port in scan:
+            self.serialport.SetValue(scan[0])
+            if self.settings.port:
                 self.serialport.SetValue(self.settings.port)
-            elif len(portslist)>0:
-                self.serialport.SetValue(portslist[0])
         except:
             pass
         uts.Add(self.serialport)
@@ -491,23 +487,45 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         lls.Add(wx.StaticText(self.panel,-1,_("Heater:"),pos=(0,343)),pos=(11,0),span=(1,1))
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
+        
         if self.settings.last_temperature not in map(float,self.temps.values()):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=htemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
-        self.htemp.SetValue("0")
+
+        
         lls.Add(self.htemp,pos=(11,1),span=(1,3))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(11,4),span=(1,2))
         lls.Add(wx.StaticText(self.panel,-1,_("Bed:"),pos=(0,343)),pos=(12,0),span=(1,1))
-        btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.bedtemps[x])]
+        btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=btemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
-        self.btemp.SetValue("0")
+        self.btemp.SetValue(str(self.settings.last_bed_temperature))
+        self.htemp.SetValue(str(self.settings.last_temperature))
+         
+        
+        ## added for an error where only the bed would get (pla) or (abs). 
+        #This ensures, if last temp is a default pla or abs, it will be marked so.
+        # if it is not, then a (user) remark is added. This denotes a manual entry
+
+        for i in btemp_choices:
+            if i.split()[0] == str(self.settings.last_bed_temperature).split('.')[0] or i.split()[0] == str(self.settings.last_bed_temperature):
+                self.btemp.SetValue(i)
+        for i in htemp_choices:
+            if i.split()[0] == str(self.settings.last_temperature).split('.')[0] or i.split()[0] == str(self.settings.last_temperature) :
+               self.htemp.SetValue(i)
+
+        if( '(' not in self.btemp.Value):
+            self.btemp.SetValue(self.btemp.Value + ' (user)')
+        if( '(' not in self.htemp.Value):
+            self.htemp.SetValue(self.htemp.Value + ' (user)')   
+
+
         lls.Add(self.btemp,pos=(12,1),span=(1,3))
         self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,365))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
@@ -622,9 +640,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         for sizer,button in allcbs:
             #sizer.Remove(button)
             button.Destroy()
-        self.custombuttonbuttons=[]
-        while len(self.custombuttons) < 13:
-            self.custombuttons.append(None)
         for i in xrange(len(self.custombuttons)):
             btndef = self.custombuttons[i]
             try:
@@ -641,7 +656,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             b.properties=btndef
             b.Bind(wx.EVT_BUTTON,self.procbutton)
             b.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
-            self.custombuttonbuttons.append(b)
             if i<4:
                 ubs.Add(b)
             else:
@@ -720,8 +734,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 bedit.color.SetValue(colour)
         else:
             n = len(self.custombuttons)
-            while n>0 and self.custombuttons[n-1] is None:
-                n -= 1
         if bedit.ShowModal()==wx.ID_OK:
             if n==len(self.custombuttons):
                 self.custombuttons+=[None]
@@ -736,8 +748,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         n = button.custombutton
         self.custombuttons[n]=None
         self.cbutton_save(n,None)
-        #while len(self.custombuttons) and self.custombuttons[-1] is None:
-        #    del self.custombuttons[-1]
+        while len(self.custombuttons) and self.custombuttons[-1] is None:
+            del self.custombuttons[-1]
         self.cbuttons_reload()
     
     def cbutton_order(self,e,button,dir):
@@ -750,8 +762,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.custombuttons[n],self.custombuttons[n+1] = self.custombuttons[n+1],self.custombuttons[n]
         self.cbutton_save(n,self.custombuttons[n])
         self.cbutton_save(n+1,self.custombuttons[n+1])
-        #if self.custombuttons[-1] is None:
-        #    del self.custombuttons[-1]
+        if self.custombuttons[-1] is None:
+            del self.custombuttons[-1]
         self.cbuttons_reload()
     
     def editbutton(self,e):
@@ -778,90 +790,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 item = popupmenu.Append(-1,_("Add custom button"))
                 self.Bind(wx.EVT_MENU,self.cbutton_edit,item)
             self.panel.PopupMenu(popupmenu, pos)
-        elif e.Dragging() and e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
-            obj = e.GetEventObject()
-            scrpos = obj.ClientToScreen(e.GetPosition())
-            if not hasattr(self,"dragging"):
-                # init dragging of the custom button
-                if hasattr(obj,"custombutton"):
-                    self.dragging = wx.Button(self.panel,-1,obj.GetLabel())
-                    self.dragging.SetBackgroundColour(obj.GetBackgroundColour())
-                    self.dragging.sourcebutton = obj
-                    self.dragging.Raise()
-                    self.dragging.Disable()
-                    self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
-                    for b in self.custombuttonbuttons:
-                        if b.IsFrozen(): b.Thaw()
-                    self.last_drag_dest = obj
-                    self.dragging.label = obj.s_label = obj.GetLabel()
-                    self.dragging.bgc = obj.s_bgc = obj.GetBackgroundColour()
-            else: 
-                # dragging in progress
-                self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
-                btns = self.custombuttonbuttons 
-                dst = None
-                src = self.dragging.sourcebutton
-                drg = self.dragging
-                for b in self.custombuttonbuttons:
-                    if b.GetScreenRect().Contains(scrpos):
-                        dst = b
-                        break
-                #if dst is None and self.panel.GetScreenRect().Contains(scrpos):
-                #    # try to check if it is after buttons at the end
-                #    tspos = self.panel.ClientToScreen(self.upperbottomsizer.GetPosition())
-                #    bspos = self.panel.ClientToScreen(self.centersizer.GetPosition())
-                #    tsrect = wx.Rect(*(tspos.Get()+self.upperbottomsizer.GetSize().Get()))
-                #    bsrect = wx.Rect(*(bspos.Get()+self.centersizer.GetSize().Get()))
-                #    lbrect = btns[-1].GetScreenRect()
-                #    p = scrpos.Get()
-                #    if len(btns)<4 and tsrect.Contains(scrpos):
-                #        if lbrect.GetRight() < p[0]:
-                #            print "Right of last button on upper cb sizer"
-                #    if bsrect.Contains(scrpos):
-                #        if lbrect.GetBottom() < p[1]:
-                #            print "Below last button on lower cb sizer"
-                #        if lbrect.GetRight() < p[0] and lbrect.GetTop() <= p[1] and lbrect.GetBottom() >= p[1]:
-                #            print "Right to last button on lower cb sizer"
-                if dst is not self.last_drag_dest:
-                    if self.last_drag_dest is not None:
-                        self.last_drag_dest.SetBackgroundColour(self.last_drag_dest.s_bgc)
-                        self.last_drag_dest.SetLabel(self.last_drag_dest.s_label)
-                    if dst is not None and dst is not src:
-                        dst.s_bgc = dst.GetBackgroundColour()
-                        dst.s_label = dst.GetLabel()
-                        src.SetBackgroundColour(dst.GetBackgroundColour())
-                        src.SetLabel(dst.GetLabel())
-                        dst.SetBackgroundColour(drg.bgc)
-                        dst.SetLabel(drg.label)
-                    else:
-                        src.SetBackgroundColour(drg.bgc)
-                        src.SetLabel(drg.label)
-                    self.last_drag_dest = dst
-        elif hasattr(self,"dragging") and not e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
-            # dragging finished
-            obj = e.GetEventObject()
-            scrpos = obj.ClientToScreen(e.GetPosition())
-            dst = None
-            src = self.dragging.sourcebutton
-            drg = self.dragging
-            for b in self.custombuttonbuttons:
-                if b.GetScreenRect().Contains(scrpos):
-                    dst = b
-                    break
-            if dst is not None:
-                src_i = src.custombutton
-                dst_i = dst.custombutton
-                self.custombuttons[src_i],self.custombuttons[dst_i] = self.custombuttons[dst_i],self.custombuttons[src_i]
-                self.cbutton_save(src_i,self.custombuttons[src_i])
-                self.cbutton_save(dst_i,self.custombuttons[dst_i])
-                while self.custombuttons[-1] is None:
-                    del self.custombuttons[-1]
-            wx.CallAfter(self.dragging.Destroy)
-            del self.dragging
-            wx.CallAfter(self.cbuttons_reload)
-            del self.last_drag_dest
         else:
-            e.Skip()
+           e.Skip()
     
     def procbutton(self,e):
         try:
@@ -1192,6 +1122,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         pass
         
     def pause(self,event):
+        print _("Paused.")
         if not self.paused:
             if self.sdprinting:
                 self.p.send_now("M25")
@@ -1217,6 +1148,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         pass
         
     def connect(self,event):
+        print _("Connecting...)
         port=None
         try:
             port=self.scanserial()[0]
@@ -1247,9 +1179,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         
     def disconnect(self,event):
+        print _("Disconnected.")
         self.p.disconnect()
         self.statuscheck=False
-        
+    
         wx.CallAfter(self.connectbtn.Enable);
         wx.CallAfter(self.printbtn.Disable);
         wx.CallAfter(self.pausebtn.Disable);
@@ -1267,6 +1200,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 
     
     def reset(self,event):
+        print _("Reset.")
         dlg=wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES|wx.NO)
         if dlg.ShowModal()==wx.ID_YES:
             self.p.reset()
@@ -1323,8 +1257,6 @@ class macroed(wx.Dialog):
     def unindent(self,text):
         import re
         self.indent_chars = text[:len(text)-len(text.lstrip())]
-        if len(self.indent_chars)==0:
-            self.indent_chars="  "
         unindented = ""
         lines = re.split(r"(?:\r\n?|\n)",text)
         #print lines
@@ -1343,8 +1275,7 @@ class macroed(wx.Dialog):
             return text
         reindented = ""
         for line in lines:
-            if line.strip() != "":
-                reindented += self.indent_chars + line + "\n"
+            reindented += self.indent_chars + line + "\n"
         return reindented
         
 class options(wx.Dialog):
