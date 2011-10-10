@@ -12,8 +12,7 @@ Download the following, and install in this order:
   1. http://python.org/ftp/python/2.7.2/python-2.7.2.msi
   2. http://pypi.python.org/packages/any/p/pyserial/pyserial-2.5.win32.exe
   3. http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py27.exe
-  4. http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.win32.exe
-
+  4. http://launchpad.net/pyreadline/1.7/1.7/+download/pyreadline-1.7.zip
 ## Ubuntu/Debian
 `sudo apt-get install python-serial python-wxgtk2.8`
 
@@ -27,8 +26,10 @@ Download the following, and install in this order:
   3. Download and unpack pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
   4. In a terminal, change to the folder you unzipped to, then type in: `sudo python setup.py install`
 
-The tools will run just fine in 64bit on Lion, you don't need to mess
-with any of the 32bit settings.
+The tools will probably run just fine in 64bit on Lion, you don't need to mess
+with any of the 32bit settings. In case they don't, try 
+  5. export VERSIONER_PYTHON_PREFER_32_BIT=yes
+in a terminal before running Pronterface
 
 ## Mac OS X (pre Lion)
   1. Download and install http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
