@@ -420,7 +420,7 @@ class TestGlPanel(GLPanel):
         '''create opengl objects when opengl is initialized'''
         import stltool
         batch = pyglet.graphics.Batch()
-        s= stltool.stl("../prusa/metric-prusa/x-end-idler.stl")
+        s= stltool.stl("x-end-idler.stl")
         stl = stlview(s.facets, batch=batch)
         #print "added vertices"
         self.batches+=[[[50,50,0],batch,0]]
