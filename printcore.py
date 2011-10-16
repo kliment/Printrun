@@ -76,9 +76,12 @@ class printcore():
         while(True):
             if(not self.printer or not self.printer.isOpen):
                 break
-            line=self.printer.readline()
+            try:
+                line=self.printer.readline()
+            except:
+                line=''
             if(len(line)>1):
-                self.log+=[line]
+                self.log+=[{'Line': self.lineno, 'Response': line, 'Time': time.time()}]
                 if self.recvcb is not None:
                     try:
                         self.recvcb(line)
@@ -86,6 +89,10 @@ class printcore():
                         pass
                 if self.loud:
                     print "RECV: ",line.rstrip()
+            elif self.printing and time.time()-self.log[-1]['Time'] > self.printer.timeout/1000:
+                if self.loud:
+                    print 'Timed out on line '+repr(self.lineno)+', continuing...'
+                self.clear=True
             if(line.startswith('DEBUG_')):
                 continue
             if(line.startswith('start') or line.startswith('ok')):
