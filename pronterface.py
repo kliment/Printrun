@@ -644,6 +644,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         for sizer,button in allcbs:
             #sizer.Remove(button)
             button.Destroy()
+        self.custombuttonbuttons=[]
+        while len(self.custombuttons) < 13:
+            self.custombuttons.append(None)
         for i in xrange(len(self.custombuttons)):
             btndef = self.custombuttons[i]
             try:
@@ -660,6 +663,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             b.properties=btndef
             b.Bind(wx.EVT_BUTTON,self.procbutton)
             b.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
+            self.custombuttonbuttons.append(b)
             if i<4:
                 ubs.Add(b)
             else:
@@ -738,6 +742,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 bedit.color.SetValue(colour)
         else:
             n = len(self.custombuttons)
+            while n>0 and self.custombuttons[n-1] is None:
+                n -= 1
         if bedit.ShowModal()==wx.ID_OK:
             if n==len(self.custombuttons):
                 self.custombuttons+=[None]
@@ -752,8 +758,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         n = button.custombutton
         self.custombuttons[n]=None
         self.cbutton_save(n,None)
-        while len(self.custombuttons) and self.custombuttons[-1] is None:
-            del self.custombuttons[-1]
+        #while len(self.custombuttons) and self.custombuttons[-1] is None:
+        #    del self.custombuttons[-1]
         self.cbuttons_reload()
     
     def cbutton_order(self,e,button,dir):
@@ -766,8 +772,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.custombuttons[n],self.custombuttons[n+1] = self.custombuttons[n+1],self.custombuttons[n]
         self.cbutton_save(n,self.custombuttons[n])
         self.cbutton_save(n+1,self.custombuttons[n+1])
-        if self.custombuttons[-1] is None:
-            del self.custombuttons[-1]
+        #if self.custombuttons[-1] is None:
+        #    del self.custombuttons[-1]
         self.cbuttons_reload()
     
     def editbutton(self,e):
@@ -794,8 +800,90 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 item = popupmenu.Append(-1,_("Add custom button"))
                 self.Bind(wx.EVT_MENU,self.cbutton_edit,item)
             self.panel.PopupMenu(popupmenu, pos)
+        elif e.Dragging() and e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
+            obj = e.GetEventObject()
+            scrpos = obj.ClientToScreen(e.GetPosition())
+            if not hasattr(self,"dragging"):
+                # init dragging of the custom button
+                if hasattr(obj,"custombutton"):
+                    self.dragging = wx.Button(self.panel,-1,obj.GetLabel())
+                    self.dragging.SetBackgroundColour(obj.GetBackgroundColour())
+                    self.dragging.sourcebutton = obj
+                    self.dragging.Raise()
+                    self.dragging.Disable()
+                    self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
+                    for b in self.custombuttonbuttons:
+                        if b.IsFrozen(): b.Thaw()
+                    self.last_drag_dest = obj
+                    self.dragging.label = obj.s_label = obj.GetLabel()
+                    self.dragging.bgc = obj.s_bgc = obj.GetBackgroundColour()
+            else: 
+                # dragging in progress
+                self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
+                btns = self.custombuttonbuttons 
+                dst = None
+                src = self.dragging.sourcebutton
+                drg = self.dragging
+                for b in self.custombuttonbuttons:
+                    if b.GetScreenRect().Contains(scrpos):
+                        dst = b
+                        break
+                #if dst is None and self.panel.GetScreenRect().Contains(scrpos):
+                #    # try to check if it is after buttons at the end
+                #    tspos = self.panel.ClientToScreen(self.upperbottomsizer.GetPosition())
+                #    bspos = self.panel.ClientToScreen(self.centersizer.GetPosition())
+                #    tsrect = wx.Rect(*(tspos.Get()+self.upperbottomsizer.GetSize().Get()))
+                #    bsrect = wx.Rect(*(bspos.Get()+self.centersizer.GetSize().Get()))
+                #    lbrect = btns[-1].GetScreenRect()
+                #    p = scrpos.Get()
+                #    if len(btns)<4 and tsrect.Contains(scrpos):
+                #        if lbrect.GetRight() < p[0]:
+                #            print "Right of last button on upper cb sizer"
+                #    if bsrect.Contains(scrpos):
+                #        if lbrect.GetBottom() < p[1]:
+                #            print "Below last button on lower cb sizer"
+                #        if lbrect.GetRight() < p[0] and lbrect.GetTop() <= p[1] and lbrect.GetBottom() >= p[1]:
+                #            print "Right to last button on lower cb sizer"
+                if dst is not self.last_drag_dest:
+                    if self.last_drag_dest is not None:
+                        self.last_drag_dest.SetBackgroundColour(self.last_drag_dest.s_bgc)
+                        self.last_drag_dest.SetLabel(self.last_drag_dest.s_label)
+                    if dst is not None and dst is not src:
+                        dst.s_bgc = dst.GetBackgroundColour()
+                        dst.s_label = dst.GetLabel()
+                        src.SetBackgroundColour(dst.GetBackgroundColour())
+                        src.SetLabel(dst.GetLabel())
+                        dst.SetBackgroundColour(drg.bgc)
+                        dst.SetLabel(drg.label)
+                    else:
+                        src.SetBackgroundColour(drg.bgc)
+                        src.SetLabel(drg.label)
+                    self.last_drag_dest = dst
+        elif hasattr(self,"dragging") and not e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
+            # dragging finished
+            obj = e.GetEventObject()
+            scrpos = obj.ClientToScreen(e.GetPosition())
+            dst = None
+            src = self.dragging.sourcebutton
+            drg = self.dragging
+            for b in self.custombuttonbuttons:
+                if b.GetScreenRect().Contains(scrpos):
+                    dst = b
+                    break
+            if dst is not None:
+                src_i = src.custombutton
+                dst_i = dst.custombutton
+                self.custombuttons[src_i],self.custombuttons[dst_i] = self.custombuttons[dst_i],self.custombuttons[src_i]
+                self.cbutton_save(src_i,self.custombuttons[src_i])
+                self.cbutton_save(dst_i,self.custombuttons[dst_i])
+                while self.custombuttons[-1] is None:
+                    del self.custombuttons[-1]
+            wx.CallAfter(self.dragging.Destroy)
+            del self.dragging
+            wx.CallAfter(self.cbuttons_reload)
+            del self.last_drag_dest
         else:
-           e.Skip()
+            e.Skip()
     
     def procbutton(self,e):
         try:
