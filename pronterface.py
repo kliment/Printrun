@@ -202,14 +202,27 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
                     print _("Setting hotend temperature to "),f,_(" degrees Celsius.")
-                    self.htemp.SetValue(l)
-                    self.set("last_temperature",str(f))
+                    if f>0: 
+                        self.htemp.SetValue(l)
+                        self.set("last_temperature",str(f))
+                        self.settoff.SetBackgroundColour("")
+                        self.settoff.SetForegroundColour("")
+                        self.settbtn.SetBackgroundColour("#FFAA66")
+                        self.settbtn.SetForegroundColour("#660000")
+                        self.htemp.SetBackgroundColour("#FFDABB")
+                    else:
+                        self.settoff.SetBackgroundColour("#0044CC")
+                        self.settoff.SetForegroundColour("white")
+                        self.settbtn.SetBackgroundColour("")
+                        self.settbtn.SetForegroundColour("")
+                        self.htemp.SetBackgroundColour("white")
+                        self.htemp.Refresh()
                 else:
                     print _("Printer is not online.")
             else:
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
-        except:
-            print _("You must enter a temperature.")
+        except Exception,x:
+            print _("You must enter a temperature. (%s)" % (repr(x),))
     
     def do_bedtemp(self,l=""):
         try:
@@ -223,8 +236,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
                     print _("Setting bed temperature to "),f,_(" degrees Celsius.")
-                    self.btemp.SetValue(l)
-                    self.set("last_bed_temperature",str(f))
+                    if f>0: 
+                        self.btemp.SetValue(l)
+                        self.set("last_bed_temperature",str(f))
+                        self.setboff.SetBackgroundColour("")
+                        self.setboff.SetForegroundColour("")
+                        self.setbbtn.SetBackgroundColour("#FFAA66")
+                        self.setbbtn.SetForegroundColour("#660000")
+                        self.btemp.SetBackgroundColour("#FFDABB")
+                    else:
+                        self.setboff.SetBackgroundColour("#0044CC")
+                        self.setboff.SetForegroundColour("white")
+                        self.setbbtn.SetBackgroundColour("")
+                        self.setbbtn.SetForegroundColour("")
+                        self.btemp.SetBackgroundColour("white")
+                        self.btemp.Refresh()
                 else:
                     print _("Printer is not online.")
             else:
@@ -492,31 +518,48 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(wx.StaticText(self.panel,-1,_("Heater:"),pos=(0,343)),pos=(11,0),span=(1,1))
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
         
+        self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1),pos=(45,335))
+        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off"))
+        self.printerControls.append(self.settoff)
+        lls.Add(self.settoff,pos=(11,1),span=(1,1))
+        
         if self.settings.last_temperature not in map(float,self.temps.values()):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
-                choices=htemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
-
+                choices=htemp_choices,style=wx.CB_DROPDOWN, size=(60,25),pos=(45,337))
+        lls.Add(self.htemp,pos=(11,2),span=(1,2))
         
-        lls.Add(self.htemp,pos=(11,1),span=(1,3))
-        self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,335))
+        self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(36,-1),pos=(125,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(11,4),span=(1,2))
+        
         lls.Add(wx.StaticText(self.panel,-1,_("Bed:"),pos=(0,343)),pos=(12,0),span=(1,1))
         btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
+        
+        self.setboff=wx.Button(self.panel,-1,_("Off"),size=(36,-1),pos=(135,335))
+        self.setboff.Bind(wx.EVT_BUTTON,lambda e:self.do_bedtemp("off"))
+        self.printerControls.append(self.setboff)
+        lls.Add(self.setboff,pos=(12,1),span=(1,1))
+        
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
-                choices=btemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,367))
+                choices=btemp_choices,style=wx.CB_DROPDOWN, size=(60,25),pos=(135,367))
+        lls.Add(self.btemp,pos=(12,2),span=(1,2))
+        
+        self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,365))
+        self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
+        self.printerControls.append(self.setbbtn)
+        lls.Add(self.setbbtn,pos=(12,4),span=(1,2))
+        
         self.btemp.SetValue(str(self.settings.last_bed_temperature))
         self.htemp.SetValue(str(self.settings.last_temperature))
-         
-        
+
         ## added for an error where only the bed would get (pla) or (abs). 
         #This ensures, if last temp is a default pla or abs, it will be marked so.
         # if it is not, then a (user) remark is added. This denotes a manual entry
-
+        
         for i in btemp_choices:
             if i.split()[0] == str(self.settings.last_bed_temperature).split('.')[0] or i.split()[0] == str(self.settings.last_bed_temperature):
                 self.btemp.SetValue(i)
@@ -529,12 +572,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if( '(' not in self.htemp.Value):
             self.htemp.SetValue(self.htemp.Value + ' (user)')   
 
-
-        lls.Add(self.btemp,pos=(12,1),span=(1,3))
-        self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,365))
-        self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
-        self.printerControls.append(self.setbbtn)
-        lls.Add(self.setbbtn,pos=(12,4),span=(1,2))
         self.tempdisp=wx.StaticText(self.panel,-1,"")
         lls.Add(self.tempdisp,pos=(12,6),span=(1,3))
         
