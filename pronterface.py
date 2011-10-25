@@ -205,6 +205,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.p.send_now("M104 S"+l)
                     print _("Setting hotend temperature to "),f,_(" degrees Celsius.")
                     self.hsetpoint=f
+                    self.tgauge.SetTarget(int(f))
                     if f>0: 
                         self.htemp.SetValue(l)
                         self.set("last_temperature",str(f))
@@ -448,6 +449,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.resetbtn)
         self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
+        self.tgauge=TempGauge(self.panel,size=(300,20))
+        def scroll_setpoint(e):
+           if e.GetWheelRotation()>0:
+               self.do_settemp(str(self.hsetpoint+1))
+           elif e.GetWheelRotation()<0:
+               self.do_settemp(str(max(0,self.hsetpoint-1)))
+        self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
+        
         uts.Add((10,-1))
         self.monitorbox=wx.CheckBox(self.panel,-1,"",pos=(450,37))
         uts.Add((15,-1))
@@ -457,6 +466,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         uts.Add((15,-1),flag=wx.EXPAND)
         uts.Add(self.minibtn)
+        uts.Add(self.tgauge)
         
         #SECOND ROW
         ubs=self.upperbottomsizer=wx.BoxSizer(wx.HORIZONTAL)
@@ -648,6 +658,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if self.bsetpoint > 0:
             self.do_bedtemp("")
         wx.CallAfter(self.btemp.SetInsertionPoint,0)
+    
     def showwin(self,event):
         if(self.f is not None):
             self.gwindow.Show()
@@ -1008,6 +1019,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     pass
                 string+=(self.tempreport.replace("\r","").replace("T",_("Hotend")).replace("B",_("Bed")).replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
+                try:
+                    self.tgauge.SetValue(int(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                except:
+                    pass
                 if self.sdprinting:
                     string+= _(" SD printing:%04.2f %%") % (self.percentdone,)
                 if self.p.printing:
@@ -1499,6 +1514,71 @@ class ButtonEdit(wx.Dialog):
         self.command.SetValue(macro)
         if self.name.GetValue()=="":
             self.name.SetValue(macro)
+    
+class TempGauge(wx.Panel):
+    def __init__(self,parent,size=(200,20)):
+        wx.Panel.__init__(self,parent,-1,size=size)
+        self.Bind(wx.EVT_PAINT,self.paint)
+        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+        self.width,self.height=size
+        self.value=0
+        self.setpoint=0
+        self.recalc()
+    def recalc(self):
+        self.max=max(int(self.setpoint*1.05),240)
+        self.scale=float(self.width-2)/float(self.max)
+        self.ypt=int(self.scale*max(self.setpoint,40))
+    def SetValue(self,value):
+        self.value=value
+        wx.CallAfter(self.Refresh)
+    def SetTarget(self,value):
+        self.setpoint=value
+        self.recalc()
+        wx.CallAfter(self.Refresh)
+    def paint(self,ev):
+        dc=wx.PaintDC(self)
+        dc.SetBackground(wx.Brush((255,255,255)))
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+        gc.SetBrush(gc.CreateLinearGradientBrush(0,0,self.ypt,0,wx.Colour(0,167,223),wx.Colour(239,233,119)))
+        gc.DrawRectangle(0,0,self.ypt,20)
+        gc.SetBrush(gc.CreateLinearGradientBrush(self.ypt,0,self.width-2,0,wx.Colour(239,233,119),wx.Colour(210,50,100)))
+        gc.DrawRectangle(self.ypt,0,self.width-2-self.ypt,20)
+        ###
+        gc.SetBrush(gc.CreateLinearGradientBrush(0,3,0,15,wx.Colour(255,255,210),wx.Colour(234,82,0)))
+        #gc.SetBrush(gc.CreateLinearGradientBrush(0,3,0,15,wx.Colour(255,255,255),wx.Colour(255,90,32)))
+        width=12
+        w1=9-width/2
+        w2=w1+width
+        value=max(10,min(self.width-2,int(self.value*self.scale)))
+        val_path = gc.CreatePath()
+        val_path.MoveToPoint(0,w1)
+        val_path.AddLineToPoint(value,w1)
+        val_path.AddLineToPoint(value+2,w1+width/4)
+        val_path.AddLineToPoint(value+2,w2-width/4)
+        val_path.AddLineToPoint(value,w2)
+        #val_path.AddLineToPoint(value-4,10)
+        val_path.AddLineToPoint(0,w2)
+        gc.DrawPath(val_path)
+        ###
+        setpoint=max(10,int(self.setpoint*self.scale))
+        gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0,0,0))))
+        setp_path = gc.CreatePath()
+        setp_path.MoveToPoint(setpoint-4,0)
+        setp_path.AddLineToPoint(setpoint+4,0)
+        setp_path.AddLineToPoint(setpoint,5)
+        setp_path.MoveToPoint(setpoint-5,20)
+        setp_path.AddLineToPoint(setpoint+5,20)
+        setp_path.AddLineToPoint(setpoint,14)
+        gc.DrawPath(setp_path)
+        ###
+        text=u"T\u00B0 %u/%u"%(self.value,self.setpoint)
+        #gc.SetFont(gc.CreateFont(wx.Font(12,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
+        #gc.DrawText(text,29,-2)
+        gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
+        gc.DrawText(text,31,1)
+        gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD)))
+        gc.DrawText(text,30,0)
     
 if __name__ == '__main__':
     app = wx.App(False)
