@@ -140,6 +140,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.starttime=0
         self.curlayer=0
         self.cur_button=None
+        self.hsetpoint=0.0
+        self.bsetpoint=0.0
     
     def startcb(self):
         self.starttime=time.time()
@@ -202,6 +204,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
                     print _("Setting hotend temperature to "),f,_(" degrees Celsius.")
+                    self.hsetpoint=f
                     if f>0: 
                         self.htemp.SetValue(l)
                         self.set("last_temperature",str(f))
@@ -236,6 +239,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
                     print _("Setting bed temperature to "),f,_(" degrees Celsius.")
+                    self.bsetpoint=f
                     if f>0: 
                         self.btemp.SetValue(l)
                         self.set("last_bed_temperature",str(f))
@@ -527,6 +531,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=htemp_choices,style=wx.CB_DROPDOWN, size=(60,25),pos=(45,337))
+        self.htemp.Bind(wx.EVT_COMBOBOX,self.htemp_change)
         lls.Add(self.htemp,pos=(11,2),span=(1,2))
         
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(36,-1),pos=(125,335))
@@ -546,6 +551,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=btemp_choices,style=wx.CB_DROPDOWN, size=(60,25),pos=(135,367))
+        self.btemp.Bind(wx.EVT_COMBOBOX,self.btemp_change)
         lls.Add(self.btemp,pos=(12,2),span=(1,2))
         
         self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,365))
@@ -633,6 +639,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #uts.Layout()
         self.cbuttons_reload()
         
+    def htemp_change(self,event):
+        if self.hsetpoint > 0:
+            self.do_settemp("")
+        wx.CallAfter(self.htemp.SetInsertionPoint,0)
+
+    def btemp_change(self,event):
+        if self.bsetpoint > 0:
+            self.do_bedtemp("")
+        wx.CallAfter(self.btemp.SetInsertionPoint,0)
     def showwin(self,event):
         if(self.f is not None):
             self.gwindow.Show()
