@@ -1070,6 +1070,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if "T:" in l:
             self.tempreport=l
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
+            try:
+                self.tgauge.SetValue(int(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+            except:
+                pass
         tstring=l.rstrip()
         #print tstring
         if(tstring!="ok"):
