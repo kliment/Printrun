@@ -803,6 +803,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         elif e.Dragging() and e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
             obj = e.GetEventObject()
             scrpos = obj.ClientToScreen(e.GetPosition())
+            if not hasattr(self,"dragpos"):
+                self.dragpos = scrpos
+                e.Skip()
+                return
+            else: 
+                dx,dy=self.dragpos[0]-scrpos[0],self.dragpos[1]-scrpos[1]
+                if dx*dx+dy*dy < 5*5: # threshold to detect dragging for jittery mice
+                    e.Skip()
+                    return
             if not hasattr(self,"dragging"):
                 # init dragging of the custom button
                 if hasattr(obj,"custombutton"):
@@ -882,6 +891,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             del self.dragging
             wx.CallAfter(self.cbuttons_reload)
             del self.last_drag_dest
+            del self.dragpos
         else:
             e.Skip()
     
