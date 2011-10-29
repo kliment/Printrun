@@ -604,7 +604,7 @@ msgstr "Reprendre"
 
 #: pronterface.py:1168
 msgid "Are you sure you want to reset the printer?"
-msgstr "Etes-vous sûrde vouloir réinitialiser l'imprimante?"
+msgstr "Etes-vous sûr de vouloir réinitialiser l'imprimante?"
 
 #: pronterface.py:1168
 msgid "Reset?"
