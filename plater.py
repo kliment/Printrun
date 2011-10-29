@@ -76,7 +76,7 @@ class showstl(wx.Window):
                 
                 r=i.rot
                 o=i.offsets
-                sf.write('translate([%s,%s,%s]) rotate([0,0,%s]) import_stl("%s");\n'%(str(o[0]),str(o[1]),str(o[2]),-r,os.path.split(i.filename)[1]))
+                sf.write('translate([%s,%s,%s]) rotate([0,0,%s]) import_stl("%s");\n'%(str(o[0]),str(o[1]),str(o[2]),r,os.path.split(i.filename)[1]))
                 if r != 0:
                     i=i.rotate([0,0,-r])
                 if o != [0,0,0]:
