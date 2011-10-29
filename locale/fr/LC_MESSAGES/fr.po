@@ -17,7 +17,7 @@ msgstr ""
 
 #: pronterface.py:10
 msgid "WX is not installed. This program requires WX to run."
-msgstr "wxWidgets n'est pas installé. Ce programme nécéssite la librairie wxWidgets pour fonctionner."
+msgstr "wxWidgets n'est pas installé. Ce programme nécessite la librairie wxWidgets pour fonctionner."
 
 #: pronterface.py:60
 msgid "Printer Interface"
@@ -221,11 +221,11 @@ msgstr " Ouvrir un fichier"
 
 #: pronterface.py:278
 msgid "&Edit..."
-msgstr "&Editer..."
+msgstr "&Éditer..."
 
 #: pronterface.py:278
 msgid " Edit open file"
-msgstr " Editer le fichier ouvert"
+msgstr " Éditer le fichier ouvert"
 
 #: pronterface.py:279
 msgid "E&xit"
@@ -604,7 +604,7 @@ msgstr "Reprendre"
 
 #: pronterface.py:1168
 msgid "Are you sure you want to reset the printer?"
-msgstr "Etes-vous sûrde vouloir réinitialiser l'imprimante?"
+msgstr "Etes-vous sûr de vouloir réinitialiser l'imprimante?"
 
 #: pronterface.py:1168
 msgid "Reset?"
