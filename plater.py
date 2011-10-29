@@ -69,15 +69,20 @@ class showstl(wx.Window):
         dlg.SetWildcard("STL files (;*.stl;)")
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
+            sf=open(name.replace(".","_")+".scad","w")
+            
             facets=[]
             for i in self.models.values():
+                
                 r=i.rot
                 o=i.offsets
+                sf.write('translate([%s,%s,%s]) rotate([0,0,%s]) import_stl("%s");\n'%(str(o[0]),str(o[1]),str(o[2]),-r,os.path.split(i.filename)[1]))
                 if r != 0:
                     i=i.rotate([0,0,-r])
                 if o != [0,0,0]:
                     i=i.translate([o[0],-o[1],o[2]])
                 facets+=i.facets
+            sf.close()
             stltool.emitstl(name,facets,"plater_export")
             print "wrote ",name
             
@@ -141,6 +146,7 @@ class showstl(wx.Window):
                 self.models[newname]=stltool.stl(name)
                 self.models[newname].offsets=[0,0,0]
                 self.models[newname].rot=0
+                self.models[newname].filename=name
                 minx,miny,minz,maxx,maxy,maxz=(10000,10000,10000,0,0,0)
                 for i in self.models[newname].facets:
                     for j in i[1]:
