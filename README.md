@@ -42,7 +42,11 @@ in a terminal before running Pronterface
 
 Alternatively, you can run python in 32 bit mode by setting the following environment variable before running the setup.py command:
 
+This alternative approach is confirmed to work on Mac OS X 10.6.8. 
+
 `export VERSIONER_PYTHON_PREFER_32_BIT=yes`
+
+`sudo python setup.py install`
 
 Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.zip
 
