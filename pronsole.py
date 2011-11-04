@@ -89,10 +89,10 @@ def get_coordinate_value(axis, parts):
 	
 	
 def estimate_duration(g):
-	extra_cost_per_movement = 0.05
+	extra_cost_per_movement = 0.02
 	total_duration = 0
-	fallback_feedrate = 0
 	initial_feedrate = 0
+	feedrate = 0
 	X_last_position = 0
 	Y_last_position = 0
 	for i in g:
@@ -103,16 +103,9 @@ def estimate_duration(g):
 			F = get_coordinate_value("F", parts[1:])
 			E = get_coordinate_value("E", parts[1:])
 
-			if (X is None and Y is None and E is None and F is not None):
-				fallback_feedrate = F
-				continue
-			
-			feedrate = 0
-			if (F is None):
-				feedrate = fallback_feedrate / 60
-			else:
+			if (F is not None):
 				feedrate = F / 60
-
+			
 			distance = 0
 			if (X is None and Y is None and E is not None):
 				distance = abs(E)
