@@ -114,7 +114,7 @@ def estimate_duration(g):
 				feedrate = F / 60
 
 			distance = 0
-			if (X is None and Y is None and E is not None and E < 0.0):
+			if (X is None and Y is None and E is not None):
 				distance = abs(E)
 			elif (X is not None and Y is None):
 				distance = X - X_last_position
@@ -128,9 +128,8 @@ def estimate_duration(g):
 				distance = sqrt(X_distance * X_distance + Y_distance * Y_distance)
 				X_last_position = X
 				Y_last_position = Y
-			else:
-				continue
 
+			if (feedrate == 0 or distance == 0): continue
 			
 			time_for_move = distance / feedrate
 			acceleration = (feedrate - initial_feedrate) / time_for_move
