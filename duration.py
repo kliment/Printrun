@@ -31,9 +31,9 @@ for i in g:
         
         feedrate = 0
         if (F is None):
-            feedrate = global_feedrate
+            feedrate = global_feedrate / 60
         else:
-            feedrate = F
+            feedrate = F / 60
 
         distance = 0
         if (X is not None and Y is None):
@@ -49,7 +49,7 @@ for i in g:
             X_last_position = X
             Y_last_position = Y        
 
-        time_for_move = distance / (feedrate / 60)
+        time_for_move = distance / feedrate
         acceleration = (feedrate - initial_feedrate) / time_for_move
 
         halfway_feedrate = initial_feedrate + acceleration * time_for_move / 2
