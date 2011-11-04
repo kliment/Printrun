@@ -12,9 +12,9 @@ def get_value(axis, parts):
     return None
 
 
+extra_cost_per_movement = 0.05
 total_duration = 0
-starting_velocity = 0
-global_feedrate = 0
+fallback_feedrate = 0
 initial_feedrate = 0
 X_last_position = 0
 Y_last_position = 0
@@ -26,12 +26,12 @@ for i in g:
         F = get_value("F", parts[1:])
 
         if (X is None and Y is None and F is not None):
-            global_feedrate = F
+            fallback_feedrate = F
             continue
         
         feedrate = 0
         if (F is None):
-            feedrate = global_feedrate / 60
+            feedrate = fallback_feedrate / 60
         else:
             feedrate = F / 60
 
@@ -62,7 +62,9 @@ for i in g:
         else:
             duration = (halfway_feedrate * 2 - initial_feedrate) / acceleration
 
-        total_duration += duration
+        total_duration += duration + extra_cost_per_movement
     
-    
-print ("Total duration (in minutes): {0}".format(total_duration / 60))
+
+mod_minutes = total_duration % (60 * 60)
+mod_seconds = mod_minutes % 60
+print ("Estimated total duration (pessimistic): {0:02d}H{1:02d}M".format(int((total_duration - mod_minutes) / (60 * 60)), int((mod_minutes - mod_seconds) / 60)))
