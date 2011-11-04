@@ -91,7 +91,6 @@ def get_coordinate_value(axis, parts):
 def estimate_duration(g):
 	extra_cost_per_movement = 0.02
 	total_duration = 0
-	initial_feedrate = 0
 	feedrate = 0
 	X_last_position = 0
 	Y_last_position = 0
@@ -125,9 +124,9 @@ def estimate_duration(g):
 			if (feedrate == 0 or distance == 0): continue
 			
 			time_for_move = distance / feedrate
-			acceleration = (feedrate - initial_feedrate) / time_for_move
-			halfway_feedrate = initial_feedrate + acceleration * time_for_move / 2
-			duration = (halfway_feedrate * 2 - initial_feedrate) / acceleration
+			acceleration = feedrate / time_for_move
+			halfway_feedrate = acceleration * time_for_move / 2
+			duration = halfway_feedrate * 2 / acceleration
 
 			total_duration += duration + extra_cost_per_movement
 
