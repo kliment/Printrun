@@ -96,13 +96,14 @@ def estimate_duration(g):
 	X_last_position = 0
 	Y_last_position = 0
 	for i in g:
-		if "G1" in i and ("X" in i or "Y" in i or "F" in i):
+		if "G1" in i and ("X" in i or "Y" in i or "F" in i or "E" in i):
 			parts = i.split(" ")
 			X = get_coordinate_value("X", parts[1:])
 			Y = get_coordinate_value("Y", parts[1:])
 			F = get_coordinate_value("F", parts[1:])
+			E = get_coordinate_value("E", parts[1:])
 
-			if (X is None and Y is None and F is not None):
+			if (X is None and Y is None and E is None and F is not None):
 				fallback_feedrate = F
 				continue
 			
@@ -113,7 +114,9 @@ def estimate_duration(g):
 				feedrate = F / 60
 
 			distance = 0
-			if (X is not None and Y is None):
+			if (X is None and Y is None and E is not None and E < 0.0):
+				distance = abs(E)
+			elif (X is not None and Y is None):
 				distance = X - X_last_position
 				X_last_position = X
 			elif (X is None and Y is not None):
@@ -124,8 +127,11 @@ def estimate_duration(g):
 				Y_distance = Y - Y_last_position
 				distance = sqrt(X_distance * X_distance + Y_distance * Y_distance)
 				X_last_position = X
-				Y_last_position = Y        
+				Y_last_position = Y
+			else:
+				continue
 
+			
 			time_for_move = distance / feedrate
 			acceleration = (feedrate - initial_feedrate) / time_for_move
 
@@ -144,7 +150,7 @@ def estimate_duration(g):
 	mod_minutes = total_duration % (60 * 60)
 	mod_seconds = mod_minutes % 60		
 	
-	return "{0:02d}H{1:02d}M".format(int((total_duration - mod_minutes) / (60 * 60)), int((mod_minutes - mod_seconds) / 60))
+	return "{0:02d}h{1:02d}m".format(int((total_duration - mod_minutes) / (60 * 60)), int((mod_minutes - mod_seconds) / 60))
 	
 class Settings:
     #def _temperature_alias(self): return {"pla":210,"abs":230,"off":0}
