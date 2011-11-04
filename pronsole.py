@@ -126,16 +126,8 @@ def estimate_duration(g):
 			
 			time_for_move = distance / feedrate
 			acceleration = (feedrate - initial_feedrate) / time_for_move
-
 			halfway_feedrate = initial_feedrate + acceleration * time_for_move / 2
-
-			duration = 0
-			if (halfway_feedrate == feedrate):
-				time_full_feedrate = (feedrate - initial_feedrate) / acceleration
-				distance_full_feedrate = (0.5 * (feedrate + initial_feedrate)) * time_full_feedrate
-				duration = time_full_feedrate * 2 + (distance - distance_full_feedrate * 2) / feedrate
-			else:
-				duration = (halfway_feedrate * 2 - initial_feedrate) / acceleration
+			duration = (halfway_feedrate * 2 - initial_feedrate) / acceleration
 
 			total_duration += duration + extra_cost_per_movement
 
