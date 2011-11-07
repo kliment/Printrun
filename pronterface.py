@@ -1184,6 +1184,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         print _("the print goes from"),Xmin,_("mm to"),Xmax,_("mm in X\nand is"),Xtot,_("mm wide\n")
         print _("the print goes from"),Ymin,_("mm to"),Ymax,_("mm in Y\nand is"),Ytot,_("mm wide\n")
         print _("the print goes from"),Zmin,_("mm to"),Zmax,_("mm in Z\nand is"),Ztot,_("mm high\n")
+        print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
         self.gviz.clear()
         self.gwindow.p.clear()
         for i in self.f:
