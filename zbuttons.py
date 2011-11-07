@@ -29,6 +29,7 @@ class ZButtons(BufferedCanvas):
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
 
     def lookupRange(self, ydist):
         idx = -1
@@ -79,10 +80,12 @@ class ZButtons(BufferedCanvas):
             if self.homeCallback:
                 self.homeCallback()
 
-    def draw(self, dc):
-        dc.Clear()
-        # center = wx.Point(XYButtons.center[0], XYButtons.center[1])
+    def OnLeaveWindow(self, evt):
+        self.range = None
+        self.direction = None
+        self.update()
 
+    def draw(self, dc):
         dc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
         dc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
 

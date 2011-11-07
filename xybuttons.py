@@ -60,6 +60,7 @@ class XYButtons(BufferedCanvas):
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
         parent.Bind(wx.EVT_CHAR_HOOK, self.onKey)
     
     def onKey(self, evt):
@@ -156,6 +157,11 @@ class XYButtons(BufferedCanvas):
         else:
             self.setKeypadIndex(idx)
     
+    def OnLeaveWindow(self, evt):
+        self.quadrant = None
+        self.concentric = None
+        self.update()
+    
     def drawPartialPie(self, dc, center, r1, r2, angle1, angle2):
         parts = 64
         angle_dist = angle2 - angle1
@@ -205,7 +211,6 @@ class XYButtons(BufferedCanvas):
         self.drawPartialPie(dc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
 
     def draw(self, dc):
-        dc.Clear()
         center = wx.Point(XYButtons.center[0], XYButtons.center[1])
 
         dc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))

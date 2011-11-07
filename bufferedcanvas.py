@@ -111,6 +111,8 @@ class BufferedCanvas(wx.Panel):
         Causes the canvas to be updated.
         """
         dc = wx.MemoryDC()
+        width,height = self.GetClientSizeTuple()
+        self.backbuffer = wx.EmptyBitmap(width,height)
         dc.SelectObject(self.backbuffer)
         dc.BeginDrawing()
         self.draw(dc)
