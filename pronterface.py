@@ -30,6 +30,8 @@ if os.name=="nt":
         pass
 
 
+from xybuttons import XYButtons
+from zbuttons import ZButtons
 import pronsole
 
 def dosify(name):
@@ -74,33 +76,33 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ycol=(180,180,255)
         zcol=(180,255,180)
         self.cpbuttons=[
-        [_("X+100"),("move X 100"),(2,0),xcol,(1,3)],
-        [_("X+10"),("move X 10"),(3,0),xcol,(1,3)],
-        [_("X+1"),("move X 1"),(4,0),xcol,(1,3)],
-        [_("X+0.1"),("move X 0.1"),(5,0),xcol,(1,3)],
-        [_("HomeX"),("home X"),(6,0),(205,205,78),(1,3)],
-        [_("X-0.1"),("move X -0.1"),(7,0),xcol,(1,3)],
-        [_("X-1"),("move X -1"),(8,0),xcol,(1,3)],
-        [_("X-10"),("move X -10"),(9,0),xcol,(1,3)],
-        [_("X-100"),("move X -100"),(10,0),xcol,(1,3)],
-        [_("Y+100"),("move Y 100"),(2,3),ycol,(1,3)],
-        [_("Y+10"),("move Y 10"),(3,3),ycol,(1,3)],
-        [_("Y+1"),("move Y 1"),(4,3),ycol,(1,3)],
-        [_("Y+0.1"),("move Y 0.1"),(5,3),ycol,(1,3)],
-        [_("HomeY"),("home Y"),(6,3),(150,150,205),(1,3)],
-        [_("Y-0.1"),("move Y -0.1"),(7,3),ycol,(1,3)],
-        [_("Y-1"),("move Y -1"),(8,3),ycol,(1,3)],
-        [_("Y-10"),("move Y -10"),(9,3),ycol,(1,3)],
-        [_("Y-100"),("move Y -100"),(10,3),ycol,(1,3)],
-        [_("Motors off"),("M84"),(2,6),(250,250,250),(1,3)],
-        [_("Z+10"),("move Z 10"),(3,6),zcol,(1,3)],
-        [_("Z+1"),("move Z 1"),(4,6),zcol,(1,3)],
-        [_("Z+0.1"),("move Z 0.1"),(5,6),zcol,(1,3)],
-        [_("HomeZ"),("home Z"),(6,6),(150,205,150),(1,3)],
-        [_("Z-0.1"),("move Z -0.1"),(7,6),zcol,(1,3)],
-        [_("Z-1"),("move Z -1"),(8,6),zcol,(1,3)],
-        [_("Z-10"),("move Z -10"),(9,6),zcol,(1,3)],
-        [_("Home"),("home"),(10,6),(250,250,250),(1,3)],
+        # [_("X+100"),("move X 100"),(2,0),xcol,(1,3)],
+        # [_("X+10"),("move X 10"),(3,0),xcol,(1,3)],
+        # [_("X+1"),("move X 1"),(4,0),xcol,(1,3)],
+        # [_("X+0.1"),("move X 0.1"),(5,0),xcol,(1,3)],
+        # [_("HomeX"),("home X"),(6,0),(205,205,78),(1,3)],
+        # [_("X-0.1"),("move X -0.1"),(7,0),xcol,(1,3)],
+        # [_("X-1"),("move X -1"),(8,0),xcol,(1,3)],
+        # [_("X-10"),("move X -10"),(9,0),xcol,(1,3)],
+        # [_("X-100"),("move X -100"),(10,0),xcol,(1,3)],
+        # [_("Y+100"),("move Y 100"),(2,3),ycol,(1,3)],
+        # [_("Y+10"),("move Y 10"),(3,3),ycol,(1,3)],
+        # [_("Y+1"),("move Y 1"),(4,3),ycol,(1,3)],
+        # [_("Y+0.1"),("move Y 0.1"),(5,3),ycol,(1,3)],
+        # [_("HomeY"),("home Y"),(6,3),(150,150,205),(1,3)],
+        # [_("Y-0.1"),("move Y -0.1"),(7,3),ycol,(1,3)],
+        # [_("Y-1"),("move Y -1"),(8,3),ycol,(1,3)],
+        # [_("Y-10"),("move Y -10"),(9,3),ycol,(1,3)],
+        # [_("Y-100"),("move Y -100"),(10,3),ycol,(1,3)],
+        # [_("Motors off"),("M84"),(2,6),(250,250,250),(1,3)],
+        # [_("Z+10"),("move Z 10"),(3,6),zcol,(1,3)],
+        # [_("Z+1"),("move Z 1"),(4,6),zcol,(1,3)],
+        # [_("Z+0.1"),("move Z 0.1"),(5,6),zcol,(1,3)],
+        # [_("HomeZ"),("home Z"),(6,6),(150,205,150),(1,3)],
+        # [_("Z-0.1"),("move Z -0.1"),(7,6),zcol,(1,3)],
+        # [_("Z-1"),("move Z -1"),(8,6),zcol,(1,3)],
+        # [_("Z-10"),("move Z -10"),(9,6),zcol,(1,3)],
+        # [_("Home"),("home"),(10,6),(250,250,250),(1,3)],
         [_("Check temp"),("M105"),(11,6),(225,200,200),(1,3)],
         [_("Extrude"),("extrude"),(13,0),(225,200,200),(1,2)],
         [_("Reverse"),("reverse"),(14,0),(225,200,200),(1,2)],
@@ -477,6 +479,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(self.zfeedc,pos=(1,8),span=(1,4))
         
         #lls.Add((200,375))
+        
+        lls.Add(XYButtons(self.panel, self.moveXY, self.home), pos=(2,0), span=(9,6))
+        lls.Add(ZButtons(self.panel, self.moveZ, self.home), pos=(2,7), span=(9,2))
         
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0])#,size=(60,-1))
@@ -895,6 +900,19 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         else:
             e.Skip()
     
+    def moveXY(self, x, y):
+        if x != 0:
+            self.onecmd('move X %s' % x)
+        if y != 0:
+            self.onecmd('move Y %s' % y)
+    
+    def moveZ(self, z):
+        if z != 0:
+            self.onecmd('move Z %s' % z)
+    
+    def home(self):
+        self.onecmd('home')
+        
     def procbutton(self,e):
         try:
             if hasattr(e.GetEventObject(),"custombutton"):
