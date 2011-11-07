@@ -73,6 +73,7 @@ class gviz(wx.Panel):
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate=[0.0,0.0]
         self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
+        self.arcpen=wx.Pen(wx.Colour(255,0,0),penwidth)
         self.travelpen=wx.Pen(wx.Colour(10,80,80),penwidth)
         self.hlpen=wx.Pen(wx.Colour(200,50,50),penwidth)
         self.fades=[wx.Pen(wx.Colour(250-0.6**i*100,250-0.6**i*100,200-0.4**i*50),penwidth) for i in xrange(6)]
@@ -262,7 +263,7 @@ class gviz(wx.Panel):
             
             if not hilight:
                 self.arcs[ target[2] ]    += [arc]
-                self.arcpens[ target[2] ] += [self.mainpen]
+                self.arcpens[ target[2] ] += [self.arcpen]
                 self.lastpos = target
             else:
                 self.hilightarcs += arc
