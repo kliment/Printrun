@@ -58,12 +58,14 @@ class gviz(wx.Panel):
         self.size=size
         self.bedsize=bedsize
         self.grid=grid
-        self.lastpos=[0,0,0,0,0]
+        self.lastpos=[0,0,0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
         self.Bind(wx.EVT_PAINT,self.paint)
         self.Bind(wx.EVT_SIZE,lambda *e:(wx.CallAfter(self.repaint),wx.CallAfter(self.Refresh)))
         self.lines={}
         self.pens={}
+        self.arcs={}
+        self.arcpens={}
         self.layers=[]
         self.layerindex=0
         self.filament_width=extrusion_width # set it to 0 to disable scaling lines with zoom
@@ -77,11 +79,12 @@ class gviz(wx.Panel):
         self.penslist=[self.mainpen,self.travelpen,self.hlpen]+self.fades
         self.showall=0
         self.hilight=[]
+        self.hilightarcs=[]
         self.dirty=1
         self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
         
     def clear(self):
-        self.lastpos=[0,0,0,0,0]
+        self.lastpos=[0,0,0,0,0,0,0]
         self.lines={}
         self.pens={}
         self.layers=[]
@@ -143,27 +146,48 @@ class gviz(wx.Panel):
             dc.SetBrush(wx.Brush((0,255,0)))
             if len(self.layers):
                 dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1],13,self.size[1]-1)
-        def scaler(x):
-            return (self.scale[0]*x[0]+self.translate[0],
-                    self.scale[1]*x[1]+self.translate[1],
-                    self.scale[0]*x[2]+self.translate[0],
-                    self.scale[1]*x[3]+self.translate[1],)
+            
+        def _drawlines(lines,pens):
+            def _scaler(x):
+                return (self.scale[0]*x[0]+self.translate[0],
+                        self.scale[1]*x[1]+self.translate[1],
+                        self.scale[0]*x[2]+self.translate[0],
+                        self.scale[1]*x[3]+self.translate[1],)
+            scaled_lines = map(_scaler,lines)
+            dc.DrawLineList(scaled_lines, pens)
+        
+        def _drawarcs(arcs,pens):
+            def _scaler(x):
+                return (self.scale[0]*x[0]+self.translate[0],
+                        self.scale[1]*x[1]+self.translate[1],
+                        self.scale[0]*x[2]+self.translate[0],
+                        self.scale[1]*x[3]+self.translate[1],
+                        self.scale[0]*x[4]+self.translate[0],
+                        self.scale[1]*x[5]+self.translate[1],)
+            scaled_arcs = map(_scaler,arcs)
+            for i in range(len(scaled_arcs)):
+                dc.SetPen(pens[i] if type(pens).__name__ == 'list' else pens)
+                dc.SetBrush(wx.TRANSPARENT_BRUSH)
+                dc.DrawArc(*scaled_arcs[i])
+        
         if self.showall:
             l=[]
             for i in self.layers:
                 dc.DrawLineList(l,self.fades[0])
-                l=map(scaler,self.lines[i])
-                dc.DrawLineList(l,self.pens[i])
+                _drawlines(self.lines[i], self.pens[i])
+                _drawarcs(self.arcs[i], self.arcpens[i])
             return
         if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
             for layer_i in xrange(max(0,self.layerindex-6),self.layerindex):
                 #print i, self.layerindex, self.layerindex-i
-                l=map(scaler,self.lines[self.layers[layer_i]])
-                dc.DrawLineList(l,self.fades[self.layerindex-layer_i-1])
-            l=map(scaler,self.lines[self.layers[self.layerindex]])
-            dc.DrawLineList(l,self.pens[self.layers[self.layerindex]])
-        l=map(scaler,self.hilight)
-        dc.DrawLineList(l,self.hlpen)
+                _drawlines(self.lines[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
+                _drawarcs(self.arcs[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
+            _drawlines(self.lines[self.layers[self.layerindex]], self.pens[self.layers[self.layerindex]])
+            _drawarcs(self.arcs[self.layers[self.layerindex]], self.arcpens[self.layers[self.layerindex]])
+        
+        _drawlines(self.hilight, self.hlpen)
+        _drawarcs(self.hilightarcs, self.hlpen)
+        
         dc.SelectObject(wx.NullBitmap)
     
     def paint(self,event):
@@ -178,8 +202,11 @@ class gviz(wx.Panel):
     def addgcode(self,gcode="M105",hilight=0):
         gcode=gcode.split("*")[0]
         gcode=gcode.split(";")[0]
-        if "g1" in gcode.lower():
-            gcode=gcode.lower().split()
+        gcode = gcode.lower().strip().split()
+        if len(gcode) == 0:
+            return
+        
+        def _readgcode():
             target=self.lastpos[:]
             if hilight:
                 target=self.hilightpos[:]
@@ -194,23 +221,53 @@ class gviz(wx.Panel):
                     target[3]=float(i[1:])
                 elif i[0]=="f":
                     target[4]=float(i[1:])
-            #draw line
+                elif i[0]=="i":
+                    target[5]=float(i[1:])
+                elif i[0]=="j":
+                    target[6]=float(i[1:])
             if not hilight:
                 if not target[2] in self.lines.keys():
                     self.lines[target[2]]=[]
                     self.pens[target[2]]=[]
+                    self.arcs[target[2]]=[]
+                    self.arcpens[target[2]]=[]
                     self.layers+=[target[2]]
-                self.lines[target[2]]+=[(self.lastpos[0],self.bedsize[1]-self.lastpos[1],target[0],self.bedsize[1]-target[1])]
-                if target[3] != self.lastpos[3]:
-                    self.pens[target[2]]+=[self.mainpen]
-                else:
-                    self.pens[target[2]]+=[self.travelpen]
-                self.lastpos=target
+            return target
+        
+        def _y(y):
+            return self.bedsize[1]-y
+        
+        start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
+        
+        if gcode[0] == "g1":
+            target = _readgcode()
+            line = [ start_pos[0], _y(start_pos[1]), target[0], _y(target[1]) ]
+            if not hilight:
+                self.lines[ target[2] ] += [line]
+                self.pens[ target[2] ]  += [self.mainpen if target[3] != self.lastpos[3] else self.travelpen]
+                self.lastpos = target
             else:
-                self.hilight+=[(self.hilightpos[0],self.bedsize[1]-self.hilightpos[1],target[0],self.bedsize[1]-target[1])]
-                self.hilightpos=target
-            self.dirty=1
+                self.hilight += line
+                self.hilightpos = target
+            self.dirty = 1
+        
+        if gcode[0] in [ "g2", "g3" ]:
+            target = _readgcode()
+            arc = []
+            arc += [ start_pos[0], _y(start_pos[1]) ]
+            arc += [ target[0], _y(target[1]) ]
+            arc += [ start_pos[0] + target[5], _y(start_pos[1] + target[6]) ]  # center
+            if gcode[0] == "g2":  # clockwise, reverse endpoints
+                arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
             
+            if not hilight:
+                self.arcs[ target[2] ]    += [arc]
+                self.arcpens[ target[2] ] += [self.mainpen]
+                self.lastpos = target
+            else:
+                self.hilightarcs += arc
+                self.hilightpos = target
+            self.dirty = 1
             
 if __name__ == '__main__':
     app = wx.App(False)
