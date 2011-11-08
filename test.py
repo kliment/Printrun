@@ -6,12 +6,12 @@ from zbuttons import ZButtons
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(800, 600))
+        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(600, 400))
         sizer = wx.BoxSizer()
         self.xy = XYButtons(self, moveCallback=self.moveXY)
-        sizer.Add(self.xy)
+        sizer.Add(self.xy, flag=wx.ALIGN_CENTER)
         self.z = ZButtons(self, moveCallback=self.moveZ)
-        sizer.Add(self.z)
+        sizer.Add(self.z, flag=wx.ALIGN_CENTER)
 
         self.SetSizer(sizer)
     
