@@ -13,13 +13,12 @@ class ZButtons(BufferedCanvas):
     button_ydistances = [8, 30, 56, 84, 118]
     center = (32, 146)
 
-    def __init__(self, parent, moveCallback=None, homeCallback=None, ID=-1):
+    def __init__(self, parent, moveCallback=None, ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_z.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.range = None
         self.direction = None
         self.orderOfMagnitudeIdx = 0 # 0 means '1', 1 means '10', 2 means '100', etc.
         self.moveCallback = moveCallback
-        self.homeCallback = homeCallback
 
         BufferedCanvas.__init__(self, parent, ID)
 
@@ -73,9 +72,6 @@ class ZButtons(BufferedCanvas):
             value = math.pow(10, self.orderOfMagnitudeIdx) * math.pow(10, r - 1) * d
             if self.moveCallback:
                 self.moveCallback(value)
-        else:
-            if self.homeCallback:
-                self.homeCallback()
 
     def OnLeaveWindow(self, evt):
         self.range = None

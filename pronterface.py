@@ -76,36 +76,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ycol=(180,180,255)
         zcol=(180,255,180)
         self.cpbuttons=[
-        # [_("X+100"),("move X 100"),(2,0),xcol,(1,3)],
-        # [_("X+10"),("move X 10"),(3,0),xcol,(1,3)],
-        # [_("X+1"),("move X 1"),(4,0),xcol,(1,3)],
-        # [_("X+0.1"),("move X 0.1"),(5,0),xcol,(1,3)],
-        # [_("HomeX"),("home X"),(6,0),(205,205,78),(1,3)],
-        # [_("X-0.1"),("move X -0.1"),(7,0),xcol,(1,3)],
-        # [_("X-1"),("move X -1"),(8,0),xcol,(1,3)],
-        # [_("X-10"),("move X -10"),(9,0),xcol,(1,3)],
-        # [_("X-100"),("move X -100"),(10,0),xcol,(1,3)],
-        # [_("Y+100"),("move Y 100"),(2,3),ycol,(1,3)],
-        # [_("Y+10"),("move Y 10"),(3,3),ycol,(1,3)],
-        # [_("Y+1"),("move Y 1"),(4,3),ycol,(1,3)],
-        # [_("Y+0.1"),("move Y 0.1"),(5,3),ycol,(1,3)],
-        # [_("HomeY"),("home Y"),(6,3),(150,150,205),(1,3)],
-        # [_("Y-0.1"),("move Y -0.1"),(7,3),ycol,(1,3)],
-        # [_("Y-1"),("move Y -1"),(8,3),ycol,(1,3)],
-        # [_("Y-10"),("move Y -10"),(9,3),ycol,(1,3)],
-        # [_("Y-100"),("move Y -100"),(10,3),ycol,(1,3)],
-        # [_("Motors off"),("M84"),(2,6),(250,250,250),(1,3)],
-        # [_("Z+10"),("move Z 10"),(3,6),zcol,(1,3)],
-        # [_("Z+1"),("move Z 1"),(4,6),zcol,(1,3)],
-        # [_("Z+0.1"),("move Z 0.1"),(5,6),zcol,(1,3)],
-        # [_("HomeZ"),("home Z"),(6,6),(150,205,150),(1,3)],
-        # [_("Z-0.1"),("move Z -0.1"),(7,6),zcol,(1,3)],
-        # [_("Z-1"),("move Z -1"),(8,6),zcol,(1,3)],
-        # [_("Z-10"),("move Z -10"),(9,6),zcol,(1,3)],
-        # [_("Home"),("home"),(10,6),(250,250,250),(1,3)],
-        [_("Check temp"),("M105"),(11,6),(225,200,200),(1,3)],
-        [_("Extrude"),("extrude"),(13,0),(225,200,200),(1,2)],
-        [_("Reverse"),("reverse"),(14,0),(225,200,200),(1,2)],
+            [_("Home"),("home"),(3,0),(250,250,250),(1,2)],
+            [_("HomeX"),("home X"),(3,2),(205,205,78),(1,2)],
+            [_("HomeY"),("home Y"),(3,4),(150,150,205),(1,2)],
+            [_("HomeZ"),("home Z"),(3,6),(150,205,150),(1,2)],
+            [_("Motors off"),("M84"),(3,8),(250,250,250),(1,2)],
+            [_("Check temp"),("M105"),(6,6),(225,200,200),(1,3)],
+            [_("Extrude"),("extrude"),(7,0),(225,200,200),(1,2)],
+            [_("Reverse"),("reverse"),(8,0),(225,200,200),(1,2)],
         ]
         self.custombuttons=[]
         self.btndict={}
@@ -388,7 +366,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             portslist += [self.settings.port]
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=portslist,
-                style=wx.CB_DROPDOWN|wx.CB_SORT, pos=(50,0))
+                style=wx.CB_DROPDOWN|wx.CB_SORT|wx.CB_READONLY, pos=(50,0))
         try:
             if self.settings.port in scan:
                 self.serialport.SetValue(self.settings.port)
@@ -400,7 +378,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(wx.StaticText(self.panel,-1,"@",pos=(250,5)),wx.RIGHT,5)
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200"],
-                style=wx.CB_DROPDOWN|wx.CB_SORT, size=(110,30),pos=(275,0))
+                style=wx.CB_DROPDOWN|wx.CB_SORT|wx.CB_READONLY, size=(110,30),pos=(275,0))
         try:
             self.baud.SetValue("115200")
             self.baud.SetValue(str(self.settings.baudrate))
@@ -480,8 +458,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         #lls.Add((200,375))
         
-        lls.Add(XYButtons(self.panel, self.moveXY, self.home), pos=(2,0), span=(9,6))
-        lls.Add(ZButtons(self.panel, self.moveZ, self.home), pos=(2,7), span=(9,2))
+        xyb = XYButtons(self.panel, self.moveXY)
+        lls.Add(xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
+        zb = ZButtons(self.panel, self.moveZ)
+        lls.Add(zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
+        wx.CallAfter(xyb.SetFocus)
         
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0])#,size=(60,-1))
@@ -494,7 +475,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             lls.Add(btn,pos=i[2],span=i[4])
         
         
-        lls.Add(wx.StaticText(self.panel,-1,_("Heater:"),pos=(0,343)),pos=(11,0),span=(1,1))
+        lls.Add(wx.StaticText(self.panel,-1,_("Heater:"),pos=(0,343)),pos=(4,0),span=(1,1))
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
         
         if self.settings.last_temperature not in map(float,self.temps.values()):
@@ -503,12 +484,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 choices=htemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
 
         
-        lls.Add(self.htemp,pos=(11,1),span=(1,3))
+        lls.Add(self.htemp,pos=(4,1),span=(1,3))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
-        lls.Add(self.settbtn,pos=(11,4),span=(1,2))
-        lls.Add(wx.StaticText(self.panel,-1,_("Bed:"),pos=(0,343)),pos=(12,0),span=(1,1))
+        lls.Add(self.settbtn,pos=(4,4),span=(1,2))
+        lls.Add(wx.StaticText(self.panel,-1,_("Bed:"),pos=(0,343)),pos=(5,0),span=(1,1))
         btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices

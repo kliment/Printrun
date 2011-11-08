@@ -19,15 +19,13 @@ class XYButtons(BufferedCanvas):
     concentric_circle_radii = [15, 55, 86, 117, 142]
     center = (166, 164)
 
-    def __init__(self, parent, moveCallback=None, homeCallback=None, ID=-1):
+    def __init__(self, parent, moveCallback=None, ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_xy.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        self.keypad_idx = 0
-        self.orderOfMagnitudeIdx = 0
+        self.keypad_idx = -1
         self.quadrant = None
         self.concentric = None
         self.moveCallback = moveCallback
-        self.homeCallback = homeCallback
 
         BufferedCanvas.__init__(self, parent, ID)
 
@@ -38,26 +36,27 @@ class XYButtons(BufferedCanvas):
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
-        parent.Bind(wx.EVT_CHAR_HOOK, self.onKey)
+        wx.GetTopLevelParent(self).Bind(wx.EVT_CHAR_HOOK, self.onKey)
     
     def onKey(self, evt):
-        if evt.GetKeyCode() == wx.WXK_TAB:
-            self.setKeypadIndex(self.rotateKeypadIndex())
-        elif evt.GetKeyCode() == wx.WXK_UP:
-            self.quadrant = 1
-        elif evt.GetKeyCode() == wx.WXK_DOWN:
-            self.quadrant = 3
-        elif evt.GetKeyCode() == wx.WXK_LEFT:
-            self.quadrant = 2
-        elif evt.GetKeyCode() == wx.WXK_RIGHT:
-            self.quadrant = 0
-        else:
-            evt.Skip()
-            return
-        if self.moveCallback:
-            self.concentric = self.keypad_idx
-            x, y = self.getMovement()
-            self.moveCallback(x, y)
+        if self.keypad_idx >= 0:
+            if evt.GetKeyCode() == wx.WXK_TAB:
+                self.setKeypadIndex(self.rotateKeypadIndex())
+            elif evt.GetKeyCode() == wx.WXK_UP:
+                self.quadrant = 1
+            elif evt.GetKeyCode() == wx.WXK_DOWN:
+                self.quadrant = 3
+            elif evt.GetKeyCode() == wx.WXK_LEFT:
+                self.quadrant = 2
+            elif evt.GetKeyCode() == wx.WXK_RIGHT:
+                self.quadrant = 0
+            else:
+                evt.Skip()
+                return False
+            if self.moveCallback:
+                self.concentric = self.keypad_idx
+                x, y = self.getMovement()
+                self.moveCallback(x, y)
 
     
     def rotateKeypadIndex(self):
@@ -135,7 +134,10 @@ class XYButtons(BufferedCanvas):
                 if self.moveCallback:
                     self.moveCallback(x, y)
         else:
-            self.setKeypadIndex(idx)
+            if self.keypad_idx == idx:
+                self.setKeypadIndex(-1)
+            else:
+                self.setKeypadIndex(idx)
     
     def OnLeaveWindow(self, evt):
         self.quadrant = None
@@ -207,8 +209,9 @@ class XYButtons(BufferedCanvas):
 
         if self.quadrant != None and self.concentric != None:
             self.highlightQuadrant(dc, self.quadrant, self.concentric)
-
-        pos = XYButtons.keypad_positions[self.keypad_idx]
-        dc.DrawBitmap(self.keypad_bmp, pos[0], pos[1])
+        
+        if self.keypad_idx >= 0:
+            pos = XYButtons.keypad_positions[self.keypad_idx]
+            dc.DrawBitmap(self.keypad_bmp, pos[0], pos[1])
         
         return True
