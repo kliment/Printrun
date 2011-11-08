@@ -1,6 +1,6 @@
 """
-BufferedCanvas -- Double-buffered, flicker-free canvas widget
-Copyright (C) 2005, 2006 Daniel Keep
+BufferedCanvas -- flicker-free canvas widget
+Copyright (C) 2005, 2006 Daniel Keep, 2011 Duane Johnson
 
 To use this widget, just override or replace the draw method.
 This will be called whenever the widget size changes, or when
@@ -46,15 +46,11 @@ import wx
 
 class BufferedCanvas(wx.Panel):
     """
-    Implements a double-buffered, flicker-free canvas widget.
+    Implements a flicker-free canvas widget.
 
     Standard usage is to subclass this class, and override the
     draw method.  The draw method is passed a device context, which
     should be used to do your drawing.
-
-    Also, you should NOT call dc.BeginDrawing() and dc.EndDrawing() --
-    these methods are automatically called for you, although you still
-    need to manually clear the device context.
 
     If you want to force a redraw (for whatever reason), you should
     call the update method.  This is because the draw method is never
@@ -77,15 +73,11 @@ class BufferedCanvas(wx.Panel):
 
         # Bind events
         self.Bind(wx.EVT_PAINT, self.onPaint)
-        self.Bind(wx.EVT_SIZE, self.onSize)
 
         # Disable background erasing (flicker-licious)
         def disable_event(*pargs,**kwargs):
             pass # the sauce, please
         self.Bind(wx.EVT_ERASE_BACKGROUND, disable_event)
-
-        # Ensure that the buffers are setup correctly
-        self.onSize(None)
 
     ##
     ## General methods
@@ -97,27 +89,11 @@ class BufferedCanvas(wx.Panel):
         """
         pass
 
-
-    def flip(self):
-        """
-        Flips the front and back buffers.
-        """
-        self.buffer,self.backbuffer = self.backbuffer,self.buffer
-        self.Refresh()
-
-
     def update(self):
         """
         Causes the canvas to be updated.
         """
-        dc = wx.MemoryDC()
-        width,height = self.getWidthHeight()
-        self.backbuffer = wx.EmptyBitmapRGBA(width,height,alpha=0)
-        dc.SelectObject(self.backbuffer)
-        dc.BeginDrawing()
-        self.draw(dc)
-        dc.EndDrawing()
-        self.flip()
+        self.Refresh()
     
     def getWidthHeight(self):
         width,height = self.GetClientSizeTuple()
@@ -133,15 +109,9 @@ class BufferedCanvas(wx.Panel):
 
     def onPaint(self, event):
         # Blit the front buffer to the screen
-        dc = wx.BufferedPaintDC(self, self.buffer)
-
-
-    def onSize(self, event):
-        # Here we need to create a new off-screen buffer to hold
-        # the in-progress drawings on.
-        w, h = self.getWidthHeight()
-        self.buffer = wx.EmptyBitmapRGBA(w, h, alpha=0)
-        self.backbuffer = wx.EmptyBitmapRGBA(w, h, alpha=0)
-
-        # Now update the screen
-        self.update()
+        w, h = self.GetClientSizeTuple()
+        if not w or not h:
+            return
+        else:
+            dc = wx.BufferedPaintDC(self)
+            self.draw(dc, w, h)

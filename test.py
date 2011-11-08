@@ -14,6 +14,7 @@ class MyFrame(wx.Frame):
         sizer.Add(self.z, flag=wx.ALIGN_CENTER)
 
         self.SetSizer(sizer)
+        self.SetBackgroundColour("white")
     
     def moveXY(self, x, y):
         print "got x", x, 'y', y

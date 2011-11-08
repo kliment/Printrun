@@ -38,7 +38,7 @@ class ZButtons(BufferedCanvas):
             idx += 1
         return None
     
-    def highlight(self, dc, rng, dir):
+    def highlight(self, gc, rng, dir):
         assert(rng >= -1 and rng <= 3)
         assert(dir >= -1 and dir <= 1)
 
@@ -49,7 +49,8 @@ class ZButtons(BufferedCanvas):
             k = 1 if dir > 0 else 0
             y = ZButtons.center[1] - (dir * ZButtons.button_ydistances[rng+k])
             h = ZButtons.button_ydistances[rng+1] - ZButtons.button_ydistances[rng]
-            dc.DrawRectangle(x, y, w, h)
+            gc.DrawRoundedRectangle(x, y, w, h, 4)
+            # gc.DrawRectangle(x, y, w, h)
         # self.drawPartialPie(dc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
     
     def getRangeDir(self, pos):
@@ -78,13 +79,16 @@ class ZButtons(BufferedCanvas):
         self.direction = None
         self.update()
 
-    def draw(self, dc):
-        dc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
-        dc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
+    def draw(self, dc, w, h):
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
 
-        dc.DrawBitmap(self.bg_bmp, 0, 0)
+        gc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
+        gc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
+
+        gc.DrawBitmap(self.bg_bmp, 0, 0, self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
 
         if self.range != None and self.direction != None:
-            self.highlight(dc, self.range, self.direction)
+            self.highlight(gc, self.range, self.direction)
 
         return True

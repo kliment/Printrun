@@ -120,6 +120,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.starttime=0
         self.curlayer=0
         self.cur_button=None
+        self.SetBackgroundColour("white")
     
     def startcb(self):
         self.starttime=time.time()
