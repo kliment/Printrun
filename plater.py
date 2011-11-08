@@ -75,9 +75,9 @@ class showstl(wx.Window):
     def load(self,event):
         dlg=wx.FileDialog(self,"Pick file to load",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard("OpenSCAD files (;*.scad;)")
+        self.models={}
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
-            print("Path: %s" % (name))
             lf=open(name)
             s=[i.replace("\n","").replace("\r","").replace(";","") for i in lf]
             lf.close()
@@ -88,8 +88,6 @@ class showstl(wx.Window):
                 rotate_list = eval(parts[1])
                 stl_file = eval(parts[2])
                 
-                print("translate([%s,%s,%s]) rotate([%s,%s,%s]) import_slt('%s');" % (translate_list[0], translate_list[1], translate_list[2], rotate_list[0], rotate_list[1], rotate_list[2], stl_file))
-
                 newname=os.path.split(stl_file.lower())[1]
                 c=1
                 while newname in self.models:
@@ -97,11 +95,8 @@ class showstl(wx.Window):
                     newname=newname+"(%d)"%c
                     c+=1
                 stl_path = os.path.join(os.path.split(name)[0:len(os.path.split(stl_file))-1])
-                print("STL file: %s" % (stl_file))
-                print("STL path: %s" % (stl_path))
                 stl_full_path = os.path.join(stl_path[0],str(stl_file))
-                print("STL full path: %s" % (stl_full_path))
-                self.load_stl(stl_full_path,stl_file)
+                self.load_stl(stl_full_path,stl_file,translate_list,rotate_list[2])
                 
     def export(self,event):
         dlg=wx.FileDialog(self,"Pick file to save to",self.basedir,style=wx.FD_SAVE)
@@ -180,7 +175,7 @@ class showstl(wx.Window):
             self.Refresh()
             #print time.time()-t
 
-    def load_stl(self,path,name):
+    def load_stl(self,path,name,offset=[0,0,0],rotation=0):
         newname=os.path.split(name.lower())[1]
         c=1
         while newname in self.models:
@@ -188,8 +183,8 @@ class showstl(wx.Window):
             newname=newname+"(%d)"%c
             c+=1
         self.models[newname]=stltool.stl(path)
-        self.models[newname].offsets=[0,0,0]
-        self.models[newname].rot=0
+        self.models[newname].offsets=offset
+        self.models[newname].rot=rotation
         self.models[newname].filename=name
         minx,miny,minz,maxx,maxy,maxz=(10000,10000,10000,0,0,0)
         for i in self.models[newname].facets:
