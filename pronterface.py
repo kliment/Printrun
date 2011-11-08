@@ -67,6 +67,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
         self.SetIcon(wx.Icon("P-face.ico",wx.BITMAP_TYPE_ICO))
         self.panel=wx.Panel(self,-1,size=size)
+        self.panel.SetBackgroundColour("white")
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
@@ -120,7 +121,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.starttime=0
         self.curlayer=0
         self.cur_button=None
-        self.SetBackgroundColour("white")
     
     def startcb(self):
         self.starttime=time.time()

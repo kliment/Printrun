@@ -36,8 +36,15 @@ class XYButtons(BufferedCanvas):
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
-        wx.GetTopLevelParent(self).Bind(wx.EVT_CHAR_HOOK, self.onKey)
+        self.Bind(wx.EVT_KEY_UP, self.onKey)
+        wx.GetTopLevelParent(self).Bind(wx.EVT_CHAR_HOOK, self.onTopLevelKey)
     
+    def onTopLevelKey(self, evt):
+        # Let user press escape on any control, and return focus here
+        if evt.GetKeyCode() == wx.WXK_ESCAPE:
+            self.SetFocus()            
+        evt.Skip()
+
     def onKey(self, evt):
         if self.keypad_idx >= 0:
             if evt.GetKeyCode() == wx.WXK_TAB:
@@ -52,11 +59,13 @@ class XYButtons(BufferedCanvas):
                 self.quadrant = 0
             else:
                 evt.Skip()
-                return False
+                return
+            
             if self.moveCallback:
                 self.concentric = self.keypad_idx
                 x, y = self.getMovement()
                 self.moveCallback(x, y)
+            evt.Skip()
 
     
     def rotateKeypadIndex(self):
@@ -124,6 +133,9 @@ class XYButtons(BufferedCanvas):
             self.update()
 
     def OnLeftDown(self, event):
+        # Take focus when clicked so that arrow keys can control movement
+        self.SetFocus()
+
         mpos = event.GetPosition()
 
         idx = self.mouseOverKeypad(mpos)
