@@ -241,6 +241,7 @@ class showstl(wx.Window):
             wx.YES_NO | wx.ICON_QUESTION)
         if (result == 2):
             self.models={}
+            self.l.Clear()
             self.Refresh()
             
     def move(self,event):
