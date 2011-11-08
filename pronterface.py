@@ -721,7 +721,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                         b.SetForegroundColour("#ffffff")
             except:
                 b=wx.StaticText(self.panel,-1,"",size=(72,20),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
-                b.Freeze()
+                #b.Freeze()
+                b.Disable()
             b.custombutton=i
             b.properties=btndef
             if btndef is not None:
@@ -889,8 +890,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.dragging.Disable()
                     self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
                     for b in self.custombuttonbuttons:
-                        if b.IsFrozen(): b.Thaw()
-                        #if b.properties is None:
+                        #if b.IsFrozen(): b.Thaw()
+                        if b.properties is None:
+                            b.Enable()
                         #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.last_drag_dest = obj
                     self.dragging.label = obj.s_label = obj.GetLabel()
