@@ -22,13 +22,15 @@ class stlwrap:
 class showstl(wx.Window):
     def __init__(self,parent,size,pos):
         wx.Window.__init__(self,parent,size=size,pos=pos)
-        self.l=wx.ListBox(self,size=(300,155),pos=(0,size[1]-155))
+        self.l=wx.ListBox(self,size=(300,180),pos=(0,size[1]-180))
+        self.cl=wx.Button(self,label="Clear",pos=(300,size[1]-180))
         self.lb=wx.Button(self,label="Load",pos=(300,size[1]-155))
         self.eb=wx.Button(self,label="Export",pos=(300,size[1]-130))
         self.sb=wx.Button(self,label="Snap to Z=0",pos=(300,size[1]-105))
         self.cb=wx.Button(self,label="Put at 100,100",pos=(300,size[1]-80))
         self.db=wx.Button(self,label="Delete",pos=(300,size[1]-55))
         self.ab=wx.Button(self,label="Auto",pos=(300,size[1]-30))
+        self.cl.Bind(wx.EVT_BUTTON,self.clear)
         self.lb.Bind(wx.EVT_BUTTON,self.right)
         self.eb.Bind(wx.EVT_BUTTON,self.export)
         self.sb.Bind(wx.EVT_BUTTON,self.snap)
@@ -147,7 +149,6 @@ class showstl(wx.Window):
         s=[i.replace("\n","").replace("\r","").replace(";","") for i in lf]
         lf.close()
 
-        self.models={}
         for i in s:
             parts = i.split()
             translate_list = eval(parts[0])
@@ -235,6 +236,12 @@ class showstl(wx.Window):
     
         self.l.Select(self.l.GetCount()-1)
     
+    def clear(self,event):
+        result = wx.MessageBox('Are you sure you want to clear the grid? All unsaved changes will be lost.', 'Clear the grid?', 
+            wx.YES_NO | wx.ICON_QUESTION)
+        if (result == 2):
+            self.models={}
+            self.Refresh()
             
     def move(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
@@ -337,11 +344,11 @@ class showstl(wx.Window):
         #s.export()
         
 class stlwin(wx.Frame):
-    def __init__(self,size=(400,555)):
+    def __init__(self,size=(400,580)):
         wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
         self.SetIcon(wx.Icon("plater.ico",wx.BITMAP_TYPE_ICO))
         self.SetClientSize(size)
-        self.s=showstl(self,(400,555),(0,0))
+        self.s=showstl(self,(400,580),(0,0))
         
 if __name__ == '__main__':
     app = wx.App(False)
