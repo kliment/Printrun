@@ -111,13 +111,21 @@ class BufferedCanvas(wx.Panel):
         Causes the canvas to be updated.
         """
         dc = wx.MemoryDC()
-        width,height = self.GetClientSizeTuple()
-        self.backbuffer = wx.EmptyBitmap(width,height)
+        width,height = self.getWidthHeight()
+        self.backbuffer = wx.EmptyBitmapRGBA(width,height,alpha=0)
         dc.SelectObject(self.backbuffer)
         dc.BeginDrawing()
         self.draw(dc)
         dc.EndDrawing()
         self.flip()
+    
+    def getWidthHeight(self):
+        width,height = self.GetClientSizeTuple()
+        if width == 0:
+            width = 1
+        if height == 0:
+            height = 1
+        return (width, height)
 
     ##
     ## Event handlers
@@ -131,13 +139,9 @@ class BufferedCanvas(wx.Panel):
     def onSize(self, event):
         # Here we need to create a new off-screen buffer to hold
         # the in-progress drawings on.
-        width,height = self.GetClientSizeTuple()
-        if width == 0:
-            width = 1
-        if height == 0:
-            height = 1
-        self.buffer = wx.EmptyBitmap(width,height)
-        self.backbuffer = wx.EmptyBitmap(width,height)
+        w, h = self.getWidthHeight()
+        self.buffer = wx.EmptyBitmapRGBA(w, h, alpha=0)
+        self.backbuffer = wx.EmptyBitmapRGBA(w, h, alpha=0)
 
         # Now update the screen
         self.update()
