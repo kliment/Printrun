@@ -29,7 +29,7 @@ class showstl(wx.Window):
         self.cb=wx.Button(self,label="Put at 100,100",pos=(300,size[1]-80))
         self.db=wx.Button(self,label="Delete",pos=(300,size[1]-55))
         self.ab=wx.Button(self,label="Auto",pos=(300,size[1]-30))
-        self.lb.Bind(wx.EVT_BUTTON,self.load)
+        self.lb.Bind(wx.EVT_BUTTON,self.right)
         self.eb.Bind(wx.EVT_BUTTON,self.export)
         self.sb.Bind(wx.EVT_BUTTON,self.snap)
         self.cb.Bind(wx.EVT_BUTTON,self.center)
@@ -72,32 +72,6 @@ class showstl(wx.Window):
                 self.l.Select(self.l.GetCount()-1)
                 self.Refresh()
 
-    def load(self,event):
-        dlg=wx.FileDialog(self,"Pick file to load",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard("OpenSCAD files (;*.scad;)")
-        self.models={}
-        if(dlg.ShowModal() == wx.ID_OK):
-            name=dlg.GetPath()
-            lf=open(name)
-            s=[i.replace("\n","").replace("\r","").replace(";","") for i in lf]
-            lf.close()
-            
-            for i in s:
-                parts = i.split()
-                translate_list = eval(parts[0])
-                rotate_list = eval(parts[1])
-                stl_file = eval(parts[2])
-                
-                newname=os.path.split(stl_file.lower())[1]
-                c=1
-                while newname in self.models:
-                    newname=os.path.split(stl_file.lower())[1]
-                    newname=newname+"(%d)"%c
-                    c+=1
-                stl_path = os.path.join(os.path.split(name)[0:len(os.path.split(stl_file))-1])
-                stl_full_path = os.path.join(stl_path[0],str(stl_file))
-                self.load_stl(stl_full_path,stl_file,translate_list,rotate_list[2])
-                
     def export(self,event):
         dlg=wx.FileDialog(self,"Pick file to save to",self.basedir,style=wx.FD_SAVE)
         dlg.SetWildcard("STL files (;*.stl;)")
@@ -157,25 +131,53 @@ class showstl(wx.Window):
             self.models[i].offsets[0] += centreoffset[0]
             self.models[i].offsets[1] += centreoffset[1]
         self.Refresh()
-        
+    
     def right(self,event):
-        dlg=wx.FileDialog(self,"Open file to print",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard("STL files (;*.stl;)")
+        dlg=wx.FileDialog(self,"Pick file to load",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+        dlg.SetWildcard("STL files (;*.stl;)|*.stl|OpenSCAD files (;*.scad;)|*.scad")
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
-            if not(os.path.exists(name)):
-                return
-            path = os.path.split(name)[0]
-            self.basedir=path
-            t=time.time()
-            #print name
-            if name.lower().endswith(".stl"):
-                #Filter out the path, just show the STL filename.
-                self.load_stl(name,name)
-            self.Refresh()
-            #print time.time()-t
+            if (name.lower().endswith(".stl")):
+                self.load_stl(event,name)
+            elif (name.lower().endswith(".scad")):
+                self.load_scad(event,name)
+    
+    def load_scad(self,event,name):
+        lf=open(name)
+        s=[i.replace("\n","").replace("\r","").replace(";","") for i in lf]
+        lf.close()
 
-    def load_stl(self,path,name,offset=[0,0,0],rotation=0):
+        self.models={}
+        for i in s:
+            parts = i.split()
+            translate_list = eval(parts[0])
+            rotate_list = eval(parts[1])
+            stl_file = eval(parts[2])
+            
+            newname=os.path.split(stl_file.lower())[1]
+            c=1
+            while newname in self.models:
+                newname=os.path.split(stl_file.lower())[1]
+                newname=newname+"(%d)"%c
+                c+=1
+            stl_path = os.path.join(os.path.split(name)[0:len(os.path.split(stl_file))-1])
+            stl_full_path = os.path.join(stl_path[0],str(stl_file))
+            self.load_stl_into_model(stl_full_path,stl_file,translate_list,rotate_list[2])
+
+    def load_stl(self,event,name):
+        if not(os.path.exists(name)):
+            return
+        path = os.path.split(name)[0]
+        self.basedir=path
+        t=time.time()
+        #print name
+        if name.lower().endswith(".stl"):
+            #Filter out the path, just show the STL filename.
+            self.load_stl_into_model(name,name)
+        self.Refresh()
+        #print time.time()-t
+
+    def load_stl_into_model(self,path,name,offset=[0,0,0],rotation=0):
         newname=os.path.split(name.lower())[1]
         c=1
         while newname in self.models:
