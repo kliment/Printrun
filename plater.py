@@ -100,7 +100,7 @@ class showstl(wx.Window):
                 
     def export(self,event):
         dlg=wx.FileDialog(self,"Pick file to save to",self.basedir,style=wx.FD_SAVE)
-        dlg.SetWildcard("OpenSCAD files (;*.scad;)")
+        dlg.SetWildcard("STL files (;*.stl;)")
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
             sf=open(name.replace(".","_")+".scad","w")
