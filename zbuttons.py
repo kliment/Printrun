@@ -10,8 +10,8 @@ def sign(n):
     else: return 0
 
 class ZButtons(BufferedCanvas):
-    button_ydistances = [16, 46, 80, 118]
-    center = (36, 147)
+    button_ydistances = [8, 30, 56, 84, 118]
+    center = (32, 146)
 
     def __init__(self, parent, moveCallback=None, homeCallback=None, ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_z.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
@@ -23,7 +23,7 @@ class ZButtons(BufferedCanvas):
 
         BufferedCanvas.__init__(self, parent, ID)
 
-        self.SetSize(wx.Size(84, 295))
+        self.SetSize(wx.Size(87, 295))
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -40,20 +40,17 @@ class ZButtons(BufferedCanvas):
         return None
     
     def highlight(self, dc, rng, dir):
-        assert(rng >= -1 and rng <= 2)
+        assert(rng >= -1 and rng <= 3)
         assert(dir >= -1 and dir <= 1)
 
-        fudge = 10
+        fudge = 11
         x = 0 + fudge
         w = 72 - fudge*2
-        if rng == -1:
-            y = ZButtons.center[1] - ZButtons.button_ydistances[0]
-            h = ZButtons.button_ydistances[0] * 2
-        else:
+        if rng >= 0:
             k = 1 if dir > 0 else 0
             y = ZButtons.center[1] - (dir * ZButtons.button_ydistances[rng+k])
             h = ZButtons.button_ydistances[rng+1] - ZButtons.button_ydistances[rng]
-        dc.DrawRectangle(x, y, w, h)
+            dc.DrawRectangle(x, y, w, h)
         # self.drawPartialPie(dc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
     
     def getRangeDir(self, pos):
