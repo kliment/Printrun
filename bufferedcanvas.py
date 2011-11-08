@@ -68,7 +68,7 @@ class BufferedCanvas(wx.Panel):
                  ID=-1,
                  pos=wx.DefaultPosition,
                  size=wx.DefaultSize,
-                 style=wx.NO_FULL_REPAINT_ON_RESIZE):
+                 style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS):
         wx.Panel.__init__(self,parent,ID,pos,size,style)
 
         # Bind events

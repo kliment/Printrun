@@ -42,7 +42,7 @@ class XYButtons(BufferedCanvas):
     def onTopLevelKey(self, evt):
         # Let user press escape on any control, and return focus here
         if evt.GetKeyCode() == wx.WXK_ESCAPE:
-            self.SetFocus()            
+            self.SetFocus()
         evt.Skip()
 
     def onKey(self, evt):
@@ -65,7 +65,6 @@ class XYButtons(BufferedCanvas):
                 self.concentric = self.keypad_idx
                 x, y = self.getMovement()
                 self.moveCallback(x, y)
-            evt.Skip()
 
     
     def rotateKeypadIndex(self):
