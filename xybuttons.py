@@ -15,8 +15,8 @@ class XYButtons(BufferedCanvas):
         1: (78, 86),
         2: (49, 58)
     }
-    concentric_circle_radii = [17, 45, 83, 122]
-    center = (146, 149)
+    concentric_circle_radii = [15, 55, 86, 117, 142]
+    center = (166, 164)
     distance = [
         # Order of Magnitude 0 (i.e. 0.1, 1, 10)
         [
@@ -54,7 +54,7 @@ class XYButtons(BufferedCanvas):
 
         BufferedCanvas.__init__(self, parent, ID)
 
-        self.SetSize(wx.Size(297, 297))
+        self.SetSize(wx.Size(335, 328))
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -96,7 +96,7 @@ class XYButtons(BufferedCanvas):
             if radius < r:
                 return idx
             idx += 1
-        return 2
+        return None
     
     def setKeypadIndex(self, idx):
         self.keypad_idx = idx
@@ -131,11 +131,16 @@ class XYButtons(BufferedCanvas):
 
         mpos = event.GetPosition()
         idx = self.mouseOverKeypad(mpos)
+        self.quadrant = None
+        self.concentric = None
         if idx != None:
-            self.quadrant = None
             self.concentric = -1
         else:
-            self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
+            center = wx.Point(XYButtons.center[0], XYButtons.center[1])
+            riseDist = self.distanceToLine(mpos, center.x-1, center.y-1, center.x+1, center.y+1)
+            fallDist = self.distanceToLine(mpos, center.x-1, center.y+1, center.x+1, center.y-1)
+            if riseDist > 10 and fallDist > 10:
+                self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
         
         if oldq != self.quadrant or oldc != self.concentric:
             self.update()
@@ -185,13 +190,20 @@ class XYButtons(BufferedCanvas):
             center.y + r2*math.sin(angle1+i*angle_inc)) for i in range(parts, 0, -1)])
         dc.DrawPolygon(points)
     
+    def distanceToLine(self, pos, x1, y1, x2, y2):
+        xlen = x2 - x1
+        ylen = y2 - y1
+        pxlen = x1 - pos.x
+        pylen = y1 - pos.y
+        return abs(xlen*pylen-ylen*pxlen)/math.sqrt(xlen**2+ylen**2)
+    
     def highlightQuadrant(self, dc, quadrant, concentric):
         assert(quadrant >= 0 and quadrant <= 3)
-        assert(concentric >= 0 and concentric <= 2)
+        assert(concentric >= 0 and concentric <= 3)
 
         inner_ring_radius = XYButtons.concentric_circle_radii[0]
         # fudge = math.pi*0.002
-        fudge = 0
+        fudge = -0.02
         center = wx.Point(XYButtons.center[0], XYButtons.center[1])
         if quadrant == 0:
             a1, a2 = (-math.pi*0.25, math.pi*0.25)

@@ -23,7 +23,7 @@ class ZButtons(BufferedCanvas):
 
         BufferedCanvas.__init__(self, parent, ID)
 
-        self.SetSize(wx.Size(71, 297))
+        self.SetSize(wx.Size(84, 295))
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
