@@ -1179,7 +1179,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             time.sleep(0.1)
         fn=self.filename
         try:
-            self.filename=self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")
+            self.filename=self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode").replace(".obj","_export.gcode").replace(".OBJ","_export.gcode")
             of=open(self.filename)
             self.f=[i.replace("\n","").replace("\r","") for i in of]
             of.close
@@ -1217,7 +1217,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
         dlg=wx.FileDialog(self,_("Open file to print"),basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("STL and GCODE files (;*.gcode;*.gco;*.g;*.stl;*.STL;)"))
+        dlg.SetWildcard(_("OBJ, STL, and GCODE files (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)"))
         if(filename is not None or dlg.ShowModal() == wx.ID_OK):
             if filename is not None:
                 name=filename
@@ -1230,6 +1230,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if path != self.settings.last_file_path:
                 self.set("last_file_path",path)
             if name.lower().endswith(".stl"):
+                self.skein(name)
+            elif name.lower().endswith(".obj"):
                 self.skein(name)
             else:
                 self.filename=name
@@ -1250,6 +1252,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         print _("the print goes from"),Xmin,_("mm to"),Xmax,_("mm in X\nand is"),Xtot,_("mm wide\n")
         print _("the print goes from"),Ymin,_("mm to"),Ymax,_("mm in Y\nand is"),Ytot,_("mm wide\n")
         print _("the print goes from"),Zmin,_("mm to"),Zmax,_("mm in Z\nand is"),Ztot,_("mm high\n")
+        print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
         self.gviz.clear()
         self.gwindow.p.clear()
         for i in self.f:
