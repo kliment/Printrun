@@ -77,14 +77,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ycol=(180,180,255)
         zcol=(180,255,180)
         self.cpbuttons=[
-            [_("Home"),("home"),(3,0),(250,250,250),(1,2)],
-            [_("HomeX"),("home X"),(3,2),(205,205,78),(1,2)],
-            [_("HomeY"),("home Y"),(3,4),(150,150,205),(1,2)],
-            [_("HomeZ"),("home Z"),(3,6),(150,205,150),(1,2)],
-            [_("Motors off"),("M84"),(3,8),(250,250,250),(1,2)],
-            [_("Check temp"),("M105"),(4,5),(225,200,200),(1,3)],
-            [_("Extrude"),("extrude"),(6,0),(225,200,200),(1,2)],
-            [_("Reverse"),("reverse"),(7,0),(225,200,200),(1,2)],
+            [_("Motors off"),("M84"),(1,0),(250,250,250),(1,2)],
+            [_("Check temp"),("M105"),(3,5),(225,200,200),(1,3)],
+            [_("Extrude"),("extrude"),(5,0),(225,200,200),(1,2)],
+            [_("Reverse"),("reverse"),(6,0),(225,200,200),(1,2)],
+        ]
+        self.absbuttons=[
+            [_("Home"),("home"),(0,380),(250,250,250),(1,2)],
+            [_("HomeX"),("home X"),(0,100),(205,205,78),(1,2)],
+            [_("HomeY"),("home Y"),(270, 100),(150,150,205),(1,2)],
+            [_("HomeZ"),("home Z"),(270, 380),(150,205,150),(1,2)],
         ]
         self.custombuttons=[]
         self.btndict={}
@@ -464,6 +466,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         zb = ZButtons(self.panel, self.moveZ)
         lls.Add(zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
         wx.CallAfter(xyb.SetFocus)
+
+        # Absolute-positioned Home buttons that cover the XYButtons control
+        for i in self.absbuttons:
+            btn=wx.Button(self.panel,-1,i[0],pos=i[2])
+            btn.SetBackgroundColour(i[3])
+            btn.SetForegroundColour("black")
+            btn.properties=i
+            btn.Bind(wx.EVT_BUTTON,self.procbutton)
+            self.btndict[i[1]]=btn
+            self.printerControls.append(btn)
         
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0])#,size=(60,-1))
@@ -476,7 +488,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             lls.Add(btn,pos=i[2],span=i[4])
         
         
-        lls.Add(wx.StaticText(self.panel,-1,_("Heater:"),pos=(0,343)),pos=(4,0),span=(1,1),flag=wx.ALIGN_CENTER)
+        lls.Add(wx.StaticText(self.panel,-1,_("Heater:"),pos=(0,343)),pos=(3,0),span=(1,1),flag=wx.ALIGN_CENTER)
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
         
         if self.settings.last_temperature not in map(float,self.temps.values()):
@@ -485,12 +497,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 choices=htemp_choices,style=wx.CB_DROPDOWN, size=(90,25),pos=(45,337))
 
         
-        lls.Add(self.htemp,pos=(4,1),span=(1,3))
+        lls.Add(self.htemp,pos=(3,1),span=(1,3))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,335))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
-        lls.Add(self.settbtn,pos=(4,4),span=(1,1))
-        lls.Add(wx.StaticText(self.panel,-1,_("Bed:"),pos=(0,343)),pos=(5,0),span=(1,1),flag=wx.ALIGN_CENTER)
+        lls.Add(self.settbtn,pos=(3,4),span=(1,1))
+        lls.Add(wx.StaticText(self.panel,-1,_("Bed:"),pos=(0,343)),pos=(4,0),span=(1,1),flag=wx.ALIGN_CENTER)
         btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
@@ -517,30 +529,30 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.htemp.SetValue(self.htemp.Value + ' (user)')   
 
 
-        lls.Add(self.btemp,pos=(5,1),span=(1,3))
+        lls.Add(self.btemp,pos=(4,1),span=(1,3))
         self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),pos=(135,365))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         self.printerControls.append(self.setbbtn)
-        lls.Add(self.setbbtn,pos=(5,4),span=(1,2))
+        lls.Add(self.setbbtn,pos=(4,4),span=(1,2))
         self.tempdisp=wx.StaticText(self.panel,-1,"")
-        lls.Add(self.tempdisp,pos=(5,6),span=(1,3))
+        lls.Add(self.tempdisp,pos=(4,6),span=(1,3))
         
         self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,25),pos=(70,398))
         self.edist.SetBackgroundColour((225,200,200))
         self.edist.SetForegroundColour("black")
-        lls.Add(self.edist,pos=(6,2),span=(1,1))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm"),pos=(130,407)),pos=(6,3),span=(1,2))
+        lls.Add(self.edist,pos=(5,2),span=(1,1))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm"),pos=(130,407)),pos=(5,3),span=(1,2))
         self.efeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.e_feedrate),min=0,max=50000,size=(60,25),pos=(70,397+28))
         self.efeedc.SetBackgroundColour((225,200,200))
         self.efeedc.SetForegroundColour("black")
         self.efeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
-        lls.Add(self.efeedc,pos=(7,2),span=(1,1))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/min"),pos=(130,407+27)),pos=(7,3),span=(1,2))
+        lls.Add(self.efeedc,pos=(6,2),span=(1,1))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm/min"),pos=(130,407+27)),pos=(6,3),span=(1,2))
         self.xyfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.SetBackgroundColour((180,255,180))
         self.zfeedc.SetForegroundColour("black")
-        lls.Add((10,0),pos=(0,11),span=(1,1))
+        # lls.Add((10,0),pos=(0,11),span=(1,1))
         self.gviz=gviz.gviz(self.panel,(300,300),
             bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
