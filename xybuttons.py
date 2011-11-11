@@ -252,6 +252,7 @@ class XYButtons(BufferedCanvas):
         if not self.enabled:
             return
         
+        oldcorner = self.corner
         oldq, oldc = self.quadrant, self.concentric
 
         mpos = event.GetPosition()
@@ -278,7 +279,7 @@ class XYButtons(BufferedCanvas):
         if mpos.x < cx and mpos.y >= cy:
             self.corner = 3
 
-        if oldq != self.quadrant or oldc != self.concentric:
+        if oldq != self.quadrant or oldc != self.concentric or oldcorner != self.corner:
             self.update()
 
     def OnLeftDown(self, event):
