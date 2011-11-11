@@ -33,9 +33,11 @@ class ZButtons(BufferedCanvas):
 
     def disable(self):
         self.enabled = False
+        self.update()
     
     def enable(self):
         self.enabled = True
+        self.update()
 
     def lookupRange(self, ydist):
         idx = -1

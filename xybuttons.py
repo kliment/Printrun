@@ -47,9 +47,11 @@ class XYButtons(BufferedCanvas):
     
     def disable(self):
         self.enabled = False
+        self.update()
     
     def enable(self):
         self.enabled = True
+        self.update()
     
     def distanceToLine(self, pos, x1, y1, x2, y2):
         xlen = x2 - x1

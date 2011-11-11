@@ -133,8 +133,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.connectbtn.Disable)
         for i in self.printerControls:
             wx.CallAfter(i.Enable)
+
+        # Enable XYButtons and ZButtons
         self.xyb.enable()
         self.zb.enable()
+
         if self.filename:
             wx.CallAfter(self.printbtn.Enable)
         
@@ -1313,6 +1316,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.pausebtn.Disable);
         for i in self.printerControls:
             wx.CallAfter(i.Disable)
+
+        # Disable XYButtons and ZButtons
+        self.xyb.disable()
+        self.zb.disable()
         
         if self.paused:
             self.p.paused=0
