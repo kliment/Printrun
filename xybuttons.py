@@ -200,9 +200,10 @@ class XYButtons(BufferedCanvas):
                     self.highlightCorner(gc, self.corner)
             
             if self.keypad_idx >= 0:
+                padw, padh = (self.keypad_bmp.GetWidth(), self.keypad_bmp.GetHeight())
                 pos = XYButtons.keypad_positions[self.keypad_idx]
-                pos = (pos[0] - w/2 - 3, pos[1] - h/2 - 3)
-                gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], w, h)
+                pos = (pos[0] - padw/2 - 3, pos[1] - padh/2 - 3)
+                gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], padw, padh)
         else:
             gc.SetPen(wx.Pen(wx.Colour(255,255,255,0), 4))
             gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128)))
