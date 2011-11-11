@@ -10,8 +10,8 @@ def sign(n):
     else: return 0
 
 class ZButtons(BufferedCanvas):
-    button_ydistances = [8, 30, 56, 84, 118]
-    center = (32, 146)
+    button_ydistances = [7, 30, 55, 83, 112]
+    center = (30, 118)
 
     def __init__(self, parent, moveCallback=None, ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_z.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
@@ -19,16 +19,23 @@ class ZButtons(BufferedCanvas):
         self.direction = None
         self.orderOfMagnitudeIdx = 0 # 0 means '1', 1 means '10', 2 means '100', etc.
         self.moveCallback = moveCallback
+        self.enabled = False
 
         BufferedCanvas.__init__(self, parent, ID)
 
-        self.SetSize(wx.Size(87, 295))
+        self.SetSize(wx.Size(59, 244))
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+
+    def disable(self):
+        self.enabled = False
+    
+    def enable(self):
+        self.enabled = True
 
     def lookupRange(self, ydist):
         idx = -1
@@ -44,7 +51,7 @@ class ZButtons(BufferedCanvas):
 
         fudge = 11
         x = 0 + fudge
-        w = 72 - fudge*2
+        w = 59 - fudge*2
         if rng >= 0:
             k = 1 if dir > 0 else 0
             y = ZButtons.center[1] - (dir * ZButtons.button_ydistances[rng+k])
@@ -57,7 +64,32 @@ class ZButtons(BufferedCanvas):
         ydelta = ZButtons.center[1] - pos[1]
         return (self.lookupRange(abs(ydelta)), sign(ydelta))
 
+    def draw(self, dc, w, h):
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+        w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
+
+        gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+
+        if self.enabled:
+            gc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
+            gc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
+
+            if self.range != None and self.direction != None:
+                self.highlight(gc, self.range, self.direction)
+        else:
+            gc.SetPen(wx.Pen(wx.Colour(255,255,255,0), 4))
+            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128)))
+            gc.DrawRectangle(0, 0, w, h)
+
+    ## ------ ##
+    ## Events ##
+    ## ------ ##
+
     def OnMotion(self, event):
+        if not self.enabled:
+            return
+        
         oldr, oldd = self.range, self.direction
 
         mpos = event.GetPosition()
@@ -67,6 +99,9 @@ class ZButtons(BufferedCanvas):
             self.update()
 
     def OnLeftDown(self, event):
+        if not self.enabled:
+            return
+
         mpos = event.GetPosition()
         r, d = self.getRangeDir(mpos)
         if r >= 0:
@@ -78,17 +113,3 @@ class ZButtons(BufferedCanvas):
         self.range = None
         self.direction = None
         self.update()
-
-    def draw(self, dc, w, h):
-        dc.Clear()
-        gc = wx.GraphicsContext.Create(dc)
-
-        gc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
-        gc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
-
-        gc.DrawBitmap(self.bg_bmp, 0, 0, self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
-
-        if self.range != None and self.direction != None:
-            self.highlight(gc, self.range, self.direction)
-
-        return True

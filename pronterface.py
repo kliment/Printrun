@@ -82,12 +82,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             [_("Extrude"),("extrude"),(5,0),(225,200,200),(1,2)],
             [_("Reverse"),("reverse"),(6,0),(225,200,200),(1,2)],
         ]
-        self.absbuttons=[
-            [_("Home"),("home"),(0,380),(250,250,250),(1,2)],
-            [_("HomeX"),("home X"),(0,100),(205,205,78),(1,2)],
-            [_("HomeY"),("home Y"),(270, 100),(150,150,205),(1,2)],
-            [_("HomeZ"),("home Z"),(270, 380),(150,205,150),(1,2)],
-        ]
         self.custombuttons=[]
         self.btndict={}
         self.parse_cmdline(sys.argv[1:])
@@ -139,6 +133,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.connectbtn.Disable)
         for i in self.printerControls:
             wx.CallAfter(i.Enable)
+        self.xyb.enable()
+        self.zb.enable()
         if self.filename:
             wx.CallAfter(self.printbtn.Enable)
         
@@ -461,22 +457,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         #lls.Add((200,375))
         
-        xyb = XYButtons(self.panel, self.moveXY)
-        lls.Add(xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
-        zb = ZButtons(self.panel, self.moveZ)
-        lls.Add(zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
-        wx.CallAfter(xyb.SetFocus)
-
-        # Absolute-positioned Home buttons that cover the XYButtons control
-        for i in self.absbuttons:
-            btn=wx.Button(self.panel,-1,i[0],pos=i[2])
-            btn.SetBackgroundColour(i[3])
-            btn.SetForegroundColour("black")
-            btn.properties=i
-            btn.Bind(wx.EVT_BUTTON,self.procbutton)
-            self.btndict[i[1]]=btn
-            self.printerControls.append(btn)
-        
+        self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked)
+        lls.Add(self.xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
+        self.zb = ZButtons(self.panel, self.moveZ)
+        lls.Add(self.zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
+        wx.CallAfter(self.xyb.SetFocus)
+                
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0])#,size=(60,-1))
             btn.SetBackgroundColour(i[3])
@@ -894,6 +880,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         else:
             e.Skip()
     
+    def homeButtonClicked(self, corner):
+        if corner == 0: # upper-left
+            self.onecmd('home X')
+        if corner == 1: # upper-right
+            self.onecmd('home Y')
+        if corner == 2: # lower-right
+            self.onecmd('home Z')
+        if corner == 3: # lower-left
+            self.onecmd('home')
+    
     def moveXY(self, x, y):
         if x != 0:
             self.onecmd('move X %s' % x)
@@ -903,10 +899,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def moveZ(self, z):
         if z != 0:
             self.onecmd('move Z %s' % z)
-    
-    def home(self):
-        self.onecmd('home')
-        
+            
     def procbutton(self,e):
         try:
             if hasattr(e.GetEventObject(),"custombutton"):
