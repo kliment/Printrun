@@ -1,0 +1,117 @@
+import wx, os, math
+from bufferedcanvas import *
+
+def imagefile(filename):
+    return os.path.join(os.path.dirname(__file__), "images", filename)
+
+def sign(n):
+    if n < 0: return -1
+    elif n > 0: return 1
+    else: return 0
+
+class ZButtons(BufferedCanvas):
+    button_ydistances = [7, 30, 55, 83, 112]
+    center = (30, 118)
+
+    def __init__(self, parent, moveCallback=None, ID=-1):
+        self.bg_bmp = wx.Image(imagefile("control_z.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        self.range = None
+        self.direction = None
+        self.orderOfMagnitudeIdx = 0 # 0 means '1', 1 means '10', 2 means '100', etc.
+        self.moveCallback = moveCallback
+        self.enabled = False
+
+        BufferedCanvas.__init__(self, parent, ID)
+
+        self.SetSize(wx.Size(59, 244))
+
+        # Set up mouse and keyboard event capture
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+        self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
+        self.Bind(wx.EVT_MOTION, self.OnMotion)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+
+    def disable(self):
+        self.enabled = False
+        self.update()
+    
+    def enable(self):
+        self.enabled = True
+        self.update()
+
+    def lookupRange(self, ydist):
+        idx = -1
+        for d in ZButtons.button_ydistances:
+            if ydist < d:
+                return idx
+            idx += 1
+        return None
+    
+    def highlight(self, gc, rng, dir):
+        assert(rng >= -1 and rng <= 3)
+        assert(dir >= -1 and dir <= 1)
+
+        fudge = 11
+        x = 0 + fudge
+        w = 59 - fudge*2
+        if rng >= 0:
+            k = 1 if dir > 0 else 0
+            y = ZButtons.center[1] - (dir * ZButtons.button_ydistances[rng+k])
+            h = ZButtons.button_ydistances[rng+1] - ZButtons.button_ydistances[rng]
+            gc.DrawRoundedRectangle(x, y, w, h, 4)
+            # gc.DrawRectangle(x, y, w, h)
+        # self.drawPartialPie(dc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
+    
+    def getRangeDir(self, pos):
+        ydelta = ZButtons.center[1] - pos[1]
+        return (self.lookupRange(abs(ydelta)), sign(ydelta))
+
+    def draw(self, dc, w, h):
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+        w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
+
+        gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+
+        if self.enabled:
+            gc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
+            gc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
+
+            if self.range != None and self.direction != None:
+                self.highlight(gc, self.range, self.direction)
+        else:
+            gc.SetPen(wx.Pen(wx.Colour(255,255,255,0), 4))
+            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128)))
+            gc.DrawRectangle(0, 0, w, h)
+
+    ## ------ ##
+    ## Events ##
+    ## ------ ##
+
+    def OnMotion(self, event):
+        if not self.enabled:
+            return
+        
+        oldr, oldd = self.range, self.direction
+
+        mpos = event.GetPosition()
+        self.range, self.direction = self.getRangeDir(mpos)
+
+        if oldr != self.range or oldd != self.direction:
+            self.update()
+
+    def OnLeftDown(self, event):
+        if not self.enabled:
+            return
+
+        mpos = event.GetPosition()
+        r, d = self.getRangeDir(mpos)
+        if r >= 0:
+            value = math.pow(10, self.orderOfMagnitudeIdx) * math.pow(10, r - 1) * d
+            if self.moveCallback:
+                self.moveCallback(value)
+
+    def OnLeaveWindow(self, evt):
+        self.range = None
+        self.direction = None
+        self.update()
