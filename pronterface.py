@@ -642,12 +642,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     if 0.3*rr+0.59*gg+0.11*bb < 60:
                         b.SetForegroundColour("#ffffff")
             except:
-                b=wx.Button(self.panel,-1,"")
-                b.Freeze()
+                b=wx.StaticText(self.panel,-1,"",size=(72,20),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
+                #b.Freeze()
+                b.Disable()
             b.custombutton=i
             b.properties=btndef
-            b.Bind(wx.EVT_BUTTON,self.procbutton)
-            b.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
+            if btndef is not None:
+                b.Bind(wx.EVT_BUTTON,self.procbutton)
+                b.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
+            else:
+                b.Bind(wx.EVT_BUTTON,lambda e:e.Skip())
             self.custombuttonbuttons.append(b)
             if i<4:
                 ubs.Add(b)
@@ -802,18 +806,24 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if hasattr(obj,"custombutton"):
                     self.dragging = wx.Button(self.panel,-1,obj.GetLabel())
                     self.dragging.SetBackgroundColour(obj.GetBackgroundColour())
+                    self.dragging.SetForegroundColour(obj.GetForegroundColour())
                     self.dragging.sourcebutton = obj
                     self.dragging.Raise()
                     self.dragging.Disable()
                     self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
                     for b in self.custombuttonbuttons:
-                        if b.IsFrozen(): b.Thaw()
+                        #if b.IsFrozen(): b.Thaw()
+                        if b.properties is None:
+                            b.Enable()
+                        #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.last_drag_dest = obj
                     self.dragging.label = obj.s_label = obj.GetLabel()
                     self.dragging.bgc = obj.s_bgc = obj.GetBackgroundColour()
+                    self.dragging.fgc = obj.s_fgc = obj.GetForegroundColour()
             else: 
                 # dragging in progress
                 self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
+                wx.CallAfter(self.dragging.Refresh)
                 btns = self.custombuttonbuttons 
                 dst = None
                 src = self.dragging.sourcebutton
@@ -841,16 +851,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if dst is not self.last_drag_dest:
                     if self.last_drag_dest is not None:
                         self.last_drag_dest.SetBackgroundColour(self.last_drag_dest.s_bgc)
+                        self.last_drag_dest.SetForegroundColour(self.last_drag_dest.s_fgc)
                         self.last_drag_dest.SetLabel(self.last_drag_dest.s_label)
                     if dst is not None and dst is not src:
                         dst.s_bgc = dst.GetBackgroundColour()
+                        dst.s_fgc = dst.GetForegroundColour()
                         dst.s_label = dst.GetLabel()
                         src.SetBackgroundColour(dst.GetBackgroundColour())
+                        src.SetForegroundColour(dst.GetForegroundColour())
                         src.SetLabel(dst.GetLabel())
                         dst.SetBackgroundColour(drg.bgc)
+                        dst.SetForegroundColour(drg.fgc)
                         dst.SetLabel(drg.label)
                     else:
                         src.SetBackgroundColour(drg.bgc)
+                        src.SetForegroundColour(drg.fgc)
                         src.SetLabel(drg.label)
                     self.last_drag_dest = dst
         elif hasattr(self,"dragging") and not e.ButtonIsDown(wx.MOUSE_BTN_LEFT):

@@ -2,6 +2,12 @@
 import wx,time,random,threading,os,math
 import stltool
 
+def translate(l): return l
+
+def rotate(l): return l
+
+def import_stl(s): return s
+
 class stlwrap:
     def __init__(self,obj,name=None):
         self.obj=obj
@@ -16,12 +22,16 @@ class stlwrap:
 class showstl(wx.Window):
     def __init__(self,parent,size,pos):
         wx.Window.__init__(self,parent,size=size,pos=pos)
-        self.l=wx.ListBox(self,size=(300,130),pos=(0,size[1]-130))
+        self.l=wx.ListBox(self,size=(300,180),pos=(0,size[1]-180))
+        self.cl=wx.Button(self,label="Clear",pos=(300,size[1]-180))
+        self.lb=wx.Button(self,label="Load",pos=(300,size[1]-155))
         self.eb=wx.Button(self,label="Export",pos=(300,size[1]-130))
         self.sb=wx.Button(self,label="Snap to Z=0",pos=(300,size[1]-105))
         self.cb=wx.Button(self,label="Put at 100,100",pos=(300,size[1]-80))
         self.db=wx.Button(self,label="Delete",pos=(300,size[1]-55))
         self.ab=wx.Button(self,label="Auto",pos=(300,size[1]-30))
+        self.cl.Bind(wx.EVT_BUTTON,self.clear)
+        self.lb.Bind(wx.EVT_BUTTON,self.right)
         self.eb.Bind(wx.EVT_BUTTON,self.export)
         self.sb.Bind(wx.EVT_BUTTON,self.snap)
         self.cb.Bind(wx.EVT_BUTTON,self.center)
@@ -123,79 +133,117 @@ class showstl(wx.Window):
             self.models[i].offsets[0] += centreoffset[0]
             self.models[i].offsets[1] += centreoffset[1]
         self.Refresh()
-        
+    
     def right(self,event):
-        dlg=wx.FileDialog(self,"Open file to print",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard("STL files (;*.stl;)")
+        dlg=wx.FileDialog(self,"Pick file to load",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+        dlg.SetWildcard("STL files (;*.stl;)|*.stl|OpenSCAD files (;*.scad;)|*.scad")
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
-            if not(os.path.exists(name)):
-                return
-            path = os.path.split(name)[0]
-            self.basedir=path
-            t=time.time()
-            #print name
-            if name.lower().endswith(".stl"):
-                #Filter out the path, just show the STL filename.
-                newname=os.path.split(name.lower())[1]
-                c=1
-                while newname in self.models:
-                    newname=os.path.split(name.lower())[1]
-                    newname=newname+"(%d)"%c
-                    c+=1
-                self.models[newname]=stltool.stl(name)
-                self.models[newname].offsets=[0,0,0]
-                self.models[newname].rot=0
-                self.models[newname].filename=name
-                minx,miny,minz,maxx,maxy,maxz=(10000,10000,10000,0,0,0)
-                for i in self.models[newname].facets:
-                    for j in i[1]:
-                        if j[0]<minx:
-                            minx=j[0]
-                        if j[1]<miny:
-                            miny=j[1]
-                        if j[2]<minz:
-                            minz=j[2]
-                        if j[0]>maxx:
-                            maxx=j[0]
-                        if j[1]>maxy:
-                            maxy=j[1]
-                        if j[2]>maxz:
-                            maxz=j[2]
-                self.models[newname].dims=[minx,maxx,miny,maxy,minz,maxz]
-                #if minx<0:
-                #    self.models[newname].offsets[0]=-minx
-                #if miny<0:
-                #    self.models[newname].offsets[1]=-miny
-                self.models[newname].bitmap=wx.EmptyBitmap(800,800,32)
-                dc=wx.MemoryDC()
-                dc.SelectObject(self.models[newname].bitmap)
-                dc.SetBackground(wx.Brush((0,0,0,0)))
-                dc.SetBrush(wx.Brush((0,0,0,255)))
-                #dc.DrawRectangle(-1,-1,10000,10000)
-                dc.SetBrush(wx.Brush(wx.Colour(128,255,128)))
-                dc.SetPen(wx.Pen(wx.Colour(128,128,128)))
-                m=self.models[newname]
-                #m.offsets=[10,10,0]
-                print m.offsets,m.dims
-                scale=2
-                for i in m.facets:#random.sample(m.facets,min(100000,len(m.facets))):
-                    dc.DrawPolygon([wx.Point(400+scale*p[0],(400+scale*p[1])) for p in i[1]])
-                    #if(time.time()-t)>5:
-                    #    break
-                dc.SelectObject(wx.NullBitmap)
-                m.bitmap.SetMask(wx.Mask(m.bitmap,wx.Colour(0,0,0,255)))
-                
-                #print time.time()-t
-                self.l.Append(newname)
-                i=self.l.GetSelection()
-                if i==wx.NOT_FOUND:
-                    self.l.Select(0)
+            if (name.lower().endswith(".stl")):
+                self.load_stl(event,name)
+            elif (name.lower().endswith(".scad")):
+                self.load_scad(event,name)
+    
+    def load_scad(self,event,name):
+        lf=open(name)
+        s=[i.replace("\n","").replace("\r","").replace(";","") for i in lf]
+        lf.close()
+
+        for i in s:
+            parts = i.split()
+            translate_list = eval(parts[0])
+            rotate_list = eval(parts[1])
+            stl_file = eval(parts[2])
             
-                self.l.Select(self.l.GetCount()-1)
-            self.Refresh()
-            #print time.time()-t
+            newname=os.path.split(stl_file.lower())[1]
+            c=1
+            while newname in self.models:
+                newname=os.path.split(stl_file.lower())[1]
+                newname=newname+"(%d)"%c
+                c+=1
+            stl_path = os.path.join(os.path.split(name)[0:len(os.path.split(stl_file))-1])
+            stl_full_path = os.path.join(stl_path[0],str(stl_file))
+            self.load_stl_into_model(stl_full_path,stl_file,translate_list,rotate_list[2])
+
+    def load_stl(self,event,name):
+        if not(os.path.exists(name)):
+            return
+        path = os.path.split(name)[0]
+        self.basedir=path
+        t=time.time()
+        #print name
+        if name.lower().endswith(".stl"):
+            #Filter out the path, just show the STL filename.
+            self.load_stl_into_model(name,name)
+        self.Refresh()
+        #print time.time()-t
+
+    def load_stl_into_model(self,path,name,offset=[0,0,0],rotation=0):
+        newname=os.path.split(name.lower())[1]
+        c=1
+        while newname in self.models:
+            newname=os.path.split(name.lower())[1]
+            newname=newname+"(%d)"%c
+            c+=1
+        self.models[newname]=stltool.stl(path)
+        self.models[newname].offsets=offset
+        self.models[newname].rot=rotation
+        self.models[newname].filename=name
+        minx,miny,minz,maxx,maxy,maxz=(10000,10000,10000,0,0,0)
+        for i in self.models[newname].facets:
+            for j in i[1]:
+                if j[0]<minx:
+                    minx=j[0]
+                if j[1]<miny:
+                    miny=j[1]
+                if j[2]<minz:
+                    minz=j[2]
+                if j[0]>maxx:
+                    maxx=j[0]
+                if j[1]>maxy:
+                    maxy=j[1]
+                if j[2]>maxz:
+                    maxz=j[2]
+        self.models[newname].dims=[minx,maxx,miny,maxy,minz,maxz]
+        #if minx<0:
+        #    self.models[newname].offsets[0]=-minx
+        #if miny<0:
+        #    self.models[newname].offsets[1]=-miny
+        self.models[newname].bitmap=wx.EmptyBitmap(800,800,32)
+        dc=wx.MemoryDC()
+        dc.SelectObject(self.models[newname].bitmap)
+        dc.SetBackground(wx.Brush((0,0,0,0)))
+        dc.SetBrush(wx.Brush((0,0,0,255)))
+        #dc.DrawRectangle(-1,-1,10000,10000)
+        dc.SetBrush(wx.Brush(wx.Colour(128,255,128)))
+        dc.SetPen(wx.Pen(wx.Colour(128,128,128)))
+        m=self.models[newname]
+        #m.offsets=[10,10,0]
+        print m.offsets,m.dims
+        scale=2
+        for i in m.facets:#random.sample(m.facets,min(100000,len(m.facets))):
+            dc.DrawPolygon([wx.Point(400+scale*p[0],(400+scale*p[1])) for p in i[1]])
+            #if(time.time()-t)>5:
+            #    break
+        dc.SelectObject(wx.NullBitmap)
+        m.bitmap.SetMask(wx.Mask(m.bitmap,wx.Colour(0,0,0,255)))
         
+        #print time.time()-t
+        self.l.Append(newname)
+        i=self.l.GetSelection()
+        if i==wx.NOT_FOUND:
+            self.l.Select(0)
+    
+        self.l.Select(self.l.GetCount()-1)
+    
+    def clear(self,event):
+        result = wx.MessageBox('Are you sure you want to clear the grid? All unsaved changes will be lost.', 'Clear the grid?', 
+            wx.YES_NO | wx.ICON_QUESTION)
+        if (result == 2):
+            self.models={}
+            self.l.Clear()
+            self.Refresh()
+            
     def move(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
@@ -297,11 +345,11 @@ class showstl(wx.Window):
         #s.export()
         
 class stlwin(wx.Frame):
-    def __init__(self,size=(400,530)):
+    def __init__(self,size=(400,580)):
         wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
         self.SetIcon(wx.Icon("plater.ico",wx.BITMAP_TYPE_ICO))
         self.SetClientSize(size)
-        self.s=showstl(self,(400,530),(0,0))
+        self.s=showstl(self,(400,580),(0,0))
         
 if __name__ == '__main__':
     app = wx.App(False)
