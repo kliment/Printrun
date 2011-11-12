@@ -37,7 +37,7 @@ class XYButtons(BufferedCanvas):
         self.corner = None
         self.moveCallback = moveCallback
         self.cornerCallback = cornerCallback
-        self.enabled = True
+        self.enabled = False
 
         BufferedCanvas.__init__(self, parent, ID)
 
