@@ -431,7 +431,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.resetbtn)
         self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
-        self.tgauge=TempGauge(self.panel,size=(300,20))
+        self.tgauge=TempGauge(self.panel,size=(300,24))
         def scroll_setpoint(e):
            if e.GetWheelRotation()>0:
                self.do_settemp(str(self.hsetpoint+1))
@@ -1562,7 +1562,7 @@ class ButtonEdit(wx.Dialog):
             self.name.SetValue(macro)
     
 class TempGauge(wx.Panel):
-    def __init__(self,parent,size=(200,20)):
+    def __init__(self,parent,size=(200,22)):
         wx.Panel.__init__(self,parent,-1,size=size)
         self.Bind(wx.EVT_PAINT,self.paint)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
@@ -1582,49 +1582,67 @@ class TempGauge(wx.Panel):
         self.recalc()
         wx.CallAfter(self.Refresh)
     def paint(self,ev):
+        x0,y0,x1,y1,xE,yE = 1,1,self.ypt+1,1,self.width+1-2,20
         dc=wx.PaintDC(self)
         dc.SetBackground(wx.Brush((255,255,255)))
         dc.Clear()
+        cold,medium,hot = wx.Colour(0,167,223),wx.Colour(239,233,119),wx.Colour(210,50.100)
+        gauge1,gauge2 = wx.Colour(255,255,210),wx.Colour(234,82,0)
+        shadow1,shadow2 = wx.Colour(110,110,110),wx.Colour(255,255,255)
         gc = wx.GraphicsContext.Create(dc)
-        gc.SetBrush(gc.CreateLinearGradientBrush(0,0,self.ypt,0,wx.Colour(0,167,223),wx.Colour(239,233,119)))
-        gc.DrawRectangle(0,0,self.ypt,20)
-        gc.SetBrush(gc.CreateLinearGradientBrush(self.ypt,0,self.width-2,0,wx.Colour(239,233,119),wx.Colour(210,50,100)))
-        gc.DrawRectangle(self.ypt,0,self.width-2-self.ypt,20)
-        ###
-        gc.SetBrush(gc.CreateLinearGradientBrush(0,3,0,15,wx.Colour(255,255,210),wx.Colour(234,82,0)))
+        # draw shadow first
+        # corners
+        gc.SetBrush(gc.CreateRadialGradientBrush(xE-7,9,xE-7,9,8,shadow1,shadow2))
+        gc.DrawRectangle(xE-7,1,8,8)
+        gc.SetBrush(gc.CreateRadialGradientBrush(xE-7,17,xE-7,17,8,shadow1,shadow2))
+        gc.DrawRectangle(xE-7,17,8,8)
+        gc.SetBrush(gc.CreateRadialGradientBrush(x0+6,17,x0+6,17,8,shadow1,shadow2))
+        gc.DrawRectangle(0,17,x0+6,8)
+        # edges
+        gc.SetBrush(gc.CreateLinearGradientBrush(xE-13,0,xE-6,0,shadow1,shadow2))
+        gc.DrawRectangle(xE-6,9,10,8)
+        gc.SetBrush(gc.CreateLinearGradientBrush(x0,yE-2,x0,yE+5,shadow1,shadow2))
+        gc.DrawRectangle(x0+6,yE-2,xE-12,7)
+        # draw gauge background
+        gc.SetBrush(gc.CreateLinearGradientBrush(x0,y0,x1+1,y1,cold,medium))
+        gc.DrawRoundedRectangle(x0,y0,x1+4,yE,6)
+        gc.SetBrush(gc.CreateLinearGradientBrush(x1-2,y1,xE,y1,medium,hot))
+        gc.DrawRoundedRectangle(x1-2,y1,xE-x1,yE,6)
+        # draw gauge
+        gc.SetBrush(gc.CreateLinearGradientBrush(x0,y0+3,x0,y0+15,gauge1,gauge2))
         #gc.SetBrush(gc.CreateLinearGradientBrush(0,3,0,15,wx.Colour(255,255,255),wx.Colour(255,90,32)))
         width=12
-        w1=9-width/2
+        w1=y0+9-width/2
         w2=w1+width
-        value=max(10,min(self.width-2,int(self.value*self.scale)))
+        value=x0+max(10,min(self.width+1-2,int(self.value*self.scale)))
         val_path = gc.CreatePath()
-        val_path.MoveToPoint(0,w1)
+        val_path.MoveToPoint(x0,w1)
         val_path.AddLineToPoint(value,w1)
         val_path.AddLineToPoint(value+2,w1+width/4)
         val_path.AddLineToPoint(value+2,w2-width/4)
         val_path.AddLineToPoint(value,w2)
         #val_path.AddLineToPoint(value-4,10)
-        val_path.AddLineToPoint(0,w2)
+        val_path.AddLineToPoint(x0,w2)
         gc.DrawPath(val_path)
-        ###
-        setpoint=max(10,int(self.setpoint*self.scale))
+        # draw setpoint markers
+        setpoint=x0+max(10,int(self.setpoint*self.scale))
         gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0,0,0))))
         setp_path = gc.CreatePath()
-        setp_path.MoveToPoint(setpoint-4,0)
-        setp_path.AddLineToPoint(setpoint+4,0)
-        setp_path.AddLineToPoint(setpoint,5)
-        setp_path.MoveToPoint(setpoint-5,20)
-        setp_path.AddLineToPoint(setpoint+5,20)
-        setp_path.AddLineToPoint(setpoint,14)
+        setp_path.MoveToPoint(setpoint-4,y0)
+        setp_path.AddLineToPoint(setpoint+4,y0)
+        setp_path.AddLineToPoint(setpoint,y0+5)
+        setp_path.MoveToPoint(setpoint-4,yE)
+        setp_path.AddLineToPoint(setpoint+4,yE)
+        setp_path.AddLineToPoint(setpoint,yE-5)
         gc.DrawPath(setp_path)
-        ###
+        # draw readout
         text=u"T\u00B0 %u/%u"%(self.value,self.setpoint)
         #gc.SetFont(gc.CreateFont(wx.Font(12,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
         #gc.DrawText(text,29,-2)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
-        gc.DrawText(text,31,1)
+        gc.DrawText(text,x0+31,y0+1)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD)))
-        gc.DrawText(text,30,0)
+        gc.DrawText(text,x0+30,y0+0)
     
 if __name__ == '__main__':
     app = wx.App(False)
