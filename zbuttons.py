@@ -12,6 +12,12 @@ def sign(n):
 class ZButtons(BufferedCanvas):
     button_ydistances = [7, 30, 55, 83, 112]
     center = (30, 118)
+    label_overlay_positions = {
+        0: (1, 18, 11),
+        1: (1, 41, 13),
+        2: (1, 67, 15),
+        3: None
+    }
 
     def __init__(self, parent, moveCallback=None, ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_z.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
@@ -74,9 +80,17 @@ class ZButtons(BufferedCanvas):
         gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
 
         if self.enabled:
+            # Draw label overlays
+            gc.SetPen(wx.Pen(wx.Colour(255,255,255,128), 1))
+            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128+64)))
+            for idx, kpos in ZButtons.label_overlay_positions.items():
+                if kpos and idx != self.range:
+                    r = kpos[2]
+                    gc.DrawEllipse(ZButtons.center[0]-kpos[0]-r, ZButtons.center[1]-kpos[1]-r, r*2, r*2)
+            
+            # Top 'layer' is the mouse-over highlights
             gc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
             gc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
-
             if self.range != None and self.direction != None:
                 self.highlight(gc, self.range, self.direction)
         else:
