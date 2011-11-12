@@ -10,7 +10,7 @@ def sign(n):
     else: return 0
 
 class ZButtons(BufferedCanvas):
-    button_ydistances = [7, 30, 55, 83, 112]
+    button_ydistances = [7, 30, 55, 83] # ,112
     center = (30, 118)
     label_overlay_positions = {
         0: (1, 18, 11),
