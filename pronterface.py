@@ -528,7 +528,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if self.settings.last_temperature not in map(float,self.temps.values()):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
-                choices=htemp_choices,style=wx.CB_DROPDOWN, size=(60,25),pos=(45,337))
+                choices=htemp_choices,style=wx.CB_DROPDOWN, size=(80,25),pos=(45,337))
         self.htemp.Bind(wx.EVT_COMBOBOX,self.htemp_change)
 
         lls.Add(self.htemp,pos=(3,2),span=(1,2))
@@ -548,7 +548,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
-                choices=btemp_choices,style=wx.CB_DROPDOWN, size=(60,25),pos=(135,367))
+                choices=btemp_choices,style=wx.CB_DROPDOWN, size=(80,25),pos=(135,367))
         self.btemp.Bind(wx.EVT_COMBOBOX,self.btemp_change)
         lls.Add(self.btemp,pos=(4,2),span=(1,2))
         
