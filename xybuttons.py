@@ -18,6 +18,12 @@ class XYButtons(BufferedCanvas):
     }
     corner_size = (49, 49)
     corner_inset = (8, 6)
+    label_overlay_positions = {
+        0: (142, 105, 11),
+        1: (160, 85, 13),
+        2: (179, 65, 15),
+        3: (201, 42, 16)
+    }
     concentric_circle_radii = [11, 45, 69, 94, 115]
     center = (124, 121)
     spacer = 7
@@ -31,7 +37,7 @@ class XYButtons(BufferedCanvas):
         self.corner = None
         self.moveCallback = moveCallback
         self.cornerCallback = cornerCallback
-        self.enabled = False
+        self.enabled = True
 
         BufferedCanvas.__init__(self, parent, ID)
 
@@ -206,14 +212,23 @@ class XYButtons(BufferedCanvas):
                 pos = XYButtons.keypad_positions[self.keypad_idx]
                 pos = (pos[0] - padw/2 - 3, pos[1] - padh/2 - 3)
                 gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], padw, padh)
+            
+            # Draw label overlays
+            gc.SetPen(wx.Pen(wx.Colour(255,255,255,128), 1))
+            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128+64)))
+            for idx, kpos in XYButtons.label_overlay_positions.items():
+                if idx != self.concentric:
+                    r = kpos[2]
+                    gc.DrawEllipse(kpos[0]-r, kpos[1]-r, r*2, r*2)
         else:
             gc.SetPen(wx.Pen(wx.Colour(255,255,255,0), 4))
             gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128)))
             gc.DrawRectangle(0, 0, w, h)
+        
 
         # Used to check exact position of keypad dots, should we ever resize the bg image
-        # for idx, kpos in XYButtons.keypad_positions.items():
-        #    dc.DrawCircle(kpos[0], kpos[1], 6)
+        # for idx, kpos in XYButtons.label_overlay_positions.items():
+        #    dc.DrawCircle(kpos[0], kpos[1], kpos[2])
 
     ## ------ ##
     ## Events ##
