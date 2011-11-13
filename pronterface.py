@@ -382,6 +382,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def OnExit(self, event):
         self.Close()
         
+    def rescanports(self,event=None):
+        scan=self.scanserial()
+        portslist=list(scan)
+        if self.settings.port != "" and self.settings.port not in portslist:
+            portslist += [self.settings.port]
+            self.serialport.Clear()
+            self.serialport.AppendItems(portslist)
+        try:
+            if self.settings.port in scan:
+                self.serialport.SetValue(self.settings.port)
+            elif len(portslist)>0:
+                self.serialport.SetValue(portslist[0])
+        except:
+            pass
+        
+        
     def popwindow(self):
         # this list will contain all controls that should be only enabled
         # when we're connected to a printer
@@ -392,21 +408,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #lower section contains the rest of the window - manual controls, console, visualizations
         #TOP ROW:
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
-        uts.Add(wx.StaticText(self.panel,-1,_("Port:"),pos=(0,5)),wx.TOP|wx.LEFT,5)
-        scan=self.scanserial()
-        portslist=list(scan)
-        if self.settings.port != "" and self.settings.port not in portslist:
-            portslist += [self.settings.port]
+        self.rescanbtn=wx.Button(self.panel,-1,_("Port"),pos=(380,0))
+        self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
+        
+        uts.Add(self.rescanbtn,wx.TOP|wx.LEFT,5)
         self.serialport = wx.ComboBox(self.panel, -1,
-                choices=portslist,
-                style=wx.CB_DROPDOWN|wx.CB_SORT|wx.CB_READONLY, pos=(50,0))
-        try:
-            if self.settings.port in scan:
-                self.serialport.SetValue(self.settings.port)
-            elif len(portslist)>0:
-                self.serialport.SetValue(portslist[0])
-        except:
-            pass
+                choices=[],
+                style=wx.CB_DROPDOWN|wx.CB_READONLY, pos=(50,0))
+        self.rescanports()
         uts.Add(self.serialport)
         uts.Add(wx.StaticText(self.panel,-1,"@",pos=(250,5)),wx.RIGHT,5)
         self.baud = wx.ComboBox(self.panel, -1,
