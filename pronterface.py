@@ -355,7 +355,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         scan=self.scanserial()
         portslist=list(scan)
         if self.settings.port != "" and self.settings.port not in portslist:
-            portslist = [self.settings.port]+portslist
+            portslist += [self.settings.port]
             self.serialport.Clear()
             self.serialport.AppendItems(portslist)
         try:
