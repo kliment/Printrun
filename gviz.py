@@ -248,7 +248,7 @@ class gviz(wx.Panel):
                 self.pens[ target[2] ]  += [self.mainpen if target[3] != self.lastpos[3] else self.travelpen]
                 self.lastpos = target
             else:
-                self.hilight += line
+                self.hilight += [line]
                 self.hilightpos = target
             self.dirty = 1
         
@@ -266,7 +266,7 @@ class gviz(wx.Panel):
                 self.arcpens[ target[2] ] += [self.arcpen]
                 self.lastpos = target
             else:
-                self.hilightarcs += arc
+                self.hilightarcs += [arc]
                 self.hilightpos = target
             self.dirty = 1
             
