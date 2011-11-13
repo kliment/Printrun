@@ -382,7 +382,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         uts.Add(self.rescanbtn,wx.TOP|wx.LEFT,5)
         self.serialport = wx.ComboBox(self.panel, -1,
-                choices=[],
+                choices=self.scanserial(),
                 style=wx.CB_DROPDOWN|wx.CB_READONLY, pos=(50,0))
         self.rescanports()
         uts.Add(self.serialport)
