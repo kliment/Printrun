@@ -380,7 +380,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.rescanbtn=wx.Button(self.panel,-1,_("Port"),pos=(380,0))
         self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
         
-        uts.Add(self.rescanbtn,wx.TOP|wx.LEFT,5)
+        uts.Add(self.rescanbtn,wx.TOP|wx.LEFT,0)
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
                 style=wx.CB_DROPDOWN|wx.CB_READONLY, pos=(50,0))
