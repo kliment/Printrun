@@ -137,8 +137,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(i.Enable)
 
         # Enable XYButtons and ZButtons
-        self.xyb.enable()
-        self.zb.enable()
+        wx.CallAfter(self.xyb.enable)
+        wx.CallAfter(self.zb.enable)
 
         if self.filename:
             wx.CallAfter(self.printbtn.Enable)
@@ -411,7 +411,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.rescanbtn=wx.Button(self.panel,-1,_("Port"),pos=(380,0))
         self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
         
-        uts.Add(self.rescanbtn,wx.TOP|wx.LEFT,5)
+        uts.Add(self.rescanbtn,wx.TOP|wx.LEFT,0)
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
                 style=wx.CB_DROPDOWN|wx.CB_READONLY, pos=(50,0))
@@ -1416,8 +1416,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(i.Disable)
 
         # Disable XYButtons and ZButtons
-        self.xyb.disable()
-        self.zb.disable()
+        wx.CallAfter(self.xyb.disable)
+        wx.CallAfter(self.zb.disable)
         
         if self.paused:
             self.p.paused=0
