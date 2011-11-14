@@ -716,6 +716,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btndef = self.custombuttons[i]
             try:
                 b=wx.Button(self.panel,-1,btndef[0])
+                b.SetToolTip(wx.ToolTip(_("Execute command: ")+btndef[1]))
                 if len(btndef)>2:
                     b.SetBackgroundColour(btndef[2])
                     rr,gg,bb=b.GetBackgroundColour().Get()
@@ -726,6 +727,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.newbuttonbutton=b=wx.Button(self.panel,-1,"+",size=(16,16))
                     b.SetFont(wx.Font(12,wx.FONTFAMILY_SWISS,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
+                    b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON,self.cbutton_edit)
                 else:
                     b=wx.StaticText(self.panel,-1,"",size=(72,22),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
