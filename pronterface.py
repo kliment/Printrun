@@ -707,6 +707,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             #sizer.Remove(button)
             button.Destroy()
         self.custombuttonbuttons=[]
+        newbuttonbuttonindex = len(self.custombuttons)
+        while newbuttonbuttonindex>0 and self.custombuttons[newbuttonbuttonindex-1] is None:
+            newbuttonbuttonindex -= 1
         while len(self.custombuttons) < 13:
             self.custombuttons.append(None)
         for i in xrange(len(self.custombuttons)):
@@ -719,16 +722,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     if 0.3*rr+0.59*gg+0.11*bb < 60:
                         b.SetForegroundColour("#ffffff")
             except:
-                b=wx.StaticText(self.panel,-1,"",size=(72,20),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
-                #b.Freeze()
-                b.Disable()
+                if i == newbuttonbuttonindex:
+                    self.newbuttonbutton=b=wx.Button(self.panel,-1,"+",size=(16,16))
+                    b.SetFont(wx.Font(12,wx.FONTFAMILY_SWISS,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD))
+                    b.SetForegroundColour("#4444ff")
+                    b.Bind(wx.EVT_BUTTON,self.cbutton_edit)
+                else:
+                    b=wx.StaticText(self.panel,-1,"",size=(72,22),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
+                    #b.Freeze()
+                    b.Disable()
             b.custombutton=i
             b.properties=btndef
             if btndef is not None:
                 b.Bind(wx.EVT_BUTTON,self.procbutton)
                 b.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
-            else:
-                b.Bind(wx.EVT_BUTTON,lambda e:e.Skip())
+            #else:
+            #    b.Bind(wx.EVT_BUTTON,lambda e:e.Skip())
             self.custombuttonbuttons.append(b)
             if i<4:
                 ubs.Add(b)
@@ -826,7 +835,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cbutton_save(n,None)
         #while len(self.custombuttons) and self.custombuttons[-1] is None:
         #    del self.custombuttons[-1]
-        self.cbuttons_reload()
+        wx.CallAfter(self.cbuttons_reload)
     
     def cbutton_order(self,e,button,dir):
         n = button.custombutton
@@ -880,7 +889,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     return
             if not hasattr(self,"dragging"):
                 # init dragging of the custom button
-                if hasattr(obj,"custombutton"):
+                if hasattr(obj,"custombutton") and obj.properties is not None:
+                    self.newbuttonbutton.SetLabel("")
+                    self.newbuttonbutton.SetFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL))
+                    self.newbuttonbutton.SetForegroundColour("black")
+                    self.newbuttonbutton.SetSize(obj.GetSize())
+                    if self.upperbottomsizer.GetItem(self.newbuttonbutton) is not None:
+                        self.upperbottomsizer.SetItemMinSize(self.newbuttonbutton,obj.GetSize())
+                        self.topsizer.Layout()
                     self.dragging = wx.Button(self.panel,-1,obj.GetLabel())
                     self.dragging.SetBackgroundColour(obj.GetBackgroundColour())
                     self.dragging.SetForegroundColour(obj.GetForegroundColour())
