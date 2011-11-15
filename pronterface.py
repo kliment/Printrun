@@ -725,7 +725,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 if i == newbuttonbuttonindex:
                     self.newbuttonbutton=b=wx.Button(self.panel,-1,"+",size=(16,16))
-                    b.SetFont(wx.Font(12,wx.FONTFAMILY_SWISS,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD))
+                    #b.SetFont(wx.Font(12,wx.FONTFAMILY_SWISS,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON,self.cbutton_edit)
