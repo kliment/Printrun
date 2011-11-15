@@ -187,7 +187,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.p.send_now("M104 S"+l)
                     print _("Setting hotend temperature to "),f,_(" degrees Celsius.")
                     self.hsetpoint=f
-                    self.tgauge.SetTarget(int(f))
+                    #self.tgauge.SetTarget(int(f))
                     if f>0: 
                         self.htemp.SetValue(l)
                         self.set("last_temperature",str(f))
@@ -440,13 +440,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.resetbtn)
         self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),pos=(690,0))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
-        self.tgauge=TempGauge(self.panel,size=(300,24))
-        def scroll_setpoint(e):
-           if e.GetWheelRotation()>0:
-               self.do_settemp(str(self.hsetpoint+1))
-           elif e.GetWheelRotation()<0:
-               self.do_settemp(str(max(0,self.hsetpoint-1)))
-        self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
+        #self.tgauge=TempGauge(self.panel,size=(300,24))
+        #def scroll_setpoint(e):
+        #   if e.GetWheelRotation()>0:
+        #       self.do_settemp(str(self.hsetpoint+1))
+        #   elif e.GetWheelRotation()<0:
+        #       self.do_settemp(str(max(0,self.hsetpoint-1)))
+        #self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
         
         uts.Add((10,-1))
         self.monitorbox=wx.CheckBox(self.panel,-1,"",pos=(450,37))
@@ -457,7 +457,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         uts.Add((15,-1),flag=wx.EXPAND)
         uts.Add(self.minibtn)
-        uts.Add(self.tgauge)
+        #uts.Add(self.tgauge)
         
         #SECOND ROW
         ubs=self.upperbottomsizer=wx.BoxSizer(wx.HORIZONTAL)
@@ -1081,10 +1081,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     pass
                 string+=(self.tempreport.replace("\r","").replace("T",_("Hotend")).replace("B",_("Bed")).replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
-                try:
-                    self.tgauge.SetValue(int(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                except:
-                    pass
+                #try:
+                #    self.tgauge.SetValue(int(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                #except:
+                #    pass
                 if self.sdprinting:
                     string+= _(" SD printing:%04.2f %%") % (self.percentdone,)
                 if self.p.printing:
@@ -1122,10 +1122,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if "T:" in l:
             self.tempreport=l
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
-            try:
-                self.tgauge.SetValue(int(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-            except:
-                pass
+            #try:
+            #    self.tgauge.SetValue(int(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+            #except:
+            #    pass
         tstring=l.rstrip()
         #print tstring
         if(tstring!="ok"):
