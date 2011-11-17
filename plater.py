@@ -93,7 +93,7 @@ class showstl(wx.Window):
             i=self.parent.l.GetSelection()
             if i != wx.NOT_FOUND:
                 #o=self.models[self.l.GetItemText(i)].offsets
-                self.parent.models[self.parent.l.GetString(i)].rot+=5*(self.i-self.previ)
+                self.parent.models[self.parent.l.GetString(i)].rot-=5*(self.i-self.previ)
                 #self.models[self.l.GetItemText(i)].offsets=o
             self.previ=self.i
             self.Refresh()
@@ -108,7 +108,7 @@ class showstl(wx.Window):
         if self.prevsel!=s:
             self.i=0
             self.prevsel=s
-        if z > 0:
+        if z < 0:
             self.i-=1
         else:
             self.i+=1
@@ -280,7 +280,7 @@ class stlwin(wx.Frame):
                 o=i.offsets
                 sf.write('translate([%s,%s,%s]) rotate([0,0,%s]) import_stl("%s");\n'%(str(o[0]),str(o[1]),str(o[2]),r,os.path.split(i.filename)[1]))
                 if r != 0:
-                    i=i.rotate([0,0,-r])
+                    i=i.rotate([0,0,r])
                 if o != [0,0,0]:
                     i=i.translate([o[0],o[1],o[2]])
                 facets+=i.facets
