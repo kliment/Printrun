@@ -160,7 +160,7 @@ class showstl(wx.Window):
         
 class stlwin(wx.Frame):
     def __init__(self,size=(800,580)):
-        wx.Frame.__init__(self,None,title="Right-click to add a file",size=size)
+        wx.Frame.__init__(self,None,title="Plate building tool",size=size)
         self.SetIcon(wx.Icon("plater.ico",wx.BITMAP_TYPE_ICO))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.panel=wx.Panel(self,-1,size=(150,600),pos=(0,0))
