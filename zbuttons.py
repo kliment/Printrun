@@ -2,7 +2,12 @@ import wx, os, math
 from bufferedcanvas import *
 
 def imagefile(filename):
-    return os.path.join(os.path.dirname(__file__), "images", filename)
+    if os.path.exists(os.path.join(os.path.dirname(__file__), "images", filename)):
+        return os.path.join(os.path.dirname(__file__), "images", filename)
+    else:
+        return os.path.join(os.path.split(os.path.split(__file__)[0])[0], "images", filename)
+    
+    
 
 def sign(n):
     if n < 0: return -1

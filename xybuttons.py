@@ -1,9 +1,13 @@
 import wx, os, math
 from bufferedcanvas import *
 
-def imagefile(filename):
-    return os.path.join(os.path.dirname(__file__), "images", filename)
 
+def imagefile(filename):
+    if os.path.exists(os.path.join(os.path.dirname(__file__), "images", filename)):
+        return os.path.join(os.path.dirname(__file__), "images", filename)
+    else:
+        return os.path.join(os.path.split(os.path.split(__file__)[0])[0], "images", filename)
+    
 def sign(n):
     if n < 0: return -1
     elif n > 0: return 1
@@ -254,6 +258,8 @@ class XYButtons(BufferedCanvas):
                 self.quadrant = 2
             elif evt.GetKeyCode() == wx.WXK_RIGHT:
                 self.quadrant = 0
+            elif evt.GetKeyCode() == wx.WXK_SPACE:
+                pass
             else:
                 evt.Skip()
                 return
