@@ -175,7 +175,7 @@ class stlwin(wx.Frame):
             self.eb=wx.Button(self.panel,label="Done",pos=(100,0))
             self.eb.Bind(wx.EVT_BUTTON,lambda e:self.done(e,callback))
             self.eb=wx.Button(self.panel,label="Cancel",pos=(200,0))
-            self.eb.Bind(wx.EVT_BUTTON,self.Destroy)
+            self.eb.Bind(wx.EVT_BUTTON,lambda e:self.Destroy())
         self.sb=wx.Button(self.panel,label="Snap to Z=0",pos=(00,255))
         self.cb=wx.Button(self.panel,label="Put at 100,100",pos=(0,280))
         self.db=wx.Button(self.panel,label="Delete",pos=(0,305))
