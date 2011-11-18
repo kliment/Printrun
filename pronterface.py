@@ -14,11 +14,12 @@ try:
 except:
     print _("WX is not installed. This program requires WX to run.")
     raise
-import printcore, sys, glob, time, threading, traceback, StringIO, gviz, traceback, cStringIO
+import printcore, sys, glob, time, threading, traceback, gviz, traceback, cStringIO, subprocess
 try:
     os.chdir(os.path.split(__file__)[0])
 except:
     pass
+StringIO=cStringIO
     
 thread=threading.Thread
 winsize=(800,500)
@@ -71,6 +72,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
+        self.skeinp=None
         self.monitor_interval=3
         self.paused=False
         xcol=(245,245,108)
@@ -110,6 +112,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.popwindow()
         self.t=Tee(self.catchprint)
         self.stdout=sys.stdout
+        self.skeining=0
         self.mini=False
         self.p.sendcb=self.sentcb
         self.p.startcb=self.startcb
@@ -305,12 +308,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
         
-        self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("SFACT Settings"),_(" Adjust SFACT settings")))
-        try:
-            from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
-            self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
-        except:
-            pass
+        self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("Slicing Settings"),_(" Adjust slicing settings")))
+        #try:
+        #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
+        #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
+        #except:
+        #    pass
 
         self.menustrip.Append(m,_("&Settings"))
         self.update_macros_menu()
@@ -447,7 +450,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #   elif e.GetWheelRotation()<0:
         #       self.do_settemp(str(max(0,self.hsetpoint-1)))
         #self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
-        
         uts.Add((10,-1))
         self.monitorbox=wx.CheckBox(self.panel,-1,"",pos=(450,37))
         uts.Add((15,-1))
@@ -465,14 +467,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.loadbtn=wx.Button(self.panel,-1,_("Load file"),pos=(0,40))
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
         ubs.Add(self.loadbtn)
-        self.uploadbtn=wx.Button(self.panel,-1,_("SD Upload"),pos=(90,40))
-        self.uploadbtn.Bind(wx.EVT_BUTTON,self.upload)
-        self.printerControls.append(self.uploadbtn)
-        ubs.Add(self.uploadbtn)
-        self.sdprintbtn=wx.Button(self.panel,-1,_("SD Print"),pos=(180,40))
-        self.sdprintbtn.Bind(wx.EVT_BUTTON,self.sdprintfile)
-        self.printerControls.append(self.sdprintbtn)
-        ubs.Add(self.sdprintbtn)
+        self.platebtn=wx.Button(self.panel,-1,_("Compose"),pos=(90,40))
+        self.platebtn.Bind(wx.EVT_BUTTON,self.plate)
+        #self.printerControls.append(self.uploadbtn)
+        ubs.Add(self.platebtn)
+        self.sdbtn=wx.Button(self.panel,-1,_("SD"),pos=(180,40),size=(-1,-1))
+        self.sdbtn.Bind(wx.EVT_BUTTON,self.sdmenu)
+        self.printerControls.append(self.sdbtn)
+        ubs.Add(self.sdbtn)
         self.printbtn=wx.Button(self.panel,-1,_("Print"),pos=(270,40))
         self.printbtn.Bind(wx.EVT_BUTTON,self.printfile)
         self.printbtn.Disable()
@@ -606,6 +608,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.SetBackgroundColour((180,255,180))
         self.zfeedc.SetForegroundColour("black")
         # lls.Add((10,0),pos=(0,11),span=(1,1))
+        
         self.gviz=gviz.gviz(self.panel,(300,300),
             bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
@@ -636,6 +639,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.status.SetStatusText(_("Not connected to printer."))
         self.panel.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
+        
         self.topsizer.Layout()
         self.topsizer.Fit(self)
         
@@ -648,6 +652,24 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #uts.Layout()
         self.cbuttons_reload()
         
+    def plate(self,e):
+        import plater
+        print "plate function activated"
+        plater.stlwin(size=(800,580),callback=self.platecb,parent=self).Show()
+    
+    def platecb(self,name):
+        print "plated: "+name
+        self.loadfile(None,name)
+        
+    def sdmenu(self,e):
+        obj = e.GetEventObject()
+        popupmenu=wx.Menu()
+        item = popupmenu.Append(-1,_("SD Upload"))
+        self.Bind(wx.EVT_MENU,self.upload)
+        item = popupmenu.Append(-1,_("SD Print"))
+        self.Bind(wx.EVT_MENU,self.sdprintfile)
+        self.panel.PopupMenu(popupmenu, obj.GetPosition())
+    
     def htemp_change(self,event):
         if self.hsetpoint > 0:
             self.do_settemp("")
@@ -1196,11 +1218,20 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
     def skein_func(self):
         try:
-            from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
-            from skeinforge.skeinforge_application import skeinforge
-            from skeinforge.fabmetheus_utilities import settings
-            skeinforge_craft.writeOutput(self.filename,False)
-            #print len(self.cout.getvalue().split())
+            import shlex
+            param = self.expandcommand(self.settings.slicecommand).replace("$s",self.filename).replace("$o",self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode()
+            print shlex.split(param)
+            print "Slicing: ",param
+            self.cancelskein=0
+            #p=subprocess.Popen(param,shell=True,bufsize=10,stderr=subprocess.STDOUT,stdout=subprocess.PIPE,close_fds=True)
+            pararray=shlex.split(param)
+            #print pararray
+            self.skeinp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
+            while True:
+                o = self.skeinp.stdout.read(1)
+                if o == '' and self.skeinp.poll() != None: break
+                sys.stdout.write(o)
+            self.skeinp.wait()
             self.stopsf=1
         except:
             print _("Skeinforge execution failed.")
@@ -1210,7 +1241,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def skein_monitor(self):
         while(not self.stopsf):
             try:
-                wx.CallAfter(self.status.SetStatusText,_("Skeining..."))#+self.cout.getvalue().split("\n")[-1])
+                wx.CallAfter(self.status.SetStatusText,_("Slicing..."))#+self.cout.getvalue().split("\n")[-1])
             except:
                 pass
             time.sleep(0.1)
@@ -1230,22 +1261,24 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             threading.Thread(target=self.loadviz).start()
         except:
             self.filename=fn
+        wx.CallAfter(self.loadbtn.SetLabel,_("Load File"))
+        wx.CallAfter(self.status.SetStatusText,_("Slicing cancelled."))
+        
         
     def skein(self,filename):
-        print _("Skeining ") + filename
-        if not os.path.exists("skeinforge"):
-            print _("Skeinforge not found. \nPlease copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file.")
-            return
-        if not os.path.exists("skeinforge/__init__.py"):
-            f=open("skeinforge/__init__.py","w")
-            f.close()
+        wx.CallAfter(self.loadbtn.SetLabel,_("Cancel"))
+        print _("Slicing ") + filename
         self.cout=StringIO.StringIO()
         self.filename=filename
         self.stopsf=0
+        self.skeining=1
         thread(target=self.skein_func).start()
         thread(target=self.skein_monitor).start()
         
     def loadfile(self,event,filename=None):
+        if self.skeining and self.skeinp is not None:
+            self.skeinp.terminate()
+            return
         basedir=self.settings.last_file_path
         if not os.path.exists(basedir):
             basedir = "."

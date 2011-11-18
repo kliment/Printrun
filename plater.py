@@ -159,8 +159,8 @@ class showstl(wx.Window):
         #s.export()
         
 class stlwin(wx.Frame):
-    def __init__(self,size=(800,580)):
-        wx.Frame.__init__(self,None,title="Plate building tool",size=size)
+    def __init__(self,size=(800,580),callback=None,parent=None):
+        wx.Frame.__init__(self,parent,title="Plate building tool",size=size)
         self.SetIcon(wx.Icon("plater.ico",wx.BITMAP_TYPE_ICO))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.panel=wx.Panel(self,-1,size=(150,600),pos=(0,0))
@@ -168,14 +168,20 @@ class stlwin(wx.Frame):
         self.l=wx.ListBox(self.panel,size=(300,180),pos=(0,30))
         self.cl=wx.Button(self.panel,label="Clear",pos=(0,205))
         self.lb=wx.Button(self.panel,label="Load",pos=(0,0))
-        self.eb=wx.Button(self.panel,label="Export",pos=(100,0))
+        if(callback is None):
+            self.eb=wx.Button(self.panel,label="Export",pos=(100,0))
+            self.eb.Bind(wx.EVT_BUTTON,self.export)
+        else:
+            self.eb=wx.Button(self.panel,label="Done",pos=(100,0))
+            self.eb.Bind(wx.EVT_BUTTON,lambda e:self.done(e,callback))
+            self.eb=wx.Button(self.panel,label="Cancel",pos=(200,0))
+            self.eb.Bind(wx.EVT_BUTTON,self.Destroy)
         self.sb=wx.Button(self.panel,label="Snap to Z=0",pos=(00,255))
         self.cb=wx.Button(self.panel,label="Put at 100,100",pos=(0,280))
         self.db=wx.Button(self.panel,label="Delete",pos=(0,305))
         self.ab=wx.Button(self.panel,label="Auto",pos=(0,330))
         self.cl.Bind(wx.EVT_BUTTON,self.clear)
         self.lb.Bind(wx.EVT_BUTTON,self.right)
-        self.eb.Bind(wx.EVT_BUTTON,self.export)
         self.sb.Bind(wx.EVT_BUTTON,self.snap)
         self.cb.Bind(wx.EVT_BUTTON,self.center)
         self.db.Bind(wx.EVT_BUTTON,self.delete)
@@ -266,28 +272,43 @@ class stlwin(wx.Frame):
                 self.l.Select(self.l.GetCount()-1)
                 self.Refresh()
 
+    def done(self,event,cb):
+        import os,time
+        try:
+            os.mkdir("tempstl")
+        except:
+            pass
+        name="tempstl/"+str(int(time.time())%10000)+".stl"
+        self.writefiles(name)
+        if cb is not None:
+            cb(name)
+        self.Destroy()
+        
+        
     def export(self,event):
         dlg=wx.FileDialog(self,"Pick file to save to",self.basedir,style=wx.FD_SAVE)
         dlg.SetWildcard("STL files (;*.stl;)")
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
-            sf=open(name.replace(".","_")+".scad","w")
+            self.writefiles(name)
             
-            facets=[]
-            for i in self.models.values():
-                
-                r=i.rot
-                o=i.offsets
-                sf.write('translate([%s,%s,%s]) rotate([0,0,%s]) import_stl("%s");\n'%(str(o[0]),str(o[1]),str(o[2]),r,os.path.split(i.filename)[1]))
-                if r != 0:
-                    i=i.rotate([0,0,r])
-                if o != [0,0,0]:
-                    i=i.translate([o[0],o[1],o[2]])
-                facets+=i.facets
-            sf.close()
-            stltool.emitstl(name,facets,"plater_export")
-            print "wrote ",name
+    def writefiles(self,name):
+        sf=open(name.replace(".","_")+".scad","w")
+        facets=[]
+        for i in self.models.values():
             
+            r=i.rot
+            o=i.offsets
+            sf.write('translate([%s,%s,%s]) rotate([0,0,%s]) import_stl("%s");\n'%(str(o[0]),str(o[1]),str(o[2]),r,os.path.split(i.filename)[1]))
+            if r != 0:
+                i=i.rotate([0,0,r])
+            if o != [0,0,0]:
+                i=i.translate([o[0],o[1],o[2]])
+            facets+=i.facets
+        sf.close()
+        stltool.emitstl(name,facets,"plater_export")
+        print "wrote ",name
+        
     def right(self,event):
         dlg=wx.FileDialog(self,"Pick file to load",self.basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard("STL files (;*.stl;)|*.stl|OpenSCAD files (;*.scad;)|*.scad")

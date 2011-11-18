@@ -153,6 +153,9 @@ class Settings:
         self.xy_feedrate = 3000
         self.z_feedrate = 200
         self.e_feedrate = 300
+        self.slicecommand="python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s"
+        self.sliceoptscommand="python skeinforge/skeinforge_application/skeinforge.py"
+        
     def _set(self,key,value):
         try:
             value = getattr(self,"_%s_alias"%key)()[value]
@@ -1070,6 +1073,9 @@ class pronsole(cmd.Cmd):
         print "monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"
         print "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"
         
+    def expandcommand(self,c):
+        return c.replace("$python",sys.executable)
+        
     def do_skein(self,l):
         l=l.split()
         if len(l)==0:
@@ -1083,27 +1089,16 @@ class pronsole(cmd.Cmd):
             if not(os.path.exists(l[0])):
                 print "File not found!"
                 return
-        if not os.path.exists("skeinforge"):
-            print "Skeinforge not found. \nPlease copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
-            return
-        if not os.path.exists("skeinforge/__init__.py"):
-            f=open("skeinforge/__init__.py","w")
-            f.close()
         try:
-            from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
-            from skeinforge.skeinforge_application import skeinforge
+            import shlex
             if(settings):
-                param = "skeinforge/skeinforge_application/skeinforge.py"
-                print "Entering skeinforge settings: ",sys.executable," ",param
-                subprocess.call([sys.executable,param])
+                param = self.expandcommand(self.settings.sliceoptscommand).encode()
+                print "Entering skeinforge settings: ",param
+                subprocess.call(shlex.split(param))
             else:
-                if(len(l)>1):
-                    if(l[1] == "view"):
-                        skeinforge_craft.writeOutput(l[0],True)
-                    else:
-                        skeinforge_craft.writeOutput(l[0],False)
-                else:
-                    skeinforge_craft.writeOutput(l[0],False)
+                param = self.expandcommand(self.settings.slicecommand).replace("$s",l[0]).replace("$o",l[0].replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode()
+                print "Slicing: ",param
+                subprocess.call(shlex.split(param))
                 print "Loading skeined file."
                 self.do_load(l[0].replace(".stl","_export.gcode"))
         except Exception,e:

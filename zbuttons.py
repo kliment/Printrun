@@ -75,9 +75,9 @@ class ZButtons(BufferedCanvas):
     def draw(self, dc, w, h):
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
-        w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
-
-        gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+        if self.bg_bmp:
+            w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
+            gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
 
         if self.enabled:
             # Draw label overlays

@@ -38,9 +38,8 @@ class XYButtons(BufferedCanvas):
         self.moveCallback = moveCallback
         self.cornerCallback = cornerCallback
         self.enabled = False
-
+    
         BufferedCanvas.__init__(self, parent, ID)
-
         self.SetSize(self.bg_bmp.GetSize())
 
         # Set up mouse and keyboard event capture
@@ -192,8 +191,9 @@ class XYButtons(BufferedCanvas):
         gc = wx.GraphicsContext.Create(dc)
 
         center = wx.Point(XYButtons.center[0], XYButtons.center[1])
-        w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
-        gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+        if self.bg_bmp:
+            w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
+            gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
         
         if self.enabled:
             # Brush and pen for grey overlay when mouse hovers over
