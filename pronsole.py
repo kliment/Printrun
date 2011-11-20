@@ -147,9 +147,9 @@ class Settings:
         self.port = ""
         self.baudrate = 115200
         self.temperature_pla = 185
-        self.temperature_abs = 230.0
-        self.bedtemp_pla = 60.0
-        self.bedtemp_abs = 110.0
+        self.temperature_abs = 230
+        self.bedtemp_pla = 60
+        self.bedtemp_abs = 110
         self.xy_feedrate = 3000
         self.z_feedrate = 200
         self.e_feedrate = 300
