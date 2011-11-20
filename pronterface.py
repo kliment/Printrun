@@ -417,13 +417,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.rescanbtn,wx.TOP|wx.LEFT,0)
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
-                style=wx.CB_DROPDOWN|wx.CB_READONLY, pos=(50,0))
+                style=wx.CB_DROPDOWN, pos=(50,0))
         self.rescanports()
         uts.Add(self.serialport)
         uts.Add(wx.StaticText(self.panel,-1,"@",pos=(250,5)),wx.RIGHT,5)
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
-                style=wx.CB_DROPDOWN|wx.CB_READONLY, size=(110,30),pos=(275,0))
+                style=wx.CB_DROPDOWN, size=(110,30),pos=(275,0))
         try:
             self.baud.SetValue("115200")
             self.baud.SetValue(str(self.settings.baudrate))
