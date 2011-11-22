@@ -2,7 +2,7 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-import os, gettext
+import os, gettext, Queue
 
 if os.path.exists('/usr/share/pronterface/locale'):
     gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
@@ -75,6 +75,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.skeinp=None
         self.monitor_interval=3
         self.paused=False
+        self.sentlines=Queue.Queue(30)
         xcol=(245,245,108)
         ycol=(180,180,255)
         zcol=(180,255,180)
@@ -158,7 +159,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                         threading.Thread(target=wx.CallAfter,args=(self.gviz.setlayer,layer)).start()
                 except:
                     pass
-            threading.Thread(target=self.gviz.addgcode,args=(line,1)).start()
+            try:
+                self.sentlines.put_nowait(line)
+            except:
+                pass
+            #threading.Thread(target=self.gviz.addgcode,args=(line,1)).start()
             #self.gwindow.p.addgcode(line,hilight=1)
     
     def do_extrude(self,l=""):
@@ -1118,6 +1123,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                         self.p.send_now("M27")
                     self.p.send_now("M105")
                 time.sleep(self.monitor_interval)
+                while not self.sentlines.empty():
+                    try:
+                        gc=self.sentlines.get_nowait()
+                        wx.CallAfter(self.gviz.addgcode(gc,1))
+                    except:
+                        break
             wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
         except:
             pass #if window has been closed

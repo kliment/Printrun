@@ -88,7 +88,11 @@ class gviz(wx.Panel):
         self.lastpos=[0,0,0,0,0,0,0]
         self.lines={}
         self.pens={}
+        self.arcs={}
+        self.arcpens={}
         self.layers=[]
+        self.hilight=[]
+        self.hilightarcs=[]
         self.layerindex=0
         self.showall=0
         self.dirty=1
