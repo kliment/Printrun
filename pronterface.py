@@ -1262,7 +1262,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             self.filename=fn
         wx.CallAfter(self.loadbtn.SetLabel,_("Load File"))
-        wx.CallAfter(self.status.SetStatusText,_("Slicing cancelled."))
+        self.skeining=0
+        self.skeinp=None
         
         
     def skein(self,filename):
