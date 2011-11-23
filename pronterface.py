@@ -1126,7 +1126,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 while not self.sentlines.empty():
                     try:
                         gc=self.sentlines.get_nowait()
-                        wx.CallAfter(self.gviz.addgcode(gc,1))
+                        wx.CallAfter(self.gviz.addgcode,gc,1)
                     except:
                         break
             wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
