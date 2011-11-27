@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from serial import Serial
 from threading import Thread
+from select import error as SelectError
 import time
 import sys
 
@@ -76,7 +77,15 @@ class printcore():
         while(True):
             if(not self.printer or not self.printer.isOpen):
                 break
-            line=self.printer.readline()
+            try:
+                line=self.printer.readline()
+            except SelectError, e:
+                if 'Bad file descriptor' in e.args[1]:
+                    print "Can't read from printer (disconnected?)."
+                    break
+                else:
+                    raise
+
             if(len(line)>1):
                 self.log+=[line]
                 if self.recvcb is not None:

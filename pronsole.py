@@ -94,7 +94,7 @@ def estimate_duration(g):
 	feedrate = 0
 	X_last_position = 0
 	Y_last_position = 0
-	for i in g:
+	for i.split(";")[0] in g:
 		if "G1" in i and ("X" in i or "Y" in i or "F" in i or "E" in i):
 			parts = i.split(" ")
 			X = get_coordinate_value("X", parts[1:])
@@ -812,14 +812,14 @@ class pronsole(cmd.Cmd):
         print "! os.listdir('.')"
         
     def default(self,l):
-        if(l[0]=='M' or l[0]=="G"):
+        if(l[0]=='M' or l[0]=="G" or l[0]=='T'):
             if(self.p and self.p.online):
                 print "SENDING:"+l
                 self.p.send_now(l)
             else:
                 print "Printer is not online."
             return
-        if(l[0]=='m' or l[0]=="g"):
+        if(l[0]=='m' or l[0]=="g" or l[0]=='t'):
             if(self.p and self.p.online):
                 print "SENDING:"+l.upper()
                 self.p.send_now(l.upper())
