@@ -240,45 +240,10 @@ class gcview(object):
                                              ('v3f/static', layertemp[lasth][0]),
                                              ('n3f/static', layertemp[lasth][1]))
                 lasth=i[0][2]
-            S=i[0][:3]
-            E=i[1][:3]
-            v=map(lambda x,y:x-y,E,S)
-            vlen=math.sqrt(float(sum(map(lambda a:a*a, v[:3]))))
-            
-            if vlen==0:
-                vlen=0.01
-            sq2=math.sqrt(2.0)/2.0
-            htw=float(h)/w
-            d=w/2.0
-            if i[1][3]==i[0][3]:
-                d=0.05
-            points=[[d,0,0],
-            [sq2*d,sq2*d,0],
-            [0,d,0],
-            [-sq2*d,sq2*d,0],
-            [-d,0,0],
-            [-sq2*d,-sq2*d,0],
-            [0,-d,0],
-            [sq2*d,-sq2*d,0]
-            ]
-            axis=stltool.cross([0,0,1],v)
-            alen=math.sqrt(float(sum(map(lambda a:a*a, v[:3]))))
-            if alen>0:
-                axis=map(lambda m:m/alen,axis)
-                angle=math.acos(v[2]/vlen)
-                def vrot(v,axis,angle):
-                    kxv=stltool.cross(axis,v)
-                    kdv=sum(map(lambda x,y:x*y,axis,v))
-                    return map(lambda x,y,z:x*math.cos(angle)+y*math.sin(angle)+z*kdv*(1.0-math.cos(angle)),v,kxv,axis)
-                points=map(lambda x:vrot(x,axis,angle),points)
-            points=map(lambda x:[x[0],x[1],htw*x[2]],points)
-            
-            def vadd(v,o):
-                return map(lambda x,y:x+y,v,o)
             def vdiff(v,o):
                 return map(lambda x,y:x-y,v,o)
-            spoints=map(lambda x:vadd(S,x),points)
-            epoints=map(lambda x:vadd(E,x),points)
+        
+            spoints,epoints,S,E=self.genline(i,h,w)
             for j in xrange(8):
                 
                 layertemp[i[0][2]][0].extend(spoints[(j+1)%8])
@@ -325,6 +290,46 @@ class gcview(object):
                                              ('v3f/static', layertemp[lasth][0]),
                                              ('n3f/static', layertemp[lasth][1]))
                 
+       
+    def genline(self,i,h,w):
+        S=i[0][:3]
+        E=i[1][:3]
+        v=map(lambda x,y:x-y,E,S)
+        vlen=math.sqrt(float(sum(map(lambda a:a*a, v[:3]))))
+        
+        if vlen==0:
+            vlen=0.01
+        sq2=math.sqrt(2.0)/2.0
+        htw=float(h)/w
+        d=w/2.0
+        if i[1][3]==i[0][3]:
+            d=0.05
+        points=[[d,0,0],
+        [sq2*d,sq2*d,0],
+        [0,d,0],
+        [-sq2*d,sq2*d,0],
+        [-d,0,0],
+        [-sq2*d,-sq2*d,0],
+        [0,-d,0],
+        [sq2*d,-sq2*d,0]
+        ]
+        axis=stltool.cross([0,0,1],v)
+        alen=math.sqrt(float(sum(map(lambda a:a*a, v[:3]))))
+        if alen>0:
+            axis=map(lambda m:m/alen,axis)
+            angle=math.acos(v[2]/vlen)
+            def vrot(v,axis,angle):
+                kxv=stltool.cross(axis,v)
+                kdv=sum(map(lambda x,y:x*y,axis,v))
+                return map(lambda x,y,z:x*math.cos(angle)+y*math.sin(angle)+z*kdv*(1.0-math.cos(angle)),v,kxv,axis)
+            points=map(lambda x:vrot(x,axis,angle),points)
+        points=map(lambda x:[x[0],x[1],htw*x[2]],points)
+        
+        def vadd(v,o):
+            return map(lambda x,y:x+y,v,o)
+        spoints=map(lambda x:vadd(S,x),points)
+        epoints=map(lambda x:vadd(E,x),points)
+        return spoints,epoints,S,E
        
     def transform(self,line):
             line=line.split(";")[0]
@@ -697,8 +702,19 @@ class TestGlPanel(GLPanel):
             glTranslatef(*(i.offsets))
             glRotatef(i.rot,0.0,0.0,1.0)
             glScalef(*i.scale)
-            i.batch.draw()
-            glPopMatrix()
+            
+            try:
+                if i.curlayer in i.gc.layers:
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.23, 0.57, 0.35, 1))
+                    [i.gc.layers[j].draw() for j in i.gc.layers.keys() if j<i.curlayer]
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.9, 0.7, 1))
+                    b=i.gc.layers[i.curlayer]
+                    b.draw()
+                else:
+                    i.batch.draw()
+            except:
+                i.batch.draw()
+        glPopMatrix()
         glPopMatrix()
         #print "drawn batch"
 class TestFrame(wx.Frame):
@@ -713,6 +729,19 @@ class TestFrame(wx.Frame):
         self.SetBackgroundColour((10,10,10))
         self.mainsizer.Add(self.panel)
         #self.mainsizer.AddSpacer(10)
+        class d:
+            def GetSelection(self):
+                return -1
+        
+        m=d()
+        m.offsets=[0,0,0]
+        m.rot=0
+        m.curlayer=1.0
+        m.scale=[1.,1.,1.]
+        m.batch=pyglet.graphics.Batch()
+        m.gc=gcview([], batch=m.batch)
+        self.models={"":m}
+        self.l=d()
         self.GLPanel1 = TestGlPanel(self,size)
         self.mainsizer.Add(self.GLPanel1, 1, wx.EXPAND)
         #self.GLPanel2 = TestGlPanel(self, wx.ID_ANY, (20, 20))
