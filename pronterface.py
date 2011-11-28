@@ -1088,7 +1088,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.sdprinting:
                     string+= _(" SD printing:%04.2f %%") % (self.percentdone,)
                 if self.p.printing:
+                    secondselapsed = int(time.time()-self.starttime)
+                    fractioncomplete = float(self.p.queueindex)/len(self.p.mainqueue)
+                    secondsestimate = secondselapsed/fractioncomplete
+                    secondsremain = secondsestimate - secondselapsed
                     string+= _(" Printing:%04.2f %%") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
+                    string+= _(" Estimated:%02.0f") % (int(secondsremain/60),)
+                    string+= _(":%02.0f") % (int(secondsremain%60),)
+                    string+= _(" of %02.0f") % (int(secondsestimate/60),)
+                    string+= _(":%02.0f Remaining") % (int(secondsestimate%60),)
                 wx.CallAfter(self.status.SetStatusText,string)
                 wx.CallAfter(self.gviz.Refresh)
                 if(self.monitor and self.p.online):
