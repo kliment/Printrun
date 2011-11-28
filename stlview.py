@@ -714,7 +714,7 @@ class TestGlPanel(GLPanel):
                     i.batch.draw()
             except:
                 i.batch.draw()
-        glPopMatrix()
+            glPopMatrix()
         glPopMatrix()
         #print "drawn batch"
 class TestFrame(wx.Frame):
