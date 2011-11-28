@@ -94,7 +94,8 @@ def estimate_duration(g):
 	feedrate = 0
 	X_last_position = 0
 	Y_last_position = 0
-	for i.split(";")[0] in g:
+	for i in g:
+		i=i.split(";")[0]
 		if "G1" in i and ("X" in i or "Y" in i or "F" in i or "E" in i):
 			parts = i.split(" ")
 			X = get_coordinate_value("X", parts[1:])
