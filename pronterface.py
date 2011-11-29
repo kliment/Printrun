@@ -122,10 +122,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def startcb(self):
         self.starttime=time.time()
+        print "Print Started at: " +time.strftime('%H:%M:%S',time.localtime(self.starttime))
         
     def endcb(self):
         if(self.p.queueindex==0):
-            print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
+            print "Print ended at: " +time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "and took: "+time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime)))  #+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
             
@@ -1099,11 +1101,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     secondsremain = secondsestimate - secondselapsed
                     string+= _(" Est: ") + time.strftime('%H:%M:%S', time.gmtime(secondsremain))
                     string+= _(" of: ") + time.strftime('%H:%M:%S', time.gmtime(secondsestimate))
-                    string+= _(" Remaining")
-                    #string+= _(" Est:%02.0f") % (int(secondsremain/60),)
-                    #string+= _(":%02.0f") % (int(secondsremain%60),)
-                    #string+= _(" of %02.0f") % (int(secondsestimate/60),)
-                    #string+= _(":%02.0f Remaining") % (int(secondsestimate%60),)
+                    string+= _(" Remaining | ")
+                    string+= _(" Z: %0.2f mm") % self.curlayer
                 wx.CallAfter(self.status.SetStatusText,string)
                 wx.CallAfter(self.gviz.Refresh)
                 if(self.monitor and self.p.online):
