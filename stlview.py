@@ -222,6 +222,7 @@ class gcview(object):
         f=open("20cube_export.gcode")
         lines=list(f)
         f.close()
+        self.vlists=[]
         self.layers={}
         lines=[self.transform(i) for i in lines]
         lines=[i for i in lines if i is not None]
@@ -233,17 +234,23 @@ class gcview(object):
                 if lasth is not None:
                     self.layers[lasth]=pyglet.graphics.Batch()
                     indices = range(len(layertemp[lasth][0]))#[[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-                    self.layers[lasth].add_indexed(len(layertemp[lasth][0])//3, 
+                    self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0])//3, 
                                              GL_TRIANGLES,
                                              None,#group,
                                              indices,
                                              ('v3f/static', layertemp[lasth][0]),
-                                             ('n3f/static', layertemp[lasth][1]))
+                                             ('n3f/static', layertemp[lasth][1])))
+                    
                 lasth=i[0][2]
+                #if lasth==3.8:
+                #    return
             def vdiff(v,o):
                 return map(lambda x,y:x-y,v,o)
         
             spoints,epoints,S,E=self.genline(i,h,w)
+            #if abs(sum(vdiff(S,E)))<10:
+            #    continue
+            #    print spoints
             for j in xrange(8):
                 
                 layertemp[i[0][2]][0].extend(spoints[(j+1)%8])
@@ -274,21 +281,21 @@ class gcview(object):
         # Create a list of triangle indices.
         indices = range(3*16*len(lines))#[[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
         #print indices[:10]
-        self.vertex_list = batch.add_indexed(len(vertices)//3, 
+        self.vlists.append(batch.add_indexed(len(vertices)//3, 
                                              GL_TRIANGLES,
                                              None,#group,
                                              indices,
                                              ('v3f/static', vertices),
-                                             ('n3f/static', normals))
+                                             ('n3f/static', normals)))
         if lasth is not None:
                     self.layers[lasth]=pyglet.graphics.Batch()
                     indices = range(len(layertemp[lasth][0]))#[[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-                    self.layers[lasth].add_indexed(len(layertemp[lasth][0])//3, 
+                    self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0])//3, 
                                              GL_TRIANGLES,
                                              None,#group,
                                              indices,
                                              ('v3f/static', layertemp[lasth][0]),
-                                             ('n3f/static', layertemp[lasth][1]))
+                                             ('n3f/static', layertemp[lasth][1])))
                 
        
     def genline(self,i,h,w):
@@ -357,7 +364,9 @@ class gcview(object):
         
        
     def delete(self):
-        self.vertex_list.delete()
+        for i in self.vlists:
+            i.delete()
+        self.vlists=[]
 
 
 def trackball(p1x, p1y, p2x, p2y, r):
@@ -706,7 +715,7 @@ class TestGlPanel(GLPanel):
             try:
                 if i.curlayer in i.gc.layers:
                     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.23, 0.57, 0.35, 1))
-                    [i.gc.layers[j].draw() for j in i.gc.layers.keys() if j<i.curlayer]
+                    #[i.gc.layers[j].draw() for j in i.gc.layers.keys() if j<i.curlayer]
                     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.9, 0.7, 1))
                     b=i.gc.layers[i.curlayer]
                     b.draw()
@@ -736,7 +745,7 @@ class TestFrame(wx.Frame):
         m=d()
         m.offsets=[0,0,0]
         m.rot=0
-        m.curlayer=1.0
+        m.curlayer=0.2
         m.scale=[1.,1.,1.]
         m.batch=pyglet.graphics.Batch()
         m.gc=gcview([], batch=m.batch)
