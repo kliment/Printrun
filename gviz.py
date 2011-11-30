@@ -61,7 +61,7 @@ class gviz(wx.Panel):
         self.lastpos=[0,0,0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
         self.Bind(wx.EVT_PAINT,self.paint)
-        self.Bind(wx.EVT_SIZE,lambda *e:(wx.CallAfter(self.repaint),wx.CallAfter(self.Refresh)))
+        self.Bind(wx.EVT_SIZE,self.resize)
         self.lines={}
         self.pens={}
         self.arcs={}
@@ -69,7 +69,8 @@ class gviz(wx.Panel):
         self.layers=[]
         self.layerindex=0
         self.filament_width=extrusion_width # set it to 0 to disable scaling lines with zoom
-        self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
+        self.basescale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
+        self.scale=self.basescale
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate=[0.0,0.0]
         self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
@@ -118,9 +119,16 @@ class gviz(wx.Panel):
         except:
             pass
     
+    def resize(self,event):
+        size=self.GetClientSize()
+        newsize=min(float(size[0])/self.size[0],float(size[1])/self.size[1])
+        self.size=self.GetClientSize()
+        wx.CallAfter(self.zoom,0,0,newsize)
+        
 
     def zoom(self,x,y,factor):
         self.scale = [s * factor for s in self.scale]
+        
         self.translate = [ x - (x-self.translate[0]) * factor,
                             y - (y-self.translate[1]) * factor]
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
@@ -129,6 +137,7 @@ class gviz(wx.Panel):
         #self.dirty=1
         self.repaint()
         self.Refresh()
+        
         
     def repaint(self):
         self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
