@@ -233,7 +233,12 @@ class gcview(object):
                 layertemp[i[0][2]]=[[],[]]
                 if lasth is not None:
                     self.layers[lasth]=pyglet.graphics.Batch()
-                    indices = range(len(layertemp[lasth][0]))#[[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
+                    lt=layertemp[lasth][0]
+                    #for p in [[lt[k:k+3],lt[k+3:k+6],lt[k+6:k+9]] for k in range(0, len(lt), 9)]:
+                    #    area= 0.5*math.sqrt(sum(map(lambda x:x*x,stltool.cross(vdiff(p[1],p[0]),vdiff(p[2],p[0])))))
+                    #    if area>3: print p,area
+                    #print len(lt),lasth
+                    indices = range(len(layertemp[lasth][0])//3)#[[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
                     self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0])//3, 
                                              GL_TRIANGLES,
                                              None,#group,
@@ -714,9 +719,9 @@ class TestGlPanel(GLPanel):
             
             try:
                 if i.curlayer in i.gc.layers:
-                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.23, 0.57, 0.35, 1))
-                    #[i.gc.layers[j].draw() for j in i.gc.layers.keys() if j<i.curlayer]
-                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.9, 0.7, 1))
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.13, 0.37, 0.25, 1))
+                    [i.gc.layers[j].draw() for j in i.gc.layers.keys() if j<i.curlayer]
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.6, 0.9, 1))
                     b=i.gc.layers[i.curlayer]
                     b.draw()
                 else:
@@ -745,7 +750,7 @@ class TestFrame(wx.Frame):
         m=d()
         m.offsets=[0,0,0]
         m.rot=0
-        m.curlayer=0.2
+        m.curlayer=7.0
         m.scale=[1.,1.,1.]
         m.batch=pyglet.graphics.Batch()
         m.gc=gcview([], batch=m.batch)
