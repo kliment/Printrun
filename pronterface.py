@@ -126,10 +126,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def startcb(self):
         self.starttime=time.time()
+        print "Print Started at: " +time.strftime('%H:%M:%S',time.localtime(self.starttime))
         
     def endcb(self):
         if(self.p.queueindex==0):
-            print "Print took "+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
+            print "Print ended at: " +time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "and took: "+time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime)))  #+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
             
@@ -1112,18 +1114,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 #    self.tgauge.SetValue(int(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
                 #except:
                 #    pass
+                fractioncomplete = 0.0
                 if self.sdprinting:
+                    fractioncomplete = float(self.percentdone/100.0)
                     string+= _(" SD printing:%04.2f %%") % (self.percentdone,)
                 if self.p.printing:
-                    secondselapsed = int(time.time()-self.starttime)
                     fractioncomplete = float(self.p.queueindex)/len(self.p.mainqueue)
+                    string+= _(" Printing:%04.2f %% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
+                    string+= _(" Line# ") + str(self.p.queueindex) + _("of ") + str(len(self.p.mainqueue)) + _(" lines |" )
+                if fractioncomplete > 0.0:
+                    secondselapsed = int(time.time()-self.starttime)
                     secondsestimate = secondselapsed/fractioncomplete
                     secondsremain = secondsestimate - secondselapsed
-                    string+= _(" Printing:%04.2f %%") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
-                    string+= _(" Estimated:%02.0f") % (int(secondsremain/60),)
-                    string+= _(":%02.0f") % (int(secondsremain%60),)
-                    string+= _(" of %02.0f") % (int(secondsestimate/60),)
-                    string+= _(":%02.0f Remaining") % (int(secondsestimate%60),)
+                    string+= _(" Est: ") + time.strftime('%H:%M:%S', time.gmtime(secondsremain))
+                    string+= _(" of: ") + time.strftime('%H:%M:%S', time.gmtime(secondsestimate))
+                    string+= _(" Remaining | ")
+                    string+= _(" Z: %0.2f mm") % self.curlayer
                 wx.CallAfter(self.status.SetStatusText,string)
                 wx.CallAfter(self.gviz.Refresh)
                 if(self.monitor and self.p.online):

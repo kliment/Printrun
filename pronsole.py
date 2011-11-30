@@ -89,53 +89,56 @@ def get_coordinate_value(axis, parts):
 	
 	
 def estimate_duration(g):
-	extra_cost_per_movement = 0.02
-	total_duration = 0
-	feedrate = 0
-	X_last_position = 0
-	Y_last_position = 0
-	for i in g:
-		i=i.split(";")[0]
-		if "G1" in i and ("X" in i or "Y" in i or "F" in i or "E" in i):
-			parts = i.split(" ")
-			X = get_coordinate_value("X", parts[1:])
-			Y = get_coordinate_value("Y", parts[1:])
-			F = get_coordinate_value("F", parts[1:])
-			E = get_coordinate_value("E", parts[1:])
+    extra_cost_per_movement = 0.02
+    total_duration = 0.0
+    feedrate = 0.0
+    avg_feedrate = 0.0
+    last_feedrate = 0.0
+    X_last_position = 0.0
+    Y_last_position = 0.0
+    Z_last_position = 0.0
+    for i in g:
+        i=i.split(";")[0]
+        if "G1" in i and ("X" in i or "Y" in i or "F" in i or "E" in i):
+        #if "G1" in i and ("X" in i or "Y" in i or "Z" in i or "F" in i or "E" in i):
+            parts = i.split(" ")
+            X = get_coordinate_value("X", parts[1:])
+            Y = get_coordinate_value("Y", parts[1:])
+            #Z = get_coordinate_value("Z", parts[1:])
+            F = get_coordinate_value("F", parts[1:])
+            E = get_coordinate_value("E", parts[1:])
 
-			if (F is not None):
-				feedrate = F / 60
-			
-			distance = 0
-			if (X is None and Y is None and E is not None):
-				distance = abs(E)
-			elif (X is not None and Y is None):
-				distance = X - X_last_position
-				X_last_position = X
-			elif (X is None and Y is not None):
-				distance = Y - Y_last_position
-				Y_last_position = Y
-			elif (X is not None and Y is not None):
-				X_distance = X - X_last_position
-				Y_distance = Y - Y_last_position
-				distance = sqrt(X_distance * X_distance + Y_distance * Y_distance)
-				X_last_position = X
-				Y_last_position = Y
+            if (F is not None):
+                feedrate = (last_feedrate + (F / 60.0))/2.0
+            distance = 0
+            if (X is None and Y is None and E is not None):
+                distance = abs(E)
+            elif (X is not None and Y is None):
+                distance = X - X_last_position
+                X_last_position = X
+            elif (X is None and Y is not None):
+                distance = Y - Y_last_position
+                Y_last_position = Y
+            elif (X is not None and Y is not None):
+                X_distance = X - X_last_position
+                Y_distance = Y - Y_last_position
+                distance = sqrt(X_distance * X_distance + Y_distance * Y_distance)
+                X_last_position = X
+                Y_last_position = Y
+            #if (Z is not None):
+            #    Z_distance = Z - Z_last_position
+            #    if not(distance == 0.0):
+            #        distance = sqrt(Z_distance * Z_distance + distance * distance )
+            #    else:
+            #        distance = Z_distance
+            #    Z_last_position = Z
 
-			if (feedrate == 0 or distance == 0): continue
-			
-			time_for_move = distance / feedrate
-			acceleration = feedrate / time_for_move
-			halfway_feedrate = acceleration * time_for_move / 2
-			duration = halfway_feedrate * 2 / acceleration
-
-			total_duration += duration + extra_cost_per_movement
-
-	mod_minutes = total_duration % (60 * 60)
-	mod_seconds = mod_minutes % 60		
-	
-	return "{0:02d}h{1:02d}m".format(int((total_duration - mod_minutes) / (60 * 60)), int((mod_minutes - mod_seconds) / 60))
-	
+            if (feedrate == 0.0 or distance == 0.0): continue
+            
+            time_for_move = distance / feedrate 
+            total_duration += time_for_move + extra_cost_per_movement
+            if (F is not None):                feedrate = F / 60.0
+    return time.strftime('%H:%M:%S', time.gmtime(total_duration/60.0))
 class Settings:
     #def _temperature_alias(self): return {"pla":210,"abs":230,"off":0}
     #def _temperature_validate(self,v):
