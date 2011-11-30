@@ -490,14 +490,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ubs.Add(self.pausebtn)
         #Right full view
         lrs=self.lowerrsizer=wx.BoxSizer(wx.VERTICAL)
-        self.logbox=wx.TextCtrl(self.panel,style = wx.TE_MULTILINE)
+        self.logbox=wx.TextCtrl(self.panel,style = wx.TE_MULTILINE,size=(350,-1))
         self.logbox.SetEditable(0)
         lrs.Add(self.logbox,1,wx.EXPAND)
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
         self.commandbox=wx.TextCtrl(self.panel,style = wx.TE_PROCESS_ENTER)
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
         #self.printerControls.append(self.commandbox)
-        lbrs.Add(self.commandbox,1)
+        lbrs.Add(self.commandbox,0)
         self.sendbtn=wx.Button(self.panel,-1,_("Send"))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
         #self.printerControls.append(self.sendbtn)
@@ -625,9 +625,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
         self.gwindow.Bind(wx.EVT_CLOSE,lambda x:self.gwindow.Hide())
+        vcs=wx.BoxSizer(wx.VERTICAL)
+        vcs.Add(self.gviz,1,flag=wx.SHAPED)
         cs=self.centersizer=wx.GridBagSizer()
-        cs.Add(self.gviz,pos=(0,0),span=(1,3))
-        lls.Add(cs,pos=(0,10),span=(8,1))
+        vcs.Add(cs,0,flag=wx.EXPAND)
         
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
         self.uppersizer.Add(self.uppertopsizer)
@@ -635,7 +636,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         self.lowersizer=wx.BoxSizer(wx.HORIZONTAL)
         self.lowersizer.Add(lls)
-        self.lowersizer.Add(lrs,1,wx.EXPAND)
+        self.lowersizer.Add(vcs,1,wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
+        self.lowersizer.Add(lrs,0,wx.EXPAND)
         self.topsizer=wx.BoxSizer(wx.VERTICAL)
         self.topsizer.Add(self.uppersizer)
         self.topsizer.Add(self.lowersizer,1,wx.EXPAND)
@@ -757,9 +759,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON,self.cbutton_edit)
                 else:
-                    b=wx.StaticText(self.panel,-1,"",size=(72,22),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
-                    #b.Freeze()
-                    b.Disable()
+                    continue
             b.custombutton=i
             b.properties=btndef
             if btndef is not None:
@@ -771,7 +771,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if i<4:
                 ubs.Add(b)
             else:
-                cs.Add(b,pos=(1+(i-4)/3,(i-4)%3),span=(1,1))
+                cs.Add(b,pos=((i-4)/3,(i-4)%3))
         self.topsizer.Layout()
     
     def help_button(self):
