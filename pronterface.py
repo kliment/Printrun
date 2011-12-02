@@ -1243,11 +1243,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             import shlex
             param = self.expandcommand(self.settings.slicecommand).replace("$s",self.filename).replace("$o",self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode()
-            print shlex.split(param)
+            print shlex.split(param.replace("\\","\\\\"))
             print "Slicing: ",param
             self.cancelskein=0
             #p=subprocess.Popen(param,shell=True,bufsize=10,stderr=subprocess.STDOUT,stdout=subprocess.PIPE,close_fds=True)
-            pararray=shlex.split(param)
+            pararray=shlex.split(param.replace("\\","\\\\"))
             #print pararray
             self.skeinp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
             while True:
