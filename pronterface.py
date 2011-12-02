@@ -1580,7 +1580,7 @@ class options(wx.Dialog):
         grid=wx.GridSizer(rows=0,cols=2,hgap=8,vgap=2)
         vbox.Add(grid,0,wx.EXPAND)
         ctrls = {}
-        for k,v in pronterface.settings._all_settings().items():
+        for k,v in sorted(pronterface.settings._all_settings().items()):
             grid.Add(wx.StaticText(self,-1,k),0,wx.BOTTOM+wx.RIGHT)
             ctrls[k] = wx.TextCtrl(self,-1,str(v))
             grid.Add(ctrls[k],1,wx.EXPAND)
