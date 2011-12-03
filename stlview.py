@@ -212,6 +212,10 @@ class stlview(object):
     def delete(self):
         self.vertex_list.delete()
 
+def vdiff(v,o):
+    return [x[0]-x[1] for x in zip(v,o)]
+        
+
 class gcview(object):
     def __init__(self, lines, batch, w=0.5, h=0.5):
         # Create the vertex and normal arrays.
@@ -219,25 +223,25 @@ class gcview(object):
         normals = []
         self.prev=[0.001,0.001,0.001,0.001]
         self.fline=1
-        f=open("20cube_export.gcode")
-        lines=list(f)
-        f.close()
         self.vlists=[]
         self.layers={}
+        t0=time.time()
         lines=[self.transform(i) for i in lines]
         lines=[i for i in lines if i is not None]
+        print "transformed lines in %fs"%(time.time()-t0)
+        t0=time.time()
         layertemp={}
         lasth=None
+        counter=0
+        if len(lines)==0:
+            return
         for i in lines:
+            counter+=1
             if i[0][2] not in layertemp:
                 layertemp[i[0][2]]=[[],[]]
                 if lasth is not None:
                     self.layers[lasth]=pyglet.graphics.Batch()
                     lt=layertemp[lasth][0]
-                    #for p in [[lt[k:k+3],lt[k+3:k+6],lt[k+6:k+9]] for k in range(0, len(lt), 9)]:
-                    #    area= 0.5*math.sqrt(sum(map(lambda x:x*x,stltool.cross(vdiff(p[1],p[0]),vdiff(p[2],p[0])))))
-                    #    if area>3: print p,area
-                    #print len(lt),lasth
                     indices = range(len(layertemp[lasth][0])//3)#[[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
                     self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0])//3, 
                                              GL_TRIANGLES,
@@ -247,45 +251,29 @@ class gcview(object):
                                              ('n3f/static', layertemp[lasth][1])))
                     
                 lasth=i[0][2]
-                #if lasth==3.8:
-                #    return
-            def vdiff(v,o):
-                return map(lambda x,y:x-y,v,o)
-        
+                
             spoints,epoints,S,E=self.genline(i,h,w)
-            #if abs(sum(vdiff(S,E)))<10:
-            #    continue
-            #    print spoints
-            for j in xrange(8):
-                
-                layertemp[i[0][2]][0].extend(spoints[(j+1)%8])
-                layertemp[i[0][2]][1].extend(vdiff(spoints[(j+1)%8],S))
-                layertemp[i[0][2]][0].extend(epoints[(j)%8])
-                layertemp[i[0][2]][1].extend(vdiff(epoints[(j)%8],E))
-                layertemp[i[0][2]][0].extend(spoints[j])
-                layertemp[i[0][2]][1].extend(vdiff(spoints[j],S))
-                layertemp[i[0][2]][0].extend(epoints[(j)])
-                layertemp[i[0][2]][1].extend(vdiff(epoints[(j)],E))
-                layertemp[i[0][2]][0].extend(spoints[(j+1)%8])
-                layertemp[i[0][2]][1].extend(vdiff(spoints[j],S))
-                layertemp[i[0][2]][0].extend(epoints[(j+1)%8])
-                layertemp[i[0][2]][1].extend(vdiff(epoints[(j+1)%8],E))
-                
-                vertices.extend(spoints[(j+1)%8])
-                normals.extend(vdiff(spoints[(j+1)%8],S))
-                vertices.extend(epoints[(j)%8])
-                normals.extend(vdiff(epoints[(j)%8],E))
-                vertices.extend(spoints[j])
-                normals.extend(vdiff(spoints[j],S))
-                vertices.extend(epoints[(j)])
-                normals.extend(vdiff(epoints[(j)],E))
-                vertices.extend(spoints[(j+1)%8])
-                normals.extend(vdiff(spoints[j],S))
-                vertices.extend(epoints[(j+1)%8])
-                normals.extend(vdiff(epoints[(j+1)%8],E))
+            
+            verticestoadd=[[spoints[(j+1)%8],epoints[(j)%8],spoints[j],epoints[j],spoints[(j+1)%8],epoints[(j+1)%8]] for j in xrange(8)]
+            normalstoadd=[map(vdiff,v,[S,E,S,E,S,E]) for v in verticestoadd]
+            v1=[]
+            map(v1.extend,verticestoadd)
+            v2=[]
+            map(v2.extend,v1)
+            n1=[]
+            map(n1.extend,normalstoadd)
+            n2=[]
+            map(n2.extend,n1)
+            
+            layertemp[i[0][2]][0]+=v2
+            vertices+=v2
+            layertemp[i[0][2]][1]+=n2
+            normals+=n2
+        print "appended lines in %fs"%(time.time()-t0)
+        t0=time.time()
+        
         # Create a list of triangle indices.
         indices = range(3*16*len(lines))#[[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-        #print indices[:10]
         self.vlists.append(batch.add_indexed(len(vertices)//3, 
                                              GL_TRIANGLES,
                                              None,#group,
@@ -338,7 +326,7 @@ class gcview(object):
         points=map(lambda x:[x[0],x[1],htw*x[2]],points)
         
         def vadd(v,o):
-            return map(lambda x,y:x+y,v,o)
+            return map(sum,zip(v,o))
         spoints=map(lambda x:vadd(S,x),points)
         epoints=map(lambda x:vadd(E,x),points)
         return spoints,epoints,S,E
@@ -567,6 +555,10 @@ class TestGlPanel(GLPanel):
             i=self.parent.l.GetSelection()
                     
             if i<0:
+                try:
+                    self.parent.setlayerindex(z)
+                except:
+                    pass
                 return
             m=self.parent.models[self.parent.l.GetString(i)]
                     
@@ -731,49 +723,69 @@ class TestGlPanel(GLPanel):
             glPopMatrix()
         glPopMatrix()
         #print "drawn batch"
-class TestFrame(wx.Frame):
+class GCFrame(wx.Frame):
     '''A simple class for using OpenGL with wxPython.'''
 
     def __init__(self, parent, ID, title, pos=wx.DefaultPosition,
             size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE):
-        super(TestFrame, self).__init__(parent, ID, title, pos, (size[0]+150,size[1]), style)
-        self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel=wx.Panel(self,-1,size=(150,600),pos=(0,0))
-        self.panel.SetBackgroundColour((10,10,10))
-        self.SetBackgroundColour((10,10,10))
-        self.mainsizer.Add(self.panel)
-        #self.mainsizer.AddSpacer(10)
+        super(GCFrame, self).__init__(parent, ID, title, pos, (size[0]+150,size[1]), style)
         class d:
             def GetSelection(self):
                 return -1
-        
+        self.p=self
         m=d()
         m.offsets=[0,0,0]
         m.rot=0
-        m.curlayer=7.0
+        m.curlayer=0.0
         m.scale=[1.,1.,1.]
         m.batch=pyglet.graphics.Batch()
         m.gc=gcview([], batch=m.batch)
         self.models={"":m}
         self.l=d()
+        self.modelindex=0
         self.GLPanel1 = TestGlPanel(self,size)
-        self.mainsizer.Add(self.GLPanel1, 1, wx.EXPAND)
-        #self.GLPanel2 = TestGlPanel(self, wx.ID_ANY, (20, 20))
-        #self.mainsizer.Add(self.GLPanel2, 1, wx.EXPAND)
-        self.SetSizer(self.mainsizer)
-        #self.mainsizer.Fit(self)
-        self.Layout()
-        
-        
-
-if __name__=="__main__":
-    rx = ry = rz = 0
     
+    def addfile(self,gcode=[]):
+        self.models[""].gc.delete()
+        self.models[""].gc=gcview(gcode, batch=self.models[""].batch)
+        
+    def clear(self):
+        self.models[""].gc.delete()
+        self.models[""].gc=gcview([], batch=self.models[""].batch)
+       
+       
+    def Show(self,arg=True):
+        wx.Frame.Show(self,arg)
+        self.SetClientSize((self.GetClientSize()[0],self.GetClientSize()[1]+1))
+        self.SetClientSize((self.GetClientSize()[0],self.GetClientSize()[1]-1))
+        self.Refresh()
+        wx.FutureCall(500,self.GLPanel1.forceresize)
+        #threading.Thread(target=self.update).start()
+        #self.initialized=0
+    
+
+        
+    def setlayerindex(self,z):
+        m=self.models[""]
+        mlk=sorted(m.gc.layers.keys())
+        if z>0 and self.modelindex<len(mlk)-1:
+            self.modelindex+=1
+        if z<0 and self.modelindex>0:
+            self.modelindex-=1
+        m.curlayer=mlk[self.modelindex]
+        wx.CallAfter(self.SetTitle,"Gcode view, shift to move. Layer %d, Z=%f"%(self.modelindex,m.curlayer))
+
+    
+def main():
     app = wx.App(redirect=False)
-    frame = TestFrame(None, wx.ID_ANY, 'GL Window', size=(400,400))
+    frame = GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(400,400))
+    frame.addfile(list(open("carriage dump_export.gcode")))
     #frame = wx.Frame(None, -1, "GL Window", size=(400,400))
     #panel = TestGlPanel(frame)
-    frame.Show(True)
-    app.MainLoop()
+    #frame.Show(True)
+    #app.MainLoop()
     app.Destroy()
     
+if __name__=="__main__":
+    import cProfile
+    print cProfile.run("main()")

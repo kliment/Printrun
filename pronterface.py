@@ -619,6 +619,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
             extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.showall=1
+        #try:
+        #    
+        #    import stlview
+        #    self.gwindow=stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(600,600))
+        #except:
         self.gwindow=gviz.window([],
             bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
@@ -658,6 +663,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.panel.Fit()
         #uts.Layout()
         self.cbuttons_reload()
+                
         
     def plate(self,e):
         import plater
@@ -689,8 +695,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def showwin(self,event):
         if(self.f is not None):
-            self.gwindow.Show()
-        
+            self.gwindow.Show(True)
+
     def setfeeds(self,e):
         self.feedrates_changed = True
         try:
@@ -1347,11 +1353,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         print _("the print goes from"),Ymin,_("mm to"),Ymax,_("mm in Y\nand is"),Ytot,_("mm wide\n")
         print _("the print goes from"),Zmin,_("mm to"),Zmax,_("mm in Z\nand is"),Ztot,_("mm high\n")
         print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
+        #import time
+        #t0=time.time()
         self.gviz.clear()
         self.gwindow.p.clear()
-        for i in self.f:
-            self.gviz.addgcode(i)
-            self.gwindow.p.addgcode(i)
+        self.gviz.addfile(self.f)
+        #print "generated 2d view in %f s"%(time.time()-t0)
+        #t0=time.time()
+        self.gwindow.p.addfile(self.f)
+        #print "generated 3d view in %f s"%(time.time()-t0)
         self.gviz.showall=1
         wx.CallAfter(self.gviz.Refresh)
                 
