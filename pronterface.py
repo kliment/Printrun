@@ -1249,11 +1249,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             import shlex
             param = self.expandcommand(self.settings.slicecommand).replace("$s",self.filename).replace("$o",self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode()
-            print shlex.split(param)
+            print shlex.split(param.replace("\\","\\\\"))
             print "Slicing: ",param
             self.cancelskein=0
             #p=subprocess.Popen(param,shell=True,bufsize=10,stderr=subprocess.STDOUT,stdout=subprocess.PIPE,close_fds=True)
-            pararray=shlex.split(param)
+            pararray=shlex.split(param.replace("\\","\\\\"))
             #print pararray
             self.skeinp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
             while True:
@@ -1590,7 +1590,7 @@ class options(wx.Dialog):
         grid=wx.GridSizer(rows=0,cols=2,hgap=8,vgap=2)
         vbox.Add(grid,0,wx.EXPAND)
         ctrls = {}
-        for k,v in pronterface.settings._all_settings().items():
+        for k,v in sorted(pronterface.settings._all_settings().items()):
             grid.Add(wx.StaticText(self,-1,k),0,wx.BOTTOM+wx.RIGHT)
             ctrls[k] = wx.TextCtrl(self,-1,str(v))
             grid.Add(ctrls[k],1,wx.EXPAND)
