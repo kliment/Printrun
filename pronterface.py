@@ -1243,6 +1243,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.listing=0
         self.sdfiles=[]
         self.recvlisteners+=[self.listfiles]
+        self.p.send_now("M21")
         self.p.send_now("M20")
         
     def skein_func(self):
@@ -1412,6 +1413,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             return
         dlg=wx.TextEntryDialog(self, ("Enter a target filename in 8.3 format:"), _("Pick SD filename") ,dosify(self.filename))
         if dlg.ShowModal()==wx.ID_OK:
+            self.p.send_now("M21")
             self.p.send_now("M28 "+str(dlg.GetValue()))
             self.recvlisteners+=[self.uploadtrigger]
         pass
