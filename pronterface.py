@@ -72,6 +72,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
+	self.f=None
         self.skeinp=None
         self.monitor_interval=3
         self.paused=False
@@ -678,6 +679,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         obj = e.GetEventObject()
         popupmenu=wx.Menu()
         item = popupmenu.Append(-1,_("SD Upload"))
+	if not self.f or not len(self.f):
+		item.Enable(False)
         self.Bind(wx.EVT_MENU,self.upload,id=item.GetId())
         item = popupmenu.Append(-1,_("SD Print"))
         self.Bind(wx.EVT_MENU,self.sdprintfile,id=item.GetId())
@@ -1407,7 +1410,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.recvlisteners.remove(self.uploadtrigger)
         
     def upload(self,event):
-        if not len(self.f):
+        if not self.f or not len(self.f):
             return
         if not self.p.online:
             return
