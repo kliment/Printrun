@@ -72,6 +72,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
+	self.f=None
         self.skeinp=None
         self.monitor_interval=3
         self.paused=False
@@ -138,7 +139,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def online(self):
         print _("Printer is now online.")
-        wx.CallAfter(self.connectbtn.Disable)
+        self.connectbtn.SetLabel("Disconnect")
+        self.connectbtn.Bind(wx.EVT_BUTTON,self.disconnect)
+
         for i in self.printerControls:
             wx.CallAfter(i.Enable)
 
@@ -441,10 +444,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.connectbtn)
         self.connectbtn.SetToolTipString(_("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
-        self.disconnectbtn=wx.Button(self.panel,-1,_("Disconnect"))
-        self.disconnectbtn.Bind(wx.EVT_BUTTON,self.disconnect)
-        self.printerControls.append(self.disconnectbtn)
-        uts.Add(self.disconnectbtn)
         self.resetbtn=wx.Button(self.panel,-1,_("Reset"))
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
         uts.Add(self.resetbtn)
@@ -678,9 +677,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         obj = e.GetEventObject()
         popupmenu=wx.Menu()
         item = popupmenu.Append(-1,_("SD Upload"))
-        self.Bind(wx.EVT_MENU,self.upload)
+	if not self.f or not len(self.f):
+		item.Enable(False)
+        self.Bind(wx.EVT_MENU,self.upload,id=item.GetId())
         item = popupmenu.Append(-1,_("SD Print"))
-        self.Bind(wx.EVT_MENU,self.sdprintfile)
+        self.Bind(wx.EVT_MENU,self.sdprintfile,id=item.GetId())
         self.panel.PopupMenu(popupmenu, obj.GetPosition())
     
     def htemp_change(self,event):
@@ -1407,7 +1408,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.recvlisteners.remove(self.uploadtrigger)
         
     def upload(self,event):
-        if not len(self.f):
+        if not self.f or not len(self.f):
             return
         if not self.p.online:
             return
@@ -1479,8 +1480,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         print _("Disconnected.")
         self.p.disconnect()
         self.statuscheck=False
-        
-        wx.CallAfter(self.connectbtn.Enable);
+       
+        self.connectbtn.SetLabel("Connect")
+        self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
+
         wx.CallAfter(self.printbtn.Disable);
         wx.CallAfter(self.pausebtn.Disable);
         for i in self.printerControls:
