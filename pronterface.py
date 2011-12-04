@@ -678,9 +678,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         obj = e.GetEventObject()
         popupmenu=wx.Menu()
         item = popupmenu.Append(-1,_("SD Upload"))
-        self.Bind(wx.EVT_MENU,self.upload)
+        self.Bind(wx.EVT_MENU,self.upload,id=item.GetId())
         item = popupmenu.Append(-1,_("SD Print"))
-        self.Bind(wx.EVT_MENU,self.sdprintfile)
+        self.Bind(wx.EVT_MENU,self.sdprintfile,id=item.GetId())
         self.panel.PopupMenu(popupmenu, obj.GetPosition())
     
     def htemp_change(self,event):
