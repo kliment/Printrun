@@ -2,7 +2,7 @@
 #Interactive RepRap e axis calibration program
 #(C) Nathan Zadoks 2011
 #Licensed under CC-BY-SA or GPLv2 and higher - Pick your poison.
-t= 60			#Time to wait for extrusion
+s=300			#Extrusion speed (mm/min)
 n=100			#Default length to extrude
 m=  0			#User-entered measured extrusion length
 k=300			#Default amount of steps per mm
@@ -10,6 +10,8 @@ port='/dev/ttyUSB0'	#Default serial port to connect to printer
 temp=210		#Default extrusion temperature
 
 tempmax=250		#Maximum extrusion temperature
+
+t=int(n*60)/s #Time to wait for extrusion
 
 try:
 	from printdummy import printcore
@@ -42,6 +44,37 @@ def w(s):
 	sys.stdout.write(s)
 	sys.stdout.flush()
 
+
+def heatup(p,temp,s=0):
+	curtemp=gettemp(p)
+	p.send_now('M109 S%03d'%temp)
+	p.temp=0
+	if not s: w("Heating extruder up..")
+	f=False
+	while curtemp<=(temp-1):
+		p.send_now('M105')
+		time.sleep(0.5)
+		if not f:
+			time.sleep(1.5)
+			f=True
+		curtemp=gettemp(p)
+		if curtemp: w(u"\rHeating extruder up.. %3d \xb0C"%curtemp)
+	if s: print
+	else: print "\nReady."
+
+def gettemp(p):
+	try: p.logl
+	except: setattr(p,'logl',0)
+	try: p.temp
+	except: setattr(p,'temp',0)
+	for n in range(p.logl,len(p.log)):
+		line=p.log[n]
+		if 'T:' in line:
+			try:
+				setattr(p,'temp',int(line.split('T:')[1].split()[0]))
+			except: print line
+	p.logl=len(p.log)
+	return p.temp
 if not os.path.exists(port):
 	port=0
 
@@ -83,39 +116,36 @@ print "Length extruded: %3d mm"%n
 print 
 print "Serial port:     %s"%(port if port else 'auto')
 
-#Connect to printer
-w("Connecting to printer..")
+p=None
 try:
-	p=printcore(port,115200)
-except:
-	print 'Error.'
-	raise
-while not p.online:
-	time.sleep(1)
-	w('.')
-print " connected."
-
-def sendcb(self,l):
-	if l=='G92 E0':
-		self.hot=True
-w("Heating extruder up..")
-setattr(p,'hot',False)
-p.sendcb=sendcb
-p.send_now('M109 S%03d'%temp)
-while not p.hot:
-	time.sleep(1)
-	w('.')
-print " ready."
-
-#Calibration loop
-while n!=m:
-	p.send_now("G92 E0")			#Reset e axis
-	p.send_now("G1 E%d F100"%int(n))	#Extrude length of filament
-	wait(t,'Extruding.. ')
-	m=float_input("How many millimeters of filament were extruded? ")
-	if n!=m:
-		k=(n/m)*k
-		p.send_now("M92 E%d"%int(round(k)))	#Set new step count
-		print "Steps per mm:    %3d steps"%k	#Tell user
-print 'Calibration completed.'	#Yay!
-p.disconnect()
+	#Connect to printer
+	w("Connecting to printer..")
+	try:
+		p=printcore(port,115200)
+	except:
+		print 'Error.'
+		raise
+	while not p.online:
+		time.sleep(1)
+		w('.')
+	print " connected."
+	
+	heatup(p,temp)
+	
+	#Calibration loop
+	while n!=m:
+		heatup(p,temp,True)
+		p.send_now("G92 E0")			#Reset e axis
+		p.send_now("G1 E%d F%d"%(n,s))	#Extrude length of filament
+		wait(t,'Extruding.. ')
+		m=float_input("How many millimeters of filament were extruded? ")
+		if m==0: continue
+		if n!=m:
+			k=(n/m)*k
+			p.send_now("M92 E%d"%int(round(k)))	#Set new step count
+			print "Steps per mm:    %3d steps"%k	#Tell user
+	print 'Calibration completed.'	#Yay!
+except KeyboardInterrupt:
+	pass
+finally:
+	if p: p.disconnect()

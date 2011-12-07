@@ -72,7 +72,7 @@ class printcore():
         """This function acts on messages from the firmware
         """
         self.clear=True
-        time.sleep(0.5)
+        time.sleep(1.0)
         self.send_now("M105")
         while(True):
             if(not self.printer or not self.printer.isOpen):
