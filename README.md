@@ -23,7 +23,8 @@ Download the following, and install in this order:
 ## Mac OS X Lion
 
   1. Ensure that the active Python is the system version. (`brew uninstall python` or other appropriate incantations)
-  2. Download an install [wxPython version 2.9-Carbon](http://wxpython.org/download.php#unstable) (the Cocoa version doesn't work)
+  2. Download an install [wxPython2.8-osx-unicode] matching to your python version (most likely 2.7 on Lion, 
+        check with: python --version) from: http://wxpython.org/download.php#stable
   3. Download and unpack pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
   4. In a terminal, change to the folder you unzipped to, then type in: `sudo python setup.py install`
 
