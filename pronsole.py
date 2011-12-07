@@ -2,7 +2,9 @@
 import cmd, printcore, sys 
 import glob, os, time
 import sys, subprocess 
+import math
 from math import sqrt
+
 if os.name=="nt":
     try:
         import _winreg
@@ -22,51 +24,50 @@ def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
     
 def measurements(g):
-	Xcur=0.0
-	Ycur=0.0
-	Zcur=0.0
-	Xmin=1000000
-	Ymin=1000000
-	Zmin=1000000
-	Xmax=-1000000
-	Ymax=-1000000
-	Zmax=-1000000
-	Xtot=0
-	Ytot=0
-	Ztot=0
-	
-	
-	for i in g:
-		if "X" in i and ("G1" in i or "G0" in i):
-			try:
-				Xcur = float(i.split("X")[1].split(" ")[0])
-				if Xcur<Xmin and Xcur>5.0: Xmin=Xcur
-				if Xcur>Xmax: Xmax=Xcur
-			except:
-				pass
-		if "Y" in i and ("G1" in i or "G0" in i):
-			try:
-				Ycur = float(i.split("Y")[1].split(" ")[0])
-				if Ycur<Ymin and Ycur>5.0: Ymin=Ycur
-				if Ycur>Ymax: Ymax=Ycur
-			except:
-				pass
-				
-		if "Z" in i and ("G1" in i or "G0" in i):
-			try:
-				Zcur = float(i.split("Z")[1].split(" ")[0])
-				if Zcur<Zmin: Zmin=Zcur
-				if Zcur>Zmax: Zmax=Zcur
-			except:
-				pass
-				
-		
-		Xtot = Xmax - Xmin
-		Ytot = Ymax - Ymin
-		Ztot = Zmax - Zmin		
-		
-            
-	return (Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax)
+    Xcur=0.0
+    Ycur=0.0
+    Zcur=0.0
+    Xmin=1000000
+    Ymin=1000000
+    Zmin=1000000
+    Xmax=-1000000
+    Ymax=-1000000
+    Zmax=-1000000
+    Xtot=0
+    Ytot=0
+    Ztot=0
+    
+    
+    for i in g:
+        if "X" in i and ("G1" in i or "G0" in i):
+            try:
+                Xcur = float(i.split("X")[1].split(" ")[0])
+                if Xcur<Xmin and Xcur>5.0: Xmin=Xcur
+                if Xcur>Xmax: Xmax=Xcur
+            except:
+                pass
+        if "Y" in i and ("G1" in i or "G0" in i):
+            try:
+                Ycur = float(i.split("Y")[1].split(" ")[0])
+                if Ycur<Ymin and Ycur>5.0: Ymin=Ycur
+                if Ycur>Ymax: Ymax=Ycur
+            except:
+                pass
+                
+        if "Z" in i and ("G1" in i or "G0" in i):
+            try:
+                Zcur = float(i.split("Z")[1].split(" ")[0])
+                if Zcur<Zmin: Zmin=Zcur
+                if Zcur>Zmax: Zmax=Zcur
+            except:
+                pass
+                
+        
+        Xtot = Xmax - Xmin
+        Ytot = Ymax - Ymin
+        Ztot = Zmax - Zmin		
+        
+    return (Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax)
 
 def totalelength(g):
     tot=0
@@ -86,59 +87,77 @@ def get_coordinate_value(axis, parts):
         if (axis in i):
             return float(i[1:])
     return None
-	
-	
+
+def hypot3d(X1, Y1, Z1, X2=0.0, Y2=0.0, Z2=0.0): 
+    return math.hypot(X2-X1, math.hypot(Y2-Y1, Z2-Z1))
+
 def estimate_duration(g):
-    extra_cost_per_movement = 0.02
-    total_duration = 0.0
-    feedrate = 0.0
-    avg_feedrate = 0.0
-    last_feedrate = 0.0
-    X_last_position = 0.0
-    Y_last_position = 0.0
-    Z_last_position = 0.0
+    
+    lastx = lasty = lastz = laste = lastf = 0.0
+    x = y = z = e = f = 0.0
+    currenttravel = 0.0
+    totaltravel = 0.0
+    moveduration = 0.0
+    totalduration = 0.0
+    acceleration = 1500.0 #mm/s/s  ASSUMING THE DEFAULT FROM SPRINTER !!!!
+    layerduration = 0.0
+    layerbeginduration = 0.0
+    
+    #TODO:
+    # get device caps from firmware: max speed, acceleration/axis (including extruder)
+    # calculate the maximum move duration accounting for above ;)
+    print ".... estimating ...."    
     for i in g:
-        i=i.split(";")[0]
-        if "G1" in i and ("X" in i or "Y" in i or "F" in i or "E" in i):
-        #if "G1" in i and ("X" in i or "Y" in i or "Z" in i or "F" in i or "E" in i):
-            parts = i.split(" ")
-            X = get_coordinate_value("X", parts[1:])
-            Y = get_coordinate_value("Y", parts[1:])
-            #Z = get_coordinate_value("Z", parts[1:])
-            F = get_coordinate_value("F", parts[1:])
-            E = get_coordinate_value("E", parts[1:])
+        if "G4" in i or "G1" in i:
+            if "G4" in i:
+                parts = i.split(" ")
+                moveduration = get_coordinate_value("P", parts[1:])
+                if moveduration is None:
+                    continue
+                else:
+                    moveduration /= 1000.0
+            if "G1" in i:
+                parts = i.split(" ")
+                x = get_coordinate_value("X", parts[1:])
+                if x is None: x=lastx
+                y = get_coordinate_value("Y", parts[1:])
+                if y is None: y=lasty
+                z = get_coordinate_value("Z", parts[1:])
+                if z is None: z=lastz
+                e = get_coordinate_value("E", parts[1:])
+                if e is None: e=laste
+                f = get_coordinate_value("F", parts[1:])
+                if f is None: f=lastf
+                else: f /= 60.0 # mm/s vs mm/m
+                
+                # given last feedrate and current feedrate calculate the distance needed to achieve current feedrate.
+                # if travel is longer than req'd distance, then subtract distance to achieve full speed, and add the time it took to get there.
+                # then calculate the time taken to complete the remaining distance
 
-            if (F is not None):
-                feedrate = (last_feedrate + (F / 60.0))/2.0
-            distance = 0
-            if (X is None and Y is None and E is not None):
-                distance = abs(E)
-            elif (X is not None and Y is None):
-                distance = X - X_last_position
-                X_last_position = X
-            elif (X is None and Y is not None):
-                distance = Y - Y_last_position
-                Y_last_position = Y
-            elif (X is not None and Y is not None):
-                X_distance = X - X_last_position
-                Y_distance = Y - Y_last_position
-                distance = sqrt(X_distance * X_distance + Y_distance * Y_distance)
-                X_last_position = X
-                Y_last_position = Y
-            #if (Z is not None):
-            #    Z_distance = Z - Z_last_position
-            #    if not(distance == 0.0):
-            #        distance = sqrt(Z_distance * Z_distance + distance * distance )
-            #    else:
-            #        distance = Z_distance
-            #    Z_last_position = Z
+                currenttravel = hypot3d(x, y, z, lastx, lasty, lastz)
+                distance = 2* ((lastf+f) * (f-lastf) * 0.5 ) / acceleration  #2x because we have to accelerate and decelerate
+                if distance <= currenttravel:
+                    moveduration = 2 * distance / ( lastf + f )
+                    currenttravel -= distance
+                    moveduration += currenttravel/f
+                else:
+                    moveduration = math.sqrt( 2 * distance / acceleration )
 
-            if (feedrate == 0.0 or distance == 0.0): continue
-            
-            time_for_move = distance / feedrate 
-            total_duration += time_for_move + extra_cost_per_movement
-            if (F is not None):                feedrate = F / 60.0
-    return time.strftime('%H:%M:%S', time.gmtime(total_duration/60.0))
+            totalduration += moveduration
+
+            if z > lastz:
+                print "layer z: ", lastz, " will take: ", time.strftime('%H:%M:%S', time.gmtime(totalduration-layerbeginduration))
+                layerbeginduration = totalduration
+
+            lastx = x
+            lasty = y
+            lastz = z
+            laste = e
+            lastf = f
+
+    print "Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration))
+    return time.strftime('%H:%M:%S', time.gmtime(totalduration))
+
 class Settings:
     #def _temperature_alias(self): return {"pla":210,"abs":230,"off":0}
     #def _temperature_validate(self,v):
