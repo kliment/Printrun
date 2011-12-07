@@ -403,7 +403,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.serialport.Clear()
             self.serialport.AppendItems(portslist)
         try:
-            if self.settings.port in scan:
+            if os.path.exists(self.settings.port):
                 self.serialport.SetValue(self.settings.port)
             elif len(portslist)>0:
                 self.serialport.SetValue(portslist[0])
