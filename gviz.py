@@ -224,6 +224,8 @@ class gviz(wx.Panel):
         gcode = gcode.lower().strip().split()
         if len(gcode) == 0:
             return
+        if gcode[0][0] == 'n':
+            gcode.pop(0)
         
         def _readgcode():
             target=self.lastpos[:]
