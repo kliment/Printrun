@@ -108,6 +108,7 @@ def estimate_duration(g):
     # calculate the maximum move duration accounting for above ;)
     print ".... estimating ...."    
     for i in g:
+        i=i.split(";")[0]
         if "G4" in i or "G1" in i:
             if "G4" in i:
                 parts = i.split(" ")

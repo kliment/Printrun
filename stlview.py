@@ -102,7 +102,7 @@ class GLPanel(wx.Panel):
         self.dist=1000
         self.vpmat=None
         #normal gl init
-        glClearColor(0, 0, 0, 0.5)
+        glClearColor(0, 0, 0, 1)
         glColor3f(1, 0, 0)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -129,7 +129,7 @@ class GLPanel(wx.Panel):
     
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(1, 1, 1, 1))
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 200)
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0,0.1,0,0.9))
         #create objects to draw
         #self.create_objects()
