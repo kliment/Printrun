@@ -102,11 +102,11 @@ def estimate_duration(g):
     acceleration = 1500.0 #mm/s/s  ASSUMING THE DEFAULT FROM SPRINTER !!!!
     layerduration = 0.0
     layerbeginduration = 0.0
-    
+    layercount=0
     #TODO:
     # get device caps from firmware: max speed, acceleration/axis (including extruder)
     # calculate the maximum move duration accounting for above ;)
-    print ".... estimating ...."    
+    # print ".... estimating ...."
     for i in g:
         if "G4" in i or "G1" in i:
             if "G4" in i:
@@ -146,7 +146,8 @@ def estimate_duration(g):
             totalduration += moveduration
 
             if z > lastz:
-                print "layer z: ", lastz, " will take: ", time.strftime('%H:%M:%S', time.gmtime(totalduration-layerbeginduration))
+                layercount +=1
+                #print "layer z: ", lastz, " will take: ", time.strftime('%H:%M:%S', time.gmtime(totalduration-layerbeginduration))
                 layerbeginduration = totalduration
 
             lastx = x
@@ -155,8 +156,8 @@ def estimate_duration(g):
             laste = e
             lastf = f
 
-    print "Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration))
-    return time.strftime('%H:%M:%S', time.gmtime(totalduration))
+    #print "Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration))
+    return "{0:d} layers, ".format(int(layercount))+time.strftime('%H:%M:%S', time.gmtime(totalduration))
 
 class Settings:
     #def _temperature_alias(self): return {"pla":210,"abs":230,"off":0}
