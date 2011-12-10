@@ -69,6 +69,23 @@ def measurements(g):
         
     return (Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax)
 
+def checkbounds (machine=[], xmin=0.0, ymin=0.0, zmin=0.0, xmax=0.0, ymax=0.0, zmax=0.0):
+    warn = False
+    msg = ""
+
+    axis = ("X", "Y", "Z")
+    gmnmx = ((xmin, xmax), (ymin, ymax), (zmin, zmax))
+    mmnmx = ((machine[0], machine[3]), (machine[1],machine[4]), (machine[2], machine[5]))
+    for a, (gmn, gmx), (mmn, mmx) in zip(axis, gmnmx, mmnmx):
+        if gmn < mmn:
+            msg += "{1: >8.2f} is past the {0}-min endstop @ {2: >8.2f}\n".format(a, gmn, mmn)
+            warn = True
+        if gmx > mmx:
+            msg += "{1: >8.2f} is past the {0}-max endstop @ {2: >8.2f}\n".format(a, gmx, mmx)
+            warn = True
+
+    return warn, msg
+
 def totalelength(g):
     tot=0
     cur=0
