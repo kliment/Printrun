@@ -1,9 +1,9 @@
 import wx,time
 
 class window(wx.Frame):
-    def __init__(self,f,size=(600,600),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
+    def __init__(self,f,size=(600,600),bedsize=(200,200),center=(100,100),grid=(10,50),extrusion_width=0.5):
         wx.Frame.__init__(self,None,title="Layer view (Use shift+mousewheel to switch layers)",size=(size[0],size[1]))
-        self.p=gviz(self,size=size,bedsize=bedsize,grid=grid,extrusion_width=extrusion_width)
+        self.p=gviz(self,size=size,bedsize=bedsize,center=center,grid=grid,extrusion_width=extrusion_width)
         s=time.time()
         for i in f:
             self.p.addgcode(i)
@@ -53,10 +53,11 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
         
 class gviz(wx.Panel):
-    def __init__(self,parent,size=(200,200),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
+    def __init__(self,parent,size=(200,200),bedsize=(200,200),center=(100,100),grid=(10,50),extrusion_width=0.5):
         wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
         self.size=size
         self.bedsize=bedsize
+        self.center=center
         self.grid=grid
         self.lastpos=[0,0,0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
@@ -236,13 +237,15 @@ class gviz(wx.Panel):
             return target
         
         def _y(y):
-            return self.bedsize[1]-y
+            return self.bedsize[1]-(y+(self.bedsize[0]/2-self.center[0]))
+        def _x(x):
+            return x+(self.bedsize[0]/2-self.center[0])
         
         start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
         
         if gcode[0] == "g1":
             target = _readgcode()
-            line = [ start_pos[0], _y(start_pos[1]), target[0], _y(target[1]) ]
+            line = [ _x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1]) ]
             if not hilight:
                 self.lines[ target[2] ] += [line]
                 self.pens[ target[2] ]  += [self.mainpen if target[3] != self.lastpos[3] else self.travelpen]
@@ -255,9 +258,9 @@ class gviz(wx.Panel):
         if gcode[0] in [ "g2", "g3" ]:
             target = _readgcode()
             arc = []
-            arc += [ start_pos[0], _y(start_pos[1]) ]
-            arc += [ target[0], _y(target[1]) ]
-            arc += [ start_pos[0] + target[5], _y(start_pos[1] + target[6]) ]  # center
+            arc += [ _x(start_pos[0]), _y(start_pos[1]) ]
+            arc += [ _x(target[0]), _y(target[1]) ]
+            arc += [ _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6]) ]  # center
             if gcode[0] == "g2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
             

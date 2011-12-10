@@ -59,6 +59,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.settings.last_bed_temperature = 0.0
         self.settings.bed_size_x = 200.
         self.settings.bed_size_y = 200.
+        self.settings.bed_center_x = 100.
+        self.settings.bed_center_y = 100.
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
         self.settings.preview_extrusion_width = 0.5
@@ -610,11 +612,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         # lls.Add((10,0),pos=(0,11),span=(1,1))
         self.gviz=gviz.gviz(self.panel,(300,300),
             bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
+            center=(self.settings.bed_center_x,self.settings.bed_center_y),
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
             extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.showall=1
         self.gwindow=gviz.window([],
             bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
+            center=(self.settings.bed_center_x,self.settings.bed_center_y),
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
             extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
@@ -1539,7 +1543,7 @@ class options(wx.Dialog):
         grid=wx.GridSizer(rows=0,cols=2,hgap=8,vgap=2)
         vbox.Add(grid,0,wx.EXPAND)
         ctrls = {}
-        for k,v in pronterface.settings._all_settings().items():
+        for k,v in sorted(pronterface.settings._all_settings().items(), key=lambda item: item[0]):
             grid.Add(wx.StaticText(self,-1,k),0,wx.BOTTOM+wx.RIGHT)
             ctrls[k] = wx.TextCtrl(self,-1,str(v))
             grid.Add(ctrls[k],1,wx.EXPAND)
