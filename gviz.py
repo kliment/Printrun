@@ -1,9 +1,9 @@
 import wx,time
 
 class window(wx.Frame):
-    def __init__(self,f,size=(600,600),bedsize=(200,200),center=(100,100),grid=(10,50),extrusion_width=0.5):
+    def __init__(self,f,size=(600,600),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
         wx.Frame.__init__(self,None,title="Layer view (Use shift+mousewheel to switch layers)",size=(size[0],size[1]))
-        self.p=gviz(self,size=size,bedsize=bedsize,center=center,grid=grid,extrusion_width=extrusion_width)
+        self.p=gviz(self,size=size,build_dimensions=build_dimensions,grid=grid,extrusion_width=extrusion_width)
         s=time.time()
         for i in f:
             self.p.addgcode(i)
@@ -53,11 +53,10 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
         
 class gviz(wx.Panel):
-    def __init__(self,parent,size=(200,200),bedsize=(200,200),center=(100,100),grid=(10,50),extrusion_width=0.5):
+    def __init__(self,parent,size=(200,200),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
         wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
         self.size=size
-        self.bedsize=bedsize
-        self.center=center
+        self.build_dimensions=build_dimensions
         self.grid=grid
         self.lastpos=[0,0,0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
@@ -70,7 +69,7 @@ class gviz(wx.Panel):
         self.layers=[]
         self.layerindex=0
         self.filament_width=extrusion_width # set it to 0 to disable scaling lines with zoom
-        self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
+        self.scale=[min(float(size[0])/build_dimensions[0],float(size[1])/build_dimensions[1])]*2
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate=[0.0,0.0]
         self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
@@ -136,10 +135,10 @@ class gviz(wx.Panel):
         dc.SetPen(wx.Pen(wx.Colour(180,180,150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
-                for x in xrange(int(self.bedsize[0]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1],self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1]+self.scale[1]*self.bedsize[1])
-                for y in xrange(int(self.bedsize[1]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0],self.translate[1]+y*self.scale[1]*grid_unit,self.translate[0]+self.scale[0]*self.bedsize[0],self.translate[1]+y*self.scale[1]*grid_unit)
+                for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
+                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1],self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1]+self.scale[1]*self.build_dimensions[1])
+                for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
+                    dc.DrawLine(self.translate[0],self.translate[1]+y*self.scale[1]*grid_unit,self.translate[0]+self.scale[0]*self.build_dimensions[0],self.translate[1]+y*self.scale[1]*grid_unit)
             dc.SetPen(wx.Pen(wx.Colour(0,0,0)))
         if not self.showall:
             self.size = self.GetSize()
@@ -237,9 +236,9 @@ class gviz(wx.Panel):
             return target
         
         def _y(y):
-            return self.bedsize[1]-(y+(self.bedsize[0]/2-self.center[0]))
+            return self.build_dimensions[1]-(y-self.build_dimensions[4])
         def _x(x):
-            return x+(self.bedsize[0]/2-self.center[0])
+            return x-self.build_dimensions[3]
         
         start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
         

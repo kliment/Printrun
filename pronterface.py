@@ -57,10 +57,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.settings.last_file_path = ""
         self.settings.last_temperature = 0.0
         self.settings.last_bed_temperature = 0.0
-        self.settings.bed_size_x = 200.
-        self.settings.bed_size_y = 200.
-        self.settings.bed_center_x = 100.
-        self.settings.bed_center_y = 100.
+        #default build dimensions are 200x200x100 with 0,0,0 in the corner of the bed
+        self.settings.build_dimensions = '200x200x100+0+0+0'
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
         self.settings.preview_extrusion_width = 0.5
@@ -86,7 +84,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ]
         self.custombuttons=[]
         self.btndict={}
+        print self.settings.build_dimensions
         self.parse_cmdline(sys.argv[1:])
+        print self.settings.build_dimensions
+        self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
+        print self.build_dimensions_list
         customdict={}
         try:
             execfile("custombtn.txt",customdict)
@@ -611,14 +613,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.SetForegroundColour("black")
         # lls.Add((10,0),pos=(0,11),span=(1,1))
         self.gviz=gviz.gviz(self.panel,(300,300),
-            bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
-            center=(self.settings.bed_center_x,self.settings.bed_center_y),
+            build_dimensions=self.build_dimensions_list,
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
             extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.showall=1
         self.gwindow=gviz.window([],
-            bedsize=(self.settings.bed_size_x,self.settings.bed_size_y),
-            center=(self.settings.bed_center_x,self.settings.bed_center_y),
+            build_dimensions=self.build_dimensions_list,
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
             extrusion_width=self.settings.preview_extrusion_width)
         self.gviz.Bind(wx.EVT_LEFT_DOWN,self.showwin)
@@ -1462,6 +1462,35 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 self.paused=0
+    
+    def get_build_dimensions(self,bdim):
+        import re
+        # a string containing up to six numbers delimited by almost anything
+        # first 0-3 numbers specify the build volume, no sign, always positive
+        # remaining 0-3 numbers specify the coordinates of the "southwest" corner of the build platform
+        # "XXX,YYY"
+        # "XXXxYYY+xxx-yyy"
+        # "XXX,YYY,ZZZ+xxx+yyy-zzz"
+        # etc
+        bdl = re.match(
+        "[^\d+-]*(\d+)?" + # X build size
+        "[^\d+-]*(\d+)?" + # Y build size
+        "[^\d+-]*(\d+)?" + # Z build size
+        "[^\d+-]*([+-]\d+)?" + # X corner coordinate
+        "[^\d+-]*([+-]\d+)?" + # Y corner coordinate
+        "[^\d+-]*([+-]\d+)?"   # Z corner coordinate
+        ,bdim).groups()
+        print bdl
+        bdl_float = [
+        200.0 if bdl[0]==None else float(bdl[0]),
+        200.0 if bdl[1]==None else float(bdl[1]),
+        100.0 if bdl[2]==None else float(bdl[2]),
+        0.0 if bdl[3]==None else float(bdl[3]),
+        0.0 if bdl[4]==None else float(bdl[4]),
+        0.0 if bdl[5]==None else float(bdl[5]),
+        ]
+        return bdl_float
+
             
 class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
