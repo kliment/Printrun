@@ -84,11 +84,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ]
         self.custombuttons=[]
         self.btndict={}
-        print self.settings.build_dimensions
         self.parse_cmdline(sys.argv[1:])
-        print self.settings.build_dimensions
         self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
-        print self.build_dimensions_list
         customdict={}
         try:
             execfile("custombtn.txt",customdict)
@@ -1480,15 +1477,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         "[^\d+-]*([+-]\d+)?" + # Y corner coordinate
         "[^\d+-]*([+-]\d+)?"   # Z corner coordinate
         ,bdim).groups()
-        print bdl
-        bdl_float = [
-        200.0 if bdl[0]==None else float(bdl[0]),
-        200.0 if bdl[1]==None else float(bdl[1]),
-        100.0 if bdl[2]==None else float(bdl[2]),
-        0.0 if bdl[3]==None else float(bdl[3]),
-        0.0 if bdl[4]==None else float(bdl[4]),
-        0.0 if bdl[5]==None else float(bdl[5]),
-        ]
+        defaults = [200, 200, 100, 0, 0, 0]
+        bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
         return bdl_float
 
             
