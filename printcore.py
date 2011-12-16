@@ -267,12 +267,13 @@ if __name__ == '__main__':
     #print "Usage: python printcore.py filename.gcode"
     filename="../prusamendel/sellsx_export.gcode"
     if len(sys.argv)>1:
-        filename=sys.argv[1]
+        port=sys.argv[1]
+        filename=sys.argv[2]
         print "Printing: "+filename
     else:
-        print "Usage: python printcore.py filename.gcode"
-        #sys.exit(2)
-    p=printcore('/dev/ttyUSB0',115200)
+        print "Usage: python printcore.py /dev/tty[USB|ACM]x filename.gcode"
+        sys.exit(2)
+    p=printcore(port,115200)
     p.loud=True
     statusreport=False
     time.sleep(2)
