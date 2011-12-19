@@ -310,5 +310,7 @@ if __name__ == '__main__':
             if statusreport:
                 sys.stdout.write("\b\b\b\b%02.1f%%" % (100*float(p.queueindex)/len(p.mainqueue),) )
                 sys.stdout.flush()
+        p.disconnect()
+        sys.exit(0)
     except:
         p.disconnect()
