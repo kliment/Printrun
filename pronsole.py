@@ -171,16 +171,16 @@ class Settings:
         # the initial value determines the type
         self.port = ""
         self.baudrate = 115200
-        self.temperature_pla = 185
-        self.temperature_abs = 230
-        self.bedtemp_pla = 60
         self.bedtemp_abs = 110
+        self.bedtemp_pla = 60
+        self.temperature_abs = 230
+        self.temperature_pla = 185
         self.xy_feedrate = 3000
         self.z_feedrate = 200
         self.e_feedrate = 300
         self.slicecommand="python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s"
         self.sliceoptscommand="python skeinforge/skeinforge_application/skeinforge.py"
-        
+
     def _set(self,key,value):
         try:
             value = getattr(self,"_%s_alias"%key)()[value]
@@ -241,6 +241,19 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.monitoring=0
+        self.helpdict = {}
+        self.helpdict["baudrate"] = _("Communications Speed (default: 115200)")
+        self.helpdict["bedtemp_abs"] = _("Heated Build Platform temp for ABS (default: 110 deg C)")
+        self.helpdict["bedtemp_pla"] = _("Heated Build Platform temp for PLA (default: 60 deg C)")
+        self.helpdict["e_feedrate"] = _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)")
+        self.helpdict["port"] = _("Port used to communicate with printer")
+        self.helpdict["slicecommand"] = _("Feedrate for Control Panel Moves in Extrusions.\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)")
+        self.helpdict["sliceoptscommand"] = _("Feedrate for Control Panel Moves in Extrusions.\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")
+        self.helpdict["temperature_abs"] = _("Extruder temp for ABS (default: 230 deg C)")
+        self.helpdict["temperature_pla"] = _("Extruder temp for PLA (default: 185 deg C)")
+        self.helpdict["xy_feedrate"] = _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")
+        self.helpdict["z_feedrate"] = _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")
+
     
     def set_temp_preset(self,key,value):
         if not key.startswith("bed"):

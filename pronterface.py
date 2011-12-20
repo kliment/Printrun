@@ -55,14 +55,20 @@ class Tee(object):
 class PronterWindow(wx.Frame,pronsole.pronsole):
     def __init__(self, filename=None,size=winsize):
         pronsole.pronsole.__init__(self)
+        self.settings.build_dimensions = '200x200x100+0+0+0' #default build dimensions are 200x200x100 with 0,0,0 in the corner of the bed
+        self.settings.last_bed_temperature = 0.0
         self.settings.last_file_path = ""
         self.settings.last_temperature = 0.0
-        self.settings.last_bed_temperature = 0.0
-        #default build dimensions are 200x200x100 with 0,0,0 in the corner of the bed
-        self.settings.build_dimensions = '200x200x100+0+0+0'
+        self.settings.preview_extrusion_width = 0.5
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
-        self.settings.preview_extrusion_width = 0.5
+        self.helpdict["build_dimensions"] = _("Dimensions of Build Platform\n & optional offset of origin\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ")
+        self.helpdict["last_bed_temperature"] = _("Last Set Temperature for the Heated Print Bed")
+        self.helpdict["last_file_path"] = _("Folder of last opened file")
+        self.helpdict["last_temperature"] = _("Last Temperature of the Hot End")
+        self.helpdict["preview_extrusion_width"] = _("Width of Extrusion in Preview (default: 0.5)")
+        self.helpdict["preview_grid_step1"] = _("Fine Grid Spacing (default: 10)")
+        self.helpdict["preview_grid_step2"] = _("Coarse Grid Spacing (default: 50)")
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
@@ -72,7 +78,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
-	self.f=None
+        self.f=None
         self.skeinp=None
         self.monitor_interval=3
         self.paused=False
@@ -678,8 +684,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         obj = e.GetEventObject()
         popupmenu=wx.Menu()
         item = popupmenu.Append(-1,_("SD Upload"))
-	if not self.f or not len(self.f):
-		item.Enable(False)
+        if not self.f or not len(self.f):
+            item.Enable(False)
         self.Bind(wx.EVT_MENU,self.upload,id=item.GetId())
         item = popupmenu.Append(-1,_("SD Print"))
         self.Bind(wx.EVT_MENU,self.sdprintfile,id=item.GetId())
@@ -1537,7 +1543,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
         return bdl_float
 
-            
 class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
     def __init__(self,macro_name,definition,callback,gcode=False):
@@ -1607,7 +1612,7 @@ class macroed(wx.Dialog):
             if line.strip() != "":
                 reindented += self.indent_chars + line + "\n"
         return reindented
-        
+
 class options(wx.Dialog):
     """Options editor"""
     def __init__(self,pronterface):
@@ -1619,17 +1624,21 @@ class options(wx.Dialog):
         vbox.Add(grid,0,wx.EXPAND)
         ctrls = {}
         for k,v in sorted(pronterface.settings._all_settings().items()):
-            grid.Add(wx.StaticText(self,-1,k),0,wx.BOTTOM+wx.RIGHT)
-            ctrls[k] = wx.TextCtrl(self,-1,str(v))
-            grid.Add(ctrls[k],1,wx.EXPAND)
+            ctrls[k,0] = wx.StaticText(self,-1,k)
+            ctrls[k,1] = wx.TextCtrl(self,-1,str(v))
+            if k in pronterface.helpdict:
+                ctrls[k,0].SetToolTipString(pronterface.helpdict.get(k))
+                ctrls[k,1].SetToolTipString(pronterface.helpdict.get(k))
+            grid.Add(ctrls[k,0],0,wx.BOTTOM+wx.RIGHT)
+            grid.Add(ctrls[k,1],1,wx.EXPAND)
         topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0,wx.EXPAND)
         self.SetSizer(topsizer)        
         topsizer.Layout()
         topsizer.Fit(self)
         if self.ShowModal()==wx.ID_OK:
             for k,v in pronterface.settings._all_settings().items():
-                if ctrls[k].GetValue() != str(v):
-                    pronterface.set(k,str(ctrls[k].GetValue()))
+                if ctrls[k,1].GetValue() != str(v):
+                    pronterface.set(k,str(ctrls[k,1].GetValue()))
         self.Destroy()
         
 class ButtonEdit(wx.Dialog):
