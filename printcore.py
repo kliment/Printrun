@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+# Licensed under GPLv3
+
 from serial import Serial
 from threading import Thread
 from select import error as SelectError
-import time
-import sys
+import time, getopt, sys
 
 class printcore():
     def __init__(self,port=None,baud=None):
@@ -267,25 +268,41 @@ class printcore():
             self.printer.write(str(command+"\n"))
 
 if __name__ == '__main__':
-    #print "Usage: python printcore.py filename.gcode"
-    filename="../prusamendel/sellsx_export.gcode"
-    if len(sys.argv)>1:
-        filename=sys.argv[1]
-        print "Printing: "+filename
-    else:
-        print "Usage: python printcore.py filename.gcode"
-        #sys.exit(2)
-    p=printcore('/dev/ttyUSB0',115200)
-    p.loud=True
+    baud = 115200
+    loud = False
     statusreport=False
+    try:
+	opts, args=getopt.getopt(sys.argv[1:], "h,b:,v,s",["help","baud","verbose","statusreport"])
+    except getopt.GetoptError,err:
+		print str(err)
+		print help
+		sys.exit(2)
+    for o,a in opts:
+	if o in ('-h', '--help'):
+		# FIXME: Fix help
+		print "Opts are: --help , -b --baud = baudrate, -v --verbose, -s --statusreport"
+		sys.exit(1)
+	if o in ('-b', '--baud'):
+		baud = int(a)
+	if o in ('-v','--verbose'):
+		loud=True
+        elif o in ('-s','--statusreport'):
+		statusreport=True
+
+
+    if len(args)>1:
+        port=args[-2]
+        filename=args[-1]
+        print "Printing: "+filename + " on "+port + " with baudrate "+str(baud) 
+    else:
+        print "Usage: python [-h|-b|-v|-s] printcore.py /dev/tty[USB|ACM]x filename.gcode"
+        sys.exit(2)
+    p=printcore(port,baud)
+    p.loud = loud
     time.sleep(2)
-    testdata=[i.replace("\n","") for i in open(filename)]
-    p.startprint(testdata)
-    #time.sleep(1)
-    #p.pause()
-    #print "pause"
-    #time.sleep(5)
-    #p.resume()
+    gcode=[i.replace("\n","") for i in open(filename)]
+    p.startprint(gcode)
+
     try:
         if statusreport:
             p.loud=False
@@ -296,5 +313,7 @@ if __name__ == '__main__':
             if statusreport:
                 sys.stdout.write("\b\b\b\b%02.1f%%" % (100*float(p.queueindex)/len(p.mainqueue),) )
                 sys.stdout.flush()
+        p.disconnect()
+        sys.exit(0)
     except:
         p.disconnect()
