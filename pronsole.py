@@ -4,6 +4,11 @@ import glob, os, time
 import sys, subprocess 
 import math
 from math import sqrt
+import gettext
+if os.path.exists('/usr/share/pronterface/locale'):
+    gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
+else: 
+    gettext.install('pronterface', './locale', unicode=1)
 
 if os.name=="nt":
     try:
