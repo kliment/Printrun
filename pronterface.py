@@ -72,7 +72,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
-	self.f=None
+        self.f=None
         self.skeinp=None
         self.monitor_interval=3
         self.paused=False
@@ -203,20 +203,20 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.hsetpoint=f
                     #self.tgauge.SetTarget(int(f))
                     if f>0: 
-                        self.htemp.SetValue(l)
+                        wx.CallAfter(self.htemp.SetValue,l)
                         self.set("last_temperature",str(f))
-                        self.settoff.SetBackgroundColour("")
-                        self.settoff.SetForegroundColour("")
-                        self.settbtn.SetBackgroundColour("#FFAA66")
-                        self.settbtn.SetForegroundColour("#660000")
-                        self.htemp.SetBackgroundColour("#FFDABB")
+                        wx.CallAfter(self.settoff.SetBackgroundColour,"")
+                        wx.CallAfter(self.settoff.SetForegroundColour,"")
+                        wx.CallAfter(self.settbtn.SetBackgroundColour,"#FFAA66")
+                        wx.CallAfter(self.settbtn.SetForegroundColour,"#660000")
+                        wx.CallAfter(self.htemp.SetBackgroundColour,"#FFDABB")
                     else:
-                        self.settoff.SetBackgroundColour("#0044CC")
-                        self.settoff.SetForegroundColour("white")
-                        self.settbtn.SetBackgroundColour("")
-                        self.settbtn.SetForegroundColour("")
-                        self.htemp.SetBackgroundColour("white")
-                        self.htemp.Refresh()
+                        wx.CallAfter(self.settoff.SetBackgroundColour,"#0044CC")
+                        wx.CallAfter(self.settoff.SetForegroundColour,"white")
+                        wx.CallAfter(self.settbtn.SetBackgroundColour,"")
+                        wx.CallAfter(self.settbtn.SetForegroundColour,"")
+                        wx.CallAfter(self.htemp.SetBackgroundColour,"white")
+                        wx.CallAfter(self.htemp.Refresh)
                 else:
                     print _("Printer is not online.")
             else:
@@ -238,20 +238,20 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     print _("Setting bed temperature to "),f,_(" degrees Celsius.")
                     self.bsetpoint=f
                     if f>0: 
-                        self.btemp.SetValue(l)
+                        wx.CallAfter(self.btemp.SetValue,l)
                         self.set("last_bed_temperature",str(f))
-                        self.setboff.SetBackgroundColour("")
-                        self.setboff.SetForegroundColour("")
-                        self.setbbtn.SetBackgroundColour("#FFAA66")
-                        self.setbbtn.SetForegroundColour("#660000")
-                        self.btemp.SetBackgroundColour("#FFDABB")
+                        wx.CallAfter(self.setboff.SetBackgroundColour,"")
+                        wx.CallAfter(self.setboff.SetForegroundColour,"")
+                        wx.CallAfter(self.setbbtn.SetBackgroundColour,"#FFAA66")
+                        wx.CallAfter(self.setbbtn.SetForegroundColour,"#660000")
+                        wx.CallAfter(self.btemp.SetBackgroundColour,"#FFDABB")
                     else:
-                        self.setboff.SetBackgroundColour("#0044CC")
-                        self.setboff.SetForegroundColour("white")
-                        self.setbbtn.SetBackgroundColour("")
-                        self.setbbtn.SetForegroundColour("")
-                        self.btemp.SetBackgroundColour("white")
-                        self.btemp.Refresh()
+                        wx.CallAfter(self.setboff.SetBackgroundColour,"#0044CC")
+                        wx.CallAfter(self.setboff.SetForegroundColour,"white")
+                        wx.CallAfter(self.setbbtn.SetBackgroundColour,"")
+                        wx.CallAfter(self.setbbtn.SetForegroundColour,"")
+                        wx.CallAfter(self.btemp.SetBackgroundColour,"white")
+                        wx.CallAfter(self.btemp.Refresh)
                 else:
                     print _("Printer is not online.")
             else:
@@ -1076,11 +1076,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if l.strip()=="":
             self.monitorbox.SetValue(not self.monitorbox.GetValue())
         elif l.strip()=="off":
-            self.monitorbox.SetValue(False)
+            wx.CallAfter(self.monitorbox.SetValue,False)
         else:
             try:
                 self.monitor_interval=float(l)
-                self.monitorbox.SetValue(self.monitor_interval>0)
+                wx.CallAfter(self.monitorbox.SetValue,self.monitor_interval>0)
             except:
                 print _("Invalid period given.")
         self.setmonitor(None)
