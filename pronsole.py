@@ -1135,13 +1135,14 @@ class pronsole(cmd.Cmd):
         try:
             import shlex
             if(settings):
-                param = self.expandcommand(self.settings.sliceoptscommand).encode()
+                param = self.expandcommand(self.settings.sliceoptscommand).replace("\\","\\\\").encode()
                 print "Entering skeinforge settings: ",param
                 subprocess.call(shlex.split(param))
             else:
-                param = self.expandcommand(self.settings.slicecommand).replace("$s",l[0]).replace("$o",l[0].replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode()
+                param = self.expandcommand(self.settings.slicecommand).encode()
                 print "Slicing: ",param
-                subprocess.call(shlex.split(param))
+                params=[i.replace("$s",l[0]).replace("$o",l[0].replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
+                subprocess.call(params)
                 print "Loading skeined file."
                 self.do_load(l[0].replace(".stl","_export.gcode"))
         except Exception,e:

@@ -1257,13 +1257,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def skein_func(self):
         try:
             import shlex
-            param = self.expandcommand(self.settings.slicecommand).replace("$s",self.filename).replace("$o",self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode()
-            print shlex.split(param.replace("\\","\\\\"))
+            param = self.expandcommand(self.settings.slicecommand).encode()
             print "Slicing: ",param
-            self.cancelskein=0
-            #p=subprocess.Popen(param,shell=True,bufsize=10,stderr=subprocess.STDOUT,stdout=subprocess.PIPE,close_fds=True)
-            pararray=shlex.split(param.replace("\\","\\\\"))
-            #print pararray
+            pararray=[i.replace("$s",self.filename).replace("$o",self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
+                #print pararray
             self.skeinp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
             while True:
                 o = self.skeinp.stdout.read(1)
