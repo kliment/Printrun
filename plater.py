@@ -55,6 +55,7 @@ class showstl(wx.Window):
         self.Bind(wx.EVT_MOUSEWHEEL, self.rot)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.Bind(wx.EVT_PAINT, self.repaint)
+        self.Bind(wx.EVT_KEY_DOWN, self.keypress)
         #self.s=stltool.stl("sphere.stl").scale([2,1,1])
         self.triggered = 0
         self.models = {}
@@ -272,22 +273,31 @@ class showstl(wx.Window):
             self.l.Clear()
             self.Refresh()
 
+    def move_shape(self, delta):
+        name = self.l.GetSelection()
+
+        if name == wx.NOT_FOUND:
+            return False
+        name = self.l.GetString(name)
+
+        model = self.models[name]
+        model.offsets = [
+                model.offsets[0] + delta[0],
+                model.offsets[1] + delta[1],
+                model.offsets[2]
+            ]
+        self.Refresh()
+        return True
+
     def move(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
-                i = self.l.GetSelection()
-                if i != wx.NOT_FOUND:
-                    p = event.GetPositionTuple()
-                    #print (p[0]-self.initpos[0]),(p[1]-self.initpos[1])
-                    t = time.time()
-                    m = self.models[self.l.GetString(i)]
-                    m.offsets = [
-                            m.offsets[0] + 0.5 * (p[0] - self.initpos[0]),
-                            m.offsets[1] - 0.5 * (p[1] - self.initpos[1]),
-                            m.offsets[2]
-                        ]
-                    #self.models[self.l.GetItemText(i)]=self.models[self.l.GetItemText(i)].translate([0.5*(p[0]-self.initpos[0]),0.5*(p[1]-self.initpos[1]),0])
-                    #print time.time()-t
+                p = event.GetPositionTuple()
+                delta = (
+                        0.5 * (p[0] - self.initpos[0]),
+                        - 0.5 * (p[1] - self.initpos[1])
+                    )
+                self.move_shape(delta)
                 self.Refresh()
                 self.initpos = None
         elif event.ButtonDown(wx.MOUSE_BTN_RIGHT):
@@ -333,6 +343,40 @@ class showstl(wx.Window):
         if not self.triggered:
             self.triggered = 1
             threading.Thread(target=self.cr).start()
+
+    def keypress(self, event):
+        keycode = event.GetKeyCode()
+        #print keycode
+        step = 5
+        angle = 18
+        if event.ShiftDown():
+            step = 1
+            angle = 1
+        #h
+        if keycode == 72:
+            self.move_shape((-step, 0))
+        #l
+        if keycode == 76:
+            self.move_shape((step, 0))
+        #j
+        if keycode == 75:
+            self.move_shape((0, step))
+        #k
+        if keycode == 74:
+            self.move_shape((0, -step))
+        #[
+        if keycode == 91:
+            self.i += angle
+            if not self.triggered:
+                self.triggered = 1
+                threading.Thread(target=self.cr).start()
+        #]
+        if keycode == 93:
+            self.i -= angle
+            if not self.triggered:
+                self.triggered = 1
+                threading.Thread(target=self.cr).start()
+        event.Skip()
 
     def repaint(self, event):
         dc = wx.PaintDC(self)
