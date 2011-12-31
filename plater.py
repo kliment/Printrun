@@ -2,11 +2,8 @@
 import wx,time,random,threading,os,math
 import stltool
 
-def translate(l): return l
-
-def rotate(l): return l
-
-def import_stl(s): return s
+def evalme(s):
+    return eval(s[s.find("(")+1:s.find(")")])
 
 class stlwrap:
     def __init__(self,obj,name=None):
@@ -146,14 +143,20 @@ class showstl(wx.Window):
     
     def load_scad(self,event,name):
         lf=open(name)
-        s=[i.replace("\n","").replace("\r","").replace(";","") for i in lf]
+        s=[i.replace("\n","").replace("\r","").replace(";","") for i in lf if "stl" in i]
         lf.close()
 
         for i in s:
             parts = i.split()
-            translate_list = eval(parts[0])
-            rotate_list = eval(parts[1])
-            stl_file = eval(parts[2])
+            for part in parts:
+                if 'translate' in part:
+                    translate_list = evalme(part)
+            for part in parts:
+                if 'rotate' in part:
+                    rotate_list = evalme(part)
+            for part in parts:
+                if 'import' in part:
+                    stl_file = evalme(part)
             
             newname=os.path.split(stl_file.lower())[1]
             c=1
