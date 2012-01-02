@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 import wx,time,random,threading,os,math
 import stltool
-glview=True
-try:
-    import stlview
-except:
-    glview=False
+
+import sys
+
+
+glview=False
+if "-nogl" not in sys.argv:
+    try:
+        import stlview
+        glview=True
+    except:
+        pass
+
 
 def evalme(s):
     return eval(s[s.find("(")+1:s.find(")")])
@@ -32,6 +39,7 @@ class showstl(wx.Window):
         self.Bind(wx.EVT_MOUSEWHEEL,self.rot)
         self.Bind(wx.EVT_MOUSE_EVENTS,self.move)
         self.Bind(wx.EVT_PAINT,self.repaint)
+        self.Bind(wx.EVT_KEY_DOWN, self.keypress)
         #self.s=stltool.stl("sphere.stl").scale([2,1,1])
         self.triggered=0
         self.initpos=None
@@ -56,35 +64,87 @@ class showstl(wx.Window):
         m.bitmap.SetMask(wx.Mask(m.bitmap,wx.Colour(0,0,0,255)))
     
             
-    def move(self,event):
+    def move_shape(self, delta):
+        """moves shape (selected in l, which is list ListBox of shapes)
+        by an offset specified in tuple delta.
+        Positive numbers move to (rigt, down)"""
+        name = self.parent.l.GetSelection()
+        if name == wx.NOT_FOUND:
+            return False
+        name = self.parent.l.GetString(name)
+        model = self.parent.models[name]
+        model.offsets = [
+                model.offsets[0] + delta[0],
+                model.offsets[1] + delta[1],
+                model.offsets[2]
+            ]
+        self.Refresh()
+        return True
+
+    def move(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
-                i=self.parent.l.GetSelection()
-                if i != wx.NOT_FOUND:
-                    p=event.GetPositionTuple()
-                    #print (p[0]-self.initpos[0]),(p[1]-self.initpos[1])
-                    t=time.time()
-                    m=self.parent.models[self.parent.l.GetString(i)]
-                    m.offsets=[m.offsets[0]+0.5*(p[0]-self.initpos[0]),m.offsets[1]-0.5*(p[1]-self.initpos[1]),m.offsets[2]]
-                    #self.models[self.l.GetItemText(i)]=self.models[self.l.GetItemText(i)].translate([0.5*(p[0]-self.initpos[0]),0.5*(p[1]-self.initpos[1]),0])
-                    #print time.time()-t
+                currentpos = event.GetPositionTuple()
+                delta = (
+                        0.5 * (currentpos[0] - self.initpos[0]),
+                        - 0.5 * (currentpos[1] - self.initpos[1])
+                    )
+                self.move_shape(delta)
                 self.Refresh()
-                self.initpos=None
+                self.initpos = None
         elif event.ButtonDown(wx.MOUSE_BTN_RIGHT):
             self.parent.right(event)
         elif event.Dragging():
             if self.initpos is None:
-                self.initpos=event.GetPositionTuple()
+                self.initpos = event.GetPositionTuple()
             self.Refresh()
-            dc=wx.ClientDC(self)
-            p=event.GetPositionTuple()
-            dc.DrawLine(self.initpos[0],self.initpos[1],p[0],p[1])
+            dc = wx.ClientDC(self)
+            p = event.GetPositionTuple()
+            dc.DrawLine(self.initpos[0], self.initpos[1], p[0], p[1])
             #print math.sqrt((p[0]-self.initpos[0])**2+(p[1]-self.initpos[1])**2)
-                    
+
             del dc
         else:
             event.Skip()
         
+    def rotate_shape(self, angle):
+        """rotates acive shape
+        positive angle is clockwise
+        """
+        self.i += angle
+        if not self.triggered:
+            self.triggered = 1
+            threading.Thread(target=self.cr).start()
+
+    def keypress(self, event):
+        """gets keypress events and moves/rotates acive shape"""
+        keycode = event.GetKeyCode()
+        #print keycode
+        step = 5
+        angle = 18
+        if event.ControlDown():
+            step = 1
+            angle = 1
+        #h
+        if keycode == 72:
+            self.move_shape((-step, 0))
+        #l
+        if keycode == 76:
+            self.move_shape((step, 0))
+        #j
+        if keycode == 75:
+            self.move_shape((0, step))
+        #k
+        if keycode == 74:
+            self.move_shape((0, -step))
+        #[
+        if keycode == 91:
+            self.rotate_shape(-angle)
+        #]
+        if keycode == 93:
+            self.rotate_shape(angle)
+        event.Skip()
+
     def rotateafter(self):
         if(self.i!=self.previ):
             i=self.parent.l.GetSelection()
@@ -94,6 +154,7 @@ class showstl(wx.Window):
                 #self.models[self.l.GetItemText(i)].offsets=o
             self.previ=self.i
             self.Refresh()
+
     def cr(self):
         time.sleep(0.01)
         wx.CallAfter(self.rotateafter)
@@ -106,12 +167,9 @@ class showstl(wx.Window):
             self.i=0
             self.prevsel=s
         if z < 0:
-            self.i-=1
+            self.rotate_shape(-1)
         else:
-            self.i+=1
-        if not self.triggered:
-            self.triggered=1
-            threading.Thread(target=self.cr).start()
+            self.rotate_shape(1)
     
     def repaint(self,event):
         dc=wx.PaintDC(self)
