@@ -445,7 +445,7 @@ class TestGlPanel(GLPanel):
         self.initialized=1
         self.canvas.Bind(wx.EVT_MOUSEWHEEL,self.wheel)
         self.parent=parent
-        self.initp=None
+        self.initpos=None
         self.dist=200
         self.bedsize=[200,200]
         self.transv=[0, 0, -self.dist]
@@ -469,26 +469,49 @@ class TestGlPanel(GLPanel):
         threading.Thread(target=self.update).start()
         self.initialized=0
     
+    def move_shape(self, delta):
+        """moves shape (selected in l, which is list ListBox of shapes)
+        by an offset specified in tuple delta.
+        Positive numbers move to (rigt, down)"""
+        name = self.parent.l.GetSelection()
+        if name == wx.NOT_FOUND:
+            return False
+
+        name = self.parent.l.GetString(name)
+
+        model = self.parent.models[name]
+        model.offsets = [
+                model.offsets[0] + delta[0],
+                model.offsets[1] + delta[1],
+                model.offsets[2]
+            ]
+        self.Refresh()
+        return True
+
     def move(self, event):
+        """react to mouse actions:
+        no mouse: show red mousedrop
+        LMB: move active object,
+            with shift rotate viewport
+        RMB: nothing
+            with shift move viewport
+        """
         if event.Dragging() and event.LeftIsDown():
-            if self.initp==None:
-                self.initp=event.GetPositionTuple()
+            if self.initpos==None:
+                self.initpos=event.GetPositionTuple()
             else:
                 if not event.ShiftDown():
-                    i=self.parent.l.GetSelection()
-                    if i<0:
-                        return
-                    p1=list(self.initp)
-                    p1[1]*=-1
-                    self.initp=None
-                    p2=list(event.GetPositionTuple())
-                    p2[1]*=-1
-                    m=self.parent.models[self.parent.l.GetString(i)]
-                    m.offsets=map(lambda old,new,original:original+(new-old), list(p1)+[0],list(p2)+[0],m.offsets)
+                    currentpos = event.GetPositionTuple()
+                    delta = (
+                            (currentpos[0] - self.initpos[0]),
+                            -(currentpos[1] - self.initpos[1])
+                        )
+                    self.move_shape(delta)
+                    self.initpos=None
                     return
-                #print self.initp
-                p1=self.initp
-                self.initp=None
+                #print self.initpos
+                p1=self.initpos
+                self.initpos=None
                 p2=event.GetPositionTuple()
                 sz=self.GetClientSize()
                 p1x=(float(p1[0])-sz[0]/2)/(sz[0]/2)
@@ -511,18 +534,18 @@ class TestGlPanel(GLPanel):
                 self.rot=1
             
         elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
-            if self.initp is not None:
-                self.initp=None
+            if self.initpos is not None:
+                self.initpos=None
         elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
-            if self.initp is not None:
-                self.initp=None
+            if self.initpos is not None:
+                self.initpos=None
                 
         
         elif event.Dragging() and event.RightIsDown() and event.ShiftDown():
-                if self.initp is None:
-                    self.initp=event.GetPositionTuple()
+                if self.initpos is None:
+                    self.initpos=event.GetPositionTuple()
                 else:
-                    p1=self.initp
+                    p1=self.initpos
                     p2=event.GetPositionTuple()
                     sz=self.GetClientSize()
                     p1=list(p1)
@@ -539,7 +562,7 @@ class TestGlPanel(GLPanel):
                         glMultMatrixd(build_rotmatrix(self.basequat))
                     glGetDoublev(GL_MODELVIEW_MATRIX,self.mvmat)
                     self.rot=1
-                    self.initp=None
+                    self.initpos=None
         else:
             #mouse is moving without a button press
             p=event.GetPositionTuple()
@@ -548,9 +571,24 @@ class TestGlPanel(GLPanel):
             v[1]=self.bedsize[1]-v[1]
             self.mousepos=v
         
+    def rotate_shape(self, angle):
+        """rotates acive shape
+        positive angle is clockwise
+        """
+        name = self.parent.l.GetSelection()
+        if name == wx.NOT_FOUND:
+            return False
+        name = self.parent.l.GetString(name)
+        model = self.parent.models[name]
+        model.rot += angle
+
     def wheel(self,event):
+        """react to mouse wheel actions:
+        rotate object
+            with shift zoom viewport
+        """
         z=event.GetWheelRotation()
-        delta=10
+        angle=10
         if not event.ShiftDown():
             i=self.parent.l.GetSelection()
                     
@@ -560,17 +598,16 @@ class TestGlPanel(GLPanel):
                 except:
                     pass
                 return
-            m=self.parent.models[self.parent.l.GetString(i)]
                     
             if z > 0:
-                m.rot+=delta/2
+                self.rotate_shape(angle/2)
             else:
-                m.rot-=delta/2
+                self.rotate_shape(-angle/2)
             return
         if z > 0:
-            self.transv[2]+=delta
+            self.transv[2]+=angle
         else:
-            self.transv[2]-=delta
+            self.transv[2]-=angle
         
         glLoadIdentity()
         glTranslatef(*self.transv)
@@ -579,6 +616,34 @@ class TestGlPanel(GLPanel):
         glGetDoublev(GL_MODELVIEW_MATRIX,self.mvmat)
         self.rot=1
     
+    def keypress(self, event):
+        """gets keypress events and moves/rotates acive shape"""
+        keycode = event.GetKeyCode()
+        print keycode
+        step = 5
+        angle = 18
+        if event.ControlDown():
+            step = 1
+            angle = 1
+        #h
+        if keycode == 72:
+            self.move_shape((-step, 0))
+        #l
+        if keycode == 76:
+            self.move_shape((step, 0))
+        #j
+        if keycode == 75:
+            self.move_shape((0, step))
+        #k
+        if keycode == 74:
+            self.move_shape((0, -step))
+        #[
+        if keycode == 91:
+            self.rotate_shape(-angle)
+        #]
+        if keycode == 93:
+            self.rotate_shape(angle)
+        event.Skip()
                 
     def update(self):
         while(1):
