@@ -15,6 +15,7 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
   1. http://pypi.python.org/packages/source/m/mechanize/mechanize-0.2.5.tar.gz
   2. http://sourceforge.net/projects/libgmail/files/latest/download?source=files
 
+  3. Chosing your Carrier: The carrieres in the list may or may not work for you... if not, find your carrier in this list: http://en.wikipedia.org/wiki/List_of_SMS_gateways, set your carrier to Other and provide the SMS gateway in the options.
 ## Windows
 Download the following, and install in this order:
 
