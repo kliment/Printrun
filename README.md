@@ -4,7 +4,16 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
   * pronsole.py is an interactive command-line host software with tabcompletion goodness
   * pronterface.py is a graphical host software with the same functionality as pronsole
 
+  * This version of printrun provides SMS capability on a complete build
+  
+  * To enable SMS Send, go to pronterface options and fill in the SMS Settings
+  * You must select the appropriate carrier (eg. ATT) from the drop box, and check the Send SMS on End box.
+  
 # INSTALLING DEPENDENCIES
+
+##SMS Dependencies
+  1. http://pypi.python.org/packages/source/m/mechanize/mechanize-0.2.5.tar.gz
+  2. http://sourceforge.net/projects/libgmail/files/latest/download?source=files
 
 ## Windows
 Download the following, and install in this order:
@@ -13,7 +22,7 @@ Download the following, and install in this order:
   2. http://pypi.python.org/packages/any/p/pyserial/pyserial-2.5.win32.exe
   3. http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py27.exe
   4. http://launchpad.net/pyreadline/1.7/1.7/+download/pyreadline-1.7.win32.exe
-
+  
 ## Ubuntu/Debian
 `sudo apt-get install python-serial python-wxgtk2.8`
 
