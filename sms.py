@@ -3,7 +3,7 @@ import cmd, printcore, sys
 import glob, os, time
 import sys, subprocess 
 import math
-import libgmail
+import smtplib
 
 from math import sqrt
 
@@ -22,30 +22,6 @@ try:
 except:
     READLINE=False #neither readline module is available
 
-class Sender:
-    """
-    This type acts a system to send messages    
-    """
-    def __init__(self, uname, psswd):
-        # fill these if you will be using the same account often
-        self.user_name = uname
-        self.password = psswd
-        self.ga = libgmail.GmailAccount(self.user_name, self.password)
-        self.ga.login()
-    def sendMessage(self, receiver, mssg):
-        ## had to switch message and body argument for some reason!?
-        gMssg = libgmail.GmailComposedMessage(receiver.address, mssg.body, mssg.subject)
-        gStub = self.ga.sendMessage(gMssg)
-    
-class TextMessage:
-    """
-    Acts as a generic type for a text message
-    """
-    def __init__(self,_body, _subject, _att = None):
-        self.subject = _subject
-        self.body = _body
-        self.att = _att    
-    
 class Receiver:
     """
     This type is to represent a reciever of a text message
@@ -62,12 +38,14 @@ class Receiver:
                 "tMobile":"t-mobile.net", "Telus":"msg.telus.com",
                 "Verizon":"vtext.com", "Other":""}
         if(carrier == "Other"):
-            self.address = p_number+'@'+other
+            if(p_number == ""):
+                 self.address = other
+            else:
+                 self.address = p_number+'@'+other
         else:
             if (type(p_number) == type(0)): ## is phone number and integer?
                 p_number = str(p_number)    ## if so, convert to string
             self.address = p_number+'@'+CARRIERS[carrier]
-    
 class SMSSettings:
     def _carrier_list(self): return ["Alltel", "ATT", "Rogers", "Sprint", "tMobile", "Telus", "Verizon", "Other"]
     def __init__(self):
@@ -117,12 +95,23 @@ class sms(cmd.Cmd):
         if(self.smscmb.GetValue() == "Other"):
             print "Sending SMS Message ("+subject+"::"+message+") to " +self.sms_settings.phonenumber+"@"+self.sms_settings.other_carrier   
         else:  
-            print "Sending SMS Message ("+subject+"::"+message+") to " +self.sms_settings.phonenumber+"@"+self.smscmb.GetValue()      
-        sender = Sender(self.sms_settings.gmail_username, self.sms_settings.gmail_password)  
-        txtM = TextMessage(subject, message)
+            print "Sending SMS Message ("+subject+"::"+message+") to " +self.sms_settings.phonenumber+"@"+self.smscmb.GetValue()
         receiver = Receiver(self.sms_settings.phonenumber, self.smscmb.GetValue(),self.sms_settings.other_carrier)
-        sender.sendMessage(receiver, txtM)
-    
+        to = receiver.address
+        gmail_user = self.sms_settings.gmail_username
+        gmail_pwd = self.sms_settings.gmail_password
+        smtpserver = smtplib.SMTP("smtp.gmail.com",587)
+        print "Connected"
+        smtpserver.ehlo()
+        smtpserver.starttls()
+        smtpserver.ehlo
+        smtpserver.login(self.sms_settings.gmail_username, self.sms_settings.gmail_password)
+        header = 'To:' + to + '\n' + 'From: ' + self.sms_settings.gmail_username + '\n' + 'Subject:'+subject+' \n'
+        print header
+        msg = header + '\n '+message+'\n\n'
+        smtpserver.sendmail(gmail_user, to, msg)
+        print 'done!'
+        smtpserver.close()
     def smsset(self,var,str):
         try:
             t = type(getattr(self.sms_settings,var))
