@@ -121,7 +121,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole,sms.sms):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
-    
     def startcb(self):
         self.starttime=time.time()
         print "Print Started at: " +time.strftime('%H:%M:%S',time.localtime(self.starttime))

@@ -134,7 +134,7 @@ class sms(cmd.Cmd):
         except ValueError, ve:
             print "Bad value for variable '%s', expecting %s (%s)" % (var,repr(t)[1:-1],ve.args[0])
     
-    def do_set(self,argl):
+    def do_sms_set(self,argl):
         args = argl.split(None,1)
         if len(args) < 1:
             for k in [kk for kk in dir(self.sms_settings) if not kk.startswith("_")]:
@@ -147,7 +147,7 @@ class sms(cmd.Cmd):
             except AttributeError:
                 print "Unknown SMS variable '%s'" % args[0]
             return
-        self.set(args[0],args[1])
+        self.smsset(args[0],args[1])
     
     def help_set(self):
         print "Set variable:   set <variable> <value>"
@@ -161,4 +161,25 @@ class sms(cmd.Cmd):
             return [i for i in self.sms_settings._tabcomplete(line.split()[1]) if i.startswith(text)]
         else:
             return []
-    
+      
+    def parse_sms_cmdline(self,args):
+        import getopt
+        opts,args = getopt.getopt(args, "c:e:h", ["conf=","config=","help"])
+        for o,a in opts:
+            #print repr((o,a))
+            if o in ("-c","--conf","--config"):
+                self.load_rc(a)
+            elif o in ("-h","--help"):
+                print "Usage: "+sys.argv[0]+' [-c filename [-c filename2 ... ] ] [-e "command" ...]'
+                print "  -c | --conf | --config   - override startup .pronsolerc file"
+                print "     may chain config files, settings auto-save will go into last file in the chain"
+                print '  -e <command> - executes command after configuration/.pronsolerc is loaded'
+                print "     macros/settings from these commands are not autosaved"
+                sys.exit()
+        if not self.rc_loaded:
+            self.load_default_rc()
+        for o,a in opts:
+            if o == "-e":
+                self.processing_args = True
+                self.onecmd(a)
+                self.processing_args = False
