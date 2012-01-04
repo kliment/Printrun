@@ -37,8 +37,8 @@ class Receiver:
                 "Rogers":"pcs.rogers.com", "Sprint":"messaging.sprintpcs.com",
                 "tMobile":"t-mobile.net", "Telus":"msg.telus.com",
                 "Verizon":"vtext.com", "Other":""}
-        if(carrier == "Other"):
-            if(p_number == ""):
+        if(carrier == "Other" or (p_number == "" or p_number == "PHONENUMBER")):
+            if(p_number == "" or p_number == "PHONENUMBER"):
                  self.address = other
             else:
                  self.address = p_number+'@'+other
@@ -92,12 +92,9 @@ class sms(cmd.Cmd):
     
     def send_sms(self,subject,message):
         """send sms message"""
-        if(self.smscmb.GetValue() == "Other"):
-            print "Sending SMS Message ("+subject+"::"+message+") to " +self.sms_settings.phonenumber+"@"+self.sms_settings.other_carrier   
-        else:  
-            print "Sending SMS Message ("+subject+"::"+message+") to " +self.sms_settings.phonenumber+"@"+self.smscmb.GetValue()
         receiver = Receiver(self.sms_settings.phonenumber, self.smscmb.GetValue(),self.sms_settings.other_carrier)
         to = receiver.address
+        print "Sending SMS Message ("+subject+"::"+message+") to " +to   
         gmail_user = self.sms_settings.gmail_username
         gmail_pwd = self.sms_settings.gmail_password
         smtpserver = smtplib.SMTP("smtp.gmail.com",587)
