@@ -51,7 +51,7 @@ class Receiver:
     This type is to represent a reciever of a text message
     """
     
-    def __init__(self, p_number, carrier):
+    def __init__(self, p_number, carrier, other):
         """
         p_number can be an int or a string (must be 10 digits with area code)
         carrier parameter needs to be a string from the list:
@@ -60,19 +60,23 @@ class Receiver:
         CARRIERS = {"Alltel":"alltelmessage.com", "ATT":"mobile.mycingular.com",
                 "Rogers":"pcs.rogers.com", "Sprint":"messaging.sprintpcs.com",
                 "tMobile":"t-mobile.net", "Telus":"msg.telus.com",
-                "Verizon":"vtext.com"}
-        if (type(p_number) == type(0)): ## is phone number and integer?
-            p_number = str(p_number)    ## if so, convert to string
-        self.address = p_number+'@'+CARRIERS[carrier]
+                "Verizon":"vtext.com", "Other":""}
+        if(carrier == "Other"):
+            self.address = p_number+'@'+other
+        else:
+            if (type(p_number) == type(0)): ## is phone number and integer?
+                p_number = str(p_number)    ## if so, convert to string
+            self.address = p_number+'@'+CARRIERS[carrier]
     
 class SMSSettings:
-    def _carrier_list(self): return ["Alltel", "ATT", "Rogers", "Sprint", "tMobile", "Telus", "Verizon"]
+    def _carrier_list(self): return ["Alltel", "ATT", "Rogers", "Sprint", "tMobile", "Telus", "Verizon", "Other"]
     def __init__(self):
         # defaults here.
         # the initial value determines the type
         self.gmail_username = "GMAIL_USERNAME@gmail.com"
         self.gmail_password = "GMAIL_PASSWORD"
         self.phonenumber = "PHONENUMBER"
+        self.other_carrier = ""
     def _set(self,key,value):
         try:
             value = getattr(self,"_%s_alias"%key)()[value]
@@ -110,8 +114,51 @@ class sms(cmd.Cmd):
     
     def send_sms(self,subject,message):
         """send sms message"""
-        print "Sending SMS Message to " +self.sms_settings.phonenumber+"@"+self.smscmb.GetValue()      
+        if(self.smscmb.GetValue() == "Other"):
+            print "Sending SMS Message ("+subject+"::"+message+") to " +self.sms_settings.phonenumber+"@"+self.sms_settings.other_carrier   
+        else:  
+            print "Sending SMS Message ("+subject+"::"+message+") to " +self.sms_settings.phonenumber+"@"+self.smscmb.GetValue()      
         sender = Sender(self.sms_settings.gmail_username, self.sms_settings.gmail_password)  
         txtM = TextMessage(subject, message)
-        receiver = Receiver(self.sms_settings.phonenumber, self.smscmb.GetValue())
+        receiver = Receiver(self.sms_settings.phonenumber, self.smscmb.GetValue(),self.sms_settings.other_carrier)
         sender.sendMessage(receiver, txtM)
+    
+    def smsset(self,var,str):
+        try:
+            t = type(getattr(self.sms_settings,var))
+            value = self.sms_settings._set(var,str)
+            if not self.processing_rc and not self.processing_args:
+                self.save_in_rc("set "+var,"set %s %s" % (var,value))
+        except AttributeError:
+            print "Unknown SMS variable '%s'" % var
+        except ValueError, ve:
+            print "Bad value for variable '%s', expecting %s (%s)" % (var,repr(t)[1:-1],ve.args[0])
+    
+    def do_set(self,argl):
+        args = argl.split(None,1)
+        if len(args) < 1:
+            for k in [kk for kk in dir(self.sms_settings) if not kk.startswith("_")]:
+                print "%s = %s" % (k,str(getattr(self.sms_settings,k)))
+            return
+            value = getattr(self.sms_settings,args[0])
+        if len(args) < 2:
+            try:
+                print "%s = %s" % (args[0],getattr(self.sms_settings,args[0]))
+            except AttributeError:
+                print "Unknown SMS variable '%s'" % args[0]
+            return
+        self.set(args[0],args[1])
+    
+    def help_set(self):
+        print "Set variable:   set <variable> <value>"
+        print "Show variable:  set <variable>"
+        print "'set' without arguments displays all variables"
+
+    def complete_set(self, text, line, begidx, endidx):
+        if (len(line.split())==2 and line[-1] != " ") or (len(line.split())==1 and line[-1]==" "):
+            return [i for i in dir(self.sms_settings) if not i.startswith("_") and i.startswith(text)]
+        elif(len(line.split())==3 or (len(line.split())==2 and line[-1]==" ")):
+            return [i for i in self.sms_settings._tabcomplete(line.split()[1]) if i.startswith(text)]
+        else:
+            return []
+    

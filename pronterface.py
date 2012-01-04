@@ -407,6 +407,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole,sms.sms):
         except:
             pass
         
+         
+    def testsms(self,event=None):
+        try:
+            sms.sms.send_sms(self, "SMS Message", "Hello From Pronterface!")
+        except:
+            pass
         
     def popwindow(self):
         # this list will contain all controls that should be only enabled
@@ -476,7 +482,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole,sms.sms):
         self.sendsmsbox.Bind(wx.EVT_CHECKBOX,self.sendsms)
         
         self.smscmb = wx.ComboBox(self.panel, -1,
-                choices=["Alltel", "ATT", "Rogers", "Sprint", "tMobile", "Telus", "Verizon"],
+                choices=["Alltel", "ATT", "Rogers", "Sprint", "tMobile", "Telus", "Verizon", "Other"],
                 style=wx.CB_DROPDOWN, size=(110,30),pos=(275,0))
         try:
             self.smscmb.SetValue("ATT")
@@ -485,6 +491,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole,sms.sms):
             pass
         
         uts.Add(self.smscmb)
+        
+        self.testsmsbtn=wx.Button(self.panel,-1,_("Test SMS"),pos=(380,0))
+        self.testsmsbtn.Bind(wx.EVT_BUTTON,self.testsms)
+        
+        uts.Add(self.testsmsbtn,wx.TOP|wx.LEFT,0)
+        
         #SECOND ROW
         ubs=self.upperbottomsizer=wx.BoxSizer(wx.HORIZONTAL)
         
@@ -1588,7 +1600,8 @@ class options(wx.Dialog):
                     pronterface.set(k,str(ctrls[k].GetValue()))
             for k,v in pronterface.sms_settings._all_settings().items():
                 if ctrls[k].GetValue() != str(v):
-                    pronterface.set(k,str(ctrls[k].GetValue()))
+                    print "Updating "+k+" to "+str(ctrls[k].GetValue());
+                    pronterface.smsset(k,str(ctrls[k].GetValue()))
         self.Destroy()
         
 class ButtonEdit(wx.Dialog):
