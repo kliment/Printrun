@@ -124,11 +124,11 @@ class printcore():
                         pass
                 #callback for errors
                 pass
-            if "resend" in line.lower() or "rs" in line:
+            if line.lower().startswith("resend") or line.startswith("rs"):
                 try:
                     toresend=int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
                 except:
-                    if "rs" in line:
+                    if line.startswith("rs"):
                         toresend=int(line.split()[1])
                 self.resendfrom=toresend
                 self.clear=True
@@ -205,6 +205,8 @@ class printcore():
                 pass
         while(self.printing and self.printer and self.online):
             self._sendnext()
+        self.log=[]
+        self.sent=[]
         if self.endcb is not None:
             try:
                 self.endcb()
@@ -225,6 +227,7 @@ class printcore():
             self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
             self.resendfrom+=1
             return
+        self.sentlines={}
         self.resendfrom=-1
         for i in self.priqueue[:]:
             self._send(i)
