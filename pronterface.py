@@ -62,12 +62,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
         self.settings.preview_extrusion_width = 0.5
+	self.settings.bgcolor = "#FFFFFF"
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
         self.SetIcon(wx.Icon("P-face.ico",wx.BITMAP_TYPE_ICO))
         self.panel=wx.Panel(self,-1,size=size)
-        self.panel.SetBackgroundColour("white")
+
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
@@ -85,6 +86,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.custombuttons=[]
         self.btndict={}
         self.parse_cmdline(sys.argv[1:])
+        self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict={}
         try:
             execfile("custombtn.txt",customdict)
