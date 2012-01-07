@@ -69,12 +69,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.helpdict["preview_extrusion_width"] = _("Width of Extrusion in Preview (default: 0.5)")
         self.helpdict["preview_grid_step1"] = _("Fine Grid Spacing (default: 10)")
         self.helpdict["preview_grid_step2"] = _("Coarse Grid Spacing (default: 50)")
+        self.settings.bgcolor = "#FFFFFF"
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
         self.SetIcon(wx.Icon("P-face.ico",wx.BITMAP_TYPE_ICO))
         self.panel=wx.Panel(self,-1,size=size)
-        self.panel.SetBackgroundColour("white")
+
         self.statuscheck=False
         self.tempreport=""
         self.monitor=0
@@ -96,6 +97,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.btndict={}
         self.parse_cmdline(sys.argv[1:])
         self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
+        self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict={}
         try:
             execfile("custombtn.txt",customdict)
