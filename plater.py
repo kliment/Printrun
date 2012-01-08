@@ -248,6 +248,9 @@ class stlwin(wx.Frame):
         #self.mainsizer.AddSpacer(10)
         if glview:
             self.s=stlview.TestGlPanel(self,(580,580))
+            #Initialise the old showstl for the rotation, but don't show it.
+            self.d=showstl(self,(0,0),(0,0))
+            self.Bind(wx.EVT_MOUSEWHEEL,self.d.rot)
         else:
             self.s=showstl(self,(580,580),(0,0))
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
