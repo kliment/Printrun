@@ -47,7 +47,7 @@ class Tee(object):
         sys.stdout = self.stdout
     def write(self, data):
         self.target(data)
-        self.stdout.write(data)
+        self.stdout.write(data.encode("utf-8"))
     def flush(self):
         self.stdout.flush()
 
