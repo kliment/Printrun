@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2012-01-09 10:00+CET\n"
-"PO-Revision-Date: 2012-01-09 13:30+0100\n"
+"PO-Revision-Date: 2012-01-09 10:30+0100\n"
 "Last-Translator: Christian Metzen <metzench@ccux-linux.de>\n"
 "Language-Team: DE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -88,7 +88,7 @@ msgid ""
 "# Backup of your old buttons is in custombtn.old\n"
 msgstr ""
 "# Alle individuellen Buttons in .pronsolerc eingetragen.\n"
-"# Bitte fuegen Sie sie hier nicht mehr ein.\n"
+"# Bitte fügen Sie sie hier nicht mehr ein.\n"
 "# Backup Ihrer alten Buttons befindet sich in custombtn.old\n"
 
 #: pronterface.py:117
@@ -97,7 +97,7 @@ msgstr "Achtung! Sie haben benutzerdefinierte Buttons in custombtn.txt und .pron
 
 #: pronterface.py:118
 msgid "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
-msgstr "Ignoriere custombtn.txt. Alle aktuellen Buttons entfernen um wieder zu custombtn.txt zurueckzukehren"
+msgstr "Ignoriere custombtn.txt. Alle aktuellen Buttons entfernen um wieder zu custombtn.txt zurückzukehren"
 
 #: pronterface.py:146
 #: pronterface.py:492
@@ -129,7 +129,7 @@ msgstr "Drucker ist nicht online."
 
 #: pronterface.py:231
 msgid "You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."
-msgstr "Sie koennen keine negativen Temperaturen einstellen. Um das Hotend ganz auszuschalten, Temperatur auf 0 setzen."
+msgstr "Sie können keine negativen Temperaturen einstellen. Um das Hotend ganz auszuschalten, Temperatur auf 0 setzen."
 
 #: pronterface.py:246
 msgid "Setting bed temperature to "
@@ -137,11 +137,11 @@ msgstr "Setze Heizbett Temperatur auf"
 
 #: pronterface.py:266
 msgid "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
-msgstr "Sie koennen keine negativen Temperaturen einstellen. Um das Heizbett ganz auszuschalten, Temperatur auf 0 setzen."
+msgstr "Sie können keine negativen Temperaturen einstellen. Um das Heizbett ganz auszuschalten, Temperatur auf 0 setzen."
 
 #: pronterface.py:268
 msgid "You must enter a temperature."
-msgstr "Sie muessen eine Temperatur eingeben."
+msgstr "Sie müssen eine Temperatur eingeben."
 
 #: pronterface.py:283
 msgid "Do you want to erase the macro?"
@@ -473,7 +473,7 @@ msgstr "Wähle Druckdatei"
 
 #: pronterface.py:1275
 msgid "Failed to execute slicing software: "
-msgstr "Fehler beim Ausfuehren der Slicing Software:"
+msgstr "Fehler beim Ausführen der Slicing Software:"
 
 #: pronterface.py:1282
 msgid "Slicing..."
@@ -531,7 +531,7 @@ msgstr "mm bis"
 #: pronterface.py:1362
 #: pronterface.py:1363
 msgid "the print goes from"
-msgstr "Der Druck verlaeuft von"
+msgstr "Der Druck verläuft von"
 
 #: pronterface.py:1362
 msgid ""
@@ -555,7 +555,7 @@ msgstr ""
 
 #: pronterface.py:1364
 msgid "Estimated duration (pessimistic): "
-msgstr "Geschaetze Dauer (pessimistisch):"
+msgstr "Geschätze Dauer (pessimistisch):"
 
 #: pronterface.py:1388
 msgid "No file loaded. Please use load first."
