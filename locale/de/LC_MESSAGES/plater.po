@@ -1,0 +1,89 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Plater\n"
+"POT-Creation-Date: 2012-01-09 15:07+CET\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Christian Metzen <metzench@ccux-linux.de>\n"
+"Language-Team:  <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: German\n"
+"X-Poedit-Country: GERMANY\n"
+
+#: plater.py:223
+msgid "Plate building tool"
+msgstr "Plate building tool"
+
+#: plater.py:229
+msgid "Clear"
+msgstr "Löschen"
+
+#: plater.py:230
+msgid "Load"
+msgstr "Laden"
+
+#: plater.py:232
+msgid "Export"
+msgstr "Exportieren"
+
+#: plater.py:235
+msgid "Done"
+msgstr "Fertig"
+
+#: plater.py:237
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: plater.py:239
+msgid "Snap to Z = 0"
+msgstr "Einrasten auf Z = 0"
+
+#: plater.py:240
+msgid "Put at 100, 100"
+msgstr "Auf 100, 100 setzen"
+
+#: plater.py:241
+msgid "Delete"
+msgstr "Löschen"
+
+#: plater.py:242
+msgid "Auto"
+msgstr "Auto"
+
+#: plater.py:266
+msgid "Autoplating"
+msgstr "Autoplating"
+
+#: plater.py:294
+msgid "Bed full, sorry sir :("
+msgstr "Das Druckbett ist voll! Sorry."
+
+#: plater.py:304
+msgid "Are you sure you want to clear the grid? All unsaved changes will be lost."
+msgstr "Bist du sicher dass du das Raster leeren willst? Alle ungesicherten Änderungen gehen verloren."
+
+#: plater.py:304
+msgid "Clear the grid?"
+msgstr "Raster leeren?"
+
+#: plater.py:346
+msgid "Pick file to save to"
+msgstr "Wähle die zu sichernde Datei"
+
+#: plater.py:347
+msgid "STL files (;*.stl;)"
+msgstr "STL Dateien (;*.stl;)"
+
+#: plater.py:367
+msgid "wrote "
+msgstr "geschrieben"
+
+#: plater.py:370
+msgid "Pick file to load"
+msgstr "Wähle die zu ladende Datei"
+
+#: plater.py:371
+msgid "STL files (;*.stl;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"
+msgstr "STL Dateien (;*.stl;)|*.stl|OpenSCAD Dateien (;*.scad;)|*.scad"
+
