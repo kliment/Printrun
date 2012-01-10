@@ -1,9 +1,18 @@
 #!/usr/bin/env python
+
+# Set up Internationalization using gettext
+# searching for installed locales on /usr/share; uses relative folder if not found (windows)
+import os, gettext, Queue, re
+
+if os.path.exists('/usr/share/pronterface/locale'):
+    gettext.install('plater', '/usr/share/pronterface/locale', unicode=1)
+else: 
+    gettext.install('plater', './locale', unicode=1)
+
 import wx
 import time
 import random
 import threading
-import os
 import math
 import sys
 
@@ -220,26 +229,26 @@ class showstl(wx.Window):
 
 class stlwin(wx.Frame):
     def __init__(self, size=(800, 580), callback=None, parent=None):
-        wx.Frame.__init__(self, parent, title="Plate building tool", size=size)
+        wx.Frame.__init__(self, parent, title=_("Plate building tool"), size=size)
         self.SetIcon(wx.Icon("plater.ico", wx.BITMAP_TYPE_ICO))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = wx.Panel(self, -1, size=(150, 600), pos=(0, 0))
         self.panel.SetBackgroundColour((10, 10, 10))
         self.l = wx.ListBox(self.panel, size=(300, 180), pos=(0, 30))
-        self.cl = wx.Button(self.panel, label="Clear", pos=(0, 205))
-        self.lb = wx.Button(self.panel, label="Load", pos=(0, 0))
+        self.cl = wx.Button(self.panel, label=_("Clear"), pos=(0, 205))
+        self.lb = wx.Button(self.panel, label=_("Load"), pos=(0, 0))
         if(callback is None):
-            self.eb = wx.Button(self.panel, label="Export", pos=(100, 0))
+            self.eb = wx.Button(self.panel, label=_("Export"), pos=(100, 0))
             self.eb.Bind(wx.EVT_BUTTON, self.export)
         else:
-            self.eb = wx.Button(self.panel, label="Done", pos=(100, 0))
+            self.eb = wx.Button(self.panel, label=_("Done"), pos=(100, 0))
             self.eb.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
-            self.eb = wx.Button(self.panel, label="Cancel", pos=(200, 0))
+            self.eb = wx.Button(self.panel, label=_("Cancel"), pos=(200, 0))
             self.eb.Bind(wx.EVT_BUTTON, lambda e: self.Destroy())
-        self.sb = wx.Button(self.panel, label="Snap to Z = 0", pos=(00, 255))
-        self.cb = wx.Button(self.panel, label="Put at 100, 100", pos=(0, 280))
-        self.db = wx.Button(self.panel, label="Delete", pos=(0, 305))
-        self.ab = wx.Button(self.panel, label="Auto", pos=(0, 330))
+        self.sb = wx.Button(self.panel, label=_("Snap to Z = 0"), pos=(00, 255))
+        self.cb = wx.Button(self.panel, label=_("Put at 100, 100"), pos=(0, 280))
+        self.db = wx.Button(self.panel, label=_("Delete"), pos=(0, 305))
+        self.ab = wx.Button(self.panel, label=_("Auto"), pos=(0, 330))
         self.cl.Bind(wx.EVT_BUTTON, self.clear)
         self.lb.Bind(wx.EVT_BUTTON, self.right)
         self.sb.Bind(wx.EVT_BUTTON, self.snap)
@@ -263,7 +272,7 @@ class stlwin(wx.Frame):
         #self.SetClientSize(size)
 
     def autoplate(self, event):
-        print "Autoplating"
+        print _("Autoplating")
         separation = 2
         bedsize = [200, 200, 100]
         cursor = [0, 0, 0]
@@ -291,7 +300,7 @@ class stlwin(wx.Frame):
                 max[1] = cursor[1] + x
             cursor[0] += x + separation
             if (cursor[1] + y) >= bedsize[1]:
-                print "Bed full, sorry sir :("
+                print _("Bed full, sorry sir :(")
                 self.Refresh()
                 return
         centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
@@ -301,7 +310,7 @@ class stlwin(wx.Frame):
         self.Refresh()
 
     def clear(self, event):
-        result = wx.MessageBox('Are you sure you want to clear the grid? All unsaved changes will be lost.', 'Clear the grid?',
+        result = wx.MessageBox(_('Are you sure you want to clear the grid? All unsaved changes will be lost.'), _('Clear the grid?'),
             wx.YES_NO | wx.ICON_QUESTION)
         if (result == 2):
             self.models = {}
@@ -343,8 +352,8 @@ class stlwin(wx.Frame):
         self.Destroy()
 
     def export(self, event):
-        dlg = wx.FileDialog(self, "Pick file to save to", self.basedir, style=wx.FD_SAVE)
-        dlg.SetWildcard("STL files (;*.stl;)")
+        dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style=wx.FD_SAVE)
+        dlg.SetWildcard(_("STL files (;*.stl;)"))
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
             self.writefiles(name)
@@ -364,11 +373,11 @@ class stlwin(wx.Frame):
             facets += i.facets
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
-        print "wrote ", name
+        print _("wrote "), name
 
     def right(self, event):
-        dlg = wx.FileDialog(self, "Pick file to load", self.basedir, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard("STL files (;*.stl;)|*.stl|OpenSCAD files (;*.scad;)|*.scad")
+        dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        dlg.SetWildcard(_("STL files (;*.stl;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"))
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
             if (name.lower().endswith(".stl")):
