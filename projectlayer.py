@@ -39,7 +39,7 @@ class dispframe(wx.Frame):
             for i in svg:
                 #print i
                 points=[wx.Point(*map(lambda x:int(round(float(x)*self.scale)),j.strip().split())) for j in i.strip().split("M")[1].split("L")]
-                dc.DrawPolygon(points,60,60)
+                dc.DrawPolygon(points,self.size[0]/2,self.size[1]/2)
                     
                 
             dc.SelectObject(wx.NullBitmap)
@@ -69,13 +69,14 @@ class dispframe(wx.Frame):
             wx.CallAfter(self.timer.Stop)
             
         
-    def present(self,layers,interval=0.5,thickness=0.4,scale=20):
+    def present(self,layers,interval=0.5,thickness=0.4,scale=20,size=(800,600)):
         wx.CallAfter(self.pic.Hide)
         wx.CallAfter(self.Refresh)
         self.layers=layers
         self.scale=scale
         self.thickness=thickness
         self.index=0
+        self.size=size
         self.timer=wx.Timer(self,1)
         self.timer.Bind(wx.EVT_TIMER,self.nextimg)
         self.Bind(wx.EVT_TIMER,self.nextimg)
@@ -101,6 +102,10 @@ class setframe(wx.Frame):
         wx.StaticText(self.panel,-1,"Scale:",pos=(0,90))
         wx.StaticText(self.panel,-1,"x",pos=(130,90))
         self.scale=wx.TextCtrl(self.panel,-1,"10",pos=(50,90))
+        wx.StaticText(self.panel,-1,"X:",pos=(160,30))
+        self.X=wx.TextCtrl(self.panel,-1,"800",pos=(180,30))
+        wx.StaticText(self.panel,-1,"Y:",pos=(160,60))
+        self.Y=wx.TextCtrl(self.panel,-1,"600",pos=(180,60))
         self.bload=wx.Button(self.panel,-1,"Present",pos=(0,150))
         self.bload.Bind(wx.EVT_BUTTON,self.startdisplay)
         self.Show()
@@ -126,5 +131,10 @@ class setframe(wx.Frame):
         self.f.ShowFullScreen(1)
         l=self.layers[0][:]
         #l=list(reversed(l))
-        self.f.present(l,thickness=float(self.thickness.GetValue()),interval=float(self.interval.GetValue()),scale=float(self.scale.GetValue()))
+        self.f.present(l,thickness=float(self.thickness.GetValue()),interval=float(self.interval.GetValue()),scale=float(self.scale.GetValue()), size=(float(self.X.GetValue()),float(self.Y.GetValue())))
 
+if __name__=="__main__":
+    a=wx.App()
+    setframe(None).Show()
+    a.MainLoop()
+    
