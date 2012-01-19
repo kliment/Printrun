@@ -62,6 +62,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.settings.preview_extrusion_width = 0.5
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
+        self.settings.bgcolor = "#FFFFFF"
         self.helpdict["build_dimensions"] = _("Dimensions of Build Platform\n & optional offset of origin\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ")
         self.helpdict["last_bed_temperature"] = _("Last Set Temperature for the Heated Print Bed")
         self.helpdict["last_file_path"] = _("Folder of last opened file")
@@ -69,7 +70,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.helpdict["preview_extrusion_width"] = _("Width of Extrusion in Preview (default: 0.5)")
         self.helpdict["preview_grid_step1"] = _("Fine Grid Spacing (default: 10)")
         self.helpdict["preview_grid_step2"] = _("Coarse Grid Spacing (default: 50)")
-        self.settings.bgcolor = "#FFFFFF"
+        self.helpdict["bgcolor"] = _("Pronterface background color (default: #FFFFFF)")
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
