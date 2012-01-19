@@ -1639,7 +1639,10 @@ class options(wx.Dialog):
         topsizer=wx.BoxSizer(wx.VERTICAL)
         vbox=wx.StaticBoxSizer(wx.StaticBox(self, label=_("Defaults")) ,wx.VERTICAL)
         topsizer.Add(vbox,1,wx.ALL+wx.EXPAND)
-        grid=wx.GridSizer(rows=0,cols=2,hgap=8,vgap=2)
+        grid=wx.FlexGridSizer(rows=0,cols=2,hgap=8,vgap=2)
+        grid.SetFlexibleDirection( wx.BOTH )
+        grid.AddGrowableCol( 1 )
+        grid.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
         vbox.Add(grid,0,wx.EXPAND)
         ctrls = {}
         for k,v in sorted(pronterface.settings._all_settings().items()):
@@ -1648,8 +1651,8 @@ class options(wx.Dialog):
             if k in pronterface.helpdict:
                 ctrls[k,0].SetToolTipString(pronterface.helpdict.get(k))
                 ctrls[k,1].SetToolTipString(pronterface.helpdict.get(k))
-            grid.Add(ctrls[k,0],0,wx.BOTTOM+wx.RIGHT)
-            grid.Add(ctrls[k,1],1,wx.EXPAND)
+            grid.Add(ctrls[k,0],0,wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
+            grid.Add(ctrls[k,1],1,wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
         topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0,wx.EXPAND)
         self.SetSizer(topsizer)        
         topsizer.Layout()
