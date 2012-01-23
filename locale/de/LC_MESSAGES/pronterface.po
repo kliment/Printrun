@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2012-01-19 09:21+CET\n"
-"PO-Revision-Date: 2012-01-19 09:22+0100\n"
+"PO-Revision-Date: 2012-01-23 10:01+0100\n"
 "Last-Translator: Christian Metzen <metzench@ccux-linux.de>\n"
 "Language-Team: DE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -139,7 +139,7 @@ msgstr "Extrudieren"
 
 #: pronterface.py:96
 msgid "Reverse"
-msgstr "Umkehren"
+msgstr "Rückwärts"
 
 #: pronterface.py:114
 msgid ""
@@ -391,7 +391,7 @@ msgstr "Aus"
 #: pronterface.py:566
 #: pronterface.py:586
 msgid "Set"
-msgstr "Einstellen"
+msgstr "Ein"
 
 #: pronterface.py:571
 #: pronterface.py:634
