@@ -114,4 +114,6 @@ sender, or the following code example:
     p.resume()
     p.disconnect()
 
+# LICENSE
 
+The Printrun suite is licensed under the terms of GPL version 3, or, at your option, any later version.

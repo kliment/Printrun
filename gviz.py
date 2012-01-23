@@ -1,3 +1,4 @@
+# Licensed under the terms of GPL version 3, or, at your option, any later version.
 import wx,time
 
 class window(wx.Frame):

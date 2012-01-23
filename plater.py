@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Licensed under the terms of GPL version 3, or, at your option, any later version.
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)

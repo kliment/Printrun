@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Licensed under the terms of GPL version 3, or, at your option, any later version.
 import cmd, printcore, sys 
 import glob, os, time
 import sys, subprocess 

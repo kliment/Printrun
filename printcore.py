@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Licensed under GPLv3
+# Licensed under the terms of GPL version 3, or, at your option, any later version.
 
 from serial import Serial
 from threading import Thread
