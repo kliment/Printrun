@@ -283,9 +283,9 @@ class gcline(object):
             ]
     def glcolor(self):
         if self.extrusion_ratio == 0:
-            return [10,10,10,0,10,10,10,0]
+            return [255,255,255,128,128,128]
         else:
-            return[255,128,128,120,255,128,128,120]
+            return[255,128,128,128,0,0]
 
 
 def float_from_line(axe, line):
@@ -317,8 +317,7 @@ class gcview(object):
             layer_name = line.z
             if line.z not in self.layers:
                 self.layers[line.z] = pyglet.graphics.Batch()
-            self.layers[line.z].add(2, GL_LINES, None, ("c4B", line.glcolor()))
-            self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()))
+            self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor()))
         self.layerlist = self.layers.keys()
         self.layerlist.sort()
         t2 = time.time()
@@ -800,11 +799,16 @@ class TestGlPanel(GLPanel):
             glTranslatef(*(i.offsets))
             glRotatef(i.rot, 0.0, 0.0, 1.0)
             glScalef(*i.scale)
-            #glEnable(GL_COLOR_MATERIAL)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.93, 0.37, 0.25, 1))
+            #glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.93, 0.37, 0.25, 1))
+            glEnable(GL_COLOR_MATERIAL)
+            glLineWidth (0.5)
             [i.gc.layers[j].draw() for j in i.gc.layerlist if j < i.curlayer]
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.6, 0.9, 1))
+
+            glLineWidth (3.5)
             i.gc.layers[i.curlayer].draw()
+            glLineWidth (1.5)
+
+            glDisable(GL_COLOR_MATERIAL)
 
             glPopMatrix()
         glPopMatrix()
