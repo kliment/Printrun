@@ -211,7 +211,7 @@ class gcline(object):
     Once initialised,it knows its position, length and extrusion ratio
     Returns lines into gcview batch()
     """
-    def __init__(self, x=None, y=None, z=None, e=None, prev_gcline=None, orgline = False):
+    def __init__(self, x=None, y=None, z=None, e=None, f=None, prev_gcline=None, orgline = False):
         if prev_gcline is None:
             self.prev_gcline = gcpoint()
         else:
@@ -233,13 +233,15 @@ class gcline(object):
         else:
             self.e = float(e)
 
+        self.f = f
+
         self.orgline = orgline
 
         self.calc_delta()
         self.calc_len()
 
     def __str__(self):
-        return u"line from %s,%s,%s to %s,%s,%s with extrusion ratio %s\n%s" % (
+        return u"line from %s,%s,%s to %s,%s,%s with extrusion ratio %s and feedrate %n\n%s" % (
                 self.prev_gcline.x,
                 self.prev_gcline.y,
                 self.prev_gcline.z,
@@ -247,6 +249,7 @@ class gcline(object):
                 self.y,
                 self.z,
                 self.extrusion_ratio,
+                self.f,
                 self.orgline,
             )
 
@@ -283,23 +286,31 @@ class gcline(object):
                 self.y,
                 self.z,
             ]
-    def glcolor(self, upper_limit = None, lower_limit = 0):
+    def glcolor(self, upper_limit = None, lower_limit = 0, max_feedrate = 0):
         if self.extrusion_ratio == 0:
             return [255,255,255,0,0,0]
         else:
+            blue_color = 0
+            green_color = 0
             if upper_limit is not None:
                 if self.extrusion_ratio <= lower_limit:
-                    color = 0
+                    blue_color = 0
                 else:
-                    color = int ((self.extrusion_ratio - lower_limit) / (upper_limit - lower_limit) * 255)
+                    blue_color = int ((self.extrusion_ratio - lower_limit) / (upper_limit - lower_limit) * 255)
             else:
-                color = 0
+                blue_color = 0
+            if max_feedrate > 0 and self.f > 0:
+                green_color = int((self.f/max_feedrate) * 255)
 
-            if color > 255:
-                color = 255
-            if color < 0:
-                color = 0
-            return[255,128,color,128,0,color]
+            if green_color > 255:
+                green_color = 255
+            if green_color < 0:
+                green_color = 0
+            if blue_color > 255:
+                blue_color = 255
+            if blue_color < 0:
+                blue_color = 0
+            return[255,green_color,blue_color,128,green_color,blue_color/4]
 
 
 def float_from_line(axe, line):
@@ -316,18 +327,22 @@ class gcview(object):
         self.delta = [0, 0, 0, 0]
         self.layers = {}
         t0 = time.time()
+        self.lastf = 0
         lines = [self.transform(i) for i in lines]
         lines = [i for i in lines if i is not None]
         t1 = time.time()
         print "transformed %s lines in %fs" % (len(lines), t1- t0)
         upper_limit = 0
         lower_limit = None
+        max_feedrate = 0
         for line in lines:
-            if line.extrusion_ratio and line.length > 0.003:  #lines shorter than 0.003 can have large extrusion ratio
+            if line.extrusion_ratio and line.length > 0.005:  #lines shorter than 0.003 can have large extrusion ratio
                 if line.extrusion_ratio > upper_limit:
                     upper_limit = line.extrusion_ratio
                 if lower_limit is None or line.extrusion_ratio < lower_limit:
                     lower_limit = line.extrusion_ratio
+            if line.f > max_feedrate:
+                max_feedrate = line.f
         #print upper_limit, lower_limit
 
         layertemp = {}
@@ -336,7 +351,7 @@ class gcview(object):
             layer_name = line.z
             if line.z not in self.layers:
                 self.layers[line.z] = pyglet.graphics.Batch()
-            self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(upper_limit, lower_limit)))
+            self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(upper_limit, lower_limit, max_feedrate)))
         self.layerlist = self.layers.keys()
         self.layerlist.sort()
         t2 = time.time()
@@ -348,7 +363,7 @@ class gcview(object):
         """
         orgline = line
         line = line.split(";")[0]
-        cur = [None, None, None, None]
+        cur = [None, None, None, None, None]
         if len(line) > 0:
             if "G92" in line:
                 #Recalculate delta on G92 (reset)
@@ -384,12 +399,20 @@ class gcview(object):
                     cur[2] = float_from_line("Z", line) + self.delta[2]
                 if("E" in line):
                     cur[3] = float_from_line("E", line) + self.delta[3]
+                if "F" in line:
+                    cur[4] = float_from_line("F", line)
 
-                if cur == [None, None, None, None]:
+
+                if cur == [None, None, None, None, None]:
                     return None
                 else:
                     #print cur
-                    r = gcline(cur[0], cur[1], cur[2], cur[3], self.prev, orgline=orgline)
+                    if cur[4] is None:
+                        cur[4] = self.lastf
+                    else:
+                        self.lastf = cur[4]
+
+                    r = gcline(x=cur[0], y=cur[1], z=cur[2],e=cur[3], f=cur[4], prev_gcline=self.prev, orgline=orgline)
                     self.prev = r
                     return r
             return None
