@@ -208,6 +208,7 @@ class gcpoint(object):
 class gcline(object):
     """gcode move line
     Once initialised,it knows its position, length and extrusion ratio
+    Returns lines into gcview batch()
     """
     def __init__(self, x=None, y=None, z=None, e=None, prev_gcline=None, orgline = False):
         if prev_gcline is None:
@@ -283,7 +284,7 @@ class gcline(object):
             ]
     def glcolor(self):
         if self.extrusion_ratio == 0:
-            return [255,255,255,128,128,128]
+            return [255,255,255,0,0,0]
         else:
             return[255,128,128,128,0,0]
 
@@ -292,38 +293,37 @@ def float_from_line(axe, line):
     return float(line.split(axe)[1].split(" ")[0])
 
 class gcview(object):
-    """gcode visualiser"""
+    """gcode visualiser
+    Holds opengl objects for all layers
+    """
     def __init__(self, lines, batch, w=0.5, h=0.5):
-        print len(lines)
-        self.sq2 = math.sqrt(2.0) / 2.0
-        # Create the vertex and normal arrays.
-        vertices = []
-        normals = []
         #End pos of previous mode
         self.prev = gcpoint()
         # Correction for G92 moves
         self.delta = [0, 0, 0, 0]
-        self.fline = True
-        #self.vlists = []
         self.layers = {}
         t0 = time.time()
         lines = [self.transform(i) for i in lines]
-        lines = [i for i in lines if i is not None]
+        #lines = [i for i in lines if i is not None]
         t1 = time.time()
         print "transformed %s lines in %fs" % (len(lines), t1- t0)
         layertemp = {}
         counter = 0
         for line in lines:
-            layer_name = line.z
-            if line.z not in self.layers:
-                self.layers[line.z] = pyglet.graphics.Batch()
-            self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor()))
+            if line is not None:
+                layer_name = line.z
+                if line.z not in self.layers:
+                    self.layers[line.z] = pyglet.graphics.Batch()
+                self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor()))
         self.layerlist = self.layers.keys()
         self.layerlist.sort()
         t2 = time.time()
         print "Rendered lines in %fs" % (t2-t1)
 
     def transform(self, line):
+        """transforms line of gcode into gcline object (or None if its not move)
+        Tracks coordinates across resets in self.delta
+        """
         orgline = line
         line = line.split(";")[0]
         cur = [None, None, None, None]
@@ -801,7 +801,7 @@ class TestGlPanel(GLPanel):
             glScalef(*i.scale)
             #glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.93, 0.37, 0.25, 1))
             glEnable(GL_COLOR_MATERIAL)
-            glLineWidth (0.5)
+            glLineWidth (0.7)
             [i.gc.layers[j].draw() for j in i.gc.layerlist if j < i.curlayer]
 
             glLineWidth (3.5)
@@ -833,19 +833,19 @@ class GCFrame(wx.Frame):
         m.scale = [1.0, 1.0, 1.0]
         m.batch = pyglet.graphics.Batch()
         m.gc = gcview([], batch=m.batch)
-        self.models = {"": m}
+        self.models = {"GCODE": m}
         self.l = d()
         self.modelindex = 0
         self.GLPanel1 = TestGlPanel(self, size)
 
     def addfile(self, gcode=[]):
-        self.models[""].gc.delete()
-        self.models[""].gc = gcview(gcode, batch=self.models[""].batch)
+        self.models["GCODE"].gc.delete()
+        self.models["GCODE"].gc = gcview(gcode, batch=self.models["GCODE"].batch)
         self.setlayerindex(None)
 
     def clear(self):
-        self.models[""].gc.delete()
-        self.models[""].gc = gcview([], batch=self.models[""].batch)
+        self.models["GCODE"].gc.delete()
+        self.models["GCODE"].gc = gcview([], batch=self.models["GCODE"].batch)
 
     def Show(self, arg=True):
         wx.Frame.Show(self, arg)
@@ -857,7 +857,7 @@ class GCFrame(wx.Frame):
         #self.initialized = 0
 
     def setlayerindex(self, z):
-        m = self.models[""]
+        m = self.models["GCODE"]
         mlk = m.gc.layerlist
         if z > 0 and self.modelindex < len(mlk) - 1:
             self.modelindex += 1
@@ -874,10 +874,13 @@ def main():
     app = wx.App(redirect=False)
     frame = GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(400, 400))
     import sys
-    for gcfile in sys.argv:
-        if "gcode" in gcfile:
-            print gcfile
-            frame.addfile(list(open(gcfile)))
+    for filename in sys.argv:
+        if ".gcode" in filename:
+            frame.addfile(list(open(filename)))
+        elif ".stl" in filename:
+            #TODO: add stl here
+            pass
+
     #frame = wx.Frame(None, -1, "GL Window", size=(400, 400))
     #panel = TestGlPanel(frame, size=(300,300))
     frame.Show(True)
