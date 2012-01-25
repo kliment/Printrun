@@ -199,10 +199,11 @@ class gcpoint(object):
     """gcode point
     stub for first line"""
     def __init__(self, x=0,y=0,z=0,e=0):
-        self.x=x
-        self.y=y
-        self.z=z
-        self.e=e
+        self.x = x
+        self.y = y
+        self.z = z
+        self.e = e
+        self.length = 0
 
 
 class gcline(object):
@@ -282,11 +283,23 @@ class gcline(object):
                 self.y,
                 self.z,
             ]
-    def glcolor(self):
+    def glcolor(self, upper_limit = None, lower_limit = 0):
         if self.extrusion_ratio == 0:
             return [255,255,255,0,0,0]
         else:
-            return[255,128,128,128,0,0]
+            if upper_limit is not None:
+                if self.extrusion_ratio <= lower_limit:
+                    color = 0
+                else:
+                    color = int ((self.extrusion_ratio - lower_limit) / (upper_limit - lower_limit) * 255)
+            else:
+                color = 0
+
+            if color > 255:
+                color = 255
+            if color < 0:
+                color = 0
+            return[255,128,color,128,0,color]
 
 
 def float_from_line(axe, line):
@@ -304,17 +317,26 @@ class gcview(object):
         self.layers = {}
         t0 = time.time()
         lines = [self.transform(i) for i in lines]
-        #lines = [i for i in lines if i is not None]
+        lines = [i for i in lines if i is not None]
         t1 = time.time()
         print "transformed %s lines in %fs" % (len(lines), t1- t0)
+        upper_limit = 0
+        lower_limit = None
+        for line in lines:
+            if line.extrusion_ratio and line.length > 0.003:  #lines shorter than 0.003 can have large extrusion ratio
+                if line.extrusion_ratio > upper_limit:
+                    upper_limit = line.extrusion_ratio
+                if lower_limit is None or line.extrusion_ratio < lower_limit:
+                    lower_limit = line.extrusion_ratio
+        #print upper_limit, lower_limit
+
         layertemp = {}
         counter = 0
         for line in lines:
-            if line is not None:
-                layer_name = line.z
-                if line.z not in self.layers:
-                    self.layers[line.z] = pyglet.graphics.Batch()
-                self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor()))
+            layer_name = line.z
+            if line.z not in self.layers:
+                self.layers[line.z] = pyglet.graphics.Batch()
+            self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(upper_limit, lower_limit)))
         self.layerlist = self.layers.keys()
         self.layerlist.sort()
         t2 = time.time()
