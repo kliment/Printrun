@@ -13,6 +13,8 @@ from pyglet.gl import *
 
 import stltool
 
+import threading
+
 
 class GLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
@@ -241,7 +243,7 @@ class gcline(object):
         self.calc_len()
 
     def __str__(self):
-        return u"line from %s,%s,%s to %s,%s,%s with extrusion ratio %s and feedrate %n\n%s" % (
+        return u"line from %s,%s,%s to %s,%s,%s with extrusion ratio %s and feedrate %s\n%s" % (
                 self.prev_gcline.x,
                 self.prev_gcline.y,
                 self.prev_gcline.z,
@@ -316,46 +318,62 @@ class gcline(object):
 def float_from_line(axe, line):
     return float(line.split(axe)[1].split(" ")[0])
 
+class gcThreadRenderer(threading.Thread):
+    def __init__(self, gcview, lines):
+        threading.Thread.__init__(self)
+        self.gcview = gcview
+        self.lines = lines
+        print "q init"
+
+    def run(self):
+        for line in self.lines:
+            layer_name = line.z
+            if line.z not in self.gcview.layers:
+                self.gcview.layers[line.z] = pyglet.graphics.Batch()
+                self.gcview.layerlist = self.gcview.layers.keys()
+                self.gcview.layerlist.sort()
+            self.gcview.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(self.gcview.upper_limit, self.gcview.lower_limit, self.gcview.max_feedrate)))
+        self.gcview.t2 = time.time()
+        print "Rendered lines in %fs" % (self.gcview.t2-self.gcview.t1)
+
 class gcview(object):
     """gcode visualiser
     Holds opengl objects for all layers
     """
     def __init__(self, lines, batch, w=0.5, h=0.5):
+        if len(lines) == 0:
+            return
+        print "Loading %s lines" % (len(lines))
         #End pos of previous mode
         self.prev = gcpoint()
         # Correction for G92 moves
         self.delta = [0, 0, 0, 0]
         self.layers = {}
-        t0 = time.time()
+        self.t0 = time.time()
         self.lastf = 0
         lines = [self.transform(i) for i in lines]
         lines = [i for i in lines if i is not None]
-        t1 = time.time()
-        print "transformed %s lines in %fs" % (len(lines), t1- t0)
-        upper_limit = 0
-        lower_limit = None
-        max_feedrate = 0
+        self.t1 = time.time()
+        print "transformed %s lines in %fs" % (len(lines), self.t1- self.t0)
+        self.upper_limit = 0
+        self.lower_limit = None
+        self.max_feedrate = 0
         for line in lines:
             if line.extrusion_ratio and line.length > 0.005:  #lines shorter than 0.003 can have large extrusion ratio
-                if line.extrusion_ratio > upper_limit:
-                    upper_limit = line.extrusion_ratio
-                if lower_limit is None or line.extrusion_ratio < lower_limit:
-                    lower_limit = line.extrusion_ratio
-            if line.f > max_feedrate:
-                max_feedrate = line.f
+                if line.extrusion_ratio > self.upper_limit:
+                    self.upper_limit = line.extrusion_ratio
+                if self.lower_limit is None or line.extrusion_ratio < self.lower_limit:
+                    self.lower_limit = line.extrusion_ratio
+            if line.f > self.max_feedrate:
+                self.max_feedrate = line.f
         #print upper_limit, lower_limit
+        #self.render_gl(lines)
+        q = gcThreadRenderer(self, lines)
+        q.setDaemon(True)
+        q.start()
 
-        layertemp = {}
-        counter = 0
-        for line in lines:
-            layer_name = line.z
-            if line.z not in self.layers:
-                self.layers[line.z] = pyglet.graphics.Batch()
-            self.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(upper_limit, lower_limit, max_feedrate)))
-        self.layerlist = self.layers.keys()
-        self.layerlist.sort()
-        t2 = time.time()
-        print "Rendered lines in %fs" % (t2-t1)
+
+
 
     def transform(self, line):
         """transforms line of gcode into gcline object (or None if its not move)
@@ -846,11 +864,37 @@ class TestGlPanel(GLPanel):
             glScalef(*i.scale)
             #glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.93, 0.37, 0.25, 1))
             glEnable(GL_COLOR_MATERIAL)
-            glLineWidth (0.7)
-            [i.gc.layers[j].draw() for j in i.gc.layerlist if j < i.curlayer]
 
-            glLineWidth (3.5)
-            i.gc.layers[i.curlayer].draw()
+            if i.curlayer == -1:
+                # curlayer == -1 means we are over the top.
+                glLineWidth (0.8)
+                [i.gc.layers[j].draw() for j in i.gc.layerlist]
+            else:
+                glLineWidth (0.6)
+
+                tmpindex = i.gc.layerlist.index(i.curlayer)
+                if tmpindex >= 5:
+                    thin_layer = i.gc.layerlist[tmpindex - 5]
+                    [i.gc.layers[j].draw() for j in i.gc.layerlist if j <= thin_layer]
+
+                if tmpindex > 4:
+                    glLineWidth (0.9)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 4]].draw()
+
+                if tmpindex > 3:
+                    glLineWidth (1.1)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 3]].draw()
+
+                if tmpindex > 2:
+                    glLineWidth (1.3)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 2]].draw()
+
+                if tmpindex > 1:
+                    glLineWidth (2.2)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 1]].draw()
+
+                glLineWidth (3.5)
+                i.gc.layers[i.curlayer].draw()
             glLineWidth (1.5)
 
             glDisable(GL_COLOR_MATERIAL)
@@ -903,16 +947,31 @@ class GCFrame(wx.Frame):
 
     def setlayerindex(self, z):
         m = self.models["GCODE"]
-        mlk = m.gc.layerlist
-        if z > 0 and self.modelindex < len(mlk) - 1:
-            self.modelindex += 1
-        elif z < 0 and self.modelindex > 0:
-            self.modelindex -= 1
-        elif z is None:
-            self.modelindex = len(mlk)-1
+        try:
+            mlk = m.gc.layerlist
+        except:
+            mlk = []
+        if z is None:
+            self.modelindex = -1
+        elif z > 0:
+            if self.modelindex < len(mlk) - 1:
+                if self.modelindex > -1:
+                    self.modelindex += 1
+            else:
+                self.modelindex = -1
+        elif z < 0:
+            if self.modelindex > 0:
+                self.modelindex -= 1
+            elif self.modelindex == -1:
+                self.modelindex = len(mlk)
 
-        m.curlayer = mlk[self.modelindex]
-        wx.CallAfter(self.SetTitle, "Gcode view, shift to move. Layer %d, Z = %f" % (self.modelindex, m.curlayer))
+        if self.modelindex >= 0:
+            m.curlayer = mlk[self.modelindex]
+            wx.CallAfter(self.SetTitle, "Gcode view, shift to move. Layer %d/%d, Z = %f" % (self.modelindex, len(mlk), m.curlayer))
+        else:
+            m.curlayer = -1
+            wx.CallAfter(self.SetTitle, "Gcode view, shift to move view, mousewheel to set layer")
+
 
 
 def main():
