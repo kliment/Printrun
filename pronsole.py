@@ -1,9 +1,30 @@
 #!/usr/bin/env python
+
+# This file is part of the Printrun suite.
+# 
+# Printrun is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Printrun is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
+
 import cmd, printcore, sys 
 import glob, os, time
 import sys, subprocess 
 import math
 from math import sqrt
+import gettext
+if os.path.exists('/usr/share/pronterface/locale'):
+    gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
+else: 
+    gettext.install('pronterface', './locale', unicode=1)
 
 if os.name=="nt":
     try:
@@ -108,6 +129,7 @@ def estimate_duration(g):
     # calculate the maximum move duration accounting for above ;)
     # print ".... estimating ...."
     for i in g:
+        i=i.split(";")[0]
         if "G4" in i or "G1" in i:
             if "G4" in i:
                 parts = i.split(" ")
@@ -136,7 +158,7 @@ def estimate_duration(g):
 
                 currenttravel = hypot3d(x, y, z, lastx, lasty, lastz)
                 distance = 2* ((lastf+f) * (f-lastf) * 0.5 ) / acceleration  #2x because we have to accelerate and decelerate
-                if distance <= currenttravel:
+                if distance <= currenttravel and ( lastf + f )!=0 and f!=0:
                     moveduration = 2 * distance / ( lastf + f )
                     currenttravel -= distance
                     moveduration += currenttravel/f
@@ -170,13 +192,16 @@ class Settings:
         # the initial value determines the type
         self.port = ""
         self.baudrate = 115200
-        self.temperature_pla = 185
-        self.temperature_abs = 230
-        self.bedtemp_pla = 60
         self.bedtemp_abs = 110
+        self.bedtemp_pla = 60
+        self.temperature_abs = 230
+        self.temperature_pla = 185
         self.xy_feedrate = 3000
         self.z_feedrate = 200
         self.e_feedrate = 300
+        self.slicecommand="python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s"
+        self.sliceoptscommand="python skeinforge/skeinforge_application/skeinforge.py"
+
     def _set(self,key,value):
         try:
             value = getattr(self,"_%s_alias"%key)()[value]
@@ -237,6 +262,19 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.monitoring=0
+        self.helpdict = {}
+        self.helpdict["baudrate"] = _("Communications Speed (default: 115200)")
+        self.helpdict["bedtemp_abs"] = _("Heated Build Platform temp for ABS (default: 110 deg C)")
+        self.helpdict["bedtemp_pla"] = _("Heated Build Platform temp for PLA (default: 60 deg C)")
+        self.helpdict["e_feedrate"] = _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)")
+        self.helpdict["port"] = _("Port used to communicate with printer")
+        self.helpdict["slicecommand"] = _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)")
+        self.helpdict["sliceoptscommand"] = _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")
+        self.helpdict["temperature_abs"] = _("Extruder temp for ABS (default: 230 deg C)")
+        self.helpdict["temperature_pla"] = _("Extruder temp for PLA (default: 185 deg C)")
+        self.helpdict["xy_feedrate"] = _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")
+        self.helpdict["z_feedrate"] = _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")
+
     
     def set_temp_preset(self,key,value):
         if not key.startswith("bed"):
@@ -1094,6 +1132,9 @@ class pronsole(cmd.Cmd):
         print "monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"
         print "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"
         
+    def expandcommand(self,c):
+        return c.replace("$python",sys.executable)
+        
     def do_skein(self,l):
         l=l.split()
         if len(l)==0:
@@ -1107,27 +1148,17 @@ class pronsole(cmd.Cmd):
             if not(os.path.exists(l[0])):
                 print "File not found!"
                 return
-        if not os.path.exists("skeinforge"):
-            print "Skeinforge not found. \nPlease copy Skeinforge into a directory named \"skeinforge\" in the same directory as this file."
-            return
-        if not os.path.exists("skeinforge/__init__.py"):
-            f=open("skeinforge/__init__.py","w")
-            f.close()
         try:
-            from skeinforge.skeinforge_application.skeinforge_utilities import skeinforge_craft
-            from skeinforge.skeinforge_application import skeinforge
+            import shlex
             if(settings):
-                param = "skeinforge/skeinforge_application/skeinforge.py"
-                print "Entering skeinforge settings: ",sys.executable," ",param
-                subprocess.call([sys.executable,param])
+                param = self.expandcommand(self.settings.sliceoptscommand).replace("\\","\\\\").encode()
+                print "Entering skeinforge settings: ",param
+                subprocess.call(shlex.split(param))
             else:
-                if(len(l)>1):
-                    if(l[1] == "view"):
-                        skeinforge_craft.writeOutput(l[0],True)
-                    else:
-                        skeinforge_craft.writeOutput(l[0],False)
-                else:
-                    skeinforge_craft.writeOutput(l[0],False)
+                param = self.expandcommand(self.settings.slicecommand).encode()
+                print "Slicing: ",param
+                params=[i.replace("$s",l[0]).replace("$o",l[0].replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
+                subprocess.call(params)
                 print "Loading skeined file."
                 self.do_load(l[0].replace(".stl","_export.gcode"))
         except Exception,e:

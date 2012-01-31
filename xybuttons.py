@@ -1,9 +1,28 @@
+# This file is part of the Printrun suite.
+# 
+# Printrun is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Printrun is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
+
 import wx, os, math
 from bufferedcanvas import *
 
-def imagefile(filename):
-    return os.path.join(os.path.dirname(__file__), "images", filename)
 
+def imagefile(filename):
+    if os.path.exists(os.path.join(os.path.dirname(__file__), "images", filename)):
+        return os.path.join(os.path.dirname(__file__), "images", filename)
+    else:
+        return os.path.join(os.path.split(os.path.split(__file__)[0])[0], "images", filename)
+    
 def sign(n):
     if n < 0: return -1
     elif n > 0: return 1
@@ -38,9 +57,8 @@ class XYButtons(BufferedCanvas):
         self.moveCallback = moveCallback
         self.cornerCallback = cornerCallback
         self.enabled = False
-
+    
         BufferedCanvas.__init__(self, parent, ID)
-
         self.SetSize(self.bg_bmp.GetSize())
 
         # Set up mouse and keyboard event capture
@@ -192,8 +210,9 @@ class XYButtons(BufferedCanvas):
         gc = wx.GraphicsContext.Create(dc)
 
         center = wx.Point(XYButtons.center[0], XYButtons.center[1])
-        w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
-        gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+        if self.bg_bmp:
+            w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
+            gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
         
         if self.enabled:
             # Brush and pen for grey overlay when mouse hovers over
@@ -254,6 +273,8 @@ class XYButtons(BufferedCanvas):
                 self.quadrant = 2
             elif evt.GetKeyCode() == wx.WXK_RIGHT:
                 self.quadrant = 0
+            elif evt.GetKeyCode() == wx.WXK_SPACE:
+                pass
             else:
                 evt.Skip()
                 return

@@ -1,12 +1,25 @@
+# This file is part of the Printrun suite.
+# 
+# Printrun is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Printrun is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
+
 import wx,time
 
 class window(wx.Frame):
-    def __init__(self,f,size=(600,600),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
-        wx.Frame.__init__(self,None,title="Layer view (Use shift+mousewheel to switch layers)",size=(size[0],size[1]))
-        self.p=gviz(self,size=size,bedsize=bedsize,grid=grid,extrusion_width=extrusion_width)
+    def __init__(self,f,size=(600,600),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
+        wx.Frame.__init__(self,None,title="Gcode view, shift to move view, mousewheel to set layer",size=(size[0],size[1]))
+        self.p=gviz(self,size=size,build_dimensions=build_dimensions,grid=grid,extrusion_width=extrusion_width)
         s=time.time()
-        for i in f:
-            self.p.addgcode(i)
         #print time.time()-s
         self.initpos=[0,0]
         self.p.Bind(wx.EVT_KEY_DOWN,self.key)
@@ -15,7 +28,7 @@ class window(wx.Frame):
         self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.p.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
         self.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
-        
+    
     def mouse(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
@@ -53,15 +66,15 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
         
 class gviz(wx.Panel):
-    def __init__(self,parent,size=(200,200),bedsize=(200,200),grid=(10,50),extrusion_width=0.5):
+    def __init__(self,parent,size=(200,200),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
         wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
         self.size=size
-        self.bedsize=bedsize
+        self.build_dimensions=build_dimensions
         self.grid=grid
         self.lastpos=[0,0,0,0,0,0,0]
         self.hilightpos=self.lastpos[:]
         self.Bind(wx.EVT_PAINT,self.paint)
-        self.Bind(wx.EVT_SIZE,lambda *e:(wx.CallAfter(self.repaint),wx.CallAfter(self.Refresh)))
+        self.Bind(wx.EVT_SIZE,self.resize)
         self.lines={}
         self.pens={}
         self.arcs={}
@@ -69,7 +82,8 @@ class gviz(wx.Panel):
         self.layers=[]
         self.layerindex=0
         self.filament_width=extrusion_width # set it to 0 to disable scaling lines with zoom
-        self.scale=[min(float(size[0])/bedsize[0],float(size[1])/bedsize[1])]*2
+        self.basescale=[min(float(size[0])/build_dimensions[0],float(size[1])/build_dimensions[1])]*2
+        self.scale=self.basescale
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate=[0.0,0.0]
         self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
@@ -88,7 +102,11 @@ class gviz(wx.Panel):
         self.lastpos=[0,0,0,0,0,0,0]
         self.lines={}
         self.pens={}
+        self.arcs={}
+        self.arcpens={}
         self.layers=[]
+        self.hilight=[]
+        self.hilightarcs=[]
         self.layerindex=0
         self.showall=0
         self.dirty=1
@@ -114,9 +132,16 @@ class gviz(wx.Panel):
         except:
             pass
     
+    def resize(self,event):
+        size=self.GetClientSize()
+        newsize=min(float(size[0])/self.size[0],float(size[1])/self.size[1])
+        self.size=self.GetClientSize()
+        wx.CallAfter(self.zoom,0,0,newsize)
+        
 
     def zoom(self,x,y,factor):
         self.scale = [s * factor for s in self.scale]
+        
         self.translate = [ x - (x-self.translate[0]) * factor,
                             y - (y-self.translate[1]) * factor]
         penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
@@ -125,6 +150,7 @@ class gviz(wx.Panel):
         #self.dirty=1
         self.repaint()
         self.Refresh()
+        
         
     def repaint(self):
         self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
@@ -135,10 +161,10 @@ class gviz(wx.Panel):
         dc.SetPen(wx.Pen(wx.Colour(180,180,150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
-                for x in xrange(int(self.bedsize[0]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1],self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1]+self.scale[1]*self.bedsize[1])
-                for y in xrange(int(self.bedsize[1]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0],self.translate[1]+y*self.scale[1]*grid_unit,self.translate[0]+self.scale[0]*self.bedsize[0],self.translate[1]+y*self.scale[1]*grid_unit)
+                for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
+                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1],self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1]+self.scale[1]*self.build_dimensions[1])
+                for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
+                    dc.DrawLine(self.translate[0],self.translate[1]+y*self.scale[1]*grid_unit,self.translate[0]+self.scale[0]*self.build_dimensions[0],self.translate[1]+y*self.scale[1]*grid_unit)
             dc.SetPen(wx.Pen(wx.Colour(0,0,0)))
         if not self.showall:
             self.size = self.GetSize()
@@ -200,12 +226,19 @@ class gviz(wx.Panel):
         dc.DrawBitmap(self.blitmap,0,0)
         del dc
         
+    def addfile(self,gcodes=[]):
+        self.clear()
+        for i in gcodes:
+            self.addgcode(i)
+        
     def addgcode(self,gcode="M105",hilight=0):
         gcode=gcode.split("*")[0]
         gcode=gcode.split(";")[0]
         gcode = gcode.lower().strip().split()
         if len(gcode) == 0:
             return
+        if gcode[0][0] == 'n':
+            gcode.pop(0)
         
         def _readgcode():
             target=self.lastpos[:]
@@ -236,13 +269,15 @@ class gviz(wx.Panel):
             return target
         
         def _y(y):
-            return self.bedsize[1]-y
+            return self.build_dimensions[1]-(y-self.build_dimensions[4])
+        def _x(x):
+            return x-self.build_dimensions[3]
         
         start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
         
         if gcode[0] == "g1":
             target = _readgcode()
-            line = [ start_pos[0], _y(start_pos[1]), target[0], _y(target[1]) ]
+            line = [ _x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1]) ]
             if not hilight:
                 self.lines[ target[2] ] += [line]
                 self.pens[ target[2] ]  += [self.mainpen if target[3] != self.lastpos[3] else self.travelpen]
@@ -255,9 +290,9 @@ class gviz(wx.Panel):
         if gcode[0] in [ "g2", "g3" ]:
             target = _readgcode()
             arc = []
-            arc += [ start_pos[0], _y(start_pos[1]) ]
-            arc += [ target[0], _y(target[1]) ]
-            arc += [ start_pos[0] + target[5], _y(start_pos[1] + target[6]) ]  # center
+            arc += [ _x(start_pos[0]), _y(start_pos[1]) ]
+            arc += [ _x(target[0]), _y(target[1]) ]
+            arc += [ _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6]) ]  # center
             if gcode[0] == "g2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
             

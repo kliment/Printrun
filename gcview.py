@@ -1,23 +1,6 @@
 #!/usr/bin/python
-
-# This file is part of the Printrun suite.
-# 
-# Printrun is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# Printrun is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
-
 import os
 import math
-import stltool
 import wx
 from wx import glcanvas
 import time
@@ -27,6 +10,10 @@ import pyglet
 pyglet.options['shadow_window'] = False
 pyglet.options['debug_gl'] = False
 from pyglet.gl import *
+
+import stltool
+
+import threading
 
 
 class GLPanel(wx.Panel):
@@ -203,190 +190,261 @@ class GLPanel(wx.Panel):
         pass
 
 
-class stlview(object):
-    def __init__(self, facets, batch):
-        # Create the vertex and normal arrays.
-        vertices = []
-        normals = []
+def _dist(dist):
+    """return axis length, or 0 if None"""
+    if dist is None:
+        return 0
+    else:
+        return float(dist)
 
-        for i in facets:
-            for j in i[1]:
-                vertices.extend(j)
-                normals.extend(i[0])
-
-        # Create a list of triangle indices.
-        indices = range(3 * len(facets))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-        #print indices[:10]
-        self.vertex_list = batch.add_indexed(len(vertices) // 3,
-                                             GL_TRIANGLES,
-                                             None,  # group,
-                                             indices,
-                                             ('v3f/static', vertices),
-                                             ('n3f/static', normals))
-
-    def delete(self):
-        self.vertex_list.delete()
+class gcpoint(object):
+    """gcode point
+    stub for first line"""
+    def __init__(self, x=0,y=0,z=0,e=0):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.e = e
+        self.length = 0
 
 
-def vdiff(v, o):
-    return [x[0] - x[1] for x in zip(v, o)]
+class gcline(object):
+    """gcode move line
+    Once initialised,it knows its position, length and extrusion ratio
+    Returns lines into gcview batch()
+    """
+    def __init__(self, x=None, y=None, z=None, e=None, f=None, prev_gcline=None, orgline = False):
+        if prev_gcline is None:
+            self.prev_gcline = gcpoint()
+        else:
+            self.prev_gcline = prev_gcline
+        if x is None:
+            self.x = self.prev_gcline.x
+        else:
+            self.x = float(x)
+        if y is None:
+            self.y = self.prev_gcline.y
+        else:
+            self.y = float(y)
+        if z is None:
+            self.z = self.prev_gcline.z
+        else:
+            self.z = float(z)
+        if e is None:
+            self.e = self.prev_gcline.e
+        else:
+            self.e = float(e)
 
+        self.f = f
+
+        self.orgline = orgline
+
+        self.calc_delta()
+        self.calc_len()
+
+    def __str__(self):
+        return u"line from %s,%s,%s to %s,%s,%s with extrusion ratio %s and feedrate %s\n%s" % (
+                self.prev_gcline.x,
+                self.prev_gcline.y,
+                self.prev_gcline.z,
+                self.x,
+                self.y,
+                self.z,
+                self.extrusion_ratio,
+                self.f,
+                self.orgline,
+            )
+
+    def calc_delta(self, prev_gcline=None):
+        if prev_gcline is None:
+            prev_gcline = self.prev_gcline
+        if self.prev_gcline is not None:
+            self.dx = self.x - prev_gcline.x
+            self.dy = self.y - prev_gcline.y
+            self.dz = self.z - prev_gcline.z
+            self.de = self.e - prev_gcline.e
+        else:
+            self.dx = self.x
+            self.dy = self.y
+            self.dz = self.z
+            self.de = self.e
+
+    def calc_len(self):
+        if self.dz != 0:
+            self.length = math.sqrt(self.dx**2 + self.dy**2 + self.dz**2)
+        else:
+            self.length = math.sqrt(self.dx**2 + self.dy**2)
+        if self.de:
+            self.extrusion_ratio = self.length / self.de
+        else:
+            self.extrusion_ratio = 0
+
+    def glline(self):
+        return [
+                self.prev_gcline.x,
+                self.prev_gcline.y,
+                self.prev_gcline.z,
+                self.x,
+                self.y,
+                self.z,
+            ]
+    def glcolor(self, upper_limit = None, lower_limit = 0, max_feedrate = 0):
+        if self.extrusion_ratio == 0:
+            return [255,255,255,0,0,0]
+        else:
+            blue_color = 0
+            green_color = 0
+            if upper_limit is not None:
+                if self.extrusion_ratio <= lower_limit:
+                    blue_color = 0
+                else:
+                    blue_color = int ((self.extrusion_ratio - lower_limit) / (upper_limit - lower_limit) * 255)
+            else:
+                blue_color = 0
+            if max_feedrate > 0 and self.f > 0:
+                green_color = int((self.f/max_feedrate) * 255)
+
+            if green_color > 255:
+                green_color = 255
+            if green_color < 0:
+                green_color = 0
+            if blue_color > 255:
+                blue_color = 255
+            if blue_color < 0:
+                blue_color = 0
+            return[255,green_color,blue_color,128,green_color,blue_color/4]
+
+
+def float_from_line(axe, line):
+    return float(line.split(axe)[1].split(" ")[0])
+
+class gcThreadRenderer(threading.Thread):
+    def __init__(self, gcview, lines):
+        threading.Thread.__init__(self)
+        self.gcview = gcview
+        self.lines = lines
+        print "q init"
+
+    def run(self):
+        for line in self.lines:
+            layer_name = line.z
+            if line.z not in self.gcview.layers:
+                self.gcview.layers[line.z] = pyglet.graphics.Batch()
+                self.gcview.layerlist = self.gcview.layers.keys()
+                self.gcview.layerlist.sort()
+            self.gcview.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(self.gcview.upper_limit, self.gcview.lower_limit, self.gcview.max_feedrate)))
+        self.gcview.t2 = time.time()
+        print "Rendered lines in %fs" % (self.gcview.t2-self.gcview.t1)
 
 class gcview(object):
+    """gcode visualiser
+    Holds opengl objects for all layers
+    """
     def __init__(self, lines, batch, w=0.5, h=0.5):
-        # Create the vertex and normal arrays.
-        vertices = []
-        normals = []
-        self.prev = [0.001, 0.001, 0.001, 0.001]
-        self.fline = 1
-        self.vlists = []
-        self.layers = {}
-        t0 = time.time()
-        lines = [self.transform(i) for i in lines]
-        lines = [i for i in lines if i is not None]
-        print "transformed lines in %fs" % (time.time() - t0)
-        t0 = time.time()
-        layertemp = {}
-        lasth = None
-        counter = 0
         if len(lines) == 0:
             return
-        for i in lines:
-            counter += 1
-            if i[0][2] not in layertemp:
-                layertemp[i[0][2]] = [[], []]
-                if lasth is not None:
-                    self.layers[lasth] = pyglet.graphics.Batch()
-                    lt = layertemp[lasth][0]
-                    indices = range(len(layertemp[lasth][0]) // 3)  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-                    self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
-                                             GL_TRIANGLES,
-                                             None,  # group,
-                                             indices,
-                                             ('v3f/static', layertemp[lasth][0]),
-                                             ('n3f/static', layertemp[lasth][1])))
+        print "Loading %s lines" % (len(lines))
+        #End pos of previous mode
+        self.prev = gcpoint()
+        # Correction for G92 moves
+        self.delta = [0, 0, 0, 0]
+        self.layers = {}
+        self.t0 = time.time()
+        self.lastf = 0
+        lines = [self.transform(i) for i in lines]
+        lines = [i for i in lines if i is not None]
+        self.t1 = time.time()
+        print "transformed %s lines in %fs" % (len(lines), self.t1- self.t0)
+        self.upper_limit = 0
+        self.lower_limit = None
+        self.max_feedrate = 0
+        for line in lines:
+            if line.extrusion_ratio and line.length > 0.005:  #lines shorter than 0.003 can have large extrusion ratio
+                if line.extrusion_ratio > self.upper_limit:
+                    self.upper_limit = line.extrusion_ratio
+                if self.lower_limit is None or line.extrusion_ratio < self.lower_limit:
+                    self.lower_limit = line.extrusion_ratio
+            if line.f > self.max_feedrate:
+                self.max_feedrate = line.f
+        #print upper_limit, lower_limit
+        #self.render_gl(lines)
+        q = gcThreadRenderer(self, lines)
+        q.setDaemon(True)
+        q.start()
 
-                lasth = i[0][2]
 
-            spoints, epoints, S, E = self.genline(i, h, w)
 
-            verticestoadd = [[
-                    spoints[(j + 1) % 8],
-                    epoints[(j) % 8],
-                    spoints[j],
-                    epoints[j],
-                    spoints[(j + 1) % 8],
-                    epoints[(j + 1) % 8]
-                ] for j in xrange(8)]
-            normalstoadd = [map(vdiff, v, [S, E, S, E, S, E]) for v in verticestoadd]
-            v1 = []
-            map(v1.extend, verticestoadd)
-            v2 = []
-            map(v2.extend, v1)
-            n1 = []
-            map(n1.extend, normalstoadd)
-            n2 = []
-            map(n2.extend, n1)
-
-            layertemp[i[0][2]][0] += v2
-            vertices += v2
-            layertemp[i[0][2]][1] += n2
-            normals += n2
-        print "appended lines in %fs" % (time.time() - t0)
-        t0 = time.time()
-
-        # Create a list of triangle indices.
-        indices = range(3 * 16 * len(lines))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-        self.vlists.append(batch.add_indexed(len(vertices) // 3,
-                                             GL_TRIANGLES,
-                                             None,  # group,
-                                             indices,
-                                             ('v3f/static', vertices),
-                                             ('n3f/static', normals)))
-        if lasth is not None:
-                    self.layers[lasth] = pyglet.graphics.Batch()
-                    indices = range(len(layertemp[lasth][0]))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-                    self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
-                                             GL_TRIANGLES,
-                                             None,  # group,
-                                             indices,
-                                             ('v3f/static', layertemp[lasth][0]),
-                                             ('n3f/static', layertemp[lasth][1])))
-
-    def genline(self, i, h, w):
-        S = i[0][:3]
-        E = i[1][:3]
-        v = map(lambda x, y: x - y, E, S)
-        vlen = math.sqrt(float(sum(map(lambda a: a * a, v[:3]))))
-
-        if vlen == 0:
-            vlen = 0.01
-        sq2 = math.sqrt(2.0) / 2.0
-        htw = float(h) / w
-        d = w / 2.0
-        if i[1][3] == i[0][3]:
-            d = 0.05
-        points = [[d, 0, 0],
-                [sq2 * d, sq2 * d, 0],
-                [0, d, 0],
-                [-sq2 * d, sq2 * d, 0],
-                [-d, 0, 0],
-                [-sq2 * d, -sq2 * d, 0],
-                [0, -d, 0],
-                [sq2 * d, -sq2 * d, 0]
-            ]
-        axis = stltool.cross([0, 0, 1], v)
-        alen = math.sqrt(float(sum(map(lambda a: a * a, v[:3]))))
-        if alen > 0:
-            axis = map(lambda m: m / alen, axis)
-            angle = math.acos(v[2] / vlen)
-
-            def vrot(v, axis, angle):
-                kxv = stltool.cross(axis, v)
-                kdv = sum(map(lambda x, y: x * y, axis, v))
-                return map(lambda x, y, z: x * math.cos(angle) + y * math.sin(angle) + z * kdv * (1.0 - math.cos(angle)), v, kxv, axis)
-
-            points = map(lambda x: vrot(x, axis, angle), points)
-        points = map(lambda x: [x[0], x[1], htw * x[2]], points)
-
-        def vadd(v, o):
-            return map(sum, zip(v, o))
-        spoints = map(lambda x: vadd(S, x), points)
-        epoints = map(lambda x: vadd(E, x), points)
-        return spoints, epoints, S, E
 
     def transform(self, line):
-            line = line.split(";")[0]
-            cur = self.prev[:]
-            if len(line) > 0:
-                if "G1" in line or "G0" in line or "G92" in line:
-                    if("X" in line):
-                        cur[0] = float(line.split("X")[1].split(" ")[0])
-                    if("Y" in line):
-                        cur[1] = float(line.split("Y")[1].split(" ")[0])
-                    if("Z" in line):
-                        cur[2] = float(line.split("Z")[1].split(" ")[0])
-                    if("E" in line):
-                        cur[3] = float(line.split("E")[1].split(" ")[0])
-                    if self.prev == cur:
-                        return None
-                    if self.fline or "G92" in line:
-                        self.prev = cur
-                        self.fline = 0
-                        return None
+        """transforms line of gcode into gcline object (or None if its not move)
+        Tracks coordinates across resets in self.delta
+        """
+        orgline = line
+        line = line.split(";")[0]
+        cur = [None, None, None, None, None]
+        if len(line) > 0:
+            if "G92" in line:
+                #Recalculate delta on G92 (reset)
+                if("X" in line):
+                    try:
+                        self.delta[0] = float_from_line("X", line) + self.prev.x
+                    except:
+                        self.delta[0] = 0
+                if("Y" in line):
+                    try:
+                        self.delta[1] = float_from_line("Y", line) + self.prev.y
+                    except:
+                        self.delta[1] = 0
+                if("Z" in line):
+                    try:
+                        self.delta[2] = float_from_line("Z", line) + self.prev.z
+                    except:
+                        self.delta[2] = 0
+                if("E" in line):
+                    try:
+                        self.delta[3] = float_from_line("E", line) + self.prev.e
+                    except:
+                        self.delta[3] = 0
+                return None
+
+            if "G1" in line or "G0" in line:
+                #Create new gcline
+                if("X" in line):
+                    cur[0] = float_from_line("X", line) + self.delta[0]
+                if("Y" in line):
+                    cur[1] = float_from_line("Y", line) + self.delta[1]
+                if("Z" in line):
+                    cur[2] = float_from_line("Z", line) + self.delta[2]
+                if("E" in line):
+                    cur[3] = float_from_line("E", line) + self.delta[3]
+                if "F" in line:
+                    cur[4] = float_from_line("F", line)
+
+
+                if cur == [None, None, None, None, None]:
+                    return None
+                else:
+                    #print cur
+                    if cur[4] is None:
+                        cur[4] = self.lastf
                     else:
-                        r = [self.prev, cur]
-                        self.prev = cur
-                        return r
+                        self.lastf = cur[4]
+
+                    r = gcline(x=cur[0], y=cur[1], z=cur[2],e=cur[3], f=cur[4], prev_gcline=self.prev, orgline=orgline)
+                    self.prev = r
+                    return r
+            return None
 
     def delete(self):
-        for i in self.vlists:
-            i.delete()
-        self.vlists = []
+        #for i in self.vlists:
+        #    i.delete()
+        #self.vlists = []
+        pass
 
 
 def trackball(p1x, p1y, p2x, p2y, r):
     TRACKBALLSIZE = r
+
 #float a[3]; /* Axis of rotation */
 #float phi;  /* how much to rotate about axis */
 #float p1[3], p2[3], d[3];
@@ -570,27 +628,27 @@ class TestGlPanel(GLPanel):
                 self.initpos = None
 
         elif event.Dragging() and event.RightIsDown() and event.ShiftDown():
-                if self.initpos is None:
-                    self.initpos = event.GetPositionTuple()
-                else:
-                    p1 = self.initpos
-                    p2 = event.GetPositionTuple()
-                    sz = self.GetClientSize()
-                    p1 = list(p1)
-                    p2 = list(p2)
-                    p1[1] *= -1
-                    p2[1] *= -1
+            if self.initpos is None:
+                self.initpos = event.GetPositionTuple()
+            else:
+                p1 = self.initpos
+                p2 = event.GetPositionTuple()
+                sz = self.GetClientSize()
+                p1 = list(p1)
+                p2 = list(p2)
+                p1[1] *= -1
+                p2[1] *= -1
 
-                    self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
+                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
 
-                    glLoadIdentity()
-                    glTranslatef(self.transv[0], self.transv[1], 0)
-                    glTranslatef(0, 0, self.transv[2])
-                    if(self.rot):
-                        glMultMatrixd(build_rotmatrix(self.basequat))
-                    glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                    self.rot = 1
-                    self.initpos = None
+                glLoadIdentity()
+                glTranslatef(self.transv[0], self.transv[1], 0)
+                glTranslatef(0, 0, self.transv[2])
+                if(self.rot):
+                    glMultMatrixd(build_rotmatrix(self.basequat))
+                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
+                self.rot = 1
+                self.initpos = None
         else:
             #mouse is moving without a button press
             p = event.GetPositionTuple()
@@ -793,24 +851,54 @@ class TestGlPanel(GLPanel):
         glPopMatrix()
         glPushMatrix()
         glTranslatef(-100, -100, 0)
+        glEnable(GL_LINE_SMOOTH)
+        glEnable(GL_BLEND)
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glHint (GL_LINE_SMOOTH_HINT, GL_NICEST)
+        glLineWidth (1.5)
 
         for i in self.parent.models.values():
             glPushMatrix()
             glTranslatef(*(i.offsets))
             glRotatef(i.rot, 0.0, 0.0, 1.0)
             glScalef(*i.scale)
+            #glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.93, 0.37, 0.25, 1))
+            glEnable(GL_COLOR_MATERIAL)
 
-            try:
-                if i.curlayer in i.gc.layers:
-                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.13, 0.37, 0.25, 1))
-                    [i.gc.layers[j].draw() for j in i.gc.layers.keys() if j < i.curlayer]
-                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.6, 0.9, 1))
-                    b = i.gc.layers[i.curlayer]
-                    b.draw()
-                else:
-                    i.batch.draw()
-            except:
-                i.batch.draw()
+            if i.curlayer == -1:
+                # curlayer == -1 means we are over the top.
+                glLineWidth (0.8)
+                [i.gc.layers[j].draw() for j in i.gc.layerlist]
+            else:
+                glLineWidth (0.6)
+
+                tmpindex = i.gc.layerlist.index(i.curlayer)
+                if tmpindex >= 5:
+                    thin_layer = i.gc.layerlist[tmpindex - 5]
+                    [i.gc.layers[j].draw() for j in i.gc.layerlist if j <= thin_layer]
+
+                if tmpindex > 4:
+                    glLineWidth (0.9)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 4]].draw()
+
+                if tmpindex > 3:
+                    glLineWidth (1.1)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 3]].draw()
+
+                if tmpindex > 2:
+                    glLineWidth (1.3)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 2]].draw()
+
+                if tmpindex > 1:
+                    glLineWidth (2.2)
+                    i.gc.layers[i.gc.layerlist[tmpindex - 1]].draw()
+
+                glLineWidth (3.5)
+                i.gc.layers[i.curlayer].draw()
+            glLineWidth (1.5)
+
+            glDisable(GL_COLOR_MATERIAL)
+
             glPopMatrix()
         glPopMatrix()
         #print "drawn batch"
@@ -830,22 +918,23 @@ class GCFrame(wx.Frame):
         m = d()
         m.offsets = [0, 0, 0]
         m.rot = 0
-        m.curlayer = 0.0
+        m.curlayer = -1
         m.scale = [1.0, 1.0, 1.0]
         m.batch = pyglet.graphics.Batch()
         m.gc = gcview([], batch=m.batch)
-        self.models = {"": m}
+        self.models = {"GCODE": m}
         self.l = d()
         self.modelindex = 0
         self.GLPanel1 = TestGlPanel(self, size)
 
     def addfile(self, gcode=[]):
-        self.models[""].gc.delete()
-        self.models[""].gc = gcview(gcode, batch=self.models[""].batch)
+        self.models["GCODE"].gc.delete()
+        self.models["GCODE"].gc = gcview(gcode, batch=self.models["GCODE"].batch)
+        self.setlayerindex(None)
 
     def clear(self):
-        self.models[""].gc.delete()
-        self.models[""].gc = gcview([], batch=self.models[""].batch)
+        self.models["GCODE"].gc.delete()
+        self.models["GCODE"].gc = gcview([], batch=self.models["GCODE"].batch)
 
     def Show(self, arg=True):
         wx.Frame.Show(self, arg)
@@ -857,26 +946,52 @@ class GCFrame(wx.Frame):
         #self.initialized = 0
 
     def setlayerindex(self, z):
-        m = self.models[""]
-        mlk = sorted(m.gc.layers.keys())
-        if z > 0 and self.modelindex < len(mlk) - 1:
-            self.modelindex += 1
-        if z < 0 and self.modelindex > 0:
-            self.modelindex -= 1
-        m.curlayer = mlk[self.modelindex]
-        wx.CallAfter(self.SetTitle, "Gcode view, shift to move. Layer %d, Z = %f" % (self.modelindex, m.curlayer))
+        m = self.models["GCODE"]
+        try:
+            mlk = m.gc.layerlist
+        except:
+            mlk = []
+        if z is None:
+            self.modelindex = -1
+        elif z > 0:
+            if self.modelindex < len(mlk) - 1:
+                if self.modelindex > -1:
+                    self.modelindex += 1
+            else:
+                self.modelindex = -1
+        elif z < 0:
+            if self.modelindex > 0:
+                self.modelindex -= 1
+            elif self.modelindex == -1:
+                self.modelindex = len(mlk)
+
+        if self.modelindex >= 0:
+            m.curlayer = mlk[self.modelindex]
+            wx.CallAfter(self.SetTitle, "Gcode view, shift to move. Layer %d/%d, Z = %f" % (self.modelindex, len(mlk), m.curlayer))
+        else:
+            m.curlayer = -1
+            wx.CallAfter(self.SetTitle, "Gcode view, shift to move view, mousewheel to set layer")
+
 
 
 def main():
     app = wx.App(redirect=False)
     frame = GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(400, 400))
-    frame.addfile(list(open("carriage dump_export.gcode")))
+    import sys
+    for filename in sys.argv:
+        if ".gcode" in filename:
+            frame.addfile(list(open(filename)))
+        elif ".stl" in filename:
+            #TODO: add stl here
+            pass
+
     #frame = wx.Frame(None, -1, "GL Window", size=(400, 400))
-    #panel = TestGlPanel(frame)
-    #frame.Show(True)
-    #app.MainLoop()
+    #panel = TestGlPanel(frame, size=(300,300))
+    frame.Show(True)
+    app.MainLoop()
     app.Destroy()
 
 if __name__ == "__main__":
-    import cProfile
-    print cProfile.run("main()")
+    #import cProfile
+    #print cProfile.run("main()")
+    main()

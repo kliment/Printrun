@@ -1,5 +1,19 @@
 #!/usr/bin/env python
-# Licensed under GPLv3
+
+# This file is part of the Printrun suite.
+# 
+# Printrun is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Printrun is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 from serial import Serial
 from threading import Thread
@@ -124,11 +138,11 @@ class printcore():
                         pass
                 #callback for errors
                 pass
-            if "resend" in line.lower() or "rs" in line:
+            if line.lower().startswith("resend") or line.startswith("rs"):
                 try:
                     toresend=int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
                 except:
-                    if "rs" in line:
+                    if line.startswith("rs"):
                         toresend=int(line.split()[1])
                 self.resendfrom=toresend
                 self.clear=True
@@ -205,6 +219,8 @@ class printcore():
                 pass
         while(self.printing and self.printer and self.online):
             self._sendnext()
+        self.log=[]
+        self.sent=[]
         if self.endcb is not None:
             try:
                 self.endcb()
@@ -225,6 +241,7 @@ class printcore():
             self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
             self.resendfrom+=1
             return
+        self.sentlines={}
         self.resendfrom=-1
         for i in self.priqueue[:]:
             self._send(i)

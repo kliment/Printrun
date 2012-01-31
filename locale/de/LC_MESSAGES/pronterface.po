@@ -1,39 +1,39 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Pronterface
+# Copyright (C) 2011 Jonathan Marsden
+# Jonathan Marsden <jmarsden@fastmail.fm>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2012-01-19 09:21+CET\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2012-01-23 10:01+0100\n"
+"Last-Translator: Christian Metzen <metzench@ccux-linux.de>\n"
+"Language-Team: DE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
-"Content-Transfer-Encoding: ENCODING\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 "Generated-By: pygettext.py 1.5\n"
-
 
 #: pronsole.py:250
 msgid "Communications Speed (default: 115200)"
-msgstr ""
+msgstr "Kommunikationsgeschwindigkeit (Vorgabe: 115200)"
 
 #: pronsole.py:251
 msgid "Heated Build Platform temp for ABS (default: 110 deg C)"
-msgstr ""
+msgstr "Heizbett Temp. für ABS (Vorgabe: 110 Grad Celsius)"
 
 #: pronsole.py:252
 msgid "Heated Build Platform temp for PLA (default: 60 deg C)"
-msgstr ""
+msgstr "Heizbett Temp. für PLA (Vorgabe: 60 Grad Celsius)"
 
 #: pronsole.py:253
 msgid "Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)"
-msgstr ""
+msgstr "Vorschub Control Panel Bewegungen Extrudierung (Vorgabe: 300mm/min)"
 
 #: pronsole.py:254
 msgid "Port used to communicate with printer"
-msgstr ""
+msgstr "Port für Druckerkommunikation"
 
 #: pronsole.py:255
 msgid ""
@@ -41,6 +41,9 @@ msgid ""
 "   default:\n"
 "       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)"
 msgstr ""
+"Kommando Slicing\n"
+"   Vorgabe:\n"
+"       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)"
 
 #: pronsole.py:256
 msgid ""
@@ -48,26 +51,29 @@ msgid ""
 "   default:\n"
 "       python skeinforge/skeinforge_application/skeinforge.py"
 msgstr ""
+"Kommando Slicing Einstellungen\n"
+"   Vorgabe:\n"
+"       python skeinforge/skeinforge_application/skeinforge.py"
 
 #: pronsole.py:257
 msgid "Extruder temp for ABS (default: 230 deg C)"
-msgstr ""
+msgstr "Extruder Temperatur für ABS (Vorgabe: 230 Grad Celsius)"
 
 #: pronsole.py:258
 msgid "Extruder temp for PLA (default: 185 deg C)"
-msgstr ""
+msgstr "Extruder Temperatur für PLA (Vorgabe: 185 Grad Celsius)"
 
 #: pronsole.py:259
 msgid "Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)"
-msgstr ""
+msgstr "Vorschub Control Panel Bewegungen X und Y (Vorgabe: 3000mm/min)"
 
 #: pronsole.py:260
 msgid "Feedrate for Control Panel Moves in Z (default: 200mm/min)"
-msgstr ""
+msgstr "Vorschub Control Panel Bewegungen Z (Vorgabe: 200mm/min)"
 
 #: pronterface.py:15
 msgid "WX is not installed. This program requires WX to run."
-msgstr ""
+msgstr "WX ist nicht installiert. Dieses Programm erfordert WX zum Starten."
 
 #: pronterface.py:66
 msgid ""
@@ -79,54 +85,61 @@ msgid ""
 "   XXX,YYY,ZZZ\n"
 "   XXXxYYYxZZZ+OffX+OffY+OffZ"
 msgstr ""
+"Abmessungen der Bauplattform\n"
+" & optional Versatz vom Ausgangspunkt\n"
+"\n"
+"Beispiel:\n"
+"   XXXxYYY\n"
+"   XXX,YYY,ZZZ\n"
+"   XXXxYYYxZZZ+OffX+OffY+OffZ"
 
 #: pronterface.py:67
 msgid "Last Set Temperature for the Heated Print Bed"
-msgstr ""
+msgstr "Letzte gesetzte Temperatur für das Heizbett"
 
 #: pronterface.py:68
 msgid "Folder of last opened file"
-msgstr ""
+msgstr "Verzeichniss der zuletzt geöffneten Datei"
 
 #: pronterface.py:69
 msgid "Last Temperature of the Hot End"
-msgstr ""
+msgstr "Letzte Hotend Temperatur"
 
 #: pronterface.py:70
 msgid "Width of Extrusion in Preview (default: 0.5)"
-msgstr ""
+msgstr "Vorschaubreite der Extrudierung (Vorgabe: 0.5)"
 
 #: pronterface.py:71
 msgid "Fine Grid Spacing (default: 10)"
-msgstr ""
+msgstr "Feiner Rasterabstand (Vorgabe: 10)"
 
 #: pronterface.py:72
 msgid "Coarse Grid Spacing (default: 50)"
-msgstr ""
+msgstr "Grober Rasterabstand (Vorgabe: 50)"
 
 #: pronterface.py:73
 msgid "Pronterface background color (default: #FFFFFF)"
-msgstr ""
+msgstr "Pronterface Hintergrundfarbe (Vorgabe: #FFFFFF)"
 
 #: pronterface.py:76
 msgid "Printer Interface"
-msgstr ""
+msgstr "Printer Interface"
 
 #: pronterface.py:93
 msgid "Motors off"
-msgstr ""
+msgstr "Motoren aus"
 
 #: pronterface.py:94
 msgid "Check temp"
-msgstr ""
+msgstr "Temperatur prüfen"
 
 #: pronterface.py:95
 msgid "Extrude"
-msgstr ""
+msgstr "Extrudieren"
 
 #: pronterface.py:96
 msgid "Reverse"
-msgstr ""
+msgstr "Rückwärts"
 
 #: pronterface.py:114
 msgid ""
@@ -134,521 +147,556 @@ msgid ""
 "# Please don't add them here any more.\n"
 "# Backup of your old buttons is in custombtn.old\n"
 msgstr ""
+"# Alle individuellen Buttons in .pronsolerc eingetragen.\n"
+"# Bitte fügen Sie sie hier nicht mehr ein.\n"
+"# Backup Ihrer alten Buttons befindet sich in custombtn.old\n"
 
 #: pronterface.py:119
 msgid "Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"
-msgstr ""
+msgstr "Achtung! Sie haben benutzerdefinierte Buttons in custombtn.txt und .pronsolerc angegeben"
 
 #: pronterface.py:120
 msgid "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
-msgstr ""
+msgstr "Ignoriere custombtn.txt. Alle aktuellen Buttons entfernen um wieder zu custombtn.txt zurückzukehren"
 
-#: pronterface.py:148 pronterface.py:499 pronterface.py:1319
-#: pronterface.py:1373 pronterface.py:1495 pronterface.py:1529
+#: pronterface.py:148
+#: pronterface.py:499
+#: pronterface.py:1319
+#: pronterface.py:1373
+#: pronterface.py:1495
+#: pronterface.py:1529
 #: pronterface.py:1544
 msgid "Print"
-msgstr ""
+msgstr "Drucken"
 
 #: pronterface.py:152
 msgid "Printer is now online."
-msgstr ""
+msgstr "Drucker ist jetzt Online."
 
 #: pronterface.py:212
 msgid "Setting hotend temperature to "
-msgstr ""
+msgstr "Setze Hotend Temperatur auf "
 
-#: pronterface.py:212 pronterface.py:248
+#: pronterface.py:212
+#: pronterface.py:248
 msgid " degrees Celsius."
-msgstr ""
+msgstr " Grad Celsius."
 
-#: pronterface.py:231 pronterface.py:267 pronterface.py:325
+#: pronterface.py:231
+#: pronterface.py:267
+#: pronterface.py:325
 msgid "Printer is not online."
-msgstr ""
+msgstr "Drucker ist nicht online."
 
 #: pronterface.py:233
 msgid "You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."
-msgstr ""
+msgstr "Sie können keine negativen Temperaturen einstellen. Um das Hotend ganz auszuschalten, Temperatur auf 0 setzen."
 
 #: pronterface.py:248
 msgid "Setting bed temperature to "
-msgstr ""
+msgstr "Setze Heizbett Temperatur auf"
 
 #: pronterface.py:269
 msgid "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
-msgstr ""
+msgstr "Sie können keine negativen Temperaturen einstellen. Um das Heizbett ganz auszuschalten, Temperatur auf 0 setzen."
 
 #: pronterface.py:271
 msgid "You must enter a temperature."
-msgstr ""
+msgstr "Sie müssen eine Temperatur eingeben."
 
 #: pronterface.py:286
 msgid "Do you want to erase the macro?"
-msgstr ""
+msgstr "Möchten Sie das Makro löschen?"
 
 #: pronterface.py:290
 msgid "Cancelled."
-msgstr ""
+msgstr "Abgebrochen."
 
 #: pronterface.py:331
 msgid " Opens file"
-msgstr ""
+msgstr " Öffnet eine Datei"
 
 #: pronterface.py:331
 msgid "&Open..."
-msgstr ""
+msgstr "&Öffnen..."
 
 #: pronterface.py:332
 msgid " Edit open file"
-msgstr ""
+msgstr " Offene Datei bearbeiten"
 
 #: pronterface.py:332
 msgid "&Edit..."
-msgstr ""
+msgstr "&Bearbeiten..."
 
 #: pronterface.py:333
 msgid " Clear output console"
-msgstr ""
+msgstr " Ausgabe Konsole leeren"
 
 #: pronterface.py:333
 msgid "Clear console"
-msgstr ""
+msgstr "Konsole leeren"
 
 #: pronterface.py:334
 msgid " Project slices"
-msgstr ""
+msgstr " Projekt Slices"
 
 #: pronterface.py:334
 msgid "Projector"
-msgstr ""
+msgstr "Projektor"
 
 #: pronterface.py:335
 msgid " Closes the Window"
-msgstr ""
+msgstr " Schliesst das Fenster"
 
 #: pronterface.py:335
 msgid "E&xit"
-msgstr ""
+msgstr "&Verlassen"
 
 #: pronterface.py:336
 msgid "&File"
-msgstr ""
+msgstr "&Datei"
 
 #: pronterface.py:341
 msgid "&Macros"
-msgstr ""
+msgstr "&Makros"
 
 #: pronterface.py:342
 msgid "<&New...>"
-msgstr ""
+msgstr "<&Neu...>"
 
 #: pronterface.py:343
 msgid " Options dialog"
-msgstr ""
+msgstr " Optionen Dialog"
 
 #: pronterface.py:343
 msgid "&Options"
-msgstr ""
+msgstr "&Optionen"
 
 #: pronterface.py:345
 msgid " Adjust slicing settings"
-msgstr ""
+msgstr " Slicing Einstellungen anpassen"
 
 #: pronterface.py:345
 msgid "Slicing Settings"
-msgstr ""
+msgstr "Slicing Einstellungen"
 
 #: pronterface.py:352
 msgid "&Settings"
-msgstr ""
+msgstr "&Einstellungen"
 
 #: pronterface.py:368
 msgid "Enter macro name"
-msgstr ""
+msgstr "Makro Name eingeben"
 
 #: pronterface.py:371
 msgid "Macro name:"
-msgstr ""
+msgstr "Makro Name:"
 
 #: pronterface.py:374
 msgid "Ok"
-msgstr ""
+msgstr "Ok"
 
-#: pronterface.py:378 pronterface.py:1330 pronterface.py:1587
+#: pronterface.py:378
+#: pronterface.py:1330
+#: pronterface.py:1587
 msgid "Cancel"
-msgstr ""
+msgstr "Abbrechen"
 
 #: pronterface.py:396
 msgid "' is being used by built-in command"
-msgstr ""
+msgstr "' wird durch eingebautes Kommando genutzt"
 
 #: pronterface.py:396
 msgid "Name '"
-msgstr ""
+msgstr "Name '"
 
 #: pronterface.py:399
 msgid "Macro name may contain only alphanumeric symbols and underscores"
-msgstr ""
+msgstr "Makro Name darf nur alphanumerische Zeichen und Unterstriche enthalten"
 
 #: pronterface.py:448
 msgid "Port"
-msgstr ""
+msgstr "Port:"
 
 #: pronterface.py:467
 msgid "Connect"
-msgstr ""
+msgstr "Verbinden"
 
 #: pronterface.py:469
 msgid "Connect to the printer"
-msgstr ""
+msgstr "Drucker Verbinden"
 
 #: pronterface.py:471
 msgid "Reset"
-msgstr ""
+msgstr "Zurücksetzen"
 
-#: pronterface.py:474 pronterface.py:751
+#: pronterface.py:474
+#: pronterface.py:751
 msgid "Mini mode"
-msgstr ""
+msgstr "Mini-Modus"
 
 #: pronterface.py:478
 msgid "Monitor Printer"
-msgstr ""
+msgstr "Drucker überwachen"
 
 #: pronterface.py:488
 msgid "Load file"
-msgstr ""
+msgstr "Datei laden"
 
 #: pronterface.py:491
 msgid "Compose"
-msgstr ""
+msgstr "Zusammenstellen"
 
 #: pronterface.py:495
 msgid "SD"
-msgstr ""
+msgstr "SD"
 
-#: pronterface.py:503 pronterface.py:1374 pronterface.py:1419
-#: pronterface.py:1469 pronterface.py:1494 pronterface.py:1528
+#: pronterface.py:503
+#: pronterface.py:1374
+#: pronterface.py:1419
+#: pronterface.py:1469
+#: pronterface.py:1494
+#: pronterface.py:1528
 #: pronterface.py:1543
 msgid "Pause"
-msgstr ""
+msgstr "Pause"
 
 #: pronterface.py:516
 msgid "Send"
-msgstr ""
+msgstr "Senden"
 
-#: pronterface.py:524 pronterface.py:625
+#: pronterface.py:524
+#: pronterface.py:625
 msgid "mm/min"
-msgstr ""
+msgstr "mm/min"
 
 #: pronterface.py:526
 msgid "XY:"
-msgstr ""
+msgstr "XY:"
 
 #: pronterface.py:528
 msgid "Z:"
-msgstr ""
+msgstr "Z:"
 
-#: pronterface.py:551 pronterface.py:632
+#: pronterface.py:551
+#: pronterface.py:632
 msgid "Heater:"
-msgstr ""
+msgstr "Heizelement:"
 
-#: pronterface.py:554 pronterface.py:574
+#: pronterface.py:554
+#: pronterface.py:574
 msgid "Off"
-msgstr ""
+msgstr "Aus"
 
-#: pronterface.py:566 pronterface.py:586
+#: pronterface.py:566
+#: pronterface.py:586
 msgid "Set"
-msgstr ""
+msgstr "Ein"
 
-#: pronterface.py:571 pronterface.py:634
+#: pronterface.py:571
+#: pronterface.py:634
 msgid "Bed:"
-msgstr ""
+msgstr "Heizbett:"
 
 #: pronterface.py:619
 msgid "mm"
-msgstr ""
+msgstr "mm"
 
-#: pronterface.py:677 pronterface.py:1182 pronterface.py:1413
+#: pronterface.py:677
+#: pronterface.py:1182
+#: pronterface.py:1413
 msgid "Not connected to printer."
-msgstr ""
+msgstr "Keine Verbindung zum Drucker."
 
 #: pronterface.py:706
 msgid "SD Upload"
-msgstr ""
+msgstr "SD Laden"
 
 #: pronterface.py:710
 msgid "SD Print"
-msgstr ""
+msgstr "SD Drucken"
 
 #: pronterface.py:758
 msgid "Full mode"
-msgstr ""
+msgstr "Voll-Modus"
 
 #: pronterface.py:783
 msgid "Execute command: "
-msgstr ""
+msgstr "Kommando ausführen:"
 
 #: pronterface.py:794
 msgid "click to add new custom button"
-msgstr ""
+msgstr "Individuellen Button hinzufügen"
 
 #: pronterface.py:813
 msgid "Defines custom button. Usage: button <num> \"title\" [/c \"colour\"] command"
-msgstr ""
+msgstr "Definiert einen individuellen Button. Nutzung: button <num> \"title\" [/c \"colour\"] command"
 
 #: pronterface.py:835
 msgid "Custom button number should be between 0 and 63"
-msgstr ""
+msgstr "Nummer des individuellen Button sollte zwischen 0 und 63 sein."
 
 #: pronterface.py:927
 msgid "Edit custom button '%s'"
-msgstr ""
+msgstr "Individuellen Button '%s' bearbeiten"
 
 #: pronterface.py:929
 msgid "Move left <<"
-msgstr ""
+msgstr "Links bewegen <<"
 
 #: pronterface.py:932
 msgid "Move right >>"
-msgstr ""
+msgstr "Rechts bewegen >>"
 
 #: pronterface.py:936
 msgid "Remove custom button '%s'"
-msgstr ""
+msgstr "Individuellen Button '%s' entfernen"
 
 #: pronterface.py:939
 msgid "Add custom button"
-msgstr ""
+msgstr "Individuellen Button hinzufuegen"
 
 #: pronterface.py:1084
 msgid "event object missing"
-msgstr ""
+msgstr "Ereigniss Objekt fehlt"
 
 #: pronterface.py:1112
 msgid "Invalid period given."
-msgstr ""
+msgstr "Ungültiger Abschnitt angegeben."
 
 #: pronterface.py:1115
 msgid "Monitoring printer."
-msgstr ""
+msgstr "Überwache Drucker."
 
 #: pronterface.py:1117
 msgid "Done monitoring."
-msgstr ""
+msgstr "Überwachung abgeschlossen."
 
 #: pronterface.py:1139
 msgid "Printer is online. "
-msgstr ""
+msgstr "Drucker ist online."
 
-#: pronterface.py:1141 pronterface.py:1317 pronterface.py:1372
+#: pronterface.py:1141
+#: pronterface.py:1317
+#: pronterface.py:1372
 msgid "Loaded "
-msgstr ""
+msgstr "Geladen"
 
 #: pronterface.py:1144
 msgid "Bed"
-msgstr ""
+msgstr "Heizbett"
 
 #: pronterface.py:1144
 msgid "Hotend"
-msgstr ""
+msgstr "Hotend"
 
 #: pronterface.py:1154
 msgid " SD printing:%04.2f %%"
-msgstr ""
+msgstr "SD Drucken:%04.2f %%"
 
 #: pronterface.py:1157
 msgid " Printing:%04.2f %% |"
-msgstr ""
+msgstr " Drucken:%04.2f %% |"
 
 #: pronterface.py:1158
 msgid " Line# "
-msgstr ""
+msgstr "Zeile#"
 
 #: pronterface.py:1158
 msgid " lines |"
-msgstr ""
+msgstr " Zeilen |"
 
 #: pronterface.py:1158
 msgid "of "
-msgstr ""
+msgstr "von"
 
 #: pronterface.py:1163
 msgid " Est: "
-msgstr ""
+msgstr " Erw:"
 
 #: pronterface.py:1164
 msgid " of: "
-msgstr ""
+msgstr " von: "
 
 #: pronterface.py:1165
 msgid " Remaining | "
-msgstr ""
+msgstr " Verbleibend | "
 
 #: pronterface.py:1166
 msgid " Z: %0.2f mm"
-msgstr ""
+msgstr " Z: %0.2f mm"
 
 #: pronterface.py:1233
 msgid "Opening file failed."
-msgstr ""
+msgstr "Datei öffnen fehlgeschlagen."
 
 #: pronterface.py:1239
 msgid "Starting print"
-msgstr ""
+msgstr "Starte Druck"
 
 #: pronterface.py:1262
 msgid "Pick SD file"
-msgstr ""
+msgstr "Wähle SD Datei"
 
 #: pronterface.py:1262
 msgid "Select the file to print"
-msgstr ""
+msgstr "Wähle Druckdatei"
 
 #: pronterface.py:1297
 msgid "Failed to execute slicing software: "
-msgstr ""
+msgstr "Fehler beim Ausführen der Slicing Software:"
 
 #: pronterface.py:1304
 msgid "Slicing..."
-msgstr ""
+msgstr "Slicing..."
 
-#: pronterface.py:1317 pronterface.py:1372
+#: pronterface.py:1317
+#: pronterface.py:1372
 msgid ", %d lines"
-msgstr ""
+msgstr ", %d Zeilen"
 
 #: pronterface.py:1324
 msgid "Load File"
-msgstr ""
+msgstr "Datei laden"
 
 #: pronterface.py:1331
 msgid "Slicing "
-msgstr ""
+msgstr "Slicing"
 
 #: pronterface.py:1350
 msgid "Open file to print"
-msgstr ""
+msgstr "Öffne zu druckende Datei"
 
 #: pronterface.py:1351
 msgid "OBJ, STL, and GCODE files (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)"
-msgstr ""
+msgstr "OBJ,STL und GCODE Dateien  (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)"
 
 #: pronterface.py:1358
 msgid "File not found!"
-msgstr ""
+msgstr "Datei nicht gefunden!"
 
 #: pronterface.py:1382
-msgid ""
-"mm of filament used in this print\n"
-msgstr ""
+msgid "mm of filament used in this print\n"
+msgstr "mm Filament in Druck genutzt\n"
 
 #: pronterface.py:1383
 msgid ""
 "mm in X\n"
 "and is"
 msgstr ""
+"mm in X\n"
+"und ist"
 
-#: pronterface.py:1383 pronterface.py:1384
-msgid ""
-"mm wide\n"
-msgstr ""
+#: pronterface.py:1383
+#: pronterface.py:1384
+msgid "mm wide\n"
+msgstr "mm breit\n"
 
-#: pronterface.py:1383 pronterface.py:1384 pronterface.py:1385
+#: pronterface.py:1383
+#: pronterface.py:1384
+#: pronterface.py:1385
 msgid "mm to"
-msgstr ""
+msgstr "mm bis"
 
-#: pronterface.py:1383 pronterface.py:1384 pronterface.py:1385
+#: pronterface.py:1383
+#: pronterface.py:1384
+#: pronterface.py:1385
 msgid "the print goes from"
-msgstr ""
+msgstr "Der Druck verläuft von"
 
 #: pronterface.py:1384
 msgid ""
 "mm in Y\n"
 "and is"
 msgstr ""
+"mm in Y\n"
+"und ist"
 
 #: pronterface.py:1385
-msgid ""
-"mm high\n"
-msgstr ""
+msgid "mm high\n"
+msgstr "mm hoch\n"
 
 #: pronterface.py:1385
 msgid ""
 "mm in Z\n"
 "and is"
 msgstr ""
+"mm in Z\n"
+"und ist"
 
 #: pronterface.py:1386
 msgid "Estimated duration (pessimistic): "
-msgstr ""
+msgstr "Geschätze Dauer (pessimistisch):"
 
 #: pronterface.py:1410
 msgid "No file loaded. Please use load first."
-msgstr ""
+msgstr "Keine Datei geladen. Benutze zuerst laden."
 
 #: pronterface.py:1421
 msgid "Restart"
-msgstr ""
+msgstr "Neustart"
 
 #: pronterface.py:1425
 msgid "File upload complete"
-msgstr ""
+msgstr "Datei Upload komplett"
 
 #: pronterface.py:1444
 msgid "Pick SD filename"
-msgstr ""
+msgstr "Wähle SD Dateiname"
 
 #: pronterface.py:1452
 msgid "Paused."
-msgstr ""
+msgstr "Pausiert."
 
 #: pronterface.py:1462
 msgid "Resume"
-msgstr ""
+msgstr "Fortsetzen"
 
 #: pronterface.py:1478
 msgid "Connecting..."
-msgstr ""
+msgstr "Verbinde..."
 
 #: pronterface.py:1509
 msgid "Disconnected."
-msgstr ""
+msgstr "Getrennt."
 
 #: pronterface.py:1536
 msgid "Reset."
-msgstr ""
+msgstr "Zurücksetzen."
 
 #: pronterface.py:1537
 msgid "Are you sure you want to reset the printer?"
-msgstr ""
+msgstr "Möchten Sie den Drucker wirklich zurücksetzen?"
 
 #: pronterface.py:1537
 msgid "Reset?"
-msgstr ""
+msgstr "Zurücksetzen?"
 
 #: pronterface.py:1583
 msgid "Save"
-msgstr ""
+msgstr "Speichern"
 
 #: pronterface.py:1639
 msgid "Edit settings"
-msgstr ""
+msgstr "Einstellungen bearbeiten"
 
 #: pronterface.py:1641
 msgid "Defaults"
-msgstr ""
+msgstr "Standardwerte"
 
 #: pronterface.py:1670
 msgid "Custom button"
-msgstr ""
+msgstr "Individueller Button"
 
 #: pronterface.py:1675
 msgid "Button title"
-msgstr ""
+msgstr "Button Titel"
 
 #: pronterface.py:1678
 msgid "Command"
-msgstr ""
+msgstr "Kommando"
 
 #: pronterface.py:1687
 msgid "Color"
-msgstr ""
+msgstr "Farbe"
 
