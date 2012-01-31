@@ -49,7 +49,7 @@ if os.name=="nt":
 from xybuttons import XYButtons
 from zbuttons import ZButtons
 import pronsole
-
+import sms
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
@@ -67,9 +67,10 @@ class Tee(object):
         self.stdout.flush()
 
 
-class PronterWindow(wx.Frame,pronsole.pronsole):
+class PronterWindow(wx.Frame,pronsole.pronsole,sms.sms):
     def __init__(self, filename=None,size=winsize):
         pronsole.pronsole.__init__(self)
+        sms.sms.__init__(self)
         self.settings.build_dimensions = '200x200x100+0+0+0' #default build dimensions are 200x200x100 with 0,0,0 in the corner of the bed
         self.settings.last_bed_temperature = 0.0
         self.settings.last_file_path = ""
@@ -95,11 +96,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
         self.capture_skip=[]
         self.tempreport=""
-        self.monitor=0
+        self.monitor=0 
         self.f=None
         self.skeinp=None
         self.monitor_interval=3
         self.paused=False
+        self.sms_send = 0
         self.sentlines=Queue.Queue(30)
         xcol=(245,245,108)
         ycol=(180,180,255)
@@ -150,7 +152,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
-    
     def startcb(self):
         self.starttime=time.time()
         print "Print Started at: " +time.strftime('%H:%M:%S',time.localtime(self.starttime))
@@ -162,6 +163,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
             
+        if(self.sms_send==1):
+            try:
+               sms.sms.send_sms(self, "Print Complete", "Total Print Time"+time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime))))
+            except:
+                print "Unable to Send Text Message"
+                pass
     
     def online(self):
         print _("Printer is now online.")
@@ -449,6 +456,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         
+         
+    def testsms(self,event=None):
+        try:
+            sms.sms.send_sms(self, "SMS Message", "Hello From Pronterface!")
+        except:
+            pass
         
     def popwindow(self):
         # this list will contain all controls that should be only enabled
@@ -496,6 +509,28 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         uts.Add((15,-1),flag=wx.EXPAND)
         uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
+        
+        self.sendsmsbox=wx.CheckBox(self.panel,-1,"",pos=(450,37))
+        uts.Add((15,-1))
+        uts.Add(self.sendsmsbox)
+        uts.Add(wx.StaticText(self.panel,-1,_("Send SMS\nOn End"),pos=(470,37)))
+        self.sendsmsbox.Bind(wx.EVT_CHECKBOX,self.sendsms)
+        
+        self.smscmb = wx.ComboBox(self.panel, -1,
+                choices=["Alltel", "ATT", "Rogers", "Sprint", "tMobile", "Telus", "Verizon", "Other"],
+                style=wx.CB_DROPDOWN, size=(110,30),pos=(275,0))
+        try:
+            self.smscmb.SetValue("ATT")
+            self.smscmb.SetValue(str(self.sms_settings.carrier))
+        except:
+            pass
+        
+        uts.Add(self.smscmb)
+        
+        self.testsmsbtn=wx.Button(self.panel,-1,_("Test SMS"),pos=(380,0))
+        self.testsmsbtn.Bind(wx.EVT_BUTTON,self.testsms)
+        
+        uts.Add(self.testsmsbtn,wx.TOP|wx.LEFT,0)
         
         #SECOND ROW
         ubs=self.upperbottomsizer=wx.BoxSizer(wx.HORIZONTAL)
@@ -1135,6 +1170,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def setmonitor(self,e):
         self.monitor=self.monitorbox.GetValue()
         
+    def sendsms(self,e):
+        self.sms_send=self.sendsmsbox.GetValue()
+
     def sendline(self,e):
         command=self.commandbox.GetValue()
         if not len(command):
@@ -1660,6 +1698,10 @@ class options(wx.Dialog):
         grid.AddGrowableCol( 1 )
         grid.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
         vbox.Add(grid,0,wx.EXPAND)
+        svbox=wx.StaticBoxSizer(wx.StaticBox(self, label=_("SMS Settings")) ,wx.VERTICAL)
+        topsizer.Add(svbox,0,wx.EXPAND)
+        sgrid=wx.GridSizer(rows=0,cols=2,hgap=8,vgap=2)
+        svbox.Add(sgrid,0,wx.EXPAND)
         ctrls = {}
         for k,v in sorted(pronterface.settings._all_settings().items()):
             ctrls[k,0] = wx.StaticText(self,-1,k)
@@ -1669,6 +1711,10 @@ class options(wx.Dialog):
                 ctrls[k,1].SetToolTipString(pronterface.helpdict.get(k))
             grid.Add(ctrls[k,0],0,wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
             grid.Add(ctrls[k,1],1,wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
+        for k,v in pronterface.sms_settings._all_settings().items():
+            sgrid.Add(wx.StaticText(self,-1,k),0,wx.BOTTOM+wx.RIGHT)
+            ctrls[k] = wx.TextCtrl(self,-1,str(v))
+            sgrid.Add(ctrls[k],1,wx.EXPAND)
         topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0,wx.EXPAND)
         self.SetSizer(topsizer)        
         topsizer.Layout()
@@ -1677,6 +1723,10 @@ class options(wx.Dialog):
             for k,v in pronterface.settings._all_settings().items():
                 if ctrls[k,1].GetValue() != str(v):
                     pronterface.set(k,str(ctrls[k,1].GetValue()))
+            for k,v in pronterface.sms_settings._all_settings().items():
+                if ctrls[k].GetValue() != str(v):
+                    print "Updating "+k+" to "+str(ctrls[k].GetValue());
+                    pronterface.smsset(k,str(ctrls[k].GetValue()))
         self.Destroy()
         
 class ButtonEdit(wx.Dialog):
