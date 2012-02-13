@@ -529,9 +529,12 @@ class pronsole(cmd.Cmd):
             definition += "\n"
         try:
             written = False
-            rco=open(self.rc_filename+"~new","w")
             if os.path.exists(self.rc_filename):
-                rci=open(self.rc_filename,"r")
+                import shutil
+                shutil.copy(self.rc_filename,self.rc_filename+"~bak")
+                rci=open(self.rc_filename+"~bak","r")
+            rco=open(self.rc_filename,"w")
+            if rci is not None:
                 overwriting = False
                 for rc_cmd in rci:
                     l = rc_cmd.rstrip()
@@ -550,11 +553,7 @@ class pronsole(cmd.Cmd):
                 rco.write(definition)
             if rci is not None:
                 rci.close()
-                if os.path.exists(self.rc_filename+"~old"):
-                    os.remove(rci.name+"~old")
-                os.rename(rci.name,rci.name+"~old")
             rco.close()
-            os.rename(rco.name,self.rc_filename)
             #if definition != "":
             #    print "Saved '"+key+"' to '"+self.rc_filename+"'"
             #else:
