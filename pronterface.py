@@ -93,7 +93,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.panel=wx.Panel(self,-1,size=size)
 
         self.statuscheck=False
-        self.capture_skip=[]
+        self.capture_skip={}
+        self.capture_skip_newline=False
         self.tempreport=""
         self.monitor=0
         self.f=None
@@ -312,9 +313,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pronsole.pronsole.start_macro(self,macro_name,old_macro_definition)
     
     def catchprint(self,l):
-        for pat in self.capture_skip:
-            if pat.match(l):
-                self.capture_skip.remove(pat)
+        if self.capture_skip_newline and len(l) and not len(l.strip("\n\r")):
+            self.capture_skip_newline = False
+            return
+        for pat in self.capture_skip.keys():
+            if self.capture_skip[pat] > 0 and pat.match(l):
+                self.capture_skip[pat] -= 1
+                self.capture_skip_newline = True
                 return
         wx.CallAfter(self.logbox.AppendText,l)
         
@@ -1184,8 +1189,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if(self.monitor and self.p.online):
                     if self.sdprinting:
                         self.p.send_now("M27")
-                    self.capture_skip.append(re.compile(r"ok T:[\d\.]+( B:[\d\.]+)?( @:[\d\.]+)?\s*"))
-                    self.capture_skip.append(re.compile(r"\n"))
+                    if not hasattr(self,"auto_monitor_pattern"):
+                        self.auto_monitor_pattern = re.compile(r"(ok\s+)?T:[\d\.]+(\s+B:[\d\.]+)?(\s+@:[\d\.]+)?\s*")
+                    self.capture_skip[self.auto_monitor_pattern]=self.capture_skip.setdefault(self.auto_monitor_pattern,0)+1
                     self.p.send_now("M105")
                 time.sleep(self.monitor_interval)
                 while not self.sentlines.empty():
