@@ -65,7 +65,6 @@ This alternative approach is confirmed to work on Mac OS X 10.6.8.
 
 `sudo python setup.py install`
 
-Then repeat the same with http://launchpad.net/pyreadline/trunk/1.7/+download/pyreadline-1.7.zip
 Then repeat the same with http://http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
 
 # USING PRONTERFACE
