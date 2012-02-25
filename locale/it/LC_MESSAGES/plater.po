@@ -1,0 +1,92 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2012-01-09 15:07+CET\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Italian RepRap Community <reprap-italia@googlegroups.com>\n"
+"Language-Team: Italian RepRap Community <reprap-italia@googlegroups.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: plater.py:223
+msgid "Plate building tool"
+msgstr "Strumento di posizionamento sul piatto"
+
+#: plater.py:229
+msgid "Clear"
+msgstr "Pulisci"
+
+#: plater.py:230
+msgid "Load"
+msgstr "Carica"
+
+#: plater.py:232
+msgid "Export"
+msgstr "Esporta"
+
+#: plater.py:235
+msgid "Done"
+msgstr "Fatto"
+
+#: plater.py:237
+msgid "Cancel"
+msgstr "Cancella"
+
+#: plater.py:239
+msgid "Snap to Z = 0"
+msgstr "Vai a Z = 0"
+
+#: plater.py:240
+msgid "Put at 100, 100"
+msgstr "Metti a 100,100"
+
+#: plater.py:241
+msgid "Delete"
+msgstr "Elimina"
+
+#: plater.py:242
+msgid "Auto"
+msgstr "Automatico"
+
+#: plater.py:266
+msgid "Autoplating"
+msgstr "Posizionamento automatico sul piatto"
+
+#: plater.py:294
+msgid "Bed full, sorry sir :("
+msgstr "Il letto è pieno, mi dispiace :("
+
+#: plater.py:304
+msgid "Are you sure you want to clear the grid? All unsaved changes will be lost."
+msgstr "Sei sicuro di voler pulire la griglia? Tutte le modifiche non salvate saranno perse."
+
+#: plater.py:304
+msgid "Clear the grid?"
+msgstr "Pulire la griglia?"
+
+#: plater.py:346
+msgid "Pick file to save to"
+msgstr "Scegli un file in cui salvare"
+
+#: plater.py:347
+msgid "STL files (;*.stl;)"
+msgstr "files STL (;*.stl;)"
+
+#: plater.py:367
+msgid "wrote "
+msgstr "scritti "
+
+#: plater.py:370
+msgid "Pick file to load"
+msgstr "Scegli un file da caricare"
+
+#: plater.py:371
+msgid "STL files (;*.stl;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"
+msgstr "files STL (;*.stl;)|*.stl|files OpenSCAD (;*.scad;)|*.scad"
