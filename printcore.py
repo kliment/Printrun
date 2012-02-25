@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from serial import Serial
+from serial import Serial, SerialException
 from threading import Thread
 from select import error as SelectError
 import time, getopt, sys
@@ -100,6 +100,9 @@ class printcore():
                     break
                 else:
                     raise
+            except SerialException, e:
+                print "Can't read from printer (disconnected?)."
+                break
 
             if(len(line)>1):
                 self.log+=[line]
@@ -279,7 +282,10 @@ class printcore():
                     self.sendcb(command)
                 except:
                     pass
-            self.printer.write(str(command+"\n"))
+            try:
+                self.printer.write(str(command+"\n"))
+            except SerialException, e:
+                print "Can't write to printer (disconnected?)."
 
 if __name__ == '__main__':
     baud = 115200
