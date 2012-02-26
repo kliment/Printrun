@@ -247,7 +247,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             else:
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
         except Exception,x:
-            print _("You must enter a temperature. (%s)" % (repr(x),))
+            print _("You must enter a temperature. (%s)") % (repr(x),)
     
     def do_bedtemp(self,l=""):
         try:
