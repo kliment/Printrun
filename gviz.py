@@ -275,7 +275,7 @@ class gviz(wx.Panel):
         
         start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
         
-        if gcode[0] == "g1":
+        if gcode[0] in [ "g0", "g1" ]:
             target = _readgcode()
             line = [ _x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1]) ]
             if not hilight:
