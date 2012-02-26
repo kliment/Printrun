@@ -165,7 +165,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def online(self):
         print _("Printer is now online.")
-        self.connectbtn.SetLabel("Disconnect")
+        self.connectbtn.SetLabel(_("Disconnect"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.disconnect)
 
         for i in self.printerControls:
