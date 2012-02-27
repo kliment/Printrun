@@ -25,6 +25,10 @@ now there is only one, for German.  New ones can be created:
   # Edit the .po file to add messages for newlang
   msgfmt -o ${newlang}.mo ${newlang}.po
 
+To update a previously created message catalog from the template, use :
+
+  msgmerge -U locale/fr/LC_MESSAGES/${lang}.po locale/pronterface.pot
+
 As currently coded, the default location for these message catalogs is
 
   /usr/share/pronterface/locale/
