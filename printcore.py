@@ -47,6 +47,7 @@ class printcore():
         self.endcb=None#impl ()
         self.onlinecb=None#impl ()
         self.loud=False#emit sent and received lines to terminal
+        self.greetings=['start','Grbl ']
         if port is not None and baud is not None:
             #print port, baud
             self.connect(port, baud)
@@ -115,10 +116,10 @@ class printcore():
                     print "RECV: ",line.rstrip()
             if(line.startswith('DEBUG_')):
                 continue
-            if(line.startswith('start') or line.startswith('ok')):
+            if(line.startswith(tuple(self.greetings)) or line.startswith('ok')):
                 self.clear=True
-            if(line.startswith('start') or line.startswith('ok') or "T:" in line):
-                if (not self.online or line.startswith('start')) and self.onlinecb is not None:
+            if(line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line):
+                if (not self.online or line.startswith(tuple(self.greetings))) and self.onlinecb is not None:
                     try:
                         self.onlinecb()
                     except:
