@@ -1161,7 +1161,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     string+=_("Loaded ")+os.path.split(self.filename)[1]+" "
                 except:
                     pass
-                string+=(self.tempreport.replace("\r","").replace("T",_("Hotend")).replace("B",_("Bed")).replace("\n","").replace("ok ",""))+" "
+                string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
                     self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
@@ -1557,11 +1557,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         dlg=wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES|wx.NO)
         if dlg.ShowModal()==wx.ID_YES:
             self.p.reset()
+            self.p.printing=0
+            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
             if self.paused:
                 self.p.paused=0
-                self.p.printing=0
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-                wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 self.paused=0
     
     def get_build_dimensions(self,bdim):
