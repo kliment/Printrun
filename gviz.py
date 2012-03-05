@@ -49,11 +49,17 @@ class window(wx.Frame):
     
     def key(self, event):
         x=event.GetKeyCode()
-        #print x
-        if x==wx.WXK_UP:
-            self.p.layerup()
-        if x==wx.WXK_DOWN:
-            self.p.layerdown()
+        if event.ShiftDown():
+            cx,cy=self.p.translate
+            if x==wx.WXK_UP:
+                self.p.zoom(cx,cy,1.2)
+            if x==wx.WXK_DOWN:
+                self.p.zoom(cx,cy,1/1.2)
+        else:
+            if x==wx.WXK_UP:
+                self.p.layerup()
+            if x==wx.WXK_DOWN:  
+                self.p.layerdown()
     
         #print p.lines.keys()
     def zoom(self, event):

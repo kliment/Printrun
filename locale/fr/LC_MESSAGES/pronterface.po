@@ -1,14 +1,14 @@
-# Pronterface Message Catalog Dutch
-# Copyright (C) 2011 Ruben Lubbes
-# Ruben Lubbes <ruben.lubbes@gmx.net>, 2011.
+# Pronterface Message Catalog Template
+# Copyright (C) 2011 Jonathan Marsden
+# Jonathan Marsden <jmarsden@fastmail.fm>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Pronterface rl1\n"
+"Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2012-02-26 02:12+CET\n"
-"PO-Revision-Date: 2011-09-06 16:31+0100\n"
-"Last-Translator: Ruben Lubbes <ruben.lubbes@gmx.net>\n"
-"Language-Team: NL <LL@li.org>\n"
+"PO-Revision-Date: 2012-02-26 02:13+0100\n"
+"Last-Translator: Guillaume Seguin <guillaume@segu.in>\n"
+"Language-Team: FR <c.laguilhon.debat@gmail.com>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -17,7 +17,9 @@ msgstr ""
 
 #: pronterface.py:30
 msgid "WX is not installed. This program requires WX to run."
-msgstr "WX is niet geïnstalleerd. Dit programma vereist WX."
+msgstr ""
+"wxWidgets n'est pas installé. Ce programme nécessite la librairie wxWidgets "
+"pour fonctionner."
 
 #: pronterface.py:81
 msgid ""
@@ -32,51 +34,51 @@ msgstr ""
 
 #: pronterface.py:82
 msgid "Last Set Temperature for the Heated Print Bed"
-msgstr ""
+msgstr "Dernière température du plateau chauffant définie"
 
 #: pronterface.py:83
 msgid "Folder of last opened file"
-msgstr ""
+msgstr "Dossier du dernier fichier ouvert"
 
 #: pronterface.py:84
 msgid "Last Temperature of the Hot End"
-msgstr ""
+msgstr "Dernière température de la buse définie"
 
 #: pronterface.py:85
 msgid "Width of Extrusion in Preview (default: 0.5)"
-msgstr ""
+msgstr "Largeur de l'extrusion dans la prévisualisation (défaut : 0.5)"
 
 #: pronterface.py:86
 msgid "Fine Grid Spacing (default: 10)"
-msgstr ""
+msgstr "Espacement fin de la grille (défaut : 10)"
 
 #: pronterface.py:87
 msgid "Coarse Grid Spacing (default: 50)"
-msgstr ""
+msgstr "Espacement large de la grille (défaut : 50)"
 
 #: pronterface.py:88
 msgid "Pronterface background color (default: #FFFFFF)"
-msgstr ""
+msgstr "Couleur de fond de la Pronterface (défaut : #FFFFFF)"
 
 #: pronterface.py:91
 msgid "Printer Interface"
-msgstr "Printer Interface"
+msgstr "Interface de l'imprimante"
 
 #: pronterface.py:108
 msgid "Motors off"
-msgstr "Motoren uit"
+msgstr "Arrêter les moteurs"
 
 #: pronterface.py:109
 msgid "Check temp"
-msgstr "Controleer Temp."
+msgstr "Lire les températures"
 
 #: pronterface.py:110
 msgid "Extrude"
-msgstr "Extruden"
+msgstr "Extruder"
 
 #: pronterface.py:111
 msgid "Reverse"
-msgstr "Terug"
+msgstr "Inverser"
 
 #: pronterface.py:129
 msgid ""
@@ -84,125 +86,127 @@ msgid ""
 "# Please don't add them here any more.\n"
 "# Backup of your old buttons is in custombtn.old\n"
 msgstr ""
-"# Gedefinieerde knoppen zijn verplaatst naar .pronsolerc.\n"
-"# Hier geen nieuwe knoppen definiëren.\n"
-"# Een backup van de oude knoppen staat in custombtn.old\n"
+"# Tous vos boutons personalisés ont été déplacés dans le fichier ."
+"pronsolerc.\n"
+"# Veuillez ne plus en ajouter ici.\n"
+"# Une sauvegarde de vos anciens boutons est dans le fichier custombtn.old\n"
 
 #: pronterface.py:134
 msgid ""
 "Note!!! You have specified custom buttons in both custombtn.txt and ."
 "pronsolerc"
 msgstr ""
-"Let op!!! Er zijn gedefinieerde knoppen in zowel custombtn.txt en .pronsolerc"
+"Remarque! Vous avez spécifié des boutons personnalisés dans custombtn.txt et "
+"aussi dans .pronsolerc"
 
 #: pronterface.py:135
 msgid ""
 "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
 msgstr ""
-"Negeer custombtn.txt. Verwijder alle gedefinieerde knoppen om gebruik te "
-"maken van custombtn.txt"
+"custombtn.txt ignoré. Retirez tous les boutons en cours pour revenir à "
+"custombtn.txt"
 
 #: pronterface.py:163 pronterface.py:514 pronterface.py:1333
 #: pronterface.py:1387 pronterface.py:1509 pronterface.py:1543
 #: pronterface.py:1558
 msgid "Print"
-msgstr "Printen"
+msgstr "Imprimer"
 
 #: pronterface.py:167
 msgid "Printer is now online."
-msgstr "Printer is nu verbonden."
+msgstr "L'imprimante est connectée"
 
 #: pronterface.py:168
 msgid "Disconnect"
-msgstr "Ontkoppel"
+msgstr "Déconnecter"
 
 #: pronterface.py:227
 msgid "Setting hotend temperature to %f degrees Celsius."
-msgstr "Stel elementtemperatuur in op %f graden Celsius."
+msgstr "Réglage de la température de la buse à %f degrés Celsius."
 
 #: pronterface.py:246 pronterface.py:282 pronterface.py:340
 msgid "Printer is not online."
-msgstr "Printer is niet verbonden."
+msgstr "L'imprimante est déconnectée"
 
 #: pronterface.py:248
 msgid ""
 "You cannot set negative temperatures. To turn the hotend off entirely, set "
 "its temperature to 0."
 msgstr ""
-"Negatieve temperatuur is niet instelbaar. Om het element uit te schakelen "
-"wordt temperatuur 0 ingesteld."
+"Vous ne pouvez pas régler une température négative. Pour éteindre la buse, "
+"réglez sa température à 0°C."
 
 #: pronterface.py:250
 msgid "You must enter a temperature. (%s)"
-msgstr "Er moet een temperatuur worden ingesteld. (%s)"
+msgstr "Vous devez saisir une température. (%s)"
 
 #: pronterface.py:263
 msgid "Setting bed temperature to %f degrees Celsius."
-msgstr "Bed teperatuur ingesteld op %f graden Celsius."
+msgstr "Réglage de la température du plateau à %f degrés Celsius."
 
 #: pronterface.py:284
 msgid ""
 "You cannot set negative temperatures. To turn the bed off entirely, set its "
 "temperature to 0."
 msgstr ""
-"Negatieve temperatuur is niet instelbaar. Om het printbed uit te schakelen "
-"wordt temperatuur 0 ingesteld."
+"Vous ne pouvez pas régler une température négative. Pour désactiver votre "
+"plateau chauffant, réglez sa température à 0°C."
 
 #: pronterface.py:286
 msgid "You must enter a temperature."
-msgstr "Er moet een temperatuur worden ingesteld."
+msgstr "Vous devez saisir une température."
 
 #: pronterface.py:301
 msgid "Do you want to erase the macro?"
-msgstr "Wilt u de macro verwijderen?"
+msgstr "Voulez-vous effacer la macro ?"
 
 #: pronterface.py:305
 msgid "Cancelled."
-msgstr "Afgebroken"
+msgstr "Annulé"
 
 #: pronterface.py:346
 msgid " Opens file"
-msgstr " Opent bestand"
+msgstr " Ouvrir un fichier"
 
 #: pronterface.py:346
 msgid "&Open..."
-msgstr "&Open..."
+msgstr "&Ouvrir..."
 
 #: pronterface.py:347
 msgid " Edit open file"
-msgstr " Wijzig geopend bestand"
+msgstr " Éditer le fichier ouvert"
 
 #: pronterface.py:347
 msgid "&Edit..."
-msgstr "&Wijzig..."
+msgstr "&Éditer..."
 
 #: pronterface.py:348
 msgid " Clear output console"
-msgstr ""
+msgstr " Effacer le contenu de la console de sortie"
 
 #: pronterface.py:348
 msgid "Clear console"
-msgstr ""
+msgstr "Effacer la console"
 
 #: pronterface.py:349
 msgid " Project slices"
-msgstr ""
+msgstr " Projeter les couches"
 
 #: pronterface.py:349
 msgid "Projector"
-msgstr ""
+msgstr "Projecteur"
 
 #: pronterface.py:350
 msgid " Closes the Window"
-msgstr " Sluit het venster"
+msgstr " Quitter le programme"
 
 #: pronterface.py:350
 msgid "E&xit"
-msgstr "&Stoppen"
+msgstr "&Quitter"
 
 #: pronterface.py:351
 msgid "&File"
-msgstr ""
+msgstr "&Fichier"
 
 #: pronterface.py:356
 msgid "&Macros"
@@ -210,100 +214,99 @@ msgstr "&Macros"
 
 #: pronterface.py:357
 msgid "<&New...>"
-msgstr "<&Nieuw...>"
+msgstr "<&Nouvelle...>"
 
 #: pronterface.py:358
 msgid " Options dialog"
-msgstr "Optievenster"
+msgstr " Fenêtre des options"
 
 #: pronterface.py:358
 msgid "&Options"
-msgstr "&Opties"
+msgstr "&Options"
 
 #: pronterface.py:360
-#, fuzzy
 msgid " Adjust slicing settings"
-msgstr "Instellen SFACT"
+msgstr " Régler les paramètres de slicing"
 
 #: pronterface.py:360
-#, fuzzy
 msgid "Slicing Settings"
-msgstr "SFACT Instellingen"
+msgstr "Paramètres de slicing"
 
 #: pronterface.py:367
 msgid "&Settings"
-msgstr "&Instellingen"
+msgstr "&Paramètres"
 
 #: pronterface.py:383
 msgid "Enter macro name"
-msgstr "Voer macronaam in"
+msgstr "Saisissez le nom de la macro"
 
 #: pronterface.py:386
 msgid "Macro name:"
-msgstr "Macronaam:"
+msgstr "Nom :"
 
 #: pronterface.py:389
 msgid "Ok"
-msgstr "Ok"
+msgstr "Valider"
 
 #: pronterface.py:393 pronterface.py:1344 pronterface.py:1601
 msgid "Cancel"
-msgstr "Annuleer"
+msgstr "Annuler"
 
 #: pronterface.py:411
 msgid "Name '%s' is being used by built-in command"
-msgstr "Naam '%s' wordt gebruikt door ingebouwde instructie"
+msgstr "Le nom '%s' est utilisé par une commande interne"
 
 #: pronterface.py:414
 msgid "Macro name may contain only alphanumeric symbols and underscores"
 msgstr ""
+"Un nom de macro ne peut contenir que des caractères alphanumérique et des "
+"underscore (_)"
 
 #: pronterface.py:463
 msgid "Port"
-msgstr "Poort"
+msgstr "Port"
 
 #: pronterface.py:482
 msgid "Connect"
-msgstr "Verbind"
+msgstr "Connecter"
 
 #: pronterface.py:484
 msgid "Connect to the printer"
-msgstr "Verbind met printer"
+msgstr "Connecter l'imprimante"
 
 #: pronterface.py:486
 msgid "Reset"
-msgstr "Reset"
+msgstr "Réinitialiser"
 
 #: pronterface.py:489 pronterface.py:766
 msgid "Mini mode"
-msgstr "Mini-venster"
+msgstr "Mode réduit"
 
 #: pronterface.py:493
-#, fuzzy
 msgid "Monitor Printer"
-msgstr "Printercommunicatie volgen"
+msgstr "Surveiller l'imprimante"
 
 #: pronterface.py:503
 msgid "Load file"
-msgstr "open bestand"
+msgstr "Charger un fichier"
 
 #: pronterface.py:506
 msgid "Compose"
-msgstr ""
+msgstr "Composer"
 
 #: pronterface.py:510
 msgid "SD"
-msgstr ""
+msgstr "SD"
 
 #: pronterface.py:518 pronterface.py:1388 pronterface.py:1433
 #: pronterface.py:1483 pronterface.py:1508 pronterface.py:1542
 #: pronterface.py:1557
 msgid "Pause"
-msgstr "Pauze"
+msgstr "Pause"
 
 #: pronterface.py:531
 msgid "Send"
-msgstr "Zend"
+msgstr "Envoyer"
 
 #: pronterface.py:539 pronterface.py:640
 msgid "mm/min"
@@ -319,19 +322,19 @@ msgstr "Z:"
 
 #: pronterface.py:566 pronterface.py:647
 msgid "Heater:"
-msgstr "Element:"
+msgstr "Buse :"
 
 #: pronterface.py:569 pronterface.py:589
 msgid "Off"
-msgstr ""
+msgstr "Off"
 
 #: pronterface.py:581 pronterface.py:601
 msgid "Set"
-msgstr "Stel in"
+msgstr "Régler"
 
 #: pronterface.py:586 pronterface.py:649
 msgid "Bed:"
-msgstr "Bed:"
+msgstr "Plateau :"
 
 #: pronterface.py:634
 msgid "mm"
@@ -339,106 +342,107 @@ msgstr "mm"
 
 #: pronterface.py:692 pronterface.py:1196 pronterface.py:1427
 msgid "Not connected to printer."
-msgstr "Printer is niet verbonden."
+msgstr "Imprimante non connectée."
 
 #: pronterface.py:721
 msgid "SD Upload"
-msgstr "uploaden naar SD"
+msgstr "Copier sur SD"
 
 #: pronterface.py:725
 msgid "SD Print"
-msgstr "Afdruk van SD"
+msgstr "Imprimer depuis SD"
 
 #: pronterface.py:773
 msgid "Full mode"
-msgstr "Volledig venster"
+msgstr "Mode complet"
 
 #: pronterface.py:798
 msgid "Execute command: "
-msgstr ""
+msgstr "Exécuter la commande :"
 
 #: pronterface.py:809
-#, fuzzy
 msgid "click to add new custom button"
-msgstr "Definieer eigen knop."
+msgstr "Ajouter un bouton personnalisé"
 
 #: pronterface.py:828
 msgid ""
 "Defines custom button. Usage: button <num> \"title\" [/c \"colour\"] command"
 msgstr ""
-"Definieert eigen knop. Gebruik: knop <num> \"titel\" [/c \"kleur\"] commando"
+"Définit des boutons personnalidés. Utilisation : <numero> \"Libelle\" [/c "
+"\"couleur\"] commande"
 
 #: pronterface.py:850
 msgid "Custom button number should be between 0 and 63"
-msgstr "Knopnummer moet tussen 0 en 63 zijn"
+msgstr ""
+"Les numéros des boutons personnalisés doivent être compris entre 0 et 63."
 
 #: pronterface.py:942
 msgid "Edit custom button '%s'"
-msgstr "Wijzig gedefineerde knop '%s'"
+msgstr "Editer le bouton personnalisé '%s'"
 
 #: pronterface.py:944
 msgid "Move left <<"
-msgstr "Verplaats links <<"
+msgstr "Déplacer vers la gauche <<"
 
 #: pronterface.py:947
 msgid "Move right >>"
-msgstr "Verplaats rechts >>"
+msgstr "Déplacer vers la droite >>"
 
 #: pronterface.py:951
 msgid "Remove custom button '%s'"
-msgstr "Verwijder gedefinieerde knop '%s'"
+msgstr "Supprimer le bouton personnalisé '%s'"
 
 #: pronterface.py:954
 msgid "Add custom button"
-msgstr "Definieer eigen knop."
+msgstr "Ajouter un bouton personnalisé"
 
 #: pronterface.py:1099
 msgid "event object missing"
-msgstr "vermist object"
+msgstr "événement d'objet manquant"
 
 #: pronterface.py:1127
 msgid "Invalid period given."
-msgstr "Foute gegevens ingevoerd"
+msgstr "La période donnée est invalide"
 
 #: pronterface.py:1130
 msgid "Monitoring printer."
-msgstr "Printercommunicatie wordt gevolgd."
+msgstr "Imprimante sous surveillance."
 
 #: pronterface.py:1132
 msgid "Done monitoring."
-msgstr "Klaar met volgen."
+msgstr "Surveillance de l'imprimante effectuée."
 
 #: pronterface.py:1154
 msgid "Printer is online. "
-msgstr "Printer is verbonden. "
+msgstr "L'imprimante est connectée. "
 
 #: pronterface.py:1156 pronterface.py:1331
 msgid "Loaded "
-msgstr "Geladen "
+msgstr "Chargé "
 
 #: pronterface.py:1159
 msgid "Bed"
-msgstr "Bed"
+msgstr "Plateau"
 
 #: pronterface.py:1159
 msgid "Hotend"
-msgstr "Element"
+msgstr "Buse"
 
 #: pronterface.py:1169
 msgid " SD printing:%04.2f %%"
-msgstr " SD printen:%04.2f %%"
+msgstr "Impression SD : %04.2f %%"
 
 #: pronterface.py:1172
 msgid " Printing:%04.2f %% |"
-msgstr " Printen:%04.2f %% |"
+msgstr "Impression : %04.2f %% |"
 
 #: pronterface.py:1173
 msgid " Line# %d of %d lines |"
-msgstr ""
+msgstr "Ligne# %d sur %d lignes |"
 
 #: pronterface.py:1178
 msgid " Est: %s of %s remaining | "
-msgstr ""
+msgstr " ETA: %s restant sur %s | "
 
 #: pronterface.py:1180
 msgid " Z: %0.2f mm"
@@ -446,263 +450,157 @@ msgstr " Z: %0.2f mm"
 
 #: pronterface.py:1247
 msgid "Opening file failed."
-msgstr "Bestand openen mislukt"
+msgstr "L'ouverture du fichier a échoué"
 
 #: pronterface.py:1253
 msgid "Starting print"
-msgstr "Start het printen"
+msgstr "Début de l'impression..."
 
 #: pronterface.py:1276
 msgid "Pick SD file"
-msgstr "Kies bestand op SD"
+msgstr "Choisir un fichier sur la carte SD"
 
 #: pronterface.py:1276
 msgid "Select the file to print"
-msgstr "Kies het te printen bestand"
+msgstr "Sélectionnez le fichier à imprimer :"
 
 #: pronterface.py:1311
 msgid "Failed to execute slicing software: "
-msgstr ""
+msgstr "Une erreur s'est produite lors du slicing : "
 
 #: pronterface.py:1318
-#, fuzzy
 msgid "Slicing..."
-msgstr "Skeinforge draait..."
+msgstr "Slicing..."
 
 #: pronterface.py:1331
 msgid ", %d lines"
-msgstr ", %d regels"
+msgstr ", %d lignes"
 
 #: pronterface.py:1338
-#, fuzzy
 msgid "Load File"
-msgstr "open bestand"
+msgstr "Charger un fichier"
 
 #: pronterface.py:1345
-#, fuzzy
 msgid "Slicing "
-msgstr "Skeinforge draait"
+msgstr "Slicing "
 
 #: pronterface.py:1364
 msgid "Open file to print"
-msgstr "Open het te printen bestand"
+msgstr "Ouvrir un fichier à imprimer"
 
 #: pronterface.py:1365
-#, fuzzy
 msgid "OBJ, STL, and GCODE files (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)"
-msgstr "STL en GCODE bestanden (;*.gcode;*.g;*.stl;*.STL;)"
+msgstr ""
+"Fichiers OBJ, STL et GCODE (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)"
 
 #: pronterface.py:1372
 msgid "File not found!"
-msgstr "Bestand niet gevonden!"
+msgstr "Fichier non trouvé"
 
 #: pronterface.py:1386
 msgid "Loaded %s, %d lines"
-msgstr "Geladen %s, %d regels"
+msgstr "%s chargé, %d lignes"
 
 #: pronterface.py:1396
 msgid "mm of filament used in this print\n"
-msgstr "mm fillament wordt gebruikt in deze print\n"
+msgstr "mm de filament utilisés pour cette impression\n"
 
 #: pronterface.py:1397
 msgid ""
 "the print goes from %f mm to %f mm in X\n"
 "and is %f mm wide\n"
 msgstr ""
+"L'impression va de %f mm à %f m en X\n"
+"et mesure %f mm de large\n"
 
 #: pronterface.py:1398
 msgid ""
 "the print goes from %f mm to %f mm in Y\n"
 "and is %f mm wide\n"
 msgstr ""
+"L'impression va de %f mm à %f m en Y\n"
+"et mesure %f mm de large\n"
 
 #: pronterface.py:1399
 msgid ""
 "the print goes from %f mm to %f mm in Z\n"
 "and is %f mm high\n"
 msgstr ""
+"L'impression va de %f mm à %f m en Y\n"
+"et mesure %f mm de haut\n"
 
 #: pronterface.py:1400
 msgid "Estimated duration (pessimistic): "
-msgstr ""
+msgstr "Durée estimée (pessimiste) : "
 
 #: pronterface.py:1424
 msgid "No file loaded. Please use load first."
-msgstr "Geen bestand geladen. Eerst bestand inladen."
+msgstr "Aucun fichier chargé. Veuillez charger un fichier avant."
 
 #: pronterface.py:1435
 msgid "Restart"
-msgstr "Herstart"
+msgstr "Recommencer"
 
 #: pronterface.py:1439
 msgid "File upload complete"
-msgstr "Bestandsupload voltooid"
+msgstr "Envoi du fichier terminé"
 
 #: pronterface.py:1458
 msgid "Pick SD filename"
-msgstr "Kies bestandsnaam op SD"
+msgstr "Lister les fichiers sur la carte SD"
 
 #: pronterface.py:1466
-#, fuzzy
 msgid "Paused."
-msgstr "Pauze"
+msgstr "En pause."
 
 #: pronterface.py:1476
 msgid "Resume"
-msgstr "Hervat"
+msgstr "Reprendre"
 
 #: pronterface.py:1492
-#, fuzzy
 msgid "Connecting..."
-msgstr "Verbind"
+msgstr "Connection en cours..."
 
 #: pronterface.py:1523
-#, fuzzy
 msgid "Disconnected."
-msgstr "Ontkoppel"
+msgstr "Déconnecté."
 
 #: pronterface.py:1550
-#, fuzzy
 msgid "Reset."
-msgstr "Reset"
+msgstr "Réinitialisée."
 
 #: pronterface.py:1551
 msgid "Are you sure you want to reset the printer?"
-msgstr "Weet je zeker dat je de printer wilt resetten?"
+msgstr "Etes-vous sûr de vouloir réinitialiser l'imprimante?"
 
 #: pronterface.py:1551
 msgid "Reset?"
-msgstr "resetten?"
+msgstr "Réinitialiser ?"
 
 #: pronterface.py:1597
 msgid "Save"
-msgstr ""
+msgstr "Enregistrer"
 
 #: pronterface.py:1653
 msgid "Edit settings"
-msgstr "Wijzig instellingen"
+msgstr "Modifier les paramètres"
 
 #: pronterface.py:1655
 msgid "Defaults"
-msgstr "Standaardinstelling"
+msgstr "Paramètres par défaut"
 
 #: pronterface.py:1684
 msgid "Custom button"
-msgstr "Gedefinieerde knop"
+msgstr "Commande personnalisée"
 
 #: pronterface.py:1689
 msgid "Button title"
-msgstr "Knoptitel"
+msgstr "Titre du bouton"
 
 #: pronterface.py:1692
 msgid "Command"
-msgstr "Commando"
+msgstr "Commande"
 
 #: pronterface.py:1701
 msgid "Color"
-msgstr "Kleur"
-
-#~ msgid "X+100"
-#~ msgstr "X+100"
-
-#~ msgid "X+10"
-#~ msgstr "X+10"
-
-#~ msgid "X+1"
-#~ msgstr "X+1"
-
-#~ msgid "X+0.1"
-#~ msgstr "X+0.1"
-
-#~ msgid "HomeX"
-#~ msgstr "0-puntX"
-
-#~ msgid "X-0.1"
-#~ msgstr "X-0.1"
-
-#~ msgid "X-1"
-#~ msgstr "X-1"
-
-#~ msgid "X-10"
-#~ msgstr "X-10"
-
-#~ msgid "X-100"
-#~ msgstr "X-100"
-
-#~ msgid "Y+100"
-#~ msgstr "Y+100"
-
-#~ msgid "Y+10"
-#~ msgstr "Y+10"
-
-#~ msgid "Y+1"
-#~ msgstr "Y+1"
-
-#~ msgid "Y+0.1"
-#~ msgstr "Y+0.1"
-
-#~ msgid "HomeY"
-#~ msgstr "0-puntY"
-
-#~ msgid "Y-0.1"
-#~ msgstr "Y-0.1"
-
-#~ msgid "Y-1"
-#~ msgstr "Y-1"
-
-#~ msgid "Y-10"
-#~ msgstr "Y-10"
-
-#~ msgid "Y-100"
-#~ msgstr "Y-100"
-
-#~ msgid "Z+10"
-#~ msgstr "Z+10"
-
-#~ msgid "Z+1"
-#~ msgstr "Z+1"
-
-#~ msgid "Z+0.1"
-#~ msgstr "Z+0.1"
-
-#~ msgid "HomeZ"
-#~ msgstr "0-puntZ"
-
-#~ msgid "Z-0.1"
-#~ msgstr "Z-0.1"
-
-#~ msgid "Z-1"
-#~ msgstr "Z-1"
-
-#~ msgid "Z-10"
-#~ msgstr "Z-10"
-
-#~ msgid "Home"
-#~ msgstr "0-punt"
-
-#~ msgid " degrees Celsius."
-#~ msgstr " graden Celsius."
-
-#~ msgid "SFACT Quick Settings"
-#~ msgstr "SFACT Snelinstelling"
-
-#~ msgid " Quickly adjust SFACT settings for active profile"
-#~ msgstr " Eenvoudig SFACT's huidige profiel instellen"
-
-#~ msgid "Name '"
-#~ msgstr "Naam '"
-
-#~ msgid "Skeinforge execution failed."
-#~ msgstr "Skeinforge was niet succesvol."
-
-#~ msgid ""
-#~ "Skeinforge not found. \n"
-#~ "Please copy Skeinforge into a directory named \"skeinforge\" in the same "
-#~ "directory as this file."
-#~ msgstr ""
-#~ "Skeinforge niet gevonden.\n"
-#~ "Plaats Skeinforge in een map met de naam \"skeinforge\" in dezelfde map "
-#~ "als dit bestand."
-
-#~ msgid "&Print"
-#~ msgstr "&Printen"
+msgstr "Couleur"

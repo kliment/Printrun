@@ -274,7 +274,7 @@ class pronsole(cmd.Cmd):
         self.helpdict["temperature_pla"] = _("Extruder temp for PLA (default: 185 deg C)")
         self.helpdict["xy_feedrate"] = _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")
         self.helpdict["z_feedrate"] = _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")
-
+        self.commandprefixes='MGT$'
     
     def set_temp_preset(self,key,value):
         if not key.startswith("bed"):
@@ -529,9 +529,12 @@ class pronsole(cmd.Cmd):
             definition += "\n"
         try:
             written = False
-            rco=open(self.rc_filename+"~new","w")
             if os.path.exists(self.rc_filename):
-                rci=open(self.rc_filename,"r")
+                import shutil
+                shutil.copy(self.rc_filename,self.rc_filename+"~bak")
+                rci=open(self.rc_filename+"~bak","r")
+            rco=open(self.rc_filename,"w")
+            if rci is not None:
                 overwriting = False
                 for rc_cmd in rci:
                     l = rc_cmd.rstrip()
@@ -550,11 +553,7 @@ class pronsole(cmd.Cmd):
                 rco.write(definition)
             if rci is not None:
                 rci.close()
-                if os.path.exists(self.rc_filename+"~old"):
-                    os.remove(rci.name+"~old")
-                os.rename(rci.name,rci.name+"~old")
             rco.close()
-            os.rename(rco.name,self.rc_filename)
             #if definition != "":
             #    print "Saved '"+key+"' to '"+self.rc_filename+"'"
             #else:
@@ -871,14 +870,14 @@ class pronsole(cmd.Cmd):
         print "! os.listdir('.')"
         
     def default(self,l):
-        if(l[0]=='M' or l[0]=="G" or l[0]=='T'):
+        if(l[0] in self.commandprefixes.upper()):
             if(self.p and self.p.online):
                 print "SENDING:"+l
                 self.p.send_now(l)
             else:
                 print "Printer is not online."
             return
-        if(l[0]=='m' or l[0]=="g" or l[0]=='t'):
+        elif(l[0] in self.commandprefixes.lower()):
             if(self.p and self.p.online):
                 print "SENDING:"+l.upper()
                 self.p.send_now(l.upper())
