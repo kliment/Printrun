@@ -390,7 +390,7 @@ class stlwin(wx.Frame):
             facets += i.facets
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
-        print _("wrote "), name
+        print _("wrote %s") % name
 
     def right(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)

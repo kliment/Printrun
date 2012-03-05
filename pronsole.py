@@ -274,7 +274,7 @@ class pronsole(cmd.Cmd):
         self.helpdict["temperature_pla"] = _("Extruder temp for PLA (default: 185 deg C)")
         self.helpdict["xy_feedrate"] = _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")
         self.helpdict["z_feedrate"] = _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")
-
+        self.commandprefixes='MGT$'
     
     def set_temp_preset(self,key,value):
         if not key.startswith("bed"):
@@ -870,14 +870,14 @@ class pronsole(cmd.Cmd):
         print "! os.listdir('.')"
         
     def default(self,l):
-        if(l[0]=='M' or l[0]=="G" or l[0]=='T'):
+        if(l[0] in self.commandprefixes.upper()):
             if(self.p and self.p.online):
                 print "SENDING:"+l
                 self.p.send_now(l)
             else:
                 print "Printer is not online."
             return
-        if(l[0]=='m' or l[0]=="g" or l[0]=='t'):
+        elif(l[0] in self.commandprefixes.lower()):
             if(self.p and self.p.online):
                 print "SENDING:"+l.upper()
                 self.p.send_now(l.upper())

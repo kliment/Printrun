@@ -166,7 +166,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def online(self):
         print _("Printer is now online.")
-        self.connectbtn.SetLabel("Disconnect")
+        self.connectbtn.SetLabel(_("Disconnect"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.disconnect)
 
         for i in self.printerControls:
@@ -225,7 +225,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if f>=0:
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
-                    print _("Setting hotend temperature to "),f,_(" degrees Celsius.")
+                    print _("Setting hotend temperature to %f degrees Celsius.") % f
                     self.hsetpoint=f
                     self.hottgauge.SetTarget(int(f))
                     if f>0: 
@@ -248,7 +248,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             else:
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
         except Exception,x:
-            print _("You must enter a temperature. (%s)" % (repr(x),))
+            print _("You must enter a temperature. (%s)") % (repr(x),)
     
     def do_bedtemp(self,l=""):
         try:
@@ -261,7 +261,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if f>=0:
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
-                    print _("Setting bed temperature to "),f,_(" degrees Celsius.")
+                    print _("Setting bed temperature to %f degrees Celsius.") % f
                     self.bsetpoint=f
                     self.bedtgauge.SetTarget(int(f))
                     if f>0: 
@@ -413,7 +413,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if self.macros.has_key(macro):
             old_def = self.macros[macro]
         elif hasattr(self.__class__,"do_"+macro):
-            print _("Name '")+macro+_("' is being used by built-in command")
+            print _("Name '%s' is being used by built-in command") % macro
             return
         elif len([c for c in macro if not c.isalnum() and c != "_"]):
             print _("Macro name may contain only alphanumeric symbols and underscores")
@@ -1175,14 +1175,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.printing:
                     fractioncomplete = float(self.p.queueindex)/len(self.p.mainqueue)
                     string+= _(" Printing:%04.2f %% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
-                    string+= _(" Line# ") + str(self.p.queueindex) + _("of ") + str(len(self.p.mainqueue)) + _(" lines |" )
+                    string+= _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
                 if fractioncomplete > 0.0:
                     secondselapsed = int(time.time()-self.starttime)
                     secondsestimate = secondselapsed/fractioncomplete
                     secondsremain = secondsestimate - secondselapsed
-                    string+= _(" Est: ") + time.strftime('%H:%M:%S', time.gmtime(secondsremain))
-                    string+= _(" of: ") + time.strftime('%H:%M:%S', time.gmtime(secondsestimate))
-                    string+= _(" Remaining | ")
+                    string+= _(" Est: %s of %s remaining | ") % (time.strftime('%H:%M:%S', time.gmtime(secondsremain)),
+                                                                 time.strftime('%H:%M:%S', time.gmtime(secondsestimate)))
                     string+= _(" Z: %0.2f mm") % self.curlayer
                 wx.CallAfter(self.status.SetStatusText,string)
                 wx.CallAfter(self.gviz.Refresh)
@@ -1390,7 +1389,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 of=open(self.filename)
                 self.f=[i.replace("\n","").replace("\r","") for i in of]
                 of.close
-                self.status.SetStatusText(_("Loaded ") + name + _(", %d lines") % (len(self.f),))
+                self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.f)))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 wx.CallAfter(self.pausebtn.Disable)
@@ -1401,9 +1400,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def loadviz(self):
         Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
-        print _("the print goes from"),Xmin,_("mm to"),Xmax,_("mm in X\nand is"),Xtot,_("mm wide\n")
-        print _("the print goes from"),Ymin,_("mm to"),Ymax,_("mm in Y\nand is"),Ytot,_("mm wide\n")
-        print _("the print goes from"),Zmin,_("mm to"),Zmax,_("mm in Z\nand is"),Ztot,_("mm high\n")
+        print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
+        print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
+        print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
         print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
         #import time
         #t0=time.time()
