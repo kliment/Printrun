@@ -663,7 +663,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             raise ""
             import stlview
-            self.gwindow=stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(600,600))
+            self.gwindow=stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, mousewheel to zoom, shift + mousewheel to set layer', size=(600,600))
         except:
             self.gwindow=gviz.window([],
             build_dimensions=self.build_dimensions_list,
