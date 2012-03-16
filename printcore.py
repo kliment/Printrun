@@ -104,6 +104,9 @@ class printcore():
             except SerialException, e:
                 print "Can't read from printer (disconnected?)."
                 break
+            except OSError, e:
+                print "Can't read from printer (disconnected?)."
+                break
 
             if(len(line)>1):
                 self.log+=[line]
