@@ -147,6 +147,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.p.startcb=self.startcb
         self.p.endcb=self.endcb
         self.starttime=0
+        self.extra_print_time=0
         self.curlayer=0
         self.cur_button=None
         self.hsetpoint=0.0
@@ -159,7 +160,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def endcb(self):
         if(self.p.queueindex==0):
             print "Print ended at: " +time.strftime('%H:%M:%S',time.localtime(time.time()))
-            print "and took: "+time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime)))  #+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
+            print "and took: "+time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime+self.extra_print_time)))  #+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
             
@@ -1177,7 +1178,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     string+= _(" Printing:%04.2f %% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
                     string+= _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
                 if fractioncomplete > 0.0:
-                    secondselapsed = int(time.time()-self.starttime)
+                    secondselapsed = int(time.time()-self.starttime+self.extra_print_time)
                     secondsestimate = secondselapsed/fractioncomplete
                     secondsremain = secondsestimate - secondselapsed
                     string+= _(" Est: %s of %s remaining | ") % (time.strftime('%H:%M:%S', time.gmtime(secondsremain)),
@@ -1368,7 +1369,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
         dlg=wx.FileDialog(self,_("Open file to print"),basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("OBJ, STL, and GCODE files (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)"))
+	dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
         if(filename is not None or dlg.ShowModal() == wx.ID_OK):
             if filename is not None:
                 name=filename
@@ -1417,6 +1418,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.gviz.Refresh)
                 
     def printfile(self,event):
+        self.extra_print_time=0
         if self.paused:
             self.p.paused=0
             self.paused=0
@@ -1479,6 +1481,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     return
                 self.p.pause()
             self.paused=True
+            self.extra_print_time += int(time.time() - self.starttime)
             wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
         else:
             self.paused=False
