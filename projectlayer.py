@@ -75,26 +75,33 @@ class dispframe(wx.Frame):
             raise
             pass
             
-    def showimgdelay(self,image):
-        self.drawlayer(image)
+    def showimgdelay(self):
+        self.drawlayer(self.layers[self.index-1])
         self.pic.Show()
         self.Refresh()
         #    time.sleep(self.interval)
         #self.pic.Hide()
         self.Refresh()
-        if self.p!=None and self.p.online:
-                self.p.send_now("G91")
-                self.p.send_now("G1 Z%f F300"%(self.thickness,))
-                self.p.send_now("G90")
-            
+           
     def nextimg(self,event):
         #print "b"
         if self.index<len(self.layers):
             i=self.index
             #print self.layers[i]
-            print i
-            wx.CallAfter(self.showimgdelay,self.layers[i])
-            wx.FutureCall(1000*self.interval,self.pic.Hide)
+            print "Layer: ", i, ", Height:", i*self.thickness
+
+            if i > 5:
+                if self.p!=None and self.p.online:
+                    self.p.send_now("G91")
+                    self.p.send_now("G1 Z10 F200")
+                    self.p.send_now("G1 Z%f F200"%(-(10-self.thickness),))
+                    self.p.send_now("G90")
+                wx.CallAfter(self.pic.Hide)
+            
+            wx.FutureCall(1000*self.pause,self.showimgdelay)
+            
+            #wx.CallAfter(self.showimgdelay,self.layers[i])
+            #wx.FutureCall(1000*self.interval,self.pic.Hide)
             self.index+=1
         else:
             print "end"
@@ -113,6 +120,7 @@ class dispframe(wx.Frame):
         self.index=0
         self.size=size
         self.interval=interval
+        self.pause = pause
         self.timer=wx.Timer(self,1)
         self.timer.Bind(wx.EVT_TIMER,self.nextimg)
         self.Bind(wx.EVT_TIMER,self.nextimg)
@@ -134,17 +142,17 @@ class setframe(wx.Frame):
         self.thickness=wx.TextCtrl(self.panel,-1,"0.5",pos=(50,30))
         wx.StaticText(self.panel,-1,"Exposure:",pos=(0,60))
         wx.StaticText(self.panel,-1,"s",pos=(130,60))
-        self.interval=wx.TextCtrl(self.panel,-1,"0.5",pos=(50,60))
+        self.interval=wx.TextCtrl(self.panel,-1,"60",pos=(50,60))
         wx.StaticText(self.panel,-1,"Blank:",pos=(0,90))
         wx.StaticText(self.panel,-1,"s",pos=(130,90))
-        self.delay=wx.TextCtrl(self.panel,-1,"0.5",pos=(50,90))
+        self.delay=wx.TextCtrl(self.panel,-1,"7",pos=(50,90))
         wx.StaticText(self.panel,-1,"Scale:",pos=(0,120))
         wx.StaticText(self.panel,-1,"x",pos=(130,120))
-        self.scale=wx.TextCtrl(self.panel,-1,"5",pos=(50,120))
+        self.scale=wx.TextCtrl(self.panel,-1,"10",pos=(50,120))
         wx.StaticText(self.panel,-1,"X:",pos=(160,30))
-        self.X=wx.TextCtrl(self.panel,-1,"1024",pos=(180,30))
+        self.X=wx.TextCtrl(self.panel,-1,"1920",pos=(180,30))
         wx.StaticText(self.panel,-1,"Y:",pos=(160,60))
-        self.Y=wx.TextCtrl(self.panel,-1,"768",pos=(180,60))
+        self.Y=wx.TextCtrl(self.panel,-1,"1080",pos=(180,60))
         self.bload=wx.Button(self.panel,-1,"Present",pos=(0,150))
         self.bload.Bind(wx.EVT_BUTTON,self.startdisplay)
         self.Show()
