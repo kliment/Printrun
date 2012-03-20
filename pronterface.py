@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
 # This file is part of the Printrun suite.
-# 
+#
 # Printrun is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Printrun is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,7 +21,7 @@ import os, gettext, Queue, re
 
 if os.path.exists('/usr/share/pronterface/locale'):
     gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
-else: 
+else:
     gettext.install('pronterface', './locale', unicode=1)
 
 try:
@@ -35,7 +35,7 @@ try:
 except:
     pass
 StringIO=cStringIO
-    
+
 thread=threading.Thread
 winsize=(800,500)
 if os.name=="nt":
@@ -48,6 +48,7 @@ if os.name=="nt":
 
 from xybuttons import XYButtons
 from zbuttons import ZButtons
+from graph import Graph
 import pronsole
 
 def dosify(name):
@@ -119,7 +120,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         customdict={}
         try:
             execfile("custombtn.txt",customdict)
-            if len(customdict["btns"]): 
+            if len(customdict["btns"]):
                 if not len(self.custombuttons):
                     try:
                         self.custombuttons = customdict["btns"]
@@ -134,7 +135,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 else:
                     print _("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc")
                     print _("Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt")
-                    
+
         except:
             pass
         self.popmenu()
@@ -152,19 +153,19 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
-    
+
     def startcb(self):
         self.starttime=time.time()
         print "Print Started at: " +time.strftime('%H:%M:%S',time.localtime(self.starttime))
-        
+
     def endcb(self):
         if(self.p.queueindex==0):
             print "Print ended at: " +time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "and took: "+time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime+self.extra_print_time)))  #+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
-            
-    
+
+
     def online(self):
         print _("Printer is now online.")
         self.connectbtn.SetLabel(_("Disconnect"))
@@ -179,8 +180,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         if self.filename:
             wx.CallAfter(self.printbtn.Enable)
-        
-    
+
+
     def sentcb(self,line):
         if("G1" in line):
             if("Z" in line):
@@ -198,7 +199,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 pass
             #threading.Thread(target=self.gviz.addgcode,args=(line,1)).start()
             #self.gwindow.p.addgcode(line,hilight=1)
-    
+
     def do_extrude(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
@@ -206,7 +207,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pronsole.pronsole.do_extrude(self,l)
         except:
             raise
-    
+
     def do_reverse(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
@@ -214,7 +215,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pronsole.pronsole.do_extrude(self,l)
         except:
             pass
-    
+
     def do_settemp(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
@@ -229,7 +230,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     print _("Setting hotend temperature to %f degrees Celsius.") % f
                     self.hsetpoint=f
                     self.hottgauge.SetTarget(int(f))
-                    if f>0: 
+                    self.graph.SetExtruder1TargetTemperature(int(f))
+                    if f>0:
                         wx.CallAfter(self.htemp.SetValue,l)
                         self.set("last_temperature",str(f))
                         wx.CallAfter(self.settoff.SetBackgroundColour,"")
@@ -249,8 +251,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             else:
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
         except Exception,x:
-            print _("You must enter a temperature. (%s)") % (repr(x),)
-    
+            print _("You must enter a temperature. (%s)" % (repr(x),))
+
     def do_bedtemp(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
@@ -265,7 +267,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     print _("Setting bed temperature to %f degrees Celsius.") % f
                     self.bsetpoint=f
                     self.bedtgauge.SetTarget(int(f))
-                    if f>0: 
+                    self.graph.SetBedTargetTemperature(int(f))
+                    if f>0:
                         wx.CallAfter(self.btemp.SetValue,l)
                         self.set("last_bed_temperature",str(f))
                         wx.CallAfter(self.setboff.SetBackgroundColour,"")
@@ -286,15 +289,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
         except:
             print _("You must enter a temperature.")
-            
+
     def end_macro(self):
         pronsole.pronsole.end_macro(self)
         self.update_macros_menu()
-    
+
     def delete_macro(self,macro_name):
         pronsole.pronsole.delete_macro(self,macro_name)
         self.update_macros_menu()
-    
+
     def start_macro(self,macro_name,old_macro_definition=""):
         if not self.processing_rc:
             def cb(definition):
@@ -312,7 +315,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             macroed(macro_name,old_macro_definition,cb)
         else:
             pronsole.pronsole.start_macro(self,macro_name,old_macro_definition)
-    
+
     def catchprint(self,l):
         if self.capture_skip_newline and len(l) and not len(l.strip("\n\r")):
             self.capture_skip_newline = False
@@ -323,7 +326,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.capture_skip_newline = True
                 return
         wx.CallAfter(self.logbox.AppendText,l)
-        
+
     def scanserial(self):
         """scan for available ports. return a list of device names."""
         baselist=[]
@@ -337,14 +340,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
         return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
-        
+
     def project(self,event):
         import projectlayer
         if(self.p.online):
             projectlayer.setframe(self,self.p).Show()
         else:
             print _("Printer is not online.")
-        
+
     def popmenu(self):
         self.menustrip = wx.MenuBar()
         # File menu
@@ -355,14 +358,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.project, m.Append(-1,_("Projector"),_(" Project slices")))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT,_("E&xit"),_(" Closes the Window")))
         self.menustrip.Append(m,_("&File"))
-        
+
         # Settings menu
         m = wx.Menu()
         self.macros_menu = wx.Menu()
         m.AppendSubMenu(self.macros_menu, _("&Macros"))
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
-        
+
         self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("Slicing Settings"),_(" Adjust slicing settings")))
         #try:
         #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
@@ -373,18 +376,18 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.menustrip.Append(m,_("&Settings"))
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
-    
-    
+
+
     def doneediting(self,gcode):
         f=open(self.filename,"w")
         f.write("\n".join(gcode))
         f.close()
         wx.CallAfter(self.loadfile,None,self.filename)
-    
+
     def do_editgcode(self,e=None):
         if(self.filename is not None):
             macroed(self.filename,self.f,self.doneediting,1)
-    
+
     def new_macro(self,e=None):
         dialog = wx.Dialog(self,-1,_("Enter macro name"),size=(260,85))
         panel = wx.Panel(dialog,-1)
@@ -408,7 +411,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 wx.CallAfter(self.edit_macro,macro)
         dialog.Destroy()
         return macro
-        
+
     def edit_macro(self,macro):
         if macro == "": return self.new_macro()
         if self.macros.has_key(macro):
@@ -423,7 +426,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             old_def = ""
         self.start_macro(macro,old_def)
         return macro
-        
+
     def update_macros_menu(self):
         if not hasattr(self,"macros_menu"):
             return # too early, menu not yet built
@@ -439,7 +442,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def OnExit(self, event):
         self.Close()
-        
+
     def rescanports(self,event=None):
         scan=self.scanserial()
         portslist=list(scan)
@@ -454,13 +457,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.serialport.SetValue(portslist[0])
         except:
             pass
-        
-        
+
+
     def popwindow(self):
         # this list will contain all controls that should be only enabled
         # when we're connected to a printer
         self.printerControls = []
-        
+
         #sizer layout: topsizer is a column sizer containing two sections
         #upper section contains the mini view buttons
         #lower section contains the rest of the window - manual controls, console, visualizations
@@ -468,7 +471,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
         self.rescanbtn=wx.Button(self.panel,-1,_("Port"))
         self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
-        
+
         uts.Add(self.rescanbtn,0,wx.TOP|wx.LEFT,0)
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
@@ -494,18 +497,18 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.resetbtn)
         self.minibtn=wx.Button(self.panel,-1,_("Mini mode"))
         self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
-        
+
         uts.Add((25,-1))
         self.monitorbox=wx.CheckBox(self.panel,-1,_("Monitor Printer"))
         uts.Add(self.monitorbox,0,wx.ALIGN_CENTER)
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
-        
+
         uts.Add((15,-1),flag=wx.EXPAND)
         uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
-        
+
         #SECOND ROW
         ubs=self.upperbottomsizer=wx.BoxSizer(wx.HORIZONTAL)
-        
+
         self.loadbtn=wx.Button(self.panel,-1,_("Load file"))
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
         ubs.Add(self.loadbtn)
@@ -539,7 +542,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.printerControls.append(self.sendbtn)
         lbrs.Add(self.sendbtn)
         lrs.Add(lbrs,0,wx.EXPAND)
-        
+
         #left pane
         lls=self.lowerlsizer=wx.GridBagSizer()
         lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,4),span=(1,4))
@@ -549,15 +552,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(wx.StaticText(self.panel,-1,_("Z:")),pos=(1,6),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(70,-1))
         lls.Add(self.zfeedc,pos=(1,7),span=(1,3))
-        
+
         #lls.Add((200,375))
-        
+
         self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked)
         lls.Add(self.xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
         self.zb = ZButtons(self.panel, self.moveZ)
         lls.Add(self.zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
         wx.CallAfter(self.xyb.SetFocus)
-                
+
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0])#)
             btn.SetBackgroundColour(i[3])
@@ -567,16 +570,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.btndict[i[1]]=btn
             self.printerControls.append(btn)
             lls.Add(btn,pos=i[2],span=i[4])
-        
-        
+
+
         lls.Add(wx.StaticText(self.panel,-1,_("Heater:")),pos=(3,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
-        
+
         self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1))
         self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off"))
         self.printerControls.append(self.settoff)
         lls.Add(self.settoff,pos=(3,1),span=(1,1))
-        
+
         if self.settings.last_temperature not in map(float,self.temps.values()):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
@@ -588,34 +591,34 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(3,4),span=(1,1))
-        
+
         lls.Add(wx.StaticText(self.panel,-1,_("Bed:")),pos=(4,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
-        
+
         self.setboff=wx.Button(self.panel,-1,_("Off"),size=(36,-1))
         self.setboff.Bind(wx.EVT_BUTTON,lambda e:self.do_bedtemp("off"))
         self.printerControls.append(self.setboff)
         lls.Add(self.setboff,pos=(4,1),span=(1,1))
-        
+
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=btemp_choices,style=wx.CB_DROPDOWN, size=(80,-1))
         self.btemp.Bind(wx.EVT_COMBOBOX,self.btemp_change)
         lls.Add(self.btemp,pos=(4,2),span=(1,2))
-        
+
         self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         self.printerControls.append(self.setbbtn)
         lls.Add(self.setbbtn,pos=(4,4),span=(1,1))
-        
+
         self.btemp.SetValue(str(self.settings.last_bed_temperature))
         self.htemp.SetValue(str(self.settings.last_temperature))
 
-        ## added for an error where only the bed would get (pla) or (abs). 
+        ## added for an error where only the bed would get (pla) or (abs).
         #This ensures, if last temp is a default pla or abs, it will be marked so.
         # if it is not, then a (user) remark is added. This denotes a manual entry
-        
+
         for i in btemp_choices:
             if i.split()[0] == str(self.settings.last_bed_temperature).split('.')[0] or i.split()[0] == str(self.settings.last_bed_temperature):
                 self.btemp.SetValue(i)
@@ -626,40 +629,43 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if( '(' not in self.btemp.Value):
             self.btemp.SetValue(self.btemp.Value + ' (user)')
         if( '(' not in self.htemp.Value):
-            self.htemp.SetValue(self.htemp.Value + ' (user)')   
+            self.htemp.SetValue(self.htemp.Value + ' (user)')
 
         #lls.Add(self.btemp,pos=(4,1),span=(1,3))
         #lls.Add(self.setbbtn,pos=(4,4),span=(1,2))
         self.tempdisp=wx.StaticText(self.panel,-1,"")
         lls.Add(self.tempdisp,pos=(4,5),span=(1,3))
-        
+
         self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,-1))
         self.edist.SetBackgroundColour((225,200,200))
         self.edist.SetForegroundColour("black")
         lls.Add(self.edist,pos=(5,2),span=(1,1))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm")),pos=(5,3),span=(1,2))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm")),pos=(5,3),span=(1,1))
         self.efeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.e_feedrate),min=0,max=50000,size=(60,-1))
         self.efeedc.SetBackgroundColour((225,200,200))
         self.efeedc.SetForegroundColour("black")
         self.efeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         lls.Add(self.efeedc,pos=(6,2),span=(1,1))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(6,3),span=(1,2))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(6,3),span=(1,1))
         self.xyfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.SetBackgroundColour((180,255,180))
         self.zfeedc.SetForegroundColour("black")
         # lls.Add((10,0),pos=(0,11),span=(1,1))
-        
-        self.hottgauge=TempGauge(self.panel,size=(300,24),title=_("Heater:"),maxval=230)
-        lls.Add(self.hottgauge,pos=(7,0),span=(1,8))
-        self.bedtgauge=TempGauge(self.panel,size=(300,24),title=_("Bed:"),maxval=130)
-        lls.Add(self.bedtgauge,pos=(8,0),span=(1,8))
+
+        self.hottgauge=TempGauge(self.panel,size=(200,24),title=_("Heater:"),maxval=230)
+        lls.Add(self.hottgauge,pos=(7,0),span=(1,4))
+        self.bedtgauge=TempGauge(self.panel,size=(200,24),title=_("Bed:"),maxval=130)
+        lls.Add(self.bedtgauge,pos=(8,0),span=(1,4))
         #def scroll_setpoint(e):
         #   if e.GetWheelRotation()>0:
         #       self.do_settemp(str(self.hsetpoint+1))
         #   elif e.GetWheelRotation()<0:
         #       self.do_settemp(str(max(0,self.hsetpoint-1)))
         #self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
+
+        self.graph = Graph(self.panel, wx.ID_ANY)
+        lls.Add(self.graph, pos=(5, 4), span=(4,4), flag=wx.ALIGN_LEFT)
 
         self.gviz=gviz.gviz(self.panel,(300,300),
             build_dimensions=self.build_dimensions_list,
@@ -681,11 +687,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         vcs.Add(self.gviz,1,flag=wx.SHAPED)
         cs=self.centersizer=wx.GridBagSizer()
         vcs.Add(cs,0,flag=wx.EXPAND)
-        
+
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
         self.uppersizer.Add(self.uppertopsizer)
         self.uppersizer.Add(self.upperbottomsizer)
-        
+
         self.lowersizer=wx.BoxSizer(wx.HORIZONTAL)
         self.lowersizer.Add(lls)
         self.lowersizer.Add(vcs,1,wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
@@ -698,29 +704,29 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.status.SetStatusText(_("Not connected to printer."))
         self.panel.Bind(wx.EVT_MOUSE_EVENTS,self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
-        
+
         self.topsizer.Layout()
         self.topsizer.Fit(self)
-        
+
         # disable all printer controls until we connect to a printer
         self.pausebtn.Disable()
         for i in self.printerControls:
             i.Disable()
-        
+
         #self.panel.Fit()
         #uts.Layout()
         self.cbuttons_reload()
-                
-        
+
+
     def plate(self,e):
         import plater
         print "plate function activated"
         plater.stlwin(size=(800,580),callback=self.platecb,parent=self).Show()
-    
+
     def platecb(self,name):
         print "plated: "+name
         self.loadfile(None,name)
-        
+
     def sdmenu(self,e):
         obj = e.GetEventObject()
         popupmenu=wx.Menu()
@@ -731,7 +737,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         item = popupmenu.Append(-1,_("SD Print"))
         self.Bind(wx.EVT_MENU,self.sdprintfile,id=item.GetId())
         self.panel.PopupMenu(popupmenu, obj.GetPosition())
-    
+
     def htemp_change(self,event):
         if self.hsetpoint > 0:
             self.do_settemp("")
@@ -741,7 +747,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if self.bsetpoint > 0:
             self.do_bedtemp("")
         wx.CallAfter(self.btemp.SetInsertionPoint,0)
-    
+
     def showwin(self,event):
         if(self.f is not None):
             self.gwindow.Show(True)
@@ -761,23 +767,23 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.settings._set("xy_feedrate",self.xyfeedc.GetValue())
         except:
             pass
-        
-        
+
+
     def toggleview(self,e):
         if(self.mini):
             self.mini=False
             self.topsizer.Fit(self)
-        
+
             #self.SetSize(winsize)
             wx.CallAfter(self.minibtn.SetLabel, _("Mini mode"))
-            
+
         else:
             self.mini=True
             self.uppersizer.Fit(self)
-        
+
             #self.SetSize(winssize)
             wx.CallAfter(self.minibtn.SetLabel, _("Full mode"))
-    
+
     def cbuttons_reload(self):
         allcbs = []
         ubs=self.upperbottomsizer
@@ -829,10 +835,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             else:
                 cs.Add(b,pos=((i-4)/3,(i-4)%3))
         self.topsizer.Layout()
-    
+
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
-    
+
     def do_button(self,argstr):
         def nextarg(rest):
             rest=rest.lstrip()
@@ -865,7 +871,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #except Exception,x:
         #    print "Bad syntax for button definition, see 'help button'"
         #    print x
-        
+
 
     def cbutton_save(self,n,bdef,new_n=None):
         if new_n is None: new_n=n
@@ -921,7 +927,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #while len(self.custombuttons) and self.custombuttons[-1] is None:
         #    del self.custombuttons[-1]
         wx.CallAfter(self.cbuttons_reload)
-    
+
     def cbutton_order(self,e,button,dir):
         n = button.custombutton
         if dir<0:
@@ -935,7 +941,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #if self.custombuttons[-1] is None:
         #    del self.custombuttons[-1]
         self.cbuttons_reload()
-    
+
     def editbutton(self,e):
         if e.IsCommandEvent() or e.ButtonUp(wx.MOUSE_BTN_RIGHT):
             if e.IsCommandEvent():
@@ -967,7 +973,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.dragpos = scrpos
                 e.Skip()
                 return
-            else: 
+            else:
                 dx,dy=self.dragpos[0]-scrpos[0],self.dragpos[1]-scrpos[1]
                 if dx*dx+dy*dy < 5*5: # threshold to detect dragging for jittery mice
                     e.Skip()
@@ -998,11 +1004,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.dragging.label = obj.s_label = obj.GetLabel()
                     self.dragging.bgc = obj.s_bgc = obj.GetBackgroundColour()
                     self.dragging.fgc = obj.s_fgc = obj.GetForegroundColour()
-            else: 
+            else:
                 # dragging in progress
                 self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
                 wx.CallAfter(self.dragging.Refresh)
-                btns = self.custombuttonbuttons 
+                btns = self.custombuttonbuttons
                 dst = None
                 src = self.dragging.sourcebutton
                 drg = self.dragging
@@ -1072,7 +1078,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             del self.dragpos
         else:
             e.Skip()
-    
+
     def homeButtonClicked(self, corner):
         if corner == 0: # upper-left
             self.onecmd('home X')
@@ -1082,17 +1088,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.onecmd('home Z')
         if corner == 3: # lower-left
             self.onecmd('home')
-    
+
     def moveXY(self, x, y):
         if x != 0:
             self.onecmd('move X %s' % x)
         if y != 0:
             self.onecmd('move Y %s' % y)
-    
+
     def moveZ(self, z):
         if z != 0:
             self.onecmd('move Z %s' % z)
-            
+
     def procbutton(self,e):
         try:
             if hasattr(e.GetEventObject(),"custombutton"):
@@ -1105,7 +1111,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             print _("event object missing")
             self.cur_button=None
             raise
-        
+
     def kill(self,e):
         self.statuscheck=0
         self.p.recvcb=None
@@ -1119,7 +1125,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         self.Destroy()
-        
+
     def do_monitor(self,l=""):
         if l.strip()=="":
             self.monitorbox.SetValue(not self.monitorbox.GetValue())
@@ -1136,11 +1142,17 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             print _("Monitoring printer.")
         else:
             print _("Done monitoring.")
-            
-        
+
+
     def setmonitor(self,e):
         self.monitor=self.monitorbox.GetValue()
-        
+        if self.monitor:
+            self.graph.StartPlotting(1000)
+        else:
+            self.graph.StopPlotting()
+
+
+
     def sendline(self,e):
         command=self.commandbox.GetValue()
         if not len(command):
@@ -1151,7 +1163,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def clearOutput(self,e):
         self.logbox.Clear()
-        
+
     def statuschecker(self):
         try:
             while(self.statuscheck):
@@ -1166,7 +1178,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
                     self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                    self.graph.SetExtruder1Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
                     self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                    self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
                 except:
                     pass
                 fractioncomplete = 0.0
@@ -1212,7 +1226,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pass
         if cout is None:
             cout=cStringIO.StringIO()
-        
+
         sys.stdout=cout
         retval=None
         try:
@@ -1228,7 +1242,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
             try:
                 self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                self.graph.SetExtruder1Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
             except:
                 pass
         tstring=l.rstrip()
@@ -1238,7 +1253,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             #wx.CallAfter(self.logbox.AppendText,tstring+"\n")
         for i in self.recvlisteners:
             i(l)
-    
+
     def listfiles(self,line):
         if "Begin file list" in line:
             self.listing=1
@@ -1248,7 +1263,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.filesloaded)
         elif self.listing:
             self.sdfiles+=[line.replace("\n","").replace("\r","").lower()]
-        
+
     def waitforsdresponse(self,l):
         if "file.open failed" in l:
             wx.CallAfter(self.status.SetStatusText,_("Opening file failed."))
@@ -1276,9 +1291,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.percentdone=100.0*int(vals[0])/int(vals[1])
             except:
                 pass
-    
-        
-        
+
+
+
     def filesloaded(self):
         dlg=wx.SingleChoiceDialog(self, _("Select the file to print"), _("Pick SD file"), self.sdfiles)
         if(dlg.ShowModal()==wx.ID_OK):
@@ -1286,7 +1301,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if len(target):
                 self.recvlisteners+=[self.waitforsdresponse]
                 self.p.send_now("M23 "+target.lower())
-        
+
         #print self.sdfiles
         pass
 
@@ -1299,7 +1314,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.recvlisteners+=[self.listfiles]
         self.p.send_now("M21")
         self.p.send_now("M20")
-        
+
     def skein_func(self):
         try:
             import shlex
@@ -1318,7 +1333,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             print _("Failed to execute slicing software: ")
             self.stopsf=1
             traceback.print_exc(file=sys.stdout)
-        
+
     def skein_monitor(self):
         while(not self.stopsf):
             try:
@@ -1334,7 +1349,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             of.close
             if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
-                    
+
             wx.CallAfter(self.status.SetStatusText,_("Loaded ")+self.filename+_(", %d lines") % (len(self.f),))
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
@@ -1345,8 +1360,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.loadbtn.SetLabel,_("Load File"))
         self.skeining=0
         self.skeinp=None
-        
-        
+
+
     def skein(self,filename):
         wx.CallAfter(self.loadbtn.SetLabel,_("Cancel"))
         print _("Slicing ") + filename
@@ -1356,7 +1371,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.skeining=1
         thread(target=self.skein_func).start()
         thread(target=self.skein_monitor).start()
-        
+
     def loadfile(self,event,filename=None):
         if self.skeining and self.skeinp is not None:
             self.skeinp.terminate()
@@ -1397,7 +1412,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target=self.loadviz).start()
-                
+
     def loadviz(self):
         Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
@@ -1416,7 +1431,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #print "generated 3d view in %f s"%(time.time()-t0)
         self.gviz.showall=1
         wx.CallAfter(self.gviz.Refresh)
-                
+
     def printfile(self,event):
         self.extra_print_time=0
         if self.paused:
@@ -1427,7 +1442,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.p.send_now("M26 S0")
                 self.p.send_now("M24")
                 return
-        
+
         if self.f is None or not len(self.f):
             wx.CallAfter(self.status.SetStatusText, _("No file loaded. Please use load first."))
             return
@@ -1436,19 +1451,19 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             return
         self.on_startprint()
         self.p.startprint(self.f)
-    
+
     def on_startprint(self):
         wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
         wx.CallAfter(self.pausebtn.Enable)
         wx.CallAfter(self.printbtn.SetLabel, _("Restart"))
-    
+
     def endupload(self):
         self.p.send_now("M29 ")
         wx.CallAfter(self.status.SetStatusText, _("File upload complete"))
         time.sleep(0.5)
         self.p.clear=True
         self.uploading=False
-        
+
     def uploadtrigger(self,l):
         if "Writing to file" in l:
             self.uploading=True
@@ -1457,7 +1472,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.recvlisteners.remove(self.uploadtrigger)
         elif "open failed, File" in l:
             self.recvlisteners.remove(self.uploadtrigger)
-        
+
     def upload(self,event):
         if not self.f or not len(self.f):
             return
@@ -1469,7 +1484,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.p.send_now("M28 "+str(dlg.GetValue()))
             self.recvlisteners+=[self.uploadtrigger]
         pass
-        
+
     def pause(self,event):
         print _("Paused.")
         if not self.paused:
@@ -1490,13 +1505,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             else:
                 self.p.resume()
             wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-    
-        
+
+
     def sdprintfile(self,event):
         self.on_startprint()
         threading.Thread(target=self.getfiles).start()
         pass
-        
+
     def connect(self,event):
         print _("Connecting...")
         port=None
@@ -1526,13 +1541,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if baud != self.settings.baudrate:
             self.set("baudrate",str(baud))
         threading.Thread(target=self.statuschecker).start()
-        
-        
+
+
     def disconnect(self,event):
         print _("Disconnected.")
         self.p.disconnect()
         self.statuscheck=False
-       
+
         self.connectbtn.SetLabel("Connect")
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
 
@@ -1544,7 +1559,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         # Disable XYButtons and ZButtons
         wx.CallAfter(self.xyb.disable)
         wx.CallAfter(self.zb.disable)
-        
+
         if self.paused:
             self.p.paused=0
             self.p.printing=0
@@ -1553,8 +1568,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.paused=0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
-                
-    
+
+
     def reset(self,event):
         print _("Reset.")
         dlg=wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES|wx.NO)
@@ -1566,7 +1581,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.p.paused=0
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 self.paused=0
-    
+
     def get_build_dimensions(self,bdim):
         import re
         # a string containing up to six numbers delimited by almost anything
@@ -1678,7 +1693,7 @@ class options(wx.Dialog):
             grid.Add(ctrls[k,0],0,wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
             grid.Add(ctrls[k,1],1,wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
         topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0,wx.EXPAND)
-        self.SetSizer(topsizer)        
+        self.SetSizer(topsizer)
         topsizer.Layout()
         topsizer.Fit(self)
         if self.ShowModal()==wx.ID_OK:
@@ -1686,7 +1701,7 @@ class options(wx.Dialog):
                 if ctrls[k,1].GetValue() != str(v):
                     pronterface.set(k,str(ctrls[k,1].GetValue()))
         self.Destroy()
-        
+
 class ButtonEdit(wx.Dialog):
     """Custom button edit dialog"""
     def __init__(self,pronterface):
@@ -1734,7 +1749,7 @@ class ButtonEdit(wx.Dialog):
         self.command.SetValue(macro)
         if self.name.GetValue()=="":
             self.name.SetValue(macro)
-    
+
 class TempGauge(wx.Panel):
     def __init__(self,parent,size=(200,22),title="",maxval=240,gaugeColour=None):
         wx.Panel.__init__(self,parent,-1,size=size)
@@ -1829,12 +1844,12 @@ class TempGauge(wx.Panel):
         #gc.SetFont(gc.CreateFont(wx.Font(12,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
         #gc.DrawText(text,29,-2)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
-        gc.DrawText(self.title,x0+19,y0+1)
-        gc.DrawText(text,      x0+153,y0+1)
+        gc.DrawText(self.title,x0+19,y0+4)
+        gc.DrawText(text,      x0+133,y0+4)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD)))
-        gc.DrawText(self.title,x0+18,y0+0)
-        gc.DrawText(text,      x0+152,y0+0)
-    
+        gc.DrawText(self.title,x0+18,y0+3)
+        gc.DrawText(text,      x0+132,y0+3)
+
 if __name__ == '__main__':
     app = wx.App(False)
     main = PronterWindow()
