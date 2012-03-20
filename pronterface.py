@@ -199,6 +199,30 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 pass
             #threading.Thread(target=self.gviz.addgcode,args=(line,1)).start()
             #self.gwindow.p.addgcode(line,hilight=1)
+        if("M104" in line or "M109" in line):
+            if("S" in line):
+                try:
+                    temp=float(line.split("S")[1].split("*")[0])
+                    self.hottgauge.SetTarget(temp)
+                    self.graph.SetExtruder1TargetTemperature(temp)
+                except:
+                    pass
+            try:
+                self.sentlines.put_nowait(line)
+            except:
+                pass
+        if("M140" in line):
+            if("S" in line):
+                try:
+                    temp=float(line.split("S")[1].split("*")[0])
+                    self.bedtgauge.SetTarget(temp)
+                    self.graph.SetBedTargetTemperature(temp)
+                except:
+                    pass
+            try:
+                self.sentlines.put_nowait(line)
+            except:
+                pass
 
     def do_extrude(self,l=""):
         try:
