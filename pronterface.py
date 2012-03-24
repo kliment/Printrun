@@ -204,7 +204,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 try:
                     temp=float(line.split("S")[1].split("*")[0])
                     self.hottgauge.SetTarget(temp)
-                    self.graph.SetExtruder1TargetTemperature(temp)
+                    self.graph.SetExtruder0TargetTemperature(temp)
                 except:
                     pass
             try:
@@ -254,7 +254,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     print _("Setting hotend temperature to %f degrees Celsius.") % f
                     self.hsetpoint=f
                     self.hottgauge.SetTarget(int(f))
-                    self.graph.SetExtruder1TargetTemperature(int(f))
+                    self.graph.SetExtruder0TargetTemperature(int(f))
                     if f>0:
                         wx.CallAfter(self.htemp.SetValue,l)
                         self.set("last_temperature",str(f))
@@ -1202,7 +1202,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
                     self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    self.graph.SetExtruder1Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                    self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
                     self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
                     self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
                 except:
@@ -1266,7 +1266,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
             try:
                 self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                self.graph.SetExtruder1Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
                 self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
             except:
                 pass
