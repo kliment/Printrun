@@ -256,8 +256,10 @@ class stlwin(wx.Frame):
             self.eb = wx.Button(self.panel, label=_("Export"), pos=(100, 0))
             self.eb.Bind(wx.EVT_BUTTON, self.export)
         else:
-            self.eb = wx.Button(self.panel, label=_("Done"), pos=(100, 0))
-            self.eb.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
+            self.eb = wx.Button(self.panel, label=_("Export"), pos=(200, 205))
+            self.eb.Bind(wx.EVT_BUTTON, self.export)
+            self.edb = wx.Button(self.panel, label=_("Done"), pos=(100, 0))
+            self.edb.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
             self.eb = wx.Button(self.panel, label=_("Cancel"), pos=(200, 0))
             self.eb.Bind(wx.EVT_BUTTON, lambda e: self.Destroy())
         self.sb = wx.Button(self.panel, label=_("Snap to Z = 0"), pos=(00, 255))
@@ -388,7 +390,7 @@ class stlwin(wx.Frame):
             facets += i.facets
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
-        print _("wrote "), name
+        print _("wrote %s") % name
 
     def right(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
