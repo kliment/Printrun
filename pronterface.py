@@ -916,6 +916,18 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def cbutton_edit(self,e,button=None):
         bedit=ButtonEdit(self)
+        def okhandler(event):
+            if event.GetId()==wx.ID_OK:
+                if n==len(self.custombuttons):
+                    self.custombuttons+=[None]
+                self.custombuttons[n]=[bedit.name.GetValue().strip(),bedit.command.GetValue().strip()]
+                if bedit.color.GetValue().strip()!="":
+                    self.custombuttons[n]+=[bedit.color.GetValue()]
+                self.cbutton_save(n,self.custombuttons[n])
+            bedit.Destroy()
+            self.cbuttons_reload()
+
+        bedit.Bind(wx.EVT_BUTTON,okhandler)
         if button is not None:
             n = button.custombutton
             bedit.name.SetValue(button.properties[0])
@@ -934,16 +946,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             n = len(self.custombuttons)
             while n>0 and self.custombuttons[n-1] is None:
                 n -= 1
-        if bedit.ShowModal()==wx.ID_OK:
-            if n==len(self.custombuttons):
-                self.custombuttons+=[None]
-            self.custombuttons[n]=[bedit.name.GetValue().strip(),bedit.command.GetValue().strip()]
-            if bedit.color.GetValue().strip()!="":
-                self.custombuttons[n]+=[bedit.color.GetValue()]
-            self.cbutton_save(n,self.custombuttons[n])
-        bedit.Destroy()
-        self.cbuttons_reload()
-
+        bedit.Show()
+        
+        
     def cbutton_remove(self,e,button):
         n = button.custombutton
         self.custombuttons[n]=None
@@ -1662,6 +1667,7 @@ class macroed(wx.Dialog):
         topsizer.Fit(self)
         self.Show()
         self.e.SetFocus()
+        
     def save(self,ev):
         self.Destroy()
         if not self.gcode:
@@ -1753,6 +1759,8 @@ class ButtonEdit(wx.Dialog):
         topsizer.Add( (0,0),1)
         topsizer.Add(self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL),0,wx.ALIGN_CENTER)
         self.SetSizer(topsizer)
+        self.handler=None
+    
     def macrob_enabler(self,e):
         macro = self.command.GetValue()
         valid = False
