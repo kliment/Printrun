@@ -1441,7 +1441,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target=self.loadviz).start()
-
+        dlg.Destroy()
+        
     def loadviz(self):
         Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
