@@ -163,7 +163,7 @@ class setframe(wx.Frame):
             print len(layers[0]), "layers found, total height", layers[1]*len(layers[0]), "mm"
             self.thickness.SetValue(str(layers[1]))
             self.layers=layers
-        
+        dlg.Destroy()
 
     def startdisplay(self,event):
         self.f.Raise()

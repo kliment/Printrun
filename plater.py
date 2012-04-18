@@ -374,6 +374,7 @@ class stlwin(wx.Frame):
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
             self.writefiles(name)
+        dlg.Destroy()
 
     def writefiles(self, name):
         sf = open(name.replace(".", "_") + ".scad", "w")
@@ -401,6 +402,7 @@ class stlwin(wx.Frame):
                 self.load_stl(event, name)
             elif (name.lower().endswith(".scad")):
                 self.load_scad(event, name)
+        dlg.Destroy()
 
     def load_scad(self, event, name):
         lf = open(name)
