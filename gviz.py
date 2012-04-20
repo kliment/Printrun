@@ -14,8 +14,6 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 import wx,time
 
-CurZ=0
-
 class window(wx.Frame):
     def __init__(self,f,size=(600,600),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
         wx.Frame.__init__(self,None,title="Gcode view, shift to move view, mousewheel to set layer",size=(size[0],size[1]))
@@ -269,7 +267,6 @@ class gviz(wx.Panel):
                     target[1]=float(i[1:])
                 elif i[0]=="z":
                     target[2]=float(i[1:])
-                    CurZ=target[2]
                 elif i[0]=="e":
                     target[3]=float(i[1:])
                 elif i[0]=="f":
