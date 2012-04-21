@@ -17,6 +17,7 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
+# Added "Find" routine in GCode editor
 import os, gettext, Queue, re
 
 if os.path.exists('/usr/share/pronterface/locale'):
