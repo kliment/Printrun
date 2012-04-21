@@ -17,6 +17,7 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
+# Added "Find" routine in GCode editor
 import os, gettext, Queue, re
 
 if os.path.exists('/usr/share/pronterface/locale'):
@@ -38,6 +39,7 @@ StringIO=cStringIO
 
 thread=threading.Thread
 winsize=(800,500)
+layerindex=0
 if os.name=="nt":
     winsize=(800,530)
     try:
@@ -916,18 +918,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def cbutton_edit(self,e,button=None):
         bedit=ButtonEdit(self)
-        def okhandler(event):
-            if event.GetId()==wx.ID_OK:
-                if n==len(self.custombuttons):
-                    self.custombuttons+=[None]
-                self.custombuttons[n]=[bedit.name.GetValue().strip(),bedit.command.GetValue().strip()]
-                if bedit.color.GetValue().strip()!="":
-                    self.custombuttons[n]+=[bedit.color.GetValue()]
-                self.cbutton_save(n,self.custombuttons[n])
-            bedit.Destroy()
-            self.cbuttons_reload()
-
-        bedit.Bind(wx.EVT_BUTTON,okhandler)
         if button is not None:
             n = button.custombutton
             bedit.name.SetValue(button.properties[0])
@@ -946,9 +936,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             n = len(self.custombuttons)
             while n>0 and self.custombuttons[n-1] is None:
                 n -= 1
-        bedit.Show()
-        
-        
+        if bedit.ShowModal()==wx.ID_OK:
+            if n==len(self.custombuttons):
+                self.custombuttons+=[None]
+            self.custombuttons[n]=[bedit.name.GetValue().strip(),bedit.command.GetValue().strip()]
+            if bedit.color.GetValue().strip()!="":
+                self.custombuttons[n]+=[bedit.color.GetValue()]
+            self.cbutton_save(n,self.custombuttons[n])
+        bedit.Destroy()
+        self.cbuttons_reload()
+
     def cbutton_remove(self,e,button):
         n = button.custombutton
         self.custombuttons[n]=None
@@ -1441,8 +1438,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target=self.loadviz).start()
-        dlg.Destroy()
-        
+
     def loadviz(self):
         Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
@@ -1635,6 +1631,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
 class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
+    
     def __init__(self,macro_name,definition,callback,gcode=False):
         self.indent_chars = "  "
         title="  macro %s"
@@ -1645,19 +1642,22 @@ class macroed(wx.Dialog):
         self.callback = callback
         self.panel=wx.Panel(self,-1)
         titlesizer=wx.BoxSizer(wx.HORIZONTAL)
-        title = wx.StaticText(self.panel,-1,title%macro_name)
+        titletext = wx.StaticText(self.panel,-1,"              _")  #title%macro_name)
         #title.SetFont(wx.Font(11,wx.NORMAL,wx.NORMAL,wx.BOLD))
-        titlesizer.Add(title,1)
+        titlesizer.Add(titletext,1)
+        self.findb = wx.Button(self.panel,  -1, _("Find"))  #New button for "Find" (Jezmy)
+        self.findb.Bind(wx.EVT_BUTTON,  self.find)
         self.okb = wx.Button(self.panel, -1, _("Save"))
         self.okb.Bind(wx.EVT_BUTTON, self.save)
         self.Bind(wx.EVT_CLOSE, self.close)
+        titlesizer.Add(self.findb)
         titlesizer.Add(self.okb)
         self.cancelb = wx.Button(self.panel, -1, _("Cancel"))
         self.cancelb.Bind(wx.EVT_BUTTON, self.close)
         titlesizer.Add(self.cancelb)
         topsizer=wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(titlesizer,0,wx.EXPAND)
-        self.e=wx.TextCtrl(self.panel,style=wx.TE_MULTILINE+wx.HSCROLL,size=(200,200))
+        self.e=wx.TextCtrl(self.panel,style=wx.TE_MULTILINE+wx.HSCROLL,size=(400,400))
         if not self.gcode:
             self.e.SetValue(self.unindent(definition))
         else:
@@ -1669,6 +1669,37 @@ class macroed(wx.Dialog):
         self.Show()
         self.e.SetFocus()
         
+    def find(self,ev):
+        # Ask user what to look for, find it and point at it ...  (Jezmy)
+        S = self.e.GetStringSelection()
+        if not S :
+            S = "Z"
+        FindValue = wx.GetTextFromUser('Please enter a search string:', caption="Search", default_value=S, parent=None)
+        somecode = self.e.GetValue()
+        numLines = len(somecode)
+        position = somecode.find(FindValue,  self.e.GetInsertionPoint()) 
+        if position == -1 :
+         #   ShowMessage(self,-1,  "Not found!")
+            titletext = wx.TextCtrl(self.panel,-1,"Not Found!")  
+
+                
+        else:   
+        # self.title.SetValue("Position : "+str(position))    
+    
+            titletext = wx.TextCtrl(self.panel,-1,str(position))    
+        
+            # ananswer = wx.MessageBox(str(numLines)+" Lines detected in file\n"+str(position), "OK")  
+            self.e.SetFocus()
+            self.e.SetInsertionPoint(position) 
+            self.e.SetSelection(position,  position + len(FindValue))
+            self.e.ShowPosition(position)
+        
+    def ShowMessage(self, ev , message):
+        dlg = wxMessageDialog(self, message,
+                              "Info!", wxOK | wxICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
+                
     def save(self,ev):
         self.Destroy()
         if not self.gcode:
@@ -1760,8 +1791,6 @@ class ButtonEdit(wx.Dialog):
         topsizer.Add( (0,0),1)
         topsizer.Add(self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL),0,wx.ALIGN_CENTER)
         self.SetSizer(topsizer)
-        self.handler=None
-    
     def macrob_enabler(self,e):
         macro = self.command.GetValue()
         valid = False
