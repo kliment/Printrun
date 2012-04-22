@@ -12,13 +12,15 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
-
 import wx,time
-
+ID_ABOUT = 101
+ID_EXIT = 110
 class window(wx.Frame):
     def __init__(self,f,size=(600,600),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
         wx.Frame.__init__(self,None,title="Gcode view, shift to move view, mousewheel to set layer",size=(size[0],size[1]))
         self.p=gviz(self,size=size,build_dimensions=build_dimensions,grid=grid,extrusion_width=extrusion_width)
+        self.CreateStatusBar(1);
+        self.SetStatusText("Layer number and Z position show here when you scroll");
         s=time.time()
         #print time.time()-s
         self.initpos=[0,0]
@@ -28,7 +30,7 @@ class window(wx.Frame):
         self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.p.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
         self.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
-    
+               
     def mouse(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
@@ -76,6 +78,7 @@ class window(wx.Frame):
 class gviz(wx.Panel):
     def __init__(self,parent,size=(200,200),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
         wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
+        self.parent=parent
         self.size=size
         self.build_dimensions=build_dimensions
         self.grid=grid
@@ -122,12 +125,18 @@ class gviz(wx.Panel):
     def layerup(self):
         if(self.layerindex+1<len(self.layers)):
             self.layerindex+=1
+            self.parent.SetStatusText("Layer "+str(self.layerindex +1)+" - Going Up - Z = "+str(self.layers[self.layerindex])+" mm",0)
+
+    #        self.parent.setstatustext("Layer = "+str(self.layerindex) , 0)
             self.repaint()
             self.Refresh()
     
     def layerdown(self):
         if(self.layerindex>0):
             self.layerindex-=1
+            self.parent.SetStatusText("Layer "+str(self.layerindex + 1)+" - Going Down - Z = "+str(self.layers[self.layerindex])+ " mm",0)
+
+          #  self.parent.setstatustext("Layer = "+str(self.layerindex), 0)
             self.repaint()
             self.Refresh()
     
