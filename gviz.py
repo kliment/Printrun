@@ -23,6 +23,14 @@ class window(wx.Frame):
         # Set up a status bar for displaying info  (Jezmy)
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
+        self.bu=wx.Button(self.p,-1,"U",pos=(0,0),size=(40,40))
+        self.bd=wx.Button(self.p,-1,"D",pos=(0,40),size=(40,40))
+        self.bi=wx.Button(self.p,-1,"+",pos=(40,0),size=(40,40))
+        self.bo=wx.Button(self.p,-1,"-",pos=(40,40),size=(40,40))
+        self.bu.Bind(wx.EVT_BUTTON,lambda x:self.p.layerup())
+        self.bd.Bind(wx.EVT_BUTTON,lambda x:self.p.layerdown())
+        self.bi.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1.2))
+        self.bo.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1/1.2))
         
         s=time.time()
         #print time.time()-s
