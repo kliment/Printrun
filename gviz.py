@@ -36,6 +36,10 @@ class window(wx.Frame):
         #print time.time()-s
         self.initpos=[0,0]
         self.p.Bind(wx.EVT_KEY_DOWN,self.key)
+        self.bu.Bind(wx.EVT_KEY_DOWN,self.key)
+        self.bd.Bind(wx.EVT_KEY_DOWN,self.key)
+        self.bi.Bind(wx.EVT_KEY_DOWN,self.key)
+        self.bo.Bind(wx.EVT_KEY_DOWN,self.key)
         self.Bind(wx.EVT_KEY_DOWN,self.key)
         self.p.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
