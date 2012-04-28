@@ -145,7 +145,7 @@ def estimate_duration(g):
                 y = get_coordinate_value("Y", parts[1:])
                 if y is None: y=lasty
                 z = get_coordinate_value("Z", parts[1:])
-                if z is None: z=lastz
+                if (z is None) or  (z<lastz): z=lastz # Do not increment z if it's below the previous (Lift z on move fix)
                 e = get_coordinate_value("E", parts[1:])
                 if e is None: e=laste
                 f = get_coordinate_value("F", parts[1:])
