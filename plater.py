@@ -274,7 +274,7 @@ class stlwin(wx.Frame):
         self.ab.Bind(wx.EVT_BUTTON, self.autoplate)
         self.basedir = "."
         self.models = {}
-        self.SetBackgroundColour((10, 10, 10))
+        #self.SetBackgroundColour((10, 10, 10))
         self.mainsizer.Add(self.panel)
         #self.mainsizer.AddSpacer(10)
         if glview:
