@@ -109,7 +109,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         zcol=(180,255,180)
         self.cpbuttons=[
             [_("Motors off"),("M84"),(0,0),(250,250,250),(1,2)],
-            [_("Check temp"),("M105"),(2,5),(225,200,200),(1,2)],
+            [_("Check temp"),("M105"),(2,5),(225,200,200),(1,1)],
             [_("Extrude"),("extrude"),(4,0),(225,200,200),(1,2)],
             [_("Reverse"),("reverse"),(5,0),(225,200,200),(1,2)],
         ]
@@ -520,19 +520,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.resetbtn=wx.Button(self.panel,-1,_("Reset"),style=wx.BU_EXACTFIT)
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
         uts.Add(self.resetbtn)
-        self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
-        self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
+        #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
+        #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
 
-        uts.Add((25,-1))
-        self.monitorbox=wx.CheckBox(self.panel,-1,_("Monitor Printer"))
-        uts.Add(self.monitorbox,0,wx.ALIGN_CENTER)
-        self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
-
-        uts.Add((15,-1),flag=wx.EXPAND)
-        uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
+        #uts.Add((25,-1))
+        
+        #uts.Add((15,-1),flag=wx.EXPAND)
+        #uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
 
         #SECOND ROW
-        ubs=self.upperbottomsizer=wx.BoxSizer(wx.HORIZONTAL)
+        ubs=self.upperbottomsizer=uts#wx.BoxSizer(wx.HORIZONTAL)
 
         self.loadbtn=wx.Button(self.panel,-1,_("Load file"),style=wx.BU_EXACTFIT)
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
@@ -600,6 +597,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.btndict[i[1]]=btn
             self.printerControls.append(btn)
             lls.Add(btn,pos=i[2],span=i[4])
+        
+        self.monitorbox=wx.CheckBox(self.panel,-1,_("Watch"))
+        lls.Add(self.monitorbox,pos=(2,6))
+        self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
+
         
         lls.Add(wx.StaticText(self.panel,-1,_("Heat")),pos=(2,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
@@ -719,7 +721,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         self.uppersizer=wx.BoxSizer(wx.VERTICAL)
         self.uppersizer.Add(self.uppertopsizer)
-        self.uppersizer.Add(self.upperbottomsizer)
+        #self.uppersizer.Add(self.upperbottomsizer)
 
         self.lowersizer=wx.BoxSizer(wx.HORIZONTAL)
         self.lowersizer.Add(lls)
@@ -817,9 +819,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         allcbs = []
         ubs=self.upperbottomsizer
         cs=self.centersizer
-        for item in ubs.GetChildren():
-            if hasattr(item.GetWindow(),"custombutton"):
-                allcbs += [(ubs,item.GetWindow())]
+        #for item in ubs.GetChildren():
+        #    if hasattr(item.GetWindow(),"custombutton"):
+        #        allcbs += [(ubs,item.GetWindow())]
         for item in cs.GetChildren():
             if hasattr(item.GetWindow(),"custombutton"):
                 allcbs += [(cs,item.GetWindow())]
@@ -859,10 +861,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             #else:
             #    b.Bind(wx.EVT_BUTTON,lambda e:e.Skip())
             self.custombuttonbuttons.append(b)
-            if i<4:
-                ubs.Add(b)
-            else:
-                cs.Add(b,pos=((i-4)/3,(i-4)%3))
+            #if i<4:
+            #    ubs.Add(b)
+            #else:
+            cs.Add(b,pos=((i)/4,(i)%4))
         self.topsizer.Layout()
 
     def help_button(self):
