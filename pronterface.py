@@ -579,7 +579,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         #lls.Add((200,375))
 
-        self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked)
+        self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked, self.spacebarAction)
         lls.Add(self.xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
         self.zb = ZButtons(self.panel, self.moveZ)
         lls.Add(self.zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
@@ -740,7 +740,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.panel.Fit()
         #uts.Layout()
         self.cbuttons_reload()
-
 
     def plate(self,e):
         import plater
@@ -1117,16 +1116,26 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.onecmd('home Z')
         if corner == 3: # lower-left
             self.onecmd('home')
+        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
+        self.zb.clearRepeat()
 
     def moveXY(self, x, y):
         if x != 0:
             self.onecmd('move X %s' % x)
         if y != 0:
             self.onecmd('move Y %s' % y)
+        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
+        self.zb.clearRepeat()
 
     def moveZ(self, z):
         if z != 0:
             self.onecmd('move Z %s' % z)
+        # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
+        self.xyb.clearRepeat()
+
+    def spacebarAction(self):
+        self.zb.repeatLast()
+        self.xyb.repeatLast()
 
     def procbutton(self,e):
         try:
