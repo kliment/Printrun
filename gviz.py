@@ -272,6 +272,8 @@ class gviz(wx.Panel):
         
         def _readgcode():
             target=self.lastpos[:]
+            target[5]=0.0
+            target[6]=0.0
             if hilight:
                 target=self.hilightpos[:]
             for i in gcode:
