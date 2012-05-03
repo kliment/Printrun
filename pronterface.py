@@ -1272,15 +1272,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.tempreport=l
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
             try:
-                self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
                 self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
                 self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
             except:
                 pass
         tstring=l.rstrip()
         #print tstring
-        if(tstring!="ok"):
-            print tstring
+        if (tstring!="ok" and tstring!="wait"):
+            print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
             #wx.CallAfter(self.logbox.AppendText,tstring+"\n")
         for i in self.recvlisteners:
             i(l)
