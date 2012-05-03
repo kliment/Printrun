@@ -165,6 +165,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
 
+            import shlex
+            param = self.settings.final_command
+            pararray=[i.replace("$s",str(self.filename)).replace("$t", str(time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime+self.extra_print_time))))).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
+            self.finalp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
 
     def online(self):
         print _("Printer is now online.")
