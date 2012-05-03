@@ -46,6 +46,8 @@ class ZButtons(BufferedCanvas):
         self.orderOfMagnitudeIdx = 0 # 0 means '1', 1 means '10', 2 means '100', etc.
         self.moveCallback = moveCallback
         self.enabled = False
+        # Remember the last clicked value, so we can repeat when spacebar pressed
+        self.lastValue = None
 
         BufferedCanvas.__init__(self, parent, ID)
 
@@ -64,6 +66,13 @@ class ZButtons(BufferedCanvas):
     def enable(self):
         self.enabled = True
         self.update()
+
+    def repeatLast(self):
+        if self.lastValue:
+            self.moveCallback(self.lastValue)
+
+    def clearRepeat(self):
+        self.lastValue = None
 
     def lookupRange(self, ydist):
         idx = -1
@@ -143,6 +152,7 @@ class ZButtons(BufferedCanvas):
         if r >= 0:
             value = math.pow(10, self.orderOfMagnitudeIdx) * math.pow(10, r - 1) * d
             if self.moveCallback:
+                self.lastValue = value
                 self.moveCallback(value)
 
     def OnLeaveWindow(self, evt):
