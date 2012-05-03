@@ -108,7 +108,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ycol=(180,180,255)
         zcol=(180,255,180)
         self.cpbuttons=[
-            [_("Motors off"),("M84"),(0,0),(250,250,250),(1,2)],
+            [_("Motors off"),("M84"),None,(250,250,250),0],
             [_("Check temp"),("M105"),(2,5),(225,200,200),(1,1)],
             [_("Extrude"),("extrude"),(4,0),(225,200,200),(1,2)],
             [_("Reverse"),("reverse"),(5,0),(225,200,200),(1,2)],
@@ -567,14 +567,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         #left pane
         lls=self.lowerlsizer=wx.GridBagSizer()
+        llts=wx.BoxSizer(wx.HORIZONTAL)
         #lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,4),span=(1,4))
-        self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,-1))
-        lls.Add(wx.StaticText(self.panel,-1,_("XY:")),pos=(0,2),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        lls.Add(self.xyfeedc,pos=(0,3),span=(1,2))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/min   Z:")),pos=(0,5),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(70,-1))
-        lls.Add(self.zfeedc,pos=(0,6),span=(1,1))
-
+        lls.Add(llts,pos=(0,0),span=(1,9))
         #lls.Add((200,375))
 
         szbuttons=wx.GridBagSizer()
@@ -596,8 +591,19 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btn.Bind(wx.EVT_BUTTON,self.procbutton)
             self.btndict[i[1]]=btn
             self.printerControls.append(btn)
-            lls.Add(btn,pos=i[2],span=i[4])
+            if(i[2]==None):
+                if(i[4]==0):
+                    llts.Add(btn)
+            else:
+                lls.Add(btn,pos=i[2],span=i[4])
         
+        self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,-1))
+        llts.Add(wx.StaticText(self.panel,-1,_("XY:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        llts.Add(self.xyfeedc)
+        llts.Add(wx.StaticText(self.panel,-1,_("mm/min   Z:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(70,-1))
+        llts.Add(self.zfeedc,)
+
         self.monitorbox=wx.CheckBox(self.panel,-1,_("Watch"))
         lls.Add(self.monitorbox,pos=(2,6))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
