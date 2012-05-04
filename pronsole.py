@@ -201,6 +201,7 @@ class Settings:
         self.e_feedrate = 300
         self.slicecommand="python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s"
         self.sliceoptscommand="python skeinforge/skeinforge_application/skeinforge.py"
+        self.final_command = ""
 
     def _set(self,key,value):
         try:
@@ -274,6 +275,7 @@ class pronsole(cmd.Cmd):
         self.helpdict["temperature_pla"] = _("Extruder temp for PLA (default: 185 deg C)")
         self.helpdict["xy_feedrate"] = _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")
         self.helpdict["z_feedrate"] = _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")
+        self.helpdict["final_command"] = _("Executable to run when the print is finished")
         self.commandprefixes='MGT$'
     
     def set_temp_preset(self,key,value):
