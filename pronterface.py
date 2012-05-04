@@ -204,8 +204,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if("S" in line):
                 try:
                     temp=float(line.split("S")[1].split("*")[0])
-                    self.hottgauge.SetTarget(temp)
-                    self.graph.SetExtruder0TargetTemperature(temp)
+                    #self.hottgauge.SetTarget(temp)
+                    wx.CallAfter(self.graph.SetExtruder0TargetTemperature,temp)
                 except:
                     pass
             try:
@@ -216,8 +216,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if("S" in line):
                 try:
                     temp=float(line.split("S")[1].split("*")[0])
-                    self.bedtgauge.SetTarget(temp)
-                    self.graph.SetBedTargetTemperature(temp)
+                    #self.bedtgauge.SetTarget(temp)
+                    wx.CallAfter(self.graph.SetBedTargetTemperature,temp)
                 except:
                     pass
             try:
@@ -254,8 +254,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.p.send_now("M104 S"+l)
                     print _("Setting hotend temperature to %f degrees Celsius.") % f
                     self.hsetpoint=f
-                    self.hottgauge.SetTarget(int(f))
-                    self.graph.SetExtruder0TargetTemperature(int(f))
+                    #self.hottgauge.SetTarget(int(f))
+                    wx.CallAfter(self.graph.SetExtruder0TargetTemperature,int(f))
                     if f>0:
                         wx.CallAfter(self.htemp.SetValue,l)
                         self.set("last_temperature",str(f))
@@ -291,8 +291,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.p.send_now("M140 S"+l)
                     print _("Setting bed temperature to %f degrees Celsius.") % f
                     self.bsetpoint=f
-                    self.bedtgauge.SetTarget(int(f))
-                    self.graph.SetBedTargetTemperature(int(f))
+                    #self.bedtgauge.SetTarget(int(f))
+                    wx.CallAfter(self.graph.SetBedTargetTemperature,int(f))
                     if f>0:
                         wx.CallAfter(self.btemp.SetValue,l)
                         self.set("last_bed_temperature",str(f))
@@ -1193,9 +1193,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def setmonitor(self,e):
         self.monitor=self.monitorbox.GetValue()
         if self.monitor:
-            self.graph.StartPlotting(1000)
+            wx.CallAfter(self.graph.StartPlotting,1000)
         else:
-            self.graph.StopPlotting()
+            wx.CallAfter(self.graph.StopPlotting)
 
 
 
@@ -1223,10 +1223,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
-                    self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
-                    self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                    #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                    wx.CallAfter(self.graph.SetExtruder0Temperature,float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                    #self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                    wx.CallAfter(self.graph.SetBedTemperature,float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
                 except:
                     pass
                 fractioncomplete = 0.0
@@ -1288,8 +1288,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
             try:
                 #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                wx.CallAfter(self.graph.SetExtruder0Temperature,float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                wx.CallAfter(self.graph.SetBedTemperature,float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
             except:
                 pass
         tstring=l.rstrip()
