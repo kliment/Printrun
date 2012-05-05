@@ -1298,8 +1298,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 pass
         tstring=l.rstrip()
         #print tstring
-        if (tstring!="ok" and tstring!="wait"):
-            print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
+        #if (tstring!="ok") and (tstring!="wait"):
+           #print "*"+tstring+"*"
+           #print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
             #wx.CallAfter(self.logbox.AppendText,tstring+"\n")
         for i in self.recvlisteners:
             i(l)
