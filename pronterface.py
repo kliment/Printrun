@@ -498,30 +498,30 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #lower section contains the rest of the window - manual controls, console, visualizations
         #TOP ROW:
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
-        self.rescanbtn=wx.Button(self.panel,-1,_("Port"),style=wx.BU_EXACTFIT)
+        self.rescanbtn=wx.Button(self.panel,-1,_("Port"),size=(70, 25))
         self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
 
         uts.Add(self.rescanbtn,0,wx.TOP|wx.LEFT,0)
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
-                style=wx.CB_DROPDOWN)
+                style=wx.CB_DROPDOWN, size=(100, 25))
         self.rescanports()
         uts.Add(self.serialport)
         uts.Add(wx.StaticText(self.panel,-1,"@"),0,wx.RIGHT|wx.ALIGN_CENTER,0)
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
-                style=wx.CB_DROPDOWN)
+                style=wx.CB_DROPDOWN,  size=(100, 25))
         try:
             self.baud.SetValue("115200")
             self.baud.SetValue(str(self.settings.baudrate))
         except:
             pass
         uts.Add(self.baud)
-        self.connectbtn=wx.Button(self.panel,-1,_("Connect"),style=wx.BU_EXACTFIT)
+        self.connectbtn=wx.Button(self.panel,-1,_("Connect"),  size=(70, 25))
         uts.Add(self.connectbtn)
         self.connectbtn.SetToolTipString(_("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
-        self.resetbtn=wx.Button(self.panel,-1,_("Reset"),style=wx.BU_EXACTFIT)
+        self.resetbtn=wx.Button(self.panel,-1,_("Reset"),  size=(70, 25))
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
         uts.Add(self.resetbtn)
         #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
@@ -535,22 +535,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #SECOND ROW
         ubs=self.upperbottomsizer=uts#wx.BoxSizer(wx.HORIZONTAL)
 
-        self.loadbtn=wx.Button(self.panel,-1,_("Load file"),style=wx.BU_EXACTFIT)
+        self.loadbtn=wx.Button(self.panel,-1,_("Load file"),  size=(70, 25))
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
         ubs.Add(self.loadbtn)
-        self.platebtn=wx.Button(self.panel,-1,_("Compose"),style=wx.BU_EXACTFIT)
+        self.platebtn=wx.Button(self.panel,-1,_("Compose"),  size=(70, 25))
         self.platebtn.Bind(wx.EVT_BUTTON,self.plate)
         #self.printerControls.append(self.uploadbtn)
         ubs.Add(self.platebtn)
-        self.sdbtn=wx.Button(self.panel,-1,_("SD"),style=wx.BU_EXACTFIT)
+        self.sdbtn=wx.Button(self.panel,-1,_("SD"),  size=(70, 25))
         self.sdbtn.Bind(wx.EVT_BUTTON,self.sdmenu)
         self.printerControls.append(self.sdbtn)
         ubs.Add(self.sdbtn)
-        self.printbtn=wx.Button(self.panel,-1,_("Print"),style=wx.BU_EXACTFIT)
+        self.printbtn=wx.Button(self.panel,-1,_("Print"),  size=(70, 25))
         self.printbtn.Bind(wx.EVT_BUTTON,self.printfile)
         self.printbtn.Disable()
         ubs.Add(self.printbtn)
-        self.pausebtn=wx.Button(self.panel,-1,_("Pause"),style=wx.BU_EXACTFIT)
+        self.pausebtn=wx.Button(self.panel,-1,_("Pause"),  size=(70, 25))
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
         ubs.Add(self.pausebtn)
         #Right full view
