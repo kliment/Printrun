@@ -39,6 +39,8 @@ StringIO=cStringIO
 thread=threading.Thread
 winsize=(800,500)
 layerindex=0
+global buttonSize
+buttonSize = (70, 25)  # Define sizes for the buttons on top rows
 if os.name=="nt":
     winsize=(800,530)
     try:
@@ -517,11 +519,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         uts.Add(self.baud)
-        self.connectbtn=wx.Button(self.panel,-1,_("Connect"),  size=(70, 25))
+        self.connectbtn=wx.Button(self.panel,-1,_("Connect"),  size=buttonSize)
         uts.Add(self.connectbtn)
         self.connectbtn.SetToolTipString(_("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
-        self.resetbtn=wx.Button(self.panel,-1,_("Reset"),  size=(70, 25))
+        self.resetbtn=wx.Button(self.panel,-1,_("Reset"),  size=buttonSize)
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
         uts.Add(self.resetbtn)
         #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
@@ -535,23 +537,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #SECOND ROW
         ubs=self.upperbottomsizer=uts#wx.BoxSizer(wx.HORIZONTAL)
 
-        self.loadbtn=wx.Button(self.panel,-1,_("Load file"),  size=(70, 25))
+        self.loadbtn=wx.Button(self.panel,-1,_("Load file"),  size=buttonSize)
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
         ubs.Add(self.loadbtn)
-        self.platebtn=wx.Button(self.panel,-1,_("Compose"),  size=(70, 25))
+        self.platebtn=wx.Button(self.panel,-1,_("Compose"),  size=buttonSize)
         self.platebtn.Bind(wx.EVT_BUTTON,self.plate)
         #self.printerControls.append(self.uploadbtn)
         ubs.Add(self.platebtn)
-        self.sdbtn=wx.Button(self.panel,-1,_("SD"),  size=(70, 25))
+        self.sdbtn=wx.Button(self.panel,-1,_("SD"),  size=buttonSize)
         self.sdbtn.Bind(wx.EVT_BUTTON,self.sdmenu)
         self.printerControls.append(self.sdbtn)
         ubs.Add(self.sdbtn)
-        self.printbtn=wx.Button(self.panel,-1,_("Print"),  size=(70, 25))
-        self.printbtn.Bind(wx.EVT_BUTTON,self.printfile)
+        self.printbtn=wx.Button(self.panel,-1,_("Print"),  size=buttonSize)
         self.printbtn.Disable()
         ubs.Add(self.printbtn)
-        self.pausebtn=wx.Button(self.panel,-1,_("Pause"),  size=(70, 25))
-        self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
+        self.pausebtn=wx.Button(self.panel,-1,_("Pause"),  size=buttonSize)
         ubs.Add(self.pausebtn)
         #Right full view
         lrs=self.lowerrsizer=wx.BoxSizer(wx.VERTICAL)
