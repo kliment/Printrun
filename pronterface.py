@@ -1218,13 +1218,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             while(self.statuscheck):
                 string=""
-                if(self.p.online):
-                    string+=_("Printer is online. ")
-                try:
-                    string+=_("Loaded ")+os.path.split(self.filename)[1]+" "
-                except:
-                    pass
-                string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
+                #if(self.p.online):
+                #    string+=_("Printer is online. ")
+                #try:
+                #    string+=_("Loaded ")+os.path.split(self.filename)[1]+" "
+                #except:
+                #    pass
+                #string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
                     #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
