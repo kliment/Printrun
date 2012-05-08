@@ -22,11 +22,11 @@ class window(wx.Frame):
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(1, wx.Image('./images/zoom_in.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
-        toolbar.AddSimpleTool(2, wx.Image('./images/zoom_out.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
+        toolbar.AddSimpleTool(1, wx.Image('./images/zoom_in.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _('Zoom In [+]'), '')
+        toolbar.AddSimpleTool(2, wx.Image('./images/zoom_out.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _('Zoom Out [-]'), '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(3, wx.Image('./images/arrow_up.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
-        toolbar.AddSimpleTool(4, wx.Image('./images/arrow_down.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
+        toolbar.AddSimpleTool(3, wx.Image('./images/arrow_up.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _('Move Up a Layer [U]'), '')
+        toolbar.AddSimpleTool(4, wx.Image('./images/arrow_down.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _('Move Down a Layer [D]'), '')
         toolbar.AddSeparator()
         #toolbar.AddSimpleTool(5, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
         toolbar.Realize()
@@ -38,8 +38,8 @@ class window(wx.Frame):
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id=4)
         #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id=5)
         
-        self.CreateStatusBar(1);
-        self.SetStatusText("Layer number and Z position show here when you scroll");
+        self.CreateStatusBar(1)
+        self.SetStatusText(_("Layer number and Z position show here when you scroll"))
         #self.bu=wx.Button(self.p,-1,"U",pos=(0,100),size=(40,140))
         #self.bd=wx.Button(self.p,-1,"D",pos=(0,140),size=(40,140))
         #self.bi=wx.Button(self.p,-1,"+",pos=(40,100),size=(40,140))

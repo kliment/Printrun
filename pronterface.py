@@ -176,7 +176,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def online(self):
         print _("Printer is now online.")
         self.connectbtn.SetLabel(_("Disconnect"))
-        self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
+        self.connectbtn.SetToolTip(wx.ToolTip(_("Disconnect from the printer")))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.disconnect)
 
         for i in self.printerControls:
@@ -502,21 +502,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #TOP ROW:
         uts=self.uppertopsizer=wx.BoxSizer(wx.HORIZONTAL)
         self.rescanbtn=wx.Button(self.panel,-1,_("Port"),size=buttonSize)
-        self.rescanbtn.SetToolTip(wx.ToolTip("Communication Settings\nClick to rescan ports"))
+        self.rescanbtn.SetToolTip(wx.ToolTip(_("Communication Settings\nClick to rescan ports")))
         self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
 
         uts.Add(self.rescanbtn,0,wx.TOP|wx.LEFT,0)
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
                 style=wx.CB_DROPDOWN, size=(100, 25))
-        self.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
+        self.serialport.SetToolTip(wx.ToolTip(_("Select Port Printer is connected to")))
         self.rescanports()
         uts.Add(self.serialport)
         uts.Add(wx.StaticText(self.panel,-1,"@"),0,wx.RIGHT|wx.ALIGN_CENTER,0)
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
                 style=wx.CB_DROPDOWN,  size=(100, 25))
-        self.baud.SetToolTip(wx.ToolTip("Select Baud rate for printer communication"))
+        self.baud.SetToolTip(wx.ToolTip(_("Select Baud rate for printer communication")))
         try:
             self.baud.SetValue("115200")
             self.baud.SetValue(str(self.settings.baudrate))
@@ -525,11 +525,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         uts.Add(self.baud)
         self.connectbtn=wx.Button(self.panel,-1,_("Connect"),  size=buttonSize)
         uts.Add(self.connectbtn)
-        self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
+        self.connectbtn.SetToolTip(wx.ToolTip(_("Connect to the printer")))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
         self.resetbtn=wx.Button(self.panel,-1,_("Reset"),  size=buttonSize)
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
-        self.resetbtn.SetToolTip(wx.ToolTip("Reset the printer"))
+        self.resetbtn.SetToolTip(wx.ToolTip(_("Reset the printer")))
         uts.Add(self.resetbtn)
         #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
         #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
@@ -544,25 +544,25 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         self.loadbtn=wx.Button(self.panel,-1,_("Load file"),  size=buttonSize)
         self.loadbtn.Bind(wx.EVT_BUTTON,self.loadfile)
-        self.loadbtn.SetToolTip(wx.ToolTip("Load a 3D model file"))
+        self.loadbtn.SetToolTip(wx.ToolTip(_("Load a 3D model file")))
         ubs.Add(self.loadbtn)
         self.platebtn=wx.Button(self.panel,-1,_("Compose"),  size=buttonSize)
         self.platebtn.Bind(wx.EVT_BUTTON,self.plate)
-        self.platebtn.SetToolTip(wx.ToolTip("Simple Plater System"))
+        self.platebtn.SetToolTip(wx.ToolTip(_("Simple Plater System\n(Allows you to arrange multiple\nparts for printing)")))
         #self.printerControls.append(self.uploadbtn)
         ubs.Add(self.platebtn)
         self.sdbtn=wx.Button(self.panel,-1,_("SD"),  size=buttonSize)
         self.sdbtn.Bind(wx.EVT_BUTTON,self.sdmenu)
-        self.sdbtn.SetToolTip(wx.ToolTip("SD Card Printing"))
+        self.sdbtn.SetToolTip(wx.ToolTip(_("SD Card Printing")))
         self.printerControls.append(self.sdbtn)
         ubs.Add(self.sdbtn)
         self.printbtn=wx.Button(self.panel,-1,_("Print"),  size=buttonSize)
         self.printbtn.Bind(wx.EVT_BUTTON,self.printfile)
-        self.printbtn.SetToolTip(wx.ToolTip("Start Printing Loaded File"))
+        self.printbtn.SetToolTip(wx.ToolTip(_("Start Printing Loaded File")))
         self.printbtn.Disable()
         ubs.Add(self.printbtn)
         self.pausebtn=wx.Button(self.panel,-1,_("Pause"),  size=buttonSize)
-        self.pausebtn.SetToolTip(wx.ToolTip("Pause Current Print"))
+        self.pausebtn.SetToolTip(wx.ToolTip(_("Pause Current Print")))
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
         ubs.Add(self.pausebtn)
         #Right full view
@@ -572,12 +572,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lrs.Add(self.logbox,1,wx.EXPAND)
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
         self.commandbox=wx.TextCtrl(self.panel,style = wx.TE_PROCESS_ENTER)
-        self.commandbox.SetToolTip(wx.ToolTip("Send commands to printer\n(Type 'help' for simple\nhelp function)"))
+        self.commandbox.SetToolTip(wx.ToolTip(_("Send commands to printer\n(Type 'help' for simple\nhelp function)")))
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
         #self.printerControls.append(self.commandbox)
         lbrs.Add(self.commandbox,1)
         self.sendbtn=wx.Button(self.panel,-1,_("Send"),style=wx.BU_EXACTFIT)
-        self.sendbtn.SetToolTip(wx.ToolTip("Send Command to Printer"))
+        self.sendbtn.SetToolTip(wx.ToolTip(_("Send Command to Printer")))
         self.sendbtn.Bind(wx.EVT_BUTTON,self.sendline)
         #self.printerControls.append(self.sendbtn)
         lbrs.Add(self.sendbtn)
@@ -603,7 +603,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0],style=wx.BU_EXACTFIT)
-            btn.SetToolTip(wx.ToolTip(i[5]))
+            btn.SetToolTip(wx.ToolTip(_(i[5])))
             btn.SetBackgroundColour(i[3])
             btn.SetForegroundColour("black")
             btn.properties=i
@@ -617,16 +617,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 lls.Add(btn,pos=i[2],span=i[4])
         
         self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,-1))
-        self.xyfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for X & Y axes (mm/min)"))
+        self.xyfeedc.SetToolTip(wx.ToolTip(_("Limit Maximum Speed for X & Y axes (mm/min)")))
         llts.Add(wx.StaticText(self.panel,-1,_("XY:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         llts.Add(self.xyfeedc)
         llts.Add(wx.StaticText(self.panel,-1,_("mm/min   Z:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(70,-1))
-        self.zfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for Z axis (mm/min)"))
+        self.zfeedc.SetToolTip(wx.ToolTip(_("Limit Maximum Speed for Z axis (mm/min)")))
         llts.Add(self.zfeedc,)
 
         self.monitorbox=wx.CheckBox(self.panel,-1,_("Watch"))
-        self.monitorbox.SetToolTip(wx.ToolTip("Monitor Temperatures in Graph"))
+        self.monitorbox.SetToolTip(wx.ToolTip(_("Monitor Temperatures in Graph")))
         lls.Add(self.monitorbox,pos=(2,6))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
 
@@ -635,7 +635,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
 
         self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1),style=wx.BU_EXACTFIT)
-        self.settoff.SetToolTip(wx.ToolTip("Switch Hotend Off"))
+        self.settoff.SetToolTip(wx.ToolTip(_("Switch Hotend Off")))
         self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off"))
         self.printerControls.append(self.settoff)
         lls.Add(self.settoff,pos=(2,1),span=(1,1))
@@ -644,12 +644,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
         self.htemp=wx.ComboBox(self.panel, -1,
                 choices=htemp_choices,style=wx.CB_DROPDOWN, size=(70,-1))
-        self.htemp.SetToolTip(wx.ToolTip("Select Temperature for Hotend"))
+        self.htemp.SetToolTip(wx.ToolTip(_("Select Temperature for Hotend")))
         self.htemp.Bind(wx.EVT_COMBOBOX,self.htemp_change)
 
         lls.Add(self.htemp,pos=(2,2),span=(1,2))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),style=wx.BU_EXACTFIT)
-        self.settbtn.SetToolTip(wx.ToolTip("Switch Hotend On"))
+        self.settbtn.SetToolTip(wx.ToolTip(_("Switch Hotend On")))
         self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(2,4),span=(1,1))
@@ -658,7 +658,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
 
         self.setboff=wx.Button(self.panel,-1,_("Off"),size=(36,-1),style=wx.BU_EXACTFIT)
-        self.setboff.SetToolTip(wx.ToolTip("Switch Heated Bed Off"))
+        self.setboff.SetToolTip(wx.ToolTip(_("Switch Heated Bed Off")))
         self.setboff.Bind(wx.EVT_BUTTON,lambda e:self.do_bedtemp("off"))
         self.printerControls.append(self.setboff)
         lls.Add(self.setboff,pos=(3,1),span=(1,1))
@@ -667,12 +667,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=btemp_choices,style=wx.CB_DROPDOWN, size=(70,-1))
-        self.btemp.SetToolTip(wx.ToolTip("Select Temperature for Heated Bed"))
+        self.btemp.SetToolTip(wx.ToolTip(_("Select Temperature for Heated Bed")))
         self.btemp.Bind(wx.EVT_COMBOBOX,self.btemp_change)
         lls.Add(self.btemp,pos=(3,2),span=(1,2))
 
         self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1),style=wx.BU_EXACTFIT)
-        self.setbbtn.SetToolTip(wx.ToolTip("Switch Heated Bed On"))
+        self.setbbtn.SetToolTip(wx.ToolTip(_("Switch Heated Bed On")))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         self.printerControls.append(self.setbbtn)
         lls.Add(self.setbbtn,pos=(3,4),span=(1,1))
@@ -705,9 +705,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.edist.SetForegroundColour("black")
         lls.Add(self.edist,pos=(4,2),span=(1,2))
         lls.Add(wx.StaticText(self.panel,-1,_("mm")),pos=(4,4),span=(1,1))
-        self.edist.SetToolTip(wx.ToolTip("Amount to Extrude or Retract (mm)"))
+        self.edist.SetToolTip(wx.ToolTip(_("Amount to Extrude or Retract (mm)")))
         self.efeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.e_feedrate),min=0,max=50000,size=(60,-1))
-        self.efeedc.SetToolTip(wx.ToolTip("Extrude / Retract speed (mm/min)"))
+        self.efeedc.SetToolTip(wx.ToolTip(_("Extrude / Retract speed (mm/min)")))
         self.efeedc.SetBackgroundColour((225,200,200))
         self.efeedc.SetForegroundColour("black")
         self.efeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
@@ -738,7 +738,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             build_dimensions=self.build_dimensions_list,
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
             extrusion_width=self.settings.preview_extrusion_width)
-        self.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
+        self.gviz.SetToolTip(wx.ToolTip(_("Click to examine / edit\n  layers of loaded file")))
         self.gviz.showall=1
         try:
             raise ""
@@ -818,7 +818,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def showwin(self,event):
         if(self.f is not None):
             self.gwindow.Show(True)
-            self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
+            self.gwindow.SetToolTip(wx.ToolTip(_("Mousewheel zooms the display\nShift / Mousewheel scrolls layers")))
             self.gwindow.Raise()
 
     def setfeeds(self,e):
@@ -1628,7 +1628,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.statuscheck=False
 
         self.connectbtn.SetLabel("Connect")
-        self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
+        self.connectbtn.SetToolTip(wx.ToolTip(_("Connect to the printer")))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
 
         wx.CallAfter(self.printbtn.Disable);
