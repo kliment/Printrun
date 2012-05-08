@@ -17,35 +17,61 @@ ID_ABOUT = 101
 ID_EXIT = 110
 class window(wx.Frame):
     def __init__(self,f,size=(600,600),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
-        wx.Frame.__init__(self,None,title="Gcode view, shift to move view, mousewheel to set layer",size=(size[0],size[1]))
+        wx.Frame.__init__(self,None,title="Gcode view, shift to move view, mousewheel to set layer",size=(size[0],size[1]))        
         self.p=gviz(self,size=size,build_dimensions=build_dimensions,grid=grid,extrusion_width=extrusion_width)
-
-        # Set up a status bar for displaying info  (Jezmy)
+        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
+        toolbar.AddSimpleTool(1, wx.Image('./images/zoom_in.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
+        toolbar.AddSimpleTool(2, wx.Image('./images/zoom_out.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
+        toolbar.AddSeparator()
+        toolbar.AddSimpleTool(3, wx.Image('./images/arrow_up.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
+        toolbar.AddSimpleTool(4, wx.Image('./images/arrow_down.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
+        toolbar.AddSeparator()
+        #toolbar.AddSimpleTool(5, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
+        toolbar.Realize()
+        vbox.Add(toolbar, 0, border=5)
+        self.SetSizer(vbox)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200,200,1.2), id=1)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200,200,1/1.2), id=2)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id=3)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id=4)
+        #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id=5)
+        
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
-        self.bu=wx.Button(self.p,-1,"U",pos=(0,0),size=(40,40))
-        self.bd=wx.Button(self.p,-1,"D",pos=(0,40),size=(40,40))
-        self.bi=wx.Button(self.p,-1,"+",pos=(40,0),size=(40,40))
-        self.bo=wx.Button(self.p,-1,"-",pos=(40,40),size=(40,40))
-        self.bu.Bind(wx.EVT_BUTTON,lambda x:self.p.layerup())
-        self.bd.Bind(wx.EVT_BUTTON,lambda x:self.p.layerdown())
-        self.bi.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1.2))
-        self.bo.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1/1.2))
+        #self.bu=wx.Button(self.p,-1,"U",pos=(0,100),size=(40,140))
+        #self.bd=wx.Button(self.p,-1,"D",pos=(0,140),size=(40,140))
+        #self.bi=wx.Button(self.p,-1,"+",pos=(40,100),size=(40,140))
+        #self.bo=wx.Button(self.p,-1,"-",pos=(40,140),size=(40,140))
+        #self.bs=wx.Button(self.p, -1, "Inject", pos=(85, 103), size=(50, 20))
+        
+        #self.bu.SetToolTip(wx.ToolTip("Move up one layer"))
+        #self.bd.SetToolTip(wx.ToolTip("Move down one layer"))
+        #self.bi.SetToolTip(wx.ToolTip("Zoom view in"))
+        #self.bo.SetToolTip(wx.ToolTip("Zoom view out"))
+        #self.bs.SetToolTip(wx.ToolTip("Insert Code at start of this layer"))
+        
+        #self.bu.Bind(wx.EVT_BUTTON,lambda x:self.p.layerup())
+        #self.bd.Bind(wx.EVT_BUTTON,lambda x:self.p.layerdown())
+        #self.bi.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1.2))
+        #self.bo.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1/1.2))
+        #self.bs.Bind(wx.EVT_BUTTON,lambda x:self.p.inject())
         
         s=time.time()
         #print time.time()-s
         self.initpos=[0,0]
         self.p.Bind(wx.EVT_KEY_DOWN,self.key)
-        self.bu.Bind(wx.EVT_KEY_DOWN,self.key)
-        self.bd.Bind(wx.EVT_KEY_DOWN,self.key)
-        self.bi.Bind(wx.EVT_KEY_DOWN,self.key)
-        self.bo.Bind(wx.EVT_KEY_DOWN,self.key)
+        #self.bu.Bind(wx.EVT_KEY_DOWN,self.key)
+        #self.bd.Bind(wx.EVT_KEY_DOWN,self.key)
+        #self.bi.Bind(wx.EVT_KEY_DOWN,self.key)
+        #self.bo.Bind(wx.EVT_KEY_DOWN,self.key)
         self.Bind(wx.EVT_KEY_DOWN,self.key)
         self.p.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.p.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
         self.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
-               
+            
     def mouse(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
@@ -64,22 +90,34 @@ class window(wx.Frame):
         else:
             event.Skip()
     
-
     def key(self, event):
+        #  Keycode definitions
+        kup=[85, 315]               # Up keys
+        kdo=[68, 317]               # Down Keys 
+        kzi=[388, 316, 61]        # Zoom In Keys
+        kzo=[390, 314, 45]       # Zoom Out Keys
         x=event.GetKeyCode()
-        if event.ShiftDown():
-            cx,cy=self.p.translate
-            if x==wx.WXK_UP:
-                self.p.zoom(cx,cy,1.2)
-            if x==wx.WXK_DOWN:
-                self.p.zoom(cx,cy,1/1.2)
-        else:
-            if x==wx.WXK_UP:
-                self.p.layerup()
-            if x==wx.WXK_DOWN:  
-                self.p.layerdown()
-        #print x
-    
+        #print "Key event - "+str(x)
+        #if event.ShiftDown():
+        cx,cy=self.p.translate
+        #   if x==wx.WXK_UP:
+        #      self.p.zoom(cx,cy,1.2)
+        #   if x==wx.WXK_DOWN:
+        #       self.p.zoom(cx,cy,1/1.2)
+        #else:
+        #   if x==wx.WXK_UP:
+        #       self.p.layerup()
+        #   if x==wx.WXK_DOWN:  
+        #       self.p.layerdown()
+        if x in kup:
+            self.p.layerup()
+        if x in kdo:
+            self.p.layerdown()
+        if x in kzi:
+            self.p.zoom(cx,cy,1.2)
+        if x in kzo:
+            self.p.zoom(cx, cy, 1/1.2)
+        
         #print p.lines.keys()
     def zoom(self, event):
         z=event.GetWheelRotation()
@@ -123,7 +161,12 @@ class gviz(wx.Panel):
         self.hilightarcs=[]
         self.dirty=1
         self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
-        
+    
+    def inject(self):
+        #import pdb; pdb.set_trace()
+        print"Inject code here..."
+        print  "Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm"
+            
     def clear(self):
         self.lastpos=[0,0,0,0,0,0,0]
         self.lines={}
@@ -161,7 +204,7 @@ class gviz(wx.Panel):
             self.showall=0
         except:
             pass
-    
+        
     def resize(self,event):
         size=self.GetClientSize()
         newsize=min(float(size[0])/self.size[0],float(size[1])/self.size[1])
