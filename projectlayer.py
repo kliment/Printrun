@@ -15,41 +15,62 @@
 
 import xml.etree.ElementTree
 import wx
-import time
+import svg.document as wxpsvgdocument
 
 def parsesvg(name):
     et= xml.etree.ElementTree.ElementTree(file=name)
+    #xml.etree.ElementTree.dump(et)
+    slicer = 'Slic3r' if et.getroot().find('{http://www.w3.org/2000/svg}metadata') == None else 'Skeinforge'
     zlast=0
     zdiff=0
     ol=[]
-    for i in et.findall("{http://www.w3.org/2000/svg}g")[0].findall("{http://www.w3.org/2000/svg}g"):
-        z=float(i.get('id').split("z:")[-1])
-        zdiff=z-zlast
-        zlast=z
-        path=i.find('{http://www.w3.org/2000/svg}path')
-        ol+=[(path.get("d").split("z"))[:-1]]
-    return ol,zdiff
+    if (slicer == 'Slic3r'):
+        height = et.getroot().get('height')
+        width = et.getroot().get('width')
+        
+        for i in et.findall("{http://www.w3.org/2000/svg}g"):
+            z=float(i.get('{http://slic3r.org/namespaces/slic3r}z'))
+            zdiff=z-zlast
+            zlast=z
+
+            svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
+            svgSnippet.set('height', height+'mm')
+            svgSnippet.set('width', width+'mm')
+            svgSnippet.set('viewBox', '0 0 '+height+' '+width)
+            svgSnippet.append(i)
+
+            ol+=[svgSnippet]
+    else :
+        for i in et.findall("{http://www.w3.org/2000/svg}g")[0].findall("{http://www.w3.org/2000/svg}g"):
+            z=float(i.get('id').split("z:")[-1])
+            zdiff=z-zlast
+            zlast=z
+            path=i.find('{http://www.w3.org/2000/svg}path')
+            ol+=[(path.get("d").split("z"))[:-1]]
+    return ol,zdiff,slicer
     
 
 class dispframe(wx.Frame):
-    def __init__(self, parent, title, res=(1600,1200),printer=None):
+    def __init__(self, parent, title, res=(800,600),printer=None):
         wx.Frame.__init__(self, parent=parent, title=title)
         self.p=printer
         self.pic=wx.StaticBitmap(self)
         self.bitmap=wx.EmptyBitmap(*res)
         self.bbitmap=wx.EmptyBitmap(*res)
+        self.slicer='Skeinforge'
         dc=wx.MemoryDC()
         dc.SelectObject(self.bbitmap)
         dc.SetBackground(wx.Brush("black"))
         dc.Clear()
         dc.SelectObject(wx.NullBitmap)
-            
+
         self.SetBackgroundColour("black")
         self.pic.Hide()
         self.pen=wx.Pen("white")
         self.brush=wx.Brush("white")
         self.SetDoubleBuffered(True)
         self.Show()
+
     def drawlayer(self,svg):
         try:
             dc=wx.MemoryDC()
@@ -58,18 +79,22 @@ class dispframe(wx.Frame):
             dc.Clear()
             dc.SetPen(self.pen)
             dc.SetBrush(self.brush)
-            for i in svg:
-                #print i
-                points=[wx.Point(*map(lambda x:int(round(float(x)*self.scale)),j.strip().split())) for j in i.strip().split("M")[1].split("L")]
-                dc.DrawPolygon(points,self.size[0]/2,self.size[1]/2)
-                    
-                
-            dc.SelectObject(wx.NullBitmap)
+
+            if self.slicer == 'Skeinforge':
+                for i in svg:
+                    #print i
+                    points=[wx.Point(*map(lambda x:int(round(float(x)*self.scale)),j.strip().split())) for j in i.strip().split("M")[1].split("L")]
+                    dc.DrawPolygon(points,self.size[0]/2,self.size[1]/2)
+            else:
+                gc = wx.GraphicsContext_Create(dc)            
+                gc.Translate(*self.offset)
+                gc.Scale(self.scale, self.scale)
+                wxpsvgdocument.SVGDocument(svg).render(gc)
+            
             self.pic.SetBitmap(self.bitmap)
             self.pic.Show()
             self.Refresh()
             
-            #self.pic.SetBitmap(self.bitmap)
             
         except:
             raise
@@ -79,19 +104,18 @@ class dispframe(wx.Frame):
         self.drawlayer(image)
         self.pic.Show()
         self.Refresh()
-        #    time.sleep(self.interval)
-        #self.pic.Hide()
+
         self.Refresh()
-        if self.p!=None and self.p.online:
+        if self.p != None and self.p.online:
                 self.p.send_now("G91")
                 self.p.send_now("G1 Z%f F300"%(self.thickness,))
                 self.p.send_now("G90")
             
     def nextimg(self,event):
-        #print "b"
+
         if self.index<len(self.layers):
             i=self.index
-            #print self.layers[i]
+
             print i
             wx.CallAfter(self.showimgdelay,self.layers[i])
             wx.FutureCall(1000*self.interval,self.pic.Hide)
@@ -104,7 +128,7 @@ class dispframe(wx.Frame):
             wx.CallAfter(self.timer.Stop)
             
         
-    def present(self,layers,interval=0.5,pause=0.2,thickness=0.4,scale=20,size=(800,600)):
+    def present(self,layers,interval=0.5,pause=0.2,thickness=0.4,scale=20,size=(800,600),offset=(0,0)):
         wx.CallAfter(self.pic.Hide)
         wx.CallAfter(self.Refresh)
         self.layers=layers
@@ -113,12 +137,11 @@ class dispframe(wx.Frame):
         self.index=0
         self.size=size
         self.interval=interval
+        self.offset=offset
         self.timer=wx.Timer(self,1)
         self.timer.Bind(wx.EVT_TIMER,self.nextimg)
         self.Bind(wx.EVT_TIMER,self.nextimg)
         self.timer.Start(1000*interval+1000*pause)
-        #print "x"
-
 
 class setframe(wx.Frame):
     
@@ -129,29 +152,43 @@ class setframe(wx.Frame):
         self.panel.SetBackgroundColour("orange")
         self.bload=wx.Button(self.panel,-1,"Load",pos=(0,0))
         self.bload.Bind(wx.EVT_BUTTON,self.loadfile)
+
         wx.StaticText(self.panel,-1,"Layer:",pos=(0,30))
         wx.StaticText(self.panel,-1,"mm",pos=(130,30))
         self.thickness=wx.TextCtrl(self.panel,-1,"0.5",pos=(50,30))
+
         wx.StaticText(self.panel,-1,"Exposure:",pos=(0,60))
         wx.StaticText(self.panel,-1,"s",pos=(130,60))
         self.interval=wx.TextCtrl(self.panel,-1,"0.5",pos=(50,60))
+
         wx.StaticText(self.panel,-1,"Blank:",pos=(0,90))
         wx.StaticText(self.panel,-1,"s",pos=(130,90))
         self.delay=wx.TextCtrl(self.panel,-1,"0.5",pos=(50,90))
+
         wx.StaticText(self.panel,-1,"Scale:",pos=(0,120))
         wx.StaticText(self.panel,-1,"x",pos=(130,120))
         self.scale=wx.TextCtrl(self.panel,-1,"5",pos=(50,120))
+
         wx.StaticText(self.panel,-1,"X:",pos=(160,30))
-        self.X=wx.TextCtrl(self.panel,-1,"1024",pos=(180,30))
+        self.X=wx.TextCtrl(self.panel,-1,"1024",pos=(210,30))
+
         wx.StaticText(self.panel,-1,"Y:",pos=(160,60))
-        self.Y=wx.TextCtrl(self.panel,-1,"768",pos=(180,60))
+        self.Y=wx.TextCtrl(self.panel,-1,"768",pos=(210,60))
+        
+        wx.StaticText(self.panel,-1,"OffsetX:",pos=(160,90))
+        self.offsetX=wx.TextCtrl(self.panel,-1,"50",pos=(210,90))
+
+        wx.StaticText(self.panel,-1,"OffsetY:",pos=(160,120))
+        self.offsetY=wx.TextCtrl(self.panel,-1,"50",pos=(210,120))
+        
         self.bload=wx.Button(self.panel,-1,"Present",pos=(0,150))
         self.bload.Bind(wx.EVT_BUTTON,self.startdisplay)
         self.Show()
+
         
     def loadfile(self,event):
         dlg=wx.FileDialog(self,("Open file to print"),style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(("Skeinforge svg files (;*.svg;*.SVG;)"))
+        dlg.SetWildcard(("Slic3r or Skeinforge svg files (;*.svg;*.SVG;)"))
         if(dlg.ShowModal() == wx.ID_OK):
             name=dlg.GetPath()
             import os
@@ -162,6 +199,7 @@ class setframe(wx.Frame):
             print "Layer thickness detected:",layers[1], "mm"
             print len(layers[0]), "layers found, total height", layers[1]*len(layers[0]), "mm"
             self.thickness.SetValue(str(layers[1]))
+            self.f.slicer = layers[2]
             self.layers=layers
         dlg.Destroy()
 
@@ -169,11 +207,15 @@ class setframe(wx.Frame):
         self.f.Raise()
         self.f.ShowFullScreen(1)
         l=self.layers[0][:]
-        #l=list(reversed(l))
-        self.f.present(l,thickness=float(self.thickness.GetValue()),interval=float(self.interval.GetValue()),scale=float(self.scale.GetValue()),pause=float(self.delay.GetValue()), size=(float(self.X.GetValue()),float(self.Y.GetValue())))
+        self.f.present(l,
+            thickness=float(self.thickness.GetValue()),
+            interval=float(self.interval.GetValue()),
+            scale=float(self.scale.GetValue()),
+            pause=float(self.delay.GetValue()), 
+            size=(float(self.X.GetValue()),float(self.Y.GetValue())),
+            offset=(float(self.offsetX.GetValue()),float(self.offsetY.GetValue())))
 
 if __name__=="__main__":
     a=wx.App()
     setframe(None).Show()
     a.MainLoop()
-    
