@@ -489,8 +489,8 @@ class TestGlPanel(GLPanel):
         v = map(lambda m, w, b: b * m / w, p, sz, self.bedsize)
         v[1] = self.bedsize[1] - v[1]
         v += [300]
-        print v
-        self.add_file("../prusa/metric-prusa/x-end-idler.stl", v)
+        print "Double-click at "+str(v)+" in "
+        print self
 
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))

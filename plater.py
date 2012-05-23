@@ -248,7 +248,7 @@ class stlwin(wx.Frame):
         self.SetIcon(wx.Icon("plater.ico", wx.BITMAP_TYPE_ICO))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = wx.Panel(self, -1, size=(150, 600), pos=(0, 0))
-        self.panel.SetBackgroundColour((10, 10, 10))
+        #self.panel.SetBackgroundColour((10, 10, 10))
         self.l = wx.ListBox(self.panel, size=(300, 180), pos=(0, 30))
         self.cl = wx.Button(self.panel, label=_("Clear"), pos=(0, 205))
         self.lb = wx.Button(self.panel, label=_("Load"), pos=(0, 0))
@@ -274,7 +274,7 @@ class stlwin(wx.Frame):
         self.ab.Bind(wx.EVT_BUTTON, self.autoplate)
         self.basedir = "."
         self.models = {}
-        self.SetBackgroundColour((10, 10, 10))
+        #self.SetBackgroundColour((10, 10, 10))
         self.mainsizer.Add(self.panel)
         #self.mainsizer.AddSpacer(10)
         if glview:
