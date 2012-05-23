@@ -27,6 +27,7 @@ class window(wx.Frame):
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(3, wx.Image('./images/arrow_up.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
         toolbar.AddSimpleTool(4, wx.Image('./images/arrow_down.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
+        toolbar.AddSimpleTool(5, wx.EmptyBitmap(16,16), 'Reset view', '')
         toolbar.AddSeparator()
         #toolbar.AddSimpleTool(5, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
         toolbar.Realize()
@@ -36,7 +37,9 @@ class window(wx.Frame):
         self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200,200,1/1.2), id=2)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id=3)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id=4)
+        self.Bind(wx.EVT_TOOL, self.resetview, id=5)
         #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id=5)
+        
         
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
@@ -71,6 +74,11 @@ class window(wx.Frame):
         self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
         self.p.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
         self.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
+            
+    def resetview(self,event):
+        self.p.translate=[0.0,0.0]
+        self.p.scale=self.p.basescale
+        self.p.zoom(0,0,1.0)
             
     def mouse(self,event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
