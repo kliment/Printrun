@@ -226,6 +226,7 @@ class printcore():
                 pass
         while(self.printing and self.printer and self.online):
             self._sendnext()
+        self.sentlines={}
         self.log=[]
         self.sent=[]
         if self.endcb is not None:
@@ -248,7 +249,6 @@ class printcore():
             self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
             self.resendfrom+=1
             return
-        self.sentlines={}
         self.resendfrom=-1
         for i in self.priqueue[:]:
             self._send(i)
