@@ -20,7 +20,7 @@ import zipfile
 import tempfile
 import shutil
 import svg.document as wxpsvgdocument
-
+import imghdr
     
 class dispframe(wx.Frame):
     def __init__(self, parent, title, res=(800, 600), printer=None):
@@ -62,7 +62,7 @@ class dispframe(wx.Frame):
                 gc.Translate(*self.offset)
                 gc.Scale(self.scale, self.scale)
                 wxpsvgdocument.SVGDocument(image).render(gc)
-            elif self.slicer == 'bmp':
+            elif self.slicer == 'bitmap':
                 dc.DrawBitmap(image, self.offset[0], -self.offset[1], True)
             else:
                 raise Exception(self.slicer + " is an unknown method.")
@@ -108,7 +108,7 @@ class dispframe(wx.Frame):
         self.scale = scale
         self.thickness = thickness
         self.index = 0
-        self.size = (size[0]+offset[0],size[1]+offset[1])
+        self.size = (size[0] + offset[0], size[1] + offset[1])
         self.interval = interval
         self.offset = offset
         self.timer = wx.Timer(self, 1)
@@ -202,15 +202,16 @@ class setframe(wx.Frame):
     def parse3DLPzip(self, name):
         if not zipfile.is_zipfile(name):
             raise Exception(name + " is not a zip file!")
+        acceptedImageTypes = ['gif','tiff','jpg','jpeg','bmp','png']
         zipFile = zipfile.ZipFile(name, 'r')
         self.image_dir = tempfile.mkdtemp()
         zipFile.extractall(self.image_dir)
         ol = []
         for f in os.listdir(self.image_dir):
             path = os.path.join(self.image_dir, f)
-            if os.path.isfile(path) and path.endswith(".bmp"):
+            if os.path.isfile(path) and imghdr.what(path) in acceptedImageTypes:
                 ol.append(wx.Bitmap(path))
-        return ol, -1, "bmp"
+        return ol, -1, "bitmap"
         
     def loadfile(self, event):
         dlg = wx.FileDialog(self, ("Open file to print"), style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
