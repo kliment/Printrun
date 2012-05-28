@@ -39,13 +39,19 @@ class ZButtons(BufferedCanvas):
         3: None
     }
 
-    def __init__(self, parent, moveCallback=None, ID=-1):
+    def __init__(self, parent, moveCallback=None, bgcolor="#FFFFFF", ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_z.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.range = None
         self.direction = None
         self.orderOfMagnitudeIdx = 0 # 0 means '1', 1 means '10', 2 means '100', etc.
         self.moveCallback = moveCallback
         self.enabled = False
+        # Remember the last clicked value, so we can repeat when spacebar pressed
+        self.lastValue = None
+
+	self.bgcolor = wx.Colour()
+	self.bgcolor.SetFromName(bgcolor)
+	self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
         BufferedCanvas.__init__(self, parent, ID)
 
@@ -64,6 +70,13 @@ class ZButtons(BufferedCanvas):
     def enable(self):
         self.enabled = True
         self.update()
+
+    def repeatLast(self):
+        if self.lastValue:
+            self.moveCallback(self.lastValue)
+
+    def clearRepeat(self):
+        self.lastValue = None
 
     def lookupRange(self, ydist):
         idx = -1
@@ -93,6 +106,7 @@ class ZButtons(BufferedCanvas):
         return (self.lookupRange(abs(ydelta)), sign(ydelta))
 
     def draw(self, dc, w, h):
+	dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         if self.bg_bmp:
@@ -114,8 +128,8 @@ class ZButtons(BufferedCanvas):
             if self.range != None and self.direction != None:
                 self.highlight(gc, self.range, self.direction)
         else:
-            gc.SetPen(wx.Pen(wx.Colour(255,255,255,0), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128)))
+            gc.SetPen(wx.Pen(self.bgcolor, 0))
+            gc.SetBrush(wx.Brush(self.bgcolormask))
             gc.DrawRectangle(0, 0, w, h)
 
     ## ------ ##
@@ -143,6 +157,7 @@ class ZButtons(BufferedCanvas):
         if r >= 0:
             value = math.pow(10, self.orderOfMagnitudeIdx) * math.pow(10, r - 1) * d
             if self.moveCallback:
+                self.lastValue = value
                 self.moveCallback(value)
 
     def OnLeaveWindow(self, evt):

@@ -30,7 +30,7 @@ class Graph(BufferedCanvas):
         #super(Graph, self).__init__(parent, id, pos, size, style)
         BufferedCanvas.__init__(self, parent, id)
 
-        self.SetSize(wx.Size(170, 100))
+        self.SetSize(wx.Size(150, 80))
 
         self.extruder0temps       = [0]
         self.extruder0targettemps = [0]
