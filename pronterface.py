@@ -579,9 +579,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         #lls.Add((200,375))
 
-        self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked)
+        self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked, self.settings.bgcolor)
         lls.Add(self.xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
-        self.zb = ZButtons(self.panel, self.moveZ)
+        self.zb = ZButtons(self.panel, self.moveZ, self.settings.bgcolor)
         lls.Add(self.zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
         wx.CallAfter(self.xyb.SetFocus)
 
@@ -677,9 +677,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.SetForegroundColour("black")
         # lls.Add((10,0),pos=(0,11),span=(1,1))
 
-        self.hottgauge=TempGauge(self.panel,size=(200,24),title=_("Heater:"),maxval=230)
+        self.hottgauge=TempGauge(self.panel,size=(200,24),title=_("Heater:"),maxval=230,bgcolor=self.settings.bgcolor)
         lls.Add(self.hottgauge,pos=(7,0),span=(1,4))
-        self.bedtgauge=TempGauge(self.panel,size=(200,24),title=_("Bed:"),maxval=130)
+        self.bedtgauge=TempGauge(self.panel,size=(200,24),title=_("Bed:"),maxval=130,bgcolor=self.settings.bgcolor)
         lls.Add(self.bedtgauge,pos=(8,0),span=(1,4))
         #def scroll_setpoint(e):
         #   if e.GetWheelRotation()>0:
@@ -1784,7 +1784,7 @@ class ButtonEdit(wx.Dialog):
             self.name.SetValue(macro)
 
 class TempGauge(wx.Panel):
-    def __init__(self,parent,size=(200,22),title="",maxval=240,gaugeColour=None):
+    def __init__(self,parent,size=(200,22),title="",maxval=240, bgcolor="#FFFFFF", gaugeColour=None):
         wx.Panel.__init__(self,parent,-1,size=size)
         self.Bind(wx.EVT_PAINT,self.paint)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
@@ -1795,6 +1795,8 @@ class TempGauge(wx.Panel):
         self.value=0
         self.setpoint=0
         self.recalc()
+        self.bgcolor = wx.Colour()
+	self.bgcolor.SetFromName(bgcolor)
     def recalc(self):
         mmax=max(int(self.setpoint*1.05),self.max)
         self.scale=float(self.width-2)/float(mmax)
@@ -1820,11 +1822,11 @@ class TempGauge(wx.Panel):
     def paint(self,ev):
         x0,y0,x1,y1,xE,yE = 1,1,self.ypt+1,1,self.width+1-2,20
         dc=wx.PaintDC(self)
-        dc.SetBackground(wx.Brush((255,255,255)))
+        dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         cold,medium,hot = wx.Colour(0,167,223),wx.Colour(239,233,119),wx.Colour(210,50.100)
         gauge1,gauge2 = wx.Colour(255,255,210),(self.gaugeColour or wx.Colour(234,82,0))
-        shadow1,shadow2 = wx.Colour(110,110,110),wx.Colour(255,255,255)
+        shadow1,shadow2 = wx.Colour(110,110,110),self.bgcolor
         gc = wx.GraphicsContext.Create(dc)
         # draw shadow first
         # corners

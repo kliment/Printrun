@@ -47,7 +47,7 @@ class XYButtons(BufferedCanvas):
     center = (124, 121)
     spacer = 7
 
-    def __init__(self, parent, moveCallback=None, cornerCallback=None, ID=-1):
+    def __init__(self, parent, moveCallback=None, cornerCallback=None, bgcolor="#FFFFFF", ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_xy.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
@@ -57,6 +57,9 @@ class XYButtons(BufferedCanvas):
         self.moveCallback = moveCallback
         self.cornerCallback = cornerCallback
         self.enabled = False
+        self.bgcolor = wx.Colour()
+	self.bgcolor.SetFromName(bgcolor)
+	self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
     
         BufferedCanvas.__init__(self, parent, ID)
         self.SetSize(self.bg_bmp.GetSize())
@@ -206,6 +209,7 @@ class XYButtons(BufferedCanvas):
         
 
     def draw(self, dc, w, h):
+        dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
 
@@ -240,8 +244,8 @@ class XYButtons(BufferedCanvas):
                     r = kpos[2]
                     gc.DrawEllipse(kpos[0]-r, kpos[1]-r, r*2, r*2)
         else:
-            gc.SetPen(wx.Pen(wx.Colour(255,255,255,0), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128)))
+            gc.SetPen(wx.Pen(self.bgcolormask, 0))
+            gc.SetBrush(wx.Brush(self.bgcolormask))
             gc.DrawRectangle(0, 0, w, h)
         
 
