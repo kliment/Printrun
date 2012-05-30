@@ -2,7 +2,10 @@
 import cherrypy, pronterface
 
 def PrintHeader():
-    return "<h3><a href='/'>main</a> | <a href='/settings'>settings</a> </h3>"
+    return "<html><head></head><body><h3><a href='/'>main</a> | <a href='/settings'>settings</a> </h3>"
+
+def PrintFooter():
+    return "</body></html>"
 
 pronterPtr = 0
 class SettingsPage(object):
@@ -24,6 +27,7 @@ class SettingsPage(object):
 class WebInterface(object):
     def __init__(self, pface):
         self.pface = pface
+        self.weblog="Connecting web interface to pronterface..."
         self.name="<h1>Pronterface Settings</h1>"
         global pronterPtr
         pronterPtr = self.pface 
@@ -32,7 +36,14 @@ class WebInterface(object):
 
     def index(self):
         pageText=self.name+PrintHeader()
+        pageText=pageText+"<textarea rows='30' cols='100'>"+self.weblog+"</textarea>"
+        pageText=pageText+PrintFooter()
         return pageText
+
+    def AddLog(self, log):
+        self.weblog=self.weblog+"\n"+log
+    def AppendLog(self, log):
+        self.weblog=self.weblog+log
     index.exposed = True
 
 class WebInterfaceStub(object):
@@ -40,10 +51,10 @@ class WebInterfaceStub(object):
         return "<b>Web Interface Must be launched by running Pronterface!</b>"
     index.exposed = True
 
-def StartWebInterfaceThread(pface):
+def StartWebInterfaceThread(webInterface):
     cherrypy.config.update({'engine.autoreload_on':False})
     cherrypy.config.update("http.config")
-    cherrypy.quickstart(WebInterface(pface))
+    cherrypy.quickstart(webInterface)
     
 if __name__ == '__main__':
     cherrypy.config.update("http.config")

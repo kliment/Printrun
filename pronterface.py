@@ -156,8 +156,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
-        self.webThread = Thread(target=webinterface.StartWebInterfaceThread, args=(self, ))
+        self.webInterface=webinterface.WebInterface(self)
+        self.webThread = Thread(target=webinterface.StartWebInterfaceThread, args=(self.webInterface, ))
         self.webThread.start()
+        self.webInterface.AddLog("Connected!!!")
 
     def startcb(self):
         self.starttime=time.time()
@@ -280,7 +282,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             else:
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
         except Exception,x:
-            print _("You must enter a temperature. (%s)" % (repr(x),))
+            print _("You must enter a temperature. (%s)" % (repr(x),)); self.webInterface.AddLog("You must enter a temperature. (%s)" % (repr(x),))
 
     def do_bedtemp(self,l=""):
         try:
@@ -313,11 +315,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                         wx.CallAfter(self.btemp.SetBackgroundColour,"white")
                         wx.CallAfter(self.btemp.Refresh)
                 else:
-                    print _("Printer is not online.")
+                    print _("Printer is not online."); self.webInterface.AddLog("Printer is not online.")
             else:
-                print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
+                print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."); self.webInterface.AddLog("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
         except:
-            print _("You must enter a temperature.")
+            print _("You must enter a temperature."); self.webInterface.AddLog("You must enter a temperature.")
 
     def end_macro(self):
         pronsole.pronsole.end_macro(self)
@@ -336,7 +338,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                         if dialog.ShowModal()==wx.ID_YES:
                             self.delete_macro(macro_name)
                             return
-                    print _("Cancelled.")
+                    print _("Cancelled."); self.webInterface.AddLog("Cancelled.")
                     return
                 self.cur_macro_name = macro_name
                 self.cur_macro_def = definition
@@ -355,6 +357,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.capture_skip_newline = True
                 return
         wx.CallAfter(self.logbox.AppendText,l)
+        self.webInterface.AppendLog(l)
 
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -375,7 +378,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if(self.p.online):
             projectlayer.setframe(self,self.p).Show()
         else:
-            print _("Printer is not online.")
+            print _("Printer is not online."); self.webInterface.AddLog("Printer is not online.")
 
     def popmenu(self):
         self.menustrip = wx.MenuBar()
@@ -449,7 +452,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             print _("Name '%s' is being used by built-in command") % macro
             return
         elif len([c for c in macro if not c.isalnum() and c != "_"]):
-            print _("Macro name may contain only alphanumeric symbols and underscores")
+            print _("Macro name may contain only alphanumeric symbols and underscores"); self.webInterface.AddLog("Macro name may contain only alphanumeric symbols and underscores")
             return
         else:
             old_def = ""
@@ -866,7 +869,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.topsizer.Layout()
 
     def help_button(self):
-        print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
+        print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command'); self.webInterface.AddLog('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
 
     def do_button(self,argstr):
         def nextarg(rest):
@@ -888,7 +891,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pass
         command=argstr.strip()
         if num<0 or num>=64:
-            print _("Custom button number should be between 0 and 63")
+            print _("Custom button number should be between 0 and 63"); self.webInterface.AddLog("Custom button number should be between 0 and 63")
             return
         while num >= len(self.custombuttons):
             self.custombuttons+=[None]
@@ -1142,7 +1145,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.onecmd(e.GetEventObject().properties[1])
             self.cur_button=None
         except:
-            print _("event object missing")
+            print _("event object missing"); self.webInterface.AddLog("event object missing")
             self.cur_button=None
             raise
 
@@ -1170,12 +1173,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.monitor_interval=float(l)
                 wx.CallAfter(self.monitorbox.SetValue,self.monitor_interval>0)
             except:
-                print _("Invalid period given.")
+                print _("Invalid period given."); self.webInterface.AddLog("Invalid period given.")
         self.setmonitor(None)
         if self.monitor:
-            print _("Monitoring printer.")
+            print _("Monitoring printer."); self.webInterface.AddLog("Monitoring printer.")
         else:
-            print _("Done monitoring.")
+            print _("Done monitoring."); self.webInterface.AddLog("Done monitoring.")
 
 
     def setmonitor(self,e):
@@ -1192,6 +1195,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if not len(command):
             return
         wx.CallAfter(self.logbox.AppendText,">>>"+command+"\n")
+        self.webInterface.AppendLog(">>>"+command+"\n")
         self.onecmd(str(command))
         self.commandbox.SetSelection(0,len(command))
 
@@ -1353,7 +1357,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             import shlex
             param = self.expandcommand(self.settings.slicecommand).encode()
-            print "Slicing: ",param
+            print "Slicing: ",param; self.webInterface.AddLog("Slicing: "+param)
             pararray=[i.replace("$s",self.filename).replace("$o",self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
                 #print pararray
             self.skeinp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
@@ -1364,7 +1368,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.skeinp.wait()
             self.stopsf=1
         except:
-            print _("Failed to execute slicing software: ")
+            print _("Failed to execute slicing software: "); self.webInterface.AddLog("Failed to execute slicing software: ")
             self.stopsf=1
             traceback.print_exc(file=sys.stdout)
 
@@ -1451,7 +1455,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def loadviz(self):
         Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
-        print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
+        print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot); self.webInterface.AddLog("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
         print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
@@ -1548,7 +1552,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         pass
 
     def connect(self,event):
-        print _("Connecting...")
+        print _("Connecting...");
+        
         port=None
         try:
             port=self.scanserial()[0]
