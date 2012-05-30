@@ -51,6 +51,9 @@ from zbuttons import ZButtons
 from graph import Graph
 import pronsole
 
+import cherrypy, webinterface
+from threading import Thread
+
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
@@ -153,6 +156,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
+        self.webThread = Thread(target=webinterface.StartWebInterfaceThread, args=(self, ))
+        self.webThread.start()
 
     def startcb(self):
         self.starttime=time.time()
