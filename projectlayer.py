@@ -15,6 +15,7 @@
 
 import xml.etree.ElementTree
 import wx
+import wx.lib.agw.floatspin as floatspin
 import os
 import zipfile
 import tempfile
@@ -23,8 +24,8 @@ import svg.document as wxpsvgdocument
 import imghdr
     
 class dispframe(wx.Frame):
-    def __init__(self, parent, title, res=(800, 600), printer=None):
-        wx.Frame.__init__(self, parent=parent, title=title)
+    def __init__(self, parent, title, res=(1024, 768), printer=None):
+        wx.Frame.__init__(self, parent=parent, title=title, size=res)
         self.p = printer
         self.pic = wx.StaticBitmap(self)
         self.bitmap = wx.EmptyBitmap(*res)
@@ -43,7 +44,29 @@ class dispframe(wx.Frame):
         self.SetDoubleBuffered(True)
         self.Show()
 
-    def drawlayer(self, image):
+    def clearlayer(self):
+        try:
+            dc = wx.MemoryDC()
+            dc.SelectObject(self.bitmap)
+            dc.SetBackground(wx.Brush("black"))
+            dc.Clear()
+            self.pic.SetBitmap(self.bitmap)
+            self.pic.Show()
+            self.Refresh()
+        except:
+            raise
+            pass        
+        
+    def resize(self, res=(1024, 768)):
+        self.bitmap = wx.EmptyBitmap(*res)
+        self.bbitmap = wx.EmptyBitmap(*res)
+        dc = wx.MemoryDC()
+        dc.SelectObject(self.bbitmap)
+        dc.SetBackground(wx.Brush("black"))
+        dc.Clear()
+        dc.SelectObject(wx.NullBitmap)
+        
+    def drawlayer(self, image, slicer):
         try:
             dc = wx.MemoryDC()
             dc.SelectObject(self.bitmap)
@@ -52,31 +75,30 @@ class dispframe(wx.Frame):
             dc.SetPen(self.pen)
             dc.SetBrush(self.brush)
 
-            if self.slicer == 'Skeinforge':
+            if slicer == 'Skeinforge':
                 for i in image:
                     #print i
                     points = [wx.Point(*map(lambda x:int(round(float(x) * self.scale)), j.strip().split())) for j in i.strip().split("M")[1].split("L")]
                     dc.DrawPolygon(points, self.size[0] / 2, self.size[1] / 2)
-            elif self.slicer == 'Slic3r':
+            elif slicer == 'Slic3r':
                 gc = wx.GraphicsContext_Create(dc)            
                 gc.Translate(*self.offset)
                 gc.Scale(self.scale, self.scale)
                 wxpsvgdocument.SVGDocument(image).render(gc)
-            elif self.slicer == 'bitmap':
-                dc.DrawBitmap(image, self.offset[0], -self.offset[1], True)
+            elif slicer == 'bitmap':
+                dc.DrawBitmap(wx.BitmapFromImage(image.Scale(image.Width*self.scale, image.Height*self.scale)), self.offset[0], -self.offset[1], True)
             else:
                 raise Exception(self.slicer + " is an unknown method.")
             self.pic.SetBitmap(self.bitmap)
             self.pic.Show()
-            self.Refresh()
-            
+            self.Refresh()            
             
         except:
             raise
             pass
             
     def showimgdelay(self, image):
-        self.drawlayer(image)
+        self.drawlayer(image,self.slicer)
         self.pic.Show()
         self.Refresh()
 
@@ -101,14 +123,15 @@ class dispframe(wx.Frame):
             wx.CallAfter(self.ShowFullScreen, 0)
             wx.CallAfter(self.timer.Stop)            
         
-    def present(self, layers, interval=0.5, pause=0.2, thickness=0.4, scale=20, size=(800, 600), offset=(0, 0)):
+    def present(self, layers, interval=0.5, pause=0.2, thickness=0.4, scale=20, size=(1024, 768), offset=(0, 0)):
         wx.CallAfter(self.pic.Hide)
         wx.CallAfter(self.Refresh)
         self.layers = layers
         self.scale = scale
         self.thickness = thickness
         self.index = 0
-        self.size = (size[0] + offset[0], size[1] + offset[1])
+        #self.size = (size[0] + offset[0], size[1] + offset[1])
+        self.size = size
         self.interval = interval
         self.offset = offset
         self.timer = wx.Timer(self, 1)
@@ -119,47 +142,61 @@ class dispframe(wx.Frame):
 class setframe(wx.Frame):
     
     def __init__(self, parent, printer=None):
-        wx.Frame.__init__(self, parent, title="Projector setup")
+        wx.Frame.__init__(self, parent, title="Projector setup", size=(400,300))
         self.f = dispframe(None, "", printer=printer)
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour("orange")
         self.bload = wx.Button(self.panel, -1, "Load", pos=(0, 0))
         self.bload.Bind(wx.EVT_BUTTON, self.loadfile)
-
-        wx.StaticText(self.panel, -1, "Layer:", pos=(0, 30))
-        wx.StaticText(self.panel, -1, "mm", pos=(130, 30))
-        self.thickness = wx.TextCtrl(self.panel, -1, "0.5", pos=(50, 30))
-
-        wx.StaticText(self.panel, -1, "Exposure:", pos=(0, 60))
-        wx.StaticText(self.panel, -1, "s", pos=(130, 60))
-        self.interval = wx.TextCtrl(self.panel, -1, "0.5", pos=(50, 60))
-
-        wx.StaticText(self.panel, -1, "Blank:", pos=(0, 90))
-        wx.StaticText(self.panel, -1, "s", pos=(130, 90))
-        self.delay = wx.TextCtrl(self.panel, -1, "0.5", pos=(50, 90))
-
-        wx.StaticText(self.panel, -1, "Scale:", pos=(0, 120))
-        wx.StaticText(self.panel, -1, "x", pos=(130, 120))
-        self.scale = wx.TextCtrl(self.panel, -1, "5", pos=(50, 120))
-
-        wx.StaticText(self.panel, -1, "X:", pos=(160, 30))
-        self.X = wx.TextCtrl(self.panel, -1, "1024", pos=(210, 30))
-
-        wx.StaticText(self.panel, -1, "Y:", pos=(160, 60))
-        self.Y = wx.TextCtrl(self.panel, -1, "768", pos=(210, 60))
         
-        wx.StaticText(self.panel, -1, "OffsetX:", pos=(160, 90))
-        self.offsetX = wx.TextCtrl(self.panel, -1, "50", pos=(210, 90))
-
-        wx.StaticText(self.panel, -1, "OffsetY:", pos=(160, 120))
-        self.offsetY = wx.TextCtrl(self.panel, -1, "50", pos=(210, 120))
+        leftlabelXPos = 0
+        leftValueXPos = 70
+        rightlabelXPos = 180
+        rightValueXPos = 230
         
-        self.bload = wx.Button(self.panel, -1, "Present", pos=(0, 150))
+        wx.StaticText(self.panel, -1, "Layer (mm):", pos=(leftlabelXPos, 30))
+        self.thickness = wx.TextCtrl(self.panel, -1, "0.3", pos=(leftValueXPos, 30))
+
+        wx.StaticText(self.panel, -1, "Exposure (s):", pos=(leftlabelXPos, 60))
+        self.interval = wx.TextCtrl(self.panel, -1, "3", pos=(leftValueXPos, 60))
+
+        wx.StaticText(self.panel, -1, "Blank (s):", pos=(leftlabelXPos, 90))
+        self.delay = wx.TextCtrl(self.panel, -1, "2", pos=(leftValueXPos, 90))
+
+        wx.StaticText(self.panel, -1, "Scale:", pos=(leftlabelXPos, 120))
+        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(leftValueXPos, 120), value=1.0, increment=0.1, digits=1 )
+        self.scale.Bind(floatspin.EVT_FLOATSPIN, self.updatescale)
+        
+        wx.StaticText(self.panel, -1, "X:", pos=(rightlabelXPos, 30))
+        self.X = wx.SpinCtrl(self.panel, -1, '1024', pos=(rightValueXPos, 30), max=999999)
+        self.X.Bind(wx.EVT_SPINCTRL, self.updateresolution)
+
+        wx.StaticText(self.panel, -1, "Y:", pos=(rightlabelXPos, 60))
+        self.Y = wx.SpinCtrl(self.panel, -1, '768', pos=(rightValueXPos, 60), max=999999)
+        self.Y.Bind(wx.EVT_SPINCTRL, self.updateresolution)
+        
+        wx.StaticText(self.panel, -1, "OffsetX:", pos=(rightlabelXPos, 90))
+        self.offsetX = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos, 90), value=0.0, increment=1, digits=1 )
+        self.offsetX.Bind(floatspin.EVT_FLOATSPIN, self.updateoffset)
+
+        wx.StaticText(self.panel, -1, "OffsetY:", pos=(rightlabelXPos, 120))
+        self.offsetY = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos, 120), value=0.0, increment=1, digits=1 )
+        self.offsetY.Bind(floatspin.EVT_FLOATSPIN, self.updateoffset)
+        
+        self.bload = wx.Button(self.panel, -1, "Present", pos=(leftlabelXPos, 150))
         self.bload.Bind(wx.EVT_BUTTON, self.startdisplay)
         
-        wx.StaticText(self.panel, -1, "Fullscreen:", pos=(160, 150))
-        self.fullscreen = wx.CheckBox(self.panel, -1, pos=(220, 150))
+        wx.StaticText(self.panel, -1, "Fullscreen:", pos=(rightlabelXPos, 150))
+        self.fullscreen = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 150))
         self.fullscreen.SetValue(True)
+        
+        wx.StaticText(self.panel, -1, "Calibrate:", pos=(rightlabelXPos, 180))
+        self.calibrate = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 180))
+        self.calibrate.Bind(wx.EVT_CHECKBOX, self.startcalibrate)
+        
+        wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(rightlabelXPos, 210))
+        self.projectedXmm = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos+40, 210), value=150.0, increment=1, digits=1 )
+        self.projectedXmm.Bind(floatspin.EVT_FLOATSPIN, self.updateprojectedXmm)
         
         self.Show()
 
@@ -170,6 +207,7 @@ class setframe(wx.Frame):
     def parsesvg(self, name):
         et = xml.etree.ElementTree.ElementTree(file=name)
         #xml.etree.ElementTree.dump(et)
+        
         slicer = 'Slic3r' if et.getroot().find('{http://www.w3.org/2000/svg}metadata') == None else 'Skeinforge'
         zlast = 0
         zdiff = 0
@@ -210,7 +248,7 @@ class setframe(wx.Frame):
         for f in os.listdir(self.image_dir):
             path = os.path.join(self.image_dir, f)
             if os.path.isfile(path) and imghdr.what(path) in acceptedImageTypes:
-                ol.append(wx.Bitmap(path))
+                ol.append(wx.Image(path))
         return ol, -1, "bitmap"
         
     def loadfile(self, event):
@@ -234,6 +272,62 @@ class setframe(wx.Frame):
             self.f.slicer = layers[2]
         dlg.Destroy()
 
+    def startcalibrate(self, event):
+        if self.calibrate.IsChecked():
+            self.f.Raise()
+            self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
+            self.f.scale=float(self.scale.GetValue())
+            resolutionXPixels = int(self.X.GetValue())
+            resolutionYPixels = int(self.Y.GetValue())
+            
+            gridBitmap = wx.EmptyBitmap(resolutionXPixels,resolutionYPixels)
+            dc = wx.MemoryDC()
+            dc.SelectObject(gridBitmap)
+            dc.SetBackground(wx.Brush("black"))
+            dc.Clear()
+            
+            dc.SetPen(wx.Pen("red",7))
+            dc.DrawLine(0,0,resolutionXPixels,0);
+            dc.DrawLine(0,0,0,resolutionYPixels);
+            dc.DrawLine(resolutionXPixels,0,resolutionXPixels,resolutionYPixels);
+            dc.DrawLine(0,resolutionYPixels,resolutionXPixels,resolutionYPixels);
+            
+            dc.SetPen(wx.Pen("red",2))
+            aspectRatio = resolutionXPixels/resolutionYPixels
+            
+            projectedXmm = float(self.projectedXmm.GetValue())            
+            projectedYmm = round(projectedXmm/aspectRatio)
+            
+            pixelsXPerMM = resolutionXPixels / projectedXmm
+            pixelsYPerMM = resolutionYPixels / projectedYmm
+            
+            gridCountX = int(projectedXmm/10)
+            gridCountY = int(projectedYmm/10)
+            
+            for y in xrange(0,gridCountY):
+                for x in xrange(0,gridCountX+1):
+                    dc.DrawLine(0,y*(pixelsYPerMM*10),resolutionXPixels,y*(pixelsYPerMM*10));
+                    dc.DrawLine(x*(pixelsXPerMM*10),0,x*(pixelsXPerMM*10),resolutionYPixels);
+
+            self.f.drawlayer(gridBitmap.ConvertToImage(), 'bitmap')
+        else:
+            self.f.clearlayer()
+    
+    def updateoffset(self,event):
+        self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
+        self.startcalibrate(event)
+    
+    def updateprojectedXmm(self,event):
+        self.startcalibrate(event)
+        
+    def updatescale(self,event):
+        self.f.scale=float(self.scale.GetValue())
+        self.startcalibrate(event)
+    
+    def updateresolution(self,event):
+        self.f.resize((float(self.X.GetValue()), float(self.Y.GetValue())))
+        self.startcalibrate(event)
+    
     def startdisplay(self, event):
         self.f.Raise()
         if (self.fullscreen.GetValue()):
@@ -248,6 +342,7 @@ class setframe(wx.Frame):
             offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue())))
 
 if __name__ == "__main__":
+    #a = wx.App(redirect=True,filename="mylogfile.txt")
     a = wx.App()
     setframe(None).Show()
     a.MainLoop()

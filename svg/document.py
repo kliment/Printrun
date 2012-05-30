@@ -455,7 +455,7 @@ class SVGDocument(object):
         if type == "URL":
             url, fallback = details
             element = self.resolveURL(url)
-            if not element:
+            if element is not None:
                 if fallback:
                     type, details = fallback
                 else:
