@@ -592,9 +592,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         szbuttons=wx.GridBagSizer()
         
-        self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked, self.spacebarAction)
+        self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked, self.spacebarAction, self.settings.bgcolor)
         szbuttons.Add(self.xyb,pos=(0,1),flag=wx.ALIGN_CENTER)
-        self.zb = ZButtons(self.panel, self.moveZ)
+        self.zb = ZButtons(self.panel, self.moveZ, self.settings.bgcolor)
         szbuttons.Add(self.zb,pos=(0,2),flag=wx.ALIGN_CENTER)
         #lls.Add(self.zb, pos=(2,6), span=(1,1), flag=wx.ALIGN_CENTER)
         wx.CallAfter(self.xyb.SetFocus)
