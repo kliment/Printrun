@@ -124,13 +124,13 @@ class XMLstatus(object):
         #handle connect push, then reload page
         txt='<?xml version="1.0"?>\n<pronterface>\n'
         state="Offline"
-        if self.statuscheck or self.p.online:
+        if gPronterPtr.statuscheck or gPronterPtr.p.online:
             state="Idle"
-        if self.sdprinting:
+        if gPronterPtr.sdprinting:
             state="SDPrinting"
-        if self.p.printing:
+        if gPronterPtr.p.printing:
             state="Printing"
-        if self.paused:
+        if gPronterPtr.paused:
             state="Paused"
         
         txt=txt+'<state>'+state+'</state>\n'
