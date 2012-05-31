@@ -123,6 +123,17 @@ class XMLstatus(object):
     def index(self):
         #handle connect push, then reload page
         txt='<?xml version="1.0"?>\n<pronterface>\n'
+        state="Offline"
+        if self.statuscheck or self.p.online:
+            state="Idle"
+        if self.sdprinting:
+            state="SDPrinting"
+        if self.p.printing:
+            state="Printing"
+        if self.paused:
+            state="Paused"
+        
+        txt=txt+'<state>'+state+'</state>\n'
         txt=txt+'<file>'+str(gPronterPtr.filename)+'</file>\n'
         txt=txt+'<status>'+str(gPronterPtr.status.GetStatusText())+'</status>\n'
         try:
