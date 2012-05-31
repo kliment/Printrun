@@ -6,7 +6,7 @@ def PrintHeader():
     return '<html>\n<head>\n<title>Pronterface-Web</title>\n<link rel="stylesheet" type="text/css" href="/css/style.css" type="text/css"></link>\n</head>\n<body>\n'
 
 def PrintMenu():
-    return '<div id="mainmenu"><ul><li><a href="/">home</a></li><li><a href="/settings">settings</a></li><li><a href="/console">console</a></li></ul></div>'
+    return '<div id="mainmenu"><ul><li><a href="/">home</a></li><li><a href="/settings">settings</a></li><li><a href="/console">console</a></li><li><a href="/status">status (XML)</a></li></ul></div>'
     
 def PrintFooter():
     return "</body></html>"
@@ -93,7 +93,13 @@ class PauseButton(object):
         gPronterPtr.pause(0)
         return ReloadPage("Pause...")
     index.exposed = True
-    
+
+class XMLstatus(object):
+    def index(self):
+        #handle connect push, then reload page
+        return '<?xml version="1.0"?>\n<xml>\n   <status>'+gPronterPtr.status.GetStatusText()+'</status>\n</xml>';
+    index.exposed = True
+
 class WebInterface(object):
     
     def __init__(self, pface):
@@ -114,6 +120,7 @@ class WebInterface(object):
     reset = ResetButton()
     printbutton = PrintButton()
     pausebutton = PrintButton()
+    status = XMLstatus()
     
     def index(self):
         pageText=PrintHeader()+self.name+PrintMenu()
