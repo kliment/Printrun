@@ -1,0 +1,108 @@
+#title
+{
+   text-align:center;
+   color:red;
+}
+
+#mainmenu
+{
+margin: 0;
+padding: 0 0 20px 10px;
+border-bottom: 1px solid #000;
+}
+#mainmenu ul, #mainmenu li
+{
+margin: 0;
+padding: 0;
+display: inline;
+list-style-type: none;
+}
+
+#mainmenu a:link, #mainmenu a:visited
+{
+float: left;
+line-height: 14px;
+font-weight: bold;
+margin: 0 10px 4px 10px;
+text-decoration: none;
+color: #999;
+}
+
+#mainmenu a:link#current, #mainmenu a:visited#current, #mainmenu a:hover
+{
+border-bottom: 4px solid #000;
+padding-bottom: 2px;
+background: transparent;
+color: #000;
+}
+
+#mainmenu a:hover { color: #000; }
+
+#controls
+{
+
+}
+
+#controls ul
+{
+list-style: none;
+margin: 0px;
+padding: 0px;
+border: none;
+}
+
+#controls ul li
+{
+margin: 0px;
+padding: 0px;
+}
+
+#controls ul li a
+{
+font-size: 80%;
+display: block;
+border-bottom: 1px dashed #C39C4E;
+padding: 5px 0px 2px 4px;
+text-decoration: none;
+color: #666666;
+width:160px;
+}
+
+#controls ul li a:hover, #controls ul li a:focus
+{
+color: #000000;
+background-color: #eeeeee;
+}
+
+#settings
+{
+margin: 0px;
+padding-top: 50px;
+border: none;
+}
+
+#settings table
+{
+	font-family: verdana,arial,sans-serif;
+	font-size:11px;
+	color:#333333;
+	border-width: 1px;
+	border-color: #999999;
+	border-collapse: collapse;
+}
+#settings table th {
+	background-color:#c3dde0;
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #a9c6c9;
+}
+#settings table  tr {
+	background-color:#d4e3e5;
+}
+#settings table  td {
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #a9c6c9;
+}
