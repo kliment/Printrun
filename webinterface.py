@@ -16,6 +16,9 @@ def PrintFooter():
 def ReloadPage(action):
     return "<html><head><meta http-equiv='refresh' content='0;url=/'></head><body>"+action+"</body></html>"
 
+def TReloadPage(action):
+    return action
+
 def clear_text(mypass):
     return mypass
     
@@ -119,6 +122,56 @@ class PauseButton(object):
         'tools.basic_auth.users': users,
         'tools.basic_auth.encrypt': clear_text}
 
+class MoveButton(object):
+    def axis(self, *args):
+        if not args:
+            raise cherrypy.HTTPError(400, "No Move Command Provided!")
+        margs=list(args)
+        axis = margs.pop(0)
+        if(margs and axis == "x"):
+            distance = margs.pop(0)
+            gPronterPtr.onecmd('move X %s' % distance)
+            return "Moving X Axis " + str(distance)
+        if(margs and axis == "y"):
+            distance = margs.pop(0)
+            gPronterPtr.onecmd('move Y %s' % distance)
+            return "Moving Y Axis " + str(distance)
+        if(margs and axis == "z"):
+            distance = margs.pop(0)
+            gPronterPtr.onecmd('move Z %s' % distance)
+            return "Moving Z Axis " + str(distance)
+        raise cherrypy.HTTPError(400, "Unmached Move Command!")
+    axis.exposed = True
+    axis._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
+            
+class HomeButton(object):
+    def axis(self, *args):
+        if not args:
+            raise cherrypy.HTTPError(400, "No Axis Provided!")
+        margs=list(args)
+        taxis = margs.pop(0)
+        if(taxis == "x"):
+            gPronterPtr.onecmd('home X')
+            return TReloadPage("Home X")
+        if(taxis == "y"):
+            gPronterPtr.onecmd('home Y')
+            return TReloadPage("Home Y")
+        if(taxis == "z"):
+            gPronterPtr.onecmd('home Z')
+            return TReloadPage("Home Z")
+        if(taxis == "all"):
+            gPronterPtr.onecmd('home')
+            return TReloadPage("Home All")
+   
+    axis.exposed = True
+    axis._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
+    
 class XMLstatus(object):
     def index(self):
         #handle connect push, then reload page
@@ -186,16 +239,45 @@ class WebInterface(object):
     printbutton = PrintButton()
     pausebutton = PrintButton()
     status = XMLstatus()
+    home = HomeButton()
+    move = MoveButton()
     
     def index(self):
         pageText=PrintHeader()+self.name+PrintMenu()
-        pageText+="<div id='controls'>"
-        pageText+="<ul><li><a href='/connect'>Connect</a></li>"
-        pageText+="<li><a href='/disconnect'>Disconnect</a></li>"
-        pageText+="<li><a href='/reset'>Reset</a></li>"
-        pageText+="<li><a href='/printbutton'>Print</a></li>"
-        pageText+="<li><a href='/pausebutton'>Pause</a></li></ul>"
-        pageText+="</div>"
+        pageText+="<div id='content'>\n"
+        pageText+="<div id='controls'>\n"
+        pageText+="<ul><li><a href='/connect'>Connect</a></li>\n"
+        pageText+="<li><a href='/disconnect'>Disconnect</a></li>\n"
+        pageText+="<li><a href='/reset'>Reset</a></li>\n"
+        pageText+="<li><a href='/printbutton'>Print</a></li>\n"
+        pageText+="<li><a href='/pausebutton'>Pause</a></li>\n"
+                
+        for i in gPronterPtr.cpbuttons:
+            pageText+="<li><a href='/custom/button/"+i[1]+"'>"+i[0]+"</a></li>\n"
+        
+        #for i in gPronterPtr.custombuttons:
+        #    print(str(i));
+            
+        pageText+="</ul>\n"
+        pageText+="</div>\n"
+        pageText+="<div id='gui'>\n"
+        pageText+="<div id='control_xy'>"
+        pageText+="<img src='/images/control_xy.png' usemap='#xymap'/>"
+        pageText+='<map name="xymap">'
+        pageText+='<area shape="rect" coords="0,0,44,44" href="/home/axis/x" alt="X Home" />'
+        pageText+='<area shape="rect" coords="200,44,244,0" href="/home/axis/y" alt="Y Home" />'
+        pageText+='<area shape="rect" coords="195,195,244,244" href="/home/axis/z" alt="Z Home" />'
+        pageText+='<area shape="rect" coords="0,244,44,196" href="/home/axis/all" alt="All Home" />'
+        #TODO Map X, Y Moves
+        pageText+="</map>"
+        pageText+="</div>\n" #endxy
+        pageText+="<div id='control_z'>"
+        pageText+="<img src='/images/control_z.png' />"
+        #TODO Map Z Moves
+        pageText+="</div>\n" #endz
+        pageText+="</div>\n" #endgui
+        pageText+="</div>\n" #endcontent
+        pageText+="</br>\n"
         pageText=pageText+"<div id='file'>File Loaded: <i>"+str(gPronterPtr.filename)+"</i></div>"
         pageText+="<div id='logframe'><iframe src='/logpage' width='100%' height='100%'>iFraming Not Supported?? No log for you.</iframe></div>"
         pageText+=PrintFooter()
@@ -223,6 +305,12 @@ def StartWebInterfaceThread(webInterface):
     cherrypy.config.update("http.config")
     conf = {'/css/style.css': {'tools.staticfile.on': True,
                       'tools.staticfile.filename': os.path.join(current_dir, 'css/style.css'),
+                     },
+             '/images/control_xy.png': {'tools.staticfile.on': True,
+                      'tools.staticfile.filename': os.path.join(current_dir, 'images/control_xy.png'),
+                     },
+             '/images/control_z.png': {'tools.staticfile.on': True,
+                      'tools.staticfile.filename': os.path.join(current_dir, 'images/control_z.png'),
                      }}
     cherrypy.config.update("http.config")
     cherrypy.quickstart(webInterface, '/', config=conf)

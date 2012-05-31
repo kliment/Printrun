@@ -591,7 +591,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zb = ZButtons(self.panel, self.moveZ)
         lls.Add(self.zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
         wx.CallAfter(self.xyb.SetFocus)
-
+        
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0])#)
             btn.SetBackgroundColour(i[3])
@@ -747,7 +747,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.panel.Fit()
         #uts.Layout()
         self.cbuttons_reload()
-
 
     def plate(self,e):
         import plater

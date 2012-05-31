@@ -38,8 +38,37 @@ color: #000;
 
 #mainmenu a:hover { color: #000; }
 
+#content{
+padding-top: 25px;
+}
+#controls{
+	float:left;
+	padding:0 0 1em 0;
+	overflow:hidden;
+	width:71%;			/* right column content width */
+	left:102%;			/* 100% plus left column left padding */
+}
+#control_xy{
+	display:inline;
+}
+
+#control_z{
+	display:inline;
+	position:absolute;
+}
+
+#gui{
+	float:left;
+	padding:0 0 1em 0;
+	overflow:hidden;
+	width:21%;			/* left column content width (column width minus left and right padding) */
+	left:6%;			/* (right column left and right padding) plus (left column left padding) */
+
+}
 #controls
 {
+	width:21%;			/* Width of left column content (column width minus padding on either side) */
+	left:31%;			/* width of (right column) plus (center column left and right padding) plus (left column left padding) */
 
 }
 
@@ -113,6 +142,14 @@ border: none;
 
 #console{
 
+}
+
+#file{
+   position:relative;
+   float:left;
+   width:100%;
+   height:20px;   /* Height of the footer */
+   background:#eee;
 }
 
 #logframe{
