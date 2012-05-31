@@ -13,7 +13,8 @@ command prompt there and running python setup.py install.  You can also download
 
 ## Webinterface Configuration
   * The Web interface port / ip is configurable in http.config
-
+  * The Default User / Password can be set in auth.config
+  
 ## Webinterface Styling
   * css/style.css can be modified to change the style of the Web Interface.
  

@@ -1,6 +1,8 @@
 #!/usr/bin/python
-import cherrypy, pronterface, re
+import cherrypy, pronterface, re, ConfigParser, io
 import os.path
+
+users = {}
 
 def PrintHeader():
     return '<html>\n<head>\n<title>Pronterface-Web</title>\n<link rel="stylesheet" type="text/css" href="/css/style.css" type="text/css"></link>\n</head>\n<body>\n'
@@ -14,6 +16,9 @@ def PrintFooter():
 def ReloadPage(action):
     return "<html><head><meta http-equiv='refresh' content='0;url=/'></head><body>"+action+"</body></html>"
 
+def clear_text(mypass):
+    return mypass
+    
 gPronterPtr = 0
 gWeblog     = ""
 gLogRefresh =5
@@ -65,13 +70,21 @@ class ConnectButton(object):
         gPronterPtr.connect(0)
         return ReloadPage("Connect...")
     index.exposed = True
-
+    index._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
+        
 class DisconnectButton(object):
     def index(self):
         #handle connect push, then reload page
         gPronterPtr.disconnect(0)
         return ReloadPage("Disconnect...")
     index.exposed = True
+    index._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
 
 class ResetButton(object):
     def index(self):
@@ -79,6 +92,10 @@ class ResetButton(object):
         gPronterPtr.reset(0)
         return ReloadPage("Reset...")
     index.exposed = True
+    index._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
 
 class PrintButton(object):
     def index(self):
@@ -86,6 +103,10 @@ class PrintButton(object):
         gPronterPtr.printfile(0)
         return ReloadPage("Print...")
     index.exposed = True
+    index._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
 
 class PauseButton(object):
     def index(self):
@@ -93,16 +114,49 @@ class PauseButton(object):
         gPronterPtr.pause(0)
         return ReloadPage("Pause...")
     index.exposed = True
+    index._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
 
 class XMLstatus(object):
     def index(self):
         #handle connect push, then reload page
-        return '<?xml version="1.0"?>\n<xml>\n   <status>'+gPronterPtr.status.GetStatusText()+'</status>\n</xml>';
+        txt='<?xml version="1.0"?>\n<pronterface>\n'
+        txt=txt+'<file>'+str(gPronterPtr.filename)+'</file>\n'
+        txt=txt+'<status>'+str(gPronterPtr.status.GetStatusText())+'</status>\n'
+        try:
+            temp = str(float(filter(lambda x:x.startswith("T:"),gPronterPtr.tempreport.split())[0].split(":")[1]))
+            txt=txt+'<hotend>'+temp+'</hotend>\n'
+        except:
+            txt=txt+'<hotend>NA</hotend>\n'
+            pass
+        try:
+            temp = str(float(filter(lambda x:x.startswith("B:"),gPronterPtr.tempreport.split())[0].split(":")[1]))
+            txt=txt+'<bed>'+temp+'</bed>\n'
+        except:
+            txt=txt+'<bed>NA</bed>\n'
+            pass
+        if gPronterPtr.sdprinting:
+            fractioncomplete = float(gPronterPtr.percentdone/100.0)
+            txt+= _("<progress>%04.2f %%") % (gPronterPtr.percentdone,)
+            txt+="</progress>\n"
+        elif gPronterPtr.p.printing:
+            fractioncomplete = float(gPronterPtr.p.queueindex)/len(gPronterPtr.p.mainqueue)
+            txt+= _("<progress>%04.2f %% |") % (100*float(gPronterPtr.p.queueindex)/len(gPronterPtr.p.mainqueue),)
+            txt+="</progress>\n"
+        else:
+            txt+="<progress>NA</progress>\n"
+        txt+='</pronterface>'
+        return txt
     index.exposed = True
 
 class WebInterface(object):
     
     def __init__(self, pface):
+        config = ConfigParser.SafeConfigParser(allow_no_value=True)
+        config.read('auth.config')
+        users[config.get("user", "user")] = config.get("user", "pass")
         self.pface = pface
         global gPronterPtr
         global gWeblog
