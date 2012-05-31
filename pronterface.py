@@ -1161,6 +1161,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         self.Destroy()
+        webinterface.KillWebInterfaceThread()
 
     def do_monitor(self,l=""):
         if l.strip()=="":
@@ -1686,6 +1687,7 @@ class macroed(wx.Dialog):
             self.callback(self.e.GetValue().split("\n"))
     def close(self,ev):
         self.Destroy()
+        webinterface.KillWebInterfaceThread()
     def unindent(self,text):
         self.indent_chars = text[:len(text)-len(text.lstrip())]
         if len(self.indent_chars)==0:

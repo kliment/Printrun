@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import cherrypy, pronterface, re, ConfigParser, io
+import cherrypy, pronterface, re, ConfigParser, threading
 import os.path
 
 users = {}
@@ -214,6 +214,9 @@ class WebInterfaceStub(object):
         return "<b>Web Interface Must be launched by running Pronterface!</b>"
     index.exposed = True
 
+def KillWebInterfaceThread():
+    cherrypy.engine.exit()
+    
 def StartWebInterfaceThread(webInterface):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cherrypy.config.update({'engine.autoreload_on':False})
@@ -223,7 +226,7 @@ def StartWebInterfaceThread(webInterface):
                      }}
     cherrypy.config.update("http.config")
     cherrypy.quickstart(webInterface, '/', config=conf)
-    
+
 if __name__ == '__main__':
     cherrypy.config.update("http.config")
     cherrypy.quickstart(WebInterfaceStub())
