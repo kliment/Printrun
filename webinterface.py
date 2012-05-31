@@ -161,7 +161,7 @@ class WebInterface(object):
         global gPronterPtr
         global gWeblog
         self.name="<div id='title'>Pronterface Web-Interface</div>"
-        gWeblog = "Connecting web interface to pronterface..."
+        gWeblog = ""
         gPronterPtr = self.pface 
 
     settings = SettingsPage()

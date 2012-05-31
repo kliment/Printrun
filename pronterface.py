@@ -159,7 +159,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.webInterface=webinterface.WebInterface(self)
         self.webThread = Thread(target=webinterface.StartWebInterfaceThread, args=(self.webInterface, ))
         self.webThread.start()
-        self.webInterface.AddLog("Connected!!!")
 
     def startcb(self):
         self.starttime=time.time()
