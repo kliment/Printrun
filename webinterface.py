@@ -155,16 +155,16 @@ class HomeButton(object):
         taxis = margs.pop(0)
         if(taxis == "x"):
             gPronterPtr.onecmd('home X')
-            return TReloadPage("Home X")
+            return ReloadPage("Home X")
         if(taxis == "y"):
             gPronterPtr.onecmd('home Y')
-            return TReloadPage("Home Y")
+            return ReloadPage("Home Y")
         if(taxis == "z"):
             gPronterPtr.onecmd('home Z')
-            return TReloadPage("Home Z")
+            return ReloadPage("Home Z")
         if(taxis == "all"):
             gPronterPtr.onecmd('home')
-            return TReloadPage("Home All")
+            return ReloadPage("Home All")
    
     axis.exposed = True
     axis._cp_config = {'tools.basic_auth.on': True,
