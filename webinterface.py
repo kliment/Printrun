@@ -203,11 +203,11 @@ class XMLstatus(object):
             pass
         if gPronterPtr.sdprinting:
             fractioncomplete = float(gPronterPtr.percentdone/100.0)
-            txt+= _("<progress>%04.2f %%") % (gPronterPtr.percentdone,)
+            txt+= _("<progress>%04.2f") % (gPronterPtr.percentdone,)
             txt+="</progress>\n"
         elif gPronterPtr.p.printing:
             fractioncomplete = float(gPronterPtr.p.queueindex)/len(gPronterPtr.p.mainqueue)
-            txt+= _("<progress>%04.2f %% |") % (100*float(gPronterPtr.p.queueindex)/len(gPronterPtr.p.mainqueue),)
+            txt+= _("<progress>%04.2f") % (100*float(gPronterPtr.p.queueindex)/len(gPronterPtr.p.mainqueue),)
             txt+="</progress>\n"
         else:
             txt+="<progress>NA</progress>\n"
