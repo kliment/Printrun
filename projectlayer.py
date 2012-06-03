@@ -188,7 +188,7 @@ class setframe(wx.Frame):
         
         wx.StaticText(self.panel, -1, "Fullscreen:", pos=(rightlabelXPos, 150))
         self.fullscreen = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 150))
-        self.fullscreen.SetValue(True)
+        self.fullscreen.Bind(wx.EVT_CHECKBOX, self.updatefullscreen)
         
         wx.StaticText(self.panel, -1, "Calibrate:", pos=(rightlabelXPos, 180))
         self.calibrate = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 180))
@@ -245,7 +245,9 @@ class setframe(wx.Frame):
         self.image_dir = tempfile.mkdtemp()
         zipFile.extractall(self.image_dir)
         ol = []
-        for f in os.listdir(self.image_dir):
+        imagefiles = os.listdir(self.image_dir)
+        imagefiles.sort()
+        for f in imagefiles:
             path = os.path.join(self.image_dir, f)
             if os.path.isfile(path) and imghdr.what(path) in acceptedImageTypes:
                 ol.append(wx.Image(path))
@@ -293,7 +295,7 @@ class setframe(wx.Frame):
             dc.DrawLine(0,resolutionYPixels,resolutionXPixels,resolutionYPixels);
             
             dc.SetPen(wx.Pen("red",2))
-            aspectRatio = resolutionXPixels/resolutionYPixels
+            aspectRatio = float(resolutionXPixels)/float(resolutionYPixels)
             
             projectedXmm = float(self.projectedXmm.GetValue())            
             projectedYmm = round(projectedXmm/aspectRatio)
@@ -304,7 +306,7 @@ class setframe(wx.Frame):
             gridCountX = int(projectedXmm/10)
             gridCountY = int(projectedYmm/10)
             
-            for y in xrange(0,gridCountY):
+            for y in xrange(0,gridCountY+1):
                 for x in xrange(0,gridCountX+1):
                     dc.DrawLine(0,y*(pixelsYPerMM*10),resolutionXPixels,y*(pixelsYPerMM*10));
                     dc.DrawLine(x*(pixelsXPerMM*10),0,x*(pixelsXPerMM*10),resolutionYPixels);
@@ -322,6 +324,13 @@ class setframe(wx.Frame):
         
     def updatescale(self,event):
         self.f.scale=float(self.scale.GetValue())
+        self.startcalibrate(event)
+        
+    def updatefullscreen(self,event):
+        if (self.fullscreen.GetValue()):
+            self.f.ShowFullScreen(1)
+        else:
+            self.f.ShowFullScreen(0)
         self.startcalibrate(event)
     
     def updateresolution(self,event):
