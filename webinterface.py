@@ -131,22 +131,37 @@ class MoveButton(object):
         if(margs and axis == "x"):
             distance = margs.pop(0)
             gPronterPtr.onecmd('move X %s' % distance)
-            return "Moving X Axis " + str(distance)
+            return ReloadPage("Moving X Axis " + str(distance))
         if(margs and axis == "y"):
             distance = margs.pop(0)
             gPronterPtr.onecmd('move Y %s' % distance)
-            return "Moving Y Axis " + str(distance)
+            return ReloadPage("Moving Y Axis " + str(distance))
         if(margs and axis == "z"):
             distance = margs.pop(0)
             gPronterPtr.onecmd('move Z %s' % distance)
-            return "Moving Z Axis " + str(distance)
+            return ReloadPage("Moving Z Axis " + str(distance))
         raise cherrypy.HTTPError(400, "Unmached Move Command!")
     axis.exposed = True
     axis._cp_config = {'tools.basic_auth.on': True,
         'tools.basic_auth.realm': 'My Print Server',
         'tools.basic_auth.users': users,
         'tools.basic_auth.encrypt': clear_text}
-            
+ 
+class CustomButton(object):
+    def button(self, *args):
+        if not args:
+            raise cherrypy.HTTPError(400, "No Custom Command Provided!")
+        margs=list(args)
+        command = margs.pop(0)
+        if(command):
+            gPronterPtr.onecmd(command)
+            return ReloadPage(str(command))
+    button.exposed = True
+    button._cp_config = {'tools.basic_auth.on': True,
+        'tools.basic_auth.realm': 'My Print Server',
+        'tools.basic_auth.users': users,
+        'tools.basic_auth.encrypt': clear_text}
+                       
 class HomeButton(object):
     def axis(self, *args):
         if not args:
@@ -241,6 +256,7 @@ class WebInterface(object):
     status = XMLstatus()
     home = HomeButton()
     move = MoveButton()
+    custom =CustomButton()
     
     def index(self):
         pageText=PrintHeader()+self.name+PrintMenu()
@@ -264,15 +280,40 @@ class WebInterface(object):
         pageText+="<div id='control_xy'>"
         pageText+="<img src='/images/control_xy.png' usemap='#xymap'/>"
         pageText+='<map name="xymap">'
-        pageText+='<area shape="rect" coords="0,0,44,44" href="/home/axis/x" alt="X Home" />'
-        pageText+='<area shape="rect" coords="200,44,244,0" href="/home/axis/y" alt="Y Home" />'
-        pageText+='<area shape="rect" coords="195,195,244,244" href="/home/axis/z" alt="Z Home" />'
-        pageText+='<area shape="rect" coords="0,244,44,196" href="/home/axis/all" alt="All Home" />'
-        #TODO Map X, Y Moves
+        
+        pageText+='<area shape="rect" coords="8,5,51,48" href="/home/axis/x" alt="X Home" title="X Home"    />'
+        pageText+='<area shape="rect" coords="195,6,236,46" href="/home/axis/y" alt="Y Home" title="Y Home"    />'
+        pageText+='<area shape="rect" coords="7,192,48,232" href="/home/axis/all" alt="All Home" title="All Home"    />'
+        pageText+='<area shape="rect" coords="194,192,235,232" href="/home/axis/z" alt="Z Home" title="Z Home"    />'
+        pageText+='<area shape="rect" coords="62,7,185,34" href="/move/axis/y/100" alt="Y 100" title="Y 100"    />'
+        pageText+='<area shape="rect" coords="68,34,175,61" href="/move/axis/y/10" alt="Y 10" title="Y 10"    />'
+        pageText+='<area shape="rect" coords="80,60,163,84" href="/move/axis/y/1" alt="Y 1" title="Y 1"    />'
+        pageText+='<area shape="rect" coords="106,83,138,107" href="/move/axis/y/.1" alt="Y .1" title="Y .1"    />'
+        pageText+='<area shape="rect" coords="110,135,142,159" href="/move/axis/y/-.1" alt="Y -.1" title="Y -.1"    />'
+        pageText+='<area shape="rect" coords="81,157,169,181" href="/move/axis/y/-1" alt="Y -1" title="Y -1"    />'
+        pageText+='<area shape="rect" coords="69,180,178,206" href="/move/axis/y/-10" alt="Y -10" title="Y -10"    />'
+        pageText+='<area shape="rect" coords="60,205,186,231" href="/move/axis/y/-100" alt="Y -100" title="Y -100"    />'
+        pageText+='<area shape="rect" coords="11,53,37,179" href="/move/axis/x/-100" alt="X -100" title="X -100"    />'
+        pageText+='<area shape="rect" coords="210,59,236,185" href="/move/axis/x/100" alt="X 100" title="X 100"    />'
+        pageText+='<area shape="rect" coords="38,60,64,172" href="/move/axis/x/-10" alt="X -10" title="X -10"    />'
+        pageText+='<area shape="rect" coords="185,66,211,178" href="/move/axis/x/10" alt="X 10" title="X 10"    />'
+        pageText+='<area shape="rect" coords="62,84,83,157" href="/move/axis/x/-1" alt="X -1" title="X -1"    />'
+        pageText+='<area shape="rect" coords="163,87,187,160" href="/move/axis/x/1" alt="X 1" title="X 1"    />'
+        pageText+='<area shape="rect" coords="82,104,110,139" href="/move/axis/x/-.1" alt="X -.1" title="X -.1"    />'
+        pageText+='<area shape="rect" coords="137,105,165,140" href="/move/axis/x/.1" alt="X .1" title="X .1"    />'
+
         pageText+="</map>"
         pageText+="</div>\n" #endxy
         pageText+="<div id='control_z'>"
-        pageText+="<img src='/images/control_z.png' />"
+        pageText+="<img src='/images/control_z.png' usemap='#zmap'/>"
+        pageText+='<map name="zmap">'
+        pageText+='<area shape="rect" coords="4,35,54,64" href="/move/axis/z/10" alt="Z 10" title="Z 10"    />'
+        pageText+='<area shape="rect" coords="4,60,54,89" href="/move/axis/z/1" alt="Z 1" title="Z 1"    />'
+        pageText+='<area shape="rect" coords="4,87,54,116" href="/move/axis/z/.1" alt="Z .1" title="Z .1"    />'
+        pageText+='<area shape="rect" coords="4,121,54,150" href="/move/axis/z/-.1" alt="Z -.1" title="Z -.1"    />'
+        pageText+='<area shape="rect" coords="4,147,54,176" href="/move/axis/z/-1" alt="Z -1" title="Z -1"    />'
+        pageText+='<area shape="rect" coords="4,173,54,202" href="/move/axis/z/-10" alt="Z -10" title="Z -10"    />'
+        pageText+="</map>"
         #TODO Map Z Moves
         pageText+="</div>\n" #endz
         pageText+="</div>\n" #endgui
