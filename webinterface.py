@@ -319,6 +319,17 @@ class WebInterface(object):
         pageText+="</div>\n" #endgui
         pageText+="</div>\n" #endcontent
         pageText+="</br>\n"
+
+       # Temp Control TBD
+       # pageText+="<div id='temp'>"
+       # pageText+="<div id='tempmenu'>"
+       # pageText+="<ul><li><b>Heater Temp:</b></li><li><a href='/off'>OFF</a></li><li><a href='/185'>185 (PLA)</a></li><li><a href='/240'>240 (ABS)</a></li></ul>"
+       # pageText+="</div>"
+       # pageText+="<div id='tempmenu'>"
+       # pageText+="<ul><li><b>Bed Temp:</b></li><li><a href='/off'>OFF</a></li><li><a href='/185'>185 (PLA)</a></li><li><a href='/240'>240 (ABS)</a></li></ul>"
+       # pageText+="</div>"
+       # pageText+="</div>"
+        
         pageText=pageText+"<div id='file'>File Loaded: <i>"+str(gPronterPtr.filename)+"</i></div>"
         pageText+="<div id='logframe'><iframe src='/logpage' width='100%' height='100%'>iFraming Not Supported?? No log for you.</iframe></div>"
         pageText+=PrintFooter()

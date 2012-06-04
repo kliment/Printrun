@@ -155,3 +155,52 @@ border: none;
 #logframe{
 
 }
+
+#temp{
+}
+#tempmenu
+{
+padding: 0 0 10px 10px;
+position: relative;
+float: left;
+width: 100%;
+}
+#tempmenu ul, #tempmenu li
+{
+margin: 0;
+display: inline;
+list-style-type: none;
+}
+
+#tempmenu b
+{
+padding-top: 4px;
+float: left;
+line-height: 14px;
+font-weight: bold;
+color: #888;
+margin: 0 10px 4px 10px;
+text-decoration: none;
+color: #999;
+}
+
+#tempmenu a:link, #tempmenu a:visited
+{
+float: left;
+border-bottom: 1px solid #000;
+line-height: 14px;
+font-weight: bold;
+margin: 0 10px 4px 10px;
+text-decoration: none;
+color: #999;
+}
+
+#tempmenu a:link#tempmenu, #tempmenu a:visited#current, #tempmenu a:hover
+{
+border-bottom: 2px solid #000;
+padding-bottom: 2px;
+background: transparent;
+color: #000;
+}
+
+#tempmenu a:hover { color: #000; }
