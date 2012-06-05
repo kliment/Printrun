@@ -4,6 +4,20 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
   * pronsole.py is an interactive command-line host software with tabcompletion goodness
   * pronterface.py is a graphical host software with the same functionality as pronsole
 
+# Modifications by Beardface (Webinterface)
+
+## Webinterface Dependencies 
+
+Cherrypy is required for the web interface.  In my branch it is available in the libs folder, install by opening a 
+command prompt there and running python setup.py install.  You can also download and install from cherrypy.
+
+## Webinterface Configuration
+  * The Web interface port / ip is configurable in http.config
+  * The Default User / Password can be set in auth.config
+  
+## Webinterface Styling
+  * css/style.css can be modified to change the style of the Web Interface.
+ 
 # INSTALLING DEPENDENCIES
 
 ## Windows
