@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import cherrypy, pronterface, re, ConfigParser, threading
+import cherrypy, pronterface, re, ConfigParser, threading, sys
 import os.path
 
 users = {}
@@ -233,7 +233,11 @@ class XMLstatus(object):
 class WebInterface(object):
     
     def __init__(self, pface):
-        config = ConfigParser.SafeConfigParser(allow_no_value=True)
+        if (sys.version_info[1] > 6):
+          # 'allow_no_value' wasn't added until 2.7
+          config = ConfigParser.SafeConfigParser(allow_no_value=True)
+        else:
+          config = ConfigParser.SafeConfigParser()
         config.read('auth.config')
         users[config.get("user", "user")] = config.get("user", "pass")
         self.pface = pface
