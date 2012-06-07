@@ -99,22 +99,28 @@ class dispframe(wx.Frame):
             
     def showimgdelay(self, image):
         self.drawlayer(image,self.slicer)
+        print "showing"
         self.pic.Show()
         self.Refresh()
 
-        self.Refresh()
+    def rise(self):
+        print "raising"
         if self.p != None and self.p.online:
                 self.p.send_now("G91")
-                self.p.send_now("G1 Z%f F300" % (self.thickness,))
+                self.p.send_now("G1 Z%f F250" % (self.thickness,))
                 self.p.send_now("G90")
-            
+                
+    def hidePic(self):
+        print "hiding"
+        self.pic.Hide()
+        self.rise()
+                    
     def nextimg(self, event):
         if self.index < len(self.layers):
             i = self.index
-
             print i
             wx.CallAfter(self.showimgdelay, self.layers[i])
-            wx.FutureCall(1000 * self.interval, self.pic.Hide)
+            wx.FutureCall(1000 * self.interval, self.hidePic)
             self.index += 1
         else:
             print "end"
