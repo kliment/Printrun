@@ -204,6 +204,9 @@ class setframe(wx.Frame):
         self.projectedXmm = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos+40, 210), value=150.0, increment=1, digits=1 )
         self.projectedXmm.Bind(floatspin.EVT_FLOATSPIN, self.updateprojectedXmm)
         
+        self.abort = wx.Button(self.panel, -1, "Abort!", pos=(leftlabelXPos, 180))
+        self.abort.Bind(wx.EVT_BUTTON, self.abortPresent)
+        
         self.Show()
 
     def __del__(self):
@@ -355,6 +358,10 @@ class setframe(wx.Frame):
             pause=float(self.delay.GetValue()),
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
             offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue())))
+        
+    def abortPresent(self, event):
+        print "Abort"
+        self.f.timer.Stop()
 
 if __name__ == "__main__":
     #a = wx.App(redirect=True,filename="mylogfile.txt")
