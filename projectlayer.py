@@ -24,7 +24,7 @@ import svg.document as wxpsvgdocument
 import imghdr
     
 class dispframe(wx.Frame):
-    def __init__(self, parent, title, res=(1024, 768), printer=None):
+    def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
         wx.Frame.__init__(self, parent=parent, title=title, size=res)
         self.p = printer
         self.pic = wx.StaticBitmap(self)
@@ -43,6 +43,11 @@ class dispframe(wx.Frame):
         self.brush = wx.Brush("white")
         self.SetDoubleBuffered(True)
         self.Show()
+        
+        self.scale = scale
+        self.index = 0
+        self.size = res
+        self.offset = offset
 
     def clearlayer(self):
         try:
@@ -99,17 +104,22 @@ class dispframe(wx.Frame):
             
     def showimgdelay(self, image):
         self.drawlayer(image,self.slicer)
+        print "Showing"
         self.pic.Show()
         self.Refresh()
 
     def rise(self):
+        print "Rising"
         if self.p != None and self.p.online:
                 self.p.send_now("G91")
                 self.p.send_now("G1 Z%f F250" % (self.thickness,))
                 self.p.send_now("G90")
-                
     def hidePic(self):
+        print "Hiding"
         self.pic.Hide()
+        
+    def hidePicAndRise(self):
+        self.hidePic()
         self.rise()
                     
     def nextimg(self, event):
@@ -117,7 +127,7 @@ class dispframe(wx.Frame):
             i = self.index
             print i
             wx.CallAfter(self.showimgdelay, self.layers[i])
-            wx.FutureCall(1000 * self.interval, self.hidePic)
+            wx.FutureCall(1000 * self.interval, self.hidePicAndRise)
             self.index += 1
         else:
             print "end"
@@ -189,6 +199,9 @@ class setframe(wx.Frame):
         self.bload = wx.Button(self.panel, -1, "Present", pos=(leftlabelXPos, 150))
         self.bload.Bind(wx.EVT_BUTTON, self.startdisplay)
         
+        self.pause = wx.Button(self.panel, -1, "Pause", pos=(leftlabelXPos, 180))
+        self.pause.Bind(wx.EVT_BUTTON, self.pausepresent)
+        
         wx.StaticText(self.panel, -1, "Fullscreen:", pos=(rightlabelXPos, 150))
         self.fullscreen = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 150))
         self.fullscreen.Bind(wx.EVT_CHECKBOX, self.updatefullscreen)
@@ -200,10 +213,11 @@ class setframe(wx.Frame):
         wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(rightlabelXPos, 210))
         self.projectedXmm = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos+40, 210), value=150.0, increment=1, digits=1 )
         self.projectedXmm.Bind(floatspin.EVT_FLOATSPIN, self.updateprojectedXmm)
-        
-        self.pause = wx.Button(self.panel, -1, "Pause", pos=(leftlabelXPos, 180))
-        self.pause.Bind(wx.EVT_BUTTON, self.pausePresent)
-        
+
+        wx.StaticText(self.panel, -1, "1st Layer:", pos=(rightlabelXPos, 240))
+        self.showfirstlayer = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 240))
+        self.showfirstlayer.Bind(wx.EVT_CHECKBOX, self.presentfirstlayer)
+                
         self.Show()
 
     def __del__(self):
@@ -359,8 +373,7 @@ class setframe(wx.Frame):
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
             offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue())))
         
-    def pausePresent(self, event):
-        
+    def pausepresent(self, event):        
         if self.f.timer.IsRunning():
             print "Pause"
             self.pause.SetLabel("Continue")
@@ -369,6 +382,13 @@ class setframe(wx.Frame):
             print "Continue"
             self.pause.SetLabel("Pause")
             self.f.timer.Start()
+
+    def presentfirstlayer(self, event):
+        if (self.showfirstlayer.GetValue()):
+            self.f.drawlayer(self.layers[0][0], self.f.slicer)
+        else:
+            self.f.hidePic()
+        
 
 if __name__ == "__main__":
     #a = wx.App(redirect=True,filename="mylogfile.txt")
