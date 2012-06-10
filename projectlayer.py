@@ -99,19 +99,16 @@ class dispframe(wx.Frame):
             
     def showimgdelay(self, image):
         self.drawlayer(image,self.slicer)
-        print "showing"
         self.pic.Show()
         self.Refresh()
 
     def rise(self):
-        print "raising"
         if self.p != None and self.p.online:
                 self.p.send_now("G91")
                 self.p.send_now("G1 Z%f F250" % (self.thickness,))
                 self.p.send_now("G90")
                 
     def hidePic(self):
-        print "hiding"
         self.pic.Hide()
         self.rise()
                     
@@ -204,14 +201,16 @@ class setframe(wx.Frame):
         self.projectedXmm = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos+40, 210), value=150.0, increment=1, digits=1 )
         self.projectedXmm.Bind(floatspin.EVT_FLOATSPIN, self.updateprojectedXmm)
         
-        self.abort = wx.Button(self.panel, -1, "Abort!", pos=(leftlabelXPos, 180))
-        self.abort.Bind(wx.EVT_BUTTON, self.abortPresent)
+        self.pause = wx.Button(self.panel, -1, "Pause", pos=(leftlabelXPos, 180))
+        self.pause.Bind(wx.EVT_BUTTON, self.pausePresent)
         
         self.Show()
 
     def __del__(self):
         if hasattr(self, 'image_dir') and self.image_dir != '':
             shutil.rmtree(self.image_dir)
+        if self.f:
+            self.f.Destroy()
             
     def parsesvg(self, name):
         et = xml.etree.ElementTree.ElementTree(file=name)
@@ -359,9 +358,16 @@ class setframe(wx.Frame):
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
             offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue())))
         
-    def abortPresent(self, event):
-        print "Abort"
-        self.f.timer.Stop()
+    def pausePresent(self, event):
+        
+        if self.f.timer.IsRunning():
+            print "Pause"
+            self.pause.SetLabel("Continue")
+            self.f.timer.Stop()
+        else:
+            print "Continue"
+            self.pause.SetLabel("Pause")
+            self.f.timer.Start()
 
 if __name__ == "__main__":
     #a = wx.App(redirect=True,filename="mylogfile.txt")
