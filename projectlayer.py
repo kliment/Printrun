@@ -346,6 +346,7 @@ class setframe(wx.Frame):
         self.startcalibrate(event)
     
     def startdisplay(self, event):
+        self.pause.SetLabel("Pause")
         self.f.Raise()
         if (self.fullscreen.GetValue()):
             self.f.ShowFullScreen(1)
