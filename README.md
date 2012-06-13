@@ -3,6 +3,7 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
   * printcore.py is a library that makes writing reprap hosts easy
   * pronsole.py is an interactive command-line host software with tabcompletion goodness
   * pronterface.py is a graphical host software with the same functionality as pronsole
+  * webinterface.py is a browser-usable remote control function for Pronterface
 
 # INSTALLING DEPENDENCIES
 
@@ -83,8 +84,27 @@ Load an STL (see the note on skeinforge below) or GCODE file, and you can upload
 The "monitor printer" function, when enabled, checks the printer state (temperatures, SD print progress) every 3 seconds.
 The command box recognizes all pronsole commands, but has no tabcompletion.
 
-If you want to load stl files, you need to put a version of skeinforge (doesn't matter which one) in a folder called "skeinforge".
-The "skeinforge" folder must be in the same folder as pronterface.py
+If you want to load stl files, you need to install a slicing program such as Slic3r and add its path to the settings.
+See the Slic3r readme for more details on integration.
+
+# Using the browser interface
+
+To run the web interface, install Cherrypy and run Pronterface as described above.
+The www server will start on the port/address you have chosen.
+
+## Webinterface Dependencies 
+
+Cherrypy is required for the web interface.  Download and install it by opening a 
+command prompt in its directory and running python setup.py install.
+
+## Webinterface Configuration
+  * The Web interface port / ip is configurable in http.config
+  * The Default User / Password can be set in auth.config
+  
+## Webinterface Styling
+  * css/style.css can be modified to change the style of the Web Interface.
+ 
+
 
 # USING PRONSOLE
 

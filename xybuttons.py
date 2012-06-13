@@ -47,7 +47,7 @@ class XYButtons(BufferedCanvas):
     center = (124, 121)
     spacer = 7
 
-    def __init__(self, parent, moveCallback=None, cornerCallback=None, ID=-1):
+    def __init__(self, parent, moveCallback=None, cornerCallback=None, spacebarCallback=None, bgcolor="#FFFFFF", ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_xy.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
@@ -56,7 +56,15 @@ class XYButtons(BufferedCanvas):
         self.corner = None
         self.moveCallback = moveCallback
         self.cornerCallback = cornerCallback
+        self.spacebarCallback = spacebarCallback
         self.enabled = False
+        # Remember the last clicked buttons, so we can repeat when spacebar pressed
+        self.lastMove = None
+        self.lastCorner = None
+
+	self.bgcolor = wx.Colour()
+	self.bgcolor.SetFromName(bgcolor)
+	self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
     
         BufferedCanvas.__init__(self, parent, ID)
         self.SetSize(self.bg_bmp.GetSize())
@@ -76,7 +84,17 @@ class XYButtons(BufferedCanvas):
     def enable(self):
         self.enabled = True
         self.update()
+
+    def repeatLast(self):
+        if self.lastMove:
+            self.moveCallback(*self.lastMove)
+        if self.lastCorner:
+            self.cornerCallback(self.lastCorner)
     
+    def clearRepeat(self):
+        self.lastMove = None
+        self.lastCorner = None
+
     def distanceToLine(self, pos, x1, y1, x2, y2):
         xlen = x2 - x1
         ylen = y2 - y1
@@ -206,6 +224,7 @@ class XYButtons(BufferedCanvas):
         
 
     def draw(self, dc, w, h):
+	dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
 
@@ -240,8 +259,8 @@ class XYButtons(BufferedCanvas):
                     r = kpos[2]
                     gc.DrawEllipse(kpos[0]-r, kpos[1]-r, r*2, r*2)
         else:
-            gc.SetPen(wx.Pen(wx.Colour(255,255,255,0), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128)))
+            gc.SetPen(wx.Pen(self.bgcolor, 0))
+            gc.SetBrush(wx.Brush(self.bgcolormask))
             gc.DrawRectangle(0, 0, w, h)
         
 
@@ -273,8 +292,6 @@ class XYButtons(BufferedCanvas):
                 self.quadrant = 2
             elif evt.GetKeyCode() == wx.WXK_RIGHT:
                 self.quadrant = 0
-            elif evt.GetKeyCode() == wx.WXK_SPACE:
-                pass
             else:
                 evt.Skip()
                 return
@@ -283,6 +300,9 @@ class XYButtons(BufferedCanvas):
                 self.concentric = self.keypad_idx
                 x, y = self.getMovement()
                 self.moveCallback(x, y)
+        elif evt.GetKeyCode() == wx.WXK_SPACE:
+            self.spacebarCallback()
+
 
     def OnMotion(self, event):
         if not self.enabled:
@@ -335,9 +355,13 @@ class XYButtons(BufferedCanvas):
                     if self.quadrant != None:
                         x, y = self.getMovement()
                         if self.moveCallback:
+                            self.lastMove = (x, y)
+                            self.lastCorner = None
                             self.moveCallback(x, y)
                 elif self.corner != None:
                     if self.cornerCallback:
+                        self.lastCorner = self.corner
+                        self.lastMove = None
                         self.cornerCallback(self.corner)
         else:
             if self.keypad_idx == idx:
