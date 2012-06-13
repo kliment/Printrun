@@ -233,7 +233,7 @@ class XMLstatus(object):
 class WebInterface(object):
     
     def __init__(self, pface):
-        config = ConfigParser.SafeConfigParser(allow_no_value=True)
+        config = ConfigParser.SafeConfigParser()
         config.read('auth.config')
         users[config.get("user", "user")] = config.get("user", "pass")
         self.pface = pface
