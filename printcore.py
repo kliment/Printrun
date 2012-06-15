@@ -217,7 +217,7 @@ class printcore():
                     time.sleep(0.001)
                 self._send(command)
             #callback for command sent
-        else
+        else:
             print "Not connected to printer."
         
     def _print(self):
