@@ -209,13 +209,16 @@ class printcore():
     def send_now(self,command):
         """Sends a command to the printer ahead of the command queue, without a checksum
         """
-        if(self.printing):
-            self.priqueue+=[command]
-        else:
-            while not self.clear:
-                time.sleep(0.001)
-            self._send(command)
-        #callback for command sent
+        if(self.online):
+            if(self.printing):
+                self.priqueue+=[command]
+            else:
+                while not self.clear:
+                    time.sleep(0.001)
+                self._send(command)
+            #callback for command sent
+        else
+            print "Not connected to printer."
         
     def _print(self):
         #callback for printing started
