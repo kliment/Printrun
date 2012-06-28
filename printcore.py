@@ -48,6 +48,7 @@ class printcore():
         self.onlinecb=None#impl ()
         self.loud=False#emit sent and received lines to terminal
         self.greetings=['start','Grbl ']
+        self.wait=0# default wait period for send(), send_now()
         if port is not None and baud is not None:
             #print port, baud
             self.connect(port, baud)
@@ -193,7 +194,7 @@ class printcore():
         self.printing=True
         Thread(target=self._print).start()
     
-    def send(self,command):
+    def send(self,command,wait=0):
         """Adds a command to the checksummed main command queue if printing, or sends the command immediately if not printing
         """
         
@@ -202,11 +203,17 @@ class printcore():
         else:
             while not self.clear:
                 time.sleep(0.001)
+            if (wait == 0 and self.wait > 0):
+              wait = self.wait
+            if (wait > 0):
+              self.clear=False
             self._send(command,self.lineno,True)
             self.lineno+=1
+            while ((wait > 0) and not self.clear):
+              time.sleep(0.001)
+              wait-=1
         
-    
-    def send_now(self,command):
+    def send_now(self,command,wait=0):
         """Sends a command to the printer ahead of the command queue, without a checksum
         """
         if(self.printing):
@@ -214,7 +221,14 @@ class printcore():
         else:
             while not self.clear:
                 time.sleep(0.001)
+            if (wait == 0 and self.wait > 0):
+              wait = self.wait
+            if (wait > 0):
+              self.clear=False
             self._send(command)
+            while ((wait > 0) and not self.clear):
+              time.sleep(0.001)
+              wait-=1
         #callback for command sent
         
     def _print(self):
