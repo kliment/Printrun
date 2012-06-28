@@ -198,20 +198,23 @@ class printcore():
         """Adds a command to the checksummed main command queue if printing, or sends the command immediately if not printing
         """
         
-        if(self.printing):
-            self.mainqueue+=[command]
+        if(self.online):
+            if(self.printing):
+                self.mainqueue+=[command]
+            else:
+                while not self.clear:
+                    time.sleep(0.001)
+                if (wait == 0 and self.wait > 0):
+                    wait = self.wait
+                if (wait > 0)
+                    self.clear=False
+                self._send(command,self.lineno,True)
+                self.lineno+=1
+                while ((wait > 0) and not self.clear):
+                    time.sleep(0.001)
+                    wait-=1
         else:
-            while not self.clear:
-                time.sleep(0.001)
-            if (wait == 0 and self.wait > 0):
-                wait = self.wait
-            if (wait > 0)
-                self.clear=False
-            self._send(command,self.lineno,True)
-            self.lineno+=1
-            while ((wait > 0) and not self.clear):
-                time.sleep(0.001)
-                wait-=1
+            print "Not connected to printer."
         
     
     def send_now(self,command,wait=0):
