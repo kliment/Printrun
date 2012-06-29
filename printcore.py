@@ -90,7 +90,8 @@ class printcore():
         """
         self.clear=True
         time.sleep(1.0)
-        self.send_now("M105")
+        if (not self.online and not self.printing):
+	        self._send("M105")
         while(True):
             if(not self.printer or not self.printer.isOpen):
                 break
