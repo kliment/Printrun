@@ -112,15 +112,16 @@ class dispframe(wx.Frame):
         print "Rising"
         if self.p != None and self.p.online:
                 self.p.send_now("G91")
-                self.p.send_now("G1 Z%f F250" % (self.thickness,))
+                self.p.send_now("G1 Z%f F200" % (3,))
+                self.p.send_now("G1 Z-%f F200" % (3-self.thickness,))
                 self.p.send_now("G90")
     def hidePic(self):
         print "Hiding"
         self.pic.Hide()
         
     def hidePicAndRise(self):
-        self.hidePic()
-        self.rise()
+        wx.CallAfter(self.hidePic)
+        wx.FutureCall(250, self.rise)
                     
     def nextimg(self, event):
         if self.index < len(self.layers):
@@ -133,7 +134,6 @@ class dispframe(wx.Frame):
             print "end"
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
-            wx.CallAfter(self.ShowFullScreen, 0)
             wx.CallAfter(self.timer.Stop)            
         
     def present(self, layers, interval=0.5, pause=0.2, thickness=0.4, scale=20, size=(1024, 768), offset=(0, 0)):
