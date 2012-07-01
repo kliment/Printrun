@@ -82,7 +82,6 @@ class dispframe(wx.Frame):
 
             if slicer == 'Skeinforge':
                 for i in image:
-                    #print i
                     points = [wx.Point(*map(lambda x:int(round(float(x) * self.scale)), j.strip().split())) for j in i.strip().split("M")[1].split("L")]
                     dc.DrawPolygon(points, self.size[0] / 2, self.size[1] / 2)
             elif slicer == 'Slic3r':
@@ -143,7 +142,6 @@ class dispframe(wx.Frame):
         self.scale = scale
         self.thickness = thickness
         self.index = 0
-        #self.size = (size[0] + offset[0], size[1] + offset[1])
         self.size = size
         self.interval = interval
         self.offset = offset
@@ -155,7 +153,7 @@ class dispframe(wx.Frame):
 class setframe(wx.Frame):
     
     def __init__(self, parent, printer=None):
-        wx.Frame.__init__(self, parent, title="Projector setup", size=(400,300))
+        wx.Frame.__init__(self, parent, title="Projector setup", size=(400,400))
         self.f = dispframe(None, "", printer=printer)
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour("orange")
@@ -217,6 +215,18 @@ class setframe(wx.Frame):
         wx.StaticText(self.panel, -1, "1st Layer:", pos=(rightlabelXPos, 240))
         self.showfirstlayer = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 240))
         self.showfirstlayer.Bind(wx.EVT_CHECKBOX, self.presentfirstlayer)
+        
+        wx.StaticText(self.panel, -1, "Raft:", pos=(rightlabelXPos, 270))
+        self.raft = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 270))
+        self.raft.Bind(wx.EVT_CHECKBOX, self.showRaft)
+        
+        wx.StaticText(self.panel, -1, "Red?:", pos=(rightlabelXPos +70, 270))
+        self.previewRaft = wx.CheckBox(self.panel, -1, pos=(rightValueXPos +70, 270))
+        self.previewRaft.Bind(wx.EVT_CHECKBOX, self.showRaft)
+        
+        wx.StaticText(self.panel, -1, "Raft Grid (mm):", pos=(rightlabelXPos, 300))
+        self.raftGridSize = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos +40, 300), value=5.0, increment=0.1, digits=1 )
+        self.raftGridSize.Bind(floatspin.EVT_FLOATSPIN, self.showRaft)
                 
         self.Show()
 
@@ -294,13 +304,16 @@ class setframe(wx.Frame):
             print len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm"
             self.layers = layers
             self.f.slicer = layers[2]
+            if (self.f.slicer == 'Slic3r'):
+                self.scale.SetValue(3.5)
+                print "Slic3r SVG detected: setting scale to 3.5 to correct size displayed."
         dlg.Destroy()
 
     def startcalibrate(self, event):
         if self.calibrate.IsChecked():
             self.f.Raise()
             self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
-            self.f.scale=float(self.scale.GetValue())
+            self.f.scale=1.0
             resolutionXPixels = int(self.X.GetValue())
             resolutionYPixels = int(self.Y.GetValue())
             
@@ -335,6 +348,67 @@ class setframe(wx.Frame):
 
             self.f.drawlayer(gridBitmap.ConvertToImage(), 'bitmap')
         else:
+            self.f.scale=float(self.scale.GetValue())
+            self.f.clearlayer()
+    
+    def showRaft(self, event):
+        if self.raft.IsChecked():
+            self.f.Raise()
+            self.f.offset=(float(self.offsetX.GetValue()), -float(self.offsetY.GetValue()))
+            self.f.scale=1.0
+            resolutionXPixels = int(self.X.GetValue())
+            resolutionYPixels = int(self.Y.GetValue())
+            
+            gridBitmap = wx.EmptyBitmap(resolutionXPixels,resolutionYPixels)
+            dc = wx.MemoryDC()
+            dc.SelectObject(gridBitmap)
+            dc.SetBackground(wx.Brush("black"))
+            dc.Clear()
+            
+            if (self.previewRaft.IsChecked()):
+                raftColor = "red"
+            else:
+                raftColor = "white"
+            
+            dc.SetPen(wx.Pen(raftColor,2))
+            aspectRatio = float(resolutionXPixels)/float(resolutionYPixels)
+
+            projectedXmm = float(self.projectedXmm.GetValue())                        
+            projectedYmm = round(projectedXmm/aspectRatio)            
+            
+            pixelsXPerMM = resolutionXPixels / projectedXmm
+            pixelsYPerMM = resolutionYPixels / projectedYmm            
+
+            if (hasattr(self, 'layers')):
+                xDist = float(self.layers[0][0].get('width').replace('m',''))
+                yDist = float(self.layers[0][0].get('height').replace('m',''))
+            else:
+                xDist = projectedXmm
+                yDist = projectedYmm
+            
+            gridSize = self.raftGridSize.GetValue()
+            gridCountX = int(xDist/gridSize)
+            gridCountY = int(yDist/gridSize)
+            
+            xDistPixels = xDist * pixelsXPerMM
+            yDistPixels = yDist * pixelsYPerMM
+            
+            # border
+            dc.DrawLine(0,0,xDistPixels,0);
+            dc.DrawLine(0,0,0,yDistPixels);
+            dc.DrawLine(xDistPixels,0,xDistPixels,yDistPixels);
+            dc.DrawLine(0,yDistPixels,xDistPixels,yDistPixels);
+            
+            # grid
+            for y in xrange(0,gridCountY+1):
+                for x in xrange(0,gridCountX+1):
+                    dc.DrawLine(0,y*(pixelsYPerMM*gridSize),xDistPixels,y*(pixelsYPerMM*gridSize));
+                    dc.DrawLine(x*(pixelsXPerMM*gridSize),0,x*(pixelsXPerMM*gridSize),yDistPixels);
+
+            self.f.drawlayer(gridBitmap.ConvertToImage(), 'bitmap')
+        else:
+            self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
+            self.f.scale=float(self.scale.GetValue())
             self.f.clearlayer()
     
     def updateoffset(self,event):
@@ -385,6 +459,8 @@ class setframe(wx.Frame):
 
     def presentfirstlayer(self, event):
         if (self.showfirstlayer.GetValue()):
+            self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
+            self.f.scale=float(self.scale.GetValue())
             self.f.drawlayer(self.layers[0][0], self.f.slicer)
         else:
             self.f.hidePic()
