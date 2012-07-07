@@ -90,7 +90,8 @@ class dispframe(wx.Frame):
                 gc.Scale(self.scale, self.scale)
                 wxpsvgdocument.SVGDocument(image).render(gc)
             elif slicer == 'bitmap':
-                dc.DrawBitmap(wx.BitmapFromImage(image.Scale(image.Width*self.scale, image.Height*self.scale)), self.offset[0], -self.offset[1], True)
+                wxImage = wx.Image(image)
+                dc.DrawBitmap(wx.BitmapFromImage(wxImage.Scale(wxImage.Width*self.scale, wxImage.Height*self.scale)), self.offset[0], -self.offset[1], True)
             else:
                 raise Exception(self.slicer + " is an unknown method.")
             self.pic.SetBitmap(self.bitmap)
@@ -282,7 +283,7 @@ class setframe(wx.Frame):
         for f in imagefiles:
             path = os.path.join(self.image_dir, f)
             if os.path.isfile(path) and imghdr.what(path) in acceptedImageTypes:
-                ol.append(wx.Image(path))
+                ol.append(path)
         return ol, -1, "bitmap"
         
     def loadfile(self, event):
