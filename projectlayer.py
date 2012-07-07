@@ -60,7 +60,7 @@ class dispframe(wx.Frame):
             self.Refresh()
         except:
             raise
-            pass        
+            pass
         
     def resize(self, res=(1024, 768)):
         self.bitmap = wx.EmptyBitmap(*res)
@@ -300,7 +300,7 @@ class setframe(wx.Frame):
                 layers = self.parsesvg(name)
                 layerHeight = layers[1]
                 self.thickness.SetValue(str(layers[1]))
-            print "Layer thickness detected:", layerHeight, "mm"
+                print "Layer thickness detected:", layerHeight, "mm"
             print len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm"
             self.layers = layers
             self.f.slicer = layers[2]
