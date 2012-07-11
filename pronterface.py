@@ -74,7 +74,10 @@ class Tee(object):
     def __del__(self):
         sys.stdout = self.stdout
     def write(self, data):
-        self.target(data)
+        try:
+            self.target(data)
+        except:
+            pass
         self.stdout.write(data.encode("utf-8"))
     def flush(self):
         self.stdout.flush()
@@ -1546,7 +1549,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
         print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
         if webavail:
-            self.webInterface.AddLog("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
+            self.webInterface.AddLog(_("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot))
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
         print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)

@@ -91,7 +91,7 @@ class printcore():
         self.clear=True
         time.sleep(1.0)
         if (not self.online and not self.printing):
-	        self._send("M105")
+            self._send("M105")
         while(True):
             if(not self.printer or not self.printer.isOpen):
                 break
@@ -221,7 +221,7 @@ class printcore():
     def send_now(self,command,wait=0):
         """Sends a command to the printer ahead of the command queue, without a checksum
         """
-        if(self.online):
+        if(self.online or force):
             if(self.printing):
                 self.priqueue+=[command]
             else:
