@@ -163,7 +163,7 @@ def estimate_duration(g):
                     currenttravel -= distance
                     moveduration += currenttravel/f
                 else:
-                    moveduration = math.sqrt( 2 * distance / acceleration )
+                    moveduration = math.sqrt( 2 * math.fabs(distance) / acceleration )
 
             totalduration += moveduration
 
