@@ -1940,16 +1940,26 @@ class ButtonEdit(wx.Dialog):
     def macrob_enabler(self,e):
         macro = self.command.GetValue()
         valid = False
-        if macro == "":
-            valid = True
-        elif self.pronterface.macros.has_key(macro):
-            valid = True
-        elif hasattr(self.pronterface.__class__,"do_"+macro):
-            valid = False
-        elif len([c for c in macro if not c.isalnum() and c != "_"]):
-            valid = False
-        else:
-            valid = True
+        try:
+            if macro == "":
+                valid = True
+            elif self.pronterface.macros.has_key(macro):
+                valid = True
+            elif hasattr(self.pronterface.__class__,u"do_"+macro):
+                valid = False
+            elif len([c for c in macro if not c.isalnum() and c != "_"]):
+                valid = False
+            else:
+                valid = True
+        except:
+            if macro == "":
+                valid = True
+            elif self.pronterface.macros.has_key(macro):
+                valid = True
+            elif len([c for c in macro if not c.isalnum() and c != "_"]):
+                valid = False
+            else:
+                valid = True
         self.macrob.Enable(valid)
     def macrob_handler(self,e):
         macro = self.command.GetValue()

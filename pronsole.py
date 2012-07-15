@@ -18,7 +18,7 @@
 import cmd, printcore, sys 
 import glob, os, time
 import sys, subprocess 
-import math
+import math, codecs
 from math import sqrt
 import gettext
 if os.path.exists('/usr/share/pronterface/locale'):
@@ -492,7 +492,7 @@ class pronsole(cmd.Cmd):
     def load_rc(self,rc_filename):
         self.processing_rc=True
         try:
-            rc=open(rc_filename)
+            rc=codecs.open(rc_filename,"r","utf-8")
             self.rc_filename = os.path.abspath(rc_filename)
             for rc_cmd in rc:
                 if not rc_cmd.lstrip().startswith("#"):
@@ -534,8 +534,8 @@ class pronsole(cmd.Cmd):
             if os.path.exists(self.rc_filename):
                 import shutil
                 shutil.copy(self.rc_filename,self.rc_filename+"~bak")
-                rci=open(self.rc_filename+"~bak","r")
-            rco=open(self.rc_filename,"w")
+                rci=codecs.open(self.rc_filename+"~bak","r","utf-8")
+            rco=codecs.open(self.rc_filename,"w","utf-8")
             if rci is not None:
                 overwriting = False
                 for rc_cmd in rci:
