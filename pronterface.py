@@ -55,10 +55,11 @@ from zbuttons import ZButtons
 from graph import Graph
 import pronsole
 
-webavail = True
+webavail = False
 try :
-    import cherrypy, webinterface
-    from threading import Thread
+    if webavail:
+        import cherrypy, webinterface
+        from threading import Thread
 except:
     print _("CherryPy is not installed. Web Interface Disabled.")
     webavail = False
@@ -1552,7 +1553,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.webInterface.AddLog(_("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot))
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
-        print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
+        try:
+            print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
+        except:
+            pass
         #import time
         #t0=time.time()
         self.gviz.clear()

@@ -157,7 +157,7 @@ def estimate_duration(g):
                 # then calculate the time taken to complete the remaining distance
 
                 currenttravel = hypot3d(x, y, z, lastx, lasty, lastz)
-                distance = 2* ((lastf+f) * (f-lastf) * 0.5 ) / acceleration  #2x because we have to accelerate and decelerate
+                distance = abs(2* ((lastf+f) * (f-lastf) * 0.5 ) / acceleration)  #2x because we have to accelerate and decelerate
                 if distance <= currenttravel and ( lastf + f )!=0 and f!=0:
                     moveduration = 2 * distance / ( lastf + f )
                     currenttravel -= distance
