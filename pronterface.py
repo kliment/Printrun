@@ -265,6 +265,46 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
 
+    def setbedgui(self,f):
+        self.bsetpoint=f
+        #self.bedtgauge.SetTarget(int(f))
+        wx.CallAfter(self.graph.SetBedTargetTemperature,int(f))
+        if f>0:
+            wx.CallAfter(self.btemp.SetValue,l)
+            self.set("last_bed_temperature",str(f))
+            wx.CallAfter(self.setboff.SetBackgroundColour,"")
+            wx.CallAfter(self.setboff.SetForegroundColour,"")
+            wx.CallAfter(self.setbbtn.SetBackgroundColour,"#FFAA66")
+            wx.CallAfter(self.setbbtn.SetForegroundColour,"#660000")
+            wx.CallAfter(self.btemp.SetBackgroundColour,"#FFDABB")
+        else:
+            wx.CallAfter(self.setboff.SetBackgroundColour,"#0044CC")
+            wx.CallAfter(self.setboff.SetForegroundColour,"white")
+            wx.CallAfter(self.setbbtn.SetBackgroundColour,"")
+            wx.CallAfter(self.setbbtn.SetForegroundColour,"")
+            wx.CallAfter(self.btemp.SetBackgroundColour,"white")
+            wx.CallAfter(self.btemp.Refresh)
+
+    def sethotendgui(self,f):
+        self.hsetpoint=f
+        #self.hottgauge.SetTarget(int(f))
+        wx.CallAfter(self.graph.SetExtruder0TargetTemperature,int(f))
+        if f>0:
+            wx.CallAfter(self.htemp.SetValue,l)
+            self.set("last_temperature",str(f))
+            wx.CallAfter(self.settoff.SetBackgroundColour,"")
+            wx.CallAfter(self.settoff.SetForegroundColour,"")
+            wx.CallAfter(self.settbtn.SetBackgroundColour,"#FFAA66")
+            wx.CallAfter(self.settbtn.SetForegroundColour,"#660000")
+            wx.CallAfter(self.htemp.SetBackgroundColour,"#FFDABB")
+        else:
+            wx.CallAfter(self.settoff.SetBackgroundColour,"#0044CC")
+            wx.CallAfter(self.settoff.SetForegroundColour,"white")
+            wx.CallAfter(self.settbtn.SetBackgroundColour,"")
+            wx.CallAfter(self.settbtn.SetForegroundColour,"")
+            wx.CallAfter(self.htemp.SetBackgroundColour,"white")
+            wx.CallAfter(self.htemp.Refresh)
+    
     def do_settemp(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
@@ -277,24 +317,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
                     print _("Setting hotend temperature to %f degrees Celsius.") % f
-                    self.hsetpoint=f
-                    #self.hottgauge.SetTarget(int(f))
-                    wx.CallAfter(self.graph.SetExtruder0TargetTemperature,int(f))
-                    if f>0:
-                        wx.CallAfter(self.htemp.SetValue,l)
-                        self.set("last_temperature",str(f))
-                        wx.CallAfter(self.settoff.SetBackgroundColour,"")
-                        wx.CallAfter(self.settoff.SetForegroundColour,"")
-                        wx.CallAfter(self.settbtn.SetBackgroundColour,"#FFAA66")
-                        wx.CallAfter(self.settbtn.SetForegroundColour,"#660000")
-                        wx.CallAfter(self.htemp.SetBackgroundColour,"#FFDABB")
-                    else:
-                        wx.CallAfter(self.settoff.SetBackgroundColour,"#0044CC")
-                        wx.CallAfter(self.settoff.SetForegroundColour,"white")
-                        wx.CallAfter(self.settbtn.SetBackgroundColour,"")
-                        wx.CallAfter(self.settbtn.SetForegroundColour,"")
-                        wx.CallAfter(self.htemp.SetBackgroundColour,"white")
-                        wx.CallAfter(self.htemp.Refresh)
+                    self.sethotendgui(f)
                 else:
                     print _("Printer is not online.")
             else:
@@ -316,24 +339,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
                     print _("Setting bed temperature to %f degrees Celsius.") % f
-                    self.bsetpoint=f
-                    #self.bedtgauge.SetTarget(int(f))
-                    wx.CallAfter(self.graph.SetBedTargetTemperature,int(f))
-                    if f>0:
-                        wx.CallAfter(self.btemp.SetValue,l)
-                        self.set("last_bed_temperature",str(f))
-                        wx.CallAfter(self.setboff.SetBackgroundColour,"")
-                        wx.CallAfter(self.setboff.SetForegroundColour,"")
-                        wx.CallAfter(self.setbbtn.SetBackgroundColour,"#FFAA66")
-                        wx.CallAfter(self.setbbtn.SetForegroundColour,"#660000")
-                        wx.CallAfter(self.btemp.SetBackgroundColour,"#FFDABB")
-                    else:
-                        wx.CallAfter(self.setboff.SetBackgroundColour,"#0044CC")
-                        wx.CallAfter(self.setboff.SetForegroundColour,"white")
-                        wx.CallAfter(self.setbbtn.SetBackgroundColour,"")
-                        wx.CallAfter(self.setbbtn.SetForegroundColour,"")
-                        wx.CallAfter(self.btemp.SetBackgroundColour,"white")
-                        wx.CallAfter(self.btemp.Refresh)
+                    self.setbedgui(f)
                 else:
                     print _("Printer is not online.")
                     if webavail:
@@ -1713,6 +1719,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         dlg=wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES|wx.NO)
         if dlg.ShowModal()==wx.ID_YES:
             self.p.reset()
+            self.sethotendgui(0)
+            self.setbedgui(0)
             self.p.printing=0
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
             if self.paused:
