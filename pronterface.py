@@ -731,7 +731,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         #lls.Add(self.btemp,pos=(4,1),span=(1,3))
         #lls.Add(self.setbbtn,pos=(4,4),span=(1,2))
-        self.tempdisp=wx.StaticText(self.panel,-1,"")
+        self.tempdisp=wx.StaticText(self.panel,-1,_("Temperatures:"))
         
         self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,-1))
         self.edist.SetBackgroundColour((225,200,200))
@@ -745,7 +745,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.efeedc.SetForegroundColour("black")
         self.efeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         lls.Add(self.efeedc,pos=(5,2),span=(1,2))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/\nmin")),pos=(5,4),span=(1,1))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(5,4),span=(2,1))
         self.xyfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.SetBackgroundColour((180,255,180))
@@ -762,10 +762,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #   elif e.GetWheelRotation()<0:
         #       self.do_settemp(str(max(0,self.hsetpoint-1)))
         #self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
-        
-        self.graph = Graph(self.panel, wx.ID_ANY)
-        lls.Add(self.graph, pos=(3,5), span=(3,3))
-        lls.Add(self.tempdisp,pos=(6,0),span=(1,1))
         
         self.gviz=gviz.gviz(self.panel,(300,300),
             build_dimensions=self.build_dimensions_list,
@@ -786,6 +782,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.gwindow.Bind(wx.EVT_CLOSE,lambda x:self.gwindow.Hide())
         vcs=wx.BoxSizer(wx.VERTICAL)
         vcs.Add(self.gviz,1,flag=wx.SHAPED)
+        self.graph = Graph(self.panel, wx.ID_ANY)
+        vcs.Add(self.tempdisp, 0)
+        vcs.Add(self.graph, 0)
+        
         cs=self.centersizer=wx.GridBagSizer()
         vcs.Add(cs,0,flag=wx.EXPAND)
 

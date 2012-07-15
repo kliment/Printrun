@@ -30,7 +30,7 @@ class Graph(BufferedCanvas):
         #super(Graph, self).__init__(parent, id, pos, size, style)
         BufferedCanvas.__init__(self, parent, id)
 
-        self.SetSize(wx.Size(150, 80))
+        self.SetSize(wx.Size(170, 80))
 
         self.extruder0temps       = [0]
         self.extruder0targettemps = [0]
@@ -42,8 +42,8 @@ class Graph(BufferedCanvas):
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
 
-        self.maxyvalue  = 250
-        self.ybars      = 5
+        self.maxyvalue  = 300
+        self.ybars      = 6
         self.xbars      = 6 # One bar per 10 second
         self.xsteps     = 60 # Covering 1 minute in the graph
 
