@@ -614,7 +614,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.commandbox.SetToolTip(wx.ToolTip("Send commands to printer\n(Type 'help' for simple\nhelp function)"))
         self.commandbox.Bind(wx.EVT_TEXT_ENTER,self.sendline)
         self.commandbox.Bind(wx.EVT_CHAR, self.cbkey)
-        self.commandbox.history=[]
+        self.commandbox.history=[u""]
         self.commandbox.histindex=1
         #self.printerControls.append(self.commandbox)
         lbrs.Add(self.commandbox,1)
@@ -829,16 +829,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def cbkey(self,e):
         if e.GetKeyCode()==wx.WXK_UP:
-            print self.commandbox.history, self.commandbox.histindex
-            #if len(self.commandbox.history)==0 or self.commandbox.histindex<len(self.commandbox.history)-1:
-            #    self.commandbox.history+=[self.commandbox.GetValue()] #save current command
+            if self.commandbox.histindex==len(self.commandbox.history):
+                self.commandbox.history+=[self.commandbox.GetValue()] #save current command
             if len(self.commandbox.history):
                 self.commandbox.histindex=(self.commandbox.histindex-1)%len(self.commandbox.history)
                 self.commandbox.SetValue(self.commandbox.history[self.commandbox.histindex])
                 self.commandbox.SetSelection(0,len(self.commandbox.history[self.commandbox.histindex]))
         elif e.GetKeyCode()==wx.WXK_DOWN:
-            #if len(self.commandbox.history)==0 or self.commandbox.histindex<len(self.commandbox.history)-1:
-            #    self.commandbox.history+=[self.commandbox.GetValue()] #save current command
+            if self.commandbox.histindex==len(self.commandbox.history):
+                    self.commandbox.history+=[self.commandbox.GetValue()] #save current command
             if len(self.commandbox.history):
                 self.commandbox.histindex=(self.commandbox.histindex+1)%len(self.commandbox.history)
                 self.commandbox.SetValue(self.commandbox.history[self.commandbox.histindex])
@@ -1317,7 +1316,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.onecmd(str(command))
         self.commandbox.SetSelection(0,len(command))
         self.commandbox.history+=[command]
-        self.commandbox.histindex=len(self.commandbox.history)-1
+        self.commandbox.histindex=len(self.commandbox.history)
 
     def clearOutput(self,e):
         self.logbox.Clear()
