@@ -950,7 +950,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON,self.cbutton_edit)
                 else:
-                    continue
+                   b=wx.Button(self.panel,-1,".",size=(1,1))
+                   #b=wx.StaticText(self.panel,-1,"",size=(72,22),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
+                   b.Disable()
+                   #continue
             b.custombutton=i
             b.properties=btndef
             if btndef is not None:
@@ -1114,13 +1117,25 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if not hasattr(self,"dragging"):
                 # init dragging of the custom button
                 if hasattr(obj,"custombutton") and obj.properties is not None:
-                    self.newbuttonbutton.SetLabel("")
-                    self.newbuttonbutton.SetFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL))
-                    self.newbuttonbutton.SetForegroundColour("black")
-                    self.newbuttonbutton.SetSize(obj.GetSize())
-                    if self.upperbottomsizer.GetItem(self.newbuttonbutton) is not None:
-                        self.upperbottomsizer.SetItemMinSize(self.newbuttonbutton,obj.GetSize())
-                        self.topsizer.Layout()
+                    #self.newbuttonbutton.SetLabel("")
+                    #self.newbuttonbutton.SetFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL))
+                    #self.newbuttonbutton.SetForegroundColour("black")
+                    #self.newbuttonbutton.SetSize(obj.GetSize())
+                    #if self.upperbottomsizer.GetItem(self.newbuttonbutton) is not None:
+                    #    self.upperbottomsizer.SetItemMinSize(self.newbuttonbutton,obj.GetSize())
+                    #    self.topsizer.Layout()
+                    for b in self.custombuttonbuttons:
+                        #if b.IsFrozen(): b.Thaw()
+                        if b.properties is None:
+                            b.Enable()
+                            b.SetLabel("")
+                            b.SetFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL))
+                            b.SetForegroundColour("black")
+                            b.SetSize(obj.GetSize())
+                            if self.upperbottomsizer.GetItem(b) is not None:
+                                self.upperbottomsizer.SetItemMinSize(b,obj.GetSize())
+                                self.topsizer.Layout()
+                        #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.dragging = wx.Button(self.panel,-1,obj.GetLabel(),style=wx.BU_EXACTFIT)
                     self.dragging.SetBackgroundColour(obj.GetBackgroundColour())
                     self.dragging.SetForegroundColour(obj.GetForegroundColour())
@@ -1128,11 +1143,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.dragging.Raise()
                     self.dragging.Disable()
                     self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
-                    for b in self.custombuttonbuttons:
-                        #if b.IsFrozen(): b.Thaw()
-                        if b.properties is None:
-                            b.Enable()
-                        #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.last_drag_dest = obj
                     self.dragging.label = obj.s_label = obj.GetLabel()
                     self.dragging.bgc = obj.s_bgc = obj.GetBackgroundColour()
