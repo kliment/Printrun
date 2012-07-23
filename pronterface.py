@@ -485,13 +485,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if macro == "": return self.new_macro()
         if self.macros.has_key(macro):
             old_def = self.macros[macro]
-        elif hasattr(self.__class__,"do_"+macro):
-            print _("Name '%s' is being used by built-in command") % macro
-            return
-        elif len([c for c in macro if not c.isalnum() and c != "_"]):
-            print _("Macro name may contain only alphanumeric symbols and underscores")
+        elif len([c for c in macro.encode("ascii","replace") if not c.isalnum() and c != "_"]):
+            print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
             if webavail:
                 self.webInterface.AddLog("Macro name may contain only alphanumeric symbols and underscores")
+            return
+        elif hasattr(self.__class__,"do_"+macro):
+            print _("Name '%s' is being used by built-in command") % macro
             return
         else:
             old_def = ""
