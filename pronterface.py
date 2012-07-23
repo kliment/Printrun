@@ -2063,10 +2063,10 @@ class TempGauge(wx.Panel):
         #gc.DrawText(text,29,-2)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
         gc.DrawText(self.title,x0+19,y0+4)
-        gc.DrawText(text,      x0+133,y0+4)
+        gc.DrawText(text,      x0+119,y0+4)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD)))
         gc.DrawText(self.title,x0+18,y0+3)
-        gc.DrawText(text,      x0+132,y0+3)
+        gc.DrawText(text,      x0+118,y0+3)
 
 if __name__ == '__main__':
     app = wx.App(False)
