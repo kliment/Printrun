@@ -28,10 +28,7 @@ except:
     print _("WX is not installed. This program requires WX to run.")
     raise
 import sys, glob, time, threading, traceback, cStringIO, subprocess
-try:
-    os.chdir(os.path.split(__file__)[0])
-except:
-    pass
+
 StringIO=cStringIO
 
 thread=threading.Thread

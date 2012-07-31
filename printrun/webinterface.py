@@ -241,7 +241,7 @@ class WebInterface(object):
           config = ConfigParser.SafeConfigParser(allow_no_value=True)
         else:
           config = ConfigParser.SafeConfigParser()
-        config.read(configfile('auth.config'))
+        config.read(configfile(pface.web_auth_config or 'auth.config'))
         users[config.get("user", "user")] = config.get("user", "pass")
         self.pface = pface
         global gPronterPtr
@@ -361,7 +361,7 @@ def KillWebInterfaceThread():
 def StartWebInterfaceThread(webInterface):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cherrypy.config.update({'engine.autoreload_on':False})
-    cherrypy.config.update(configfile("http.config"))
+    cherrypy.config.update(configfile(webInterface.pface.web_config or "http.config"))
     conf = {'/css/style.css': {'tools.staticfile.on': True,
                       'tools.staticfile.filename': sharedfile('css/style.css'),
                      },
@@ -371,7 +371,7 @@ def StartWebInterfaceThread(webInterface):
              '/images/control_z.png': {'tools.staticfile.on': True,
                       'tools.staticfile.filename': imagefile('control_z.png'),
                      }}
-    cherrypy.config.update(configfile("http.config"))
+    cherrypy.config.update(configfile(webInterface.pface.web_config or "http.config"))
     cherrypy.quickstart(webInterface, '/', config=conf)
 
 if __name__ == '__main__':

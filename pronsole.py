@@ -277,6 +277,8 @@ class pronsole(cmd.Cmd):
         self.helpdict["final_command"] = _("Executable to run when the print is finished")
         self.commandprefixes='MGT$'
         self.webrequested=False
+        self.web_config=None
+        self.web_auth_config=None
     
     def set_temp_preset(self,key,value):
         if not key.startswith("bed"):
@@ -1211,13 +1213,17 @@ class pronsole(cmd.Cmd):
         
     def parse_cmdline(self,args):
         import getopt
-        opts,args = getopt.getopt(args, "c:e:h:w", ["conf=","config=","help","web"])
+        opts,args = getopt.getopt(args, "c:e:hw", ["conf=","config=","help","web","web-config=", "web-auth-config="])
         for o,a in opts:
             #print repr((o,a))
             if o in ("-c","--conf","--config"):
                 self.load_rc(a)
             elif o in ("-w","--web"):
                 self.webrequested = True
+            elif o == "--web-config":
+                self.web_config = a
+            elif o == "--web-auth-config":
+                self.web_auth_config = a
             elif o in ("-h","--help"):
                 print "Usage: "+sys.argv[0]+' [-c filename [-c filename2 ... ] ] [-e "command" ...]'
                 print "  -c | --conf | --config   - override startup .pronsolerc file"
