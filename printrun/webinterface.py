@@ -1,6 +1,9 @@
 #!/usr/bin/python
-import cherrypy, pronterface, re, ConfigParser, threading, sys
+import pronterface
+import cherrypy, re, ConfigParser, threading, sys
 import os.path
+
+from printrun.printrun_utils import configfile
 
 users = {}
 
@@ -238,7 +241,7 @@ class WebInterface(object):
           config = ConfigParser.SafeConfigParser(allow_no_value=True)
         else:
           config = ConfigParser.SafeConfigParser()
-        config.read('auth.config')
+        config.read(configfile('auth.config'))
         users[config.get("user", "user")] = config.get("user", "pass")
         self.pface = pface
         global gPronterPtr
@@ -358,7 +361,7 @@ def KillWebInterfaceThread():
 def StartWebInterfaceThread(webInterface):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cherrypy.config.update({'engine.autoreload_on':False})
-    cherrypy.config.update("http.config")
+    cherrypy.config.update(configfile("http.config"))
     conf = {'/css/style.css': {'tools.staticfile.on': True,
                       'tools.staticfile.filename': os.path.join(current_dir, 'css/style.css'),
                      },
@@ -368,9 +371,9 @@ def StartWebInterfaceThread(webInterface):
              '/images/control_z.png': {'tools.staticfile.on': True,
                       'tools.staticfile.filename': os.path.join(current_dir, 'images/control_z.png'),
                      }}
-    cherrypy.config.update("http.config")
+    cherrypy.config.update(configfile("http.config"))
     cherrypy.quickstart(webInterface, '/', config=conf)
 
 if __name__ == '__main__':
-    cherrypy.config.update("http.config")
+    cherrypy.config.update(configfile("http.config"))
     cherrypy.quickstart(WebInterfaceStub())

@@ -51,7 +51,7 @@ from printrun import printcore, gviz
 from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
-from printrun.printrun_utils import pixmapfile
+from printrun.printrun_utils import pixmapfile, configfile
 import pronsole
 
 webavail = False
@@ -137,7 +137,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict={}
         try:
-            execfile("custombtn.txt",customdict)
+            execfile(configfile("custombtn.txt"),customdict)
             if len(customdict["btns"]):
                 if not len(self.custombuttons):
                     try:

@@ -26,3 +26,9 @@ def pixmapfile(filename):
       if os.path.exists(candidate):
          return candidate
     return filename
+
+def configfile(filename):
+    candidate = os.path.expanduser("~/.printrun/%s" % filename)
+    if os.path.exists(candidate):
+        return candidate
+    return filename
