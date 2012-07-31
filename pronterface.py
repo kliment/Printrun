@@ -67,6 +67,9 @@ except:
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
+def parse_temperatures_report(report, key):
+    return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
+
 class Tee(object):
     def __init__(self, target):
         self.stdout = sys.stdout
@@ -1344,10 +1347,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 #string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
-                    #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    wx.CallAfter(self.graph.SetExtruder0Temperature,float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    #self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
-                    wx.CallAfter(self.graph.SetBedTemperature,float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                    #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
+                    wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
+                    #self.bedtgauge.SetValue(parse_temperature_report(self.tempreport, "B:"))
+                    wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
                 except:
                     pass
                 fractioncomplete = 0.0
@@ -1409,9 +1412,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.tempreport=l
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
             try:
-                #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                wx.CallAfter(self.graph.SetExtruder0Temperature,float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                wx.CallAfter(self.graph.SetBedTemperature,float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
+                wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
+                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "T:"))
             except:
                 pass
         tstring=l.rstrip()
