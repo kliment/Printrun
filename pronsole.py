@@ -15,16 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import cmd, printcore, sys 
+import cmd, sys 
 import glob, os, time
 import sys, subprocess 
 import math, codecs
 from math import sqrt
-import gettext
-if os.path.exists('/usr/share/pronterface/locale'):
-    gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
-else: 
-    gettext.install('pronterface', './locale', unicode=1)
+
+from printrun import printcore
+from printrun.printrun_utils import install_locale
+install_locale('pronterface')
 
 if os.name=="nt":
     try:

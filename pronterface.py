@@ -17,19 +17,17 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-import os, gettext, Queue, re
+import os, Queue, re
 
-if os.path.exists('/usr/share/pronterface/locale'):
-    gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
-else:
-    gettext.install('pronterface', './locale', unicode=1)
+from printrun.printrun_utils import install_locale
+install_locale('pronterface')
 
 try:
     import wx
 except:
     print _("WX is not installed. This program requires WX to run.")
     raise
-import printcore, sys, glob, time, threading, traceback, gviz, traceback, cStringIO, subprocess
+import sys, glob, time, threading, traceback, cStringIO, subprocess
 try:
     os.chdir(os.path.split(__file__)[0])
 except:
@@ -49,16 +47,17 @@ if os.name=="nt":
         pass
 
 
-
-from xybuttons import XYButtons
-from zbuttons import ZButtons
-from graph import Graph
+from printrun import printcore, gviz
+from printrun.xybuttons import XYButtons
+from printrun.zbuttons import ZButtons
+from printrun.graph import Graph
+from printrun.printrun_utils import pixmapfile
 import pronsole
 
 webavail = False
 try :
     if webavail:
-        import cherrypy, webinterface
+        import cherrypy, printrun.webinterface
         from threading import Thread
 except:
     print _("CherryPy is not installed. Web Interface Disabled.")
@@ -109,7 +108,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
-        self.SetIcon(wx.Icon("P-face.ico",wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(pixmapfile("P-face.ico"),wx.BITMAP_TYPE_ICO))
         self.panel=wx.Panel(self,-1,size=size)
 
         self.statuscheck=False

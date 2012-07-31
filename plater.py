@@ -17,12 +17,10 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-import os, gettext, Queue, re
+import os, Queue, re
 
-if os.path.exists('/usr/share/pronterface/locale'):
-    gettext.install('plater', '/usr/share/pronterface/locale', unicode=1)
-else: 
-    gettext.install('plater', './locale', unicode=1)
+from printrun.printrun_utils import install_locale
+install_locale('plater')
 
 import wx
 import time
@@ -31,7 +29,8 @@ import threading
 import math
 import sys
 
-import stltool
+from printrun import stltool
+from printrun.printrun_utils import pixmapfile
 
 glview = False
 if "-nogl" not in sys.argv:
@@ -245,7 +244,7 @@ class showstl(wx.Window):
 class stlwin(wx.Frame):
     def __init__(self, size=(800, 580), callback=None, parent=None):
         wx.Frame.__init__(self, parent, title=_("Plate building tool"), size=size)
-        self.SetIcon(wx.Icon("plater.ico", wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(pixmapfile("plater.ico"), wx.BITMAP_TYPE_ICO))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = wx.Panel(self, -1, size=(150, 600), pos=(0, 0))
         #self.panel.SetBackgroundColour((10, 10, 10))
