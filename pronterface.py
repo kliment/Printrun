@@ -1384,6 +1384,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
         except:
             pass #if window has been closed
+    
     def capture(self, func, *args, **kwargs):
         stdout=sys.stdout
         cout=None
@@ -1460,8 +1461,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
 
-
-
     def filesloaded(self):
         dlg=wx.SingleChoiceDialog(self, _("Select the file to print"), _("Pick SD file"), self.sdfiles)
         if(dlg.ShowModal()==wx.ID_OK):
@@ -1469,9 +1468,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if len(target):
                 self.recvlisteners+=[self.waitforsdresponse]
                 self.p.send_now("M23 "+target.lower())
-
         #print self.sdfiles
-        pass
 
     def getfiles(self):
         if not self.p.online:
@@ -1532,7 +1529,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.loadbtn.SetLabel,_("Load File"))
         self.skeining=0
         self.skeinp=None
-
 
     def skein(self,filename):
         wx.CallAfter(self.loadbtn.SetLabel,_("Cancel"))
@@ -1683,7 +1679,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.p.resume()
             wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
 
-
     def sdprintfile(self,event):
         self.on_startprint()
         threading.Thread(target=self.getfiles).start()
@@ -1719,7 +1714,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.set("baudrate",str(baud))
         threading.Thread(target=self.statuschecker).start()
 
-
     def disconnect(self,event):
         print _("Disconnected.")
         self.p.disconnect()
@@ -1746,7 +1740,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.paused=0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
-
 
     def reset(self,event):
         print _("Reset.")
@@ -1835,8 +1828,6 @@ class macroed(wx.Dialog):
         if position == -1 :
          #   ShowMessage(self,-1,  "Not found!")
             titletext = wx.TextCtrl(self.panel,-1,"Not Found!")  
-
-                
         else:   
         # self.title.SetValue("Position : "+str(position))    
     
@@ -1947,6 +1938,7 @@ class ButtonEdit(wx.Dialog):
         topsizer.Add( (0,0),1)
         topsizer.Add(self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL),0,wx.ALIGN_CENTER)
         self.SetSizer(topsizer)
+
     def macrob_enabler(self,e):
         macro = self.command.GetValue()
         valid = False
@@ -1971,6 +1963,7 @@ class ButtonEdit(wx.Dialog):
             else:
                 valid = True
         self.macrob.Enable(valid)
+
     def macrob_handler(self,e):
         macro = self.command.GetValue()
         macro = self.pronterface.edit_macro(macro)
@@ -1979,6 +1972,7 @@ class ButtonEdit(wx.Dialog):
             self.name.SetValue(macro)
 
 class TempGauge(wx.Panel):
+
     def __init__(self,parent,size=(200,22),title="",maxval=240,gaugeColour=None):
         wx.Panel.__init__(self,parent,-1,size=size)
         self.Bind(wx.EVT_PAINT,self.paint)
@@ -1990,17 +1984,21 @@ class TempGauge(wx.Panel):
         self.value=0
         self.setpoint=0
         self.recalc()
+
     def recalc(self):
         mmax=max(int(self.setpoint*1.05),self.max)
         self.scale=float(self.width-2)/float(mmax)
         self.ypt=max(16,int(self.scale*max(self.setpoint,self.max/6)))
+
     def SetValue(self,value):
         self.value=value
         wx.CallAfter(self.Refresh)
+
     def SetTarget(self,value):
         self.setpoint=value
         self.recalc()
         wx.CallAfter(self.Refresh)
+
     def interpolatedColour(self,val,vmin,vmid,vmax,cmin,cmid,cmax):
         if val < vmin: return cmin
         if val > vmax: return cmax
@@ -2012,6 +2010,7 @@ class TempGauge(wx.Panel):
         rgb=lo.Red()+(hi.Red()-lo.Red())*vv,lo.Green()+(hi.Green()-lo.Green())*vv,lo.Blue()+(hi.Blue()-lo.Blue())*vv
         rgb=map(lambda x:x*0.8,rgb)
         return wx.Colour(*map(int,rgb))
+
     def paint(self,ev):
         x0,y0,x1,y1,xE,yE = 1,1,self.ypt+1,1,self.width+1-2,20
         dc=wx.PaintDC(self)
