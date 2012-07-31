@@ -130,6 +130,13 @@ for basedir, subdirs, files in os.walk("locale"):
     files = map(lambda x: os.path.join(basedir, x), files)
     data_files.append ((destpath, files))
 
+extra_data_dirs = ["css"]
+for extra_data_dir in extra_data_dirs:
+    for basedir, subdirs, files in os.walk(extra_data_dir):
+        files = map(lambda x: os.path.join(basedir, x), files)
+        destpath = os.path.join("share", "pronterface", basedir)
+        data_files.append ((destpath, files))
+
 setup (
         name             = "Printrun",
         description      = "Host software for 3D printers",

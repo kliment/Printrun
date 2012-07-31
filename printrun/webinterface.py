@@ -3,7 +3,7 @@ import pronterface
 import cherrypy, re, ConfigParser, threading, sys
 import os.path
 
-from printrun.printrun_utils import configfile
+from printrun.printrun_utils import configfile, imagefile, sharedfile
 
 users = {}
 
@@ -363,13 +363,13 @@ def StartWebInterfaceThread(webInterface):
     cherrypy.config.update({'engine.autoreload_on':False})
     cherrypy.config.update(configfile("http.config"))
     conf = {'/css/style.css': {'tools.staticfile.on': True,
-                      'tools.staticfile.filename': os.path.join(current_dir, 'css/style.css'),
+                      'tools.staticfile.filename': sharedfile('css/style.css'),
                      },
              '/images/control_xy.png': {'tools.staticfile.on': True,
-                      'tools.staticfile.filename': os.path.join(current_dir, 'images/control_xy.png'),
+                      'tools.staticfile.filename': imagefile('control_xy.png'),
                      },
              '/images/control_z.png': {'tools.staticfile.on': True,
-                      'tools.staticfile.filename': os.path.join(current_dir, 'images/control_z.png'),
+                      'tools.staticfile.filename': imagefile('control_z.png'),
                      }}
     cherrypy.config.update(configfile("http.config"))
     cherrypy.quickstart(webInterface, '/', config=conf)

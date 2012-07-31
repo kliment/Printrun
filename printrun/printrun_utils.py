@@ -20,15 +20,18 @@ def imagefile(filename):
     else:
         return os.path.join(os.path.split(os.path.split(__file__)[0])[0], "images", filename)
 
-def pixmapfile(filename):
-    for prefix in ['/usr/local/share/pixmaps', '/usr/share/pixmaps']:
+def lookup_file(filename, prefixes):
+    for prefix in prefixes:
       candidate = os.path.join(prefix, filename)
       if os.path.exists(candidate):
          return candidate
     return filename
 
+def pixmapfile(filename):
+    return lookup_file(filename, ['/usr/local/share/pixmaps', '/usr/share/pixmaps'])
+
+def sharedfile(filename):
+    return lookup_file(filename, ['/usr/local/share/pronterface', '/usr/share/pronterface'])
+
 def configfile(filename):
-    candidate = os.path.expanduser("~/.printrun/%s" % filename)
-    if os.path.exists(candidate):
-        return candidate
-    return filename
+    return lookup_file(filename, [os.path.expanduser("~/.printrun/"),])
