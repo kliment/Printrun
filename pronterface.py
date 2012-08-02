@@ -271,7 +271,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.bedtgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetBedTargetTemperature,int(f))
         if f>0:
-            wx.CallAfter(self.btemp.SetValue,l)
+            wx.CallAfter(self.btemp.SetValue,str(f))
             self.set("last_bed_temperature",str(f))
             wx.CallAfter(self.setboff.SetBackgroundColour,"")
             wx.CallAfter(self.setboff.SetForegroundColour,"")
@@ -291,7 +291,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.hottgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetExtruder0TargetTemperature,int(f))
         if f>0:
-            wx.CallAfter(self.htemp.SetValue,l)
+            wx.CallAfter(self.htemp.SetValue,str(f))
             self.set("last_temperature",str(f))
             wx.CallAfter(self.settoff.SetBackgroundColour,"")
             wx.CallAfter(self.settoff.SetForegroundColour,"")
@@ -308,7 +308,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def do_settemp(self,l=""):
         try:
-            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
+            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or not l:
                 l=str(self.htemp.GetValue().split()[0])
             l=l.lower().replace(",",".")
             for i in self.temps.keys():
