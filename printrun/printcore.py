@@ -49,6 +49,8 @@ class printcore():
         self.loud=False#emit sent and received lines to terminal
         self.greetings=['start','Grbl ']
         self.wait=0# default wait period for send(), send_now()
+        self.read_thread=None
+        self.stop_read_thread=False
         if port is not None and baud is not None:
             #print port, baud
             self.connect(port, baud)
@@ -58,7 +60,11 @@ class printcore():
     def disconnect(self):
         """Disconnects from printer and pauses the print
         """
-        if(self.printer):
+        if self.printer:
+            if self.read_thread:
+                self.stop_read_thread = True
+                self.read_thread.join()
+                self.read_thread = None
             self.printer.close()
         self.printer=None
         self.online=False
@@ -74,13 +80,15 @@ class printcore():
         if baud is not None:
             self.baud=baud
         if self.port is not None and self.baud is not None:
-            self.printer=Serial(port = self.port, baudrate = self.baud, timeout = 5)
-            Thread(target=self._listen).start()
+            self.printer=Serial(port = self.port, baudrate = self.baud, timeout = 1, dsrdtr = True)
+            self.stop_read_thread = False
+            self.read_thread = Thread(target=self._listen)
+            self.read_thread.start()
             
     def reset(self):
         """Reset the printer
         """
-        if(self.printer):
+        if self.printer:
             self.printer.setDTR(1)
             self.printer.setDTR(0)
             
@@ -96,6 +104,8 @@ class printcore():
         if (not self.online and not self.printing): # send M105 to initiate connection
             self._send("M105")
         while(True):
+            if self.stop_read_thread:
+                return
             if(not self.printer or not self.printer.isOpen):
                 break
             try:
