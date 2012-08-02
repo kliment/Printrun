@@ -74,7 +74,7 @@ class printcore():
         if baud is not None:
             self.baud=baud
         if self.port is not None and self.baud is not None:
-            self.printer=Serial(self.port,self.baud,timeout=5)
+            self.printer=Serial(port = self.port, baudrate = self.baud, timeout = 5)
             Thread(target=self._listen).start()
             
     def reset(self):
@@ -89,8 +89,11 @@ class printcore():
         """This function acts on messages from the firmware
         """
         self.clear=True
-        time.sleep(1.0)
-        if (not self.online and not self.printing):
+        if self.printer.inWaiting(): # flush receive buffer
+            self.printer.read(self.printer.inWaiting())
+        while not self.printer.inWaiting(): # wait for new data to read
+            time.sleep(0.5)
+        if (not self.online and not self.printing): # send M105 to initiate connection
             self._send("M105")
         while(True):
             if(not self.printer or not self.printer.isOpen):
