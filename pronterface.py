@@ -54,7 +54,7 @@ import pronsole
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
-def parse_temperatures_report(report, key):
+def parse_temperature_report(report, key):
     return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
 
 class Tee(object):
@@ -1413,9 +1413,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             try:
                 #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
                 wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
-                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "T:"))
+                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
             except:
-                pass
+                traceback.print_exc()
         tstring=l.rstrip()
         #print tstring
         if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring):
