@@ -107,6 +107,7 @@ class printcore():
         """
         if self.printer:
             self.printer.setDTR(1)
+            time.sleep(0.2)
             self.printer.setDTR(0)
             
     def _readline(self):
