@@ -213,15 +213,15 @@ class printcore():
     def pause(self):
         """Pauses the print, saving the current position.
         """
-        self.paused=True
-        self.printing=False
+        self.paused = True
+        self.printing = False
         time.sleep(1)
         
     def resume(self):
         """Resumes a paused print.
         """
-        self.paused=False
-        self.printing=True
+        self.paused = False
+        self.printing = True
         Thread(target=self._print).start()
     
     def send(self,command,wait=0):
