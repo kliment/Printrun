@@ -292,55 +292,53 @@ class printcore():
         #callback for printing done
         
     def _sendnext(self):
-        if(not self.printer):
+        if not self.printer:
             return
         while self.printer and self.printing and not self.clear:
             time.sleep(0.001)
-        self.clear=False
+        self.clear = False
         if not (self.printing and self.printer and self.online):
-            self.clear=True
+            self.clear = True
             return
-        if(self.resendfrom<self.lineno and self.resendfrom>-1):
+        if self.resendfrom < self.lineno and self.resendfrom > -1:
             self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
-            self.resendfrom+=1
+            self.resendfrom += 1
             return
-        self.resendfrom=-1
+        self.resendfrom = -1
         for i in self.priqueue[:]:
             self._send(i)
-            del(self.priqueue[0])
+            del self.priqueue[0]
             return
-        if(self.printing and self.queueindex<len(self.mainqueue)):
-            tline=self.mainqueue[self.queueindex]
-            tline=tline.split(";")[0]
-            if(len(tline)>0):
-                self._send(tline,self.lineno,True)
-                self.lineno+=1
+        if self.printing and self.queueindex < len(self.mainqueue):
+            tline = self.mainqueue[self.queueindex]
+            tline = tline.split(";")[0]
+            if len(tline) > 0:
+                self._send(tline, self.lineno, True)
+                self.lineno += 1
             else:
-                self.clear=True
-            self.queueindex+=1
+                self.clear = True
+            self.queueindex += 1
         else:
-            self.printing=False
-            self.clear=True
-            if(not self.paused):
-                self.queueindex=0
-                self.lineno=0
-                self._send("M110",-1, True)
+            self.printing = False
+            self.clear = True
+            if not self.paused:
+                self.queueindex = 0
+                self.lineno = 0
+                self._send("M110", -1, True)
             
-    def _send(self, command, lineno=0, calcchecksum=False):
-        if(calcchecksum):
-            prefix="N"+str(lineno)+" "+command
-            command=prefix+"*"+str(self._checksum(prefix))
-            if("M110" not in command):
-                self.sentlines[lineno]=command
-        if(self.printer):
-            self.sent+=[command]
+    def _send(self, command, lineno = 0, calcchecksum = False):
+        if calcchecksum:
+            prefix = "N" + str(lineno) + " " + command
+            command = prefix + "*" + str(self._checksum(prefix))
+            if "M110" not in command:
+                self.sentlines[lineno] = command
+        if self.printer:
+            self.sent.append(command)
             if self.loud:
                 print "SENT: ",command
             if self.sendcb is not None:
-                try:
-                    self.sendcb(command)
-                except:
-                    pass
+                try: self.sendcb(command)
+                except: pass
             try:
                 self.printer.write(str(command+"\n"))
             except SerialException, e:
