@@ -68,10 +68,7 @@ class printcore():
         self.stop_read_thread = False
         self.print_thread = None
         if port is not None and baud is not None:
-            #print port, baud
             self.connect(port, baud)
-            #print "connected\n"
-        
         
     def disconnect(self):
         """Disconnects from printer and pauses the print
