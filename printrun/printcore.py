@@ -19,6 +19,21 @@ from serial import Serial, SerialException
 from threading import Thread
 from select import error as SelectError
 import time, getopt, sys
+import platform, os
+
+def control_ttyhup(port, disable_hup):
+    """Controls the HUPCL"""
+    if platform.system() == "Linux":
+        if disable_hup:
+            os.system("stty -F %s -hup" % port)
+        else:
+            os.system("stty -F %s hup" % port)
+
+def enable_hup(port):
+    control_ttyhup(port, False)
+
+def disable_hup(port):
+    control_ttyhup(port, True)
 
 class printcore():
     def __init__(self,port=None,baud=None):
@@ -80,7 +95,8 @@ class printcore():
         if baud is not None:
             self.baud=baud
         if self.port is not None and self.baud is not None:
-            self.printer=Serial(port = self.port, baudrate = self.baud, timeout = 1, dsrdtr = True)
+            disable_hup(self.port)
+            self.printer=Serial(port = self.port, baudrate = self.baud, timeout = 1)
             self.stop_read_thread = False
             self.read_thread = Thread(target=self._listen)
             self.read_thread.start()
