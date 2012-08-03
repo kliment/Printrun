@@ -36,36 +36,36 @@ def disable_hup(port):
     control_ttyhup(port, True)
 
 class printcore():
-    def __init__(self,port=None,baud=None):
+    def __init__(self, port = None, baud = None):
         """Initializes a printcore instance. Pass the port and baud rate to connect immediately
         """
-        self.baud=None
-        self.port=None
-        self.printer=None #Serial instance connected to the printer, None when disconnected
-        self.clear=0 #clear to send, enabled after responses
-        self.online=False #The printer has responded to the initial command and is active
-        self.printing=False #is a print currently running, true if printing, false if paused
-        self.mainqueue=[] 
-        self.priqueue=[]
-        self.queueindex=0
-        self.lineno=0
-        self.resendfrom=-1
-        self.paused=False
-        self.sentlines={}
-        self.log=[]
-        self.sent=[]
-        self.tempcb=None#impl (wholeline)
-        self.recvcb=None#impl (wholeline)
-        self.sendcb=None#impl (wholeline)
-        self.errorcb=None#impl (wholeline)
-        self.startcb=None#impl ()
-        self.endcb=None#impl ()
-        self.onlinecb=None#impl ()
-        self.loud=False#emit sent and received lines to terminal
-        self.greetings=['start','Grbl ']
-        self.wait=0# default wait period for send(), send_now()
-        self.read_thread=None
-        self.stop_read_thread=False
+        self.baud = None
+        self.port = None
+        self.printer = None #Serial instance connected to the printer, None when disconnected
+        self.clear = 0 #clear to send, enabled after responses
+        self.online = False #The printer has responded to the initial command and is active
+        self.printing = False #is a print currently running, true if printing, false if paused
+        self.mainqueue = [] 
+        self.priqueue = []
+        self.queueindex = 0
+        self.lineno = 0
+        self.resendfrom = -1
+        self.paused = False
+        self.sentlines = {}
+        self.log = []
+        self.sent = []
+        self.tempcb = None #impl (wholeline)
+        self.recvcb = None #impl (wholeline)
+        self.sendcb = None #impl (wholeline)
+        self.errorcb = None #impl (wholeline)
+        self.startcb = None #impl ()
+        self.endcb = None #impl ()
+        self.onlinecb = None #impl ()
+        self.loud = False #emit sent and received lines to terminal
+        self.greetings = ['start','Grbl ']
+        self.wait = 0 # default wait period for send(), send_now()
+        self.read_thread = None
+        self.stop_read_thread = False
         if port is not None and baud is not None:
             #print port, baud
             self.connect(port, baud)
@@ -81,22 +81,22 @@ class printcore():
                 self.read_thread.join()
                 self.read_thread = None
             self.printer.close()
-        self.printer=None
-        self.online=False
-        self.printing=False
+        self.printer = None
+        self.online = False
+        self.printing = False
         
     def connect(self,port=None,baud=None):
         """Set port and baudrate if given, then connect to printer
         """
-        if(self.printer):
+        if self.printer:
             self.disconnect()
         if port is not None:
-            self.port=port
+            self.port = port
         if baud is not None:
-            self.baud=baud
+            self.baud = baud
         if self.port is not None and self.baud is not None:
             disable_hup(self.port)
-            self.printer=Serial(port = self.port, baudrate = self.baud, timeout = 1)
+            self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 1)
             self.stop_read_thread = False
             self.read_thread = Thread(target=self._listen)
             self.read_thread.start()
@@ -196,7 +196,7 @@ class printcore():
         The print queue will be replaced with the contents of the data array, the next line will be set to 0 and the firmware notified.
         Printing will then start in a parallel thread.
         """
-        if(self.printing or not self.online or not self.printer):
+        if self.printing or not self.online or not self.printer:
             return False
         self.printing=True
         self.mainqueue=[]+data
