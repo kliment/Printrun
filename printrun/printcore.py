@@ -228,47 +228,45 @@ class printcore():
         self.print_thread = Thread(target = self._print)
         self.print_thread.start()
     
-    def send(self,command,wait=0):
+    def send(self, command, wait = 0):
         """Adds a command to the checksummed main command queue if printing, or sends the command immediately if not printing
         """
         
-        if(self.online):
-            if(self.printing):
-                self.mainqueue+=[command]
+        if self.online:
+            if self.printing:
+                self.mainqueue.append(command)
             else:
-                while not self.clear:
+                while self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
-                if (wait == 0 and self.wait > 0):
+                if wait == 0 and self.wait > 0:
                     wait = self.wait
-                if (wait > 0):
-                    self.clear=False
-                self._send(command,self.lineno,True)
-                self.lineno+=1
-                while ((wait > 0) and not self.clear):
+                if wait > 0:
+                    self.clear = False
+                self._send(command, self.lineno, True)
+                self.lineno + =1
+                while (wait > 0) and self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
-                    wait-=1
+                    wait -= 1
         else:
             print "Not connected to printer."
-        
     
-    def send_now(self,command,wait=0):
+    def send_now(self, command, wait = 0):
         """Sends a command to the printer ahead of the command queue, without a checksum
         """
-        if(self.online or force):
-            if(self.printing):
-                self.priqueue+=[command]
+        if self.online or force:
+            if self.printing:
+                self.priqueue.append(command)
             else:
-                while not self.clear:
+                while self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
-                if (wait == 0 and self.wait > 0):
+                if wait == 0 and self.wait > 0:
                     wait = self.wait
-                if (wait > 0):
-                    self.clear=False
+                if wait > 0:
+                    self.clear = False
                 self._send(command)
-                while ((wait > 0) and not self.clear):
+                while (wait > 0) and self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
-                    wait-=1
-            #callback for command sent
+                    wait -= 1
         else:
             print "Not connected to printer."
         
