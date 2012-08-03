@@ -273,23 +273,19 @@ class printcore():
             print "Not connected to printer."
         
     def _print(self):
-        #callback for printing started
         if self.startcb is not None:
-            try:
-                self.startcb()
-            except:
-                pass
-        while(self.printing and self.printer and self.online):
+            #callback for printing started
+            try: self.startcb()
+            except: pass
+        while self.printing and self.printer and self.online:
             self._sendnext()
-        self.sentlines={}
-        self.log=[]
-        self.sent=[]
+        self.sentlines = {}
+        self.log = []
+        self.sent = []
         if self.endcb is not None:
-            try:
-                self.endcb()
-            except:
-                pass
-        #callback for printing done
+            #callback for printing done
+            try: self.endcb()
+            except: pass
         
     def _sendnext(self):
         if not self.printer:
