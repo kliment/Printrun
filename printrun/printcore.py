@@ -109,84 +109,70 @@ class printcore():
             self.printer.setDTR(1)
             self.printer.setDTR(0)
             
-            
+    def _readline(self):
+        try:
+            line = self.printer.readline()
+            return line
+        except SelectError, e:
+            if 'Bad file descriptor' in e.args[1]:
+                print "Can't read from printer (disconnected?)."
+                return None
+            else:
+                raise
+        except SerialException, e:
+            print "Can't read from printer (disconnected?)."
+            return None
+        except OSError, e:
+            print "Can't read from printer (disconnected?)."
+            return None
+
     def _listen(self):
         """This function acts on messages from the firmware
         """
-        self.clear=True
-        if self.printer.inWaiting(): # flush receive buffer
-            self.printer.read(self.printer.inWaiting())
-        while not self.printer.inWaiting(): # wait for new data to read
-            time.sleep(0.5)
-        if (not self.online and not self.printing): # send M105 to initiate connection
+        self.clear = True
+        if not self.printing:
             self._send("M105")
-        while(True):
-            if self.stop_read_thread:
-                return
-            if(not self.printer or not self.printer.isOpen):
+            time.sleep(1)
+        while not self.stop_read_thread and self.printer and self.printer.isOpen():
+            line = self._readline()
+            if line == None:
                 break
-            try:
-                line=self.printer.readline()
-            except SelectError, e:
-                if 'Bad file descriptor' in e.args[1]:
-                    print "Can't read from printer (disconnected?)."
-                    break
-                else:
-                    raise
-            except SerialException, e:
-                print "Can't read from printer (disconnected?)."
-                break
-            except OSError, e:
-                print "Can't read from printer (disconnected?)."
-                break
-
-            if(len(line)>1):
-                self.log+=[line]
-                if self.recvcb is not None:
-                    try:
-                        self.recvcb(line)
-                    except:
-                        pass
-                if self.loud:
-                    print "RECV: ",line.rstrip()
-            if(line.startswith('DEBUG_')):
+            if len(line) > 1:
+                self.log.append(line)
+                if self.recvcb:
+                    try: self.recvcb(line)
+                    except: pass
+                if self.loud: print "RECV: ",line.rstrip()
+            if line.startswith('DEBUG_'):
                 continue
-            if(line.startswith(tuple(self.greetings)) or line.startswith('ok')):
-                self.clear=True
-            if(line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line):
+            if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
+                self.clear = True
+            if line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line:
                 if (not self.online or line.startswith(tuple(self.greetings))) and self.onlinecb is not None:
-                    try:
-                        self.onlinecb()
-                    except:
-                        pass
-                self.online=True
-                if(line.startswith('ok')):
+                    try: self.onlinecb()
+                    except: pass
+                self.online = True
+                if line.startswith('ok'):
                     #self.resendfrom=-1
                     #put temp handling here
                     if "T:" in line and self.tempcb is not None:
-                        try:
-                            self.tempcb(line)
-                        except:
-                            pass
-                    #callback for temp, status, whatever
-            elif(line.startswith('Error')):
+                        #callback for temp, status, whatever
+                        try: self.tempcb(line)
+                        except: pass
+            elif line.startswith('Error'):
                 if self.errorcb is not None:
-                    try:
-                        self.errorcb(line)
-                    except:
-                        pass
-                #callback for errors
-                pass
+                    #callback for errors
+                    try: self.errorcb(line)
+                    except: pass
             if line.lower().startswith("resend") or line.startswith("rs"):
                 try:
-                    toresend=int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
+                    toresend = int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
                 except:
                     if line.startswith("rs"):
-                        toresend=int(line.split()[1])
-                self.resendfrom=toresend
-                self.clear=True
-        self.clear=True
-        #callback for disconnect
+                        toresend = int(line.split()[1])
+                self.resendfrom = toresend
+                self.clear = True
+        self.clear = True
         
     def _checksum(self,command):
         return reduce(lambda x,y:x^y, map(ord,command))
