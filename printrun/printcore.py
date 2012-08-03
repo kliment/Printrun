@@ -140,7 +140,7 @@ class printcore():
                 if self.recvcb:
                     try: self.recvcb(line)
                     except: pass
-                if self.loud: print "RECV: ",line.rstrip()
+                if self.loud: print "RECV: ", line.rstrip()
             if line.startswith('DEBUG_'):
                 continue
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
@@ -152,7 +152,6 @@ class printcore():
                 self.online = True
                 if line.startswith('ok'):
                     #self.resendfrom=-1
-                    #put temp handling here
                     if "T:" in line and self.tempcb is not None:
                         #callback for temp, status, whatever
                         try: self.tempcb(line)
@@ -164,7 +163,7 @@ class printcore():
                     except: pass
             if line.lower().startswith("resend") or line.startswith("rs"):
                 try:
-                    toresend = int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
+                    toresend = int(line.replace("N:", " ").replace("N", " ").replace(":", " ").split()[-1])
                 except:
                     if line.startswith("rs"):
                         toresend = int(line.split()[1])
@@ -172,8 +171,8 @@ class printcore():
                 self.clear = True
         self.clear = True
         
-    def _checksum(self,command):
-        return reduce(lambda x,y:x^y, map(ord,command))
+    def _checksum(self, command):
+        return reduce(lambda x,y:x^y, map(ord, command))
         
     def startprint(self,data):
         """Start a print, data is an array of gcode commands.
@@ -183,15 +182,15 @@ class printcore():
         """
         if self.printing or not self.online or not self.printer:
             return False
-        self.printing=True
-        self.mainqueue=[]+data
-        self.lineno=0
-        self.queueindex=0
-        self.resendfrom=-1
-        self._send("M110",-1, True)
-        if len(data)==0:
+        self.printing = True
+        self.mainqueue = [] + data
+        self.lineno = 0
+        self.queueindex = 0
+        self.resendfrom = -1
+        self._send("M110", -1, True)
+        if len(data) == 0:
             return True
-        self.clear=False
+        self.clear = False
         self.print_thread = Thread(target = self._print)
         self.print_thread.start()
         return True
