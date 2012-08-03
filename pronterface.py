@@ -31,7 +31,6 @@ import sys, glob, time, threading, traceback, cStringIO, subprocess
 
 StringIO=cStringIO
 
-thread=threading.Thread
 winsize=(800,500)
 layerindex=0
 global buttonSize
@@ -437,16 +436,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
 
         self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("Slicing Settings"),_(" Adjust slicing settings")))
-        #try:
-        #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
-        #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
-        #except:
-        #    pass
 
         self.menustrip.Append(m,_("&Settings"))
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
-
 
     def doneediting(self,gcode):
         f=open(self.filename,"w")
@@ -529,7 +522,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.serialport.SetValue(portslist[0])
         except:
             pass
-
 
     def popwindow(self):
         # this list will contain all controls that should be only enabled
@@ -642,8 +634,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #lls.Add(self.zb, pos=(2,6), span=(1,1), flag=wx.ALIGN_CENTER)
         wx.CallAfter(self.xyb.SetFocus)
         lls.Add(szbuttons, pos=(1,0), span=(1,8), flag=wx.ALIGN_CENTER)
-        
-        
+
         for i in self.cpbuttons:
             btn=wx.Button(self.panel,-1,i[0],style=wx.BU_EXACTFIT)
             btn.SetToolTip(wx.ToolTip(i[5]))
@@ -658,7 +649,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     llts.Add(btn)
             else:
                 lls.Add(btn,pos=i[2],span=i[4])
-        
+
         self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,-1))
         self.xyfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for X & Y axes (mm/min)"))
         llts.Add(wx.StaticText(self.panel,-1,_("XY:")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
@@ -673,7 +664,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(self.monitorbox,pos=(2,6))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
 
-        
         lls.Add(wx.StaticText(self.panel,-1,_("Heat")),pos=(2,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
 
@@ -898,7 +888,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
 
-
     def toggleview(self,e):
         if(self.mini):
             self.mini=False
@@ -1008,7 +997,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #except Exception,x:
         #    print "Bad syntax for button definition, see 'help button'"
         #    print x
-
 
     def cbutton_save(self,n,bdef,new_n=None):
         if new_n is None: new_n=n
@@ -1308,15 +1296,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if self.webInterface:
                 self.webInterface.AddLog("Done monitoring.")
 
-
     def setmonitor(self,e):
         self.monitor=self.monitorbox.GetValue()
         if self.monitor:
             wx.CallAfter(self.graph.StartPlotting,1000)
         else:
             wx.CallAfter(self.graph.StopPlotting)
-
-
 
     def sendline(self,e):
         command=self.commandbox.GetValue()
@@ -1539,8 +1524,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.filename=filename
         self.stopsf=0
         self.skeining=1
-        thread(target=self.skein_func).start()
-        thread(target=self.skein_monitor).start()
+        threading.Thread(target=self.skein_func).start()
+        threading.Thread(target=self.skein_monitor).start()
 
     def loadfile(self,event,filename=None):
         if self.skeining and self.skeinp is not None:
@@ -1658,7 +1643,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.p.send_now("M21")
             self.p.send_now("M28 "+str(dlg.GetValue()))
             self.recvlisteners+=[self.uploadtrigger]
-        pass
 
     def pause(self,event):
         print _("Paused.")
@@ -1684,7 +1668,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def sdprintfile(self,event):
         self.on_startprint()
         threading.Thread(target=self.getfiles).start()
-        pass
 
     def connect(self,event):
         print _("Connecting...")
