@@ -66,6 +66,7 @@ class printcore():
         self.wait = 0 # default wait period for send(), send_now()
         self.read_thread = None
         self.stop_read_thread = False
+        self.print_thread = None
         if port is not None and baud is not None:
             #print port, baud
             self.connect(port, baud)
@@ -207,7 +208,8 @@ class printcore():
         if len(data)==0:
             return True
         self.clear=False
-        Thread(target=self._print).start()
+        self.print_thread = Thread(target = self._print)
+        self.print_thread.start()
         return True
         
     def pause(self):
@@ -215,14 +217,16 @@ class printcore():
         """
         self.paused = True
         self.printing = False
-        time.sleep(1)
+        self.print_thread.join()
+        self.print_thread = None
         
     def resume(self):
         """Resumes a paused print.
         """
         self.paused = False
         self.printing = True
-        Thread(target=self._print).start()
+        self.print_thread = Thread(target = self._print)
+        self.print_thread.start()
     
     def send(self,command,wait=0):
         """Adds a command to the checksummed main command queue if printing, or sends the command immediately if not printing
@@ -290,7 +294,7 @@ class printcore():
     def _sendnext(self):
         if(not self.printer):
             return
-        while not self.clear:
+        while self.printer and self.printing and not self.clear:
             time.sleep(0.001)
         self.clear=False
         if not (self.printing and self.printer and self.online):
