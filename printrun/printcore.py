@@ -324,37 +324,37 @@ class printcore():
 if __name__ == '__main__':
     baud = 115200
     loud = False
-    statusreport=False
+    statusreport = False
     try:
-	opts, args=getopt.getopt(sys.argv[1:], "h,b:,v,s",["help","baud","verbose","statusreport"])
+        opts, args = getopt.getopt(sys.argv[1:], "h,b:,v,s",
+                                   ["help", "baud", "verbose", "statusreport"])
     except getopt.GetoptError,err:
-		print str(err)
-		print help
-		sys.exit(2)
-    for o,a in opts:
-	if o in ('-h', '--help'):
-		# FIXME: Fix help
-		print "Opts are: --help , -b --baud = baudrate, -v --verbose, -s --statusreport"
-		sys.exit(1)
-	if o in ('-b', '--baud'):
-		baud = int(a)
-	if o in ('-v','--verbose'):
-		loud=True
+        print str(err)
+        print help
+        sys.exit(2)
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            # FIXME: Fix help
+            print "Opts are: --help , -b --baud = baudrate, -v --verbose, -s --statusreport"
+            sys.exit(1)
+        if o in ('-b', '--baud'):
+            baud = int(a)
+        if o in ('-v','--verbose'):
+            loud = True
         elif o in ('-s','--statusreport'):
-		statusreport=True
+            statusreport = True
 
-
-    if len(args)>1:
-        port=args[-2]
-        filename=args[-1]
-        print "Printing: "+filename + " on "+port + " with baudrate "+str(baud) 
+    if len (args) > 1:
+        port = args[-2]
+        filename = args[-1]
+        print "Printing: %s on %s with baudrate %d" % (filename, port, baud)
     else:
         print "Usage: python [-h|-b|-v|-s] printcore.py /dev/tty[USB|ACM]x filename.gcode"
         sys.exit(2)
-    p=printcore(port,baud)
+    p = printcore(port, baud)
     p.loud = loud
     time.sleep(2)
-    gcode=[i.replace("\n","") for i in open(filename)]
+    gcode = [i.replace("\n","") for i in open(filename)]
     p.startprint(gcode)
 
     try:
@@ -362,10 +362,10 @@ if __name__ == '__main__':
             p.loud=False
             sys.stdout.write("Progress: 00.0%")
             sys.stdout.flush()
-        while(p.printing):
+        while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("\b\b\b\b%02.1f%%" % (100*float(p.queueindex)/len(p.mainqueue),) )
+                sys.stdout.write("\b\b\b\b%02.1f%%" % (100 * float(p.queueindex) / len(p.mainqueue),) )
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)
