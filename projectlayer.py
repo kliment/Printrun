@@ -21,9 +21,10 @@ import time
 import zipfile
 import tempfile
 import shutil
-import svg.document as wxpsvgdocument
+from cairosvg.surface import PNGSurface
+import cStringIO
 import imghdr
-    
+
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
         wx.Frame.__init__(self, parent=parent, title=title, size=res)
@@ -33,6 +34,7 @@ class DisplayFrame(wx.Frame):
         self.bitmap = wx.EmptyBitmap(*res)
         self.bbitmap = wx.EmptyBitmap(*res)
         self.slicer = 'bitmap'
+        self.dpi = 96
         dc = wx.MemoryDC()
         dc.SelectObject(self.bbitmap)
         dc.SetBackground(wx.Brush("black"))
@@ -87,10 +89,21 @@ class DisplayFrame(wx.Frame):
                     points = [wx.Point(*map(lambda x:int(round(float(x) * self.scale)), j.strip().split())) for j in i.strip().split("M")[1].split("L")]
                     dc.DrawPolygon(points, self.size[0] / 2, self.size[1] / 2)
             elif self.slicer == 'Slic3r':
-                gc = wx.GraphicsContext_Create(dc)            
-                gc.Translate(*self.offset)
-                gc.Scale(self.scale, self.scale)
-                wxpsvgdocument.SVGDocument(image).render(gc)
+                
+                if int(self.scale) != 1:
+                    height = float(image.get('height').replace('m',''))
+                    width = float(image.get('width').replace('m',''))
+                    
+                    image.set('height', str(height*self.scale) + 'mm')
+                    image.set('width', str(width*self.scale) + 'mm')
+                    image.set('viewBox', '0 0 ' + str(height*self.scale) + ' ' + str(width*self.scale))
+                    
+                    g = image.find("{http://www.w3.org/2000/svg}g")
+                    g.set('transform', 'scale('+str(self.scale)+')')
+                    
+                stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(image)))
+                image = wx.ImageFromStream(stream)
+                dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], -self.offset[1], True)
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
@@ -144,7 +157,7 @@ class DisplayFrame(wx.Frame):
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
         
-    def present(self, layers, interval=0.5, pause=0.2, thickness=0.4, scale=20, size=(1024, 768), offset=(0, 0)):
+    def present(self, layers, interval=0.5, pause=0.2, thickness=0.4, scale=1, size=(1024, 768), offset=(0, 0)):
         wx.CallAfter(self.pic.Hide)
         wx.CallAfter(self.Refresh)
         self.layers = layers
@@ -169,7 +182,7 @@ class SettingsFrame(wx.Frame):
         right_label_X_pos = 180
         right_value_X_pos = 230        
         self.panel = wx.Panel(self)
-        self.panel.SetBackgroundColour("red")
+        self.panel.SetBackgroundColour("orange")
         self.load_button = wx.Button(self.panel, -1, "Load", pos=(0, 0))
         self.load_button.Bind(wx.EVT_BUTTON, self.load_file)
         
@@ -264,8 +277,8 @@ class SettingsFrame(wx.Frame):
         zdiff = 0
         ol = []
         if (slicer == 'Slic3r'):
-            height = et.getroot().get('height')
-            width = et.getroot().get('width')
+            height = et.getroot().get('height').replace('m','')
+            width = et.getroot().get('width').replace('m','')
             
             for i in et.findall("{http://www.w3.org/2000/svg}g"):
                 z = float(i.get('{http://slic3r.org/namespaces/slic3r}z'))
@@ -276,6 +289,8 @@ class SettingsFrame(wx.Frame):
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
                 
+                svgSnippet.set('viewBox', '0 0 ' + height + ' ' + width)
+                svgSnippet.set('style','background-color:black')
                 svgSnippet.append(i)
     
                 ol += [svgSnippet]
@@ -447,6 +462,13 @@ class SettingsFrame(wx.Frame):
         self.display_frame.resize((float(self.X.GetValue()), float(self.Y.GetValue())))
         self.start_calibrate(event)
     
+    def get_dpi(self):
+        resolution_x_pixels = int(self.X.GetValue())
+        projected_x_mm = float(self.projected_X_mm.GetValue())
+        projected_x_inches = projected_x_mm / 25.4
+        
+        return resolution_x_pixels / projected_x_inches                         
+        
     def start_present(self, event):
         if not hasattr(self, "layers"):
             print "No model loaded!"
@@ -457,6 +479,7 @@ class SettingsFrame(wx.Frame):
         if (self.fullscreen.GetValue()):
             self.display_frame.ShowFullScreen(1)
         self.display_frame.slicer = self.layers[2]
+        self.display_frame.dpi = self.get_dpi()
         self.display_frame.present(self.layers[0][:],
             thickness=float(self.thickness.GetValue()),
             interval=float(self.interval.GetValue()),
@@ -491,6 +514,7 @@ class SettingsFrame(wx.Frame):
             self.display_frame.scale = float(self.scale.GetValue())
 
             self.display_frame.slicer = self.layers[2]
+            self.display_frame.dpi = self.get_dpi()
             self.display_frame.draw_layer(self.layers[0][0])
             self.calibrate.SetValue(False)
             self.bounding_box.SetValue(False)
