@@ -17,20 +17,22 @@ import xml.etree.ElementTree
 import wx
 import wx.lib.agw.floatspin as floatspin
 import os
+import time
 import zipfile
 import tempfile
 import shutil
 import svg.document as wxpsvgdocument
 import imghdr
     
-class dispframe(wx.Frame):
+class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
         wx.Frame.__init__(self, parent=parent, title=title, size=res)
-        self.p = printer
+        self.printer = printer
+        self.control_frame = parent
         self.pic = wx.StaticBitmap(self)
         self.bitmap = wx.EmptyBitmap(*res)
         self.bbitmap = wx.EmptyBitmap(*res)
-        self.slicer = 'Skeinforge'
+        self.slicer = 'bitmap'
         dc = wx.MemoryDC()
         dc.SelectObject(self.bbitmap)
         dc.SetBackground(wx.Brush("black"))
@@ -39,17 +41,17 @@ class dispframe(wx.Frame):
 
         self.SetBackgroundColour("black")
         self.pic.Hide()
-        self.pen = wx.Pen("white")
-        self.brush = wx.Brush("white")
         self.SetDoubleBuffered(True)
+        self.SetPosition((self.control_frame.GetSize().x, 0))
         self.Show()
         
         self.scale = scale
         self.index = 0
         self.size = res
         self.offset = offset
+        self.running = False
 
-    def clearlayer(self):
+    def clear_layer(self):
         try:
             dc = wx.MemoryDC()
             dc.SelectObject(self.bitmap)
@@ -71,29 +73,31 @@ class dispframe(wx.Frame):
         dc.Clear()
         dc.SelectObject(wx.NullBitmap)
         
-    def drawlayer(self, image, slicer):
+    def draw_layer(self, image):
         try:
             dc = wx.MemoryDC()
             dc.SelectObject(self.bitmap)
             dc.SetBackground(wx.Brush("black"))
             dc.Clear()
-            dc.SetPen(self.pen)
-            dc.SetBrush(self.brush)
+            dc.SetPen(wx.Pen("white"))
+            dc.SetBrush(wx.Brush("white"))
 
-            if slicer == 'Skeinforge':
+            if self.slicer == 'Skeinforge':
                 for i in image:
                     points = [wx.Point(*map(lambda x:int(round(float(x) * self.scale)), j.strip().split())) for j in i.strip().split("M")[1].split("L")]
                     dc.DrawPolygon(points, self.size[0] / 2, self.size[1] / 2)
-            elif slicer == 'Slic3r':
+            elif self.slicer == 'Slic3r':
                 gc = wx.GraphicsContext_Create(dc)            
                 gc.Translate(*self.offset)
                 gc.Scale(self.scale, self.scale)
                 wxpsvgdocument.SVGDocument(image).render(gc)
-            elif slicer == 'bitmap':
-                wxImage = wx.Image(image)
-                dc.DrawBitmap(wx.BitmapFromImage(wxImage.Scale(wxImage.Width*self.scale, wxImage.Height*self.scale)), self.offset[0], -self.offset[1], True)
+            elif self.slicer == 'bitmap':
+                if isinstance(image, str):
+                    image = wx.Image(image)
+                dc.DrawBitmap(wx.BitmapFromImage(image.Scale(image.Width * self.scale, image.Height * self.scale)), self.offset[0], -self.offset[1], True)
             else:
                 raise Exception(self.slicer + " is an unknown method.")
+            
             self.pic.SetBitmap(self.bitmap)
             self.pic.Show()
             self.Refresh()            
@@ -102,39 +106,43 @@ class dispframe(wx.Frame):
             raise
             pass
             
-    def showimgdelay(self, image):
-        self.drawlayer(image,self.slicer)
-        print "Showing"
+    def show_img_delay(self, image):
+        print "Showing "+ str(time.clock())
+        self.control_frame.set_current_layer(self.index)
+        self.draw_layer(image)
+        wx.FutureCall(1000 * self.interval, self.hide_pic_and_rise)
         self.pic.Show()
         self.Refresh()
 
     def rise(self):
-        print "Rising"
-        if self.p != None and self.p.online:
-                self.p.send_now("G91")
-                self.p.send_now("G1 Z%f F200" % (3,))
-                self.p.send_now("G1 Z-%f F200" % (3-self.thickness,))
-                self.p.send_now("G90")
-    def hidePic(self):
-        print "Hiding"
+        print "Rising "+ str(time.clock())
+        if self.printer != None and self.printer.online:
+                self.printer.send_now("G91")
+                self.printer.send_now("G1 Z%f F200" % (3,))
+                self.printer.send_now("G1 Z-%f F200" % (3-self.thickness,))
+                self.printer.send_now("G90")
+        
+        self.next_img()
+        
+    def hide_pic(self):
+        print "Hiding "+ str(time.clock())
         self.pic.Hide()
         
-    def hidePicAndRise(self):
-        wx.CallAfter(self.hidePic)
-        wx.FutureCall(250, self.rise)
+    def hide_pic_and_rise(self):
+        wx.CallAfter(self.hide_pic)
+        wx.FutureCall(self.pause * 1000, self.rise)
                     
-    def nextimg(self, event):
+    def next_img(self):
+        if not self.running:
+            return
         if self.index < len(self.layers):
-            i = self.index
-            print i
-            wx.CallAfter(self.showimgdelay, self.layers[i])
-            wx.FutureCall(1000 * self.interval, self.hidePicAndRise)
+            print self.index
+            wx.CallAfter(self.show_img_delay, self.layers[self.index])
             self.index += 1
         else:
             print "end"
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
-            wx.CallAfter(self.timer.Stop)            
         
     def present(self, layers, interval=0.5, pause=0.2, thickness=0.4, scale=20, size=(1024, 768), offset=(0, 0)):
         wx.CallAfter(self.pic.Hide)
@@ -142,102 +150,112 @@ class dispframe(wx.Frame):
         self.layers = layers
         self.scale = scale
         self.thickness = thickness
-        self.index = 0
         self.size = size
         self.interval = interval
+        self.pause = pause
         self.offset = offset
-        self.timer = wx.Timer(self, 1)
-        self.timer.Bind(wx.EVT_TIMER, self.nextimg)
-        self.Bind(wx.EVT_TIMER, self.nextimg)
-        self.timer.Start(1000 * interval + 1000 * pause)
+        self.index = 0
+        self.running = True
+       
+        self.next_img()
 
-class setframe(wx.Frame):
+class SettingsFrame(wx.Frame):
     
     def __init__(self, parent, printer=None):
-        wx.Frame.__init__(self, parent, title="Projector setup", size=(400,400))
-        self.f = dispframe(None, "", printer=printer)
+        wx.Frame.__init__(self, parent, title="ProjectLayer Control", size=(400, 400))
+        self.display_frame = DisplayFrame(self, title="ProjectLayer Display", printer=printer)
+        left_label_X_pos = 0
+        left_value_X_pos = 70
+        right_label_X_pos = 180
+        right_value_X_pos = 230        
         self.panel = wx.Panel(self)
-        self.panel.SetBackgroundColour("orange")
-        self.bload = wx.Button(self.panel, -1, "Load", pos=(0, 0))
-        self.bload.Bind(wx.EVT_BUTTON, self.loadfile)
+        self.panel.SetBackgroundColour("red")
+        self.load_button = wx.Button(self.panel, -1, "Load", pos=(0, 0))
+        self.load_button.Bind(wx.EVT_BUTTON, self.load_file)
         
-        leftlabelXPos = 0
-        leftValueXPos = 70
-        rightlabelXPos = 180
-        rightValueXPos = 230
-        
-        wx.StaticText(self.panel, -1, "Layer (mm):", pos=(leftlabelXPos, 30))
-        self.thickness = wx.TextCtrl(self.panel, -1, "0.3", pos=(leftValueXPos, 30))
+        wx.StaticText(self.panel, -1, "Layer (mm):", pos=(left_label_X_pos, 30))
+        self.thickness = wx.TextCtrl(self.panel, -1, "0.3", pos=(left_value_X_pos, 30))
 
-        wx.StaticText(self.panel, -1, "Exposure (s):", pos=(leftlabelXPos, 60))
-        self.interval = wx.TextCtrl(self.panel, -1, "3", pos=(leftValueXPos, 60))
+        wx.StaticText(self.panel, -1, "Exposure (s):", pos=(left_label_X_pos, 60))
+        self.interval = wx.TextCtrl(self.panel, -1, "0.5", pos=(left_value_X_pos, 60))
 
-        wx.StaticText(self.panel, -1, "Blank (s):", pos=(leftlabelXPos, 90))
-        self.delay = wx.TextCtrl(self.panel, -1, "2", pos=(leftValueXPos, 90))
+        wx.StaticText(self.panel, -1, "Blank (s):", pos=(left_label_X_pos, 90))
+        self.delay = wx.TextCtrl(self.panel, -1, "0.5", pos=(left_value_X_pos, 90))
 
-        wx.StaticText(self.panel, -1, "Scale:", pos=(leftlabelXPos, 120))
-        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(leftValueXPos, 120), value=1.0, increment=0.1, digits=1 )
-        self.scale.Bind(floatspin.EVT_FLOATSPIN, self.updatescale)
+        wx.StaticText(self.panel, -1, "Scale:", pos=(left_label_X_pos, 120))
+        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(left_value_X_pos, 120), value=1.0, increment=0.1, digits=1)
+        self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
         
-        wx.StaticText(self.panel, -1, "X:", pos=(rightlabelXPos, 30))
-        self.X = wx.SpinCtrl(self.panel, -1, '1024', pos=(rightValueXPos, 30), max=999999)
-        self.X.Bind(wx.EVT_SPINCTRL, self.updateresolution)
+        wx.StaticText(self.panel, -1, "X:", pos=(right_label_X_pos, 30))
+        self.X = wx.SpinCtrl(self.panel, -1, '1440', pos=(right_value_X_pos, 30), max=999999)
+        self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
 
-        wx.StaticText(self.panel, -1, "Y:", pos=(rightlabelXPos, 60))
-        self.Y = wx.SpinCtrl(self.panel, -1, '768', pos=(rightValueXPos, 60), max=999999)
-        self.Y.Bind(wx.EVT_SPINCTRL, self.updateresolution)
+        wx.StaticText(self.panel, -1, "Y:", pos=(right_label_X_pos, 60))
+        self.Y = wx.SpinCtrl(self.panel, -1, '900', pos=(right_value_X_pos, 60), max=999999)
+        self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         
-        wx.StaticText(self.panel, -1, "OffsetX:", pos=(rightlabelXPos, 90))
-        self.offsetX = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos, 90), value=0.0, increment=1, digits=1 )
-        self.offsetX.Bind(floatspin.EVT_FLOATSPIN, self.updateoffset)
+        wx.StaticText(self.panel, -1, "OffsetX:", pos=(right_label_X_pos, 90))
+        self.offset_X = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 90), value=0.0, increment=1, digits=1)
+        self.offset_X.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
 
-        wx.StaticText(self.panel, -1, "OffsetY:", pos=(rightlabelXPos, 120))
-        self.offsetY = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos, 120), value=0.0, increment=1, digits=1 )
-        self.offsetY.Bind(floatspin.EVT_FLOATSPIN, self.updateoffset)
+        wx.StaticText(self.panel, -1, "OffsetY:", pos=(right_label_X_pos, 120))
+        self.offset_Y = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 120), value=0.0, increment=1, digits=1)
+        self.offset_Y.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
         
-        self.bload = wx.Button(self.panel, -1, "Present", pos=(leftlabelXPos, 150))
-        self.bload.Bind(wx.EVT_BUTTON, self.startdisplay)
+        self.load_button = wx.Button(self.panel, -1, "Present", pos=(left_label_X_pos, 150))
+        self.load_button.Bind(wx.EVT_BUTTON, self.start_present)
         
-        self.pause = wx.Button(self.panel, -1, "Pause", pos=(leftlabelXPos, 180))
-        self.pause.Bind(wx.EVT_BUTTON, self.pausepresent)
+        self.pause = wx.Button(self.panel, -1, "Pause", pos=(left_label_X_pos, 180))
+        self.pause.Bind(wx.EVT_BUTTON, self.pause_present)
         
-        wx.StaticText(self.panel, -1, "Fullscreen:", pos=(rightlabelXPos, 150))
-        self.fullscreen = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 150))
-        self.fullscreen.Bind(wx.EVT_CHECKBOX, self.updatefullscreen)
+        self.stop = wx.Button(self.panel, -1, "Stop", pos=(left_label_X_pos, 210))
+        self.stop.Bind(wx.EVT_BUTTON, self.stop_present)
         
-        wx.StaticText(self.panel, -1, "Calibrate:", pos=(rightlabelXPos, 180))
-        self.calibrate = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 180))
-        self.calibrate.Bind(wx.EVT_CHECKBOX, self.startcalibrate)
+        wx.StaticText(self.panel, -1, "Fullscreen:", pos=(right_label_X_pos, 150))
+        self.fullscreen = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 150))
+        self.fullscreen.Bind(wx.EVT_CHECKBOX, self.update_fullscreen)
         
-        wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(rightlabelXPos, 210))
-        self.projectedXmm = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos+40, 210), value=150.0, increment=1, digits=1 )
-        self.projectedXmm.Bind(floatspin.EVT_FLOATSPIN, self.updateprojectedXmm)
+        wx.StaticText(self.panel, -1, "Calibrate:", pos=(right_label_X_pos, 180))
+        self.calibrate = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 180))
+        self.calibrate.Bind(wx.EVT_CHECKBOX, self.start_calibrate)
+        
+        wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(right_label_X_pos, 210))
+        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos + 40, 210), value=415.0, increment=1, digits=1)
+        self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
 
-        wx.StaticText(self.panel, -1, "1st Layer:", pos=(rightlabelXPos, 240))
-        self.showfirstlayer = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 240))
-        self.showfirstlayer.Bind(wx.EVT_CHECKBOX, self.presentfirstlayer)
+        wx.StaticText(self.panel, -1, "1st Layer:", pos=(right_label_X_pos, 240))
+        self.show_first_layer = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 240))
+        self.show_first_layer.Bind(wx.EVT_CHECKBOX, self.present_first_layer)
+
+        wx.StaticText(self.panel, -1, "(s):", pos=(right_value_X_pos +20, 240))
+        self.show_first_layer_timer = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos +40, 240), value=-1, increment=1, digits=1)
+
+        wx.StaticText(self.panel, -1, "Boundary:", pos=(right_label_X_pos, 270))
+        self.bounding_box = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 270))
+        self.bounding_box.Bind(wx.EVT_CHECKBOX, self.show_bounding_box)
         
-        wx.StaticText(self.panel, -1, "Raft:", pos=(rightlabelXPos, 270))
-        self.raft = wx.CheckBox(self.panel, -1, pos=(rightValueXPos, 270))
-        self.raft.Bind(wx.EVT_CHECKBOX, self.showRaft)
+        wx.StaticText(self.panel, -1, "Total Layers:", pos=(left_label_X_pos, 260))
+        self.total_layers = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 10, 260))
+
+        wx.StaticText(self.panel, -1, "Current Layer:", pos=(left_label_X_pos, 280))
+        self.current_layer = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 20, 280))
         
-        wx.StaticText(self.panel, -1, "Red?:", pos=(rightlabelXPos +70, 270))
-        self.previewRaft = wx.CheckBox(self.panel, -1, pos=(rightValueXPos +70, 270))
-        self.previewRaft.Bind(wx.EVT_CHECKBOX, self.showRaft)
-        
-        wx.StaticText(self.panel, -1, "Raft Grid (mm):", pos=(rightlabelXPos, 300))
-        self.raftGridSize = floatspin.FloatSpin(self.panel, -1, pos=(rightValueXPos +40, 300), value=5.0, increment=0.1, digits=1 )
-        self.raftGridSize.Bind(floatspin.EVT_FLOATSPIN, self.showRaft)
-                
+        self.SetPosition((0, 0)) 
         self.Show()
 
     def __del__(self):
         if hasattr(self, 'image_dir') and self.image_dir != '':
             shutil.rmtree(self.image_dir)
-        if self.f:
-            self.f.Destroy()
+        if self.display_frame:
+            self.display_frame.Destroy()
+
+    def set_total_layers(self, total):
+        self.total_layers.SetLabel(str(total)) 
+
+    def set_current_layer(self, index):
+        self.current_layer.SetLabel(str(index)) 
             
-    def parsesvg(self, name):
+    def parse_svg(self, name):
         et = xml.etree.ElementTree.ElementTree(file=name)
         #xml.etree.ElementTree.dump(et)
         
@@ -257,7 +275,7 @@ class setframe(wx.Frame):
                 svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
-                svgSnippet.set('viewBox', '0 0 ' + height + ' ' + width)
+                
                 svgSnippet.append(i)
     
                 ol += [svgSnippet]
@@ -270,10 +288,10 @@ class setframe(wx.Frame):
                 ol += [(path.get("d").split("z"))[:-1]]
         return ol, zdiff, slicer
     
-    def parse3DLPzip(self, name):
+    def parse_3DLP_zip(self, name):
         if not zipfile.is_zipfile(name):
             raise Exception(name + " is not a zip file!")
-        acceptedImageTypes = ['gif','tiff','jpg','jpeg','bmp','png']
+        accepted_image_types = ['gif','tiff','jpg','jpeg','bmp','png']
         zipFile = zipfile.ZipFile(name, 'r')
         self.image_dir = tempfile.mkdtemp()
         zipFile.extractall(self.image_dir)
@@ -282,11 +300,11 @@ class setframe(wx.Frame):
         imagefiles.sort()
         for f in imagefiles:
             path = os.path.join(self.image_dir, f)
-            if os.path.isfile(path) and imghdr.what(path) in acceptedImageTypes:
+            if os.path.isfile(path) and imghdr.what(path) in accepted_image_types:
                 ol.append(path)
         return ol, -1, "bitmap"
         
-    def loadfile(self, event):
+    def load_file(self, event):
         dlg = wx.FileDialog(self, ("Open file to print"), style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard(("Slic3r or Skeinforge svg files (;*.svg;*.SVG;);3DLP Zip (;*.3dlp.zip;)"))
         if(dlg.ShowModal() == wx.ID_OK):
@@ -295,86 +313,86 @@ class setframe(wx.Frame):
                 self.status.SetStatusText(("File not found!"))
                 return
             if name.endswith(".3dlp.zip"):
-                layers = self.parse3DLPzip(name)
+                layers = self.parse_3DLP_zip(name)
                 layerHeight = float(self.thickness.GetValue())
             else:
-                layers = self.parsesvg(name)
+                layers = self.parse_svg(name)
                 layerHeight = layers[1]
                 self.thickness.SetValue(str(layers[1]))
                 print "Layer thickness detected:", layerHeight, "mm"
             print len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm"
             self.layers = layers
-            self.f.slicer = layers[2]
-            if (self.f.slicer == 'Slic3r'):
-                self.scale.SetValue(3.5)
-                print "Slic3r SVG detected: setting scale to 3.5 to correct size displayed."
+            self.set_total_layers(len(layers[0]))
+            self.set_current_layer(0) 
+            self.display_frame.slicer = layers[2]
         dlg.Destroy()
 
-    def startcalibrate(self, event):
+    def start_calibrate(self, event):
         if self.calibrate.IsChecked():
-            self.f.Raise()
-            self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
-            self.f.scale=1.0
-            resolutionXPixels = int(self.X.GetValue())
-            resolutionYPixels = int(self.Y.GetValue())
+            self.display_frame.Raise()
+            self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
+            self.display_frame.scale = 1.0
+            resolution_x_pixels = int(self.X.GetValue())
+            resolution_y_pixels = int(self.Y.GetValue())
             
-            gridBitmap = wx.EmptyBitmap(resolutionXPixels,resolutionYPixels)
+            gridBitmap = wx.EmptyBitmap(resolution_x_pixels, resolution_y_pixels)
             dc = wx.MemoryDC()
             dc.SelectObject(gridBitmap)
             dc.SetBackground(wx.Brush("black"))
             dc.Clear()
             
-            dc.SetPen(wx.Pen("red",7))
-            dc.DrawLine(0,0,resolutionXPixels,0);
-            dc.DrawLine(0,0,0,resolutionYPixels);
-            dc.DrawLine(resolutionXPixels,0,resolutionXPixels,resolutionYPixels);
-            dc.DrawLine(0,resolutionYPixels,resolutionXPixels,resolutionYPixels);
+            dc.SetPen(wx.Pen("red", 7))
+            dc.DrawLine(0, 0, resolution_x_pixels, 0);
+            dc.DrawLine(0, 0, 0, resolution_y_pixels);
+            dc.DrawLine(resolution_x_pixels, 0, resolution_x_pixels, resolution_y_pixels);
+            dc.DrawLine(0, resolution_y_pixels, resolution_x_pixels, resolution_y_pixels);
+            
+            dc.SetPen(wx.Pen("red", 2))
+            aspectRatio = float(resolution_x_pixels) / float(resolution_y_pixels)
+            
+            projectedXmm = float(self.projected_X_mm.GetValue())            
+            projectedYmm = round(projectedXmm / aspectRatio)
+            
+            pixelsXPerMM = resolution_x_pixels / projectedXmm
+            pixelsYPerMM = resolution_y_pixels / projectedYmm
+            
+            gridCountX = int(projectedXmm / 10)
+            gridCountY = int(projectedYmm / 10)
+            
+            for y in xrange(0, gridCountY + 1):
+                for x in xrange(0, gridCountX + 1):
+                    dc.DrawLine(0, y * (pixelsYPerMM * 10), resolution_x_pixels, y * (pixelsYPerMM * 10));
+                    dc.DrawLine(x * (pixelsXPerMM * 10), 0, x * (pixelsXPerMM * 10), resolution_y_pixels);
+
+            self.show_first_layer.SetValue(False)
+            self.bounding_box.SetValue(False)
+            self.display_frame.slicer = 'bitmap'
+            self.display_frame.draw_layer(gridBitmap.ConvertToImage())
+
+        else:
+            if hasattr(self, 'layers'):
+                self.display_frame.slicer = self.layers[2] 
+            self.display_frame.scale = float(self.scale.GetValue())
+            self.display_frame.clear_layer()
+
+    def show_bounding_box(self, event):
+        if self.bounding_box.IsChecked():
+            self.display_frame.Raise()
+            self.display_frame.offset=(float(self.offset_X.GetValue()), -float(self.offset_Y.GetValue()))
+            self.display_frame.scale=1.0
+            resolutionXPixels = int(self.X.GetValue())
+            resolutionYPixels = int(self.Y.GetValue())
+            
+            boxBitmap = wx.EmptyBitmap(resolutionXPixels,resolutionYPixels)
+            dc = wx.MemoryDC()
+            dc.SelectObject(boxBitmap)
+            dc.SetBackground(wx.Brush("black"))
+            dc.Clear()
             
             dc.SetPen(wx.Pen("red",2))
             aspectRatio = float(resolutionXPixels)/float(resolutionYPixels)
-            
-            projectedXmm = float(self.projectedXmm.GetValue())            
-            projectedYmm = round(projectedXmm/aspectRatio)
-            
-            pixelsXPerMM = resolutionXPixels / projectedXmm
-            pixelsYPerMM = resolutionYPixels / projectedYmm
-            
-            gridCountX = int(projectedXmm/10)
-            gridCountY = int(projectedYmm/10)
-            
-            for y in xrange(0,gridCountY+1):
-                for x in xrange(0,gridCountX+1):
-                    dc.DrawLine(0,y*(pixelsYPerMM*10),resolutionXPixels,y*(pixelsYPerMM*10));
-                    dc.DrawLine(x*(pixelsXPerMM*10),0,x*(pixelsXPerMM*10),resolutionYPixels);
 
-            self.f.drawlayer(gridBitmap.ConvertToImage(), 'bitmap')
-        else:
-            self.f.scale=float(self.scale.GetValue())
-            self.f.clearlayer()
-    
-    def showRaft(self, event):
-        if self.raft.IsChecked():
-            self.f.Raise()
-            self.f.offset=(float(self.offsetX.GetValue()), -float(self.offsetY.GetValue()))
-            self.f.scale=1.0
-            resolutionXPixels = int(self.X.GetValue())
-            resolutionYPixels = int(self.Y.GetValue())
-            
-            gridBitmap = wx.EmptyBitmap(resolutionXPixels,resolutionYPixels)
-            dc = wx.MemoryDC()
-            dc.SelectObject(gridBitmap)
-            dc.SetBackground(wx.Brush("black"))
-            dc.Clear()
-            
-            if (self.previewRaft.IsChecked()):
-                raftColor = "red"
-            else:
-                raftColor = "white"
-            
-            dc.SetPen(wx.Pen(raftColor,2))
-            aspectRatio = float(resolutionXPixels)/float(resolutionYPixels)
-
-            projectedXmm = float(self.projectedXmm.GetValue())                        
+            projectedXmm = float(self.projected_X_mm.GetValue())                        
             projectedYmm = round(projectedXmm/aspectRatio)            
             
             pixelsXPerMM = resolutionXPixels / projectedXmm
@@ -387,88 +405,106 @@ class setframe(wx.Frame):
                 xDist = projectedXmm
                 yDist = projectedYmm
             
-            gridSize = self.raftGridSize.GetValue()
-            gridCountX = int(xDist/gridSize)
-            gridCountY = int(yDist/gridSize)
-            
             xDistPixels = xDist * pixelsXPerMM
             yDistPixels = yDist * pixelsYPerMM
             
-            # border
+            # boundary
             dc.DrawLine(0,0,xDistPixels,0);
             dc.DrawLine(0,0,0,yDistPixels);
             dc.DrawLine(xDistPixels,0,xDistPixels,yDistPixels);
             dc.DrawLine(0,yDistPixels,xDistPixels,yDistPixels);
             
-            # grid
-            for y in xrange(0,gridCountY+1):
-                for x in xrange(0,gridCountX+1):
-                    dc.DrawLine(0,y*(pixelsYPerMM*gridSize),xDistPixels,y*(pixelsYPerMM*gridSize));
-                    dc.DrawLine(x*(pixelsXPerMM*gridSize),0,x*(pixelsXPerMM*gridSize),yDistPixels);
-
-            self.f.drawlayer(gridBitmap.ConvertToImage(), 'bitmap')
+            self.show_first_layer.SetValue(False)
+            self.calibrate.SetValue(False)
+            self.display_frame.slicer = 'bitmap'
+            self.display_frame.draw_layer(boxBitmap.ConvertToImage())
         else:
-            self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
-            self.f.scale=float(self.scale.GetValue())
-            self.f.clearlayer()
+            if hasattr(self, 'layers'):
+                self.display_frame.slicer = self.layers[2] 
+            self.display_frame.offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
+            self.display_frame.scale=float(self.scale.GetValue())
+            self.display_frame.clear_layer()
+            
+    def update_offset(self, event):
+        self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
+        self.start_calibrate(event)
     
-    def updateoffset(self,event):
-        self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
-        self.startcalibrate(event)
-    
-    def updateprojectedXmm(self,event):
-        self.startcalibrate(event)
+    def update_projected_Xmm(self, event):
+        self.start_calibrate(event)
         
-    def updatescale(self,event):
-        self.f.scale=float(self.scale.GetValue())
-        self.startcalibrate(event)
+    def update_scale(self, event):
+        self.display_frame.scale = float(self.scale.GetValue())
+        self.start_calibrate(event)
         
-    def updatefullscreen(self,event):
+    def update_fullscreen(self, event):
         if (self.fullscreen.GetValue()):
-            self.f.ShowFullScreen(1)
+            self.display_frame.ShowFullScreen(1)
         else:
-            self.f.ShowFullScreen(0)
-        self.startcalibrate(event)
+            self.display_frame.ShowFullScreen(0)
+        self.start_calibrate(event)
     
-    def updateresolution(self,event):
-        self.f.resize((float(self.X.GetValue()), float(self.Y.GetValue())))
-        self.startcalibrate(event)
+    def update_resolution(self, event):
+        self.display_frame.resize((float(self.X.GetValue()), float(self.Y.GetValue())))
+        self.start_calibrate(event)
     
-    def startdisplay(self, event):
+    def start_present(self, event):
+        if not hasattr(self, "layers"):
+            print "No model loaded!"
+            return
+        
         self.pause.SetLabel("Pause")
-        self.f.Raise()
+        self.display_frame.Raise()
         if (self.fullscreen.GetValue()):
-            self.f.ShowFullScreen(1)
-        l = self.layers[0][:]
-        self.f.present(l,
+            self.display_frame.ShowFullScreen(1)
+        self.display_frame.slicer = self.layers[2]
+        self.display_frame.present(self.layers[0][:],
             thickness=float(self.thickness.GetValue()),
             interval=float(self.interval.GetValue()),
             scale=float(self.scale.GetValue()),
             pause=float(self.delay.GetValue()),
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
-            offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue())))
+            offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue())))
         
-    def pausepresent(self, event):        
-        if self.f.timer.IsRunning():
+    def stop_present(self, event):
+        print "Stop"
+        self.pause.SetLabel("Pause")
+        self.display_frame.running = False
+        
+    def pause_present(self, event):        
+        if self.pause.GetLabel() == 'Pause':
             print "Pause"
             self.pause.SetLabel("Continue")
-            self.f.timer.Stop()
+            self.display_frame.running = False
         else:
             print "Continue"
             self.pause.SetLabel("Pause")
-            self.f.timer.Start()
+            self.display_frame.running = True
+            self.display_frame.next_img()
 
-    def presentfirstlayer(self, event):
-        if (self.showfirstlayer.GetValue()):
-            self.f.offset=(float(self.offsetX.GetValue()), float(self.offsetY.GetValue()))
-            self.f.scale=float(self.scale.GetValue())
-            self.f.drawlayer(self.layers[0][0], self.f.slicer)
+    def present_first_layer(self, event):
+        if not hasattr(self, "layers"):
+            print "No model loaded!"
+            self.show_first_layer.SetValue(False)
+            return
+        if (self.show_first_layer.GetValue()):
+            self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
+            self.display_frame.scale = float(self.scale.GetValue())
+
+            self.display_frame.slicer = self.layers[2]
+            self.display_frame.draw_layer(self.layers[0][0])
+            self.calibrate.SetValue(False)
+            self.bounding_box.SetValue(False)
+            if self.show_first_layer_timer != -1.0 :
+                def unpresent_first_layer():
+                    self.display_frame.clear_layer()
+                    self.show_first_layer.SetValue(False)
+                wx.CallLater(self.show_first_layer_timer.GetValue() * 1000, unpresent_first_layer)
         else:
-            self.f.hidePic()
+            self.display_frame.clear_layer()
         
 
 if __name__ == "__main__":
     #a = wx.App(redirect=True,filename="mylogfile.txt")
     a = wx.App()
-    setframe(None).Show()
+    SettingsFrame(None).Show()
     a.MainLoop()
