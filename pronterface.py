@@ -56,6 +56,9 @@ def dosify(name):
 def parse_temperature_report(report, key):
     return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
 
+def format_time(timestamp):
+    return time.strftime('%H:%M:%S', time.localtime(timestamp))
+
 class Tee(object):
     def __init__(self, target):
         self.stdout = sys.stdout
@@ -176,18 +179,18 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def startcb(self):
         self.starttime=time.time()
-        print "Print Started at: " +time.strftime('%H:%M:%S',time.localtime(self.starttime))
+        print "Print Started at: " + format_time(self.starttime)
 
     def endcb(self):
         if(self.p.queueindex==0):
-            print "Print ended at: " +time.strftime('%H:%M:%S',time.localtime(time.time()))
-            print "and took: "+time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime+self.extra_print_time)))  #+str(int(time.time()-self.starttime)/60)+" minutes "+str(int(time.time()-self.starttime)%60)+" seconds."
+            print "Print ended at: " + format_time(time.time())
+            print "and took: " + format_time(int(time.time () - self.starttime + self.extra_print_time))
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
 
             import shlex
             param = self.settings.final_command
-            pararray=[i.replace("$s",str(self.filename)).replace("$t", str(time.strftime('%H:%M:%S', time.gmtime(int(time.time()-self.starttime+self.extra_print_time))))).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
+            pararray=[i.replace("$s",str(self.filename)).replace("$t", format_time(int(time.time()-self.starttime+self.extra_print_time))).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
             self.finalp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
 
     def online(self):
