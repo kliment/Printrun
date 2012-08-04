@@ -328,9 +328,8 @@ if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:], "h,b:,v,s",
                                    ["help", "baud", "verbose", "statusreport"])
-    except getopt.GetoptError,err:
+    except getopt.GetoptError, err:
         print str(err)
-        print help
         sys.exit(2)
     for o, a in opts:
         if o in ('-h', '--help'):
