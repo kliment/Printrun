@@ -226,7 +226,7 @@ class printcore():
                 if wait > 0:
                     self.clear = False
                 self._send(command, self.lineno, True)
-                self.lineno + =1
+                self.lineno += 1
                 while (wait > 0) and self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
                     wait -= 1
