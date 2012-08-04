@@ -325,7 +325,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             else:
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
         except Exception, x:
-            print _("You must enter a temperature. (%s)" % (repr(x),))
+            print _("You must enter a temperature. (%s)") % (repr(x),)
             if self.webInterface:
                 self.webInterface.AddLog("You must enter a temperature. (%s)" % (repr(x),))
 
@@ -350,8 +350,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
                 if self.webInterface:
                     self.webInterface.AddLog("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
-        except:
-            print _("You must enter a temperature.")
+        except Exception, x:
+            print _("You must enter a temperature. (%s)") % (repr(x),)
             if self.webInterface:
                 self.webInterface.AddLog("You must enter a temperature.")
 
