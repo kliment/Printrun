@@ -102,6 +102,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.panel=wx.Panel(self,-1,size=size)
 
         self.statuscheck=False
+        self.status_thread=None
         self.capture_skip={}
         self.capture_skip_newline=False
         self.tempreport=""
@@ -1259,7 +1260,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             raise
 
     def kill(self,e):
-        self.statuscheck=0
+        self.statuscheck = False
+        self.status_thread.join()
         self.p.recvcb=None
         self.p.disconnect()
         if hasattr(self,"feedrates_changed"):
@@ -1322,15 +1324,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def statuschecker(self):
         try:
-            while(self.statuscheck):
-                string=""
-                #if(self.p.online):
-                #    string+=_("Printer is online. ")
-                #try:
-                #    string+=_("Loaded ")+os.path.split(self.filename)[1]+" "
-                #except:
-                #    pass
-                #string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
+            while self.statuscheck:
+                string = ""
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
                     #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
@@ -1341,33 +1336,33 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     pass
                 fractioncomplete = 0.0
                 if self.sdprinting:
-                    fractioncomplete = float(self.percentdone/100.0)
-                    string+= _(" SD printing:%04.2f %%") % (self.percentdone,)
+                    fractioncomplete = float(self.percentdone / 100.0)
+                    string += _(" SD printing:%04.2f %%") % (self.percentdone,)
                 if self.p.printing:
-                    fractioncomplete = float(self.p.queueindex)/len(self.p.mainqueue)
-                    string+= _(" Printing:%04.2f %% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
-                    string+= _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
+                    fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
+                    string += _(" Printing: %04.2f%% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
+                    string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
                 if fractioncomplete > 0.0:
-                    secondselapsed = int(time.time()-self.starttime+self.extra_print_time)
-                    secondsestimate = secondselapsed/fractioncomplete
+                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+                    secondsestimate = secondselapsed / fractioncomplete
                     secondsremain = secondsestimate - secondselapsed
-                    string+= _(" Est: %s of %s remaining | ") % (time.strftime('%H:%M:%S', time.gmtime(secondsremain)),
-                                                                 time.strftime('%H:%M:%S', time.gmtime(secondsestimate)))
-                    string+= _(" Z: %0.2f mm") % self.curlayer
-                wx.CallAfter(self.status.SetStatusText,string)
+                    string += _(" Est: %s of %s remaining | ") % (format_time(secondsremain),
+                                                                 format_time(secondsestimate))
+                    string += _(" Z: %0.2f mm") % self.curlayer
+                wx.CallAfter(self.status.SetStatusText, string)
                 wx.CallAfter(self.gviz.Refresh)
                 if(self.monitor and self.p.online):
                     if self.sdprinting:
                         self.p.send_now("M27")
                     if not hasattr(self,"auto_monitor_pattern"):
                         self.auto_monitor_pattern = re.compile(r"(ok\s+)?T:[\d\.]+(\s+B:[\d\.]+)?(\s+@:[\d\.]+)?\s*")
-                    self.capture_skip[self.auto_monitor_pattern]=self.capture_skip.setdefault(self.auto_monitor_pattern,0)+1
+                    self.capture_skip[self.auto_monitor_pattern] = self.capture_skip.setdefault(self.auto_monitor_pattern, 0) + 1
                     self.p.send_now("M105")
                 time.sleep(self.monitor_interval)
                 while not self.sentlines.empty():
                     try:
-                        gc=self.sentlines.get_nowait()
-                        wx.CallAfter(self.gviz.addgcode,gc,1)
+                        gc = self.sentlines.get_nowait()
+                        wx.CallAfter(self.gviz.addgcode, gc, 1)
                     except:
                         break
             wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
@@ -1699,12 +1694,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.set("port",port)
         if baud != self.settings.baudrate:
             self.set("baudrate",str(baud))
-        threading.Thread(target=self.statuschecker).start()
+        self.status_thread = threading.Thread(target = self.statuschecker)
+        self.status_thread.start()
 
     def disconnect(self,event):
         print _("Disconnected.")
         self.p.disconnect()
-        self.statuscheck=False
+        self.statuscheck = False
+        self.status_thread.join()
 
         self.connectbtn.SetLabel("Connect")
         self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
