@@ -185,7 +185,7 @@ class printcore():
     def _checksum(self, command):
         return reduce(lambda x,y:x^y, map(ord, command))
         
-    def startprint(self,data):
+    def startprint(self, data, startindex = 0):
         """Start a print, data is an array of gcode commands.
         returns True on success, False if already printing.
         The print queue will be replaced with the contents of the data array, the next line will be set to 0 and the firmware notified.
@@ -196,7 +196,7 @@ class printcore():
         self.printing = True
         self.mainqueue = [] + data
         self.lineno = 0
-        self.queueindex = 0
+        self.queueindex = startindex
         self.resendfrom = -1
         self._send("M110", -1, True)
         if len(data) == 0:

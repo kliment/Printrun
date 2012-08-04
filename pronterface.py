@@ -1697,8 +1697,27 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.status_thread = threading.Thread(target = self.statuschecker)
         self.status_thread.start()
 
+    def recover(self, event):
+        self.extra_print_time = 0
+        if not self.p.online:
+            wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
+            return
+        # Reset Z
+        self.p.send_now("G92 Z" + self.predisconnect_layer)
+        # Home X and Y
+        self.p.send_now("G28 X Y")
+        self.on_startprint()
+        self.p.startprint(self.predisconnect_mainqueue)
+
+    def store_predisconnect_state(self):
+        self.predisconnect_mainqueue = self.p.mainqueue
+        self.predisconnect_queueindex = self.p.queueindex
+        self.predisconnect_layer = self.curlayer
+
     def disconnect(self,event):
         print _("Disconnected.")
+        if self.p.printing or self.p.paused or self.paused:
+            self.store_predisconnect_state()
         self.p.disconnect()
         self.statuscheck = False
         self.status_thread.join()
