@@ -600,6 +600,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.pausebtn.SetToolTip(wx.ToolTip("Pause Current Print"))
         self.pausebtn.Bind(wx.EVT_BUTTON,self.pause)
         ubs.Add(self.pausebtn)
+        self.recoverbtn=wx.Button(self.panel,-1,_("Recover"), size=buttonSize)
+        self.recoverbtn.SetToolTip(wx.ToolTip("Recover previous Print"))
+        self.recoverbtn.Bind(wx.EVT_BUTTON,self.recover)
+        ubs.Add(self.recoverbtn)
         #Right full view
         lrs=self.lowerrsizer=wx.BoxSizer(wx.VERTICAL)
         self.logbox=wx.TextCtrl(self.panel,style = wx.TE_MULTILINE,size=(350,-1))
