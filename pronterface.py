@@ -666,7 +666,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(self.monitorbox,pos=(2,6))
         self.monitorbox.Bind(wx.EVT_CHECKBOX,self.setmonitor)
 
-        lls.Add(wx.StaticText(self.panel,-1,_("Heat")),pos=(2,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+        lls.Add(wx.StaticText(self.panel,-1,_("Heat:")),pos=(2,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
 
         self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1),style=wx.BU_EXACTFIT)

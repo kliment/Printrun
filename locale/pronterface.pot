@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2012-08-04 21:53+CEST\n"
+"POT-Creation-Date: 2012-08-04 22:00+CEST\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -14,6 +14,42 @@ msgstr ""
 "Content-Transfer-Encoding: ENCODING\n"
 "Generated-By: pygettext.py 1.5\n"
 
+
+#: printrun/pronterface_widgets.py:34
+msgid "Find"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:36
+msgid "Save"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:41 pronterface.py:467 pronterface.py:1523
+msgid "Cancel"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:125
+msgid "Edit settings"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:127
+msgid "Defaults"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:156
+msgid "Custom button"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:161
+msgid "Button title"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:164
+msgid "Command"
+msgstr ""
+
+#: printrun/pronterface_widgets.py:173
+msgid "Color"
+msgstr ""
 
 #: pronterface.py:26
 msgid "WX is not installed. This program requires WX to run."
@@ -247,10 +283,6 @@ msgstr ""
 msgid "Ok"
 msgstr ""
 
-#: pronterface.py:467 pronterface.py:1523
-msgid "Cancel"
-msgstr ""
-
 #: pronterface.py:485
 msgid "Macro name may contain only ASCII alphanumeric symbols and underscores"
 msgstr ""
@@ -306,7 +338,7 @@ msgid "Watch"
 msgstr ""
 
 #: pronterface.py:669
-msgid "Heat"
+msgid "Heat:"
 msgstr ""
 
 #: pronterface.py:672 pronterface.py:695
