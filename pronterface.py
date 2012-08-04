@@ -42,8 +42,8 @@ if os.name=="nt":
     except:
         pass
 
-
-from printrun import printcore, gviz
+import printcore
+from printrun import gviz
 from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
 from printrun.graph import Graph

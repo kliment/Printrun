@@ -21,7 +21,7 @@ import sys, subprocess
 import math, codecs
 from math import sqrt
 
-from printrun import printcore
+import printcore
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
 
