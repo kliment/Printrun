@@ -110,6 +110,12 @@ class printcore():
     def _readline(self):
         try:
             line = self.printer.readline()
+            if len(line) > 1:
+                self.log.append(line)
+                if self.recvcb:
+                    try: self.recvcb(line)
+                    except: pass
+                if self.loud: print "RECV: ", line.rstrip()
             return line
         except SelectError, e:
             if 'Bad file descriptor' in e.args[1]:
@@ -124,44 +130,49 @@ class printcore():
             print "Can't read from printer (disconnected?)."
             return None
 
+    def _listen_can_continue(self):
+        return not self.stop_read_thread and self.printer and self.printer.isOpen()
+
+    def _listen_until_online(self):
+        while not self.online and self._listen_can_continue():
+            self._send("M105")
+            while self._listen_can_continue():
+                line = self._readline()
+                if line == None:
+                    break
+                if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
+                    if self.onlinecb:
+                        try: self.onlinecb()
+                        except: pass
+                    self.online = True
+                    return
+            time.sleep(0.5)
+
     def _listen(self):
         """This function acts on messages from the firmware
         """
         self.clear = True
         if not self.printing:
-            self._send("M105")
-            time.sleep(1)
-        while not self.stop_read_thread and self.printer and self.printer.isOpen():
+            self._listen_until_online(self)
+        while self._listen_can_continue():
             line = self._readline()
             if line == None:
                 break
-            if len(line) > 1:
-                self.log.append(line)
-                if self.recvcb:
-                    try: self.recvcb(line)
-                    except: pass
-                if self.loud: print "RECV: ", line.rstrip()
             if line.startswith('DEBUG_'):
                 continue
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
-            if line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line:
-                if (not self.online or line.startswith(tuple(self.greetings))) and self.onlinecb is not None:
-                    try: self.onlinecb()
+            if line.startswith('ok') and "T:" in line and self.tempcb:
+                    #callback for temp, status, whatever
+                    try: self.tempcb(line)
                     except: pass
-                self.online = True
-                if line.startswith('ok'):
-                    #self.resendfrom=-1
-                    if "T:" in line and self.tempcb is not None:
-                        #callback for temp, status, whatever
-                        try: self.tempcb(line)
-                        except: pass
             elif line.startswith('Error'):
-                if self.errorcb is not None:
+                if self.errorcb:
                     #callback for errors
                     try: self.errorcb(line)
                     except: pass
             if line.lower().startswith("resend") or line.startswith("rs"):
+                toresend = self.resendfrom
                 try:
                     toresend = int(line.replace("N:", " ").replace("N", " ").replace(":", " ").split()[-1])
                 except:
