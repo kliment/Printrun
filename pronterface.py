@@ -1261,7 +1261,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def kill(self,e):
         self.statuscheck = False
-        self.status_thread.join()
+        if self.status_thread:
+            self.status_thread.join()
+            self.status_thread = None
         self.p.recvcb=None
         self.p.disconnect()
         if hasattr(self,"feedrates_changed"):
@@ -1720,7 +1722,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.store_predisconnect_state()
         self.p.disconnect()
         self.statuscheck = False
-        self.status_thread.join()
+        if self.status_thread:
+            self.status_thread.join()
+            self.status_thread = None
 
         self.connectbtn.SetLabel("Connect")
         self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
