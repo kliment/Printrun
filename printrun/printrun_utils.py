@@ -1,6 +1,8 @@
 import os
 import gettext
 
+# Set up Internationalization using gettext
+# searching for installed locales on /usr/share; uses relative folder if not found (windows)
 def install_locale(domain):
     if os.path.exists('/usr/share/pronterface/locale'):
         gettext.install(domain, '/usr/share/pronterface/locale', unicode=1)
