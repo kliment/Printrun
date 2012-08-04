@@ -166,16 +166,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             try :
                 import cherrypy
                 from printrun import webinterface
+                try:
+                    self.webInterface=webinterface.WebInterface(self)
+                    self.webThread=threading.Thread(target=webinterface.StartWebInterfaceThread, args=(self.webInterface, ))
+                    self.webThread.start()
+                except:
+                    print _("Failed to start web interface")
+                    traceback.print_exc(file = sys.stdout)
+                    self.webInterface = None
             except:
                 print _("CherryPy is not installed. Web Interface Disabled.")
-            try:
-                self.webInterface=webinterface.WebInterface(self)
-                self.webThread=threading.Thread(target=webinterface.StartWebInterfaceThread, args=(self.webInterface, ))
-                self.webThread.start()
-            except:
-                print _("Failed to start web interface")
-                traceback.print_exc(file = sys.stdout)
-                self.webInterface = None
 
     def startcb(self):
         self.starttime=time.time()
