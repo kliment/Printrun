@@ -513,7 +513,7 @@ msgid ""
 "the print goes from %f mm to %f mm in X\n"
 "and is %f mm wide\n"
 msgstr ""
-"L'impression va de %f mm à %f m en X\n"
+"L'impression va de %f mm à %f mm en X\n"
 "et mesure %f mm de large\n"
 
 #: pronterface.py:1408
@@ -521,7 +521,7 @@ msgid ""
 "the print goes from %f mm to %f mm in Y\n"
 "and is %f mm wide\n"
 msgstr ""
-"L'impression va de %f mm à %f m en Y\n"
+"L'impression va de %f mm à %f mm en Y\n"
 "et mesure %f mm de large\n"
 
 #: pronterface.py:1409
@@ -529,7 +529,7 @@ msgid ""
 "the print goes from %f mm to %f mm in Z\n"
 "and is %f mm high\n"
 msgstr ""
-"L'impression va de %f mm à %f m en Y\n"
+"L'impression va de %f mm à %f mm en Y\n"
 "et mesure %f mm de haut\n"
 
 #: pronterface.py:1410
