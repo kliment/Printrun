@@ -124,18 +124,20 @@ class DisplayFrame(wx.Frame):
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
         wx.FutureCall(1000 * self.interval, self.hide_pic_and_rise)
-        self.pic.Show()
-        self.Refresh()
 
     def rise(self):
         print "Rising "+ str(time.clock())
-        if self.printer != None and self.printer.online:
-                self.printer.send_now("G91")
-                self.printer.send_now("G1 Z%f F200" % (3,))
-                self.printer.send_now("G1 Z-%f F200" % (3-self.thickness,))
-                self.printer.send_now("G90")
         
-        self.next_img()
+        if self.printer != None and self.printer.online:
+            self.printer.send_now("G91")
+            self.printer.send_now("G1 Z%f F200" % (3,))
+            self.printer.send_now("G1 Z-%f F200" % (3-self.thickness,))
+            self.printer.send_now("G90")
+        else:
+            time.sleep(self.pause)
+        
+        wx.FutureCall(1000 * self.pause, self.next_img)
+
         
     def hide_pic(self):
         print "Hiding "+ str(time.clock())
@@ -143,7 +145,7 @@ class DisplayFrame(wx.Frame):
         
     def hide_pic_and_rise(self):
         wx.CallAfter(self.hide_pic)
-        wx.FutureCall(self.pause * 1000, self.rise)
+        wx.FutureCall(500, self.rise)
                     
     def next_img(self):
         if not self.running:
@@ -200,11 +202,11 @@ class SettingsFrame(wx.Frame):
         self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
         
         wx.StaticText(self.panel, -1, "X:", pos=(right_label_X_pos, 30))
-        self.X = wx.SpinCtrl(self.panel, -1, '1440', pos=(right_value_X_pos, 30), max=999999)
+        self.X = wx.SpinCtrl(self.panel, -1, '1024', pos=(right_value_X_pos, 30), max=999999)
         self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
 
         wx.StaticText(self.panel, -1, "Y:", pos=(right_label_X_pos, 60))
-        self.Y = wx.SpinCtrl(self.panel, -1, '900', pos=(right_value_X_pos, 60), max=999999)
+        self.Y = wx.SpinCtrl(self.panel, -1, '768', pos=(right_value_X_pos, 60), max=999999)
         self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         
         wx.StaticText(self.panel, -1, "OffsetX:", pos=(right_label_X_pos, 90))
@@ -233,7 +235,7 @@ class SettingsFrame(wx.Frame):
         self.calibrate.Bind(wx.EVT_CHECKBOX, self.start_calibrate)
         
         wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(right_label_X_pos, 210))
-        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos + 40, 210), value=415.0, increment=1, digits=1)
+        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos + 40, 210), value=140.0, increment=1, digits=1)
         self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
 
         wx.StaticText(self.panel, -1, "1st Layer:", pos=(right_label_X_pos, 240))
