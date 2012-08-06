@@ -1713,11 +1713,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
             return
         # Reset Z
-        self.p.send_now("G92 Z" + self.predisconnect_layer)
+        self.p.send_now("G92 Z%f" % self.predisconnect_layer)
         # Home X and Y
         self.p.send_now("G28 X Y")
         self.on_startprint()
-        self.p.startprint(self.predisconnect_mainqueue)
+        self.p.startprint(self.predisconnect_mainqueue, self.p.queueindex)
 
     def store_predisconnect_state(self):
         self.predisconnect_mainqueue = self.p.mainqueue
