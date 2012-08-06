@@ -194,7 +194,7 @@ class SettingsFrame(wx.Frame):
             return val
         
     def __init__(self, parent, printer=None):
-        wx.Frame.__init__(self, parent, title="ProjectLayer Control", size=(400, 400))
+        wx.Frame.__init__(self, parent, title="ProjectLayer Control", size=(400, 450))
         self.pronterface = parent
         self.display_frame = DisplayFrame(self, title="ProjectLayer Display", printer=printer)
         
@@ -281,6 +281,9 @@ class SettingsFrame(wx.Frame):
         wx.StaticText(self.panel, -1, "Current Layer:", pos=(left_label_X_pos, info_pos + 40))
         self.current_layer = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 20, info_pos + 40))
         
+        wx.StaticText(self.panel, -1, "Estimated Time:", pos=(left_label_X_pos, info_pos + 60))
+        self.estimated_time = wx.StaticText(self.panel, -1, "", pos=(left_value_X_pos + 20, info_pos + 60))
+        
         self.SetPosition((0, 0)) 
         self.Show()
 
@@ -291,13 +294,26 @@ class SettingsFrame(wx.Frame):
             self.display_frame.Destroy()
 
     def set_total_layers(self, total):
-        self.total_layers.SetLabel(str(total)) 
+        self.total_layers.SetLabel(str(total))
+        self.set_estimated_time()
 
     def set_current_layer(self, index):
-        self.current_layer.SetLabel(str(index)) 
+        self.current_layer.SetLabel(str(index))
+        self.set_estimated_time()
 
     def set_filename(self,name):
         self.filename.SetLabel(name)
+            
+    def set_estimated_time(self):
+        if not self.layers:
+            print "No model loaded."
+            return
+        
+        current_layer = int(self.current_layer.GetLabel())
+        remaining_layers = len(self.layers[0]) - current_layer
+        # 0.5 for delay between hide and rise
+        estimated_time =  remaining_layers * (float(self.interval.GetValue()) + float(self.pause.GetValue()) + 0.5)  
+        self.estimated_time.SetLabel(time.strftime("%H:%M:%S",time.gmtime(estimated_time)))
             
     def parse_svg(self, name):
         et = xml.etree.ElementTree.ElementTree(file=name)
@@ -497,12 +513,14 @@ class SettingsFrame(wx.Frame):
         interval = float(self.interval.GetValue())
         self.display_frame.interval = interval
         self._set_setting('project_interval',interval)
+        self.set_estimated_time()
         self.start_calibrate(event)
         
     def update_pause(self, event):
         pause = float(self.pause.GetValue())
         self.display_frame.pause = pause
         self._set_setting('project_pause',pause)
+        self.set_estimated_time()
         self.start_calibrate(event)
         
     def update_fullscreen(self, event):
@@ -533,6 +551,7 @@ class SettingsFrame(wx.Frame):
             return
         
         self.pause_button.SetLabel("Pause")
+        self.set_current_layer(0)
         self.display_frame.Raise()
         if (self.fullscreen.GetValue()):
             self.display_frame.ShowFullScreen(1)
@@ -549,6 +568,7 @@ class SettingsFrame(wx.Frame):
     def stop_present(self, event):
         print "Stop"
         self.pause_button.SetLabel("Pause")
+        self.set_current_layer(0)
         self.display_frame.running = False
         
     def pause_present(self, event):        
