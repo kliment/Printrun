@@ -160,6 +160,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.extra_print_time=0
         self.curlayer=0
         self.cur_button=None
+        self.predisconnect_mainqueue = None
+        self.predisconnect_queueindex = None
+        self.predisconnect_layer = None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
         self.webInterface=None
@@ -818,6 +821,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         # disable all printer controls until we connect to a printer
         self.pausebtn.Disable()
+        self.recoverbtn.Disable()
         for i in self.printerControls:
             i.Disable()
 
@@ -1567,6 +1571,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 wx.CallAfter(self.pausebtn.Disable)
+                wx.CallAfter(self.recoverbtn.Disable)
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target=self.loadviz).start()
@@ -1702,6 +1707,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.set("baudrate",str(baud))
         self.status_thread = threading.Thread(target = self.statuschecker)
         self.status_thread.start()
+        if self.predisconnect_mainqueue:
+            self.recoverbtn.Enable()
 
     def recover(self, event):
         self.extra_print_time = 0
