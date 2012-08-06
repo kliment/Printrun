@@ -1566,7 +1566,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.filename=name
                 of=open(self.filename)
                 self.f=[i.replace("\n","").replace("\r","") for i in of]
-                of.close
+                of.close()
                 self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.f)))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
