@@ -1333,51 +1333,48 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.logbox.Clear()
 
     def statuschecker(self):
-        try:
-            while self.statuscheck:
-                string = ""
-                wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
-                try:
-                    #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
-                    wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
-                    #self.bedtgauge.SetValue(parse_temperature_report(self.tempreport, "B:"))
-                    wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
-                except:
-                    pass
-                fractioncomplete = 0.0
+        while self.statuscheck:
+            string = ""
+            wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
+            try:
+                #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
+                wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
+                #self.bedtgauge.SetValue(parse_temperature_report(self.tempreport, "B:"))
+                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
+            except:
+                pass
+            fractioncomplete = 0.0
+            if self.sdprinting:
+                fractioncomplete = float(self.percentdone / 100.0)
+                string += _(" SD printing:%04.2f %%") % (self.percentdone,)
+            if self.p.printing:
+                fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
+                string += _(" Printing: %04.2f%% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
+                string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
+            if fractioncomplete > 0.0:
+                secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+                secondsestimate = secondselapsed / fractioncomplete
+                secondsremain = secondsestimate - secondselapsed
+                string += _(" Est: %s of %s remaining | ") % (format_time(secondsremain),
+                                                             format_time(secondsestimate))
+                string += _(" Z: %0.2f mm") % self.curlayer
+            wx.CallAfter(self.status.SetStatusText, string)
+            wx.CallAfter(self.gviz.Refresh)
+            if(self.monitor and self.p.online):
                 if self.sdprinting:
-                    fractioncomplete = float(self.percentdone / 100.0)
-                    string += _(" SD printing:%04.2f %%") % (self.percentdone,)
-                if self.p.printing:
-                    fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
-                    string += _(" Printing: %04.2f%% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
-                    string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
-                if fractioncomplete > 0.0:
-                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                    secondsestimate = secondselapsed / fractioncomplete
-                    secondsremain = secondsestimate - secondselapsed
-                    string += _(" Est: %s of %s remaining | ") % (format_time(secondsremain),
-                                                                 format_time(secondsestimate))
-                    string += _(" Z: %0.2f mm") % self.curlayer
-                wx.CallAfter(self.status.SetStatusText, string)
-                wx.CallAfter(self.gviz.Refresh)
-                if(self.monitor and self.p.online):
-                    if self.sdprinting:
-                        self.p.send_now("M27")
-                    if not hasattr(self,"auto_monitor_pattern"):
-                        self.auto_monitor_pattern = re.compile(r"(ok\s+)?T:[\d\.]+(\s+B:[\d\.]+)?(\s+@:[\d\.]+)?\s*")
-                    self.capture_skip[self.auto_monitor_pattern] = self.capture_skip.setdefault(self.auto_monitor_pattern, 0) + 1
-                    self.p.send_now("M105")
-                time.sleep(self.monitor_interval)
-                while not self.sentlines.empty():
-                    try:
-                        gc = self.sentlines.get_nowait()
-                        wx.CallAfter(self.gviz.addgcode, gc, 1)
-                    except:
-                        break
-            wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
-        except:
-            pass #if window has been closed
+                    self.p.send_now("M27")
+                if not hasattr(self,"auto_monitor_pattern"):
+                    self.auto_monitor_pattern = re.compile(r"(ok\s+)?T:[\d\.]+(\s+B:[\d\.]+)?(\s+@:[\d\.]+)?\s*")
+                self.capture_skip[self.auto_monitor_pattern] = self.capture_skip.setdefault(self.auto_monitor_pattern, 0) + 1
+                self.p.send_now("M105")
+            time.sleep(self.monitor_interval)
+            while not self.sentlines.empty():
+                try:
+                    gc = self.sentlines.get_nowait()
+                    wx.CallAfter(self.gviz.addgcode, gc, 1)
+                except:
+                    break
+        wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
     
     def capture(self, func, *args, **kwargs):
         stdout=sys.stdout
