@@ -103,7 +103,7 @@ class DisplayFrame(wx.Frame):
                     
                 stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(image)))
                 image = wx.ImageFromStream(stream)
-                dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], -self.offset[1], True)
+                dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
@@ -127,7 +127,6 @@ class DisplayFrame(wx.Frame):
 
     def rise(self):
         print "Rising "+ str(time.clock())
-        
         if self.printer != None and self.printer.online:
             self.printer.send_now("G91")
             self.printer.send_now("G1 Z%f F200" % (3,))
@@ -137,7 +136,6 @@ class DisplayFrame(wx.Frame):
             time.sleep(self.pause)
         
         wx.FutureCall(1000 * self.pause, self.next_img)
-
         
     def hide_pic(self):
         print "Hiding "+ str(time.clock())
@@ -176,13 +174,31 @@ class DisplayFrame(wx.Frame):
 
 class SettingsFrame(wx.Frame):
     
+    def _set_setting(self, name, value):
+        if self.pronterface:
+            self.pronterface.set(name,value)
+    
+    def _get_setting(self,name, val):
+        if self.pronterface:
+            try:
+                return getattr(self.pronterface.settings,name)
+            except AttributeError, x:
+                print x
+                return val
+        else: 
+            return val
+        
     def __init__(self, parent, printer=None):
         wx.Frame.__init__(self, parent, title="ProjectLayer Control", size=(400, 400))
+        self.pronterface = parent
         self.display_frame = DisplayFrame(self, title="ProjectLayer Display", printer=printer)
+        
         left_label_X_pos = 0
         left_value_X_pos = 70
         right_label_X_pos = 180
-        right_value_X_pos = 230        
+        right_value_X_pos = 230
+        info_pos = 300
+        
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour("orange")
         self.load_button = wx.Button(self.panel, -1, "Load", pos=(0, 0))
@@ -192,39 +208,41 @@ class SettingsFrame(wx.Frame):
         self.thickness = wx.TextCtrl(self.panel, -1, "0.3", pos=(left_value_X_pos, 30))
 
         wx.StaticText(self.panel, -1, "Exposure (s):", pos=(left_label_X_pos, 60))
-        self.interval = wx.TextCtrl(self.panel, -1, "0.5", pos=(left_value_X_pos, 60))
-
+        self.interval = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_interval", "0.5")), pos=(left_value_X_pos, 60))
+        self.interval.Bind(wx.EVT_SPINCTRL, self.update_interval)
+        
         wx.StaticText(self.panel, -1, "Blank (s):", pos=(left_label_X_pos, 90))
-        self.delay = wx.TextCtrl(self.panel, -1, "0.5", pos=(left_value_X_pos, 90))
-
+        self.pause = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_pause", "0.5")), pos=(left_value_X_pos, 90))
+        self.pause.Bind(wx.EVT_SPINCTRL, self.update_pause)
+        
         wx.StaticText(self.panel, -1, "Scale:", pos=(left_label_X_pos, 120))
-        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(left_value_X_pos, 120), value=1.0, increment=0.1, digits=1)
+        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(left_value_X_pos, 120), value=self._get_setting('project_scale', 1.0), increment=0.1, digits=1)
         self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
         
         wx.StaticText(self.panel, -1, "X:", pos=(right_label_X_pos, 30))
-        self.X = wx.SpinCtrl(self.panel, -1, '1024', pos=(right_value_X_pos, 30), max=999999)
+        self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1024))), pos=(right_value_X_pos, 30), max=999999)
         self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
 
         wx.StaticText(self.panel, -1, "Y:", pos=(right_label_X_pos, 60))
-        self.Y = wx.SpinCtrl(self.panel, -1, '768', pos=(right_value_X_pos, 60), max=999999)
+        self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 768))), pos=(right_value_X_pos, 60), max=999999)
         self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         
         wx.StaticText(self.panel, -1, "OffsetX:", pos=(right_label_X_pos, 90))
-        self.offset_X = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 90), value=0.0, increment=1, digits=1)
+        self.offset_X = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 90), value=self._get_setting("project_offset_x", 0.0), increment=1, digits=1)
         self.offset_X.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
 
         wx.StaticText(self.panel, -1, "OffsetY:", pos=(right_label_X_pos, 120))
-        self.offset_Y = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 120), value=0.0, increment=1, digits=1)
+        self.offset_Y = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 120), value=self._get_setting("project_offset_y", 0.0), increment=1, digits=1)
         self.offset_Y.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
         
         self.load_button = wx.Button(self.panel, -1, "Present", pos=(left_label_X_pos, 150))
         self.load_button.Bind(wx.EVT_BUTTON, self.start_present)
         
-        self.pause = wx.Button(self.panel, -1, "Pause", pos=(left_label_X_pos, 180))
-        self.pause.Bind(wx.EVT_BUTTON, self.pause_present)
+        self.pause_button = wx.Button(self.panel, -1, "Pause", pos=(left_label_X_pos, 180))
+        self.pause_button.Bind(wx.EVT_BUTTON, self.pause_present)
         
-        self.stop = wx.Button(self.panel, -1, "Stop", pos=(left_label_X_pos, 210))
-        self.stop.Bind(wx.EVT_BUTTON, self.stop_present)
+        self.stop_button = wx.Button(self.panel, -1, "Stop", pos=(left_label_X_pos, 210))
+        self.stop_button.Bind(wx.EVT_BUTTON, self.stop_present)
         
         wx.StaticText(self.panel, -1, "Fullscreen:", pos=(right_label_X_pos, 150))
         self.fullscreen = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 150))
@@ -235,7 +253,7 @@ class SettingsFrame(wx.Frame):
         self.calibrate.Bind(wx.EVT_CHECKBOX, self.start_calibrate)
         
         wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(right_label_X_pos, 210))
-        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos + 40, 210), value=140.0, increment=1, digits=1)
+        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos + 40, 210), value=self._get_setting("project_projected_x", 415.0), increment=1, digits=1)
         self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
 
         wx.StaticText(self.panel, -1, "1st Layer:", pos=(right_label_X_pos, 240))
@@ -249,11 +267,14 @@ class SettingsFrame(wx.Frame):
         self.bounding_box = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 270))
         self.bounding_box.Bind(wx.EVT_CHECKBOX, self.show_bounding_box)
         
-        wx.StaticText(self.panel, -1, "Total Layers:", pos=(left_label_X_pos, 260))
-        self.total_layers = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 10, 260))
+        wx.StaticText(self.panel, -1, "File:", pos=(left_label_X_pos, info_pos))
+        self.filename = wx.StaticText(self.panel, -1, "", pos=(left_value_X_pos + 10, info_pos))
+        
+        wx.StaticText(self.panel, -1, "Total Layers:", pos=(left_label_X_pos, info_pos + 20))
+        self.total_layers = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 10, info_pos + 20))
 
-        wx.StaticText(self.panel, -1, "Current Layer:", pos=(left_label_X_pos, 280))
-        self.current_layer = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 20, 280))
+        wx.StaticText(self.panel, -1, "Current Layer:", pos=(left_label_X_pos, info_pos + 40))
+        self.current_layer = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 20, info_pos + 40))
         
         self.SetPosition((0, 0)) 
         self.Show()
@@ -269,6 +290,9 @@ class SettingsFrame(wx.Frame):
 
     def set_current_layer(self, index):
         self.current_layer.SetLabel(str(index)) 
+
+    def set_filename(self,name):
+        self.filename.SetLabel(name)
             
     def parse_svg(self, name):
         et = xml.etree.ElementTree.ElementTree(file=name)
@@ -341,6 +365,7 @@ class SettingsFrame(wx.Frame):
             self.layers = layers
             self.set_total_layers(len(layers[0]))
             self.set_current_layer(0) 
+            self.set_filename(os.path.basename(name)) 
             self.display_frame.slicer = layers[2]
         dlg.Destroy()
 
@@ -443,14 +468,36 @@ class SettingsFrame(wx.Frame):
             self.display_frame.clear_layer()
             
     def update_offset(self, event):
-        self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
+        
+        offset_x = float(self.offset_X.GetValue())
+        offset_y = float(self.offset_Y.GetValue())
+        self.display_frame.offset = (offset_x, offset_y)
+        
+        self._set_setting('project_offset_x',offset_x)
+        self._set_setting('project_offset_y',offset_y)
+        
         self.start_calibrate(event)
     
     def update_projected_Xmm(self, event):
+        self._set_setting('project_projected_x',self.projected_X_mm.GetValue())
         self.start_calibrate(event)
         
     def update_scale(self, event):
-        self.display_frame.scale = float(self.scale.GetValue())
+        scale = float(self.scale.GetValue())
+        self.display_frame.scale = scale
+        self._set_setting('project_scale',scale)
+        self.start_calibrate(event)
+        
+    def update_interval(self, event):
+        interval = float(self.interval.GetValue())
+        self.display_frame.interval = interval
+        self._set_setting('project_interval',interval)
+        self.start_calibrate(event)
+        
+    def update_pause(self, event):
+        pause = float(self.pause.GetValue())
+        self.display_frame.pause = pause
+        self._set_setting('project_pause',pause)
         self.start_calibrate(event)
         
     def update_fullscreen(self, event):
@@ -461,7 +508,11 @@ class SettingsFrame(wx.Frame):
         self.start_calibrate(event)
     
     def update_resolution(self, event):
-        self.display_frame.resize((float(self.X.GetValue()), float(self.Y.GetValue())))
+        x = float(self.X.GetValue())
+        y = float(self.Y.GetValue())
+        self.display_frame.resize((x,y))
+        self._set_setting('project_x',x)
+        self._set_setting('project_y',y)
         self.start_calibrate(event)
     
     def get_dpi(self):
@@ -476,7 +527,7 @@ class SettingsFrame(wx.Frame):
             print "No model loaded!"
             return
         
-        self.pause.SetLabel("Pause")
+        self.pause_button.SetLabel("Pause")
         self.display_frame.Raise()
         if (self.fullscreen.GetValue()):
             self.display_frame.ShowFullScreen(1)
@@ -486,23 +537,23 @@ class SettingsFrame(wx.Frame):
             thickness=float(self.thickness.GetValue()),
             interval=float(self.interval.GetValue()),
             scale=float(self.scale.GetValue()),
-            pause=float(self.delay.GetValue()),
+            pause=float(self.pause.GetValue()),
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
             offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue())))
         
     def stop_present(self, event):
         print "Stop"
-        self.pause.SetLabel("Pause")
+        self.pause_button.SetLabel("Pause")
         self.display_frame.running = False
         
     def pause_present(self, event):        
-        if self.pause.GetLabel() == 'Pause':
+        if self.pause_button.GetLabel() == 'Pause':
             print "Pause"
-            self.pause.SetLabel("Continue")
+            self.pause_button.SetLabel("Continue")
             self.display_frame.running = False
         else:
             print "Continue"
-            self.pause.SetLabel("Pause")
+            self.pause_button.SetLabel("Pause")
             self.display_frame.running = True
             self.display_frame.next_img()
 

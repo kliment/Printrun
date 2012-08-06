@@ -202,6 +202,14 @@ class Settings:
         self.slicecommand="python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s"
         self.sliceoptscommand="python skeinforge/skeinforge_application/skeinforge.py"
         self.final_command = ""
+        self.project_offset_x = 0.0
+        self.project_offset_y = 0.0
+        self.project_interval = 2
+        self.project_pause = 2.5
+        self.project_scale = 1
+        self.project_x = 1024.0
+        self.project_y = 768.0
+        self.project_projected_x = 150.0
 
     def _set(self,key,value):
         try:
@@ -220,6 +228,7 @@ class Settings:
         except AttributeError:
             pass
         return value
+    
     def _tabcomplete(self,key):
         try:
             return getattr(self,"_%s_list"%key)()
@@ -230,6 +239,7 @@ class Settings:
         except AttributeError:
             pass
         return []
+    
     def _all_settings(self):
         return dict([(k,getattr(self,k)) for k in self.__dict__.keys() if not k.startswith("_")])
 
