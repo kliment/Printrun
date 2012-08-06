@@ -1367,7 +1367,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.auto_monitor_pattern = re.compile(r"(ok\s+)?T:[\d\.]+(\s+B:[\d\.]+)?(\s+@:[\d\.]+)?\s*")
                 self.capture_skip[self.auto_monitor_pattern] = self.capture_skip.setdefault(self.auto_monitor_pattern, 0) + 1
                 self.p.send_now("M105")
-            time.sleep(self.monitor_interval)
+            cur_time = time.time()
+            while time.time() < cur_time + self.monitor_interval:
+                if not self.statuscheck:
+                    break
+                time.sleep(0.25)
             while not self.sentlines.empty():
                 try:
                     gc = self.sentlines.get_nowait()

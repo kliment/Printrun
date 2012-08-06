@@ -94,7 +94,7 @@ class printcore():
             self.baud = baud
         if self.port is not None and self.baud is not None:
             disable_hup(self.port)
-            self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 1)
+            self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 0.25)
             self.stop_read_thread = False
             self.read_thread = Thread(target=self._listen)
             self.read_thread.start()
@@ -146,7 +146,7 @@ class printcore():
                         except: pass
                     self.online = True
                     return
-            time.sleep(0.5)
+            time.sleep(0.25)
 
     def _listen(self):
         """This function acts on messages from the firmware
