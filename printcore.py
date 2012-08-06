@@ -153,7 +153,7 @@ class printcore():
         """
         self.clear = True
         if not self.printing:
-            self._listen_until_online(self)
+            self._listen_until_online()
         while self._listen_can_continue():
             line = self._readline()
             if line == None:
