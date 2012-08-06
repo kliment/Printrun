@@ -24,6 +24,7 @@ import shutil
 from cairosvg.surface import PNGSurface
 import cStringIO
 import imghdr
+import copy
 
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
@@ -91,19 +92,23 @@ class DisplayFrame(wx.Frame):
             elif self.slicer == 'Slic3r':
                 
                 if int(self.scale) != 1:
-                    height = float(image.get('height').replace('m',''))
-                    width = float(image.get('width').replace('m',''))
+                    layercopy = copy.deepcopy(image)
+                    height = float(layercopy.get('height').replace('m',''))
+                    width = float(layercopy.get('width').replace('m',''))
                     
-                    image.set('height', str(height*self.scale) + 'mm')
-                    image.set('width', str(width*self.scale) + 'mm')
-                    image.set('viewBox', '0 0 ' + str(height*self.scale) + ' ' + str(width*self.scale))
+                    layercopy.set('height', str(height*self.scale) + 'mm')
+                    layercopy.set('width', str(width*self.scale) + 'mm')
+                    layercopy.set('viewBox', '0 0 ' + str(height*self.scale) + ' ' + str(width*self.scale))
                     
-                    g = image.find("{http://www.w3.org/2000/svg}g")
+                    g = layercopy.find("{http://www.w3.org/2000/svg}g")
                     g.set('transform', 'scale('+str(self.scale)+')')
-                    
-                stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(image)))
-                image = wx.ImageFromStream(stream)
-                dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)
+                    stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(layercopy)))
+                    image = wx.ImageFromStream(stream)
+                    dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)    
+                else:    
+                    stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(image)))
+                    image = wx.ImageFromStream(stream)
+                    dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
@@ -568,7 +573,7 @@ class SettingsFrame(wx.Frame):
 
             self.display_frame.slicer = self.layers[2]
             self.display_frame.dpi = self.get_dpi()
-            self.display_frame.draw_layer(self.layers[0][0])
+            self.display_frame.draw_layer(copy.deepcopy(self.layers[0][0]))
             self.calibrate.SetValue(False)
             self.bounding_box.SetValue(False)
             if self.show_first_layer_timer != -1.0 :
