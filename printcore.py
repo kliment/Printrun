@@ -138,7 +138,7 @@ class printcore():
             self._send("M105")
             while self._listen_can_continue():
                 line = self._readline()
-                if line == None:
+                if not line:
                     break
                 if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                     if self.onlinecb:
