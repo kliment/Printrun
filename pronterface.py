@@ -25,7 +25,7 @@ try:
 except:
     print _("WX is not installed. This program requires WX to run.")
     raise
-import sys, glob, time, threading, traceback, cStringIO, subprocess
+import sys, glob, time, datetime, threading, traceback, cStringIO, subprocess
 
 from printrun.pronterface_widgets import *
 
@@ -57,7 +57,10 @@ def parse_temperature_report(report, key):
     return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
 
 def format_time(timestamp):
-    return time.strftime('%H:%M:%S', timestamp)
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+
+def format_duration(delta):
+    return str(datetime.timedelta(seconds = int(delta)))
 
 class Tee(object):
     def __init__(self, target):
@@ -188,7 +191,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def endcb(self):
         if(self.p.queueindex==0):
             print "Print ended at: " + format_time(time.time())
-            print "and took: " + format_time(int(time.time () - self.starttime + self.extra_print_time))
+            print_duration = int(time.time () - self.starttime + self.extra_print_time)
+            print "and took: " + format_duration(print_duration)
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel,_("Print"))
 
@@ -196,7 +200,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if not param:
                 return
             import shlex
-            pararray=[i.replace("$s",str(self.filename)).replace("$t", format_time(int(time.time()-self.starttime+self.extra_print_time))).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
+            pararray=[i.replace("$s",str(self.filename)).replace("$t", format_duration(print_duration)).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
             self.finalp=subprocess.Popen(pararray,stderr=subprocess.STDOUT,stdout=subprocess.PIPE)
 
     def online(self):
@@ -1357,8 +1361,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
                 secondsestimate = secondselapsed / fractioncomplete
                 secondsremain = secondsestimate - secondselapsed
-                string += _(" Est: %s of %s remaining | ") % (format_time(secondsremain),
-                                                             format_time(secondsestimate))
+                string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
+                                                              format_duration(secondsestimate))
                 string += _(" Z: %0.2f mm") % self.curlayer
             wx.CallAfter(self.status.SetStatusText, string)
             wx.CallAfter(self.gviz.Refresh)

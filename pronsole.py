@@ -16,7 +16,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import cmd, sys 
-import glob, os, time
+import glob, os, time, datetime
 import sys, subprocess 
 import math, codecs
 from math import sqrt
@@ -178,7 +178,7 @@ def estimate_duration(g):
             lastf = f
 
     #print "Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration))
-    return "{0:d} layers, ".format(int(layercount))+time.strftime('%H:%M:%S', time.gmtime(totalduration))
+    return "{0:d} layers, ".format(int(layercount)) + str(datetime.timedelta(seconds = int(totalduration)))
 
 class Settings:
     #def _temperature_alias(self): return {"pla":210,"abs":230,"off":0}
