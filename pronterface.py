@@ -57,7 +57,7 @@ def parse_temperature_report(report, key):
     return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
 
 def format_time(timestamp):
-    return time.strftime('%H:%M:%S', time.localtime(timestamp))
+    return time.strftime('%H:%M:%S', timestamp)
 
 class Tee(object):
     def __init__(self, target):
