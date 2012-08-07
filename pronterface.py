@@ -1744,9 +1744,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
 
-        wx.CallAfter(self.printbtn.Disable);
-        wx.CallAfter(self.pausebtn.Disable);
-        wx.CallAfter(self.recoverbtn.Disable);
+        wx.CallAfter(self.printbtn.Disable)
+        wx.CallAfter(self.pausebtn.Disable)
+        wx.CallAfter(self.recoverbtn.Disable)
         for i in self.printerControls:
             wx.CallAfter(i.Disable)
 
