@@ -221,7 +221,7 @@ class SettingsFrame(wx.Frame):
         self.pause.Bind(wx.EVT_SPINCTRL, self.update_pause)
         
         wx.StaticText(self.panel, -1, "Scale:", pos=(left_label_X_pos, 120))
-        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(left_value_X_pos, 120), value=self._get_setting('project_scale', 1.0), increment=0.1, digits=1)
+        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(left_value_X_pos, 120), value=self._get_setting('project_scale', 1.0), increment=0.1, digits=3)
         self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
         
         wx.StaticText(self.panel, -1, "X:", pos=(right_label_X_pos, 30))
