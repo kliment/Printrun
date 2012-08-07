@@ -1746,6 +1746,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         wx.CallAfter(self.printbtn.Disable);
         wx.CallAfter(self.pausebtn.Disable);
+        wx.CallAfter(self.recoverbtn.Disable);
         for i in self.printerControls:
             wx.CallAfter(i.Disable)
 
