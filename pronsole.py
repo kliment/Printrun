@@ -647,7 +647,6 @@ class pronsole(cmd.Cmd):
     def help_load(self):
         print "Loads a gcode file (with tab-completion)"
 
-
     def do_upload(self,l):
         if len(l)==0:
             print "No file name given."
@@ -713,7 +712,6 @@ class pronsole(cmd.Cmd):
 
     def help_upload(self):
         print "Uploads a gcode file to the sd card"
-
 
     def help_print(self):
         if self.f is None:
