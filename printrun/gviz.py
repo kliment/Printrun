@@ -19,8 +19,8 @@ from printrun_utils import imagefile
 ID_ABOUT = 101
 ID_EXIT = 110
 class window(wx.Frame):
-    def __init__(self, f,size = (600, 600),build_dimensions=[200, 200, 100, 0,0, 0],grid = (10, 50),extrusion_width = 0.5):
-        wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer",size = (size[0],size[1]))
+    def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
+        wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = (size[0], size[1]))
         self.p = gviz(self, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -46,10 +46,10 @@ class window(wx.Frame):
 
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
-        #self.bu = wx.Button(self.p,-1,"U",pos = (0, 100),size = (40, 140))
-        #self.bd = wx.Button(self.p,-1,"D",pos = (0, 140),size = (40, 140))
-        #self.bi = wx.Button(self.p,-1,"+",pos = (40, 100),size = (40, 140))
-        #self.bo = wx.Button(self.p,-1,"-",pos = (40, 140),size = (40, 140))
+        #self.bu = wx.Button(self.p,-1, "U", pos = (0, 100), size = (40, 140))
+        #self.bd = wx.Button(self.p,-1, "D", pos = (0, 140), size = (40, 140))
+        #self.bi = wx.Button(self.p,-1, "+", pos = (40, 100), size = (40, 140))
+        #self.bo = wx.Button(self.p,-1, "-", pos = (40, 140), size = (40, 140))
         #self.bs = wx.Button(self.p, -1, "Inject", pos = (85, 103), size = (50, 20))
 
         #self.bu.SetToolTip(wx.ToolTip("Move up one layer"))
@@ -66,7 +66,7 @@ class window(wx.Frame):
 
         s = time.time()
         #print time.time()-s
-        self.initpos=[0, 0]
+        self.initpos = [0, 0]
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
         #self.bu.Bind(wx.EVT_KEY_DOWN, self.key)
         #self.bd.Bind(wx.EVT_KEY_DOWN, self.key)
@@ -79,9 +79,9 @@ class window(wx.Frame):
         self.Bind(wx.EVT_MOUSE_EVENTS, self.mouse)
 
     def resetview(self, event):
-        self.p.translate=[0.0, 0.0]
+        self.p.translate = [0.0, 0.0]
         self.p.scale = self.p.basescale
-        self.p.zoom(0, 0,1.0)
+        self.p.zoom(0, 0, 1.0)
 
     def mouse(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
@@ -89,10 +89,10 @@ class window(wx.Frame):
                 self.initpos = None
         elif event.Dragging():
             e = event.GetPositionTuple()
-            if self.initpos is None or not hasattr(self,"basetrans"):
+            if self.initpos is None or not hasattr(self, "basetrans"):
                 self.initpos = e
                 self.basetrans = self.p.translate
-            #print self.p.translate, e,self.initpos
+            #print self.p.translate, e, self.initpos
             self.p.translate = [ self.basetrans[0]+(e[0]-self.initpos[0]),
                             self.basetrans[1]+(e[1]-self.initpos[1]) ]
             self.p.repaint()
@@ -103,10 +103,10 @@ class window(wx.Frame):
 
     def key(self, event):
         #  Keycode definitions
-        kup=[85, 315]               # Up keys
-        kdo=[68, 317]               # Down Keys
-        kzi=[388, 316, 61]        # Zoom In Keys
-        kzo=[390, 314, 45]       # Zoom Out Keys
+        kup = [85, 315]               # Up keys
+        kdo = [68, 317]               # Down Keys
+        kzi = [388, 316, 61]        # Zoom In Keys
+        kzo = [390, 314, 45]       # Zoom Out Keys
         x = event.GetKeyCode()
         #print "Key event - "+str(x)
         #if event.ShiftDown():
@@ -136,42 +136,42 @@ class window(wx.Frame):
             if z > 0:   self.p.layerdown()
             elif z < 0: self.p.layerup()
         else:
-            if z > 0:   self.p.zoom(event.GetX(),event.GetY(),1.2)
-            elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
+            if z > 0:   self.p.zoom(event.GetX(), event.GetY(), 1.2)
+            elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1/1.2)
 
 class gviz(wx.Panel):
-    def __init__(self, parent, size = (200, 200),build_dimensions=[200, 200, 100, 0,0, 0],grid = (10, 50),extrusion_width = 0.5):
-        wx.Panel.__init__(self, parent,-1, size = (size[0],size[1]))
+    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
+        wx.Panel.__init__(self, parent,-1, size = (size[0], size[1]))
         self.parent = parent
         self.size = size
         self.build_dimensions = build_dimensions
         self.grid = grid
-        self.lastpos=[0, 0,0, 0,0, 0,0]
+        self.lastpos = [0, 0, 0, 0, 0, 0, 0]
         self.hilightpos = self.lastpos[:]
         self.Bind(wx.EVT_PAINT, self.paint)
         self.Bind(wx.EVT_SIZE, self.resize)
-        self.lines={}
-        self.pens={}
-        self.arcs={}
-        self.arcpens={}
-        self.layers=[]
+        self.lines = {}
+        self.pens = {}
+        self.arcs = {}
+        self.arcpens = {}
+        self.layers = []
         self.layerindex = 0
         self.filament_width = extrusion_width # set it to 0 to disable scaling lines with zoom
-        self.basescale=[min(float(size[0])/build_dimensions[0],float(size[1])/build_dimensions[1])]*2
+        self.basescale = [min(float(size[0])/build_dimensions[0], float(size[1])/build_dimensions[1])]*2
         self.scale = self.basescale
         penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
-        self.translate=[0.0, 0.0]
-        self.mainpen = wx.Pen(wx.Colour(0, 0,0),penwidth)
-        self.arcpen = wx.Pen(wx.Colour(255, 0,0),penwidth)
-        self.travelpen = wx.Pen(wx.Colour(10, 80, 80),penwidth)
-        self.hlpen = wx.Pen(wx.Colour(200, 50, 50),penwidth)
-        self.fades=[wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50),penwidth) for i in xrange(6)]
-        self.penslist=[self.mainpen, self.travelpen, self.hlpen]+self.fades
+        self.translate = [0.0, 0.0]
+        self.mainpen = wx.Pen(wx.Colour(0, 0, 0), penwidth)
+        self.arcpen = wx.Pen(wx.Colour(255, 0, 0), penwidth)
+        self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
+        self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
+        self.fades = [wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50), penwidth) for i in xrange(6)]
+        self.penslist = [self.mainpen, self.travelpen, self.hlpen]+self.fades
         self.showall = 0
-        self.hilight=[]
-        self.hilightarcs=[]
+        self.hilight = []
+        self.hilightarcs = []
         self.dirty = 1
-        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
+        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
 
     def inject(self):
         #import pdb; pdb.set_trace()
@@ -179,14 +179,14 @@ class gviz(wx.Panel):
         print  "Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm"
 
     def clear(self):
-        self.lastpos=[0, 0,0, 0,0, 0,0]
-        self.lines={}
-        self.pens={}
-        self.arcs={}
-        self.arcpens={}
-        self.layers=[]
-        self.hilight=[]
-        self.hilightarcs=[]
+        self.lastpos = [0, 0, 0, 0, 0, 0, 0]
+        self.lines = {}
+        self.pens = {}
+        self.arcs = {}
+        self.arcpens = {}
+        self.layers = []
+        self.hilight = []
+        self.hilightarcs = []
         self.layerindex = 0
         self.showall = 0
         self.dirty = 1
@@ -195,7 +195,7 @@ class gviz(wx.Panel):
         if(self.layerindex+1<len(self.layers)):
             self.layerindex+=1
             # Display layer info on statusbar (Jezmy)
-            self.parent.SetStatusText("Layer "+str(self.layerindex +1)+" - Going Up - Z = "+str(self.layers[self.layerindex])+" mm",0)
+            self.parent.SetStatusText("Layer "+str(self.layerindex +1)+" - Going Up - Z = "+str(self.layers[self.layerindex])+" mm", 0)
             self.repaint()
             self.Refresh()
 
@@ -203,7 +203,7 @@ class gviz(wx.Panel):
         if(self.layerindex>0):
             self.layerindex-=1
             # Display layer info on statusbar (Jezmy)
-            self.parent.SetStatusText("Layer "+str(self.layerindex + 1)+" - Going Down - Z = "+str(self.layers[self.layerindex])+ " mm",0)
+            self.parent.SetStatusText("Layer "+str(self.layerindex + 1)+" - Going Down - Z = "+str(self.layers[self.layerindex])+ " mm", 0)
             self.repaint()
             self.Refresh()
 
@@ -218,12 +218,12 @@ class gviz(wx.Panel):
 
     def resize(self, event):
         size = self.GetClientSize()
-        newsize = min(float(size[0])/self.size[0],float(size[1])/self.size[1])
+        newsize = min(float(size[0])/self.size[0], float(size[1])/self.size[1])
         self.size = self.GetClientSize()
-        wx.CallAfter(self.zoom, 0,0, newsize)
+        wx.CallAfter(self.zoom, 0, 0, newsize)
 
 
-    def zoom(self, x,y, factor):
+    def zoom(self, x, y, factor):
         self.scale = [s * factor for s in self.scale]
 
         self.translate = [ x - (x-self.translate[0]) * factor,
@@ -237,7 +237,7 @@ class gviz(wx.Panel):
 
 
     def repaint(self):
-        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
+        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
         dc = wx.MemoryDC()
         dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250, 250, 200)))
@@ -246,17 +246,17 @@ class gviz(wx.Panel):
         for grid_unit in self.grid:
             if grid_unit > 0:
                 for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1],self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1]+self.scale[1]*self.build_dimensions[1])
+                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1], self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1]+self.scale[1]*self.build_dimensions[1])
                 for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0],self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0],self.translate[1]+y*self.scale[1]*grid_unit)
-            dc.SetPen(wx.Pen(wx.Colour(0, 0,0)))
+                    dc.DrawLine(self.translate[0], self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0], self.translate[1]+y*self.scale[1]*grid_unit)
+            dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
         if not self.showall:
             self.size = self.GetSize()
             dc.SetBrush(wx.Brush((43, 144, 255)))
-            dc.DrawRectangle(self.size[0]-15, 0,15, self.size[1])
+            dc.DrawRectangle(self.size[0]-15, 0, 15, self.size[1])
             dc.SetBrush(wx.Brush((0, 255, 0)))
             if len(self.layers):
-                dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1],13, self.size[1]-1)
+                dc.DrawRectangle(self.size[0]-14, (1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1], 13, self.size[1]-1)
 
         def _drawlines(lines, pens):
             def _scaler(x):
@@ -282,14 +282,14 @@ class gviz(wx.Panel):
                 dc.DrawArc(*scaled_arcs[i])
 
         if self.showall:
-            l=[]
+            l = []
             for i in self.layers:
                 dc.DrawLineList(l, self.fades[0])
                 _drawlines(self.lines[i], self.pens[i])
                 _drawarcs(self.arcs[i], self.arcpens[i])
             return
         if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
-            for layer_i in xrange(max(0, self.layerindex-6),self.layerindex):
+            for layer_i in xrange(max(0, self.layerindex-6), self.layerindex):
                 #print i, self.layerindex, self.layerindex-i
                 _drawlines(self.lines[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
                 _drawarcs(self.arcs[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
@@ -307,15 +307,15 @@ class gviz(wx.Panel):
             self.repaint()
         self.dirty = 0
         sz = self.GetClientSize()
-        dc.DrawBitmap(self.blitmap, 0,0)
+        dc.DrawBitmap(self.blitmap, 0, 0)
         del dc
 
-    def addfile(self, gcodes=[]):
+    def addfile(self, gcodes = []):
         self.clear()
         for i in gcodes:
             self.addgcode(i)
 
-    def addgcode(self, gcode = "M105",hilight = 0):
+    def addgcode(self, gcode = "M105", hilight = 0):
         gcode = gcode.split("*")[0]
         gcode = gcode.split(";")[0]
         gcode = gcode.lower().strip().split()

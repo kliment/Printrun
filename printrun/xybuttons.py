@@ -42,8 +42,8 @@ class XYButtons(BufferedCanvas):
     spacer = 7
 
     def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1):
-        self.bg_bmp = wx.Image(imagefile("control_xy.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        self.bg_bmp = wx.Image(imagefile("control_xy.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
         self.quadrant = None
         self.concentric = None
@@ -230,7 +230,7 @@ class XYButtons(BufferedCanvas):
         if self.enabled:
             # Brush and pen for grey overlay when mouse hovers over
             gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(0, 0,0, 128)))
+            gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
 
             if self.concentric != None:
                 if self.concentric < len(XYButtons.concentric_circle_radii):

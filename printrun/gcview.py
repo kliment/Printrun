@@ -290,7 +290,7 @@ class gcline(object):
             ]
     def glcolor(self, upper_limit = None, lower_limit = 0, max_feedrate = 0):
         if self.extrusion_ratio == 0:
-            return [255, 255, 255, 0,0, 0]
+            return [255, 255, 255, 0, 0, 0]
         else:
             blue_color = 0
             green_color = 0
@@ -430,7 +430,7 @@ class gcview(object):
                     else:
                         self.lastf = cur[4]
 
-                    r = gcline(x = cur[0], y = cur[1], z = cur[2],e = cur[3], f = cur[4], prev_gcline = self.prev, orgline = orgline)
+                    r = gcline(x = cur[0], y = cur[1], z = cur[2], e = cur[3], f = cur[4], prev_gcline = self.prev, orgline = orgline)
                     self.prev = r
                     return r
             return None
@@ -927,7 +927,7 @@ class GCFrame(wx.Frame):
         self.modelindex = 0
         self.GLPanel1 = TestGlPanel(self, size)
 
-    def addfile(self, gcode=[]):
+    def addfile(self, gcode = []):
         self.models["GCODE"].gc.delete()
         self.models["GCODE"].gc = gcview(gcode, batch = self.models["GCODE"].batch)
         self.setlayerindex(None)

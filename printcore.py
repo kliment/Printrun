@@ -289,7 +289,7 @@ class printcore():
             self.clear = True
             return
         if self.resendfrom < self.lineno and self.resendfrom > -1:
-            self._send(self.sentlines[self.resendfrom],self.resendfrom, False)
+            self._send(self.sentlines[self.resendfrom], self.resendfrom, False)
             self.resendfrom += 1
             return
         self.resendfrom = -1
@@ -364,7 +364,7 @@ if __name__ == '__main__':
     p = printcore(port, baud)
     p.loud = loud
     time.sleep(2)
-    gcode = [i.replace("\n","") for i in open(filename)]
+    gcode = [i.replace("\n", "") for i in open(filename)]
     p.startprint(gcode)
 
     try:

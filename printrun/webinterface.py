@@ -208,13 +208,13 @@ class XMLstatus(object):
         txt = txt+'<file>'+str(gPronterPtr.filename)+'</file>\n'
         txt = txt+'<status>'+str(gPronterPtr.status.GetStatusText())+'</status>\n'
         try:
-            temp = str(float(filter(lambda x:x.startswith("T:"),gPronterPtr.tempreport.split())[0].split(":")[1]))
+            temp = str(float(filter(lambda x:x.startswith("T:"), gPronterPtr.tempreport.split())[0].split(":")[1]))
             txt = txt+'<hotend>'+temp+'</hotend>\n'
         except:
             txt = txt+'<hotend>NA</hotend>\n'
             pass
         try:
-            temp = str(float(filter(lambda x:x.startswith("B:"),gPronterPtr.tempreport.split())[0].split(":")[1]))
+            temp = str(float(filter(lambda x:x.startswith("B:"), gPronterPtr.tempreport.split())[0].split(":")[1]))
             txt = txt+'<bed>'+temp+'</bed>\n'
         except:
             txt = txt+'<bed>NA</bed>\n'
@@ -288,11 +288,11 @@ class WebInterface(object):
         pageText+="<img src='/images/control_xy.png' usemap='#xymap'/>"
         pageText+='<map name = "xymap">'
 
-        pageText+='<area shape = "rect" coords = "8, 5,51, 48" href = "/home/axis/x" alt = "X Home" title = "X Home"    />'
-        pageText+='<area shape = "rect" coords = "195, 6,236, 46" href = "/home/axis/y" alt = "Y Home" title = "Y Home"    />'
+        pageText+='<area shape = "rect" coords = "8, 5, 51, 48" href = "/home/axis/x" alt = "X Home" title = "X Home"    />'
+        pageText+='<area shape = "rect" coords = "195, 6, 236, 46" href = "/home/axis/y" alt = "Y Home" title = "Y Home"    />'
         pageText+='<area shape = "rect" coords = "7, 192, 48, 232" href = "/home/axis/all" alt = "All Home" title = "All Home"    />'
         pageText+='<area shape = "rect" coords = "194, 192, 235, 232" href = "/home/axis/z" alt = "Z Home" title = "Z Home"    />'
-        pageText+='<area shape = "rect" coords = "62, 7,185, 34" href = "/move/axis/y/100" alt = "Y 100" title = "Y 100"    />'
+        pageText+='<area shape = "rect" coords = "62, 7, 185, 34" href = "/move/axis/y/100" alt = "Y 100" title = "Y 100"    />'
         pageText+='<area shape = "rect" coords = "68, 34, 175, 61" href = "/move/axis/y/10" alt = "Y 10" title = "Y 10"    />'
         pageText+='<area shape = "rect" coords = "80, 60, 163, 84" href = "/move/axis/y/1" alt = "Y 1" title = "Y 1"    />'
         pageText+='<area shape = "rect" coords = "106, 83, 138, 107" href = "/move/axis/y/.1" alt = "Y .1" title = "Y .1"    />'

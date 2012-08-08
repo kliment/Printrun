@@ -839,7 +839,7 @@ class GCFrame(wx.Frame):
         self.modelindex = 0
         self.GLPanel1 = TestGlPanel(self, size)
 
-    def addfile(self, gcode=[]):
+    def addfile(self, gcode = []):
         self.models[""].gc.delete()
         self.models[""].gc = gcview(gcode, batch = self.models[""].batch)
 

@@ -78,21 +78,21 @@ class Graph(BufferedCanvas):
 
 
     def drawgrid(self, dc, gc):
-        #cold, medium, hot = wx.Colour(0, 167, 223),wx.Colour(239, 233, 119),wx.Colour(210, 50.100)
-        #col1 = wx.Colour(255, 0,0, 255)
+        #cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
+        #col1 = wx.Colour(255, 0, 0, 255)
         #col2 = wx.Colour(255, 255, 255, 128)
 
         #b = gc.CreateLinearGradientBrush(0, 0, w, h, col1, col2)
 
-        gc.SetPen(wx.Pen(wx.Colour(255, 0,0, 0), 4))
+        gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 4))
         #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(245, 245, 255, 252))))
         #gc.SetBrush(b)
         gc.DrawRectangle(0, 0, self.width, self.height)
 
         #gc.SetBrush(wx.Brush(wx.Colour(245, 245, 255, 52)))
 
-        #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0,0, 255))))
-        #gc.SetPen(wx.Pen(wx.Colour(255, 0,0, 0), 4))
+        #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0, 0, 255))))
+        #gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 4))
 
         #gc.DrawLines(wx.Point(0, 0), wx.Point(50, 10))
 
@@ -121,20 +121,20 @@ class Graph(BufferedCanvas):
 
         if self.timer.IsRunning() == False:
             font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD)
-            gc.SetFont(font, wx.Colour(3, 4,4))
+            gc.SetFont(font, wx.Colour(3, 4, 4))
             gc.DrawText("Graph offline", self.width/2 - (font.GetPointSize() * 3), self.height/2 - (font.GetPointSize() * 1))
 
         #dc.DrawCircle(50, 50, 1)
 
-        #gc.SetPen(wx.Pen(wx.Colour(255, 0,0, 0), 1))
+        #gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
         #gc.DrawLines([[20, 30], [10, 53]])
-        #dc.SetPen(wx.Pen(wx.Colour(255, 0,0, 0), 1))
+        #dc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
 
     def drawtemperature(self, dc, gc, temperature_list, text, text_xoffset, r, g, b, a):
         if self.timer.IsRunning() == False:
             dc.SetPen(wx.Pen(wx.Colour(128, 128, 128, 128), 1))
         else:
-            dc.SetPen(wx.Pen(wx.Colour(r, g,b, a), 1))
+            dc.SetPen(wx.Pen(wx.Colour(r, g, b, a), 1))
 
         x_add = float(self.width)/self.xsteps
         x_pos = float(0.0)
@@ -155,7 +155,7 @@ class Graph(BufferedCanvas):
             if self.timer.IsRunning() == False:
                 gc.SetFont(font, wx.Colour(128, 128, 128))
             else:
-                gc.SetFont(font, wx.Colour(r, g,b))
+                gc.SetFont(font, wx.Colour(r, g, b))
 
             #gc.DrawText(text, self.width - (font.GetPointSize() * ((len(text) * text_xoffset + 1))), self.height - self._lastyvalue - (font.GetPointSize() / 2))
             gc.DrawText(text, x_pos - x_add - (font.GetPointSize() * ((len(text) * text_xoffset + 1))), self.height - self._lastyvalue - (font.GetPointSize() / 2))
@@ -163,24 +163,24 @@ class Graph(BufferedCanvas):
 
 
     def drawbedtemp(self, dc, gc):
-        self.drawtemperature(dc, gc, self.bedtemps, "Bed",2, 255, 0,0, 128)
+        self.drawtemperature(dc, gc, self.bedtemps, "Bed", 2, 255, 0, 0, 128)
 
     def drawbedtargettemp(self, dc, gc):
-        self.drawtemperature(dc, gc, self.bedtargettemps, "Bed Target",2, 255, 120, 0, 128)
+        self.drawtemperature(dc, gc, self.bedtargettemps, "Bed Target", 2, 255, 120, 0, 128)
 
 
     def drawextruder0temp(self, dc, gc):
-        self.drawtemperature(dc, gc, self.extruder0temps, "Ex0",1, 0, 155, 255, 128)
+        self.drawtemperature(dc, gc, self.extruder0temps, "Ex0", 1, 0, 155, 255, 128)
 
     def drawextruder0targettemp(self, dc, gc):
-        self.drawtemperature(dc, gc, self.extruder0targettemps, "Ex0 Target",2, 0, 5,255, 128)
+        self.drawtemperature(dc, gc, self.extruder0targettemps, "Ex0 Target", 2, 0, 5, 255, 128)
 
 
     def drawextruder1temp(self, dc, gc):
-        self.drawtemperature(dc, gc, self.extruder1temps, "Ex1",3, 55, 55, 0, 128)
+        self.drawtemperature(dc, gc, self.extruder1temps, "Ex1", 3, 55, 55, 0, 128)
 
     def drawextruder1targettemp(self, dc, gc):
-        self.drawtemperature(dc, gc, self.extruder1targettemps, "Ex1 Target",2, 55, 55, 0, 128)
+        self.drawtemperature(dc, gc, self.extruder1targettemps, "Ex1 Target", 2, 55, 55, 0, 128)
 
 
     def SetBedTemperature(self, value):

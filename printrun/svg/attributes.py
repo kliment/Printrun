@@ -35,7 +35,7 @@ url = (
 
 #paint value will parse into a (type, details) tuple.
 #For none and currentColor, the details tuple will be the empty tuple
-#for CSS color declarations, it will be (type, (R, G,B))
+#for CSS color declarations, it will be (type, (R, G, B))
 #for URLs, it will be ("URL", ((url tuple), fallback))
 #The url tuple will be as returned by urlparse.urlsplit, and can be
 #an empty tuple if the parser has an error

@@ -33,7 +33,7 @@ class ZButtons(BufferedCanvas):
     }
 
     def __init__(self, parent, moveCallback = None, bgcolor = "#FFFFFF", ID=-1):
-        self.bg_bmp = wx.Image(imagefile("control_z.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        self.bg_bmp = wx.Image(imagefile("control_z.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.range = None
         self.direction = None
         self.orderOfMagnitudeIdx = 0 # 0 means '1', 1 means '10', 2 means '100', etc.
@@ -117,7 +117,7 @@ class ZButtons(BufferedCanvas):
 
             # Top 'layer' is the mouse-over highlights
             gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(0, 0,0, 128)))
+            gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
             if self.range != None and self.direction != None:
                 self.highlight(gc, self.range, self.direction)
         else:

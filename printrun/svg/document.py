@@ -175,14 +175,14 @@ class SVGDocument(object):
                     )
                 if transform == 'skewX':
                     matrix = wx.GraphicsRenderer_GetDefaultRenderer().CreateMatrix(
-                        1, 0,math.tan(math.radians(args[0])),1, 0,0
+                        1, 0, math.tan(math.radians(args[0])), 1, 0, 0
                     )
                     ops.append(
                         (wx.GraphicsContext.ConcatTransform, (matrix,))
                     )
                 if transform == 'skewY':
                     matrix = wx.GraphicsRenderer_GetDefaultRenderer().CreateMatrix(
-                        1, math.tan(math.radians(args[0])),0, 1,0, 0
+                        1, math.tan(math.radians(args[0])), 0, 1, 0, 0
                     )
                     ops.append(
                         (wx.GraphicsContext.ConcatTransform, (matrix,))
@@ -465,29 +465,29 @@ class SVGDocument(object):
                     box = path.GetBox()
                     x, y, w, h = box.Get()
                     return wx.GraphicsRenderer.GetDefaultRenderer().CreateLinearGradientBrush(
-                        x, y,x+w, y+h, wx.Colour(0, 0,255, 128), wx.RED
+                        x, y, x+w, y+h, wx.Colour(0, 0, 255, 128), wx.RED
                     )
                 elif element.tag == '{http://www.w3.org/2000/svg}radialGradient':
                     box = path.GetBox()
                     x, y, w, h = box.Get()
                     #print w
-                    mx = wx.GraphicsRenderer.GetDefaultRenderer().CreateMatrix(x, y,w, h)
+                    mx = wx.GraphicsRenderer.GetDefaultRenderer().CreateMatrix(x, y, w, h)
                     cx, cy = mx.TransformPoint(0.5, 0.5)
                     fx, fy = cx, cy
                     return wx.GraphicsRenderer.GetDefaultRenderer().CreateRadialGradientBrush(
                         cx, cy,
                         fx, fy,
                         (max(w, h))/2,
-                        wx.Colour(0, 0,255, 128), wx.RED
+                        wx.Colour(0, 0, 255, 128), wx.RED
                     )
                 else:
                     #invlid gradient specified
                     return wx.NullBrush
-            r, g,b  = 0, 0,0
+            r, g, b  = 0, 0, 0
         if type == 'CURRENTCOLOR':
             type, details = paintValue.parseString(self.state.get('color', 'none'))
         if type == 'RGB':
-            r, g,b = details
+            r, g, b = details
         elif type == "NONE":
             return wx.NullBrush
         opacity = self.state.get('fill-opacity', self.state.get('opacity', '1'))
@@ -499,9 +499,9 @@ class SVGDocument(object):
         #be created every time anyway in order to pass them,
         #defeating the purpose of the cache
         try:
-            return SVGDocument.brushCache[(r, g,b, a)]
+            return SVGDocument.brushCache[(r, g, b, a)]
         except KeyError:
-            return SVGDocument.brushCache.setdefault((r, g,b, a), wx.Brush(wx.Colour(r, g,b, a)))
+            return SVGDocument.brushCache.setdefault((r, g, b, a), wx.Brush(wx.Colour(r, g, b, a)))
 
 
     def resolveURL(self, urlData):
@@ -584,7 +584,7 @@ class SVGDocument(object):
                 control1 = reflectPoint(self.lastControl, path.GetCurrentPoint())
             else:
                 control1 = path.GetCurrentPoint()
-            #~ print "S", self.lastControl,":",control1, control2, endpoint
+            #~ print "S", self.lastControl, ":", control1, control2, endpoint
             self.lastControl = control2
             path.AddCurveToPoint(
                 control1,

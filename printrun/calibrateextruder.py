@@ -86,9 +86,9 @@ help = u"""
         -t      --temp          Extrusion temperature in degrees Celsius (default: %d \xb0C, max %d \xb0C)
         -p      --port          Serial port the printer is connected to (default: %s)
         -h      --help          This cruft.
-"""[1:-1].encode('utf-8')%(sys.argv[0],n, k,temp, tempmax, port if port else 'auto')
+"""[1:-1].encode('utf-8')%(sys.argv[0], n, k, temp, tempmax, port if port else 'auto')
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"hl:s:t:p:",["help","length = ","steps = ","temp = ","port = "])
+    opts, args = getopt.getopt(sys.argv[1:],"hl:s:t:p:",["help", "length=", "steps=", "temp=", "port="])
 except getopt.GetoptError, err:
     print str(err)
     print help

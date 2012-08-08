@@ -443,7 +443,7 @@ class stlwin(wx.Frame):
         self.Refresh()
         #print time.time()-t
 
-    def load_stl_into_model(self, path, name, offset=[0, 0, 0], rotation = 0, scale=[1.0, 1.0, 1.0]):
+    def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
         newname = os.path.split(name.lower())[1]
         c = 1
         while newname in self.models:

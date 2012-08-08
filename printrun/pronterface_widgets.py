@@ -28,27 +28,27 @@ class macroed(wx.Dialog):
         self.callback = callback
         self.panel = wx.Panel(self,-1)
         titlesizer = wx.BoxSizer(wx.HORIZONTAL)
-        titletext = wx.StaticText(self.panel,-1,"              _")  #title%macro_name)
+        titletext = wx.StaticText(self.panel,-1, "              _")  #title%macro_name)
         #title.SetFont(wx.Font(11, wx.NORMAL, wx.NORMAL, wx.BOLD))
         titlesizer.Add(titletext, 1)
-        self.findb = wx.Button(self.panel,  -1, _("Find"),style = wx.BU_EXACTFIT)  #New button for "Find" (Jezmy)
+        self.findb = wx.Button(self.panel,  -1, _("Find"), style = wx.BU_EXACTFIT)  #New button for "Find" (Jezmy)
         self.findb.Bind(wx.EVT_BUTTON,  self.find)
-        self.okb = wx.Button(self.panel, -1, _("Save"),style = wx.BU_EXACTFIT)
+        self.okb = wx.Button(self.panel, -1, _("Save"), style = wx.BU_EXACTFIT)
         self.okb.Bind(wx.EVT_BUTTON, self.save)
         self.Bind(wx.EVT_CLOSE, self.close)
         titlesizer.Add(self.findb)
         titlesizer.Add(self.okb)
-        self.cancelb = wx.Button(self.panel, -1, _("Cancel"),style = wx.BU_EXACTFIT)
+        self.cancelb = wx.Button(self.panel, -1, _("Cancel"), style = wx.BU_EXACTFIT)
         self.cancelb.Bind(wx.EVT_BUTTON, self.close)
         titlesizer.Add(self.cancelb)
         topsizer = wx.BoxSizer(wx.VERTICAL)
-        topsizer.Add(titlesizer, 0,wx.EXPAND)
+        topsizer.Add(titlesizer, 0, wx.EXPAND)
         self.e = wx.TextCtrl(self.panel, style = wx.TE_MULTILINE+wx.HSCROLL, size = (400, 400))
         if not self.gcode:
             self.e.SetValue(self.unindent(definition))
         else:
             self.e.SetValue("\n".join(definition))
-        topsizer.Add(self.e, 1,wx.ALL+wx.EXPAND)
+        topsizer.Add(self.e, 1, wx.ALL+wx.EXPAND)
         self.panel.SetSizer(topsizer)
         topsizer.Layout()
         topsizer.Fit(self)
@@ -66,7 +66,7 @@ class macroed(wx.Dialog):
         position = somecode.find(FindValue,  self.e.GetInsertionPoint())
         if position == -1 :
          #   ShowMessage(self,-1,  "Not found!")
-            titletext = wx.TextCtrl(self.panel,-1,"Not Found!")
+            titletext = wx.TextCtrl(self.panel,-1, "Not Found!")
         else:
         # self.title.SetValue("Position : "+str(position))
 
@@ -99,7 +99,7 @@ class macroed(wx.Dialog):
         if len(self.indent_chars) == 0:
             self.indent_chars = "  "
         unindented = ""
-        lines = re.split(r"(?:\r\n?|\n)",text)
+        lines = re.split(r"(?:\r\n?|\n)", text)
         #print lines
         if len(lines) <= 1:
             return text
@@ -110,7 +110,7 @@ class macroed(wx.Dialog):
                 unindented += line + "\n"
         return unindented
     def reindent(self, text):
-        lines = re.split(r"(?:\r\n?|\n)",text)
+        lines = re.split(r"(?:\r\n?|\n)", text)
         if len(lines) <= 1:
             return text
         reindented = ""
@@ -125,12 +125,12 @@ class options(wx.Dialog):
         wx.Dialog.__init__(self, None, title = _("Edit settings"), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         topsizer = wx.BoxSizer(wx.VERTICAL)
         vbox = wx.StaticBoxSizer(wx.StaticBox(self, label = _("Defaults")) ,wx.VERTICAL)
-        topsizer.Add(vbox, 1,wx.ALL+wx.EXPAND)
+        topsizer.Add(vbox, 1, wx.ALL+wx.EXPAND)
         grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = 8, vgap = 2)
         grid.SetFlexibleDirection( wx.BOTH )
         grid.AddGrowableCol( 1 )
         grid.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
-        vbox.Add(grid, 0,wx.EXPAND)
+        vbox.Add(grid, 0, wx.EXPAND)
         ctrls = {}
         for k, v in sorted(pronterface.settings._all_settings().items()):
             ctrls[k, 0] = wx.StaticText(self,-1, k)
@@ -138,9 +138,9 @@ class options(wx.Dialog):
             if k in pronterface.helpdict:
                 ctrls[k, 0].SetToolTipString(pronterface.helpdict.get(k))
                 ctrls[k, 1].SetToolTipString(pronterface.helpdict.get(k))
-            grid.Add(ctrls[k, 0],0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
-            grid.Add(ctrls[k, 1],1, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
-        topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL),0, wx.EXPAND)
+            grid.Add(ctrls[k, 0], 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
+            grid.Add(ctrls[k, 1], 1, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
+        topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL), 0, wx.EXPAND)
         self.SetSizer(topsizer)
         topsizer.Layout()
         topsizer.Fit(self)
@@ -153,29 +153,29 @@ class options(wx.Dialog):
 class ButtonEdit(wx.Dialog):
     """Custom button edit dialog"""
     def __init__(self, pronterface):
-        wx.Dialog.__init__(self, None, title = _("Custom button"),style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        wx.Dialog.__init__(self, None, title = _("Custom button"), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.pronterface = pronterface
         topsizer = wx.BoxSizer(wx.VERTICAL)
         grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = 4, vgap = 2)
         grid.AddGrowableCol(1, 1)
         grid.Add(wx.StaticText(self,-1, _("Button title")), 0, wx.BOTTOM|wx.RIGHT)
-        self.name = wx.TextCtrl(self,-1,"")
-        grid.Add(self.name, 1,wx.EXPAND)
+        self.name = wx.TextCtrl(self,-1, "")
+        grid.Add(self.name, 1, wx.EXPAND)
         grid.Add(wx.StaticText(self, -1, _("Command")), 0, wx.BOTTOM|wx.RIGHT)
-        self.command = wx.TextCtrl(self,-1,"")
+        self.command = wx.TextCtrl(self,-1, "")
         xbox = wx.BoxSizer(wx.HORIZONTAL)
-        xbox.Add(self.command, 1,wx.EXPAND)
+        xbox.Add(self.command, 1, wx.EXPAND)
         self.command.Bind(wx.EVT_TEXT, self.macrob_enabler)
-        self.macrob = wx.Button(self,-1,"..",style = wx.BU_EXACTFIT)
+        self.macrob = wx.Button(self,-1, "..", style = wx.BU_EXACTFIT)
         self.macrob.Bind(wx.EVT_BUTTON, self.macrob_handler)
         xbox.Add(self.macrob, 0)
-        grid.Add(xbox, 1,wx.EXPAND)
-        grid.Add(wx.StaticText(self,-1, _("Color")),0, wx.BOTTOM|wx.RIGHT)
-        self.color = wx.TextCtrl(self,-1,"")
-        grid.Add(self.color, 1,wx.EXPAND)
-        topsizer.Add(grid, 0,wx.EXPAND)
-        topsizer.Add( (0, 0),1)
-        topsizer.Add(self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL),0, wx.ALIGN_CENTER)
+        grid.Add(xbox, 1, wx.EXPAND)
+        grid.Add(wx.StaticText(self,-1, _("Color")), 0, wx.BOTTOM|wx.RIGHT)
+        self.color = wx.TextCtrl(self,-1, "")
+        grid.Add(self.color, 1, wx.EXPAND)
+        topsizer.Add(grid, 0, wx.EXPAND)
+        topsizer.Add( (0, 0), 1)
+        topsizer.Add(self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL), 0, wx.ALIGN_CENTER)
         self.SetSizer(topsizer)
 
     def macrob_enabler(self, e):
@@ -212,7 +212,7 @@ class ButtonEdit(wx.Dialog):
 
 class TempGauge(wx.Panel):
 
-    def __init__(self, parent, size = (200, 22),title = "",maxval = 240, gaugeColour = None):
+    def __init__(self, parent, size = (200, 22), title = "", maxval = 240, gaugeColour = None):
         wx.Panel.__init__(self, parent,-1, size = size)
         self.Bind(wx.EVT_PAINT, self.paint)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
@@ -225,7 +225,7 @@ class TempGauge(wx.Panel):
         self.recalc()
 
     def recalc(self):
-        mmax = max(int(self.setpoint*1.05),self.max)
+        mmax = max(int(self.setpoint*1.05), self.max)
         self.scale = float(self.width-2)/float(mmax)
         self.ypt = max(16, int(self.scale*max(self.setpoint, self.max/6)))
 
@@ -251,25 +251,25 @@ class TempGauge(wx.Panel):
         return wx.Colour(*map(int, rgb))
 
     def paint(self, ev):
-        x0, y0, x1, y1, xE, yE = 1, 1,self.ypt+1, 1,self.width+1-2, 20
+        x0, y0, x1, y1, xE, yE = 1, 1, self.ypt+1, 1, self.width+1-2, 20
         dc = wx.PaintDC(self)
         dc.SetBackground(wx.Brush((255, 255, 255)))
         dc.Clear()
-        cold, medium, hot = wx.Colour(0, 167, 223),wx.Colour(239, 233, 119),wx.Colour(210, 50.100)
-        gauge1, gauge2 = wx.Colour(255, 255, 210),(self.gaugeColour or wx.Colour(234, 82, 0))
-        shadow1, shadow2 = wx.Colour(110, 110, 110),wx.Colour(255, 255, 255)
+        cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
+        gauge1, gauge2 = wx.Colour(255, 255, 210), (self.gaugeColour or wx.Colour(234, 82, 0))
+        shadow1, shadow2 = wx.Colour(110, 110, 110), wx.Colour(255, 255, 255)
         gc = wx.GraphicsContext.Create(dc)
         # draw shadow first
         # corners
-        gc.SetBrush(gc.CreateRadialGradientBrush(xE-7, 9,xE-7, 9,8, shadow1, shadow2))
-        gc.DrawRectangle(xE-7, 1,8, 8)
-        gc.SetBrush(gc.CreateRadialGradientBrush(xE-7, 17, xE-7, 17, 8,shadow1, shadow2))
-        gc.DrawRectangle(xE-7, 17, 8,8)
-        gc.SetBrush(gc.CreateRadialGradientBrush(x0+6, 17, x0+6, 17, 8,shadow1, shadow2))
+        gc.SetBrush(gc.CreateRadialGradientBrush(xE-7, 9, xE-7, 9, 8, shadow1, shadow2))
+        gc.DrawRectangle(xE-7, 1, 8, 8)
+        gc.SetBrush(gc.CreateRadialGradientBrush(xE-7, 17, xE-7, 17, 8, shadow1, shadow2))
+        gc.DrawRectangle(xE-7, 17, 8, 8)
+        gc.SetBrush(gc.CreateRadialGradientBrush(x0+6, 17, x0+6, 17, 8, shadow1, shadow2))
         gc.DrawRectangle(0, 17, x0+6, 8)
         # edges
-        gc.SetBrush(gc.CreateLinearGradientBrush(xE-13, 0,xE-6, 0,shadow1, shadow2))
-        gc.DrawRectangle(xE-6, 9,10, 8)
+        gc.SetBrush(gc.CreateLinearGradientBrush(xE-13, 0, xE-6, 0, shadow1, shadow2))
+        gc.DrawRectangle(xE-6, 9, 10, 8)
         gc.SetBrush(gc.CreateLinearGradientBrush(x0, yE-2, x0, yE+5, shadow1, shadow2))
         gc.DrawRectangle(x0+6, yE-2, xE-12, 7)
         # draw gauge background
@@ -283,7 +283,7 @@ class TempGauge(wx.Panel):
         w2 = w1+width
         value = x0+max(10, min(self.width+1-2, int(self.value*self.scale)))
         #gc.SetBrush(gc.CreateLinearGradientBrush(x0, y0+3, x0, y0+15, gauge1, gauge2))
-        #gc.SetBrush(gc.CreateLinearGradientBrush(0, 3,0, 15, wx.Colour(255, 255, 255),wx.Colour(255, 90, 32)))
+        #gc.SetBrush(gc.CreateLinearGradientBrush(0, 3, 0, 15, wx.Colour(255, 255, 255), wx.Colour(255, 90, 32)))
         gc.SetBrush(gc.CreateLinearGradientBrush(x0, y0+3, x0, y0+15, gauge1, self.interpolatedColour(value, x0, x1, xE, cold, medium, hot)))
         val_path = gc.CreatePath()
         val_path.MoveToPoint(x0, w1)
@@ -296,7 +296,7 @@ class TempGauge(wx.Panel):
         gc.DrawPath(val_path)
         # draw setpoint markers
         setpoint = x0+max(10, int(self.setpoint*self.scale))
-        gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0,0))))
+        gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0, 0))))
         setp_path = gc.CreatePath()
         setp_path.MoveToPoint(setpoint-4, y0)
         setp_path.AddLineToPoint(setpoint+4, y0)
@@ -307,9 +307,9 @@ class TempGauge(wx.Panel):
         gc.DrawPath(setp_path)
         # draw readout
         text = u"T\u00B0 %u/%u"%(self.value, self.setpoint)
-        #gc.SetFont(gc.CreateFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD),wx.WHITE))
+        #gc.SetFont(gc.CreateFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD), wx.WHITE))
         #gc.DrawText(text, 29,-2)
-        gc.SetFont(gc.CreateFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD),wx.WHITE))
+        gc.SetFont(gc.CreateFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD), wx.WHITE))
         gc.DrawText(self.title, x0+19, y0+4)
         gc.DrawText(text,      x0+119, y0+4)
         gc.SetFont(gc.CreateFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)))

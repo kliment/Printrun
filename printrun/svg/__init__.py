@@ -5,7 +5,7 @@
 import wx
 
 def AddEllipticalArc(self, x, y, w, h, startAngle, endAngle, clockwise = False):
-    """ Draws an arc of an ellipse within bounding rect (x, y,w, h)
+    """ Draws an arc of an ellipse within bounding rect (x, y, w, h)
     from startArc to endArc (in radians, relative to the horizontal line of the eclipse)"""
 
     if True:
