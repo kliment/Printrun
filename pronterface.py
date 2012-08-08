@@ -90,7 +90,7 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
         self.settings.bgcolor = "#FFFFFF"
-        self.helpdict["build_dimensions"] = _("Dimensions of Build Platform\n & optional offset of origin\n\nExamples:\n   XXXxYYY\n   XXX, YYY, ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ")
+        self.helpdict["build_dimensions"] = _("Dimensions of Build Platform\n & optional offset of origin\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ")
         self.helpdict["last_bed_temperature"] = _("Last Set Temperature for the Heated Print Bed")
         self.helpdict["last_file_path"] = _("Folder of last opened file")
         self.helpdict["last_temperature"] = _("Last Temperature of the Hot End")
@@ -1786,9 +1786,9 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         # a string containing up to six numbers delimited by almost anything
         # first 0-3 numbers specify the build volume, no sign, always positive
         # remaining 0-3 numbers specify the coordinates of the "southwest" corner of the build platform
-        # "XXX, YYY"
+        # "XXX,YYY"
         # "XXXxYYY+xxx-yyy"
-        # "XXX, YYY, ZZZ+xxx+yyy-zzz"
+        # "XXX,YYY,ZZZ+xxx+yyy-zzz"
         # etc
         bdl = re.match(
         "[^\d+-]*(\d+)?" + # X build size
