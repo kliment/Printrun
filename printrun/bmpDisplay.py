@@ -11,7 +11,7 @@ import shutil
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, mysize):
-        wx.Frame.__init__(self, parent, wx.ID_ANY, size=mysize)
+        wx.Frame.__init__(self, parent, wx.ID_ANY, size = mysize)
         self.SetBackgroundColour('black')
 
         # milliseconds per frame
@@ -49,7 +49,7 @@ class MyFrame(wx.Frame):
         if self.mytmpdir:
             shutil.rmtree(self.mytmpdir)
 
-    def onPaint(self, event=None):
+    def onPaint(self, event = None):
         # this is the wxPython drawing surface/canvas
         dc = wx.PaintDC(self)
         while self.loops:
@@ -59,7 +59,7 @@ class MyFrame(wx.Frame):
                 w, h = bmp.GetSize()
                 info = "%s  %dx%d" % (self.name_list[ix], w, h)
                 self.SetTitle(info)
-                #self.SetSize((w,h))
+                #self.SetSize((w, h))
                 # draw the image
                 dc.DrawBitmap(bmp, 0, 0, True)
                 wx.MilliSleep(self.delay)

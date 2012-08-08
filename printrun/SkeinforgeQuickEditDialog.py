@@ -35,7 +35,7 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
                                 'speed':['Main Feed Rate (mm/s):','Main Flow Rate  (scaler):','Perimeter Feed Rate (mm/s):','Perimeter Flow Rate (scaler):','Travel Feed Rate (mm/s):']
                                }
 
-        self.scrollbarPanel = wx.ScrolledWindow(self, -1, style=wx.TAB_TRAVERSAL)
+        self.scrollbarPanel = wx.ScrolledWindow(self, -1, style = wx.TAB_TRAVERSAL)
         self.settingsSizer = self.getProfileSettings()
         self.scrollbarPanel.SetSizer(self.settingsSizer)
 
@@ -67,7 +67,7 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
         self.Layout()
 
     def getProfileSettings(self):
-        settingsSizer = wx.GridBagSizer(hgap=2, vgap=1)
+        settingsSizer = wx.GridBagSizer(hgap = 2, vgap = 1)
         settingsRow = 0
 
         for craftName in sorted(self.moduleSettingsMap.keys()):
@@ -86,28 +86,28 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
             for setting in settings.getReadRepository(repo).preferences:
                 if setting.name in self.moduleSettingsMap[craftName]:
 
-                    settingSizer = wx.GridBagSizer(hgap=2, vgap=2)
+                    settingSizer = wx.GridBagSizer(hgap = 2, vgap = 2)
                     settingSizer.AddGrowableCol(0)
                     settingRow = 0
                     settingLabel = wx.StaticText(self.scrollbarPanel, -1, setting.name)
                     settingLabel.Wrap(400)
-                    settingSizer.Add(settingLabel, pos=(settingRow, 0))
+                    settingSizer.Add(settingLabel, pos = (settingRow, 0))
 
                     if (isinstance(setting.value, bool)):
                         checkbox = wx.CheckBox(self.scrollbarPanel)
                         checkbox.SetName(craftName + '.' + setting.name)
                         checkbox.SetValue(setting.value)
-                        settingSizer.Add(checkbox, pos=(settingRow, 1))
-                        settingSizer.AddSpacer((25, -1), pos=(settingRow, 2))
+                        settingSizer.Add(checkbox, pos = (settingRow, 1))
+                        settingSizer.AddSpacer((25, -1), pos = (settingRow, 2))
                     else:
-                        textCtrl = wx.TextCtrl(self.scrollbarPanel, value=str(setting.value), size=(50, -1))
+                        textCtrl = wx.TextCtrl(self.scrollbarPanel, value = str(setting.value), size = (50, -1))
                         textCtrl.SetName(craftName + '.' + setting.name)
-                        settingSizer.Add(textCtrl, pos=(settingRow, 1))
+                        settingSizer.Add(textCtrl, pos = (settingRow, 1))
 
                     craftStaticBoxSizer.Add(settingSizer, 1, wx.EXPAND, 0)
                     settingRow += 1
             col = settingsRow % 2
-            settingsSizer.Add(craftStaticBoxSizer, pos=(settingsRow - col, col))
+            settingsSizer.Add(craftStaticBoxSizer, pos = (settingsRow - col, col))
             settingsRow += 1
 
         return settingsSizer

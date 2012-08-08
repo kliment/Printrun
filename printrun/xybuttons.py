@@ -41,7 +41,7 @@ class XYButtons(BufferedCanvas):
     center = (124, 121)
     spacer = 7
 
-    def __init__(self, parent, moveCallback=None, cornerCallback=None, spacebarCallback=None, bgcolor="#FFFFFF", ID=-1):
+    def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1):
         self.bg_bmp = wx.Image(imagefile("control_xy.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"),wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
@@ -181,7 +181,7 @@ class XYButtons(BufferedCanvas):
 
         self.drawPartialPie(gc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
 
-    def drawCorner(self, gc, x, y, angle=0.0):
+    def drawCorner(self, gc, x, y, angle = 0.0):
         w, h = XYButtons.corner_size
 
         gc.PushState()
@@ -197,7 +197,7 @@ class XYButtons(BufferedCanvas):
         gc.DrawPath(path)
         gc.PopState()
 
-    def highlightCorner(self, gc, corner=0):
+    def highlightCorner(self, gc, corner = 0):
         w, h = XYButtons.corner_size
         cx, cy = XYButtons.center
         ww, wh = self.GetSizeTuple()
@@ -229,8 +229,8 @@ class XYButtons(BufferedCanvas):
 
         if self.enabled:
             # Brush and pen for grey overlay when mouse hovers over
-            gc.SetPen(wx.Pen(wx.Colour(100,100,100,172), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(0,0,0,128)))
+            gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
+            gc.SetBrush(wx.Brush(wx.Colour(0, 0,0, 128)))
 
             if self.concentric != None:
                 if self.concentric < len(XYButtons.concentric_circle_radii):
@@ -246,8 +246,8 @@ class XYButtons(BufferedCanvas):
                 gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], padw, padh)
 
             # Draw label overlays
-            gc.SetPen(wx.Pen(wx.Colour(255,255,255,128), 1))
-            gc.SetBrush(wx.Brush(wx.Colour(255,255,255,128+64)))
+            gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
+            gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128+64)))
             for idx, kpos in XYButtons.label_overlay_positions.items():
                 if idx != self.concentric:
                     r = kpos[2]

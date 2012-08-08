@@ -32,8 +32,8 @@ from pyglet.gl import *
 class GLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
 
-    def __init__(self, parent, id, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=0):
+    def __init__(self, parent, id, pos = wx.DefaultPosition,
+                 size = wx.DefaultSize, style = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
         #call super function
@@ -46,7 +46,7 @@ class GLPanel(wx.Panel):
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
         # Create the canvas
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.canvas = glcanvas.GLCanvas(self, attribList=attribList)
+        self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
         self.sizer.Add(self.canvas, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         #self.sizer.Fit(self)
@@ -215,7 +215,7 @@ class stlview(object):
                 normals.extend(i[0])
 
         # Create a list of triangle indices.
-        indices = range(3 * len(facets))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
+        indices = range(3 * len(facets))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
         #print indices[:10]
         self.vertex_list = batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
@@ -233,7 +233,7 @@ def vdiff(v, o):
 
 
 class gcview(object):
-    def __init__(self, lines, batch, w=0.5, h=0.5):
+    def __init__(self, lines, batch, w = 0.5, h = 0.5):
         # Create the vertex and normal arrays.
         vertices = []
         normals = []
@@ -258,7 +258,7 @@ class gcview(object):
                 if lasth is not None:
                     self.layers[lasth] = pyglet.graphics.Batch()
                     lt = layertemp[lasth][0]
-                    indices = range(len(layertemp[lasth][0]) // 3)  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
+                    indices = range(len(layertemp[lasth][0]) // 3)  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
                     self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -296,7 +296,7 @@ class gcview(object):
         t0 = time.time()
 
         # Create a list of triangle indices.
-        indices = range(3 * 16 * len(lines))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
+        indices = range(3 * 16 * len(lines))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
         self.vlists.append(batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -305,7 +305,7 @@ class gcview(object):
                                              ('n3f/static', normals)))
         if lasth is not None:
             self.layers[lasth] = pyglet.graphics.Batch()
-            indices = range(len(layertemp[lasth][0]))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
+            indices = range(len(layertemp[lasth][0]))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
             self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
                                      GL_TRIANGLES,
                                      None,  # group,
@@ -466,7 +466,7 @@ def mulquat(q1, rq):
 
 class TestGlPanel(GLPanel):
 
-    def __init__(self, parent, size, id=wx.ID_ANY):
+    def __init__(self, parent, size, id = wx.ID_ANY):
         super(TestGlPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0)
         self.batches = []
         self.rot = 0
@@ -495,7 +495,7 @@ class TestGlPanel(GLPanel):
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
-        threading.Thread(target=self.update).start()
+        threading.Thread(target = self.update).start()
         self.initialized = 0
 
     def move_shape(self, delta):
@@ -547,7 +547,7 @@ class TestGlPanel(GLPanel):
                 p1y = -(float(p1[1]) - sz[1] / 2) / (sz[1] / 2)
                 p2x = (float(p2[0]) - sz[0] / 2) / (sz[0] / 2)
                 p2y = -(float(p2[1]) - sz[1] / 2) / (sz[1] / 2)
-                #print p1x,p1y,p2x,p2y
+                #print p1x, p1y, p2x, p2y
                 quat = trackball(p1x, p1y, p2x, p2y, -self.transv[2] / 250.0)
                 if self.rot:
                     self.basequat = mulquat(self.basequat, quat)
@@ -710,7 +710,7 @@ class TestGlPanel(GLPanel):
 
     def drawmodel(self, m, n):
         batch = pyglet.graphics.Batch()
-        stl = stlview(m.facets, batch=batch)
+        stl = stlview(m.facets, batch = batch)
         m.batch = batch
         m.animoffset = 300
         #print m
@@ -819,8 +819,8 @@ class TestGlPanel(GLPanel):
 class GCFrame(wx.Frame):
     '''A simple class for using OpenGL with wxPython.'''
 
-    def __init__(self, parent, ID, title, pos=wx.DefaultPosition,
-            size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE):
+    def __init__(self, parent, ID, title, pos = wx.DefaultPosition,
+            size = wx.DefaultSize, style = wx.DEFAULT_FRAME_STYLE):
         super(GCFrame, self).__init__(parent, ID, title, pos, (size[0] + 150, size[1]), style)
 
         class d:
@@ -833,7 +833,7 @@ class GCFrame(wx.Frame):
         m.curlayer = 0.0
         m.scale = [1.0, 1.0, 1.0]
         m.batch = pyglet.graphics.Batch()
-        m.gc = gcview([], batch=m.batch)
+        m.gc = gcview([], batch = m.batch)
         self.models = {"": m}
         self.l = d()
         self.modelindex = 0
@@ -841,13 +841,13 @@ class GCFrame(wx.Frame):
 
     def addfile(self, gcode=[]):
         self.models[""].gc.delete()
-        self.models[""].gc = gcview(gcode, batch=self.models[""].batch)
+        self.models[""].gc = gcview(gcode, batch = self.models[""].batch)
 
     def clear(self):
         self.models[""].gc.delete()
-        self.models[""].gc = gcview([], batch=self.models[""].batch)
+        self.models[""].gc = gcview([], batch = self.models[""].batch)
 
-    def Show(self, arg=True):
+    def Show(self, arg = True):
         wx.Frame.Show(self, arg)
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
@@ -868,10 +868,10 @@ class GCFrame(wx.Frame):
 
 
 def main():
-    app = wx.App(redirect=False)
-    frame = GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(400, 400))
+    app = wx.App(redirect = False)
+    frame = GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (400, 400))
     frame.addfile(list(open("carriage dump_export.gcode")))
-    #frame = wx.Frame(None, -1, "GL Window", size=(400, 400))
+    #frame = wx.Frame(None, -1, "GL Window", size = (400, 400))
     #panel = TestGlPanel(frame)
     #frame.Show(True)
     #app.MainLoop()

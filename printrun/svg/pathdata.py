@@ -27,12 +27,12 @@ class CaselessPreservingLiteral(CaselessLiteral):
         instead of as defined.
     """
     def __init__( self, matchString ):
-        super(CaselessPreservingLiteral,self).__init__( matchString.upper() )
+        super(CaselessPreservingLiteral, self).__init__( matchString.upper() )
         self.name = "'%s'" % matchString
         self.errmsg = "Expected " + self.name
         self.myException.msg = self.errmsg
 
-    def parseImpl( self, instring, loc, doActions=True ):
+    def parseImpl( self, instring, loc, doActions = True ):
         test = instring[ loc:loc+self.matchLen ]
         if test.upper() == self.match:
             return loc+self.matchLen, test
@@ -117,7 +117,7 @@ ellipticalArcArgument = Group(
     arcRadius + maybeComma + #rx, ry
     number + maybeComma +#rotation
     arcFlags + #large-arc-flag, sweep-flag
-    coordinatePair #(x,y)
+    coordinatePair #(x, y)
 )
 
 

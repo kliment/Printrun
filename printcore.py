@@ -83,7 +83,7 @@ class printcore():
         self.online = False
         self.printing = False
 
-    def connect(self,port=None,baud=None):
+    def connect(self, port = None, baud = None):
         """Set port and baudrate if given, then connect to printer
         """
         if self.printer:
@@ -96,7 +96,7 @@ class printcore():
             disable_hup(self.port)
             self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 0.25)
             self.stop_read_thread = False
-            self.read_thread = Thread(target=self._listen)
+            self.read_thread = Thread(target = self._listen)
             self.read_thread.start()
 
     def reset(self):
@@ -183,7 +183,7 @@ class printcore():
         self.clear = True
 
     def _checksum(self, command):
-        return reduce(lambda x,y:x^y, map(ord, command))
+        return reduce(lambda x, y:x^y, map(ord, command))
 
     def startprint(self, data, startindex = 0):
         """Start a print, data is an array of gcode commands.
@@ -289,7 +289,7 @@ class printcore():
             self.clear = True
             return
         if self.resendfrom < self.lineno and self.resendfrom > -1:
-            self._send(self.sentlines[self.resendfrom],self.resendfrom,False)
+            self._send(self.sentlines[self.resendfrom],self.resendfrom, False)
             self.resendfrom += 1
             return
         self.resendfrom = -1
@@ -369,7 +369,7 @@ if __name__ == '__main__':
 
     try:
         if statusreport:
-            p.loud=False
+            p.loud = False
             sys.stdout.write("Progress: 00.0%")
             sys.stdout.flush()
         while p.printing:

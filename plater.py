@@ -46,7 +46,7 @@ def evalme(s):
 
 
 class stlwrap:
-    def __init__(self, obj, name=None):
+    def __init__(self, obj, name = None):
         self.obj = obj
         self.name = name
         if name is None:
@@ -58,7 +58,7 @@ class stlwrap:
 
 class showstl(wx.Window):
     def __init__(self, parent, size, pos):
-        wx.Window.__init__(self, parent, size=size, pos=pos)
+        wx.Window.__init__(self, parent, size = size, pos = pos)
         #self.SetBackgroundColour((0, 0, 0))
         #wx.FutureCall(200, self.paint)
         self.i = 0
@@ -141,7 +141,7 @@ class showstl(wx.Window):
         self.i += angle
         if not self.triggered:
             self.triggered = 1
-            threading.Thread(target=self.cr).start()
+            threading.Thread(target = self.cr).start()
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
@@ -200,9 +200,9 @@ class showstl(wx.Window):
 
     def repaint(self, event):
         dc = wx.PaintDC(self)
-        self.paint(dc=dc)
+        self.paint(dc = dc)
 
-    def paint(self, coord1="x", coord2="y", dc=None):
+    def paint(self, coord1 = "x", coord2 = "y", dc = None):
         coords = {"x": 0, "y": 1, "z": 2}
         if dc is None:
             dc = wx.ClientDC(self)
@@ -231,7 +231,7 @@ class showstl(wx.Window):
             bm = wx.BitmapFromImage(im)
             dcs.SelectObject(bm)
             bsz = bm.GetSize()
-            dc.Blit(scale * m.offsets[0] - bsz[0] / 2, 400 - (scale * m.offsets[1] + bsz[1] / 2), bsz[0], bsz[1], dcs, 0, 0, useMask=1)
+            dc.Blit(scale * m.offsets[0] - bsz[0] / 2, 400 - (scale * m.offsets[1] + bsz[1] / 2), bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
             #for i in m.facets:#random.sample(m.facets, min(100000, len(m.facets))):
             #    dc.DrawPolygon([wx.Point(offset[0]+scale*m.offsets[0]+scale*p[0], 400-(offset[1]+scale*m.offsets[1]+scale*p[1])) for p in i[1]])
                 #if(time.time()-t)>5:
@@ -242,29 +242,29 @@ class showstl(wx.Window):
 
 
 class stlwin(wx.Frame):
-    def __init__(self, size=(800, 580), callback=None, parent=None):
-        wx.Frame.__init__(self, parent, title=_("Plate building tool"), size=size)
+    def __init__(self, size = (800, 580), callback = None, parent = None):
+        wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
         self.SetIcon(wx.Icon(pixmapfile("plater.ico"), wx.BITMAP_TYPE_ICO))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel = wx.Panel(self, -1, size=(150, 600), pos=(0, 0))
+        self.panel = wx.Panel(self, -1, size = (150, 600), pos = (0, 0))
         #self.panel.SetBackgroundColour((10, 10, 10))
-        self.l = wx.ListBox(self.panel, size=(300, 180), pos=(0, 30))
-        self.cl = wx.Button(self.panel, label=_("Clear"), pos=(0, 205))
-        self.lb = wx.Button(self.panel, label=_("Load"), pos=(0, 0))
+        self.l = wx.ListBox(self.panel, size = (300, 180), pos = (0, 30))
+        self.cl = wx.Button(self.panel, label = _("Clear"), pos = (0, 205))
+        self.lb = wx.Button(self.panel, label = _("Load"), pos = (0, 0))
         if(callback is None):
-            self.eb = wx.Button(self.panel, label=_("Export"), pos=(100, 0))
+            self.eb = wx.Button(self.panel, label = _("Export"), pos = (100, 0))
             self.eb.Bind(wx.EVT_BUTTON, self.export)
         else:
-            self.eb = wx.Button(self.panel, label=_("Export"), pos=(200, 205))
+            self.eb = wx.Button(self.panel, label = _("Export"), pos = (200, 205))
             self.eb.Bind(wx.EVT_BUTTON, self.export)
-            self.edb = wx.Button(self.panel, label=_("Done"), pos=(100, 0))
+            self.edb = wx.Button(self.panel, label = _("Done"), pos = (100, 0))
             self.edb.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
-            self.eb = wx.Button(self.panel, label=_("Cancel"), pos=(200, 0))
+            self.eb = wx.Button(self.panel, label = _("Cancel"), pos = (200, 0))
             self.eb.Bind(wx.EVT_BUTTON, lambda e: self.Destroy())
-        self.sb = wx.Button(self.panel, label=_("Snap to Z = 0"), pos=(00, 255))
-        self.cb = wx.Button(self.panel, label=_("Put at 100, 100"), pos=(0, 280))
-        self.db = wx.Button(self.panel, label=_("Delete"), pos=(0, 305))
-        self.ab = wx.Button(self.panel, label=_("Auto"), pos=(0, 330))
+        self.sb = wx.Button(self.panel, label = _("Snap to Z = 0"), pos = (00, 255))
+        self.cb = wx.Button(self.panel, label = _("Put at 100, 100"), pos = (0, 280))
+        self.db = wx.Button(self.panel, label = _("Delete"), pos = (0, 305))
+        self.ab = wx.Button(self.panel, label = _("Auto"), pos = (0, 330))
         self.cl.Bind(wx.EVT_BUTTON, self.clear)
         self.lb.Bind(wx.EVT_BUTTON, self.right)
         self.sb.Bind(wx.EVT_BUTTON, self.snap)
@@ -368,7 +368,7 @@ class stlwin(wx.Frame):
         self.Destroy()
 
     def export(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style=wx.FD_SAVE)
+        dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
         dlg.SetWildcard(_("STL files (;*.stl;*.STL;)"))
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
@@ -393,7 +393,7 @@ class stlwin(wx.Frame):
         print _("wrote %s") % name
 
     def right(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard(_("STL files (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"))
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
@@ -443,7 +443,7 @@ class stlwin(wx.Frame):
         self.Refresh()
         #print time.time()-t
 
-    def load_stl_into_model(self, path, name, offset=[0, 0, 0], rotation=0, scale=[1.0, 1.0, 1.0]):
+    def load_stl_into_model(self, path, name, offset=[0, 0, 0], rotation = 0, scale=[1.0, 1.0, 1.0]):
         newname = os.path.split(name.lower())[1]
         c = 1
         while newname in self.models:

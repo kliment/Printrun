@@ -12,45 +12,45 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
-import wx,time
+import wx, time
 
 from printrun_utils import imagefile
 
 ID_ABOUT = 101
 ID_EXIT = 110
 class window(wx.Frame):
-    def __init__(self,f,size=(600,600),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
-        wx.Frame.__init__(self,None,title="Gcode view, shift to move view, mousewheel to set layer",size=(size[0],size[1]))
-        self.p=gviz(self,size=size,build_dimensions=build_dimensions,grid=grid,extrusion_width=extrusion_width)
+    def __init__(self, f,size = (600, 600),build_dimensions=[200, 200, 100, 0,0, 0],grid = (10, 50),extrusion_width = 0.5):
+        wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer",size = (size[0],size[1]))
+        self.p = gviz(self, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
+        toolbar = wx.ToolBar(self, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
         toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
         toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
         toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
-        toolbar.AddSimpleTool(5, wx.EmptyBitmap(16,16), 'Reset view', '')
+        toolbar.AddSimpleTool(5, wx.EmptyBitmap(16, 16), 'Reset view', '')
         toolbar.AddSeparator()
         #toolbar.AddSimpleTool(5, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
         toolbar.Realize()
-        vbox.Add(toolbar, 0, border=5)
+        vbox.Add(toolbar, 0, border = 5)
         self.SetSizer(vbox)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200,200,1.2), id=1)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200,200,1/1.2), id=2)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id=3)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id=4)
-        self.Bind(wx.EVT_TOOL, self.resetview, id=5)
-        #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id=5)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1.2), id = 1)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1/1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id = 3)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id = 4)
+        self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
+        #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 5)
 
 
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
-        #self.bu=wx.Button(self.p,-1,"U",pos=(0,100),size=(40,140))
-        #self.bd=wx.Button(self.p,-1,"D",pos=(0,140),size=(40,140))
-        #self.bi=wx.Button(self.p,-1,"+",pos=(40,100),size=(40,140))
-        #self.bo=wx.Button(self.p,-1,"-",pos=(40,140),size=(40,140))
-        #self.bs=wx.Button(self.p, -1, "Inject", pos=(85, 103), size=(50, 20))
+        #self.bu = wx.Button(self.p,-1,"U",pos = (0, 100),size = (40, 140))
+        #self.bd = wx.Button(self.p,-1,"D",pos = (0, 140),size = (40, 140))
+        #self.bi = wx.Button(self.p,-1,"+",pos = (40, 100),size = (40, 140))
+        #self.bo = wx.Button(self.p,-1,"-",pos = (40, 140),size = (40, 140))
+        #self.bs = wx.Button(self.p, -1, "Inject", pos = (85, 103), size = (50, 20))
 
         #self.bu.SetToolTip(wx.ToolTip("Move up one layer"))
         #self.bd.SetToolTip(wx.ToolTip("Move down one layer"))
@@ -58,41 +58,41 @@ class window(wx.Frame):
         #self.bo.SetToolTip(wx.ToolTip("Zoom view out"))
         #self.bs.SetToolTip(wx.ToolTip("Insert Code at start of this layer"))
 
-        #self.bu.Bind(wx.EVT_BUTTON,lambda x:self.p.layerup())
-        #self.bd.Bind(wx.EVT_BUTTON,lambda x:self.p.layerdown())
-        #self.bi.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1.2))
-        #self.bo.Bind(wx.EVT_BUTTON,lambda x:self.p.zoom(200,200,1/1.2))
-        #self.bs.Bind(wx.EVT_BUTTON,lambda x:self.p.inject())
+        #self.bu.Bind(wx.EVT_BUTTON, lambda x:self.p.layerup())
+        #self.bd.Bind(wx.EVT_BUTTON, lambda x:self.p.layerdown())
+        #self.bi.Bind(wx.EVT_BUTTON, lambda x:self.p.zoom(200, 200, 1.2))
+        #self.bo.Bind(wx.EVT_BUTTON, lambda x:self.p.zoom(200, 200, 1/1.2))
+        #self.bs.Bind(wx.EVT_BUTTON, lambda x:self.p.inject())
 
-        s=time.time()
+        s = time.time()
         #print time.time()-s
-        self.initpos=[0,0]
-        self.p.Bind(wx.EVT_KEY_DOWN,self.key)
-        #self.bu.Bind(wx.EVT_KEY_DOWN,self.key)
-        #self.bd.Bind(wx.EVT_KEY_DOWN,self.key)
-        #self.bi.Bind(wx.EVT_KEY_DOWN,self.key)
-        #self.bo.Bind(wx.EVT_KEY_DOWN,self.key)
-        self.Bind(wx.EVT_KEY_DOWN,self.key)
-        self.p.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
-        self.Bind(wx.EVT_MOUSEWHEEL,self.zoom)
-        self.p.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
-        self.Bind(wx.EVT_MOUSE_EVENTS,self.mouse)
+        self.initpos=[0, 0]
+        self.p.Bind(wx.EVT_KEY_DOWN, self.key)
+        #self.bu.Bind(wx.EVT_KEY_DOWN, self.key)
+        #self.bd.Bind(wx.EVT_KEY_DOWN, self.key)
+        #self.bi.Bind(wx.EVT_KEY_DOWN, self.key)
+        #self.bo.Bind(wx.EVT_KEY_DOWN, self.key)
+        self.Bind(wx.EVT_KEY_DOWN, self.key)
+        self.p.Bind(wx.EVT_MOUSEWHEEL, self.zoom)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.zoom)
+        self.p.Bind(wx.EVT_MOUSE_EVENTS, self.mouse)
+        self.Bind(wx.EVT_MOUSE_EVENTS, self.mouse)
 
-    def resetview(self,event):
-        self.p.translate=[0.0,0.0]
-        self.p.scale=self.p.basescale
-        self.p.zoom(0,0,1.0)
+    def resetview(self, event):
+        self.p.translate=[0.0, 0.0]
+        self.p.scale = self.p.basescale
+        self.p.zoom(0, 0,1.0)
 
-    def mouse(self,event):
+    def mouse(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
-                self.initpos=None
+                self.initpos = None
         elif event.Dragging():
-            e=event.GetPositionTuple()
+            e = event.GetPositionTuple()
             if self.initpos is None or not hasattr(self,"basetrans"):
-                self.initpos=e
-                self.basetrans=self.p.translate
-            #print self.p.translate,e,self.initpos
+                self.initpos = e
+                self.basetrans = self.p.translate
+            #print self.p.translate, e,self.initpos
             self.p.translate = [ self.basetrans[0]+(e[0]-self.initpos[0]),
                             self.basetrans[1]+(e[1]-self.initpos[1]) ]
             self.p.repaint()
@@ -107,31 +107,31 @@ class window(wx.Frame):
         kdo=[68, 317]               # Down Keys
         kzi=[388, 316, 61]        # Zoom In Keys
         kzo=[390, 314, 45]       # Zoom Out Keys
-        x=event.GetKeyCode()
+        x = event.GetKeyCode()
         #print "Key event - "+str(x)
         #if event.ShiftDown():
-        cx,cy=self.p.translate
-        #   if x==wx.WXK_UP:
-        #      self.p.zoom(cx,cy,1.2)
-        #   if x==wx.WXK_DOWN:
-        #       self.p.zoom(cx,cy,1/1.2)
+        cx, cy = self.p.translate
+        #   if x == wx.WXK_UP:
+        #      self.p.zoom(cx, cy, 1.2)
+        #   if x == wx.WXK_DOWN:
+        #       self.p.zoom(cx, cy, 1/1.2)
         #else:
-        #   if x==wx.WXK_UP:
+        #   if x == wx.WXK_UP:
         #       self.p.layerup()
-        #   if x==wx.WXK_DOWN:
+        #   if x == wx.WXK_DOWN:
         #       self.p.layerdown()
         if x in kup:
             self.p.layerup()
         if x in kdo:
             self.p.layerdown()
         if x in kzi:
-            self.p.zoom(cx,cy,1.2)
+            self.p.zoom(cx, cy, 1.2)
         if x in kzo:
             self.p.zoom(cx, cy, 1/1.2)
 
         #print p.lines.keys()
     def zoom(self, event):
-        z=event.GetWheelRotation()
+        z = event.GetWheelRotation()
         if event.ShiftDown():
             if z > 0:   self.p.layerdown()
             elif z < 0: self.p.layerup()
@@ -140,38 +140,38 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(),event.GetY(),1/1.2)
 
 class gviz(wx.Panel):
-    def __init__(self,parent,size=(200,200),build_dimensions=[200,200,100,0,0,0],grid=(10,50),extrusion_width=0.5):
-        wx.Panel.__init__(self,parent,-1,size=(size[0],size[1]))
-        self.parent=parent
-        self.size=size
-        self.build_dimensions=build_dimensions
-        self.grid=grid
-        self.lastpos=[0,0,0,0,0,0,0]
-        self.hilightpos=self.lastpos[:]
-        self.Bind(wx.EVT_PAINT,self.paint)
-        self.Bind(wx.EVT_SIZE,self.resize)
+    def __init__(self, parent, size = (200, 200),build_dimensions=[200, 200, 100, 0,0, 0],grid = (10, 50),extrusion_width = 0.5):
+        wx.Panel.__init__(self, parent,-1, size = (size[0],size[1]))
+        self.parent = parent
+        self.size = size
+        self.build_dimensions = build_dimensions
+        self.grid = grid
+        self.lastpos=[0, 0,0, 0,0, 0,0]
+        self.hilightpos = self.lastpos[:]
+        self.Bind(wx.EVT_PAINT, self.paint)
+        self.Bind(wx.EVT_SIZE, self.resize)
         self.lines={}
         self.pens={}
         self.arcs={}
         self.arcpens={}
         self.layers=[]
-        self.layerindex=0
-        self.filament_width=extrusion_width # set it to 0 to disable scaling lines with zoom
+        self.layerindex = 0
+        self.filament_width = extrusion_width # set it to 0 to disable scaling lines with zoom
         self.basescale=[min(float(size[0])/build_dimensions[0],float(size[1])/build_dimensions[1])]*2
-        self.scale=self.basescale
-        penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
-        self.translate=[0.0,0.0]
-        self.mainpen=wx.Pen(wx.Colour(0,0,0),penwidth)
-        self.arcpen=wx.Pen(wx.Colour(255,0,0),penwidth)
-        self.travelpen=wx.Pen(wx.Colour(10,80,80),penwidth)
-        self.hlpen=wx.Pen(wx.Colour(200,50,50),penwidth)
-        self.fades=[wx.Pen(wx.Colour(250-0.6**i*100,250-0.6**i*100,200-0.4**i*50),penwidth) for i in xrange(6)]
-        self.penslist=[self.mainpen,self.travelpen,self.hlpen]+self.fades
-        self.showall=0
+        self.scale = self.basescale
+        penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
+        self.translate=[0.0, 0.0]
+        self.mainpen = wx.Pen(wx.Colour(0, 0,0),penwidth)
+        self.arcpen = wx.Pen(wx.Colour(255, 0,0),penwidth)
+        self.travelpen = wx.Pen(wx.Colour(10, 80, 80),penwidth)
+        self.hlpen = wx.Pen(wx.Colour(200, 50, 50),penwidth)
+        self.fades=[wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50),penwidth) for i in xrange(6)]
+        self.penslist=[self.mainpen, self.travelpen, self.hlpen]+self.fades
+        self.showall = 0
         self.hilight=[]
         self.hilightarcs=[]
-        self.dirty=1
-        self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
+        self.dirty = 1
+        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
 
     def inject(self):
         #import pdb; pdb.set_trace()
@@ -179,7 +179,7 @@ class gviz(wx.Panel):
         print  "Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm"
 
     def clear(self):
-        self.lastpos=[0,0,0,0,0,0,0]
+        self.lastpos=[0, 0,0, 0,0, 0,0]
         self.lines={}
         self.pens={}
         self.arcs={}
@@ -187,9 +187,9 @@ class gviz(wx.Panel):
         self.layers=[]
         self.hilight=[]
         self.hilightarcs=[]
-        self.layerindex=0
-        self.showall=0
-        self.dirty=1
+        self.layerindex = 0
+        self.showall = 0
+        self.dirty = 1
         #self.repaint()
     def layerup(self):
         if(self.layerindex+1<len(self.layers)):
@@ -207,67 +207,67 @@ class gviz(wx.Panel):
             self.repaint()
             self.Refresh()
 
-    def setlayer(self,layer):
+    def setlayer(self, layer):
         try:
-            self.layerindex=self.layers.index(layer)
+            self.layerindex = self.layers.index(layer)
             self.repaint()
             wx.CallAfter(self.Refresh)
-            self.showall=0
+            self.showall = 0
         except:
             pass
 
-    def resize(self,event):
-        size=self.GetClientSize()
-        newsize=min(float(size[0])/self.size[0],float(size[1])/self.size[1])
-        self.size=self.GetClientSize()
-        wx.CallAfter(self.zoom,0,0,newsize)
+    def resize(self, event):
+        size = self.GetClientSize()
+        newsize = min(float(size[0])/self.size[0],float(size[1])/self.size[1])
+        self.size = self.GetClientSize()
+        wx.CallAfter(self.zoom, 0,0, newsize)
 
 
-    def zoom(self,x,y,factor):
+    def zoom(self, x,y, factor):
         self.scale = [s * factor for s in self.scale]
 
         self.translate = [ x - (x-self.translate[0]) * factor,
                             y - (y-self.translate[1]) * factor]
-        penwidth = max(1.0,self.filament_width*((self.scale[0]+self.scale[1])/2.0))
+        penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         for pen in self.penslist:
             pen.SetWidth(penwidth)
-        #self.dirty=1
+        #self.dirty = 1
         self.repaint()
         self.Refresh()
 
 
     def repaint(self):
-        self.blitmap=wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
-        dc=wx.MemoryDC()
+        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0],self.GetClientSize()[1],-1)
+        dc = wx.MemoryDC()
         dc.SelectObject(self.blitmap)
-        dc.SetBackground(wx.Brush((250,250,200)))
+        dc.SetBackground(wx.Brush((250, 250, 200)))
         dc.Clear()
-        dc.SetPen(wx.Pen(wx.Colour(180,180,150)))
+        dc.SetPen(wx.Pen(wx.Colour(180, 180, 150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
                 for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1],self.translate[0]+x*self.scale[0]*grid_unit,self.translate[1]+self.scale[1]*self.build_dimensions[1])
+                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1],self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1]+self.scale[1]*self.build_dimensions[1])
                 for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0],self.translate[1]+y*self.scale[1]*grid_unit,self.translate[0]+self.scale[0]*self.build_dimensions[0],self.translate[1]+y*self.scale[1]*grid_unit)
-            dc.SetPen(wx.Pen(wx.Colour(0,0,0)))
+                    dc.DrawLine(self.translate[0],self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0],self.translate[1]+y*self.scale[1]*grid_unit)
+            dc.SetPen(wx.Pen(wx.Colour(0, 0,0)))
         if not self.showall:
             self.size = self.GetSize()
-            dc.SetBrush(wx.Brush((43,144,255)))
-            dc.DrawRectangle(self.size[0]-15,0,15,self.size[1])
-            dc.SetBrush(wx.Brush((0,255,0)))
+            dc.SetBrush(wx.Brush((43, 144, 255)))
+            dc.DrawRectangle(self.size[0]-15, 0,15, self.size[1])
+            dc.SetBrush(wx.Brush((0, 255, 0)))
             if len(self.layers):
-                dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1],13,self.size[1]-1)
+                dc.DrawRectangle(self.size[0]-14,(1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1],13, self.size[1]-1)
 
-        def _drawlines(lines,pens):
+        def _drawlines(lines, pens):
             def _scaler(x):
                 return (self.scale[0]*x[0]+self.translate[0],
                         self.scale[1]*x[1]+self.translate[1],
                         self.scale[0]*x[2]+self.translate[0],
                         self.scale[1]*x[3]+self.translate[1],)
-            scaled_lines = map(_scaler,lines)
+            scaled_lines = map(_scaler, lines)
             dc.DrawLineList(scaled_lines, pens)
 
-        def _drawarcs(arcs,pens):
+        def _drawarcs(arcs, pens):
             def _scaler(x):
                 return (self.scale[0]*x[0]+self.translate[0],
                         self.scale[1]*x[1]+self.translate[1],
@@ -275,7 +275,7 @@ class gviz(wx.Panel):
                         self.scale[1]*x[3]+self.translate[1],
                         self.scale[0]*x[4]+self.translate[0],
                         self.scale[1]*x[5]+self.translate[1],)
-            scaled_arcs = map(_scaler,arcs)
+            scaled_arcs = map(_scaler, arcs)
             for i in range(len(scaled_arcs)):
                 dc.SetPen(pens[i] if type(pens).__name__ == 'list' else pens)
                 dc.SetBrush(wx.TRANSPARENT_BRUSH)
@@ -284,12 +284,12 @@ class gviz(wx.Panel):
         if self.showall:
             l=[]
             for i in self.layers:
-                dc.DrawLineList(l,self.fades[0])
+                dc.DrawLineList(l, self.fades[0])
                 _drawlines(self.lines[i], self.pens[i])
                 _drawarcs(self.arcs[i], self.arcpens[i])
             return
         if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
-            for layer_i in xrange(max(0,self.layerindex-6),self.layerindex):
+            for layer_i in xrange(max(0, self.layerindex-6),self.layerindex):
                 #print i, self.layerindex, self.layerindex-i
                 _drawlines(self.lines[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
                 _drawarcs(self.arcs[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
@@ -301,23 +301,23 @@ class gviz(wx.Panel):
 
         dc.SelectObject(wx.NullBitmap)
 
-    def paint(self,event):
-        dc=wx.PaintDC(self)
+    def paint(self, event):
+        dc = wx.PaintDC(self)
         if(self.dirty):
             self.repaint()
-        self.dirty=0
-        sz=self.GetClientSize()
-        dc.DrawBitmap(self.blitmap,0,0)
+        self.dirty = 0
+        sz = self.GetClientSize()
+        dc.DrawBitmap(self.blitmap, 0,0)
         del dc
 
-    def addfile(self,gcodes=[]):
+    def addfile(self, gcodes=[]):
         self.clear()
         for i in gcodes:
             self.addgcode(i)
 
-    def addgcode(self,gcode="M105",hilight=0):
-        gcode=gcode.split("*")[0]
-        gcode=gcode.split(";")[0]
+    def addgcode(self, gcode = "M105",hilight = 0):
+        gcode = gcode.split("*")[0]
+        gcode = gcode.split(";")[0]
         gcode = gcode.lower().strip().split()
         if len(gcode) == 0:
             return
@@ -325,11 +325,11 @@ class gviz(wx.Panel):
             gcode.pop(0)
 
         def _readgcode():
-            target=self.lastpos[:]
+            target = self.lastpos[:]
             target[5]=0.0
             target[6]=0.0
             if hilight:
-                target=self.hilightpos[:]
+                target = self.hilightpos[:]
             for i in gcode:
                 if i[0]=="x":
                     target[0]=float(i[1:])
