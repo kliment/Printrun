@@ -263,5 +263,3 @@ class Graph(BufferedCanvas):
         self.drawextruder0temp(dc, gc)
         self.drawextruder1targettemp(dc, gc)
         self.drawextruder1temp(dc, gc)
-
-

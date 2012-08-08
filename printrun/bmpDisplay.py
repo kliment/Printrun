@@ -13,7 +13,7 @@ class MyFrame(wx.Frame):
     def __init__(self, parent, mysize):
         wx.Frame.__init__(self, parent, wx.ID_ANY, size=mysize)
         self.SetBackgroundColour('black')
-        
+
         # milliseconds per frame
         self.delay = 60
         # number of loops
@@ -41,7 +41,7 @@ class MyFrame(wx.Frame):
         self.image_list = []
         for image_file in file_list:
             self.image_list.append(wx.Bitmap(image_file))
-        
+
         # bind the panel to the paint event
         wx.EVT_PAINT(self, self.onPaint)
 

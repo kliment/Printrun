@@ -17,7 +17,7 @@ import wx
 
 class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
-    
+
     def __init__(self,macro_name,definition,callback,gcode=False):
         self.indent_chars = "  "
         title="  macro %s"
@@ -54,7 +54,7 @@ class macroed(wx.Dialog):
         topsizer.Fit(self)
         self.Show()
         self.e.SetFocus()
-        
+
     def find(self,ev):
         # Ask user what to look for, find it and point at it ...  (Jezmy)
         S = self.e.GetStringSelection()
@@ -63,27 +63,27 @@ class macroed(wx.Dialog):
         FindValue = wx.GetTextFromUser('Please enter a search string:', caption="Search", default_value=S, parent=None)
         somecode = self.e.GetValue()
         numLines = len(somecode)
-        position = somecode.find(FindValue,  self.e.GetInsertionPoint()) 
+        position = somecode.find(FindValue,  self.e.GetInsertionPoint())
         if position == -1 :
          #   ShowMessage(self,-1,  "Not found!")
-            titletext = wx.TextCtrl(self.panel,-1,"Not Found!")  
-        else:   
-        # self.title.SetValue("Position : "+str(position))    
-    
-            titletext = wx.TextCtrl(self.panel,-1,str(position))    
-        
-            # ananswer = wx.MessageBox(str(numLines)+" Lines detected in file\n"+str(position), "OK")  
+            titletext = wx.TextCtrl(self.panel,-1,"Not Found!")
+        else:
+        # self.title.SetValue("Position : "+str(position))
+
+            titletext = wx.TextCtrl(self.panel,-1,str(position))
+
+            # ananswer = wx.MessageBox(str(numLines)+" Lines detected in file\n"+str(position), "OK")
             self.e.SetFocus()
-            self.e.SetInsertionPoint(position) 
+            self.e.SetInsertionPoint(position)
             self.e.SetSelection(position,  position + len(FindValue))
             self.e.ShowPosition(position)
-        
+
     def ShowMessage(self, ev , message):
         dlg = wxMessageDialog(self, message,
                               "Info!", wxOK | wxICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
-                
+
     def save(self,ev):
         self.Destroy()
         if not self.gcode:

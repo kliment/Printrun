@@ -12,7 +12,7 @@ def PrintHeader():
 
 def PrintMenu():
     return '<div id="mainmenu"><ul><li><a href="/">home</a></li><li><a href="/settings">settings</a></li><li><a href="/console">console</a></li><li><a href="/status">status (XML)</a></li></ul></div>'
-    
+
 def PrintFooter():
     return "</body></html>"
 
@@ -24,7 +24,7 @@ def TReloadPage(action):
 
 def clear_text(mypass):
     return mypass
-    
+
 gPronterPtr = 0
 gWeblog     = ""
 gLogRefresh =5
@@ -80,7 +80,7 @@ class ConnectButton(object):
         'tools.basic_auth.realm': 'My Print Server',
         'tools.basic_auth.users': users,
         'tools.basic_auth.encrypt': clear_text}
-        
+
 class DisconnectButton(object):
     def index(self):
         #handle connect push, then reload page
@@ -149,7 +149,7 @@ class MoveButton(object):
         'tools.basic_auth.realm': 'My Print Server',
         'tools.basic_auth.users': users,
         'tools.basic_auth.encrypt': clear_text}
- 
+
 class CustomButton(object):
     def button(self, *args):
         if not args:
@@ -164,7 +164,7 @@ class CustomButton(object):
         'tools.basic_auth.realm': 'My Print Server',
         'tools.basic_auth.users': users,
         'tools.basic_auth.encrypt': clear_text}
-                       
+
 class HomeButton(object):
     def axis(self, *args):
         if not args:
@@ -183,13 +183,13 @@ class HomeButton(object):
         if(taxis == "all"):
             gPronterPtr.onecmd('home')
             return ReloadPage("Home All")
-   
+
     axis.exposed = True
     axis._cp_config = {'tools.basic_auth.on': True,
         'tools.basic_auth.realm': 'My Print Server',
         'tools.basic_auth.users': users,
         'tools.basic_auth.encrypt': clear_text}
-    
+
 class XMLstatus(object):
     def index(self):
         #handle connect push, then reload page
@@ -203,7 +203,7 @@ class XMLstatus(object):
             state="Printing"
         if gPronterPtr.paused:
             state="Paused"
-        
+
         txt=txt+'<state>'+state+'</state>\n'
         txt=txt+'<file>'+str(gPronterPtr.filename)+'</file>\n'
         txt=txt+'<status>'+str(gPronterPtr.status.GetStatusText())+'</status>\n'
@@ -234,13 +234,13 @@ class XMLstatus(object):
     index.exposed = True
 
 class WebInterface(object):
-    
+
     def __init__(self, pface):
         if (sys.version_info[1] > 6):
-          # 'allow_no_value' wasn't added until 2.7
-          config = ConfigParser.SafeConfigParser(allow_no_value=True)
+            # 'allow_no_value' wasn't added until 2.7
+            config = ConfigParser.SafeConfigParser(allow_no_value=True)
         else:
-          config = ConfigParser.SafeConfigParser()
+            config = ConfigParser.SafeConfigParser()
         config.read(configfile(pface.web_auth_config or 'auth.config'))
         users[config.get("user", "user")] = config.get("user", "pass")
         self.pface = pface
@@ -248,12 +248,12 @@ class WebInterface(object):
         global gWeblog
         self.name="<div id='title'>Pronterface Web-Interface</div>"
         gWeblog = ""
-        gPronterPtr = self.pface 
+        gPronterPtr = self.pface
 
     settings = SettingsPage()
     logpage  = LogPage()
     console = ConsolePage()
-    
+
     #actions
     connect = ConnectButton()
     disconnect = DisconnectButton()
@@ -264,7 +264,7 @@ class WebInterface(object):
     home = HomeButton()
     move = MoveButton()
     custom =CustomButton()
-    
+
     def index(self):
         pageText=PrintHeader()+self.name+PrintMenu()
         pageText+="<div id='content'>\n"
@@ -274,20 +274,20 @@ class WebInterface(object):
         pageText+="<li><a href='/reset'>Reset</a></li>\n"
         pageText+="<li><a href='/printbutton'>Print</a></li>\n"
         pageText+="<li><a href='/pausebutton'>Pause</a></li>\n"
-                
+
         for i in gPronterPtr.cpbuttons:
             pageText+="<li><a href='/custom/button/"+i[1]+"'>"+i[0]+"</a></li>\n"
-        
+
         #for i in gPronterPtr.custombuttons:
         #    print(str(i));
-            
+
         pageText+="</ul>\n"
         pageText+="</div>\n"
         pageText+="<div id='gui'>\n"
         pageText+="<div id='control_xy'>"
         pageText+="<img src='/images/control_xy.png' usemap='#xymap'/>"
         pageText+='<map name="xymap">'
-        
+
         pageText+='<area shape="rect" coords="8,5,51,48" href="/home/axis/x" alt="X Home" title="X Home"    />'
         pageText+='<area shape="rect" coords="195,6,236,46" href="/home/axis/y" alt="Y Home" title="Y Home"    />'
         pageText+='<area shape="rect" coords="7,192,48,232" href="/home/axis/all" alt="All Home" title="All Home"    />'
@@ -336,7 +336,7 @@ class WebInterface(object):
        # pageText+="<ul><li><b>Bed Temp:</b></li><li><a href='/off'>OFF</a></li><li><a href='/185'>185 (PLA)</a></li><li><a href='/240'>240 (ABS)</a></li></ul>"
        # pageText+="</div>"
        # pageText+="</div>"
-        
+
         pageText=pageText+"<div id='file'>File Loaded: <i>"+str(gPronterPtr.filename)+"</i></div>"
         pageText+="<div id='logframe'><iframe src='/logpage' width='100%' height='100%'>iFraming Not Supported?? No log for you.</iframe></div>"
         pageText+=PrintFooter()
@@ -357,7 +357,7 @@ class WebInterfaceStub(object):
 
 def KillWebInterfaceThread():
     cherrypy.engine.exit()
-    
+
 def StartWebInterfaceThread(webInterface):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cherrypy.config.update({'engine.autoreload_on':False})

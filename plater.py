@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
 # This file is part of the Printrun suite.
-# 
+#
 # Printrun is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Printrun is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -336,25 +336,25 @@ class stlwin(wx.Frame):
     def center(self, event):
         i = self.l.GetSelection()
         if i != -1:
-                m = self.models[self.l.GetString(i)]
-                m.offsets = [100, 100, m.offsets[2]]
-                self.Refresh()
+            m = self.models[self.l.GetString(i)]
+            m.offsets = [100, 100, m.offsets[2]]
+            self.Refresh()
 
     def snap(self, event):
         i = self.l.GetSelection()
         if i != -1:
-                m = self.models[self.l.GetString(i)]
-                m.offsets[2] = -1.0 * min(m.facetsminz)[0]
-                #print m.offsets[2]
-                self.Refresh()
+            m = self.models[self.l.GetString(i)]
+            m.offsets[2] = -1.0 * min(m.facetsminz)[0]
+            #print m.offsets[2]
+            self.Refresh()
 
     def delete(self, event):
         i = self.l.GetSelection()
         if i != -1:
-                del self.models[self.l.GetString(i)]
-                self.l.Delete(i)
-                self.l.Select(self.l.GetCount() - 1)
-                self.Refresh()
+            del self.models[self.l.GetString(i)]
+            self.l.Delete(i)
+            self.l.Select(self.l.GetCount() - 1)
+            self.Refresh()
 
     def done(self, event, cb):
         try:

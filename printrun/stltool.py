@@ -1,15 +1,15 @@
 # This file is part of the Printrun suite.
-# 
+#
 # Printrun is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Printrun is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -38,15 +38,15 @@ I=[
 def transpose(matrix):
     return zip(*matrix)
     #return [[v[i] for v in matrix] for i in xrange(len(matrix[0]))]
-    
+
 def multmatrix(vector,matrix):
     return map(sum, transpose(map(lambda x:[x[0]*p for p in x[1]], zip(vector, transpose(matrix)))))
-    
+
 def applymatrix(facet,matrix=I):
     #return facet
     #return [map(lambda x:-1.0*x,multmatrix(facet[0]+[1],matrix)[:3]),map(lambda x:multmatrix(x+[1],matrix)[:3],facet[1])]
     return genfacet(map(lambda x:multmatrix(x+[1],matrix)[:3],facet[1]))
-    
+
 f=[[0,0,0],[[-3.022642, 0.642482, -9.510565],[-3.022642, 0.642482, -9.510565],[-3.022642, 0.642482, -9.510565]]]
 m=[
     [1,0,0,0],
@@ -73,7 +73,7 @@ def emitstl(filename,facets=[],objname="stltool_export",binary=1):
         f.write(buf)
         f.close()
         return
-        
+
 
     f=open(filename,"w")
     f.write("solid "+objname+"\n")
@@ -85,8 +85,8 @@ def emitstl(filename,facets=[],objname="stltool_export",binary=1):
         f.write("  endfacet"+"\n")
     f.write("endsolid "+objname+"\n")
     f.close()
-        
-        
+
+
 
 class stl:
     def __init__(self, filename=None):
@@ -94,7 +94,7 @@ class stl:
         self.facets=[]
         self.facetsminz=[]
         self.facetsmaxz=[]
-        
+
         self.name=""
         self.insolid=0
         self.infacet=0
@@ -133,7 +133,7 @@ class stl:
         for i in self.f:
             if not self.parseline(i):
                 return
-        
+
     def translate(self,v=[0,0,0]):
         matrix=[
         [1,0,0,v[0]],
@@ -142,7 +142,7 @@ class stl:
         [0,0,0,1]
         ]
         return self.transform(matrix)
-    
+
     def rotate(self,v=[0,0,0]):
         import math
         z=v[2]
@@ -167,7 +167,7 @@ class stl:
         [0,0,0,1]
         ]
         return self.transform(matrix1).transform(matrix2).transform(matrix3)
-    
+
     def scale(self,v=[0,0,0]):
         matrix=[
         [v[0],0,0,0],
@@ -176,8 +176,8 @@ class stl:
         [0,0,0,1]
         ]
         return self.transform(matrix)
-        
-        
+
+
     def transform(self,m=I):
         s=stl()
         s.facets=[applymatrix(i,m) for i in self.facets]
@@ -190,7 +190,7 @@ class stl:
             s.facetsminz+=[(min(map(lambda x:x[2], facet[1])),facet)]
             s.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])),facet)]
         return s
-        
+
     def export(self,f=sys.stdout):
         f.write("solid "+self.name+"\n")
         for i in self.facets:
@@ -202,14 +202,14 @@ class stl:
             f.write("  endfacet"+"\n")
         f.write("endsolid "+self.name+"\n")
         f.flush()
-        
+
     def parseline(self,l):
         l=l.strip()
         if l.startswith("solid"):
             self.insolid=1
             self.name=l[6:]
             #print self.name
-            
+
         elif l.startswith("endsolid"):
             self.insolid=0
             return 0
@@ -244,7 +244,7 @@ if __name__=="__main__":
                 working.remove(j[1])
             else:
                 break
-        
+
         print i,len(working)
     emitstl("../../Downloads/frame-vertex-neo-foot-x4-a.stl",s.facets,"emitted_object")
 #stl("../prusamendel/stl/mendelplate.stl")

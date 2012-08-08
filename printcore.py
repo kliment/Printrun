@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
 # This file is part of the Printrun suite.
-# 
+#
 # Printrun is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Printrun is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -45,7 +45,7 @@ class printcore():
         self.clear = 0 #clear to send, enabled after responses
         self.online = False #The printer has responded to the initial command and is active
         self.printing = False #is a print currently running, true if printing, false if paused
-        self.mainqueue = [] 
+        self.mainqueue = []
         self.priqueue = []
         self.queueindex = 0
         self.lineno = 0
@@ -69,7 +69,7 @@ class printcore():
         self.print_thread = None
         if port is not None and baud is not None:
             self.connect(port, baud)
-        
+
     def disconnect(self):
         """Disconnects from printer and pauses the print
         """
@@ -82,7 +82,7 @@ class printcore():
         self.printer = None
         self.online = False
         self.printing = False
-        
+
     def connect(self,port=None,baud=None):
         """Set port and baudrate if given, then connect to printer
         """
@@ -98,7 +98,7 @@ class printcore():
             self.stop_read_thread = False
             self.read_thread = Thread(target=self._listen)
             self.read_thread.start()
-            
+
     def reset(self):
         """Reset the printer
         """
@@ -106,7 +106,7 @@ class printcore():
             self.printer.setDTR(1)
             time.sleep(0.2)
             self.printer.setDTR(0)
-            
+
     def _readline(self):
         try:
             line = self.printer.readline()
@@ -164,11 +164,11 @@ class printcore():
                 self.clear = True
             if line.startswith('ok') and "T:" in line and self.tempcb:
                     #callback for temp, status, whatever
-                    try: self.tempcb(line)
-                    except: pass
+                try: self.tempcb(line)
+                except: pass
             elif line.startswith('Error'):
                 if self.errorcb:
-                    #callback for errors
+                #callback for errors
                     try: self.errorcb(line)
                     except: pass
             if line.lower().startswith("resend") or line.startswith("rs"):
@@ -181,10 +181,10 @@ class printcore():
                 self.resendfrom = toresend
                 self.clear = True
         self.clear = True
-        
+
     def _checksum(self, command):
         return reduce(lambda x,y:x^y, map(ord, command))
-        
+
     def startprint(self, data, startindex = 0):
         """Start a print, data is an array of gcode commands.
         returns True on success, False if already printing.
@@ -205,7 +205,7 @@ class printcore():
         self.print_thread = Thread(target = self._print)
         self.print_thread.start()
         return True
-        
+
     def pause(self):
         """Pauses the print, saving the current position.
         """
@@ -213,7 +213,7 @@ class printcore():
         self.printing = False
         self.print_thread.join()
         self.print_thread = None
-        
+
     def resume(self):
         """Resumes a paused print.
         """
@@ -221,11 +221,11 @@ class printcore():
         self.printing = True
         self.print_thread = Thread(target = self._print)
         self.print_thread.start()
-    
+
     def send(self, command, wait = 0):
         """Adds a command to the checksummed main command queue if printing, or sends the command immediately if not printing
         """
-        
+
         if self.online:
             if self.printing:
                 self.mainqueue.append(command)
@@ -243,7 +243,7 @@ class printcore():
                     wait -= 1
         else:
             print "Not connected to printer."
-    
+
     def send_now(self, command, wait = 0):
         """Sends a command to the printer ahead of the command queue, without a checksum
         """
@@ -263,7 +263,7 @@ class printcore():
                     wait -= 1
         else:
             print "Not connected to printer."
-        
+
     def _print(self):
         if self.startcb:
             #callback for printing started
@@ -278,7 +278,7 @@ class printcore():
             #callback for printing done
             try: self.endcb()
             except: pass
-        
+
     def _sendnext(self):
         if not self.printer:
             return
@@ -313,7 +313,7 @@ class printcore():
                 self.queueindex = 0
                 self.lineno = 0
                 self._send("M110", -1, True)
-            
+
     def _send(self, command, lineno = 0, calcchecksum = False):
         if calcchecksum:
             prefix = "N" + str(lineno) + " " + command

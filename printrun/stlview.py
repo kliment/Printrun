@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
 # This file is part of the Printrun suite.
-# 
+#
 # Printrun is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Printrun is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -304,14 +304,14 @@ class gcview(object):
                                              ('v3f/static', vertices),
                                              ('n3f/static', normals)))
         if lasth is not None:
-                    self.layers[lasth] = pyglet.graphics.Batch()
-                    indices = range(len(layertemp[lasth][0]))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
-                    self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
-                                             GL_TRIANGLES,
-                                             None,  # group,
-                                             indices,
-                                             ('v3f/static', layertemp[lasth][0]),
-                                             ('n3f/static', layertemp[lasth][1])))
+            self.layers[lasth] = pyglet.graphics.Batch()
+            indices = range(len(layertemp[lasth][0]))  # [[3*i,3*i+1,3*i+2] for i in xrange(len(facets))]
+            self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
+                                     GL_TRIANGLES,
+                                     None,  # group,
+                                     indices,
+                                     ('v3f/static', layertemp[lasth][0]),
+                                     ('n3f/static', layertemp[lasth][1])))
 
     def genline(self, i, h, w):
         S = i[0][:3]
@@ -356,28 +356,28 @@ class gcview(object):
         return spoints, epoints, S, E
 
     def transform(self, line):
-            line = line.split(";")[0]
-            cur = self.prev[:]
-            if len(line) > 0:
-                if "G1" in line or "G0" in line or "G92" in line:
-                    if("X" in line):
-                        cur[0] = float(line.split("X")[1].split(" ")[0])
-                    if("Y" in line):
-                        cur[1] = float(line.split("Y")[1].split(" ")[0])
-                    if("Z" in line):
-                        cur[2] = float(line.split("Z")[1].split(" ")[0])
-                    if("E" in line):
-                        cur[3] = float(line.split("E")[1].split(" ")[0])
-                    if self.prev == cur:
-                        return None
-                    if self.fline or "G92" in line:
-                        self.prev = cur
-                        self.fline = 0
-                        return None
-                    else:
-                        r = [self.prev, cur]
-                        self.prev = cur
-                        return r
+        line = line.split(";")[0]
+        cur = self.prev[:]
+        if len(line) > 0:
+            if "G1" in line or "G0" in line or "G92" in line:
+                if("X" in line):
+                    cur[0] = float(line.split("X")[1].split(" ")[0])
+                if("Y" in line):
+                    cur[1] = float(line.split("Y")[1].split(" ")[0])
+                if("Z" in line):
+                    cur[2] = float(line.split("Z")[1].split(" ")[0])
+                if("E" in line):
+                    cur[3] = float(line.split("E")[1].split(" ")[0])
+                if self.prev == cur:
+                    return None
+                if self.fline or "G92" in line:
+                    self.prev = cur
+                    self.fline = 0
+                    return None
+                else:
+                    r = [self.prev, cur]
+                    self.prev = cur
+                    return r
 
     def delete(self):
         for i in self.vlists:
@@ -570,27 +570,27 @@ class TestGlPanel(GLPanel):
                 self.initpos = None
 
         elif event.Dragging() and event.RightIsDown() and event.ShiftDown():
-                if self.initpos is None:
-                    self.initpos = event.GetPositionTuple()
-                else:
-                    p1 = self.initpos
-                    p2 = event.GetPositionTuple()
-                    sz = self.GetClientSize()
-                    p1 = list(p1)
-                    p2 = list(p2)
-                    p1[1] *= -1
-                    p2[1] *= -1
+            if self.initpos is None:
+                self.initpos = event.GetPositionTuple()
+            else:
+                p1 = self.initpos
+                p2 = event.GetPositionTuple()
+                sz = self.GetClientSize()
+                p1 = list(p1)
+                p2 = list(p2)
+                p1[1] *= -1
+                p2[1] *= -1
 
-                    self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
+                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
 
-                    glLoadIdentity()
-                    glTranslatef(self.transv[0], self.transv[1], 0)
-                    glTranslatef(0, 0, self.transv[2])
-                    if(self.rot):
-                        glMultMatrixd(build_rotmatrix(self.basequat))
-                    glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                    self.rot = 1
-                    self.initpos = None
+                glLoadIdentity()
+                glTranslatef(self.transv[0], self.transv[1], 0)
+                glTranslatef(0, 0, self.transv[2])
+                if(self.rot):
+                    glMultMatrixd(build_rotmatrix(self.basequat))
+                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
+                self.rot = 1
+                self.initpos = None
         else:
             #mouse is moving without a button press
             p = event.GetPositionTuple()

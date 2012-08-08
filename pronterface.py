@@ -49,7 +49,7 @@ from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
 from printrun.printrun_utils import pixmapfile, configfile
 import pronsole
- 
+
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
@@ -316,7 +316,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.settbtn.SetForegroundColour, "")
             wx.CallAfter(self.htemp.SetBackgroundColour, "white")
             wx.CallAfter(self.htemp.Refresh)
-    
+
     def do_settemp(self, l = ""):
         try:
             if not l.__class__ in (str, unicode) or not len(l):
@@ -579,7 +579,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
 
         #uts.Add((25,-1))
-        
+
         #uts.Add((15,-1),flag=wx.EXPAND)
         #uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
 
@@ -642,7 +642,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #lls.Add((200,375))
 
         szbuttons=wx.GridBagSizer()
-        
+
         self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked, self.spacebarAction, self.settings.bgcolor)
         szbuttons.Add(self.xyb,pos=(0,1),flag=wx.ALIGN_CENTER)
         self.zb = ZButtons(self.panel, self.moveZ, self.settings.bgcolor)
@@ -738,7 +738,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.btemp.SetValue(i)
         for i in htemp_choices:
             if i.split()[0] == str(self.settings.last_temperature).split('.')[0] or i.split()[0] == str(self.settings.last_temperature) :
-               self.htemp.SetValue(i)
+                self.htemp.SetValue(i)
 
         if( '(' not in self.btemp.Value):
             self.btemp.SetValue(self.btemp.Value + ' (user)')
@@ -748,7 +748,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #lls.Add(self.btemp,pos=(4,1),span=(1,3))
         #lls.Add(self.setbbtn,pos=(4,4),span=(1,2))
         self.tempdisp=wx.StaticText(self.panel,-1,"")
-        
+
         self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,-1))
         self.edist.SetBackgroundColour((225,200,200))
         self.edist.SetForegroundColour("black")
@@ -767,7 +767,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.SetBackgroundColour((180,255,180))
         self.zfeedc.SetForegroundColour("black")
         # lls.Add((10,0),pos=(0,11),span=(1,1))
-        
+
         #self.hottgauge=TempGauge(self.panel,size=(200,24),title=_("Heater:"),maxval=230)
         #lls.Add(self.hottgauge,pos=(7,0),span=(1,4))
         #self.bedtgauge=TempGauge(self.panel,size=(200,24),title=_("Bed:"),maxval=130)
@@ -778,11 +778,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #   elif e.GetWheelRotation()<0:
         #       self.do_settemp(str(max(0,self.hsetpoint-1)))
         #self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
-        
+
         self.graph = Graph(self.panel, wx.ID_ANY)
         lls.Add(self.graph, pos=(3,5), span=(3,3))
         lls.Add(self.tempdisp,pos=(6,0),span=(1,1))
-        
+
         self.gviz=gviz.gviz(self.panel,(300,300),
             build_dimensions=self.build_dimensions_list,
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
@@ -845,12 +845,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.commandbox.SetSelection(0,len(self.commandbox.history[self.commandbox.histindex]))
         elif e.GetKeyCode()==wx.WXK_DOWN:
             if self.commandbox.histindex==len(self.commandbox.history):
-                    self.commandbox.history+=[self.commandbox.GetValue()] #save current command
+                self.commandbox.history+=[self.commandbox.GetValue()] #save current command
             if len(self.commandbox.history):
                 self.commandbox.histindex=(self.commandbox.histindex+1)%len(self.commandbox.history)
                 self.commandbox.SetValue(self.commandbox.history[self.commandbox.histindex])
                 self.commandbox.SetSelection(0,len(self.commandbox.history[self.commandbox.histindex]))
-        
+
         else:
             e.Skip()
 
@@ -957,10 +957,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON,self.cbutton_edit)
                 else:
-                   b=wx.Button(self.panel,-1,".",size=(1,1))
-                   #b=wx.StaticText(self.panel,-1,"",size=(72,22),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
-                   b.Disable()
-                   #continue
+                    b=wx.Button(self.panel,-1,".",size=(1,1))
+                    #b=wx.StaticText(self.panel,-1,"",size=(72,22),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
+                    b.Disable()
+                    #continue
             b.custombutton=i
             b.properties=btndef
             if btndef is not None:
@@ -984,9 +984,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         def nextarg(rest):
             rest=rest.lstrip()
             if rest.startswith('"'):
-               return rest[1:].split('"',1)
+                return rest[1:].split('"',1)
             else:
-               return rest.split(None,1)
+                return rest.split(None,1)
         #try:
         num,argstr=nextarg(argstr)
         num=int(num)
@@ -1385,7 +1385,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 except:
                     break
         wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
-    
+
     def capture(self, func, *args, **kwargs):
         stdout=sys.stdout
         cout=None
@@ -1518,7 +1518,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.f=[i.replace("\n","").replace("\r","") for i in of]
             of.close()
             if self.p.online:
-                    wx.CallAfter(self.printbtn.Enable)
+                wx.CallAfter(self.printbtn.Enable)
 
             wx.CallAfter(self.status.SetStatusText,_("Loaded ")+self.filename+_(", %d lines") % (len(self.f),))
             wx.CallAfter(self.pausebtn.Disable)
@@ -1553,7 +1553,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
         dlg=wx.FileDialog(self,_("Open file to print"),basedir,style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-	dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
+        dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
         if(filename is not None or dlg.ShowModal() == wx.ID_OK):
             if filename is not None:
                 name=filename
@@ -1810,4 +1810,3 @@ if __name__ == '__main__':
         app.MainLoop()
     except:
         pass
-
