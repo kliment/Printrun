@@ -1744,7 +1744,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.status_thread.join()
             self.status_thread = None
 
-        self.connectbtn.SetLabel("Connect")
+        self.connectbtn.SetLabel(_("Connect"))
         self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
 
