@@ -134,19 +134,24 @@ class printcore():
         return not self.stop_read_thread and self.printer and self.printer.isOpen()
 
     def _listen_until_online(self):
-        orig_timeout = self.printer.timeout
-        self.printer.timeout = 3
         while not self.online and self._listen_can_continue():
             self._send("M105")
+            empty_lines = 0
             while self._listen_can_continue():
                 line = self._readline()
-                if not line:
-                    break
+                if line == None: break # connection problem
+                # workaround cases where M105 was sent before printer Serial
+                # was online an empty line means read timeout was reached,
+                # meaning no data was received thus we count those empty lines,
+                # and once we have seen 5 in a row, we just break and send a
+                # new M105
+                if not line: empty_lines += 1
+                else: empty_lines = 0
+                if empty_lines == 5: break
                 if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                     if self.onlinecb:
                         try: self.onlinecb()
                         except: pass
-                    self.printer.timeout = orig_timeout
                     self.online = True
                     return
             time.sleep(0.25)
