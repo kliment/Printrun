@@ -607,7 +607,7 @@ msgstr "Reprendre"
 
 #: pronterface.py:1688
 msgid "Connecting..."
-msgstr "Connection en cours..."
+msgstr "Connexion en cours..."
 
 #: pronterface.py:1738
 msgid "Disconnected."
