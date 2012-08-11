@@ -134,6 +134,8 @@ class printcore():
         return not self.stop_read_thread and self.printer and self.printer.isOpen()
 
     def _listen_until_online(self):
+        orig_timeout = self.printer.timeout
+        self.printer.timeout = 3
         while not self.online and self._listen_can_continue():
             self._send("M105")
             while self._listen_can_continue():
@@ -144,6 +146,7 @@ class printcore():
                     if self.onlinecb:
                         try: self.onlinecb()
                         except: pass
+                    self.printer.timeout = orig_timeout
                     self.online = True
                     return
             time.sleep(0.25)
