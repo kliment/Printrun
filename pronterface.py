@@ -436,6 +436,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
 
         self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("Slicing Settings"),_(" Adjust slicing settings")))
+
+        mItem = m.AppendCheckItem(-1, _("Debug G-code"),
+            _("Print all G-code sent to and received from the printer."))
+        m.Check(mItem.GetId(), self.p.loud)
+        self.Bind(wx.EVT_MENU, self.setloud, mItem)
+
         #try:
         #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
         #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
@@ -1317,7 +1323,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         else:
             wx.CallAfter(self.graph.StopPlotting)
 
-
+    def setloud(self,e):
+        self.p.loud=e.IsChecked()
 
     def sendline(self,e):
         command=self.commandbox.GetValue()
