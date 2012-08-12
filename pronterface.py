@@ -1425,7 +1425,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 pass
         tstring=l.rstrip()
         #print tstring
-        if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring):
+        if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring) and (not self.p.loud):
            # print "*"+tstring+"*"
            # print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
             wx.CallAfter(self.logbox.AppendText,tstring+"\n")
