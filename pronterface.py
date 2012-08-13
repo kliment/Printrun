@@ -436,6 +436,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
 
         self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("Slicing Settings"),_(" Adjust slicing settings")))
+
+        mItem = m.AppendCheckItem(-1, _("Debug G-code"),
+            _("Print all G-code sent to and received from the printer."))
+        m.Check(mItem.GetId(), self.p.loud)
+        self.Bind(wx.EVT_MENU, self.setloud, mItem)
+
         #try:
         #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
         #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
@@ -543,14 +549,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.rescanbtn=wx.Button(self.panel,-1,_("Port"),size=buttonSize)
         self.rescanbtn.SetToolTip(wx.ToolTip("Communication Settings\nClick to rescan ports"))
         self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
-
         uts.Add(self.rescanbtn,0,wx.TOP|wx.LEFT,0)
+
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
                 style=wx.CB_DROPDOWN, size=(100, 25))
         self.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
         self.rescanports()
         uts.Add(self.serialport)
+
         uts.Add(wx.StaticText(self.panel,-1,"@"),0,wx.RIGHT|wx.ALIGN_CENTER,0)
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
@@ -562,20 +569,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         uts.Add(self.baud)
+
         self.connectbtn=wx.Button(self.panel,-1,_("Connect"),  size=buttonSize)
-        uts.Add(self.connectbtn)
         self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
+        uts.Add(self.connectbtn)
+
         self.resetbtn=wx.Button(self.panel,-1,_("Reset"),style=wx.BU_EXACTFIT,size=(-1,buttonSize[1]))
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
         self.resetbtn.SetToolTip(wx.ToolTip("Reset the printer"))
         uts.Add(self.resetbtn)
-        #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
-        #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
 
         #uts.Add((25,-1))
         
         #uts.Add((15,-1),flag=wx.EXPAND)
+        #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
+        #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
         #uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
 
         #SECOND ROW
@@ -1314,7 +1323,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         else:
             wx.CallAfter(self.graph.StopPlotting)
 
-
+    def setloud(self,e):
+        self.p.loud=e.IsChecked()
 
     def sendline(self,e):
         command=self.commandbox.GetValue()
