@@ -153,6 +153,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
+        if(self.filename is not None):
+          self.do_load(self.filename)
 
     def startcb(self):
         self.starttime=time.time()
@@ -1400,6 +1402,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.skeining=1
         thread(target=self.skein_func).start()
         thread(target=self.skein_monitor).start()
+
+    def do_load(self,l):
+      if hasattr(self, 'skeining'):
+        self.loadfile(None, l)
+      else:
+        self._do_load(l)
 
     def loadfile(self,event,filename=None):
         if self.skeining and self.skeinp is not None:
