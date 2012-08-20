@@ -1,17 +1,6 @@
 # Sample .pronsolerc file - copy this into your home directory and rename it to .pronsolerc
 !print "Loaded " + self.rc_filename
 
-macro loud
-  !if self.p.loud:
-    !self.p.loud = 0
-    !if hasattr(self,"cur_button") and self.cur_button is not None: 
-      !self.onecmd('button %d "loud (off)" /c green loud' % self.cur_button)
-  !else:
-    !self.p.loud = 1
-    !if hasattr(self,"cur_button") and self.cur_button is not None: 
-      !self.onecmd('button %d "loud (on)" /c yellow loud' % self.cur_button)
-button 0 "loud (off)" /c "green" loud
-
 macro fan
   !global _fan
   !if '_fan' in globals() and _fan:
@@ -24,4 +13,4 @@ macro fan
     M106
     !if hasattr(self,"cur_button") and self.cur_button is not None: 
       !self.onecmd('button %d "fan (on)" /c yellow fan' % self.cur_button)
-button 1 "fan (off)" /c "green" fan
+button 0 "fan (off)" /c "green" fan

@@ -173,6 +173,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.webInterface=webinterface.WebInterface(self)
             self.webThread = Thread(target=webinterface.StartWebInterfaceThread, args=(self.webInterface, ))
             self.webThread.start()
+        if(self.filename is not None):
+          self.do_load(self.filename)
 
     def startcb(self):
         self.starttime=time.time()
@@ -434,6 +436,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1,_("&Options"),_(" Options dialog")))
 
         self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("Slicing Settings"),_(" Adjust slicing settings")))
+
+        mItem = m.AppendCheckItem(-1, _("Debug G-code"),
+            _("Print all G-code sent to and received from the printer."))
+        m.Check(mItem.GetId(), self.p.loud)
+        self.Bind(wx.EVT_MENU, self.setloud, mItem)
+
         #try:
         #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
         #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
@@ -483,13 +491,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if macro == "": return self.new_macro()
         if self.macros.has_key(macro):
             old_def = self.macros[macro]
-        elif hasattr(self.__class__,"do_"+macro):
-            print _("Name '%s' is being used by built-in command") % macro
-            return
-        elif len([c for c in macro if not c.isalnum() and c != "_"]):
-            print _("Macro name may contain only alphanumeric symbols and underscores")
+        elif len([c for c in macro.encode("ascii","replace") if not c.isalnum() and c != "_"]):
+            print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
             if webavail:
                 self.webInterface.AddLog("Macro name may contain only alphanumeric symbols and underscores")
+            return
+        elif hasattr(self.__class__,"do_"+macro):
+            print _("Name '%s' is being used by built-in command") % macro
             return
         else:
             old_def = ""
@@ -541,14 +549,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.rescanbtn=wx.Button(self.panel,-1,_("Port"),size=buttonSize)
         self.rescanbtn.SetToolTip(wx.ToolTip("Communication Settings\nClick to rescan ports"))
         self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
-
         uts.Add(self.rescanbtn,0,wx.TOP|wx.LEFT,0)
+
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices=self.scanserial(),
                 style=wx.CB_DROPDOWN, size=(100, 25))
         self.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
         self.rescanports()
         uts.Add(self.serialport)
+
         uts.Add(wx.StaticText(self.panel,-1,"@"),0,wx.RIGHT|wx.ALIGN_CENTER,0)
         self.baud = wx.ComboBox(self.panel, -1,
                 choices=["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
@@ -560,20 +569,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         uts.Add(self.baud)
+
         self.connectbtn=wx.Button(self.panel,-1,_("Connect"),  size=buttonSize)
-        uts.Add(self.connectbtn)
         self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
+        uts.Add(self.connectbtn)
+
         self.resetbtn=wx.Button(self.panel,-1,_("Reset"),style=wx.BU_EXACTFIT,size=(-1,buttonSize[1]))
         self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
         self.resetbtn.SetToolTip(wx.ToolTip("Reset the printer"))
         uts.Add(self.resetbtn)
-        #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
-        #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
 
         #uts.Add((25,-1))
         
         #uts.Add((15,-1),flag=wx.EXPAND)
+        #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
+        #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
         #uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
 
         #SECOND ROW
@@ -948,7 +959,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON,self.cbutton_edit)
                 else:
-                    continue
+                   b=wx.Button(self.panel,-1,".",size=(1,1))
+                   #b=wx.StaticText(self.panel,-1,"",size=(72,22),style=wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
+                   b.Disable()
+                   #continue
             b.custombutton=i
             b.properties=btndef
             if btndef is not None:
@@ -1112,13 +1126,25 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if not hasattr(self,"dragging"):
                 # init dragging of the custom button
                 if hasattr(obj,"custombutton") and obj.properties is not None:
-                    self.newbuttonbutton.SetLabel("")
-                    self.newbuttonbutton.SetFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL))
-                    self.newbuttonbutton.SetForegroundColour("black")
-                    self.newbuttonbutton.SetSize(obj.GetSize())
-                    if self.upperbottomsizer.GetItem(self.newbuttonbutton) is not None:
-                        self.upperbottomsizer.SetItemMinSize(self.newbuttonbutton,obj.GetSize())
-                        self.topsizer.Layout()
+                    #self.newbuttonbutton.SetLabel("")
+                    #self.newbuttonbutton.SetFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL))
+                    #self.newbuttonbutton.SetForegroundColour("black")
+                    #self.newbuttonbutton.SetSize(obj.GetSize())
+                    #if self.upperbottomsizer.GetItem(self.newbuttonbutton) is not None:
+                    #    self.upperbottomsizer.SetItemMinSize(self.newbuttonbutton,obj.GetSize())
+                    #    self.topsizer.Layout()
+                    for b in self.custombuttonbuttons:
+                        #if b.IsFrozen(): b.Thaw()
+                        if b.properties is None:
+                            b.Enable()
+                            b.SetLabel("")
+                            b.SetFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL))
+                            b.SetForegroundColour("black")
+                            b.SetSize(obj.GetSize())
+                            if self.upperbottomsizer.GetItem(b) is not None:
+                                self.upperbottomsizer.SetItemMinSize(b,obj.GetSize())
+                                self.topsizer.Layout()
+                        #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.dragging = wx.Button(self.panel,-1,obj.GetLabel(),style=wx.BU_EXACTFIT)
                     self.dragging.SetBackgroundColour(obj.GetBackgroundColour())
                     self.dragging.SetForegroundColour(obj.GetForegroundColour())
@@ -1126,11 +1152,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.dragging.Raise()
                     self.dragging.Disable()
                     self.dragging.SetPosition(self.panel.ScreenToClient(scrpos))
-                    for b in self.custombuttonbuttons:
-                        #if b.IsFrozen(): b.Thaw()
-                        if b.properties is None:
-                            b.Enable()
-                        #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.last_drag_dest = obj
                     self.dragging.label = obj.s_label = obj.GetLabel()
                     self.dragging.bgc = obj.s_bgc = obj.GetBackgroundColour()
@@ -1311,6 +1332,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if webavail:
             self.webInterface.AppendLog(text)
         
+    def setloud(self,e):
+        self.p.loud=e.IsChecked()
 
     def sendline(self,e):
         command=self.commandbox.GetValue()
@@ -1409,7 +1432,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 pass
         tstring=l.rstrip()
         #print tstring
-        if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring):
+        if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring) and (not self.p.loud):
            # print "*"+tstring+"*"
            # print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
             wx.CallAfter(self.addtexttolog,tstring+"\n");
@@ -1537,6 +1560,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.skeining=1
         thread(target=self.skein_func).start()
         thread(target=self.skein_monitor).start()
+
+    def do_load(self,l):
+      if hasattr(self, 'skeining'):
+        self.loadfile(None, l)
+      else:
+        self._do_load(l)
 
     def loadfile(self,event,filename=None):
         if self.skeining and self.skeinp is not None:
@@ -2067,10 +2096,10 @@ class TempGauge(wx.Panel):
         #gc.DrawText(text,29,-2)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
         gc.DrawText(self.title,x0+19,y0+4)
-        gc.DrawText(text,      x0+133,y0+4)
+        gc.DrawText(text,      x0+119,y0+4)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD)))
         gc.DrawText(self.title,x0+18,y0+3)
-        gc.DrawText(text,      x0+132,y0+3)
+        gc.DrawText(text,      x0+118,y0+3)
 
 if __name__ == '__main__':
     app = wx.App(False)

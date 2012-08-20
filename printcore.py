@@ -147,13 +147,19 @@ class printcore():
                         pass
                 #callback for errors
                 pass
+            # Teststrings for resend parsing       # Firmware     exp. result
+            # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
-                try:
-                    toresend=int(line.replace("N:"," ").replace("N"," ").replace(":"," ").split()[-1])
-                except:
-                    if line.startswith("rs"):
-                        toresend=int(line.split()[1])
-                self.resendfrom=toresend
+                line=line.replace("N:"," ").replace("N"," ").replace(":"," ")
+                linewords=line.split()
+                while len(linewords) != 0:
+                    try:
+                        toresend=int(linewords.pop(0))
+                        self.resendfrom=toresend
+                        #print str(toresend)
+                        break
+                    except:
+                        pass
                 self.clear=True
         self.clear=True
         #callback for disconnect
