@@ -390,10 +390,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.capture_skip[pat] -= 1
                 self.capture_skip_newline = True
                 return
-        wx.CallAfter(self.logbox.AppendText,l)
-        if webavail:
-            self.webInterface.AppendLog(l)
-
+        wx.CallAfter(self.addtexttolog,l);
+        
     def scanserial(self):
         """scan for available ports. return a list of device names."""
         baselist=[]
@@ -1304,15 +1302,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         else:
             wx.CallAfter(self.graph.StopPlotting)
 
-
+    def addtexttolog(self,text):
+        try:
+            self.logbox.AppendText(text)
+        except:
+            print "attempted to write invalid text to console"
+            pass
+        if webavail:
+            self.webInterface.AppendLog(text)
+        
 
     def sendline(self,e):
         command=self.commandbox.GetValue()
         if not len(command):
             return
-        wx.CallAfter(self.logbox.AppendText,">>>"+command+"\n")
-        if webavail:
-            self.webInterface.AppendLog(">>>"+command+"\n")
+        wx.CallAfter(self.addtexttolog,">>>"+command+"\n");
         self.onecmd(str(command))
         self.commandbox.SetSelection(0,len(command))
         self.commandbox.history+=[command]
@@ -1408,7 +1412,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring):
            # print "*"+tstring+"*"
            # print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
-            wx.CallAfter(self.logbox.AppendText,tstring+"\n")
+            wx.CallAfter(self.addtexttolog,tstring+"\n");
         for i in self.recvlisteners:
             i(l)
 
