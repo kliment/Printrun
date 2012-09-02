@@ -410,7 +410,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
 
     def project(self,event):
-        import projectlayer
+        from printrun import projectlayer
         if(self.p.online):
             projectlayer.setframe(self,self.p).Show()
         else:
@@ -794,7 +794,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.gviz.showall=1
         try:
             raise ""
-            import stlview
+            from printrun import stlview
             self.gwindow=stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(600,600))
         except:
             self.gwindow=gviz.window([],

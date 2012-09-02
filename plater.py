@@ -35,7 +35,7 @@ from printrun.printrun_utils import pixmapfile
 glview = False
 if "-nogl" not in sys.argv:
     try:
-        import stlview
+        from printrun import stlview
         glview = True
     except:
         pass
