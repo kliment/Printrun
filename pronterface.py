@@ -17,23 +17,18 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-import os, gettext, Queue, re
+import os, Queue, re
 
-if os.path.exists('/usr/share/pronterface/locale'):
-    gettext.install('pronterface', '/usr/share/pronterface/locale', unicode=1)
-else:
-    gettext.install('pronterface', './locale', unicode=1)
+from printrun.printrun_utils import install_locale
+install_locale('pronterface')
 
 try:
     import wx
 except:
     print _("WX is not installed. This program requires WX to run.")
     raise
-import printcore, sys, glob, time, threading, traceback, gviz, traceback, cStringIO, subprocess
-try:
-    os.chdir(os.path.split(__file__)[0])
-except:
-    pass
+import sys, glob, time, threading, traceback, cStringIO, subprocess
+
 StringIO=cStringIO
 
 thread=threading.Thread
@@ -49,23 +44,18 @@ if os.name=="nt":
         pass
 
 
-
-from xybuttons import XYButtons
-from zbuttons import ZButtons
-from graph import Graph
+from printrun import printcore, gviz
+from printrun.xybuttons import XYButtons
+from printrun.zbuttons import ZButtons
+from printrun.graph import Graph
+from printrun.printrun_utils import pixmapfile, configfile
 import pronsole
-
-webavail = False
-try :
-    if webavail:
-        import cherrypy, webinterface
-        from threading import Thread
-except:
-    print _("CherryPy is not installed. Web Interface Disabled.")
-    webavail = False
-    
+ 
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
+
+def parse_temperature_report(report, key):
+    return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
 
 class Tee(object):
     def __init__(self, target):
@@ -106,7 +96,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
         wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
-        self.SetIcon(wx.Icon("P-face.ico",wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(pixmapfile("P-face.ico"),wx.BITMAP_TYPE_ICO))
         self.panel=wx.Panel(self,-1,size=size)
 
         self.statuscheck=False
@@ -135,7 +125,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict={}
         try:
-            execfile("custombtn.txt",customdict)
+            execfile(configfile("custombtn.txt"),customdict)
             if len(customdict["btns"]):
                 if not len(self.custombuttons):
                     try:
@@ -169,11 +159,22 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
-        if webavail:
-            self.webInterface=webinterface.WebInterface(self)
-            self.webThread = Thread(target=webinterface.StartWebInterfaceThread, args=(self.webInterface, ))
-            self.webThread.start()
-        if(self.filename is not None):
+        self.webInterface=None
+        if self.webrequested:
+            try :
+                import cherrypy
+                from printrun import webinterface
+            except:
+                print _("CherryPy is not installed. Web Interface Disabled.")
+            try:
+                self.webInterface=webinterface.WebInterface(self)
+                self.webThread=threading.Thread(target=webinterface.StartWebInterfaceThread, args=(self.webInterface, ))
+                self.webThread.start()
+            except:
+                print _("Failed to start web interface")
+                traceback.print_exc(file = sys.stdout)
+                self.webInterface = None
+        if self.filename is not None:
           self.do_load(self.filename)
 
     def startcb(self):
@@ -272,7 +273,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.bedtgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetBedTargetTemperature,int(f))
         if f>0:
-            wx.CallAfter(self.btemp.SetValue,l)
+            wx.CallAfter(self.btemp.SetValue,str(f))
             self.set("last_bed_temperature",str(f))
             wx.CallAfter(self.setboff.SetBackgroundColour,"")
             wx.CallAfter(self.setboff.SetForegroundColour,"")
@@ -292,7 +293,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.hottgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetExtruder0TargetTemperature,int(f))
         if f>0:
-            wx.CallAfter(self.htemp.SetValue,l)
+            wx.CallAfter(self.htemp.SetValue,str(f))
             self.set("last_temperature",str(f))
             wx.CallAfter(self.settoff.SetBackgroundColour,"")
             wx.CallAfter(self.settoff.SetForegroundColour,"")
@@ -309,7 +310,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     
     def do_settemp(self,l=""):
         try:
-            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
+            if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or not l:
                 l=str(self.htemp.GetValue().split()[0])
             l=l.lower().replace(",",".")
             for i in self.temps.keys():
@@ -326,7 +327,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
         except Exception,x:
             print _("You must enter a temperature. (%s)" % (repr(x),))
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("You must enter a temperature. (%s)" % (repr(x),))
 
     def do_bedtemp(self,l=""):
@@ -344,15 +345,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.setbedgui(f)
                 else:
                     print _("Printer is not online.")
-                    if webavail:
+                    if self.webInterface:
                         self.webInterface.AddLog("Printer is not online.")
             else:
                 print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
-                if webavail:
+                if self.webInterface:
                     self.webInterface.AddLog("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
         except:
             print _("You must enter a temperature.")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("You must enter a temperature.")
 
     def end_macro(self):
@@ -373,7 +374,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                             self.delete_macro(macro_name)
                             return
                     print _("Cancelled.")
-                    if webavail:
+                    if self.webInterface:
                         self.webInterface.AddLog("Cancelled.")
                     return
                 self.cur_macro_name = macro_name
@@ -393,7 +394,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.capture_skip_newline = True
                 return
         wx.CallAfter(self.addtexttolog,l);
-        
+
     def scanserial(self):
         """scan for available ports. return a list of device names."""
         baselist=[]
@@ -409,12 +410,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
 
     def project(self,event):
-        import projectlayer
+        from printrun import projectlayer
         if(self.p.online):
             projectlayer.setframe(self,self.p).Show()
         else:
             print _("Printer is not online.")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("Printer is not online.")
 
     def popmenu(self):
@@ -493,7 +494,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             old_def = self.macros[macro]
         elif len([c for c in macro.encode("ascii","replace") if not c.isalnum() and c != "_"]):
             print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("Macro name may contain only alphanumeric symbols and underscores")
             return
         elif hasattr(self.__class__,"do_"+macro):
@@ -793,7 +794,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.gviz.showall=1
         try:
             raise ""
-            import stlview
+            from printrun import stlview
             self.gwindow=stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(600,600))
         except:
             self.gwindow=gviz.window([],
@@ -979,7 +980,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
-        if webavail:
+        if self.webInterface:
             self.webInterface.AddLog('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
 
     def do_button(self,argstr):
@@ -1003,7 +1004,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         command=argstr.strip()
         if num<0 or num>=64:
             print _("Custom button number should be between 0 and 63")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("Custom button number should be between 0 and 63")
             return
         while num >= len(self.custombuttons):
@@ -1271,7 +1272,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.cur_button=None
         except:
             print _("event object missing")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("event object missing")
             self.cur_button=None
             raise
@@ -1289,7 +1290,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             pass
         self.Destroy()
-        if webavail:
+        if self.webInterface:
+            from printrun import webinterface
             webinterface.KillWebInterfaceThread()
 
     def do_monitor(self,l=""):
@@ -1303,16 +1305,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 wx.CallAfter(self.monitorbox.SetValue,self.monitor_interval>0)
             except:
                 print _("Invalid period given.")
-                if webavail:
+                if self.webInterface:
                     self.webInterface.AddLog("Invalid period given.")
         self.setmonitor(None)
         if self.monitor:
             print _("Monitoring printer.")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("Monitoring printer.")
         else:
             print _("Done monitoring.")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("Done monitoring.")
 
 
@@ -1329,7 +1331,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         except:
             print "attempted to write invalid text to console"
             pass
-        if webavail:
+        if self.webInterface:
             self.webInterface.AppendLog(text)
         
     def setloud(self,e):
@@ -1361,10 +1363,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 #string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
-                    #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    wx.CallAfter(self.graph.SetExtruder0Temperature,float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    #self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
-                    wx.CallAfter(self.graph.SetBedTemperature,float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                    #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
+                    wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
+                    #self.bedtgauge.SetValue(parse_temperature_report(self.tempreport, "B:"))
+                    wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
                 except:
                     pass
                 fractioncomplete = 0.0
@@ -1401,6 +1403,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             wx.CallAfter(self.status.SetStatusText,_("Not connected to printer."))
         except:
             pass #if window has been closed
+    
     def capture(self, func, *args, **kwargs):
         stdout=sys.stdout
         cout=None
@@ -1425,11 +1428,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.tempreport=l
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
             try:
-                #self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                wx.CallAfter(self.graph.SetExtruder0Temperature,float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                wx.CallAfter(self.graph.SetBedTemperature,float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
+                wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
+                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
             except:
-                pass
+                traceback.print_exc()
         tstring=l.rstrip()
         #print tstring
         if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring) and (not self.p.loud):
@@ -1477,8 +1480,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
 
-
-
     def filesloaded(self):
         dlg=wx.SingleChoiceDialog(self, _("Select the file to print"), _("Pick SD file"), self.sdfiles)
         if(dlg.ShowModal()==wx.ID_OK):
@@ -1486,9 +1487,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if len(target):
                 self.recvlisteners+=[self.waitforsdresponse]
                 self.p.send_now("M23 "+target.lower())
-
         #print self.sdfiles
-        pass
 
     def getfiles(self):
         if not self.p.online:
@@ -1505,7 +1504,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             import shlex
             param = self.expandcommand(self.settings.slicecommand).encode()
             print "Slicing: ",param
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("Slicing: "+param)
             pararray=[i.replace("$s",self.filename).replace("$o",self.filename.replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
                 #print pararray
@@ -1518,7 +1517,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.stopsf=1
         except:
             print _("Failed to execute slicing software: ")
-            if webavail:
+            if self.webInterface:
                 self.webInterface.AddLog("Failed to execute slicing software: ")
             self.stopsf=1
             traceback.print_exc(file=sys.stdout)
@@ -1549,7 +1548,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         wx.CallAfter(self.loadbtn.SetLabel,_("Load File"))
         self.skeining=0
         self.skeinp=None
-
 
     def skein(self,filename):
         wx.CallAfter(self.loadbtn.SetLabel,_("Cancel"))
@@ -1612,7 +1610,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         Xtot,Ytot,Ztot,Xmin,Xmax,Ymin,Ymax,Zmin,Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
         print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
-        if webavail:
+        if self.webInterface:
             self.webInterface.AddLog(_("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot))
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
@@ -1706,7 +1704,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.p.resume()
             wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
 
-
     def sdprintfile(self,event):
         self.on_startprint()
         threading.Thread(target=self.getfiles).start()
@@ -1742,7 +1739,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.set("baudrate",str(baud))
         threading.Thread(target=self.statuschecker).start()
 
-
     def disconnect(self,event):
         print _("Disconnected.")
         self.p.disconnect()
@@ -1769,7 +1765,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.paused=0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
-
 
     def reset(self,event):
         print _("Reset.")
@@ -1858,8 +1853,6 @@ class macroed(wx.Dialog):
         if position == -1 :
          #   ShowMessage(self,-1,  "Not found!")
             titletext = wx.TextCtrl(self.panel,-1,"Not Found!")  
-
-                
         else:   
         # self.title.SetValue("Position : "+str(position))    
     
@@ -1885,7 +1878,7 @@ class macroed(wx.Dialog):
             self.callback(self.e.GetValue().split("\n"))
     def close(self,ev):
         self.Destroy()
-        if webavail:
+        if self.webInterface:
             webinterface.KillWebInterfaceThread()
     def unindent(self,text):
         self.indent_chars = text[:len(text)-len(text.lstrip())]
@@ -1970,6 +1963,7 @@ class ButtonEdit(wx.Dialog):
         topsizer.Add( (0,0),1)
         topsizer.Add(self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL),0,wx.ALIGN_CENTER)
         self.SetSizer(topsizer)
+
     def macrob_enabler(self,e):
         macro = self.command.GetValue()
         valid = False
@@ -1994,6 +1988,7 @@ class ButtonEdit(wx.Dialog):
             else:
                 valid = True
         self.macrob.Enable(valid)
+
     def macrob_handler(self,e):
         macro = self.command.GetValue()
         macro = self.pronterface.edit_macro(macro)
@@ -2002,6 +1997,7 @@ class ButtonEdit(wx.Dialog):
             self.name.SetValue(macro)
 
 class TempGauge(wx.Panel):
+
     def __init__(self,parent,size=(200,22),title="",maxval=240,gaugeColour=None):
         wx.Panel.__init__(self,parent,-1,size=size)
         self.Bind(wx.EVT_PAINT,self.paint)
@@ -2013,17 +2009,21 @@ class TempGauge(wx.Panel):
         self.value=0
         self.setpoint=0
         self.recalc()
+
     def recalc(self):
         mmax=max(int(self.setpoint*1.05),self.max)
         self.scale=float(self.width-2)/float(mmax)
         self.ypt=max(16,int(self.scale*max(self.setpoint,self.max/6)))
+
     def SetValue(self,value):
         self.value=value
         wx.CallAfter(self.Refresh)
+
     def SetTarget(self,value):
         self.setpoint=value
         self.recalc()
         wx.CallAfter(self.Refresh)
+
     def interpolatedColour(self,val,vmin,vmid,vmax,cmin,cmid,cmax):
         if val < vmin: return cmin
         if val > vmax: return cmax
@@ -2035,6 +2035,7 @@ class TempGauge(wx.Panel):
         rgb=lo.Red()+(hi.Red()-lo.Red())*vv,lo.Green()+(hi.Green()-lo.Green())*vv,lo.Blue()+(hi.Blue()-lo.Blue())*vv
         rgb=map(lambda x:x*0.8,rgb)
         return wx.Colour(*map(int,rgb))
+
     def paint(self,ev):
         x0,y0,x1,y1,xE,yE = 1,1,self.ypt+1,1,self.width+1-2,20
         dc=wx.PaintDC(self)
