@@ -13,6 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 import wx,time
+
+from printrun_utils import imagefile
+
 ID_ABOUT = 101
 ID_EXIT = 110
 class window(wx.Frame):
@@ -22,11 +25,11 @@ class window(wx.Frame):
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(self, -1, style=wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(1, wx.Image('./images/zoom_in.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
-        toolbar.AddSimpleTool(2, wx.Image('./images/zoom_out.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
+        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
+        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(3, wx.Image('./images/arrow_up.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
-        toolbar.AddSimpleTool(4, wx.Image('./images/arrow_down.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
+        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
+        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
         toolbar.AddSimpleTool(5, wx.EmptyBitmap(16,16), 'Reset view', '')
         toolbar.AddSeparator()
         #toolbar.AddSimpleTool(5, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
