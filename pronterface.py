@@ -1502,7 +1502,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
     def skein_func(self):
         try:
             import shlex
-            param = self.expandcommand(self.settings.slicecommand).encode()
+            tSliceCom = self.settings.slicecommand.replace('<port>', self.serialport.GetValue())
+            param = self.expandcommand(tSliceCom).encode()
             print "Slicing: ",param
             if self.webInterface:
                 self.webInterface.AddLog("Slicing: "+param)

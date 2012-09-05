@@ -1159,11 +1159,13 @@ class pronsole(cmd.Cmd):
         try:
             import shlex
             if(settings):
-                param = self.expandcommand(self.settings.sliceoptscommand).replace("\\","\\\\").encode()
+                sliceComm = self.settings.sliceoptscommand.replace('<port>', self.serialport.GetValue())
+                param = self.expandcommand(sliceComm).replace("\\","\\\\").encode()
                 print "Entering slicer settings: ",param
                 subprocess.call(shlex.split(param))
             else:
-                param = self.expandcommand(self.settings.slicecommand).encode()
+                sliceComm = self.settings.slicecommand.replace('<port>', self.serialport.GetValue())
+                param = self.expandcommand(sliceComm).encode()
                 print "Slicing: ",param
                 params=[i.replace("$s",l[0]).replace("$o",l[0].replace(".stl","_export.gcode").replace(".STL","_export.gcode")).encode() for i in shlex.split(param.replace("\\","\\\\").encode())]
                 subprocess.call(params)
