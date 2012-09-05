@@ -837,8 +837,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     #self.newbuttonbutton.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
                     #self.newbuttonbutton.SetForegroundColour("black")
                     #self.newbuttonbutton.SetSize(obj.GetSize())
-                    #if self.upperbottomsizer.GetItem(self.newbuttonbutton) is not None:
-                    #    self.upperbottomsizer.SetItemMinSize(self.newbuttonbutton, obj.GetSize())
+                    #if self.uppersizer.GetItem(self.newbuttonbutton) is not None:
+                    #    self.uppersizer.SetItemMinSize(self.newbuttonbutton, obj.GetSize())
                     #    self.mainsizer.Layout()
                     for b in self.custombuttonbuttons:
                         #if b.IsFrozen(): b.Thaw()
@@ -848,8 +848,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                             b.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
                             b.SetForegroundColour("black")
                             b.SetSize(obj.GetSize())
-                            if self.upperbottomsizer.GetItem(b) is not None:
-                                self.upperbottomsizer.SetItemMinSize(b, obj.GetSize())
+                            if self.uppersizer.GetItem(b) is not None:
+                                self.uppersizer.SetItemMinSize(b, obj.GetSize())
                                 self.mainsizer.Layout()
                         #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.dragging = wx.Button(self.panel,-1, obj.GetLabel(), style = wx.BU_EXACTFIT)
@@ -877,9 +877,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                         break
                 #if dst is None and self.panel.GetScreenRect().Contains(scrpos):
                 #    # try to check if it is after buttons at the end
-                #    tspos = self.panel.ClientToScreen(self.upperbottomsizer.GetPosition())
+                #    tspos = self.panel.ClientToScreen(self.uppersizer.GetPosition())
                 #    bspos = self.panel.ClientToScreen(self.centersizer.GetPosition())
-                #    tsrect = wx.Rect(*(tspos.Get()+self.upperbottomsizer.GetSize().Get()))
+                #    tsrect = wx.Rect(*(tspos.Get()+self.uppersizer.GetSize().Get()))
                 #    bsrect = wx.Rect(*(bspos.Get()+self.centersizer.GetSize().Get()))
                 #    lbrect = btns[-1].GetScreenRect()
                 #    p = scrpos.Get()
