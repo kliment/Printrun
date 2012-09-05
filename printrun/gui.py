@@ -239,10 +239,10 @@ def make_button(parent, label, callback, tooltip, container = None, size = None,
     return button
 
 def make_sized_button(*args):
-    return make_button(*args, size = buttonSize, style = wx.BU_EXACTFIT)
+    return make_button(*args, size = buttonSize)
 
 def make_autosize_button(*args):
-    return make_button(*args, size = (-1, buttonSize[1]))
+    return make_button(*args, size = (-1, buttonSize[1]), style = wx.BU_EXACTFIT)
 
 class MainToolbar(wx.BoxSizer):
 
