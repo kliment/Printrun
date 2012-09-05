@@ -61,17 +61,17 @@ class LeftPane(wx.GridBagSizer):
         self.Add(self.xyzsizer, pos = (1, 0), span = (1, 8), flag = wx.ALIGN_CENTER)
         
         for i in root.cpbuttons:
-            btn = make_button(root.panel, i[0], root.procbutton, i[5], style = wx.BU_EXACTFIT)
-            btn.SetBackgroundColour(i[3])
+            btn = make_button(root.panel, i.label, root.procbutton, i.tooltip, style = wx.BU_EXACTFIT)
+            btn.SetBackgroundColour(i.background)
             btn.SetForegroundColour("black")
             btn.properties = i
-            root.btndict[i[1]] = btn
+            root.btndict[i.command] = btn
             root.printerControls.append(btn)
-            if i[2] == None:
-                if i[4] == 0:
+            if i.pos == None:
+                if i.span == 0:
                     llts.Add(btn)
             else:
-                self.Add(btn, pos = i[2], span = i[4])
+                self.Add(btn, pos = i.pos, span = i.span)
 
         root.xyfeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70,-1))
         root.xyfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for X & Y axes (mm/min)"))
@@ -90,9 +90,7 @@ class LeftPane(wx.GridBagSizer):
         self.Add(wx.StaticText(root.panel,-1, _("Heat:")), pos = (2, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         htemp_choices = [root.temps[i]+" ("+i+")" for i in sorted(root.temps.keys(), key = lambda x:root.temps[x])]
 
-        root.settoff = wx.Button(root.panel,-1, _("Off"), size = (36,-1), style = wx.BU_EXACTFIT)
-        root.settoff.SetToolTip(wx.ToolTip("Switch Hotend Off"))
-        root.settoff.Bind(wx.EVT_BUTTON, lambda e:root.do_settemp("off"))
+        root.settoff = make_button(root.panel, _("Off"), lambda e: root.do_settemp("off"), _("Switch Hotend Off"), size = (36,-1), style = wx.BU_EXACTFIT)
         root.printerControls.append(root.settoff)
         self.Add(root.settoff, pos = (2, 1), span = (1, 1))
 
@@ -104,18 +102,14 @@ class LeftPane(wx.GridBagSizer):
         root.htemp.Bind(wx.EVT_COMBOBOX, root.htemp_change)
 
         self.Add(root.htemp, pos = (2, 2), span = (1, 2))
-        root.settbtn = wx.Button(root.panel,-1, _("Set"), size = (38,-1), style = wx.BU_EXACTFIT)
-        root.settbtn.SetToolTip(wx.ToolTip("Switch Hotend On"))
-        root.settbtn.Bind(wx.EVT_BUTTON, root.do_settemp)
+        root.settbtn = make_button(root.panel, _("Set"), root.do_settemp, _("Switch Hotend On"), size = (38, -1), style = wx.BU_EXACTFIT)
         root.printerControls.append(root.settbtn)
         self.Add(root.settbtn, pos = (2, 4), span = (1, 1))
 
         self.Add(wx.StaticText(root.panel,-1, _("Bed:")), pos = (3, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         btemp_choices = [root.bedtemps[i]+" ("+i+")" for i in sorted(root.bedtemps.keys(), key = lambda x:root.temps[x])]
 
-        root.setboff = wx.Button(root.panel,-1, _("Off"), size = (36,-1), style = wx.BU_EXACTFIT)
-        root.setboff.SetToolTip(wx.ToolTip("Switch Heated Bed Off"))
-        root.setboff.Bind(wx.EVT_BUTTON, lambda e:root.do_bedtemp("off"))
+        root.setboff = make_button(root.panel, _("Off"), lambda e:root.do_bedtemp("off"), _("Switch Heated Bed Off"), size = (36,-1), style = wx.BU_EXACTFIT)
         root.printerControls.append(root.setboff)
         self.Add(root.setboff, pos = (3, 1), span = (1, 1))
 
@@ -127,9 +121,7 @@ class LeftPane(wx.GridBagSizer):
         root.btemp.Bind(wx.EVT_COMBOBOX, root.btemp_change)
         self.Add(root.btemp, pos = (3, 2), span = (1, 2))
 
-        root.setbbtn = wx.Button(root.panel,-1, _("Set"), size = (38,-1), style = wx.BU_EXACTFIT)
-        root.setbbtn.SetToolTip(wx.ToolTip("Switch Heated Bed On"))
-        root.setbbtn.Bind(wx.EVT_BUTTON, root.do_bedtemp)
+        root.setbbtn = make_button(root.panel, _("Set"), root.do_bedtemp, ("Switch Heated Bed On"), size = (38, -1), style = wx.BU_EXACTFIT)
         root.printerControls.append(root.setbbtn)
         self.Add(root.setbbtn, pos = (3, 4), span = (1, 1))
 
@@ -232,11 +224,8 @@ class LogPane(wx.BoxSizer):
         root.commandbox.histindex = 1
         #root.printerControls.append(root.commandbox)
         lbrs.Add(root.commandbox, 1)
-        root.sendbtn = wx.Button(root.panel,-1, _("Send"), style = wx.BU_EXACTFIT)
-        root.sendbtn.SetToolTip(wx.ToolTip("Send Command to Printer"))
-        root.sendbtn.Bind(wx.EVT_BUTTON, root.sendline)
+        root.sendbtn = make_button(root.panel, _("Send"), root.sendline, _("Send Command to Printer"), style = wx.BU_EXACTFIT, container = lbrs)
         #root.printerControls.append(root.sendbtn)
-        lbrs.Add(root.sendbtn)
         self.Add(lbrs, 0, wx.EXPAND)
 
 class MainToolbar(wx.BoxSizer):

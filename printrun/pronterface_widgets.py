@@ -316,3 +316,22 @@ class TempGauge(wx.Panel):
         gc.SetFont(gc.CreateFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)))
         gc.DrawText(self.title, x0+18, y0+3)
         gc.DrawText(text,      x0+118, y0+3)
+
+class SpecialButton(object):
+
+    label = None
+    command = None
+    background = None
+    pos = None
+    span = None
+    tooltip = None
+    custom = None
+
+    def __init__(self, label, command, background = None, pos = None, span = None, tooltip = None, custom = False):
+        self.label = label
+        self.command = command
+        self.pos = pos
+        self.background = background
+        self.span = span
+        self.tooltip = tooltip
+        self.custom = custom

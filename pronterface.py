@@ -115,10 +115,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.paused = False
         self.sentlines = Queue.Queue(30)
         self.cpbuttons = [
-            [_("Motors off"), ("M84"), None, (250, 250, 250), 0, _("Switch all motors off")],
-            [_("Check temp"), ("M105"), (2, 5), (225, 200, 200), (1, 1), _("Check current hotend temperature")],
-            [_("Extrude"), ("extrude"), (4, 0), (225, 200, 200), (1, 2), _("Advance extruder by set length")],
-            [_("Reverse"), ("reverse"), (5, 0), (225, 200, 200), (1, 2), _("Reverse extruder by set length")],
+            SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), None, 0, _("Switch all motors off")),
+            SpecialButton(_("Check temp"), ("M105"), (225, 200, 200), (2, 5), (1, 1), _("Check current hotend temperature")),
+            SpecialButton(_("Extrude"), ("extrude"), (225, 200, 200), (4, 0), (1, 2), _("Advance extruder by set length")),
+            SpecialButton(_("Reverse"), ("reverse"), (225, 200, 200), (5, 0), (1, 2), _("Reverse extruder by set length")),
         ]
         self.custombuttons = []
         self.btndict = {}
@@ -649,16 +649,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         for i in xrange(len(self.custombuttons)):
             btndef = self.custombuttons[i]
             try:
-                b = wx.Button(self.panel,-1, btndef[0], style = wx.BU_EXACTFIT)
-                b.SetToolTip(wx.ToolTip(_("Execute command: ")+btndef[1]))
-                if len(btndef)>2:
-                    b.SetBackgroundColour(btndef[2])
+                b = wx.Button(self.panel, -1, btndef.label, style = wx.BU_EXACTFIT)
+                b.SetToolTip(wx.ToolTip(_("Execute command: ")+btndef.command))
+                if btndef.background:
+                    b.SetBackgroundColour(btndef.background)
                     rr, gg, bb = b.GetBackgroundColour().Get()
                     if 0.3*rr+0.59*gg+0.11*bb < 60:
                         b.SetForegroundColour("#ffffff")
             except:
                 if i == newbuttonbuttonindex:
-                    self.newbuttonbutton = b = wx.Button(self.panel,-1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
+                    self.newbuttonbutton = b = wx.Button(self.panel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
                     #b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
@@ -712,10 +712,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.webInterface.AddLog("Custom button number should be between 0 and 63")
             return
         while num >= len(self.custombuttons):
-            self.custombuttons+=[None]
-        self.custombuttons[num]=[title, command]
+            self.custombuttons.append(None)
+        self.custombuttons[num] = SpecialButton(title, command)
         if colour is not None:
-            self.custombuttons[num]+=[colour]
+            self.custombuttons[num].background = colour
         if not self.processing_rc:
             self.cbuttons_reload()
         #except Exception, x:
@@ -726,8 +726,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if new_n is None: new_n = n
         if bdef is None or bdef == "":
             self.save_in_rc(("button %d" % n),'')
-        elif len(bdef)>2:
-            colour = bdef[2]
+        elif bdef.background:
+            colour = bdef.background
             if type(colour) not in (str, unicode):
                 #print type(colour), map(type, colour)
                 if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
@@ -735,18 +735,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
                 else:
                     colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
-            self.save_in_rc(("button %d" % n),'button %d "%s" /c "%s" %s' % (new_n, bdef[0], colour, bdef[1]))
+            self.save_in_rc(("button %d" % n),'button %d "%s" /c "%s" %s' % (new_n, bdef.label, colour, bdef.command))
         else:
-            self.save_in_rc(("button %d" % n),'button %d "%s" %s' % (new_n, bdef[0], bdef[1]))
+            self.save_in_rc(("button %d" % n),'button %d "%s" %s' % (new_n, bdef.label, bdef.command))
 
     def cbutton_edit(self, e, button = None):
         bedit = ButtonEdit(self)
         if button is not None:
             n = button.custombutton
-            bedit.name.SetValue(button.properties[0])
-            bedit.command.SetValue(button.properties[1])
-            if len(button.properties)>2:
-                colour = button.properties[2]
+            bedit.name.SetValue(button.label)
+            bedit.command.SetValue(button.command)
+            if button.background:
+                colour = button.background
                 if type(colour) not in (str, unicode):
                     #print type(colour)
                     if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
@@ -762,9 +762,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if bedit.ShowModal() == wx.ID_OK:
             if n == len(self.custombuttons):
                 self.custombuttons+=[None]
-            self.custombuttons[n]=[bedit.name.GetValue().strip(), bedit.command.GetValue().strip()]
+            self.custombuttons[n]=SpecialButton(bedit.name.GetValue().strip(), bedit.command.GetValue().strip(), custom = True)
             if bedit.color.GetValue().strip()!="":
-                self.custombuttons[n]+=[bedit.color.GetValue()]
+                self.custombuttons[n].background = bedit.color.GetValue()
             self.cbutton_save(n, self.custombuttons[n])
         bedit.Destroy()
         self.cbuttons_reload()
