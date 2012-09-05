@@ -114,9 +114,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.monitor_interval = 3
         self.paused = False
         self.sentlines = Queue.Queue(30)
-        xcol = (245, 245, 108)
-        ycol = (180, 180, 255)
-        zcol = (180, 255, 180)
         self.cpbuttons = [
             [_("Motors off"), ("M84"), None, (250, 250, 250), 0, _("Switch all motors off")],
             [_("Check temp"), ("M105"), (2, 5), (225, 200, 200), (1, 1), _("Check current hotend temperature")],
