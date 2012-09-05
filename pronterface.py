@@ -41,10 +41,6 @@ if os.name == "nt":
         pass
 
 import printcore
-from printrun import gviz
-from printrun.xybuttons import XYButtons
-from printrun.zbuttons import ZButtons
-from printrun.graph import Graph
 from printrun.printrun_utils import pixmapfile, configfile
 from printrun.gui import MainWindow
 import pronsole
