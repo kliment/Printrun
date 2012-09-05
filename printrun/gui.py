@@ -27,6 +27,20 @@ from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
 
+def make_button(parent, label, callback, tooltip, container = None, size = wx.DefaultSize, style = 0):
+    button = wx.Button(parent, -1, label, style = style, size = size)
+    button.Bind(wx.EVT_BUTTON, callback)
+    button.SetToolTip(wx.ToolTip(tooltip))
+    if container:
+        container.Add(button)
+    return button
+
+def make_sized_button(*args):
+    return make_button(*args, size = buttonSize)
+
+def make_autosize_button(*args):
+    return make_button(*args, size = (-1, buttonSize[1]), style = wx.BU_EXACTFIT)
+
 class XYZControlsSizer(wx.GridBagSizer):
 
     def __init__(self, root):
@@ -47,13 +61,11 @@ class LeftPane(wx.GridBagSizer):
         self.Add(self.xyzsizer, pos = (1, 0), span = (1, 8), flag = wx.ALIGN_CENTER)
         
         for i in root.cpbuttons:
-            btn = wx.Button(root.panel,-1, i[0], style = wx.BU_EXACTFIT)
-            btn.SetToolTip(wx.ToolTip(i[5]))
+            btn = make_button(root.panel, i[0], root.procbutton, i[5], style = wx.BU_EXACTFIT)
             btn.SetBackgroundColour(i[3])
             btn.SetForegroundColour("black")
             btn.properties = i
-            btn.Bind(wx.EVT_BUTTON, root.procbutton)
-            root.btndict[i[1]]=btn
+            root.btndict[i[1]] = btn
             root.printerControls.append(btn)
             if i[2] == None:
                 if i[4] == 0:
@@ -226,23 +238,6 @@ class LogPane(wx.BoxSizer):
         #root.printerControls.append(root.sendbtn)
         lbrs.Add(root.sendbtn)
         self.Add(lbrs, 0, wx.EXPAND)
-
-def make_button(parent, label, callback, tooltip, container = None, size = None, style = None):
-    if style:
-        button = wx.Button(parent, -1, label, style = style, size = size)
-    else:
-        button = wx.Button(parent, -1, label, size = size)
-    button.Bind(wx.EVT_BUTTON, callback)
-    button.SetToolTip(wx.ToolTip(tooltip))
-    if container:
-        container.Add(button)
-    return button
-
-def make_sized_button(*args):
-    return make_button(*args, size = buttonSize)
-
-def make_autosize_button(*args):
-    return make_button(*args, size = (-1, buttonSize[1]), style = wx.BU_EXACTFIT)
 
 class MainToolbar(wx.BoxSizer):
 
