@@ -621,9 +621,12 @@ class pronsole(cmd.Cmd):
 
     def help_disconnect(self):
         print "Disconnects from the printer"
+    
+    def do_load(self,l):
+        self._do_load(l)
 
-    def do_load(self, l):
-        if len(l) == 0:
+    def _do_load(self,l):
+        if len(l)==0:
             print "No file name given."
             return
         print "Loading file:"+l
@@ -874,14 +877,16 @@ class pronsole(cmd.Cmd):
     def default(self, l):
         if(l[0] in self.commandprefixes.upper()):
             if(self.p and self.p.online):
-                print "SENDING:"+l
+                if(not self.p.loud):
+                    print "SENDING:"+l
                 self.p.send_now(l)
             else:
                 print "Printer is not online."
             return
         elif(l[0] in self.commandprefixes.lower()):
             if(self.p and self.p.online):
-                print "SENDING:"+l.upper()
+                if(not self.p.loud):
+                    print "SENDING:"+l.upper()
                 self.p.send_now(l.upper())
             else:
                 print "Printer is not online."
