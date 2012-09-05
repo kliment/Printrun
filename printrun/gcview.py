@@ -19,8 +19,8 @@ import threading
 class GLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
 
-    def __init__(self, parent, id, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=0):
+    def __init__(self, parent, id, pos = wx.DefaultPosition,
+                 size = wx.DefaultSize, style = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
         #call super function
@@ -33,7 +33,7 @@ class GLPanel(wx.Panel):
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
         # Create the canvas
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.canvas = glcanvas.GLCanvas(self, attribList=attribList)
+        self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
         self.sizer.Add(self.canvas, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         #self.sizer.Fit(self)
@@ -200,7 +200,7 @@ def _dist(dist):
 class gcpoint(object):
     """gcode point
     stub for first line"""
-    def __init__(self, x=0,y=0,z=0,e=0):
+    def __init__(self, x = 0, y = 0, z = 0, e = 0):
         self.x = x
         self.y = y
         self.z = z
@@ -210,10 +210,10 @@ class gcpoint(object):
 
 class gcline(object):
     """gcode move line
-    Once initialised,it knows its position, length and extrusion ratio
+    Once initialised, it knows its position, length and extrusion ratio
     Returns lines into gcview batch()
     """
-    def __init__(self, x=None, y=None, z=None, e=None, f=None, prev_gcline=None, orgline = False):
+    def __init__(self, x = None, y = None, z = None, e = None, f = None, prev_gcline = None, orgline = False):
         if prev_gcline is None:
             self.prev_gcline = gcpoint()
         else:
@@ -255,7 +255,7 @@ class gcline(object):
                 self.orgline,
             )
 
-    def calc_delta(self, prev_gcline=None):
+    def calc_delta(self, prev_gcline = None):
         if prev_gcline is None:
             prev_gcline = self.prev_gcline
         if self.prev_gcline is not None:
@@ -290,7 +290,7 @@ class gcline(object):
             ]
     def glcolor(self, upper_limit = None, lower_limit = 0, max_feedrate = 0):
         if self.extrusion_ratio == 0:
-            return [255,255,255,0,0,0]
+            return [255, 255, 255, 0, 0, 0]
         else:
             blue_color = 0
             green_color = 0
@@ -312,7 +312,7 @@ class gcline(object):
                 blue_color = 255
             if blue_color < 0:
                 blue_color = 0
-            return[255,green_color,blue_color,128,green_color,blue_color/4]
+            return[255, green_color, blue_color, 128, green_color, blue_color/4]
 
 
 def float_from_line(axe, line):
@@ -340,7 +340,7 @@ class gcview(object):
     """gcode visualiser
     Holds opengl objects for all layers
     """
-    def __init__(self, lines, batch, w=0.5, h=0.5):
+    def __init__(self, lines, batch, w = 0.5, h = 0.5):
         if len(lines) == 0:
             return
         print "Loading %s lines" % (len(lines))
@@ -430,7 +430,7 @@ class gcview(object):
                     else:
                         self.lastf = cur[4]
 
-                    r = gcline(x=cur[0], y=cur[1], z=cur[2],e=cur[3], f=cur[4], prev_gcline=self.prev, orgline=orgline)
+                    r = gcline(x = cur[0], y = cur[1], z = cur[2], e = cur[3], f = cur[4], prev_gcline = self.prev, orgline = orgline)
                     self.prev = r
                     return r
             return None
@@ -524,7 +524,7 @@ def mulquat(q1, rq):
 
 class TestGlPanel(GLPanel):
 
-    def __init__(self, parent, size, id=wx.ID_ANY):
+    def __init__(self, parent, size, id = wx.ID_ANY):
         super(TestGlPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0)
         self.batches = []
         self.rot = 0
@@ -553,7 +553,7 @@ class TestGlPanel(GLPanel):
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
-        threading.Thread(target=self.update).start()
+        threading.Thread(target = self.update).start()
         self.initialized = 0
 
     def move_shape(self, delta):
@@ -605,7 +605,7 @@ class TestGlPanel(GLPanel):
                 p1y = -(float(p1[1]) - sz[1] / 2) / (sz[1] / 2)
                 p2x = (float(p2[0]) - sz[0] / 2) / (sz[0] / 2)
                 p2y = -(float(p2[1]) - sz[1] / 2) / (sz[1] / 2)
-                #print p1x,p1y,p2x,p2y
+                #print p1x, p1y, p2x, p2y
                 quat = trackball(p1x, p1y, p2x, p2y, -self.transv[2] / 250.0)
                 if self.rot:
                     self.basequat = mulquat(self.basequat, quat)
@@ -768,7 +768,7 @@ class TestGlPanel(GLPanel):
 
     def drawmodel(self, m, n):
         batch = pyglet.graphics.Batch()
-        stl = stlview(m.facets, batch=batch)
+        stl = stlview(m.facets, batch = batch)
         m.batch = batch
         m.animoffset = 300
         #print m
@@ -907,8 +907,8 @@ class TestGlPanel(GLPanel):
 class GCFrame(wx.Frame):
     '''A simple class for using OpenGL with wxPython.'''
 
-    def __init__(self, parent, ID, title, pos=wx.DefaultPosition,
-            size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE):
+    def __init__(self, parent, ID, title, pos = wx.DefaultPosition,
+            size = wx.DefaultSize, style = wx.DEFAULT_FRAME_STYLE):
         super(GCFrame, self).__init__(parent, ID, title, pos, (size[0] + 150, size[1]), style)
 
         class d:
@@ -921,22 +921,22 @@ class GCFrame(wx.Frame):
         m.curlayer = -1
         m.scale = [1.0, 1.0, 1.0]
         m.batch = pyglet.graphics.Batch()
-        m.gc = gcview([], batch=m.batch)
+        m.gc = gcview([], batch = m.batch)
         self.models = {"GCODE": m}
         self.l = d()
         self.modelindex = 0
         self.GLPanel1 = TestGlPanel(self, size)
 
-    def addfile(self, gcode=[]):
+    def addfile(self, gcode = []):
         self.models["GCODE"].gc.delete()
-        self.models["GCODE"].gc = gcview(gcode, batch=self.models["GCODE"].batch)
+        self.models["GCODE"].gc = gcview(gcode, batch = self.models["GCODE"].batch)
         self.setlayerindex(None)
 
     def clear(self):
         self.models["GCODE"].gc.delete()
-        self.models["GCODE"].gc = gcview([], batch=self.models["GCODE"].batch)
+        self.models["GCODE"].gc = gcview([], batch = self.models["GCODE"].batch)
 
-    def Show(self, arg=True):
+    def Show(self, arg = True):
         wx.Frame.Show(self, arg)
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
@@ -975,8 +975,8 @@ class GCFrame(wx.Frame):
 
 
 def main():
-    app = wx.App(redirect=False)
-    frame = GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(400, 400))
+    app = wx.App(redirect = False)
+    frame = GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (400, 400))
     import sys
     for filename in sys.argv:
         if ".gcode" in filename:
@@ -985,8 +985,8 @@ def main():
             #TODO: add stl here
             pass
 
-    #frame = wx.Frame(None, -1, "GL Window", size=(400, 400))
-    #panel = TestGlPanel(frame, size=(300,300))
+    #frame = wx.Frame(None, -1, "GL Window", size = (400, 400))
+    #panel = TestGlPanel(frame, size = (300, 300))
     frame.Show(True)
     app.MainLoop()
     app.Destroy()

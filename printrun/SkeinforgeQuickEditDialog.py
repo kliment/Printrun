@@ -16,13 +16,13 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
         self.cancelButton = wx.Button(self, wx.ID_CANCEL, "")
         self.Bind(wx.EVT_BUTTON, self.OnExit, self.cancelButton)
         self.Bind(wx.EVT_BUTTON, self.OnSave, self.okButton)
-        
+
         """
             The following list determines which settings are shown.
             The dictionary key is the plugin name and the value is a list of setting names as found in the corresponding .csv file for that plugin.
-            
+
             NOTE:  Skeinforge is tightly integrated with Tkinter and there appears to be a dependency which stops radio-button values from being saved.
-                   Perhaps this can be solved, but at the moment this dialog cannot modify radio button values.  One will have to use the main Skeinforge application.  
+                   Perhaps this can be solved, but at the moment this dialog cannot modify radio button values.  One will have to use the main Skeinforge application.
         """
         self.moduleSettingsMap = {
                                 'dimension':['Filament Diameter (mm):','Retraction Distance (millimeters):', 'Retraction Distance (millimeters):','Extruder Retraction Speed (mm/s):'],
@@ -34,28 +34,28 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
                                 'raft':['First Layer Main Feedrate (mm/s):','First Layer Perimeter Feedrate (mm/s):','First Layer Flow Rate Infill(scaler):','First Layer Flow Rate Perimeter(scaler):',],
                                 'speed':['Main Feed Rate (mm/s):','Main Flow Rate  (scaler):','Perimeter Feed Rate (mm/s):','Perimeter Flow Rate (scaler):','Travel Feed Rate (mm/s):']
                                }
-        
-        self.scrollbarPanel = wx.ScrolledWindow(self, -1, style=wx.TAB_TRAVERSAL)
+
+        self.scrollbarPanel = wx.ScrolledWindow(self, -1, style = wx.TAB_TRAVERSAL)
         self.settingsSizer = self.getProfileSettings()
         self.scrollbarPanel.SetSizer(self.settingsSizer)
 
-        self.__set_properties()   
-        self.__do_layout()        
+        self.__set_properties()
+        self.__do_layout()
         self.Show()
-        
+
     def __set_properties(self):
         self.profileName = skeinforge_profile.getProfileName(skeinforge_profile.getCraftTypeName())
         self.SetTitle("Skeinforge Quick Edit Profile: " + self.profileName)
-        
-        # For some reason the dialog size is not consistent between Windows and Linux - this is a hack to get it working 
+
+        # For some reason the dialog size is not consistent between Windows and Linux - this is a hack to get it working
         if (os.name == 'nt'):
             self.SetMinSize(wx.DLG_SZE(self, (465, 370)))
         else:
             self.SetSize(wx.DLG_SZE(self, (465, 325)))
-            
+
         self.SetPosition((0, 0))
         self.scrollbarPanel.SetScrollRate(10, 10)
-        
+
     def __do_layout(self):
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         actionsSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -65,56 +65,56 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
         mainSizer.Add(actionsSizer, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
         self.SetSizer(mainSizer)
         self.Layout()
-                
+
     def getProfileSettings(self):
-        settingsSizer = wx.GridBagSizer(hgap=2, vgap=1)
+        settingsSizer = wx.GridBagSizer(hgap = 2, vgap = 1)
         settingsRow = 0
-        
+
         for craftName in sorted(self.moduleSettingsMap.keys()):
-            
+
             craftStaticBox = wx.StaticBox(self.scrollbarPanel, -1, craftName.capitalize())
             craftStaticBoxSizer = wx.StaticBoxSizer(craftStaticBox, wx.VERTICAL)
-            
+
             # For some reason the dialog size is not consistent between Windows and Linux - this is a hack to get it working
             if (os.name == 'nt'):
                 craftStaticBoxSizer.SetMinSize((320, -1))
-            else: 
+            else:
                 craftStaticBoxSizer.SetMinSize((450, -1))
             pluginModule = archive.getModuleWithPath(os.path.join(skeinforge_craft.getPluginsDirectoryPath(), craftName))
             repo = pluginModule.getNewRepository()
-            
+
             for setting in settings.getReadRepository(repo).preferences:
                 if setting.name in self.moduleSettingsMap[craftName]:
-            
-                    settingSizer = wx.GridBagSizer(hgap=2, vgap=2)
+
+                    settingSizer = wx.GridBagSizer(hgap = 2, vgap = 2)
                     settingSizer.AddGrowableCol(0)
                     settingRow = 0
                     settingLabel = wx.StaticText(self.scrollbarPanel, -1, setting.name)
                     settingLabel.Wrap(400)
-                    settingSizer.Add(settingLabel, pos=(settingRow, 0))
-                    
+                    settingSizer.Add(settingLabel, pos = (settingRow, 0))
+
                     if (isinstance(setting.value, bool)):
                         checkbox = wx.CheckBox(self.scrollbarPanel)
                         checkbox.SetName(craftName + '.' + setting.name)
                         checkbox.SetValue(setting.value)
-                        settingSizer.Add(checkbox, pos=(settingRow, 1))
-                        settingSizer.AddSpacer((25, -1), pos=(settingRow, 2))
+                        settingSizer.Add(checkbox, pos = (settingRow, 1))
+                        settingSizer.AddSpacer((25, -1), pos = (settingRow, 2))
                     else:
-                        textCtrl = wx.TextCtrl(self.scrollbarPanel, value=str(setting.value), size=(50, -1))
+                        textCtrl = wx.TextCtrl(self.scrollbarPanel, value = str(setting.value), size = (50, -1))
                         textCtrl.SetName(craftName + '.' + setting.name)
-                        settingSizer.Add(textCtrl, pos=(settingRow, 1))
-                        
+                        settingSizer.Add(textCtrl, pos = (settingRow, 1))
+
                     craftStaticBoxSizer.Add(settingSizer, 1, wx.EXPAND, 0)
                     settingRow += 1
             col = settingsRow % 2
-            settingsSizer.Add(craftStaticBoxSizer, pos=(settingsRow - col, col))
+            settingsSizer.Add(craftStaticBoxSizer, pos = (settingsRow - col, col))
             settingsRow += 1
 
         return settingsSizer
 
     def OnExit(self, e):
         self.Destroy()
-        
+
     def OnSave(self, e):
         for x in self.scrollbarPanel.GetChildren():
             if (isinstance(x, (wx.CheckBox, wx.TextCtrl))):
