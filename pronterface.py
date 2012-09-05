@@ -794,7 +794,7 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
 
         self.graph = Graph(self.panel, wx.ID_ANY)
         lls.Add(self.graph, pos = (3, 5), span = (3, 3))
-        lls.Add(self.tempdisp, pos = (6, 0), span = (1, 1))
+        lls.Add(self.tempdisp, pos = (6, 0), span = (1, 9))
 
         self.gviz = gviz.gviz(self.panel, (300, 300),
             build_dimensions = self.build_dimensions_list,
