@@ -14,6 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
+import re
 
 class macroed(wx.Dialog):
     """Really simple editor to edit macro definitions"""
