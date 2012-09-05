@@ -1,0 +1,328 @@
+# This file is part of the Printrun suite.
+#
+# Printrun is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Printrun is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
+
+try:
+    import wx
+except:
+    print _("WX is not installed. This program requires WX to run.")
+    raise
+
+global buttonSize
+buttonSize = (70, 25)  # Define sizes for the buttons on top rows
+
+from printrun import gviz
+from printrun.xybuttons import XYButtons
+from printrun.zbuttons import ZButtons
+from printrun.graph import Graph
+
+class XYZControlsSizer(wx.GridBagSizer):
+
+    def __init__(self, root):
+        super(XYZControlsSizer, self).__init__()
+        self.xyb = XYButtons(root.panel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor)
+        self.Add(self.xyb, pos = (0, 1), flag = wx.ALIGN_CENTER)
+        self.zb = ZButtons(root.panel, root.moveZ, root.settings.bgcolor)
+        self.Add(self.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
+        wx.CallAfter(self.xyb.SetFocus)
+
+class LeftPane(wx.GridBagSizer):
+
+    def __init__(self, root):
+        super(LeftPane, self).__init__()
+        llts = wx.BoxSizer(wx.HORIZONTAL)
+        self.Add(llts, pos = (0, 0), span = (1, 9))
+        self.xyzsizer = XYZControlsSizer(root)
+        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 8), flag = wx.ALIGN_CENTER)
+        
+        for i in root.cpbuttons:
+            btn = wx.Button(root.panel,-1, i[0], style = wx.BU_EXACTFIT)
+            btn.SetToolTip(wx.ToolTip(i[5]))
+            btn.SetBackgroundColour(i[3])
+            btn.SetForegroundColour("black")
+            btn.properties = i
+            btn.Bind(wx.EVT_BUTTON, root.procbutton)
+            root.btndict[i[1]]=btn
+            root.printerControls.append(btn)
+            if i[2] == None:
+                if i[4] == 0:
+                    llts.Add(btn)
+            else:
+                self.Add(btn, pos = i[2], span = i[4])
+
+        root.xyfeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70,-1))
+        root.xyfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for X & Y axes (mm/min)"))
+        llts.Add(wx.StaticText(root.panel,-1, _("XY:")), flag = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        llts.Add(root.xyfeedc)
+        llts.Add(wx.StaticText(root.panel,-1, _("mm/min   Z:")), flag = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        root.zfeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.z_feedrate), min = 0, max = 50000, size = (70,-1))
+        root.zfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for Z axis (mm/min)"))
+        llts.Add(root.zfeedc,)
+
+        root.monitorbox = wx.CheckBox(root.panel,-1, _("Watch"))
+        root.monitorbox.SetToolTip(wx.ToolTip("Monitor Temperatures in Graph"))
+        self.Add(root.monitorbox, pos = (2, 6))
+        root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
+
+        self.Add(wx.StaticText(root.panel,-1, _("Heat:")), pos = (2, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+        htemp_choices = [root.temps[i]+" ("+i+")" for i in sorted(root.temps.keys(), key = lambda x:root.temps[x])]
+
+        root.settoff = wx.Button(root.panel,-1, _("Off"), size = (36,-1), style = wx.BU_EXACTFIT)
+        root.settoff.SetToolTip(wx.ToolTip("Switch Hotend Off"))
+        root.settoff.Bind(wx.EVT_BUTTON, lambda e:root.do_settemp("off"))
+        root.printerControls.append(root.settoff)
+        self.Add(root.settoff, pos = (2, 1), span = (1, 1))
+
+        if root.settings.last_temperature not in map(float, root.temps.values()):
+            htemp_choices = [str(root.settings.last_temperature)] + htemp_choices
+        root.htemp = wx.ComboBox(root.panel, -1,
+                choices = htemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
+        root.htemp.SetToolTip(wx.ToolTip("Select Temperature for Hotend"))
+        root.htemp.Bind(wx.EVT_COMBOBOX, root.htemp_change)
+
+        self.Add(root.htemp, pos = (2, 2), span = (1, 2))
+        root.settbtn = wx.Button(root.panel,-1, _("Set"), size = (38,-1), style = wx.BU_EXACTFIT)
+        root.settbtn.SetToolTip(wx.ToolTip("Switch Hotend On"))
+        root.settbtn.Bind(wx.EVT_BUTTON, root.do_settemp)
+        root.printerControls.append(root.settbtn)
+        self.Add(root.settbtn, pos = (2, 4), span = (1, 1))
+
+        self.Add(wx.StaticText(root.panel,-1, _("Bed:")), pos = (3, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+        btemp_choices = [root.bedtemps[i]+" ("+i+")" for i in sorted(root.bedtemps.keys(), key = lambda x:root.temps[x])]
+
+        root.setboff = wx.Button(root.panel,-1, _("Off"), size = (36,-1), style = wx.BU_EXACTFIT)
+        root.setboff.SetToolTip(wx.ToolTip("Switch Heated Bed Off"))
+        root.setboff.Bind(wx.EVT_BUTTON, lambda e:root.do_bedtemp("off"))
+        root.printerControls.append(root.setboff)
+        self.Add(root.setboff, pos = (3, 1), span = (1, 1))
+
+        if root.settings.last_bed_temperature not in map(float, root.bedtemps.values()):
+            btemp_choices = [str(root.settings.last_bed_temperature)] + btemp_choices
+        root.btemp = wx.ComboBox(root.panel, -1,
+                choices = btemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
+        root.btemp.SetToolTip(wx.ToolTip("Select Temperature for Heated Bed"))
+        root.btemp.Bind(wx.EVT_COMBOBOX, root.btemp_change)
+        self.Add(root.btemp, pos = (3, 2), span = (1, 2))
+
+        root.setbbtn = wx.Button(root.panel,-1, _("Set"), size = (38,-1), style = wx.BU_EXACTFIT)
+        root.setbbtn.SetToolTip(wx.ToolTip("Switch Heated Bed On"))
+        root.setbbtn.Bind(wx.EVT_BUTTON, root.do_bedtemp)
+        root.printerControls.append(root.setbbtn)
+        self.Add(root.setbbtn, pos = (3, 4), span = (1, 1))
+
+        root.btemp.SetValue(str(root.settings.last_bed_temperature))
+        root.htemp.SetValue(str(root.settings.last_temperature))
+
+        ## added for an error where only the bed would get (pla) or (abs).
+        #This ensures, if last temp is a default pla or abs, it will be marked so.
+        # if it is not, then a (user) remark is added. This denotes a manual entry
+
+        for i in btemp_choices:
+            if i.split()[0] == str(root.settings.last_bed_temperature).split('.')[0] or i.split()[0] == str(root.settings.last_bed_temperature):
+                root.btemp.SetValue(i)
+        for i in htemp_choices:
+            if i.split()[0] == str(root.settings.last_temperature).split('.')[0] or i.split()[0] == str(root.settings.last_temperature) :
+                root.htemp.SetValue(i)
+
+        if( '(' not in root.btemp.Value):
+            root.btemp.SetValue(root.btemp.Value + ' (user)')
+        if( '(' not in root.htemp.Value):
+            root.htemp.SetValue(root.htemp.Value + ' (user)')
+
+        #self.Add(root.btemp, pos = (4, 1), span = (1, 3))
+        #self.Add(root.setbbtn, pos = (4, 4), span = (1, 2))
+        root.tempdisp = wx.StaticText(root.panel,-1, "")
+
+        root.edist = wx.SpinCtrl(root.panel,-1, "5", min = 0, max = 1000, size = (60,-1))
+        root.edist.SetBackgroundColour((225, 200, 200))
+        root.edist.SetForegroundColour("black")
+        self.Add(root.edist, pos = (4, 2), span = (1, 2))
+        self.Add(wx.StaticText(root.panel,-1, _("mm")), pos = (4, 4), span = (1, 1))
+        root.edist.SetToolTip(wx.ToolTip("Amount to Extrude or Retract (mm)"))
+        root.efeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (60,-1))
+        root.efeedc.SetToolTip(wx.ToolTip("Extrude / Retract speed (mm/min)"))
+        root.efeedc.SetBackgroundColour((225, 200, 200))
+        root.efeedc.SetForegroundColour("black")
+        root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+        self.Add(root.efeedc, pos = (5, 2), span = (1, 2))
+        self.Add(wx.StaticText(root.panel,-1, _("mm/\nmin")), pos = (5, 4), span = (1, 1))
+        root.xyfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+        root.zfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+        root.zfeedc.SetBackgroundColour((180, 255, 180))
+        root.zfeedc.SetForegroundColour("black")
+        # self.Add((10, 0), pos = (0, 11), span = (1, 1))
+
+        #root.hottgauge = TempGauge(root.panel, size = (200, 24), title = _("Heater:"), maxval = 230)
+        #self.Add(root.hottgauge, pos = (7, 0), span = (1, 4))
+        #root.bedtgauge = TempGauge(root.panel, size = (200, 24), title = _("Bed:"), maxval = 130)
+        #self.Add(root.bedtgauge, pos = (8, 0), span = (1, 4))
+        #def scroll_setpoint(e):
+        #   if e.GetWheelRotation()>0:
+        #       root.do_settemp(str(root.hsetpoint+1))
+        #   elif e.GetWheelRotation()<0:
+        #       root.do_settemp(str(max(0, root.hsetpoint-1)))
+        #root.tgauge.Bind(wx.EVT_MOUSEWHEEL, scroll_setpoint)
+
+        root.graph = Graph(root.panel, wx.ID_ANY)
+        self.Add(root.graph, pos = (3, 5), span = (3, 3))
+        self.Add(root.tempdisp, pos = (6, 0), span = (1, 9))
+
+class VizPane(wx.BoxSizer):
+
+    def __init__(self, root):
+        super(VizPane, self).__init__(wx.VERTICAL)
+        root.gviz = gviz.gviz(root.panel, (300, 300),
+            build_dimensions = root.build_dimensions_list,
+            grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
+            extrusion_width = root.settings.preview_extrusion_width)
+        root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
+        root.gviz.showall = 1
+        try:
+            raise ""
+            import printrun.stlview
+            root.gwindow = printrun.stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600))
+        except:
+            root.gwindow = gviz.window([],
+            build_dimensions = root.build_dimensions_list,
+            grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
+            extrusion_width = root.settings.preview_extrusion_width)
+        root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
+        root.gwindow.Bind(wx.EVT_CLOSE, lambda x:root.gwindow.Hide())
+        self.Add(root.gviz, 1, flag = wx.SHAPED)
+        cs = root.centersizer = wx.GridBagSizer()
+        self.Add(cs, 0, flag = wx.EXPAND)
+
+class LogPane(wx.BoxSizer):
+
+    def __init__(self, root):
+        super(LogPane, self).__init__(wx.VERTICAL)
+        root.lowerrsizer = self
+        root.logbox = wx.TextCtrl(root.panel, style = wx.TE_MULTILINE, size = (350,-1))
+        root.logbox.SetEditable(0)
+        self.Add(root.logbox, 1, wx.EXPAND)
+        lbrs = wx.BoxSizer(wx.HORIZONTAL)
+        root.commandbox = wx.TextCtrl(root.panel, style = wx.TE_PROCESS_ENTER)
+        root.commandbox.SetToolTip(wx.ToolTip("Send commands to printer\n(Type 'help' for simple\nhelp function)"))
+        root.commandbox.Bind(wx.EVT_TEXT_ENTER, root.sendline)
+        root.commandbox.Bind(wx.EVT_CHAR, root.cbkey)
+        root.commandbox.history = [u""]
+        root.commandbox.histindex = 1
+        #root.printerControls.append(root.commandbox)
+        lbrs.Add(root.commandbox, 1)
+        root.sendbtn = wx.Button(root.panel,-1, _("Send"), style = wx.BU_EXACTFIT)
+        root.sendbtn.SetToolTip(wx.ToolTip("Send Command to Printer"))
+        root.sendbtn.Bind(wx.EVT_BUTTON, root.sendline)
+        #root.printerControls.append(root.sendbtn)
+        lbrs.Add(root.sendbtn)
+        self.Add(lbrs, 0, wx.EXPAND)
+
+class MainToolbar(wx.BoxSizer):
+
+    def __init__(self, root):
+        super(MainToolbar, self).__init__(wx.HORIZONTAL)
+        root.rescanbtn = wx.Button(root.panel,-1, _("Port"), size = buttonSize)
+        root.rescanbtn.SetToolTip(wx.ToolTip("Communication Settings\nClick to rescan ports"))
+        root.rescanbtn.Bind(wx.EVT_BUTTON, root.rescanports)
+        self.Add(root.rescanbtn, 0, wx.TOP|wx.LEFT, 0)
+
+        root.serialport = wx.ComboBox(root.panel, -1,
+                choices = root.scanserial(),
+                style = wx.CB_DROPDOWN, size = (100, 25))
+        root.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
+        root.rescanports()
+        self.Add(root.serialport)
+
+        self.Add(wx.StaticText(root.panel,-1, "@"), 0, wx.RIGHT|wx.ALIGN_CENTER, 0)
+        root.baud = wx.ComboBox(root.panel, -1,
+                choices = ["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
+                style = wx.CB_DROPDOWN,  size = (100, 25))
+        root.baud.SetToolTip(wx.ToolTip("Select Baud rate for printer communication"))
+        try:
+            root.baud.SetValue("115200")
+            root.baud.SetValue(str(root.settings.baudrate))
+        except:
+            pass
+        self.Add(root.baud)
+        root.connectbtn = wx.Button(root.panel,-1, _("Connect"),  size = buttonSize)
+        root.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
+        root.connectbtn.Bind(wx.EVT_BUTTON, root.connect)
+        self.Add(root.connectbtn)
+
+        root.resetbtn = wx.Button(root.panel,-1, _("Reset"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
+        root.resetbtn.Bind(wx.EVT_BUTTON, root.reset)
+        root.resetbtn.SetToolTip(wx.ToolTip("Reset the printer"))
+        self.Add(root.resetbtn)
+
+        root.loadbtn = wx.Button(root.panel,-1, _("Load file"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
+        root.loadbtn.Bind(wx.EVT_BUTTON, root.loadfile)
+        root.loadbtn.SetToolTip(wx.ToolTip("Load a 3D model file"))
+        self.Add(root.loadbtn)
+        root.platebtn = wx.Button(root.panel,-1, _("Compose"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
+        root.platebtn.Bind(wx.EVT_BUTTON, root.plate)
+        root.platebtn.SetToolTip(wx.ToolTip("Simple Plater System"))
+        self.Add(root.platebtn)
+        root.sdbtn = wx.Button(root.panel,-1, _("SD"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
+        root.sdbtn.Bind(wx.EVT_BUTTON, root.sdmenu)
+        root.sdbtn.SetToolTip(wx.ToolTip("SD Card Printing"))
+        root.printerControls.append(root.sdbtn)
+        self.Add(root.sdbtn)
+        root.printbtn = wx.Button(root.panel,-1, _("Print"),  size = buttonSize)
+        root.printbtn.Bind(wx.EVT_BUTTON, root.printfile)
+        root.printbtn.SetToolTip(wx.ToolTip("Start Printing Loaded File"))
+        root.printbtn.Disable()
+        self.Add(root.printbtn)
+        root.pausebtn = wx.Button(root.panel,-1, _("Pause"),  size = buttonSize)
+        root.pausebtn.SetToolTip(wx.ToolTip("Pause Current Print"))
+        root.pausebtn.Bind(wx.EVT_BUTTON, root.pause)
+        self.Add(root.pausebtn)
+        root.recoverbtn = wx.Button(root.panel,-1, _("Recover"), size = buttonSize)
+        root.recoverbtn.SetToolTip(wx.ToolTip("Recover previous Print"))
+        root.recoverbtn.Bind(wx.EVT_BUTTON, root.recover)
+        self.Add(root.recoverbtn)
+
+class MainWindow(wx.Frame):
+    
+    def __init__(self, *args, **kwargs):
+        super(MainWindow, self).__init__(*args, **kwargs)
+        # this list will contain all controls that should be only enabled
+        # when we're connected to a printer
+        self.printerControls = []
+
+    def createGui(self):
+        self.mainsizer = wx.BoxSizer(wx.VERTICAL)
+        self.uppersizer = MainToolbar(self)
+        self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.lowersizer.Add(LeftPane(self))
+        self.lowersizer.Add(VizPane(self), 1, wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
+        self.lowersizer.Add(LogPane(self), 0, wx.EXPAND)
+        self.mainsizer.Add(self.uppersizer)
+        self.mainsizer.Add(self.lowersizer, 1, wx.EXPAND)
+        self.panel.SetSizer(self.mainsizer)
+        self.status = self.CreateStatusBar()
+        self.status.SetStatusText(_("Not connected to printer."))
+        self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
+        self.Bind(wx.EVT_CLOSE, self.kill)
+
+        self.mainsizer.Layout()
+        self.mainsizer.Fit(self)
+
+        # disable all printer controls until we connect to a printer
+        self.pausebtn.Disable()
+        self.recoverbtn.Disable()
+        for i in self.printerControls:
+            i.Disable()
+
+        #self.panel.Fit()
+        self.cbuttons_reload()
+
