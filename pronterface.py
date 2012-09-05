@@ -238,7 +238,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if "S" in line:
                 try:
                     temp = float(line.split("S")[1].split("*")[0])
-                    #self.hottgauge.SetTarget(temp)
                     wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
                 except:
                     pass
@@ -250,7 +249,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if "S" in line:
                 try:
                     temp = float(line.split("S")[1].split("*")[0])
-                    #self.bedtgauge.SetTarget(temp)
                     wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
                 except:
                     pass
@@ -277,7 +275,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def setbedgui(self, f):
         self.bsetpoint = f
-        #self.bedtgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetBedTargetTemperature, int(f))
         if f>0:
             wx.CallAfter(self.btemp.SetValue, str(f))
@@ -297,7 +294,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def sethotendgui(self, f):
         self.hsetpoint = f
-        #self.hottgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetExtruder0TargetTemperature, int(f))
         if f > 0:
             wx.CallAfter(self.htemp.SetValue, str(f))
@@ -1060,9 +1056,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             string = ""
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             try:
-                #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
                 wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
-                #self.bedtgauge.SetValue(parse_temperature_report(self.tempreport, "B:"))
                 wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
             except:
                 pass
@@ -1127,7 +1121,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             try:
-                #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
                 wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
                 wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
             except:
