@@ -1,0 +1,26 @@
+Some cleanup commands :
+
+To add a space after each comma :
+sed -e "s/\(\w\),\(\w\)/\1, \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\),\(\"\)/\1, \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\"\),\(\w\)/\1, \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\"\),\(\"\)/\1, \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\([)}\]]\),\(\w\)/\1, \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\([)}\]]\),\([\[{(]\)/\1, \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\),\([\[{(]\)/\1, \2/g" -i *.py printrun/*.py printrun/svg/*.py
+
+To add spaces around each = :
+sed -e "s/\(\w\)=\(\w\)/\1 = \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\)=\(\"\)/\1 = \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\)=\((\)/\1 = \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\)=\((\)/\1 = \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\)=\([\[{(]\)/\1 = \2/g" -i *.py printrun/*.py printrun/svg/*.py
+
+To add spaces around each == :
+sed -e "s/\(\w\)==\(\w\)/\1 == \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\)==\(\"\)/\1 == \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\(\w\)==\((\)/\1 == \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\()\)==\(\w\)/\1 == \2/g" -i *.py printrun/*.py printrun/svg/*.py
+sed -e "s/\()\)==\((\)/\1 == \2/g" -i *.py printrun/*.py printrun/svg/*.py
+
+Obviously this is not a perfect solution, it WILL break the code. Juste check the diff and fix what's wrong before commiting.
