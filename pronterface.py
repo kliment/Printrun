@@ -404,13 +404,7 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
                 self.capture_skip[pat] -= 1
                 self.capture_skip_newline = True
                 return
-<<<<<<< HEAD
-        wx.CallAfter(self.logbox.AppendText, l)
-        if self.webInterface:
-            self.webInterface.AppendLog(l)
-=======
         wx.CallAfter(self.addtexttolog,l);
->>>>>>> experimental
 
     def scanserial(self):
         """scan for available ports. return a list of device names."""
@@ -426,17 +420,10 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
                 pass
         return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') + glob.glob("/dev/tty.*") + glob.glob("/dev/cu.*") + glob.glob("/dev/rfcomm*")
 
-<<<<<<< HEAD
-    def project(self, event):
-        import projectlayer
-        if self.p.online:
-            projectlayer.setframe(self, self.p).Show()
-=======
     def project(self,event):
         from printrun import projectlayer
-        if(self.p.online):
+        if self.p.online:
             projectlayer.setframe(self,self.p).Show()
->>>>>>> experimental
         else:
             print _("Printer is not online.")
             if self.webInterface:
@@ -460,10 +447,7 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
         self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1, _("&Options"), _(" Options dialog")))
 
-<<<<<<< HEAD
         self.Bind(wx.EVT_MENU, lambda x: threading.Thread(target = lambda:self.do_skein("set")).start(), m.Append(-1, _("Slicing Settings"), _(" Adjust slicing settings")))
-=======
-        self.Bind(wx.EVT_MENU, lambda x:threading.Thread(target=lambda :self.do_skein("set")).start(), m.Append(-1,_("Slicing Settings"),_(" Adjust slicing settings")))
 
         mItem = m.AppendCheckItem(-1, _("Debug G-code"),
             _("Print all G-code sent to and received from the printer."))
@@ -475,7 +459,6 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
         #except:
         #    pass
->>>>>>> experimental
 
         self.menustrip.Append(m, _("&Settings"))
         self.update_macros_menu()
@@ -575,27 +558,17 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         uts = self.uppertopsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.rescanbtn = wx.Button(self.panel,-1, _("Port"), size = buttonSize)
         self.rescanbtn.SetToolTip(wx.ToolTip("Communication Settings\nClick to rescan ports"))
-<<<<<<< HEAD
         self.rescanbtn.Bind(wx.EVT_BUTTON, self.rescanports)
-
         uts.Add(self.rescanbtn, 0, wx.TOP|wx.LEFT, 0)
-=======
-        self.rescanbtn.Bind(wx.EVT_BUTTON,self.rescanports)
-        uts.Add(self.rescanbtn,0,wx.TOP|wx.LEFT,0)
 
->>>>>>> experimental
         self.serialport = wx.ComboBox(self.panel, -1,
                 choices = self.scanserial(),
                 style = wx.CB_DROPDOWN, size = (100, 25))
         self.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
         self.rescanports()
         uts.Add(self.serialport)
-<<<<<<< HEAD
-        uts.Add(wx.StaticText(self.panel,-1, "@"), 0, wx.RIGHT|wx.ALIGN_CENTER, 0)
-=======
 
-        uts.Add(wx.StaticText(self.panel,-1,"@"),0,wx.RIGHT|wx.ALIGN_CENTER,0)
->>>>>>> experimental
+        uts.Add(wx.StaticText(self.panel,-1, "@"), 0, wx.RIGHT|wx.ALIGN_CENTER, 0)
         self.baud = wx.ComboBox(self.panel, -1,
                 choices = ["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
                 style = wx.CB_DROPDOWN,  size = (100, 25))
@@ -606,41 +579,22 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         except:
             pass
         uts.Add(self.baud)
-<<<<<<< HEAD
         self.connectbtn = wx.Button(self.panel,-1, _("Connect"),  size = buttonSize)
-        uts.Add(self.connectbtn)
         self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON, self.connect)
+        uts.Add(self.connectbtn)
+
         self.resetbtn = wx.Button(self.panel,-1, _("Reset"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
         self.resetbtn.Bind(wx.EVT_BUTTON, self.reset)
         self.resetbtn.SetToolTip(wx.ToolTip("Reset the printer"))
         uts.Add(self.resetbtn)
-        #self.minibtn = wx.Button(self.panel,-1, _("Mini mode"), style = wx.BU_EXACTFIT)
-        #self.minibtn.Bind(wx.EVT_BUTTON, self.toggleview)
 
         #uts.Add((25,-1))
 
         #uts.Add((15,-1), flag = wx.EXPAND)
+        #self.minibtn = wx.Button(self.panel,-1, _("Mini mode"), style = wx.BU_EXACTFIT)
+        #self.minibtn.Bind(wx.EVT_BUTTON, self.toggleview)
         #uts.Add(self.minibtn, 0, wx.ALIGN_CENTER)
-=======
-
-        self.connectbtn=wx.Button(self.panel,-1,_("Connect"),  size=buttonSize)
-        self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
-        self.connectbtn.Bind(wx.EVT_BUTTON,self.connect)
-        uts.Add(self.connectbtn)
-
-        self.resetbtn=wx.Button(self.panel,-1,_("Reset"),style=wx.BU_EXACTFIT,size=(-1,buttonSize[1]))
-        self.resetbtn.Bind(wx.EVT_BUTTON,self.reset)
-        self.resetbtn.SetToolTip(wx.ToolTip("Reset the printer"))
-        uts.Add(self.resetbtn)
-
-        #uts.Add((25,-1))
-        
-        #uts.Add((15,-1),flag=wx.EXPAND)
-        #self.minibtn=wx.Button(self.panel,-1,_("Mini mode"),style=wx.BU_EXACTFIT)
-        #self.minibtn.Bind(wx.EVT_BUTTON,self.toggleview)
-        #uts.Add(self.minibtn,0,wx.ALIGN_CENTER)
->>>>>>> experimental
 
         #SECOND ROW
         ubs = self.upperbottomsizer = uts#wx.BoxSizer(wx.HORIZONTAL)
@@ -850,13 +804,8 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         self.gviz.showall = 1
         try:
             raise ""
-<<<<<<< HEAD
             import printrun.stlview
             self.gwindow = printrun.stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600))
-=======
-            from printrun import stlview
-            self.gwindow=stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size=(600,600))
->>>>>>> experimental
         except:
             self.gwindow = gviz.window([],
             build_dimensions = self.build_dimensions_list,
@@ -1387,15 +1336,6 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         else:
             wx.CallAfter(self.graph.StopPlotting)
 
-<<<<<<< HEAD
-    def sendline(self, e):
-        command = self.commandbox.GetValue()
-        if not len(command):
-            return
-        wx.CallAfter(self.logbox.AppendText, ">>>"+command+"\n")
-        if self.webInterface:
-            self.webInterface.AppendLog(">>>"+command+"\n")
-=======
     def addtexttolog(self,text):
         try:
             self.logbox.AppendText(text)
@@ -1408,12 +1348,11 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
     def setloud(self,e):
         self.p.loud=e.IsChecked()
 
-    def sendline(self,e):
-        command=self.commandbox.GetValue()
+    def sendline(self, e):
+        command = self.commandbox.GetValue()
         if not len(command):
             return
-        wx.CallAfter(self.addtexttolog,">>>"+command+"\n");
->>>>>>> experimental
+        wx.CallAfter(self.addtexttolog, ">>>" + command + "\n");
         self.onecmd(str(command))
         self.commandbox.SetSelection(0, len(command))
         self.commandbox.history+=[command]
@@ -1504,11 +1443,7 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring) and (not self.p.loud):
            # print "*"+tstring+"*"
            # print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
-<<<<<<< HEAD
-            wx.CallAfter(self.logbox.AppendText, tstring+"\n")
-=======
-            wx.CallAfter(self.addtexttolog,tstring+"\n");
->>>>>>> experimental
+            wx.CallAfter(self.addtexttolog, tstring + "\n");
         for i in self.recvlisteners:
             i(l)
 
@@ -1622,7 +1557,6 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
     def skein(self, filename):
         wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
         print _("Slicing ") + filename
-<<<<<<< HEAD
         self.cout = StringIO.StringIO()
         self.filename = filename
         self.stopsf = 0
@@ -1630,23 +1564,13 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
         threading.Thread(target = self.skein_func).start()
         threading.Thread(target = self.skein_monitor).start()
 
-    def loadfile(self, event, filename = None):
-=======
-        self.cout=StringIO.StringIO()
-        self.filename=filename
-        self.stopsf=0
-        self.skeining=1
-        thread(target=self.skein_func).start()
-        thread(target=self.skein_monitor).start()
-
     def do_load(self,l):
-      if hasattr(self, 'skeining'):
-        self.loadfile(None, l)
-      else:
-        self._do_load(l)
+        if hasattr(self, 'skeining'):
+            self.loadfile(None, l)
+        else:
+            self._do_load(l)
 
-    def loadfile(self,event,filename=None):
->>>>>>> experimental
+    def loadfile(self, event, filename = None):
         if self.skeining and self.skeinp is not None:
             self.skeinp.terminate()
             return
