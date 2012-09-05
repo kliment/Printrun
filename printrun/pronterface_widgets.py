@@ -90,10 +90,10 @@ class macroed(wx.Dialog):
             self.callback(self.reindent(self.e.GetValue()))
         else:
             self.callback(self.e.GetValue().split("\n"))
+
     def close(self, ev):
         self.Destroy()
-        if self.webInterface:
-            webinterface.KillWebInterfaceThread()
+
     def unindent(self, text):
         self.indent_chars = text[:len(text)-len(text.lstrip())]
         if len(self.indent_chars) == 0:
