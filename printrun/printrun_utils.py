@@ -1,4 +1,4 @@
-import os
+import os, sys
 import gettext
 
 # Set up Internationalization using gettext
@@ -16,18 +16,22 @@ def imagefile(filename):
         candidate = os.path.join(prefix, filename)
         if os.path.exists(candidate):
             return candidate
-    local_candidate = os.path.join(os.path.dirname(__file__), "images", filename)
+    local_candidate = os.path.join(os.path.dirname(sys.argv[0]), "images", filename)
     if os.path.exists(local_candidate):
         return local_candidate
     else:
-        return os.path.join(os.path.split(os.path.split(__file__)[0])[0], "images", filename)
+        return os.path.join("images", filename)
 
 def lookup_file(filename, prefixes):
     for prefix in prefixes:
         candidate = os.path.join(prefix, filename)
         if os.path.exists(candidate):
             return candidate
-    return filename
+    local_candidate = os.path.join(os.path.dirname(sys.argv[0]), filename)
+    if os.path.exists(local_candidate):
+        return local_candidate
+    else:
+        return filename
 
 def pixmapfile(filename):
     return lookup_file(filename, ['/usr/local/share/pixmaps', '/usr/share/pixmaps'])
