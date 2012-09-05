@@ -621,7 +621,7 @@ class pronsole(cmd.Cmd):
 
     def help_disconnect(self):
         print "Disconnects from the printer"
-    
+
     def do_load(self,l):
         self._do_load(l)
 

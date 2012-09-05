@@ -184,7 +184,7 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
             except:
                 print _("CherryPy is not installed. Web Interface Disabled.")
         if self.filename is not None:
-          self.do_load(self.filename)
+            self.do_load(self.filename)
 
     def startcb(self):
         self.starttime = time.time()
@@ -1344,7 +1344,7 @@ class PronterWindow(wx.Frame, pronsole.pronsole):
             pass
         if self.webInterface:
             self.webInterface.AppendLog(text)
-        
+
     def setloud(self,e):
         self.p.loud=e.IsChecked()
 
