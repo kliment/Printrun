@@ -227,13 +227,28 @@ class LogPane(wx.BoxSizer):
         lbrs.Add(root.sendbtn)
         self.Add(lbrs, 0, wx.EXPAND)
 
+def make_button(parent, label, callback, tooltip, container = None, size = None, style = None):
+    if style:
+        button = wx.Button(parent, -1, label, style = style, size = size)
+    else:
+        button = wx.Button(parent, -1, label, size = size)
+    button.Bind(wx.EVT_BUTTON, callback)
+    button.SetToolTip(wx.ToolTip(tooltip))
+    if container:
+        container.Add(button)
+    return button
+
+def make_sized_button(*args):
+    return make_button(*args, size = buttonSize, style = wx.BU_EXACTFIT)
+
+def make_autosize_button(*args):
+    return make_button(*args, size = (-1, buttonSize[1]))
+
 class MainToolbar(wx.BoxSizer):
 
     def __init__(self, root):
         super(MainToolbar, self).__init__(wx.HORIZONTAL)
-        root.rescanbtn = wx.Button(root.panel,-1, _("Port"), size = buttonSize)
-        root.rescanbtn.SetToolTip(wx.ToolTip("Communication Settings\nClick to rescan ports"))
-        root.rescanbtn.Bind(wx.EVT_BUTTON, root.rescanports)
+        root.rescanbtn = make_sized_button(root.panel, _("Port"), root.rescanports, _("Communication Settings\nClick to rescan ports"))
         self.Add(root.rescanbtn, 0, wx.TOP|wx.LEFT, 0)
 
         root.serialport = wx.ComboBox(root.panel, -1,
@@ -254,42 +269,17 @@ class MainToolbar(wx.BoxSizer):
         except:
             pass
         self.Add(root.baud)
-        root.connectbtn = wx.Button(root.panel,-1, _("Connect"),  size = buttonSize)
-        root.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
-        root.connectbtn.Bind(wx.EVT_BUTTON, root.connect)
-        self.Add(root.connectbtn)
+        root.connectbtn = make_sized_button(root.panel, _("Connect"), root.connect, _("Connect to the printer"), self)
 
-        root.resetbtn = wx.Button(root.panel,-1, _("Reset"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
-        root.resetbtn.Bind(wx.EVT_BUTTON, root.reset)
-        root.resetbtn.SetToolTip(wx.ToolTip("Reset the printer"))
-        self.Add(root.resetbtn)
-
-        root.loadbtn = wx.Button(root.panel,-1, _("Load file"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
-        root.loadbtn.Bind(wx.EVT_BUTTON, root.loadfile)
-        root.loadbtn.SetToolTip(wx.ToolTip("Load a 3D model file"))
-        self.Add(root.loadbtn)
-        root.platebtn = wx.Button(root.panel,-1, _("Compose"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
-        root.platebtn.Bind(wx.EVT_BUTTON, root.plate)
-        root.platebtn.SetToolTip(wx.ToolTip("Simple Plater System"))
-        self.Add(root.platebtn)
-        root.sdbtn = wx.Button(root.panel,-1, _("SD"), style = wx.BU_EXACTFIT, size = (-1, buttonSize[1]))
-        root.sdbtn.Bind(wx.EVT_BUTTON, root.sdmenu)
-        root.sdbtn.SetToolTip(wx.ToolTip("SD Card Printing"))
+        root.resetbtn = make_autosize_button(root.panel, _("Reset"), root.reset, _("Reset the printer"), self)
+        root.loadbtn = make_autosize_button(root.panel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
+        root.platebtn = make_autosize_button(root.panel, _("Compose"), root.plate, _("Simple Plater System"), self)
+        root.sdbtn = make_autosize_button(root.panel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
         root.printerControls.append(root.sdbtn)
-        self.Add(root.sdbtn)
-        root.printbtn = wx.Button(root.panel,-1, _("Print"),  size = buttonSize)
-        root.printbtn.Bind(wx.EVT_BUTTON, root.printfile)
-        root.printbtn.SetToolTip(wx.ToolTip("Start Printing Loaded File"))
+        root.printbtn = make_sized_button(root.panel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
         root.printbtn.Disable()
-        self.Add(root.printbtn)
-        root.pausebtn = wx.Button(root.panel,-1, _("Pause"),  size = buttonSize)
-        root.pausebtn.SetToolTip(wx.ToolTip("Pause Current Print"))
-        root.pausebtn.Bind(wx.EVT_BUTTON, root.pause)
-        self.Add(root.pausebtn)
-        root.recoverbtn = wx.Button(root.panel,-1, _("Recover"), size = buttonSize)
-        root.recoverbtn.SetToolTip(wx.ToolTip("Recover previous Print"))
-        root.recoverbtn.Bind(wx.EVT_BUTTON, root.recover)
-        self.Add(root.recoverbtn)
+        root.pausebtn = make_sized_button(root.panel, _("Pause"), root.pause, _("Pause Current Print"), self)
+        root.recoverbtn = make_sized_button(root.panel, _("Recover"), root.recover, _("Recover previous Print"), self)
 
 class MainWindow(wx.Frame):
     
@@ -325,4 +315,3 @@ class MainWindow(wx.Frame):
 
         #self.panel.Fit()
         self.cbuttons_reload()
-
