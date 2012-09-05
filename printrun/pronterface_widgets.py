@@ -16,7 +16,7 @@
 import wx
 import re
 
-class macroed(wx.Dialog):
+class MacroEditor(wx.Dialog):
     """Really simple editor to edit macro definitions"""
 
     def __init__(self, macro_name, definition, callback, gcode = False):

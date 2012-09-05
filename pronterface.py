@@ -379,7 +379,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.cur_macro_name = macro_name
                 self.cur_macro_def = definition
                 self.end_macro()
-            macroed(macro_name, old_macro_definition, cb)
+            MacroEditor(macro_name, old_macro_definition, cb)
         else:
             pronsole.pronsole.start_macro(self, macro_name, old_macro_definition)
 
@@ -460,7 +460,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_editgcode(self, e = None):
         if self.filename is not None:
-            macroed(self.filename, self.f, self.doneediting, 1)
+            MacroEditor(self.filename, self.f, self.doneediting, 1)
 
     def new_macro(self, e = None):
         dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))
