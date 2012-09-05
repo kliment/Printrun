@@ -44,7 +44,7 @@ class macroed(wx.Dialog):
         titlesizer.Add(self.cancelb)
         topsizer = wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(titlesizer, 0, wx.EXPAND)
-        self.e = wx.TextCtrl(self.panel, style = wx.TE_MULTILINE+wx.HSCROLL, size = (400, 400))
+        self.e = wx.TextCtrl(self.panel, style = wx.HSCROLL|wx.TE_MULTILINE|wx.TE_RICH2, size = (400, 400))
         if not self.gcode:
             self.e.SetValue(self.unindent(definition))
         else:
