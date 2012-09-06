@@ -45,11 +45,11 @@ class XYZControlsSizer(wx.GridBagSizer):
 
     def __init__(self, root):
         super(XYZControlsSizer, self).__init__()
-        self.xyb = XYButtons(root.panel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor)
-        self.Add(self.xyb, pos = (0, 1), flag = wx.ALIGN_CENTER)
-        self.zb = ZButtons(root.panel, root.moveZ, root.settings.bgcolor)
-        self.Add(self.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
-        wx.CallAfter(self.xyb.SetFocus)
+        root.xyb = XYButtons(root.panel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor)
+        self.Add(root.xyb, pos = (0, 1), flag = wx.ALIGN_CENTER)
+        root.zb = ZButtons(root.panel, root.moveZ, root.settings.bgcolor)
+        self.Add(root.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
+        wx.CallAfter(root.xyb.SetFocus)
 
 class LeftPane(wx.GridBagSizer):
 
