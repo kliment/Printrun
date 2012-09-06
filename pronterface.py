@@ -738,10 +738,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         bedit = ButtonEdit(self)
         if button is not None:
             n = button.custombutton
-            bedit.name.SetValue(button.label)
-            bedit.command.SetValue(button.command)
-            if button.background:
-                colour = button.background
+            bedit.name.SetValue(button.properties.label)
+            bedit.command.SetValue(button.properties.command)
+            if button.properties.background:
+                colour = button.properties.background
                 if type(colour) not in (str, unicode):
                     #print type(colour)
                     if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
