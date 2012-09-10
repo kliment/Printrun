@@ -51,12 +51,9 @@ class Graph(BufferedCanvas):
 
         self._lastyvalue = 0
 
-
         #self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         #self.sizer.Add(wx.Button(self, -1, "Button1", (0, 0)))
         #self.SetSizer(self.sizer)
-
-
 
     def OnPaint(self, evt):
         dc = wx.PaintDC(self)
@@ -66,7 +63,6 @@ class Graph(BufferedCanvas):
         #call the super method
         super(wx.Panel, self).Destroy()
 
-
     def updateTemperatures(self, event):
         self.AddBedTemperature(self.bedtemps[-1])
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
@@ -75,7 +71,6 @@ class Graph(BufferedCanvas):
         #self.AddExtruder1Temperature(self.extruder1temps[-1])
         #self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
         self.Refresh()
-
 
     def drawgrid(self, dc, gc):
         #cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
@@ -104,7 +99,6 @@ class Graph(BufferedCanvas):
         #path.CloseSubpath()
         #gc.DrawPath(path)
         #gc.StrokePath(path)
-
 
         font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD)
         gc.SetFont(font, wx.Colour(23, 44, 44))
@@ -192,7 +186,6 @@ class Graph(BufferedCanvas):
         if (len(self.bedtemps)-1) * float(self.width)/self.xsteps > self.width:
             self.bedtemps.pop(0)
 
-
     def SetBedTargetTemperature(self, value):
         self.bedtargettemps.pop()
         self.bedtargettemps.append(value)
@@ -201,7 +194,6 @@ class Graph(BufferedCanvas):
         self.bedtargettemps.append(value)
         if (len(self.bedtargettemps)-1) * float(self.width)/self.xsteps > self.width:
             self.bedtargettemps.pop(0)
-
 
     def SetExtruder0Temperature(self, value):
         self.extruder0temps.pop()
@@ -212,7 +204,6 @@ class Graph(BufferedCanvas):
         if (len(self.extruder0temps)-1) * float(self.width)/self.xsteps > self.width:
             self.extruder0temps.pop(0)
 
-
     def SetExtruder0TargetTemperature(self, value):
         self.extruder0targettemps.pop()
         self.extruder0targettemps.append(value)
@@ -221,7 +212,6 @@ class Graph(BufferedCanvas):
         self.extruder0targettemps.append(value)
         if (len(self.extruder0targettemps)-1) * float(self.width)/self.xsteps > self.width:
             self.extruder0targettemps.pop(0)
-
 
     def SetExtruder1Temperature(self, value):
         self.extruder1temps.pop()
@@ -232,7 +222,6 @@ class Graph(BufferedCanvas):
         if (len(self.extruder1temps)-1) * float(self.width)/self.xsteps > self.width:
             self.extruder1temps.pop(0)
 
-
     def SetExtruder1TargetTemperature(self, value):
         self.extruder1targettemps.pop()
         self.extruder1targettemps.append(value)
@@ -241,7 +230,6 @@ class Graph(BufferedCanvas):
         self.extruder1targettemps.append(value)
         if (len(self.extruder1targettemps)-1) * float(self.width)/self.xsteps > self.width:
             self.extruder1targettemps.pop(0)
-
 
     def StartPlotting(self, time):
         self.Refresh()
