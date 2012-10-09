@@ -62,15 +62,15 @@ def measurements(g):
         if "X" in i and ("G1" in i or "G0" in i):
             try:
                 Xcur = float(i.split("X")[1].split(" ")[0])
-                if Xcur<Xmin and Xcur>5.0: Xmin = Xcur
-                if Xcur>Xmax: Xmax = Xcur
+                if Xcur<Xmin: Xmin=Xcur
+                if Xcur>Xmax: Xmax=Xcur
             except:
                 pass
         if "Y" in i and ("G1" in i or "G0" in i):
             try:
                 Ycur = float(i.split("Y")[1].split(" ")[0])
-                if Ycur<Ymin and Ycur>5.0: Ymin = Ycur
-                if Ycur>Ymax: Ymax = Ycur
+                if Ycur<Ymin: Ymin=Ycur
+                if Ycur>Ymax: Ymax=Ycur
             except:
                 pass
 
