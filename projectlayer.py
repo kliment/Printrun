@@ -128,10 +128,14 @@ class DisplayFrame(wx.Frame):
 
     def rise(self):
         print "Rising "+ str(time.clock())
+        print self.direction
         if self.printer != None and self.printer.online:
             self.printer.send_now("G91")
-            self.printer.send_now("G1 Z%f F200" % (3,))
-            self.printer.send_now("G1 Z-%f F200" % (3-self.thickness,))
+            self.printer.send_now("G1 Z%f F200" % (self.overshoot,))
+            if (self.direction == "Top Down"):
+                self.printer.send_now("G1 Z%f F200" % (self.overshoot-self.thickness,))
+            else: # self.direction == "Bottom Up"
+                self.printer.send_now("G1 Z-%f F200" % (self.overshoot-self.thickness,))
             self.printer.send_now("G90")
         else:
             time.sleep(self.pause)
@@ -158,7 +162,7 @@ class DisplayFrame(wx.Frame):
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
         
-    def present(self, layers, interval=0.5, pause=0.2, thickness=0.4, scale=1, size=(1024, 768), offset=(0, 0)):
+    def present(self, layers, interval=0.5, pause=0.2, overshoot=0.0, direction="Top Down", thickness=0.4, scale=1, size=(1024, 768), offset=(0, 0)):
         wx.CallAfter(self.pic.Hide)
         wx.CallAfter(self.Refresh)
         self.layers = layers
@@ -167,6 +171,8 @@ class DisplayFrame(wx.Frame):
         self.size = size
         self.interval = interval
         self.pause = pause
+        self.overshoot = overshoot
+        self.direction = direction 
         self.offset = offset
         self.index = 0
         self.running = True
@@ -190,96 +196,159 @@ class SettingsFrame(wx.Frame):
             return val
         
     def __init__(self, parent, printer=None):
-        wx.Frame.__init__(self, parent, title="ProjectLayer Control", size=(400, 450))
+        wx.Frame.__init__(self, parent, title="ProjectLayer Control", size=(450, 480))
         self.pronterface = parent
         self.display_frame = DisplayFrame(self, title="ProjectLayer Display", printer=printer)
         
-        left_label_X_pos = 0
-        left_value_X_pos = 70
-        right_label_X_pos = 180
-        right_value_X_pos = 230
-        info_pos = 300
-        
         self.panel = wx.Panel(self)
-        self.panel.SetBackgroundColour("orange")
-        self.load_button = wx.Button(self.panel, -1, "Load", pos=(0, 0))
-        self.load_button.Bind(wx.EVT_BUTTON, self.load_file)
         
-        wx.StaticText(self.panel, -1, "Layer (mm):", pos=(left_label_X_pos, 30))
-        self.thickness = wx.TextCtrl(self.panel, -1, "0.3", pos=(left_value_X_pos, 30))
-
-        wx.StaticText(self.panel, -1, "Exposure (s):", pos=(left_label_X_pos, 60))
-        self.interval = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_interval", "0.5")), pos=(left_value_X_pos, 60))
-        self.interval.Bind(wx.EVT_SPINCTRL, self.update_interval)
+        vbox = wx.BoxSizer(wx.VERTICAL)       
+        buttonbox = wx.StaticBoxSizer(wx.StaticBox(self.panel, label="Controls"), wx.HORIZONTAL) 
         
-        wx.StaticText(self.panel, -1, "Blank (s):", pos=(left_label_X_pos, 90))
-        self.pause = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_pause", "0.5")), pos=(left_value_X_pos, 90))
-        self.pause.Bind(wx.EVT_SPINCTRL, self.update_pause)
+        load_button = wx.Button(self.panel, -1, "Load")
+        load_button.Bind(wx.EVT_BUTTON, self.load_file)
+        buttonbox.Add(load_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
         
-        wx.StaticText(self.panel, -1, "Scale:", pos=(left_label_X_pos, 120))
-        self.scale = floatspin.FloatSpin(self.panel, -1, pos=(left_value_X_pos, 120), value=self._get_setting('project_scale', 1.0), increment=0.1, digits=3)
-        self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
+        present_button = wx.Button(self.panel, -1, "Present")
+        present_button.Bind(wx.EVT_BUTTON, self.start_present)
+        buttonbox.Add(present_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
         
-        wx.StaticText(self.panel, -1, "X:", pos=(right_label_X_pos, 30))
-        self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1024))), pos=(right_value_X_pos, 30), max=999999)
-        self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
-
-        wx.StaticText(self.panel, -1, "Y:", pos=(right_label_X_pos, 60))
-        self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 768))), pos=(right_value_X_pos, 60), max=999999)
-        self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
-        
-        wx.StaticText(self.panel, -1, "OffsetX:", pos=(right_label_X_pos, 90))
-        self.offset_X = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 90), value=self._get_setting("project_offset_x", 0.0), increment=1, digits=1)
-        self.offset_X.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
-
-        wx.StaticText(self.panel, -1, "OffsetY:", pos=(right_label_X_pos, 120))
-        self.offset_Y = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos, 120), value=self._get_setting("project_offset_y", 0.0), increment=1, digits=1)
-        self.offset_Y.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
-        
-        self.load_button = wx.Button(self.panel, -1, "Present", pos=(left_label_X_pos, 150))
-        self.load_button.Bind(wx.EVT_BUTTON, self.start_present)
-        
-        self.pause_button = wx.Button(self.panel, -1, "Pause", pos=(left_label_X_pos, 180))
+        self.pause_button = wx.Button(self.panel, -1, "Pause")
         self.pause_button.Bind(wx.EVT_BUTTON, self.pause_present)
+        buttonbox.Add(self.pause_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
+                
+        stop_button = wx.Button(self.panel, -1, "Stop")
+        stop_button.Bind(wx.EVT_BUTTON, self.stop_present)
+        buttonbox.Add(stop_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
         
-        self.stop_button = wx.Button(self.panel, -1, "Stop", pos=(left_label_X_pos, 210))
-        self.stop_button.Bind(wx.EVT_BUTTON, self.stop_present)
+        fieldboxsizer = wx.StaticBoxSizer(wx.StaticBox(self.panel, label="Settings"), wx.VERTICAL)
+        fieldsizer = wx.GridBagSizer(10,10)
         
-        wx.StaticText(self.panel, -1, "Fullscreen:", pos=(right_label_X_pos, 150))
-        self.fullscreen = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 150))
-        self.fullscreen.Bind(wx.EVT_CHECKBOX, self.update_fullscreen)
+        # Left Column
         
-        wx.StaticText(self.panel, -1, "Calibrate:", pos=(right_label_X_pos, 180))
-        self.calibrate = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 180))
-        self.calibrate.Bind(wx.EVT_CHECKBOX, self.show_calibrate)
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Layer (mm):"), pos=(0, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.thickness = wx.TextCtrl(self.panel, -1, "0.3")
+        fieldsizer.Add(self.thickness, pos=(0, 1))
         
-        wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(right_label_X_pos, 210))
-        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos + 40, 210), value=self._get_setting("project_projected_x", 415.0), increment=1, digits=1)
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Exposure (s):"), pos=(1, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.interval = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_interval", "0.5")))
+        self.interval.Bind(wx.EVT_SPINCTRL, self.update_interval)
+        fieldsizer.Add(self.interval, pos=(1, 1))
+        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Blank (s):"), pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.pause = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_pause", "0.5")))
+        self.pause.Bind(wx.EVT_SPINCTRL, self.update_pause)
+        fieldsizer.Add(self.pause, pos=(2, 1))
+        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Scale:"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.scale = floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_scale', 1.0), increment=0.1, digits=3)
+        self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
+        fieldsizer.Add(self.scale, pos=(3, 1))
+        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Overshoot:"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.overshoot= floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_overshoot', 3.0), increment=0.1, digits=3)
+        self.overshoot.Bind(floatspin.EVT_FLOATSPIN, self.update_overshoot)
+        fieldsizer.Add(self.overshoot, pos=(4, 1))
+        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Direction:"), pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.direction = wx.ComboBox(self.panel, -1, choices=["Top Down","Bottom Up"], value=self._get_setting('project_direction', "Top Down"))
+        self.direction.Bind(wx.EVT_CHECKBOX, self.update_direction)
+        fieldsizer.Add(self.direction, pos=(5, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+        
+        # Right Column
+        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "X:"), pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1024))), max=999999)
+        self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
+        fieldsizer.Add(self.X, pos=(0, 3))
+
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Y:"), pos=(1, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 768))), max=999999)
+        self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
+        fieldsizer.Add(self.Y, pos=(1, 3))
+        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetX:"), pos=(2, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.offset_X = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_x", 0.0), increment=1, digits=1)
+        self.offset_X.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
+        fieldsizer.Add(self.offset_X, pos=(2, 3))
+
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetY:"), pos=(3, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.offset_Y = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_y", 0.0), increment=1, digits=1)
+        self.offset_Y.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
+        fieldsizer.Add(self.offset_Y, pos=(3, 3))
+        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "ProjectedX (mm):"), pos=(4, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_projected_x", 415.0), increment=1, digits=1)
         self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
-
-        wx.StaticText(self.panel, -1, "1st Layer:", pos=(right_label_X_pos, 240))
-        self.first_layer = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 240))
-        self.first_layer.Bind(wx.EVT_CHECKBOX, self.show_first_layer)
-
-        wx.StaticText(self.panel, -1, "(s):", pos=(right_value_X_pos +20, 240))
-        self.show_first_layer_timer = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos +40, 240), value=-1, increment=1, digits=1)
-
-        wx.StaticText(self.panel, -1, "Boundary:", pos=(right_label_X_pos, 270))
-        self.bounding_box = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 270))
+        fieldsizer.Add(self.projected_X_mm, pos=(4, 3))
+        
+        fieldboxsizer.Add(fieldsizer)
+        
+        # Display
+        
+        displayboxsizer = wx.StaticBoxSizer(wx.StaticBox(self.panel, label="Display"), wx.VERTICAL)
+        displaysizer = wx.GridBagSizer(10,10)
+        
+        displaysizer.Add(wx.StaticText(self.panel, -1, "Fullscreen:"), pos=(0,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.fullscreen = wx.CheckBox(self.panel, -1)
+        self.fullscreen.Bind(wx.EVT_CHECKBOX, self.update_fullscreen)
+        displaysizer.Add(self.fullscreen, pos=(0, 1), flag=wx.ALIGN_CENTER_VERTICAL)
+               
+        displaysizer.Add(wx.StaticText(self.panel, -1, "Calibrate:"), pos=(0,2), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.calibrate = wx.CheckBox(self.panel, -1)
+        self.calibrate.Bind(wx.EVT_CHECKBOX, self.show_calibrate)
+        displaysizer.Add(self.calibrate, pos=(0,3), flag=wx.ALIGN_CENTER_VERTICAL)
+        
+        displaysizer.Add(wx.StaticText(self.panel, -1, "Boundary:"), pos=(0,4), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.bounding_box = wx.CheckBox(self.panel, -1)
         self.bounding_box.Bind(wx.EVT_CHECKBOX, self.show_bounding_box)
+        displaysizer.Add(self.bounding_box, pos=(0,5), flag=wx.ALIGN_CENTER_VERTICAL)
         
-        wx.StaticText(self.panel, -1, "File:", pos=(left_label_X_pos, info_pos))
-        self.filename = wx.StaticText(self.panel, -1, "", pos=(left_value_X_pos + 10, info_pos))
+        displaysizer.Add(wx.StaticText(self.panel, -1, "1st Layer:"), pos=(0,6), flag=wx.ALIGN_CENTER_VERTICAL)
         
-        wx.StaticText(self.panel, -1, "Total Layers:", pos=(left_label_X_pos, info_pos + 20))
-        self.total_layers = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 10, info_pos + 20))
+        first_layer_boxer = wx.BoxSizer(wx.HORIZONTAL)                
+        self.first_layer = wx.CheckBox(self.panel, -1)
+        self.first_layer.Bind(wx.EVT_CHECKBOX, self.show_first_layer)
+        first_layer_boxer.Add(self.first_layer, flag=wx.ALIGN_CENTER_VERTICAL)
 
-        wx.StaticText(self.panel, -1, "Current Layer:", pos=(left_label_X_pos, info_pos + 40))
-        self.current_layer = wx.StaticText(self.panel, -1, "0", pos=(left_value_X_pos + 20, info_pos + 40))
+        first_layer_boxer.Add(wx.StaticText(self.panel, -1, " (s):"), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.show_first_layer_timer = floatspin.FloatSpin(self.panel, -1, value=-1, increment=1, digits=1, size=(55,-1))
+        first_layer_boxer.Add(self.show_first_layer_timer, flag=wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.Add(first_layer_boxer, pos=(0,7), flag=wx.ALIGN_CENTER_VERTICAL)
         
-        wx.StaticText(self.panel, -1, "Estimated Time:", pos=(left_label_X_pos, info_pos + 60))
-        self.estimated_time = wx.StaticText(self.panel, -1, "", pos=(left_value_X_pos + 20, info_pos + 60))
+        displayboxsizer.Add(displaysizer)
+                
+        # Info
+        infosizer = wx.StaticBoxSizer(wx.StaticBox(self.panel, label="Info"), wx.VERTICAL)
+                
+        infofieldsizer = wx.GridBagSizer(10,10)
         
+        infofieldsizer.Add(wx.StaticText(self.panel, -1, "File:"), pos=(0,0))
+        self.filename = wx.StaticText(self.panel, -1, "")
+        infofieldsizer.Add(self.filename, pos=(0,1))
+        
+        infofieldsizer.Add(wx.StaticText(self.panel, -1, "Total Layers:"), pos=(1,0))
+        self.total_layers = wx.StaticText(self.panel, -1)
+        infofieldsizer.Add(self.total_layers, pos=(1,1))
+
+        infofieldsizer.Add(wx.StaticText(self.panel, -1, "Current Layer:"), pos=(2,0))
+        self.current_layer = wx.StaticText(self.panel, -1, "0")
+        infofieldsizer.Add(self.current_layer, pos=(2,1))
+        
+        infofieldsizer.Add(wx.StaticText(self.panel, -1, "Estimated Time:"), pos=(3,0))
+        self.estimated_time = wx.StaticText(self.panel, -1, "")
+        infofieldsizer.Add(self.estimated_time, pos=(3,1))
+        
+        infosizer.Add(infofieldsizer)
+        
+        #
+        
+        vbox.Add(buttonbox, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP|wx.BOTTOM, border=10)
+        vbox.Add(fieldboxsizer, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=10);
+        vbox.Add(displayboxsizer, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=10);
+        vbox.Add(infosizer, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=10)
+        
+        self.panel.SetSizer(vbox)
         self.SetPosition((0, 0)) 
         self.Show()
 
@@ -492,8 +561,8 @@ class SettingsFrame(wx.Frame):
                 print "No model loaded!"
                 self.bounding_box.SetValue(False)
                 return
-            if self.slicer == "bitmap" or self.slicer == "Skeinforge":
-                print "Boundary Box not supported for bitmaps or skeinforge svgs."
+            if self.slicer == "bitmap":
+                print "Boundary Box not supported for bitmaps."
                 self.bounding_box.SetValue(False)
                 return
             self.display_frame.Raise()
@@ -597,6 +666,16 @@ class SettingsFrame(wx.Frame):
         self._set_setting('project_pause',pause)
         self.set_estimated_time()
         self.refresh_display(event)
+    
+    def update_overshoot(self, event):
+        overshoot = float(self.overshoot.GetValue())
+        self.display_frame.pause = overshoot
+        self._set_setting('project_overshoot',overshoot)
+        
+    def update_direction(self, event):
+        direction = self.direction.GetValue()
+        self.display_frame.direction = direction
+        self._set_setting('project_direction',direction)
         
     def update_fullscreen(self, event):
         if (self.fullscreen.GetValue()):
@@ -637,6 +716,8 @@ class SettingsFrame(wx.Frame):
             interval=float(self.interval.GetValue()),
             scale=float(self.scale.GetValue()),
             pause=float(self.pause.GetValue()),
+            overshoot=float(self.overshoot.GetValue()),
+            direction=self.direction.GetValue(),
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
             offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue())))
         
