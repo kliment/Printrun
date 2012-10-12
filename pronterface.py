@@ -375,10 +375,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def project(self,event):
         import projectlayer
-        if(self.p.online):
-            projectlayer.SettingsFrame(self,self.p).Show()
-        else:
-            print _("Printer is not online.")
+        projectlayer.SettingsFrame(self,self.p).Show()
 
     def popmenu(self):
         self.menustrip = wx.MenuBar()

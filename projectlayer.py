@@ -255,15 +255,15 @@ class SettingsFrame(wx.Frame):
         
         wx.StaticText(self.panel, -1, "Calibrate:", pos=(right_label_X_pos, 180))
         self.calibrate = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 180))
-        self.calibrate.Bind(wx.EVT_CHECKBOX, self.start_calibrate)
+        self.calibrate.Bind(wx.EVT_CHECKBOX, self.show_calibrate)
         
         wx.StaticText(self.panel, -1, "ProjectedX (mm):", pos=(right_label_X_pos, 210))
         self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos + 40, 210), value=self._get_setting("project_projected_x", 415.0), increment=1, digits=1)
         self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
 
         wx.StaticText(self.panel, -1, "1st Layer:", pos=(right_label_X_pos, 240))
-        self.show_first_layer = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 240))
-        self.show_first_layer.Bind(wx.EVT_CHECKBOX, self.present_first_layer)
+        self.first_layer = wx.CheckBox(self.panel, -1, pos=(right_value_X_pos, 240))
+        self.first_layer.Bind(wx.EVT_CHECKBOX, self.show_first_layer)
 
         wx.StaticText(self.panel, -1, "(s):", pos=(right_value_X_pos +20, 240))
         self.show_first_layer_timer = floatspin.FloatSpin(self.panel, -1, pos=(right_value_X_pos +40, 240), value=-1, increment=1, digits=1)
@@ -301,7 +301,7 @@ class SettingsFrame(wx.Frame):
         self.current_layer.SetLabel(str(index))
         self.set_estimated_time()
 
-    def set_filename(self,name):
+    def display_filename(self,name):
         self.filename.SetLabel(name)
             
     def set_estimated_time(self):
@@ -385,15 +385,44 @@ class SettingsFrame(wx.Frame):
             print len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm"
             self.layers = layers
             self.set_total_layers(len(layers[0]))
-            self.set_current_layer(0) 
-            self.set_filename(os.path.basename(name)) 
-            self.display_frame.slicer = layers[2]
+            self.set_current_layer(0)
+            self.current_filename = os.path.basename(name) 
+            self.display_filename(self.current_filename) 
+            self.slicer = layers[2]
+            self.display_frame.slicer = self.slicer
         dlg.Destroy()
 
-    def start_calibrate(self, event):
+    def show_calibrate(self, event):
+        if self.calibrate.IsChecked():
+            self.present_calibrate(event)
+        else:
+            if hasattr(self, 'layers'):
+                self.display_frame.slicer = self.layers[2] 
+            self.display_frame.scale = float(self.scale.GetValue())
+            self.display_frame.clear_layer()
+
+    def show_first_layer(self, event):
+        if self.first_layer.IsChecked():
+            self.present_first_layer(event)
+        else:
+            if hasattr(self, 'layers'):
+                self.display_frame.slicer = self.layers[2] 
+            self.display_frame.scale = float(self.scale.GetValue())
+            self.display_frame.clear_layer()
+    
+    def show_bounding_box(self, event):
+        if self.bounding_box.IsChecked():
+            self.present_bounding_box(event)
+        else:
+            if hasattr(self, 'layers'):
+                self.display_frame.slicer = self.layers[2] 
+            self.display_frame.scale = float(self.scale.GetValue())
+            self.display_frame.clear_layer()
+        
+    def present_calibrate(self, event):
         if self.calibrate.IsChecked():
             self.display_frame.Raise()
-            self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
+            self.display_frame.offset = (float(self.offset_X.GetValue()), -float(self.offset_Y.GetValue()))
             self.display_frame.scale = 1.0
             resolution_x_pixels = int(self.X.GetValue())
             resolution_y_pixels = int(self.Y.GetValue())
@@ -427,19 +456,21 @@ class SettingsFrame(wx.Frame):
                     dc.DrawLine(0, y * (pixelsYPerMM * 10), resolution_x_pixels, y * (pixelsYPerMM * 10));
                     dc.DrawLine(x * (pixelsXPerMM * 10), 0, x * (pixelsXPerMM * 10), resolution_y_pixels);
 
-            self.show_first_layer.SetValue(False)
+            self.first_layer.SetValue(False)
             self.bounding_box.SetValue(False)
             self.display_frame.slicer = 'bitmap'
             self.display_frame.draw_layer(gridBitmap.ConvertToImage())
 
-        else:
-            if hasattr(self, 'layers'):
-                self.display_frame.slicer = self.layers[2] 
-            self.display_frame.scale = float(self.scale.GetValue())
-            self.display_frame.clear_layer()
-
-    def show_bounding_box(self, event):
+    def present_bounding_box(self, event):
         if self.bounding_box.IsChecked():
+            if not hasattr(self, "layers"):
+                print "No model loaded!"
+                self.bounding_box.SetValue(False)
+                return
+            if self.slicer == "bitmap" or self.slicer == "Skeinforge":
+                print "Boundary Box not supported for bitmaps or skeinforge svgs."
+                self.bounding_box.SetValue(False)
+                return
             self.display_frame.Raise()
             self.display_frame.offset=(float(self.offset_X.GetValue()), -float(self.offset_Y.GetValue()))
             self.display_frame.scale=1.0
@@ -477,17 +508,31 @@ class SettingsFrame(wx.Frame):
             dc.DrawLine(xDistPixels,0,xDistPixels,yDistPixels);
             dc.DrawLine(0,yDistPixels,xDistPixels,yDistPixels);
             
-            self.show_first_layer.SetValue(False)
+            self.first_layer.SetValue(False)
             self.calibrate.SetValue(False)
             self.display_frame.slicer = 'bitmap'
             self.display_frame.draw_layer(boxBitmap.ConvertToImage())
-        else:
-            if hasattr(self, 'layers'):
-                self.display_frame.slicer = self.layers[2] 
-            self.display_frame.offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
-            self.display_frame.scale=float(self.scale.GetValue())
-            self.display_frame.clear_layer()
-            
+
+    def present_first_layer(self, event):
+        if (self.first_layer.GetValue()):
+            if not hasattr(self, "layers"):
+                print "No model loaded!"
+                self.first_layer.SetValue(False)
+                return
+            self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
+            self.display_frame.scale = float(self.scale.GetValue())
+
+            self.display_frame.slicer = self.layers[2]
+            self.display_frame.dpi = self.get_dpi()
+            self.display_frame.draw_layer(copy.deepcopy(self.layers[0][0]))
+            self.calibrate.SetValue(False)
+            self.bounding_box.SetValue(False)
+            if self.show_first_layer_timer != -1.0 :
+                def unpresent_first_layer():
+                    self.display_frame.clear_layer()
+                    self.first_layer.SetValue(False)
+                wx.CallLater(self.show_first_layer_timer.GetValue() * 1000, unpresent_first_layer)
+
     def update_offset(self, event):
         
         offset_x = float(self.offset_X.GetValue())
@@ -497,38 +542,43 @@ class SettingsFrame(wx.Frame):
         self._set_setting('project_offset_x',offset_x)
         self._set_setting('project_offset_y',offset_y)
         
-        self.start_calibrate(event)
+        self.refresh_display(event)
+        
+    def refresh_display(self, event):
+        self.present_calibrate(event)
+        self.present_bounding_box(event)
+        self.present_first_layer(event)
     
     def update_projected_Xmm(self, event):
         self._set_setting('project_projected_x',self.projected_X_mm.GetValue())
-        self.start_calibrate(event)
+        self.refresh_display(event)
         
     def update_scale(self, event):
         scale = float(self.scale.GetValue())
         self.display_frame.scale = scale
         self._set_setting('project_scale',scale)
-        self.start_calibrate(event)
+        self.refresh_display(event)
         
     def update_interval(self, event):
         interval = float(self.interval.GetValue())
         self.display_frame.interval = interval
         self._set_setting('project_interval',interval)
         self.set_estimated_time()
-        self.start_calibrate(event)
+        self.refresh_display(event)
         
     def update_pause(self, event):
         pause = float(self.pause.GetValue())
         self.display_frame.pause = pause
         self._set_setting('project_pause',pause)
         self.set_estimated_time()
-        self.start_calibrate(event)
+        self.refresh_display(event)
         
     def update_fullscreen(self, event):
         if (self.fullscreen.GetValue()):
             self.display_frame.ShowFullScreen(1)
         else:
             self.display_frame.ShowFullScreen(0)
-        self.start_calibrate(event)
+        self.refresh_display(event)
     
     def update_resolution(self, event):
         x = float(self.X.GetValue())
@@ -536,7 +586,7 @@ class SettingsFrame(wx.Frame):
         self.display_frame.resize((x,y))
         self._set_setting('project_x',x)
         self._set_setting('project_y',y)
-        self.start_calibrate(event)
+        self.refresh_display(event)
     
     def get_dpi(self):
         resolution_x_pixels = int(self.X.GetValue())
@@ -581,29 +631,6 @@ class SettingsFrame(wx.Frame):
             self.pause_button.SetLabel("Pause")
             self.display_frame.running = True
             self.display_frame.next_img()
-
-    def present_first_layer(self, event):
-        if not hasattr(self, "layers"):
-            print "No model loaded!"
-            self.show_first_layer.SetValue(False)
-            return
-        if (self.show_first_layer.GetValue()):
-            self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
-            self.display_frame.scale = float(self.scale.GetValue())
-
-            self.display_frame.slicer = self.layers[2]
-            self.display_frame.dpi = self.get_dpi()
-            self.display_frame.draw_layer(copy.deepcopy(self.layers[0][0]))
-            self.calibrate.SetValue(False)
-            self.bounding_box.SetValue(False)
-            if self.show_first_layer_timer != -1.0 :
-                def unpresent_first_layer():
-                    self.display_frame.clear_layer()
-                    self.show_first_layer.SetValue(False)
-                wx.CallLater(self.show_first_layer_timer.GetValue() * 1000, unpresent_first_layer)
-        else:
-            self.display_frame.clear_layer()
-        
 
 if __name__ == "__main__":
     #a = wx.App(redirect=True,filename="mylogfile.txt")
