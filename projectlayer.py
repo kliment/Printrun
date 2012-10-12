@@ -85,11 +85,7 @@ class DisplayFrame(wx.Frame):
             dc.SetPen(wx.Pen("white"))
             dc.SetBrush(wx.Brush("white"))
 
-            if self.slicer == 'Skeinforge':
-                for i in image:
-                    points = [wx.Point(*map(lambda x:int(round(float(x) * self.scale)), j.strip().split())) for j in i.strip().split("M")[1].split("L")]
-                    dc.DrawPolygon(points, self.size[0] / 2, self.size[1] / 2)
-            elif self.slicer == 'Slic3r':
+            if self.slicer == 'Slic3r' or self.slicer == 'Skeinforge':
                 
                 if int(self.scale) != 1:
                     layercopy = copy.deepcopy(image)
@@ -342,12 +338,41 @@ class SettingsFrame(wx.Frame):
     
                 ol += [svgSnippet]
         else :
-            for i in et.findall("{http://www.w3.org/2000/svg}g")[0].findall("{http://www.w3.org/2000/svg}g"):
-                z = float(i.get('id').split("z:")[-1])
+            
+            slice_layers = et.findall("{http://www.w3.org/2000/svg}metadata")[0].findall("{http://www.reprap.org/slice}layers")[0]
+            minX = slice_layers.get('minX')
+            maxX = slice_layers.get('maxX')
+            minY = slice_layers.get('minY')
+            maxY = slice_layers.get('maxY')
+            
+            height = str(abs(float(minY)) + abs(float(maxY)))
+            width = str(abs(float(minX)) + abs(float(maxX)))
+            
+            for g in et.findall("{http://www.w3.org/2000/svg}g")[0].findall("{http://www.w3.org/2000/svg}g"):
+                
+                g.set('transform','')
+                
+                text_element = g.findall("{http://www.w3.org/2000/svg}text")[0]
+                g.remove(text_element)
+                
+                path_elements = g.findall("{http://www.w3.org/2000/svg}path")
+                for p in path_elements:
+                    p.set('transform', 'translate('+maxX+','+maxY+')')
+                    p.set('fill', 'white')
+
+                z = float(g.get('id').split("z:")[-1])
                 zdiff = z - zlast
                 zlast = z
-                path = i.find('{http://www.w3.org/2000/svg}path')
-                ol += [(path.get("d").split("z"))[:-1]]
+    
+                svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
+                svgSnippet.set('height', height + 'mm')
+                svgSnippet.set('width', width + 'mm')
+                
+                svgSnippet.set('viewBox', '0 0 ' + height + ' ' + width)
+                svgSnippet.set('style','background-color:black;fill:white;')
+                svgSnippet.append(g)
+    
+                ol += [svgSnippet]
         return ol, zdiff, slicer
     
     def parse_3DLP_zip(self, name):
