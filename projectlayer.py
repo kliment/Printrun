@@ -208,6 +208,8 @@ class SettingsFrame(wx.Frame):
         
         self.panel = wx.Panel(self)
         
+        default_field_width = 50
+        
         vbox = wx.BoxSizer(wx.VERTICAL)       
         buttonbox = wx.StaticBoxSizer(wx.StaticBox(self.panel, label="Controls"), wx.HORIZONTAL) 
         
@@ -240,37 +242,37 @@ class SettingsFrame(wx.Frame):
         # Left Column
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Layer (mm):"), pos=(0, 0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.thickness = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_layer", "0.1")))
+        self.thickness = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_layer", "0.1")), size=(80, -1))
         self.thickness.Bind(wx.EVT_TEXT, self.update_thickness)
         self.thickness.SetHelpText("The thickness of each slice. Should match the value used to slice the model.  SVG files update this value automatically, 3dlp.zip files have to be manually entered.")        
         fieldsizer.Add(self.thickness, pos=(0, 1))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Exposure (s):"), pos=(1, 0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.interval = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_interval", "0.5")))
+        self.interval = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_interval", "0.5")), size=(80,-1))
         self.interval.Bind(wx.EVT_TEXT, self.update_interval)
         self.interval.SetHelpText("How long each slice should be displayed.")
         fieldsizer.Add(self.interval, pos=(1, 1))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Blank (s):"), pos=(2,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.pause = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_pause", "0.5")))
+        self.pause = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_pause", "0.5")), size=(80,-1))
         self.pause.Bind(wx.EVT_TEXT, self.update_pause)
         self.pause.SetHelpText("The pause length between slices. This should take into account any movement of the Z axis, plus time to prepare the resin surface (sliding, tilting, sweeping, etc).")
         fieldsizer.Add(self.pause, pos=(2, 1))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Scale:"), pos=(3,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.scale = floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_scale', 1.0), increment=0.1, digits=3)
+        self.scale = floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_scale', 1.0), increment=0.1, digits=3, size=(80,-1))
         self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
         self.scale.SetHelpText("The additional scaling of each slice.")
         fieldsizer.Add(self.scale, pos=(3, 1))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Direction:"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.direction = wx.ComboBox(self.panel, -1, choices=["Top Down","Bottom Up"], value=self._get_setting('project_direction', "Top Down"))
+        self.direction = wx.ComboBox(self.panel, -1, choices=["Top Down","Bottom Up"], value=self._get_setting('project_direction', "Top Down"), size=(80,-1))
         self.direction.Bind(wx.EVT_COMBOBOX, self.update_direction)
         self.direction.SetHelpText("The direction the Z axis should move. Top Down is where the projector is above the model, Bottom up is where the projector is below the model.")
         fieldsizer.Add(self.direction, pos=(4, 1), flag=wx.ALIGN_CENTER_VERTICAL)
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Overshoot (mm):"), pos=(5,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.overshoot= floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_overshoot', 3.0), increment=0.1, digits=1, min_val=0)
+        self.overshoot= floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_overshoot', 3.0), increment=0.1, digits=1, min_val=0, size=(80,-1))
         self.overshoot.Bind(floatspin.EVT_FLOATSPIN, self.update_overshoot)
         self.overshoot.SetHelpText("How far the axis should move beyond the next slice position for each slice. For Top Down printers this would dunk the model under the resi and then return. For Bottom Up printers this would raise the base away from the vat and then return.")
         fieldsizer.Add(self.overshoot, pos=(5, 1))
@@ -279,38 +281,38 @@ class SettingsFrame(wx.Frame):
         # Right Column
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "X (px):"), pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1024))), max=999999)
+        self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1024))), max=999999, size=(80,-1))
         self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         self.X.SetHelpText("The projector resolution in the X axis.")
         fieldsizer.Add(self.X, pos=(0, 3))
 
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Y (px):"), pos=(1, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 768))), max=999999)
+        self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 768))), max=999999, size=(80,-1))
         self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         self.Y.SetHelpText("The projector resolution in the Y axis.")
         fieldsizer.Add(self.Y, pos=(1, 3))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetX (mm):"), pos=(2, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.offset_X = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_x", 0.0), increment=1, digits=1)
+        self.offset_X = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_x", 0.0), increment=1, digits=1, size=(80,-1))
         self.offset_X.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
         self.offset_X.SetHelpText("How far the slice should be offset from the edge in the X axis.")
         fieldsizer.Add(self.offset_X, pos=(2, 3))
 
         fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetY (mm):"), pos=(3, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.offset_Y = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_y", 0.0), increment=1, digits=1)
+        self.offset_Y = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_y", 0.0), increment=1, digits=1, size=(80,-1))
         self.offset_Y.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
         self.offset_Y.SetHelpText("How far the slice should be offset from the edge in the Y axis.")
         fieldsizer.Add(self.offset_Y, pos=(3, 3))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "ProjectedX (mm):"), pos=(4, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_projected_x", 415.0), increment=1, digits=1)
+        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_projected_x", 415.0), increment=1, digits=1, size=(80,-1))
         self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
         self.projected_X_mm.SetHelpText("The actual width of the entire projected image. Use the Calibrate grid to show the full size of the projected image, and measure the width at the same level where the slice will be projected onto the resin.")
         fieldsizer.Add(self.projected_X_mm, pos=(4, 3))
         
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Z Axis Speed (mm/min):"), pos=(5, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.z_axis_rate = wx.SpinCtrl(self.panel, -1, str(self._get_setting("project_z_axis_rate", 200)), max=9999)
+        self.z_axis_rate = wx.SpinCtrl(self.panel, -1, str(self._get_setting("project_z_axis_rate", 200)), max=9999, size=(80,-1))
         self.z_axis_rate.Bind(wx.EVT_SPINCTRL, self.update_z_axis_rate)
         self.z_axis_rate.SetHelpText("Speed of the Z axis in mm/minute. Take into account that slower rates may require a longer pause value.")
         fieldsizer.Add(self.z_axis_rate, pos=(5, 3))
