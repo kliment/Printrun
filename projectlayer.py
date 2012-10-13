@@ -131,10 +131,11 @@ class DisplayFrame(wx.Frame):
         print self.direction
         if self.printer != None and self.printer.online:
             self.printer.send_now("G91")
-            self.printer.send_now("G1 Z%f F200" % (self.overshoot,))
             if (self.direction == "Top Down"):
+                self.printer.send_now("G1 Z-%f F200" % (self.overshoot,))
                 self.printer.send_now("G1 Z%f F200" % (self.overshoot-self.thickness,))
             else: # self.direction == "Bottom Up"
+                self.printer.send_now("G1 Z%f F200" % (self.overshoot,))
                 self.printer.send_now("G1 Z-%f F200" % (self.overshoot-self.thickness,))
             self.printer.send_now("G90")
         else:
@@ -196,7 +197,8 @@ class SettingsFrame(wx.Frame):
             return val
         
     def __init__(self, parent, printer=None):
-        wx.Frame.__init__(self, parent, title="ProjectLayer Control", size=(450, 480))
+        wx.Frame.__init__(self, parent, title="ProjectLayer Control",style=(wx.DEFAULT_FRAME_STYLE | wx.WS_EX_CONTEXTHELP))
+        self.SetExtraStyle(wx.FRAME_EX_CONTEXTHELP)
         self.pronterface = parent
         self.display_frame = DisplayFrame(self, title="ProjectLayer Display", printer=printer)
         
@@ -207,19 +209,23 @@ class SettingsFrame(wx.Frame):
         
         load_button = wx.Button(self.panel, -1, "Load")
         load_button.Bind(wx.EVT_BUTTON, self.load_file)
-        buttonbox.Add(load_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
+        load_button.SetHelpText("Choose an SVG file created from Slic3r or Skeinforge, or a zip file of bitmap images.")
+        buttonbox.Add(load_button, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         
         present_button = wx.Button(self.panel, -1, "Present")
         present_button.Bind(wx.EVT_BUTTON, self.start_present)
-        buttonbox.Add(present_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
+        buttonbox.Add(present_button, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         
         self.pause_button = wx.Button(self.panel, -1, "Pause")
         self.pause_button.Bind(wx.EVT_BUTTON, self.pause_present)
-        buttonbox.Add(self.pause_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
+        buttonbox.Add(self.pause_button, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
                 
         stop_button = wx.Button(self.panel, -1, "Stop")
         stop_button.Bind(wx.EVT_BUTTON, self.stop_present)
-        buttonbox.Add(stop_button, flag=wx.RIGHT|wx.BOTTOM, border=5)
+        buttonbox.Add(stop_button, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
+
+        self.help_button = wx.ContextHelpButton(self.panel)
+        buttonbox.Add(self.help_button, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         
         fieldboxsizer = wx.StaticBoxSizer(wx.StaticBox(self.panel, label="Settings"), wx.VERTICAL)
         fieldsizer = wx.GridBagSizer(10,10)
@@ -228,6 +234,8 @@ class SettingsFrame(wx.Frame):
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Layer (mm):"), pos=(0, 0), flag=wx.ALIGN_CENTER_VERTICAL)
         self.thickness = wx.TextCtrl(self.panel, -1, "0.3")
+        self.thickness.SetHelpText("i am a edit box")
+
         fieldsizer.Add(self.thickness, pos=(0, 1))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Exposure (s):"), pos=(1, 0), flag=wx.ALIGN_CENTER_VERTICAL)
@@ -245,8 +253,8 @@ class SettingsFrame(wx.Frame):
         self.scale.Bind(floatspin.EVT_FLOATSPIN, self.update_scale)
         fieldsizer.Add(self.scale, pos=(3, 1))
         
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Overshoot:"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.overshoot= floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_overshoot', 3.0), increment=0.1, digits=3)
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Overshoot (mm):"), pos=(4,0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.overshoot= floatspin.FloatSpin(self.panel, -1, value=self._get_setting('project_overshoot', 3.0), increment=0.1, digits=1, min_val=0)
         self.overshoot.Bind(floatspin.EVT_FLOATSPIN, self.update_overshoot)
         fieldsizer.Add(self.overshoot, pos=(4, 1))
         
@@ -257,22 +265,22 @@ class SettingsFrame(wx.Frame):
         
         # Right Column
         
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "X:"), pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "X (px):"), pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
         self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1024))), max=999999)
         self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         fieldsizer.Add(self.X, pos=(0, 3))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Y:"), pos=(1, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Y (px):"), pos=(1, 2), flag=wx.ALIGN_CENTER_VERTICAL)
         self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 768))), max=999999)
         self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         fieldsizer.Add(self.Y, pos=(1, 3))
         
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetX:"), pos=(2, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetX (mm):"), pos=(2, 2), flag=wx.ALIGN_CENTER_VERTICAL)
         self.offset_X = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_x", 0.0), increment=1, digits=1)
         self.offset_X.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
         fieldsizer.Add(self.offset_X, pos=(2, 3))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetY:"), pos=(3, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetY (mm):"), pos=(3, 2), flag=wx.ALIGN_CENTER_VERTICAL)
         self.offset_Y = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_offset_y", 0.0), increment=1, digits=1)
         self.offset_Y.Bind(floatspin.EVT_FLOATSPIN, self.update_offset)
         fieldsizer.Add(self.offset_Y, pos=(3, 3))
@@ -349,6 +357,8 @@ class SettingsFrame(wx.Frame):
         vbox.Add(infosizer, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=10)
         
         self.panel.SetSizer(vbox)
+        self.panel.Fit() 
+        self.Fit() 
         self.SetPosition((0, 0)) 
         self.Show()
 
@@ -739,6 +749,9 @@ class SettingsFrame(wx.Frame):
             self.display_frame.next_img()
 
 if __name__ == "__main__":
+    provider = wx.SimpleHelpProvider()
+    wx.HelpProvider_Set(provider)
+
     #a = wx.App(redirect=True,filename="mylogfile.txt")
     a = wx.App()
     SettingsFrame(None).Show()
