@@ -25,6 +25,7 @@ from cairosvg.surface import PNGSurface
 import cStringIO
 import imghdr
 import copy
+import string
 
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
@@ -131,15 +132,27 @@ class DisplayFrame(wx.Frame):
             print "Lowering "+ str(time.clock())
         else:
             print "Rising "+ str(time.clock())
-            
+                        
         if self.printer != None and self.printer.online:
             self.printer.send_now("G91")
+            
+            if (self.prelift_gcode):
+                for line in self.prelift_gcode.split('\n'):
+                    if line:
+                        self.printer.send_now(line)
+            
             if (self.direction == "Top Down"):
                 self.printer.send_now("G1 Z-%f F%g" % (self.overshoot,self.z_axis_rate,))
                 self.printer.send_now("G1 Z%f F%g" % (self.overshoot-self.thickness,self.z_axis_rate,))
             else: # self.direction == "Bottom Up"
                 self.printer.send_now("G1 Z%f F%g" % (self.overshoot,self.z_axis_rate,))
                 self.printer.send_now("G1 Z-%f F%g" % (self.overshoot-self.thickness,self.z_axis_rate,))
+            
+            if (self.postlift_gcode):
+                for line in self.postlift_gcode.split('\n'):
+                    if line:
+                        self.printer.send_now(line)
+            
             self.printer.send_now("G90")
         else:
             time.sleep(self.pause)
@@ -166,7 +179,7 @@ class DisplayFrame(wx.Frame):
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
         
-    def present(self, layers, interval=0.5, pause=0.2, overshoot=0.0, z_axis_rate=200, direction="Top Down", thickness=0.4, scale=1, size=(1024, 768), offset=(0, 0)):
+    def present(self, layers, interval=0.5, pause=0.2, overshoot=0.0, z_axis_rate=200, prelift_gcode="", postlift_gcode="", direction="Top Down", thickness=0.4, scale=1, size=(1024, 768), offset=(0, 0)):
         wx.CallAfter(self.pic.Hide)
         wx.CallAfter(self.Refresh)
         self.layers = layers
@@ -177,6 +190,8 @@ class DisplayFrame(wx.Frame):
         self.pause = pause
         self.overshoot = overshoot
         self.z_axis_rate = z_axis_rate
+        self.prelift_gcode = prelift_gcode
+        self.postlift_gcode = postlift_gcode
         self.direction = direction 
         self.offset = offset
         self.index = 0
@@ -207,9 +222,7 @@ class SettingsFrame(wx.Frame):
         self.display_frame = DisplayFrame(self, title="ProjectLayer Display", printer=printer)
         
         self.panel = wx.Panel(self)
-        
-        default_field_width = 50
-        
+                
         vbox = wx.BoxSizer(wx.VERTICAL)       
         buttonbox = wx.StaticBoxSizer(wx.StaticBox(self.panel, label="Controls"), wx.HORIZONTAL) 
         
@@ -277,7 +290,18 @@ class SettingsFrame(wx.Frame):
         self.overshoot.SetHelpText("How far the axis should move beyond the next slice position for each slice. For Top Down printers this would dunk the model under the resi and then return. For Bottom Up printers this would raise the base away from the vat and then return.")
         fieldsizer.Add(self.overshoot, pos=(5, 1))
         
-        
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Pre-lift Gcode:"), pos=(6, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.prelift_gcode = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_prelift_gcode", "").replace("\\n",'\n')), size=(-1, 35), style=wx.TE_MULTILINE)
+        self.prelift_gcode.SetHelpText("Additional gcode to run before raising the Z axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!")
+        self.prelift_gcode.Bind(wx.EVT_TEXT, self.update_prelift_gcode)
+        fieldsizer.Add(self.prelift_gcode, pos=(6, 1), span=(2,1))
+
+        fieldsizer.Add(wx.StaticText(self.panel, -1, "Post-lift Gcode:"), pos=(6, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.postlift_gcode = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_postlift_gcode", "").replace("\\n",'\n')), size=(-1, 35), style=wx.TE_MULTILINE)
+        self.postlift_gcode.SetHelpText("Additional gcode to run after raising the Z axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!")
+        self.postlift_gcode.Bind(wx.EVT_TEXT, self.update_postlift_gcode)
+        fieldsizer.Add(self.postlift_gcode, pos=(6, 3), span=(2,1))
+
         # Right Column
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "X (px):"), pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
@@ -727,7 +751,17 @@ class SettingsFrame(wx.Frame):
         overshoot = float(self.overshoot.GetValue())
         self.display_frame.pause = overshoot
         self._set_setting('project_overshoot',overshoot)
-            
+
+    def update_prelift_gcode(self, event):
+        prelift_gcode = self.prelift_gcode.GetValue().replace('\n', "\\n")
+        self.display_frame.prelift_gcode = prelift_gcode
+        self._set_setting('project_prelift_gcode',prelift_gcode)
+        
+    def update_postlift_gcode(self, event):
+        postlift_gcode = self.postlift_gcode.GetValue().replace('\n', "\\n")
+        self.display_frame.postlift_gcode = postlift_gcode
+        self._set_setting('project_postlift_gcode',postlift_gcode)
+        
     def update_z_axis_rate(self, event):
         z_axis_rate = int(self.z_axis_rate.GetValue())
         self.display_frame.z_axis_rate = z_axis_rate
@@ -779,6 +813,8 @@ class SettingsFrame(wx.Frame):
             pause=float(self.pause.GetValue()),
             overshoot=float(self.overshoot.GetValue()),
             z_axis_rate=int(self.z_axis_rate.GetValue()),
+            prelift_gcode=self.prelift_gcode.GetValue(),
+            postlift_gcode=self.postlift_gcode.GetValue(),
             direction=self.direction.GetValue(),
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
             offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue())))
@@ -803,7 +839,7 @@ class SettingsFrame(wx.Frame):
 if __name__ == "__main__":
     provider = wx.SimpleHelpProvider()
     wx.HelpProvider_Set(provider)
-    #a = wx.App(redirect=True,filename="mylogfile.txt")
-    a = wx.App()
+    a = wx.App(redirect=True,filename="mylogfile.txt")
+    #a = wx.App()
     SettingsFrame(None).Show()
     a.MainLoop()

@@ -214,6 +214,8 @@ class Settings:
         self.project_overshoot = 3.0
         self.project_z_axis_rate = 200
         self.project_layer = 0.1
+        self.project_prelift_gcode = ""
+        self.project_postlift_gcode = ""
 
     def _set(self,key,value):
         try:
