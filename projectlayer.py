@@ -839,7 +839,7 @@ class SettingsFrame(wx.Frame):
 if __name__ == "__main__":
     provider = wx.SimpleHelpProvider()
     wx.HelpProvider_Set(provider)
-    a = wx.App(redirect=True,filename="mylogfile.txt")
-    #a = wx.App()
+    #a = wx.App(redirect=True,filename="mylogfile.txt")
+    a = wx.App()
     SettingsFrame(None).Show()
     a.MainLoop()
