@@ -20,6 +20,7 @@ import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
 from math import sqrt
+from gcoder import GCode
 
 import printcore
 from printrun.printrun_utils import install_locale
@@ -44,63 +45,13 @@ def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
 def measurements(g):
-    Xcur = 0.0
-    Ycur = 0.0
-    Zcur = 0.0
-    Xmin = 1000000
-    Ymin = 1000000
-    Zmin = 1000000
-    Xmax=-1000000
-    Ymax=-1000000
-    Zmax=-1000000
-    Xtot = 0
-    Ytot = 0
-    Ztot = 0
-
-
-    for i in g:
-        if "X" in i and ("G1" in i or "G0" in i):
-            try:
-                Xcur = float(i.split("X")[1].split(" ")[0])
-                if Xcur<Xmin: Xmin=Xcur
-                if Xcur>Xmax: Xmax=Xcur
-            except:
-                pass
-        if "Y" in i and ("G1" in i or "G0" in i):
-            try:
-                Ycur = float(i.split("Y")[1].split(" ")[0])
-                if Ycur<Ymin: Ymin=Ycur
-                if Ycur>Ymax: Ymax=Ycur
-            except:
-                pass
-
-        if "Z" in i and ("G1" in i or "G0" in i):
-            try:
-                Zcur = float(i.split("Z")[1].split(" ")[0])
-                if Zcur<Zmin: Zmin = Zcur
-                if Zcur>Zmax: Zmax = Zcur
-            except:
-                pass
-
-
-        Xtot = Xmax - Xmin
-        Ytot = Ymax - Ymin
-        Ztot = Zmax - Zmin
-
-    return (Xtot, Ytot, Ztot, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)
+    gcode = GCode(g)
+    gcode.measure()
+    return (gcode.width, gcode.depth, gcode.height, gcode.xmin, gcode.xmax, gcode.ymin, gcode.ymax, gcode.zmin, gcode.zmax)
 
 def totalelength(g):
-    tot = 0
-    cur = 0
-    for i in g:
-        if "E" in i and ("G1" in i or "G0" in i):
-            try:
-                cur = float(i.split("E")[1].split(" ")[0])
-            except:
-                pass
-        elif "G92" in i and "E0" in i:
-            tot+=cur
-    return tot
+    gcode = GCode(g)
+    return gcode.filament_length()
 
 def get_coordinate_value(axis, parts):
     for i in parts:
