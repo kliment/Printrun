@@ -552,7 +552,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.commandbox.histindex = (self.commandbox.histindex+1)%len(self.commandbox.history)
                 self.commandbox.SetValue(self.commandbox.history[self.commandbox.histindex])
                 self.commandbox.SetSelection(0, len(self.commandbox.history[self.commandbox.histindex]))
-
         else:
             e.Skip()
 
