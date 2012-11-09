@@ -16,6 +16,17 @@
 
 import sys
 import re
+import math
+
+def deltalen(a,b):
+	d = object()
+	d.x = b.x - a.x
+	d.y = b.y - a.y
+	d.z = b.z - a.z
+	
+	return math.sqrt((d.x*d.x)+(d.y*d.y)+(d.z*d.z))
+	
+
 
 class Line(object):
 	def __init__(self,l):
@@ -77,8 +88,10 @@ class Line(object):
 			return ""
 			
 	def _get_float(self,which):
-		return float(self.regex.findall(self.raw.split(which)[1])[0])
-		
+		try:
+			return float(self.regex.findall(self.raw.split(which)[1])[0])
+		except:
+			return None
 		
 	def _parse_coordinates(self):
 		if "X" in self.raw:
@@ -98,14 +111,76 @@ class Line(object):
 
 		
 	def is_move(self):
-		return "G1" in self.raw or "G0" in self.raw
+		return self.command() and ("G1" in self.raw or "G0" in self.raw)
 		
+		
+	def __str__(self):
+		return self.raw
+		
+class Layer(object):
+	def __init__(self,lines):
+		self.lines = lines
+		
+		
+	def measure(self):
+		xmin = 999999999
+		ymin = 999999999
+		zmin = 0
+		xmax = -999999999
+		ymax = -999999999
+		zmax = -999999999
+		relative = False
+
+		current_x = 0
+		current_y = 0
+		current_z = 0
+
+		for line in self.lines:
+			if line.command() == "G92":
+				current_x = line.x or current_x
+				current_y = line.y or current_y
+				current_z = line.z or current_z	
+
+			if line.is_move():
+				x = line.x 
+				y = line.y
+				z = line.z
+
+				if line.relative:
+					x = current_x + (x or 0)
+					y = current_y + (y or 0)
+					z = current_z + (z or 0)
+
+
+				if x and line.e:
+					if x < xmin:
+						xmin = x
+					if x > xmax:
+						xmax = x
+				if y and line.e:
+					if y < ymin:
+						ymin = y
+					if y > ymax:
+						ymax = y
+				if z:
+					if z < zmin:
+						zmin = z
+					if z > zmax:
+						zmax = z
+
+				current_x = x or current_x
+				current_y = y or current_y
+				current_z = z or current_z
+
+		return ( (xmin,xmax),(ymin,ymax),(zmin,zmax) )
+	
 
 class GCode(object):
 	def __init__(self,data):
 		self.lines = [Line(i) for i in data]
 		self._preprocess()
-	
+		self._create_layers()
+
 	def _preprocess(self):
 		#checks for G20, G21, G90 and G91, sets imperial and relative flags
 		imperial = False
@@ -122,6 +197,63 @@ class GCode(object):
 			elif line.is_move():
 				line.imperial = imperial
 				line.relative = relative
+		
+	def _create_layers(self):
+		self.layers = []
+
+		prev_z = None
+		cur_z = 0
+		cur_lines = []
+		layer_index = []
+		
+		temp_layers = {}
+		for line in self.lines:
+			if line.command() == "G92" and line.z != None:
+				cur_z = line.z
+			elif line.is_move():
+				if line.z != None:
+					if line.relative:
+						cur_z += line.z
+					else:
+						cur_z = line.z
+					
+			if cur_z != prev_z:
+				old_lines = temp_layers.pop(prev_z,[])
+				old_lines += cur_lines
+				temp_layers[prev_z] = old_lines
+
+				if not prev_z in layer_index:
+					layer_index.append(prev_z)
+					
+				cur_lines = []
+			
+			cur_lines.append(line)
+			prev_z = cur_z
+		
+		
+		old_lines = temp_layers.pop(prev_z,[])
+		old_lines += cur_lines
+		temp_layers[prev_z] = old_lines
+
+		if not prev_z in layer_index:
+			layer_index.append(prev_z)
+			
+		layer_index.sort()
+		
+		for idx in layer_index:
+			cur_lines = temp_layers[idx]
+			has_movement = False
+			for l in cur_lines:
+				if l.is_move() and l.e != None:
+					has_movement = True
+					break
+			
+			if has_movement:
+				self.layers.append(Layer(cur_lines))
+			
+
+	def num_layers(self):
+		return len(self.layers)
 				
 
 	def measure(self):
@@ -131,60 +263,33 @@ class GCode(object):
 		xmax = -999999999
 		ymax = -999999999
 		zmax = -999999999
-		relative = False
-		
-		current_x = 0
-		current_y = 0
-		current_z = 0
 
-		for line in self.lines:
-			if line.command() == "G92":
-				current_x = line.x or current_x
-				current_y = line.y or current_y
-				current_z = line.z or current_z	
+		for l in self.layers:
+			xd,yd,zd = l.measure()
+			if xd[0] < xmin:
+				xmin = xd[0]
+			if xd[1] > xmax:
+				xmax = xd[1]
 
-			if line.is_move():
-				x = line.x 
-				y = line.y
-				z = line.z
-				
-				if line.relative:
-					x = current_x + (x or 0)
-					y = current_y + (y or 0)
-					z = current_z + (z or 0)
-		
-				
-				if x and line.e:
-					if x < xmin:
-						xmin = x
-					if x > xmax:
-						xmax = x
-				if y and line.e:
-					if y < ymin:
-						ymin = y
-					if y > ymax:
-						ymax = y
-				if z:
-					if z < zmin:
-						zmin = z
-					if z > zmax:
-						zmax = z
-				
-				current_x = x or current_x
-				current_y = y or current_y
-				current_z = z or current_z
-				
+			if yd[0] < ymin:
+				ymin = yd[0]
+			if yd[1] > ymax:
+				ymax = yd[1]
+
+			if zd[0] < zmin:
+				zmin = zd[0]
+			if zd[1] > zmax:
+				zmax = zd[1]
+
 		self.xmin = xmin
-		self.ymin = ymin
-		self.zmin = zmin
 		self.xmax = xmax
+		self.ymin = ymin
 		self.ymax = ymax
+		self.zmin = zmin
 		self.zmax = zmax
-		
-		self.width = xmax-xmin
-		self.depth = ymax-ymin
-		self.height = zmax-zmin
-	
+		self.width = xmax - xmin
+		self.depth = ymax - ymin
+		self.height = zmax - zmin
 	
 	def filament_length(self):
 		total_e = 0		
@@ -210,7 +315,8 @@ def main():
 		print "usage: %s filename.gcode" % sys.argv[0]
 		return
 
-	gcode = GCode(sys.argv[1])
+	d = [i.replace("\n","") for i in open(sys.argv[1])]
+	gcode = GCode(d)
 	
 	gcode.measure()
 
@@ -219,6 +325,9 @@ def main():
 	print "\tY: %0.02f - %0.02f (%0.02f)" % (gcode.ymin,gcode.ymax,gcode.depth)
 	print "\tZ: %0.02f - %0.02f (%0.02f)" % (gcode.zmin,gcode.zmax,gcode.height)
 	print "Filament used: %0.02fmm" % gcode.filament_length()
+	print "Number of layers: %d" % gcode.num_layers()
+
 
 if __name__ == '__main__':
 	main()
+
