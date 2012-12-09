@@ -23,9 +23,9 @@ modify it under the terms of the GNU Lesser General Public License as
 published by the Free Software Foundation; either version 2.1 of the
 License, or (at your option) any later version.
 
-As a special exception, the copyright holders of this library 
+As a special exception, the copyright holders of this library
 hereby recind Section 3 of the GNU Lesser General Public License. This
-means that you MAY NOT apply the terms of the ordinary GNU General 
+means that you MAY NOT apply the terms of the ordinary GNU General
 Public License instead of this License to any given copy of the
 Library. This has been done to prevent users of the Library from being
 denied access or the ability to use future improvements.
@@ -66,10 +66,10 @@ class BufferedCanvas(wx.Panel):
     def __init__(self,
                  parent,
                  ID=-1,
-                 pos=wx.DefaultPosition,
-                 size=wx.DefaultSize,
-                 style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS):
-        wx.Panel.__init__(self,parent,ID,pos,size,style)
+                 pos = wx.DefaultPosition,
+                 size = wx.DefaultSize,
+                 style = wx.NO_FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS):
+        wx.Panel.__init__(self, parent, ID, pos, size, style)
 
         # Bind events
         self.Bind(wx.EVT_PAINT, self.onPaint)
@@ -83,7 +83,7 @@ class BufferedCanvas(wx.Panel):
     ## General methods
     ##
 
-    def draw(self,dc):
+    def draw(self, dc):
         """
         Stub: called when the canvas needs to be re-drawn.
         """
@@ -94,9 +94,9 @@ class BufferedCanvas(wx.Panel):
         Causes the canvas to be updated.
         """
         self.Refresh()
-    
+
     def getWidthHeight(self):
-        width,height = self.GetClientSizeTuple()
+        width, height = self.GetClientSizeTuple()
         if width == 0:
             width = 1
         if height == 0:
