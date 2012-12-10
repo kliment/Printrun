@@ -117,17 +117,18 @@ class printcore():
                     except: pass
                 if self.loud: print "RECV: ", line.rstrip()
             return line
-        except SelectError, e:
+        except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                print "Can't read from printer (disconnected?)."
+                print "Can't read from printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
                 return None
             else:
+                print "SelectError ({0}): {1}".format(e.errno, e.strerror)
                 raise
-        except SerialException, e:
-            print "Can't read from printer (disconnected?)."
+        except SerialException as e:
+            print "Can't read from printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
             return None
-        except OSError, e:
-            print "Can't read from printer (disconnected?)."
+        except OSError as e:
+            print "Can't read from printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
             return None
 
     def _listen_can_continue(self):
@@ -343,7 +344,7 @@ class printcore():
             try:
                 self.printer.write(str(command+"\n"))
             except SerialException, e:
-                print "Can't write to printer (disconnected?)."
+                print "Can't write to printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
 
 if __name__ == '__main__':
     baud = 115200
