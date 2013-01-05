@@ -81,9 +81,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         self.settings.build_dimensions = '200x200x100+0+0+0' #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed
-        self.settings.last_bed_temperature = 0.0
+        self.settings.last_bed_temperature = 0
         self.settings.last_file_path = ""
-        self.settings.last_temperature = 0.0
+        self.settings.last_temperature = 0
         self.settings.preview_extrusion_width = 0.5
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
