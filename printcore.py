@@ -119,16 +119,16 @@ class printcore():
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                print "Can't read from printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
+                print "Can't read from printer (disconnected?) (SelectError {0}): {1}".format(e.errno, e.strerror)
                 return None
             else:
                 print "SelectError ({0}): {1}".format(e.errno, e.strerror)
                 raise
         except SerialException as e:
-            print "Can't read from printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
+            print "Can't read from printer (disconnected?) (SerialException {0}): {1}".format(e.errno, e.strerror)
             return None
         except OSError as e:
-            print "Can't read from printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
+            print "Can't read from printer (disconnected?) (OS Error {0}): {1}".format(e.errno, e.strerror)
             return None
 
     def _listen_can_continue(self):
