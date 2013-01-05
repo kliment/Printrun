@@ -317,7 +317,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             l = l.lower().replace(", ", ".")
             for i in self.temps.keys():
                 l = l.replace(i, self.temps[i])
-            f = float(l)
+            f = int(l)
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
@@ -339,7 +339,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             l = l.lower().replace(", ", ".")
             for i in self.bedtemps.keys():
                 l = l.replace(i, self.bedtemps[i])
-            f = float(l)
+            f = int(l)
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
