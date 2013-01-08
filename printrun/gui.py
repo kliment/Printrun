@@ -223,7 +223,7 @@ class MainToolbar(wx.BoxSizer):
 
         root.serialport = wx.ComboBox(root.panel, -1,
                 choices = root.scanserial(),
-                style = wx.CB_DROPDOWN, size = (100, 25))
+                style = wx.CB_DROPDOWN, size = (-1, 25))
         root.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
         root.rescanports()
         self.Add(root.serialport)
