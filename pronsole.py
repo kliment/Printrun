@@ -192,6 +192,7 @@ class pronsole(cmd.Cmd):
         self.p.recvcb = self.recvcb
         self.recvlisteners = []
         self.prompt = "PC>"
+        self.in_macro = False
         self.p.onlinecb = self.online
         self.f = None
         self.listing = 0
@@ -231,6 +232,19 @@ class pronsole(cmd.Cmd):
         self.web_config = None
         self.web_auth_config = None
 
+    def promptf(self):
+        """A function to generate prompts so that we can do dynamic prompts. """
+        if self.in_macro:
+            return "..>"
+        else:
+            return "PC>"
+
+    def postcmd(self, stop, line):
+        """ A hook we override to generate prompts after 
+            each command is executed, for the next prompt."""
+        self.prompt = self.promptf()
+        return stop
+
     def set_temp_preset(self, key, value):
         if not key.startswith("bed"):
             self.temps["pla"] = str(self.settings.temperature_pla)
@@ -258,7 +272,7 @@ class pronsole(cmd.Cmd):
 
     def online(self):
         print "Printer is now online"
-        sys.stdout.write(self.prompt)
+        sys.stdout.write(self.promptf())
         sys.stdout.flush()
 
     def help_help(self, l):
@@ -290,7 +304,8 @@ class pronsole(cmd.Cmd):
 
     def end_macro(self):
         if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
-        self.prompt = "PC>"
+        self.in_macro = False
+        self.prompt = self.promptf()
         if self.cur_macro_def!="":
             self.macros[self.cur_macro_name] = self.cur_macro_def
             macro = self.compile_macro(self.cur_macro_name, self.cur_macro_def)
@@ -342,7 +357,8 @@ class pronsole(cmd.Cmd):
         self.cur_macro_name = macro_name
         self.cur_macro_def = ""
         self.onecmd = self.hook_macro # override onecmd temporarily
-        self.prompt = "..>"
+        self.in_macro = False
+        self.prompt = self.promptf()
 
     def delete_macro(self, macro_name):
         if macro_name in self.macros.keys():
@@ -816,7 +832,7 @@ class pronsole(cmd.Cmd):
         tstring = l.rstrip()
         if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
             print tstring
-            sys.stdout.write(self.prompt)
+            sys.stdout.write(self.promptf())
             sys.stdout.flush()
         for i in self.recvlisteners:
             i(l)
