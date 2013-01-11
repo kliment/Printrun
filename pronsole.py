@@ -183,15 +183,45 @@ class Settings:
     def _all_settings(self):
         return dict([(k, getattr(self, k)) for k in self.__dict__.keys() if not k.startswith("_")])
 
+class Status:
+
+    def __init__(self):
+        self.extruder_temp        = 0
+        self.extruder_temp_target = 0
+        self.bed_temp             = 0
+        self.bed_temp_target      = 0
+        self.print_job            = None
+        self.print_job_progress   = 1.0
+
+    def update_tempreading(self, tempstr):
+            r = tempstr.split()
+            # eg. r = ["ok", "T:20.5", "/0.0", "B:0.0", "/0.0", "@:0"]
+            if len(r) == 6:
+                self.extruder_temp        = float(r[1][2:])
+                self.extruder_temp_target = float(r[2][1:])
+                self.bed_temp             = float(r[3][2:])
+                self.bed_temp_target      = float(r[4][1:])
+
+    @property
+    def bed_enabled(self):
+        return self.bed_temp != 0
+
+    @property
+    def extruder_enabled(self):
+        return self.extruder_temp != 0
+
+
+
 class pronsole(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
         if not READLINE:
             self.completekey = None
+        self.status = Status()
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
         self.recvlisteners = []
-        self.prompt = "PC>"
+        self.in_macro = False
         self.p.onlinecb = self.online
         self.f = None
         self.listing = 0
@@ -231,6 +261,30 @@ class pronsole(cmd.Cmd):
         self.web_config = None
         self.web_auth_config = None
 
+    def promptf(self):
+        """A function to generate prompts so that we can do dynamic prompts. """
+        if self.in_macro:
+            return "..>"
+        elif not self.p.online:
+            return "uninitialized>"
+        elif self.status.extruder_enabled:# and not self.status.bed_enabled:
+            if self.status.extruder_temp_target == 0:
+                return "T:%s>" % self.status.extruder_temp
+            else:
+                return "T:%s/%s>" % (self.status.extruder_temp, self.status.extruder_temp_target)
+        else:
+            return "printer>"
+
+    def postcmd(self, stop, line):
+        """ A hook we override to generate prompts after 
+            each command is executed, for the next prompt.
+            We also use it to send M105 commands so that 
+            temp info gets updated for the prompt."""
+        if self.p.online:
+            self.p.send_now("M105")
+        self.prompt = self.promptf()
+        return stop
+
     def set_temp_preset(self, key, value):
         if not key.startswith("bed"):
             self.temps["pla"] = str(self.settings.temperature_pla)
@@ -258,7 +312,7 @@ class pronsole(cmd.Cmd):
 
     def online(self):
         print "Printer is now online"
-        sys.stdout.write(self.prompt)
+        sys.stdout.write(self.promptf())
         sys.stdout.flush()
 
     def help_help(self, l):
@@ -290,7 +344,8 @@ class pronsole(cmd.Cmd):
 
     def end_macro(self):
         if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
-        self.prompt = "PC>"
+        self.in_macro = False
+        self.prompt = self.promptf()
         if self.cur_macro_def!="":
             self.macros[self.cur_macro_name] = self.cur_macro_def
             macro = self.compile_macro(self.cur_macro_name, self.cur_macro_def)
@@ -342,7 +397,8 @@ class pronsole(cmd.Cmd):
         self.cur_macro_name = macro_name
         self.cur_macro_def = ""
         self.onecmd = self.hook_macro # override onecmd temporarily
-        self.prompt = "..>"
+        self.in_macro = False
+        self.prompt = self.promptf()
 
     def delete_macro(self, macro_name):
         if macro_name in self.macros.keys():
@@ -520,6 +576,7 @@ class pronsole(cmd.Cmd):
 
     def preloop(self):
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
+        self.prompt = self.promptf()
         cmd.Cmd.preloop(self)
 
     def do_connect(self, l):
@@ -813,10 +870,11 @@ class pronsole(cmd.Cmd):
     def recvcb(self, l):
         if "T:" in l:
             self.tempreadings = l
+            self.status.update_tempreading(l)
         tstring = l.rstrip()
         if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
             print tstring
-            sys.stdout.write(self.prompt)
+            sys.stdout.write(self.promptf())
             sys.stdout.flush()
         for i in self.recvlisteners:
             i(l)
@@ -848,16 +906,15 @@ class pronsole(cmd.Cmd):
     def help_help(self):
         self.do_help("")
 
-    def tempcb(self, l):
-        if "T:" in l:
-            print l.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", "")
-
     def do_gettemp(self, l):
         if self.p.online:
-            self.recvlisteners+=[self.tempcb]
             self.p.send_now("M105")
             time.sleep(0.75)
-            self.recvlisteners.remove(self.tempcb)
+            if not self.status.bed_enabled:
+                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
+            else:
+                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
+                print "Bed:    %s/%s" % (self.status.bed_temp, self.status.bed_temp_target)
 
     def help_gettemp(self):
         print "Read the extruder and bed temperature."
