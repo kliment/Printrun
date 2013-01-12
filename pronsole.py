@@ -218,6 +218,7 @@ class pronsole(cmd.Cmd):
         if not READLINE:
             self.completekey = None
         self.status = Status()
+        self.dynamic_temp = False
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
         self.recvlisteners = []
@@ -267,7 +268,7 @@ class pronsole(cmd.Cmd):
             return "..>"
         elif not self.p.online:
             return "uninitialized>"
-        elif self.status.extruder_enabled:# and not self.status.bed_enabled:
+        elif self.status.extruder_enabled and self.dynamic_temp:
             if self.status.extruder_temp_target == 0:
                 return "T:%s>" % self.status.extruder_temp
             else:
@@ -280,7 +281,7 @@ class pronsole(cmd.Cmd):
             each command is executed, for the next prompt.
             We also use it to send M105 commands so that 
             temp info gets updated for the prompt."""
-        if self.p.online:
+        if self.p.online and self.dynamic_temp:
             self.p.send_now("M105")
         self.prompt = self.promptf()
         return stop
@@ -907,6 +908,8 @@ class pronsole(cmd.Cmd):
         self.do_help("")
 
     def do_gettemp(self, l):
+        if "dynamic" in l:
+            self.dynamic_temp = True
         if self.p.online:
             self.p.send_now("M105")
             time.sleep(0.75)
