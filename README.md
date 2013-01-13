@@ -180,3 +180,5 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 ```
+
+All scripts should contain this license note, if not, feel free to ask us. Please note that files where it is difficult to state this license note (such as images) are distributed under the same terms.
