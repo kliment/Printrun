@@ -94,21 +94,36 @@ class Line(object):
 			return None
 		
 	def _parse_coordinates(self):
-		if "X" in self.raw:
-			self._x = self._get_float("X")
+		try:
+			if "X" in self.raw:
+				self._x = self._get_float("X")
+		except:
+			pass
+
+		try:
+			if "Y" in self.raw:
+				self._y = self._get_float("Y")
+		except:
+			pass
 			
-		if "Y" in self.raw:
-			self._y = self._get_float("Y")
-
-		if "Z" in self.raw:
-			self._z = self._get_float("Z")
-
-		if "E" in self.raw:
-			self.e = self._get_float("E")
-
-		if "F" in self.raw:
-			self.f = self._get_float("F")
-
+		try:
+			if "Z" in self.raw:
+				self._z = self._get_float("Z")
+		except:
+			pass
+			
+		try:
+			if "E" in self.raw:
+				self.e = self._get_float("E")
+		except:
+			pass
+			
+		try:
+			if "F" in self.raw:
+				self.f = self._get_float("F")
+		except:
+			pass
+			
 		
 	def is_move(self):
 		return self.command() and ("G1" in self.raw or "G0" in self.raw)
