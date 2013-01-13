@@ -210,7 +210,7 @@ def main():
 		print "usage: %s filename.gcode" % sys.argv[0]
 		return
 
-	gcode = GCode(sys.argv[1])
+	gcode = GCode(list(open(sys.argv[1]))) 
 	
 	gcode.measure()
 
