@@ -112,7 +112,7 @@ if sys.argv[1] in ("install", "uninstall") and len (prefix):
     sys.argv += ["--prefix", prefix]
 
 target_images_path = "share/pronterface/images/"
-data_files = [('share/pixmaps/', ['P-face.ico','plater.ico'])]
+data_files = [('share/pixmaps/', ['P-face.ico','plater.ico','pronsole.ico'])]
 
 for basedir, subdirs, files in os.walk("images"):
     images = []
@@ -145,7 +145,7 @@ setup (
         license          = "GPLv3",
         data_files       = data_files,
         packages         = ["printrun", "printrun.svg"],
-        scripts          = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
+        scripts          = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py", "gcoder.py"],
         cmdclass         = {"uninstall" : uninstall,
                             "install" : install,
                             "install_data" : install_data}
