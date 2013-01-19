@@ -337,7 +337,7 @@ class pronsole(cmd.Cmd):
         return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
 
     def online(self):
-        print "Printer is now online"
+        print "\rPrinter is now online"
         sys.stdout.write(self.promptf())
         sys.stdout.flush()
 
@@ -899,7 +899,9 @@ class pronsole(cmd.Cmd):
             self.status.update_tempreading(l)
         tstring = l.rstrip()
         if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
-            print tstring
+            if tstring[:5] == "echo:":
+                tstring = tstring[5:].lstrip()
+            print "\r" + tstring.ljust(15)
             sys.stdout.write(self.promptf())
             sys.stdout.flush()
         for i in self.recvlisteners:
