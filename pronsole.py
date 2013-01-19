@@ -261,20 +261,45 @@ class pronsole(cmd.Cmd):
         self.webrequested = False
         self.web_config = None
         self.web_auth_config = None
+        self.promptstrs = {"offline" : "%(bold)suninitialized>%(normal)s ",
+                          "fallback" : "%(bold)sPC>%(normal)s ", 
+                          "macro"    : "%(bold)s..>%(normal)s ",
+                          "online"   : "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
         if self.in_macro:
-            return "..>"
+            promptstr = self.promptstrs["macro"]
         elif not self.p.online:
-            return "uninitialized>"
-        elif self.status.extruder_enabled and self.dynamic_temp:
-            if self.status.extruder_temp_target == 0:
-                return "T:%s>" % self.status.extruder_temp
-            else:
-                return "T:%s/%s>" % (self.status.extruder_temp, self.status.extruder_temp_target)
+            promptstr = self.promptstrs["offline"]
+        elif self.status.extruder_enabled:
+            promptstr = self.promptstrs["online"]
         else:
-            return "printer>"
+            promptstr = self.promptstrs["fallback"]
+        if not "%" in promptstr:
+            return promptstr
+        else:
+            specials = {}
+            specials["extruder_temp"]        = str(int(self.status.extruder_temp))
+            specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
+            if self.status.extruder_temp_target == 0:
+                specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp))
+            else:
+                specials["extruder_temp_fancy"] = "%s/%s" % (str(int(self.status.extruder_temp)), str(int(self.status.extruder_temp_target)))
+            if self.p.printing:
+                progress = int(1000*float(self.p.queueindex)/len(self.p.mainqueue)) / 10
+            elif self.sdprinting:
+                progress = self.percentdone
+            else:
+                progress = 0.0
+            specials["progress"] = str(progress)
+            if self.p.printing or self.sdprinting:
+                specials["progress_fancy"] = str(progress) +"%"
+            else:
+                specials["progress_fancy"] = "?%"
+            specials["bold"]   = "\033[01m"
+            specials["normal"] = "\033[00m"
+            return promptstr % specials
 
     def postcmd(self, stop, line):
         """ A hook we override to generate prompts after 
