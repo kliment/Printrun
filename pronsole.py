@@ -1118,6 +1118,9 @@ class pronsole(cmd.Cmd):
         if not self.p.online:
             print "Printer is not online. Please connect first."
             return
+        if not (self.p.printing or self.sdprinting):
+            print "Printer not printing. Please print something before monitoring."
+            return
         print "Monitoring printer, use ^C to interrupt."
         if len(l):
             try:
@@ -1126,22 +1129,27 @@ class pronsole(cmd.Cmd):
                 print "Invalid period given."
         print "Updating values every %f seconds."%(interval,)
         self.monitoring = 1
+        prev_msg_len = 0
         try:
-            while(1):
+            while True:
                 self.p.send_now("M105")
                 if(self.sdprinting):
                     self.p.send_now("M27")
                 time.sleep(interval)
                 #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
-                if(self.p.printing):
-                    print "Print progress: ", 100*float(self.p.queueindex)/len(self.p.mainqueue), "%"
-
-                if(self.sdprinting):
-                    print "SD print progress: ", self.percentdone, "%"
-
-        except:
+                if self.p.printing:
+                    preface  = "Print progress: "
+                    progress = 100*float(self.p.queueindex)/len(self.p.mainqueue)
+                elif self.sdprinting:
+                    preface  = "Print progress: "
+                    progress = self.percentdone
+                progress = int(progress*10)/10.0 #limit precision
+                prev_msg = preface + str(progress) + "%"
+                sys.stdout.write("\r" + prev_msg.ljust(prev_msg_len))
+                sys.stdout.flush()
+                prev_msg_len = len(prev_msg)
+        except KeyboardInterrupt:
             print "Done monitoring."
-            pass
         self.monitoring = 0
 
     def help_monitor(self):
