@@ -73,7 +73,7 @@ class Tee(object):
             self.target(data)
         except:
             pass
-        self.stdout.write(data)
+        self.stdout.write(data.encode("utf-8"))
     def flush(self):
         self.stdout.flush()
 
