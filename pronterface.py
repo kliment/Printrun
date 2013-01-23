@@ -1436,8 +1436,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 print _("You might need to add yourself to the dialout group.")
             else:
                 print e
-            # Kill the thread anyway
-            raise
+            # Kill the scope anyway
+            return
         self.statuscheck = True
         if port != self.settings.port:
             self.set("port", port)
