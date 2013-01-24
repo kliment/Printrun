@@ -40,6 +40,7 @@ class Line(object):
 		self.raw = l.upper().lstrip()
 		self.imperial = False
 		self.relative = False
+		self.relative_e = False
 		
 		if ";" in self.raw:
 			self.raw = self.raw.split(";")[0]
@@ -145,6 +146,7 @@ class Layer(object):
 		ymax = -999999999
 		zmax = -999999999
 		relative = False
+		relative_e = False
 
 		current_x = 0
 		current_y = 0
@@ -200,6 +202,7 @@ class GCode(object):
 		#checks for G20, G21, G90 and G91, sets imperial and relative flags
 		imperial = False
 		relative = False
+		relative_e = False
 		for line in self.lines:
 			if line.command() == "G20":
 				imperial = True
@@ -207,11 +210,18 @@ class GCode(object):
 				imperial = False
 			elif line.command() == "G90":
 				relative = False
+				relative_e = False
 			elif line.command() == "G91":
 				relative = True
+				relative_e = True
+			elif line.command() == "M82":
+				relative_e = False
+			elif line.command() == "M83":
+				relative_e = True
 			elif line.is_move():
 				line.imperial = imperial
 				line.relative = relative
+				line.relative_e = relative_e
 		
 	def _create_layers(self):
 		self.layers = []
@@ -316,7 +326,7 @@ class GCode(object):
 					total_e += cur_e
 					cur_e = line.e
 			elif line.is_move() and line.e:
-				if line.relative:
+				if line.relative_e:
 					cur_e += line.e
 				else:
 					cur_e = line.e
