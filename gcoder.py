@@ -340,8 +340,9 @@ def main():
 		print "usage: %s filename.gcode" % sys.argv[0]
 		return
 
-	d = [i.replace("\n","") for i in open(sys.argv[1])]
-	gcode = GCode(d)
+#	d = [i.replace("\n","") for i in open(sys.argv[1])]
+#	gcode = GCode(d)
+	gcode = GCode(list(open(sys.argv[1]))) 
 	
 	gcode.measure()
 
@@ -355,4 +356,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-

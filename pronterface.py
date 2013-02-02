@@ -28,6 +28,7 @@ except:
 import sys, glob, time, datetime, threading, traceback, cStringIO, subprocess
 
 from printrun.pronterface_widgets import *
+from serial import SerialException
 
 StringIO = cStringIO
 
@@ -72,7 +73,11 @@ class Tee(object):
             self.target(data)
         except:
             pass
-        self.stdout.write(data.encode("utf-8"))
+        try:
+            data = data.encode("utf-8")
+        except:
+            pass
+        self.stdout.write(data)
     def flush(self):
         self.stdout.flush()
 
@@ -1420,7 +1425,19 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.paused = 0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
-        self.p.connect(port, baud)
+        try:
+            self.p.connect(port, baud)
+        except SerialException as e:
+            # Currently, there is no errno, but it should be there in the future
+            if e.errno == 2:
+                print _("Error: You are trying to connect to a non-exisiting port.")
+            elif e.errno == 8:
+                print _("Error: You don't have permission to open %s.") % port
+                print _("You might need to add yourself to the dialout group.")
+            else:
+                print e
+            # Kill the scope anyway
+            return
         self.statuscheck = True
         if port != self.settings.port:
             self.set("port", port)

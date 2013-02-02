@@ -388,7 +388,7 @@ if __name__ == '__main__':
         while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("\b\b\b\b%02.1f%%" % (100 * float(p.queueindex) / len(p.mainqueue),) )
+                sys.stdout.write("%02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),) )
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)
