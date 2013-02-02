@@ -956,6 +956,17 @@ class pronsole(cmd.Cmd):
                 l = l.replace(i, self.temps[i])
             f = float(l)
             if f>=0:
+                if f > 250:
+                   def confirm():
+                       print f, " is a high temperature to set your extruder to. Are you sure you want to do that?"
+                       y_or_n = raw_input("y/n: ")
+                       if y_or_n == "y":
+                          return True
+                       elif y_or_n != "n":
+                          return confirm()
+                       return False
+                   if not confirm():
+                      return
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
                     print "Setting hotend temperature to ", f, " degrees Celsius."
