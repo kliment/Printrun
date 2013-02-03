@@ -131,6 +131,14 @@ def estimate_duration(g):
     #print "Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration))
     return "{0:d} layers, ".format(int(layercount)) + str(datetime.timedelta(seconds = int(totalduration)))
 
+def confirm():
+   y_or_n = raw_input("y/n: ")
+   if y_or_n == "y":
+      return True
+   elif y_or_n != "n":
+      return confirm()
+   return False
+
 class Settings:
     #def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
     #def _temperature_validate(self, v):
@@ -957,14 +965,7 @@ class pronsole(cmd.Cmd):
             f = float(l)
             if f>=0:
                 if f > 250:
-                   def confirm():
-                       print f, " is a high temperature to set your extruder to. Are you sure you want to do that?"
-                       y_or_n = raw_input("y/n: ")
-                       if y_or_n == "y":
-                          return True
-                       elif y_or_n != "n":
-                          return confirm()
-                       return False
+                   print f, " is a high temperature to set your extruder to. Are you sure you want to do that?"
                    if not confirm():
                       return
                 if self.p.online:
@@ -1144,8 +1145,14 @@ class pronsole(cmd.Cmd):
 
     def do_exit(self, l):
         print "Disconnecting from printer..."
-        self.p.disconnect()
+        print self.p.printing
+        if self.p.printing:
+            print "Are you sure you want to exit while printing?"
+            print "(this will terminate the print)."
+            if not confirm():
+                return False
         print "Exiting program. Goodbye!"
+        self.p.disconnect()
         return True
 
     def help_exit(self):
@@ -1335,8 +1342,9 @@ class pronsole(cmd.Cmd):
                             line = raw_input(self.prompt)
                         except EOFError:
                             print ""
-                            self.do_exit("")
-                            exit()
+                            should_exit = self.do_exit("")
+                            if should_exit: 
+                                exit()
                         except KeyboardInterrupt:
                             print ""
                             line = ""
