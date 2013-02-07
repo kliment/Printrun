@@ -1132,6 +1132,13 @@ class pronsole(cmd.Cmd):
         print "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
 
     def do_exit(self, l):
+        if self.status.extruder_temp_target != 0:
+            print "Setting extruder temp to 0"
+        self.p.send_now("M104 S0.0")
+        if self.status.bed_enabled:
+            if self.status.bed_temp_taret != 0:
+                print "Setting bed temp to 0"
+            self.p.send_now("M140 S0.0")
         print "Disconnecting from printer..."
         self.p.disconnect()
         print "Exiting program. Goodbye!"
