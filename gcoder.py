@@ -30,6 +30,11 @@ class Line(object):
 		self.imperial = False
 		self.relative = False
 		
+		while "(" in self.raw:
+			split_by_left = self.raw.split("(")
+			split_by_right = split_by_left[1].split(")")
+			self.raw = (split_by_left[0] + split_by_right[1]).strip()
+		
 		if ";" in self.raw:
 			self.raw = self.raw.split(";")[0]
 		
