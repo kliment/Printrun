@@ -30,11 +30,6 @@ class Line(object):
 		self.imperial = False
 		self.relative = False
 		
-		while "(" in self.raw:
-			split_by_left = self.raw.split("(")
-			split_by_right = split_by_left[1].split(")")
-			self.raw = (split_by_left[0] + split_by_right[1]).strip()
-		
 		if ";" in self.raw:
 			self.raw = self.raw.split(";")[0]
 		
@@ -105,7 +100,6 @@ class Line(object):
 	def is_move(self):
 		return "G1" in self.raw or "G0" in self.raw
 		
-
 class GCode(object):
 	def __init__(self,data):
 		self.lines = [Line(i) for i in data]
@@ -146,7 +140,7 @@ class GCode(object):
 			if line.command() == "G92":
 				current_x = line.x or current_x
 				current_y = line.y or current_y
-				current_z = line.z or current_z	
+				current_z = line.z or current_z 
 
 			if line.is_move():
 				x = line.x 
@@ -158,7 +152,6 @@ class GCode(object):
 					y = current_y + (y or 0)
 					z = current_z + (z or 0)
 		
-				
 				if x and line.e:
 					if x < xmin:
 						xmin = x
@@ -192,7 +185,7 @@ class GCode(object):
 	
 	
 	def filament_length(self):
-		total_e = 0		
+		total_e = 0     
 		cur_e = 0
 		
 		for line in self.lines:
@@ -206,19 +199,36 @@ class GCode(object):
 				else:
 					cur_e = line.e
 				
-				
 		return total_e
 
+def GCodePreprocess(f):
+	# This function preprocess the G-Code after it is read.
+	
+	# At this time, it removes the parenthesis comments in G-Code.
+	# Such comment is common from CAM software. But most 3D printing software
+	# and firmware do not handle it. So they are all removed here.
+	clean_f = []                
+	for l in f:
+		while "(" in l:
+			left_p = l.find("(")
+			remainder = l[left_p + 1:]
+			l = l[:left_p]
+			right_p = remainder.find(")")
+			if right_p != -1:
+				l += remainder[right_p + 1:]
+		if l.strip() != "":
+			clean_f.append(l)
+	return clean_f
 
 def main():
 	if len(sys.argv) < 2:
 		print "usage: %s filename.gcode" % sys.argv[0]
 		return
 
-	gcode = GCode(list(open(sys.argv[1]))) 
+	f = list(open(sys.argv[1]))
+	gcode = GCode(GCodePreprocess(f))
 	
 	gcode.measure()
-
 	print "Dimensions:"
 	print "\tX: %0.02f - %0.02f (%0.02f)" % (gcode.xmin,gcode.xmax,gcode.width)
 	print "\tY: %0.02f - %0.02f (%0.02f)" % (gcode.ymin,gcode.ymax,gcode.depth)

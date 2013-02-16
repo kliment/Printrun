@@ -20,7 +20,7 @@ import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
 from math import sqrt
-from gcoder import GCode
+from gcoder import GCode, GCodePreprocess
 
 import printcore
 from printrun.printrun_utils import install_locale
@@ -585,9 +585,10 @@ class pronsole(cmd.Cmd):
             print "File not found!"
             return
         self.f = [i.replace("\n", "").replace("\r", "") for i in open(l)]
+        self.f = GCodePreprocess(self.f)
         self.filename = l
         print "Loaded ", l, ", ", len(self.f)," lines."
-
+    
     def complete_load(self, text, line, begidx, endidx):
         s = line.split()
         if len(s)>2:
