@@ -222,7 +222,7 @@ class printcore():
     def pause(self):
         """Pauses the print, saving the current position.
         """
-        return False if !selft.printing
+        return False if !self.printing
         self.paused = True
         self.printing = False
         self.print_thread.join()
