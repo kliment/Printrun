@@ -62,7 +62,7 @@ class printcore():
         self.endcb = None #impl ()
         self.onlinecb = None #impl ()
         self.loud = False #emit sent and received lines to terminal
-        self.greetings = ['start','Grbl ']
+        self.greetings = ['start', 'Grbl ']
         self.wait = 0 # default wait period for send(), send_now()
         self.read_thread = None
         self.stop_read_thread = False
@@ -117,18 +117,17 @@ class printcore():
                     except: pass
                 if self.loud: print "RECV: ", line.rstrip()
             return line
-        except SelectError as e:
+        except SelectError, e:
             if 'Bad file descriptor' in e.args[1]:
-                print "Can't read from printer (disconnected?) (SelectError {0}): {1}".format(e.errno, e.strerror)
+                print "Can't read from printer (disconnected?)."
                 return None
             else:
-                print "SelectError ({0}): {1}".format(e.errno, e.strerror)
                 raise
-        except SerialException as e:
-            print "Can't read from printer (disconnected?) (SerialException {0}): {1}".format(e.errno, e.strerror)
+        except SerialException, e:
+            print "Can't read from printer (disconnected?)."
             return None
-        except OSError as e:
-            print "Can't read from printer (disconnected?) (OS Error {0}): {1}".format(e.errno, e.strerror)
+        except OSError, e:
+            print "Can't read from printer (disconnected?)."
             return None
 
     def _listen_can_continue(self):
@@ -183,7 +182,7 @@ class printcore():
             # Teststrings for resend parsing       # Firmware     exp. result
             # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
-                line = line.replace("N:"," ").replace("N"," ").replace(":"," ")
+                line = line.replace("N:", " ").replace("N", " ").replace(":", " ")
                 linewords = line.split()
                 while len(linewords) != 0:
                     try:
@@ -197,7 +196,7 @@ class printcore():
         self.clear = True
 
     def _checksum(self, command):
-        return reduce(lambda x, y:x^y, map(ord, command))
+        return reduce(lambda x, y:x ^ y, map(ord, command))
 
     def startprint(self, data, startindex = 0):
         """Start a print, data is an array of gcode commands.
@@ -223,6 +222,7 @@ class printcore():
     def pause(self):
         """Pauses the print, saving the current position.
         """
+        if not self.printing: return False
         self.paused = True
         self.printing = False
         self.print_thread.join()
@@ -231,6 +231,7 @@ class printcore():
     def resume(self):
         """Resumes a paused print.
         """
+        if not self.paused: return False
         self.paused = False
         self.printing = True
         self.print_thread = Thread(target = self._print)
@@ -288,6 +289,8 @@ class printcore():
         self.sentlines = {}
         self.log = []
         self.sent = []
+        self.print_thread.join()
+        self.print_thread = None
         if self.endcb:
             #callback for printing done
             try: self.endcb()
@@ -342,7 +345,7 @@ class printcore():
                 try: self.sendcb(command)
                 except: pass
             try:
-                self.printer.write(str(command+"\n"))
+                self.printer.write(str(command + "\n"))
             except SerialException, e:
                 print "Can't write to printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
 
@@ -363,9 +366,9 @@ if __name__ == '__main__':
             sys.exit(1)
         if o in ('-b', '--baud'):
             baud = int(a)
-        if o in ('-v','--verbose'):
+        if o in ('-v', '--verbose'):
             loud = True
-        elif o in ('-s','--statusreport'):
+        elif o in ('-s', '--statusreport'):
             statusreport = True
 
     if len (args) > 1:
@@ -389,7 +392,7 @@ if __name__ == '__main__':
         while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("\b\b\b\b%02.1f%%" % (100 * float(p.queueindex) / len(p.mainqueue),) )
+                sys.stdout.write("%02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),))
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)

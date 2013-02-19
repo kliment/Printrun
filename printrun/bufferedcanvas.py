@@ -18,26 +18,20 @@ url:
 __author__ = 'Daniel Keep <daniel.keep.sp4msux0rz@gmail.com>'
 
 __license__ = """
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public License as
-published by the Free Software Foundation; either version 2.1 of the
-License, or (at your option) any later version.
+This file is part of the Printrun suite.
 
-As a special exception, the copyright holders of this library
-hereby recind Section 3 of the GNU Lesser General Public License. This
-means that you MAY NOT apply the terms of the ordinary GNU General
-Public License instead of this License to any given copy of the
-Library. This has been done to prevent users of the Library from being
-denied access or the ability to use future improvements.
+Printrun is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-This library is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
-General Public License for more details.
+Printrun is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+You should have received a copy of the GNU General Public License
+along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 __all__ = ['BufferedCanvas']
@@ -65,17 +59,17 @@ class BufferedCanvas(wx.Panel):
 
     def __init__(self,
                  parent,
-                 ID=-1,
+                 ID = -1,
                  pos = wx.DefaultPosition,
                  size = wx.DefaultSize,
-                 style = wx.NO_FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS):
+                 style = wx.NO_FULL_REPAINT_ON_RESIZE | wx.WANTS_CHARS):
         wx.Panel.__init__(self, parent, ID, pos, size, style)
 
         # Bind events
         self.Bind(wx.EVT_PAINT, self.onPaint)
 
         # Disable background erasing (flicker-licious)
-        def disable_event(*pargs,**kwargs):
+        def disable_event(*pargs, **kwargs):
             pass # the sauce, please
         self.Bind(wx.EVT_ERASE_BACKGROUND, disable_event)
 

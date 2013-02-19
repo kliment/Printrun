@@ -40,6 +40,7 @@ class Line(object):
 		self.raw = l.upper().lstrip()
 		self.imperial = False
 		self.relative = False
+		self.relative_e = False
 		
 		if ";" in self.raw:
 			self.raw = self.raw.split(";")[0]
@@ -94,22 +95,36 @@ class Line(object):
 			return None
 		
 	def _parse_coordinates(self):
-		if "X" in self.raw:
-			self._x = self._get_float("X")
+		try:
+			if "X" in self.raw:
+				self._x = self._get_float("X")
+		except:
+			pass
+
+		try:
+			if "Y" in self.raw:
+				self._y = self._get_float("Y")
+		except:
+			pass
 			
-		if "Y" in self.raw:
-			self._y = self._get_float("Y")
-
-		if "Z" in self.raw:
-			self._z = self._get_float("Z")
-
-		if "E" in self.raw:
-			self.e = self._get_float("E")
-
-		if "F" in self.raw:
-			self.f = self._get_float("F")
-
-		
+		try:
+			if "Z" in self.raw:
+				self._z = self._get_float("Z")
+		except:
+			pass
+			
+		try:
+			if "E" in self.raw:
+				self.e = self._get_float("E")
+		except:
+			pass
+			
+		try:
+			if "F" in self.raw:
+				self.f = self._get_float("F")
+		except:
+			pass
+					
 	def is_move(self):
 		return self.command() and ("G1" in self.raw or "G0" in self.raw)
 		
@@ -130,6 +145,7 @@ class Layer(object):
 		ymax = -999999999
 		zmax = -999999999
 		relative = False
+		relative_e = False
 
 		current_x = 0
 		current_y = 0
@@ -185,6 +201,7 @@ class GCode(object):
 		#checks for G20, G21, G90 and G91, sets imperial and relative flags
 		imperial = False
 		relative = False
+		relative_e = False
 		for line in self.lines:
 			if line.command() == "G20":
 				imperial = True
@@ -192,11 +209,18 @@ class GCode(object):
 				imperial = False
 			elif line.command() == "G90":
 				relative = False
+				relative_e = False
 			elif line.command() == "G91":
 				relative = True
+				relative_e = True
+			elif line.command() == "M82":
+				relative_e = False
+			elif line.command() == "M83":
+				relative_e = True
 			elif line.is_move():
 				line.imperial = imperial
 				line.relative = relative
+				line.relative_e = relative_e
 		
 	def _create_layers(self):
 		self.layers = []
@@ -301,7 +325,7 @@ class GCode(object):
 					total_e += cur_e
 					cur_e = line.e
 			elif line.is_move() and line.e:
-				if line.relative:
+				if line.relative_e:
 					cur_e += line.e
 				else:
 					cur_e = line.e
@@ -315,8 +339,9 @@ def main():
 		print "usage: %s filename.gcode" % sys.argv[0]
 		return
 
-	d = [i.replace("\n","") for i in open(sys.argv[1])]
-	gcode = GCode(d)
+#	d = [i.replace("\n","") for i in open(sys.argv[1])]
+#	gcode = GCode(d)
+	gcode = GCode(list(open(sys.argv[1]))) 
 	
 	gcode.measure()
 
@@ -330,4 +355,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
