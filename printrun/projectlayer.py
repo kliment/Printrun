@@ -25,7 +25,9 @@ from cairosvg.surface import PNGSurface
 import cStringIO
 import imghdr
 import copy
-import string
+import re
+from collections import OrderedDict
+import itertools
 
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
@@ -54,6 +56,7 @@ class DisplayFrame(wx.Frame):
         self.size = res
         self.offset = offset
         self.running = False
+        self.layer_red = False
 
     def clear_layer(self):
         try:
@@ -82,9 +85,9 @@ class DisplayFrame(wx.Frame):
             dc = wx.MemoryDC()
             dc.SelectObject(self.bitmap)
             dc.SetBackground(wx.Brush("black"))
-            dc.Clear()
-            dc.SetPen(wx.Pen("white"))
-            dc.SetBrush(wx.Brush("white"))
+            dc.Clear()            
+            dc.SetPen(wx.Pen("red") if self.layer_red else wx.Pen("white"))
+            dc.SetBrush(wx.Brush("red") if self.layer_red else wx.Brush("white"))
 
             if self.slicer == 'Slic3r' or self.slicer == 'Skeinforge':
                 
@@ -100,12 +103,16 @@ class DisplayFrame(wx.Frame):
                     g = layercopy.find("{http://www.w3.org/2000/svg}g")
                     g.set('transform', 'scale('+str(self.scale)+')')
                     stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(layercopy)))
-                    image = wx.ImageFromStream(stream)
-                    dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)    
                 else:    
                     stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(image)))
-                    image = wx.ImageFromStream(stream)
-                    dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)
+                    
+                image = wx.ImageFromStream(stream)
+                
+                if self.layer_red:
+                    image = image.AdjustChannels(1,0,0,1)
+                
+                dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)
+                
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
@@ -179,7 +186,20 @@ class DisplayFrame(wx.Frame):
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
         
-    def present(self, layers, interval=0.5, pause=0.2, overshoot=0.0, z_axis_rate=200, prelift_gcode="", postlift_gcode="", direction="Top Down", thickness=0.4, scale=1, size=(1024, 768), offset=(0, 0)):
+    def present(self, 
+                layers, 
+                interval=0.5, 
+                pause=0.2, 
+                overshoot=0.0, 
+                z_axis_rate=200, 
+                prelift_gcode="", 
+                postlift_gcode="", 
+                direction="Top Down", 
+                thickness=0.4, 
+                scale=1, 
+                size=(1024, 768), 
+                offset=(0, 0),
+                layer_red=False):
         wx.CallAfter(self.pic.Hide)
         wx.CallAfter(self.Refresh)
         self.layers = layers
@@ -193,6 +213,7 @@ class DisplayFrame(wx.Frame):
         self.prelift_gcode = prelift_gcode
         self.postlift_gcode = postlift_gcode
         self.direction = direction 
+        self.layer_red = layer_red
         self.offset = offset
         self.index = 0
         self.running = True
@@ -360,13 +381,7 @@ class SettingsFrame(wx.Frame):
         self.calibrate.SetHelpText("Toggles the calibration grid. Each grid should be 10mmx10mm in size. Use the grid to ensure the projected size is correct. See also the help for the ProjectedX field.")
         displaysizer.Add(self.calibrate, pos=(0,3), flag=wx.ALIGN_CENTER_VERTICAL)
         
-        displaysizer.Add(wx.StaticText(self.panel, -1, "Boundary:"), pos=(0,4), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.bounding_box = wx.CheckBox(self.panel, -1)
-        self.bounding_box.Bind(wx.EVT_CHECKBOX, self.show_bounding_box)
-        self.bounding_box.SetHelpText("Toggles the boundary of the loaded model. Shown in red so it can be used to position the slice whilst the resin is in the vat.")
-        displaysizer.Add(self.bounding_box, pos=(0,5), flag=wx.ALIGN_CENTER_VERTICAL)
-        
-        displaysizer.Add(wx.StaticText(self.panel, -1, "1st Layer:"), pos=(0,6), flag=wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.Add(wx.StaticText(self.panel, -1, "1st Layer:"), pos=(0,4), flag=wx.ALIGN_CENTER_VERTICAL)
         
         first_layer_boxer = wx.BoxSizer(wx.HORIZONTAL)                
         self.first_layer = wx.CheckBox(self.panel, -1)
@@ -379,7 +394,14 @@ class SettingsFrame(wx.Frame):
         self.show_first_layer_timer = floatspin.FloatSpin(self.panel, -1, value=-1, increment=1, digits=1, size=(55,-1))
         self.show_first_layer_timer.SetHelpText("How long to display the first layer for. -1 = unlimited.")
         first_layer_boxer.Add(self.show_first_layer_timer, flag=wx.ALIGN_CENTER_VERTICAL)
-        displaysizer.Add(first_layer_boxer, pos=(0,7), flag=wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.Add(first_layer_boxer, pos=(0,6), flag=wx.ALIGN_CENTER_VERTICAL)
+        
+        displaysizer.Add(wx.StaticText(self.panel, -1, "Red:"), pos=(0,7), flag=wx.ALIGN_CENTER_VERTICAL)
+        self.layer_red = wx.CheckBox(self.panel, -1)
+        self.layer_red.Bind(wx.EVT_CHECKBOX, self.show_layer_red)
+        self.layer_red.SetHelpText("Toggles whether the image should be red. Useful for positioning whilst resin is in the printer as it should not cause a reaction.")
+        displaysizer.Add(self.layer_red, pos=(0,8), flag=wx.ALIGN_CENTER_VERTICAL)
+        
         
         displayboxsizer.Add(displaysizer)
                 
@@ -528,12 +550,23 @@ class SettingsFrame(wx.Frame):
         self.image_dir = tempfile.mkdtemp()
         zipFile.extractall(self.image_dir)
         ol = []
-        imagefiles = os.listdir(self.image_dir)
-        imagefiles.sort()
-        for f in imagefiles:
+        
+        # Note: the following funky code extracts any numbers from the filenames, matches
+        # them with the original then sorts them. It allows for filenames of the 
+        # format: abc_1.png, which would be followed by abc_10.png alphabetically.  
+        os.chdir(self.image_dir)
+        vals = filter(os.path.isfile, os.listdir('.'))
+        keys = map(lambda p:int(re.search('\d+', p).group()), vals)
+        imagefilesDict = dict(itertools.izip(keys, vals))
+        imagefilesOrderedDict = OrderedDict(sorted(imagefilesDict.items(), key=lambda t: t[0]))
+        
+        for f in imagefilesOrderedDict.values():
             path = os.path.join(self.image_dir, f)
             if os.path.isfile(path) and imghdr.what(path) in accepted_image_types:
                 ol.append(path)
+        
+        print ol
+        
         return ol, -1, "bitmap"
         
     def load_file(self, event):
@@ -580,14 +613,8 @@ class SettingsFrame(wx.Frame):
             self.display_frame.scale = float(self.scale.GetValue())
             self.display_frame.clear_layer()
     
-    def show_bounding_box(self, event):
-        if self.bounding_box.IsChecked():
-            self.present_bounding_box(event)
-        else:
-            if hasattr(self, 'layers'):
-                self.display_frame.slicer = self.layers[2] 
-            self.display_frame.scale = float(self.scale.GetValue())
-            self.display_frame.clear_layer()
+    def show_layer_red(self, event):
+        self.display_frame.layer_red = self.layer_red.IsChecked()
         
     def present_calibrate(self, event):
         if self.calibrate.IsChecked():
@@ -627,61 +654,8 @@ class SettingsFrame(wx.Frame):
                     dc.DrawLine(x * (pixelsXPerMM * 10), 0, x * (pixelsXPerMM * 10), resolution_y_pixels);
 
             self.first_layer.SetValue(False)
-            self.bounding_box.SetValue(False)
             self.display_frame.slicer = 'bitmap'
             self.display_frame.draw_layer(gridBitmap.ConvertToImage())
-
-    def present_bounding_box(self, event):
-        if self.bounding_box.IsChecked():
-            if not hasattr(self, "layers"):
-                print "No model loaded!"
-                self.bounding_box.SetValue(False)
-                return
-            if self.slicer == "bitmap":
-                print "Boundary Box not supported for bitmaps."
-                self.bounding_box.SetValue(False)
-                return
-            self.display_frame.Raise()
-            self.display_frame.offset=(float(self.offset_X.GetValue()), -float(self.offset_Y.GetValue()))
-            self.display_frame.scale=1.0
-            resolutionXPixels = int(self.X.GetValue())
-            resolutionYPixels = int(self.Y.GetValue())
-            
-            boxBitmap = wx.EmptyBitmap(resolutionXPixels,resolutionYPixels)
-            dc = wx.MemoryDC()
-            dc.SelectObject(boxBitmap)
-            dc.SetBackground(wx.Brush("black"))
-            dc.Clear()
-            
-            dc.SetPen(wx.Pen("red",2))
-            aspectRatio = float(resolutionXPixels)/float(resolutionYPixels)
-
-            projectedXmm = float(self.projected_X_mm.GetValue())                        
-            projectedYmm = round(projectedXmm/aspectRatio)            
-            
-            pixelsXPerMM = resolutionXPixels / projectedXmm
-            pixelsYPerMM = resolutionYPixels / projectedYmm            
-
-            if (hasattr(self, 'layers')):
-                xDist = float(self.layers[0][0].get('width').replace('m',''))
-                yDist = float(self.layers[0][0].get('height').replace('m',''))
-            else:
-                xDist = projectedXmm
-                yDist = projectedYmm
-            
-            xDistPixels = xDist * pixelsXPerMM
-            yDistPixels = yDist * pixelsYPerMM
-            
-            # boundary
-            dc.DrawLine(0,0,xDistPixels,0);
-            dc.DrawLine(0,0,0,yDistPixels);
-            dc.DrawLine(xDistPixels,0,xDistPixels,yDistPixels);
-            dc.DrawLine(0,yDistPixels,xDistPixels,yDistPixels);
-            
-            self.first_layer.SetValue(False)
-            self.calibrate.SetValue(False)
-            self.display_frame.slicer = 'bitmap'
-            self.display_frame.draw_layer(boxBitmap.ConvertToImage())
 
     def present_first_layer(self, event):
         if (self.first_layer.GetValue()):
@@ -696,7 +670,6 @@ class SettingsFrame(wx.Frame):
             self.display_frame.dpi = self.get_dpi()
             self.display_frame.draw_layer(copy.deepcopy(self.layers[0][0]))
             self.calibrate.SetValue(False)
-            self.bounding_box.SetValue(False)
             if self.show_first_layer_timer != -1.0 :
                 def unpresent_first_layer():
                     self.display_frame.clear_layer()
@@ -716,7 +689,6 @@ class SettingsFrame(wx.Frame):
         
     def refresh_display(self, event):
         self.present_calibrate(event)
-        self.present_bounding_box(event)
         self.present_first_layer(event)
     
     def update_thickness(self, event):
@@ -817,7 +789,8 @@ class SettingsFrame(wx.Frame):
             postlift_gcode=self.postlift_gcode.GetValue(),
             direction=self.direction.GetValue(),
             size=(float(self.X.GetValue()), float(self.Y.GetValue())),
-            offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue())))
+            offset=(float(self.offset_X.GetValue()), float(self.offset_Y.GetValue())),
+            layer_red=self.layer_red.IsChecked())
         
     def stop_present(self, event):
         print "Stop"
