@@ -412,7 +412,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') + glob.glob("/dev/tty.*") + glob.glob("/dev/cu.*") + glob.glob("/dev/rfcomm*")
 
     def project(self,event):
-        import projectlayer
+        from printrun import projectlayer
         projectlayer.SettingsFrame(self,self.p).Show()
 
     def popmenu(self):

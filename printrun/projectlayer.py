@@ -85,9 +85,7 @@ class DisplayFrame(wx.Frame):
             dc = wx.MemoryDC()
             dc.SelectObject(self.bitmap)
             dc.SetBackground(wx.Brush("black"))
-            dc.Clear()            
-            dc.SetPen(wx.Pen("red") if self.layer_red else wx.Pen("white"))
-            dc.SetBrush(wx.Brush("red") if self.layer_red else wx.Brush("white"))
+            dc.Clear()
 
             if self.slicer == 'Slic3r' or self.slicer == 'Skeinforge':
                 
@@ -116,6 +114,8 @@ class DisplayFrame(wx.Frame):
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
+                if self.layer_red:
+                    image = image.AdjustChannels(1,0,0,1)
                 dc.DrawBitmap(wx.BitmapFromImage(image.Scale(image.Width * self.scale, image.Height * self.scale)), self.offset[0], -self.offset[1], True)
             else:
                 raise Exception(self.slicer + " is an unknown method.")
@@ -564,8 +564,6 @@ class SettingsFrame(wx.Frame):
             path = os.path.join(self.image_dir, f)
             if os.path.isfile(path) and imghdr.what(path) in accepted_image_types:
                 ol.append(path)
-        
-        print ol
         
         return ol, -1, "bitmap"
         
