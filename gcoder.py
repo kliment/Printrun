@@ -124,8 +124,7 @@ class Line(object):
 				self.f = self._get_float("F")
 		except:
 			pass
-			
-		
+					
 	def is_move(self):
 		return self.command() and ("G1" in self.raw or "G0" in self.raw)
 		

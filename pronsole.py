@@ -160,6 +160,20 @@ class Settings:
         self.slicecommand = "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s"
         self.sliceoptscommand = "python skeinforge/skeinforge_application/skeinforge.py"
         self.final_command = ""
+        self.project_offset_x = 0.0
+        self.project_offset_y = 0.0
+        self.project_interval = 2.0
+        self.project_pause = 2.5
+        self.project_scale = 1.0
+        self.project_x = 1024.0
+        self.project_y = 768.0
+        self.project_projected_x = 150.0
+        self.project_direction = "Top Down"
+        self.project_overshoot = 3.0
+        self.project_z_axis_rate = 200
+        self.project_layer = 0.1
+        self.project_prelift_gcode = ""
+        self.project_postlift_gcode = ""
 
     def _set(self, key, value):
         try:
@@ -178,6 +192,7 @@ class Settings:
         except AttributeError:
             pass
         return value
+
     def _tabcomplete(self, key):
         try:
             return getattr(self, "_%s_list"%key)()
@@ -188,6 +203,7 @@ class Settings:
         except AttributeError:
             pass
         return []
+    
     def _all_settings(self):
         return dict([(k, getattr(self, k)) for k in self.__dict__.keys() if not k.startswith("_")])
 
@@ -217,7 +233,6 @@ class Status:
     @property
     def extruder_enabled(self):
         return self.extruder_temp != 0
-
 
 
 class pronsole(cmd.Cmd):
@@ -269,6 +284,7 @@ class pronsole(cmd.Cmd):
         self.webrequested = False
         self.web_config = None
         self.web_auth_config = None
+
         self.promptstrs = {"offline" : "%(bold)suninitialized>%(normal)s ",
                           "fallback" : "%(bold)sPC>%(normal)s ", 
                           "macro"    : "%(bold)s..>%(normal)s ",
@@ -1374,7 +1390,6 @@ class pronsole(cmd.Cmd):
                     readline.set_completer(self.old_completer)
                 except ImportError:
                     pass
-
 
 if __name__ == "__main__":
 

@@ -62,7 +62,7 @@ class printcore():
         self.endcb = None #impl ()
         self.onlinecb = None #impl ()
         self.loud = False #emit sent and received lines to terminal
-        self.greetings = ['start','Grbl ']
+        self.greetings = ['start', 'Grbl ']
         self.wait = 0 # default wait period for send(), send_now()
         self.read_thread = None
         self.stop_read_thread = False
@@ -182,7 +182,7 @@ class printcore():
             # Teststrings for resend parsing       # Firmware     exp. result
             # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
-                line = line.replace("N:"," ").replace("N"," ").replace(":"," ")
+                line = line.replace("N:", " ").replace("N", " ").replace(":", " ")
                 linewords = line.split()
                 while len(linewords) != 0:
                     try:
@@ -196,7 +196,7 @@ class printcore():
         self.clear = True
 
     def _checksum(self, command):
-        return reduce(lambda x, y:x^y, map(ord, command))
+        return reduce(lambda x, y:x ^ y, map(ord, command))
 
     def startprint(self, data, startindex = 0):
         """Start a print, data is an array of gcode commands.
@@ -345,9 +345,9 @@ class printcore():
                 try: self.sendcb(command)
                 except: pass
             try:
-                self.printer.write(str(command+"\n"))
+                self.printer.write(str(command + "\n"))
             except SerialException, e:
-                print "Can't write to printer (disconnected?)."
+                print "Can't write to printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
 
 if __name__ == '__main__':
     baud = 115200
@@ -366,9 +366,9 @@ if __name__ == '__main__':
             sys.exit(1)
         if o in ('-b', '--baud'):
             baud = int(a)
-        if o in ('-v','--verbose'):
+        if o in ('-v', '--verbose'):
             loud = True
-        elif o in ('-s','--statusreport'):
+        elif o in ('-s', '--statusreport'):
             statusreport = True
 
     if len (args) > 1:
@@ -392,7 +392,7 @@ if __name__ == '__main__':
         while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("%02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),) )
+                sys.stdout.write("%02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),))
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)

@@ -59,17 +59,17 @@ class BufferedCanvas(wx.Panel):
 
     def __init__(self,
                  parent,
-                 ID=-1,
+                 ID = -1,
                  pos = wx.DefaultPosition,
                  size = wx.DefaultSize,
-                 style = wx.NO_FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS):
+                 style = wx.NO_FULL_REPAINT_ON_RESIZE | wx.WANTS_CHARS):
         wx.Panel.__init__(self, parent, ID, pos, size, style)
 
         # Bind events
         self.Bind(wx.EVT_PAINT, self.onPaint)
 
         # Disable background erasing (flicker-licious)
-        def disable_event(*pargs,**kwargs):
+        def disable_event(*pargs, **kwargs):
             pass # the sauce, please
         self.Bind(wx.EVT_ERASE_BACKGROUND, disable_event)
 

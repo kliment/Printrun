@@ -86,9 +86,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         self.settings.build_dimensions = '200x200x100+0+0+0' #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed
-        self.settings.last_bed_temperature = 0.0
+        self.settings.last_bed_temperature = 0
         self.settings.last_file_path = ""
-        self.settings.last_temperature = 0.0
+        self.settings.last_temperature = 0
         self.settings.preview_extrusion_width = 0.5
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
@@ -322,7 +322,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             l = l.lower().replace(", ", ".")
             for i in self.temps.keys():
                 l = l.replace(i, self.temps[i])
-            f = float(l)
+            f = int(l)
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
@@ -344,7 +344,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             l = l.lower().replace(", ", ".")
             for i in self.bedtemps.keys():
                 l = l.replace(i, self.bedtemps[i])
-            f = float(l)
+            f = int(l)
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
@@ -418,9 +418,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def project(self,event):
         from printrun import projectlayer
-        if self.p.online:
-            projectlayer.setframe(self,self.p).Show()
-        else:
+        projectlayer.SettingsFrame(self,self.p).Show()
+
+        if not self.p.online:
             print _("Printer is not online.")
             if self.webInterface:
                 self.webInterface.AddLog("Printer is not online.")
@@ -449,12 +449,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             _("Print all G-code sent to and received from the printer."))
         m.Check(mItem.GetId(), self.p.loud)
         self.Bind(wx.EVT_MENU, self.setloud, mItem)
-
-        #try:
-        #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
-        #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
-        #except:
-        #    pass
 
         self.menustrip.Append(m, _("&Settings"))
         self.update_macros_menu()
@@ -1534,6 +1528,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         return bdl_float
 
 if __name__ == '__main__':
+    provider = wx.SimpleHelpProvider()
+    wx.HelpProvider_Set(provider)
     app = wx.App(False)
     main = PronterWindow()
     main.Show()
