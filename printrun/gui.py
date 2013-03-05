@@ -19,6 +19,8 @@ except:
     print _("WX is not installed. This program requires WX to run.")
     raise
 
+import string
+
 global buttonSize
 buttonSize=(70,25)  # Define sizes for the buttons on top rows
 
