@@ -120,7 +120,7 @@ Download the following, and install in this order:
   1. http://python.org/ftp/python/2.7.2/python-2.7.2.msi
   2. http://pypi.python.org/packages/any/p/pyserial/pyserial-2.5.win32.exe
   3. http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py27.exe
-  4. http://launchpad.net/pyreadline/1.7/1.7/+download/pyreadline-1.7.win32.exe
+  4. https://pypi.python.org/packages/any/p/pyreadline/pyreadline-1.7.1.win32.exe
   5. http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
 
 For the last one, you will need to unpack it, open a command terminal, 
