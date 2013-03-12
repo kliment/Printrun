@@ -52,6 +52,12 @@ class GCodeAnalyzer():
       self.layerZ = 0
       self.relative = False
       self.eRelative = False
+      self.homeX = 0
+      self.homeY = 0
+      self.homeZ = 0
+      self.maxX = 150
+      self.maxY = 150
+      self.maxZ = 150
       
       
    # find a code in a gstring line   
@@ -110,3 +116,10 @@ class GCodeAnalyzer():
 	    #Repetier has a bunch of limit-checking code here and time calculations: we are leaving them for now
 
 	elif code_g == 28 or code_g == 161:
+	  code_x = self.findCode(gcode, "X")
+	  code_y = self.findCode(gcode, "Y")
+	  code_z = self.findCode(gcode, "Z")
+	  code_e = self.findCode(gcode, "E")
+	  homeAll = False
+	  if code_x == None and code_y == None and code_z == None: homeAll = True
+	  
