@@ -20,6 +20,7 @@ from threading import Thread
 from select import error as SelectError
 import time, getopt, sys
 import platform, os
+from GCodeAnalyzer import GCodeAnalyzer
 
 def control_ttyhup(port, disable_hup):
     """Controls the HUPCL"""
@@ -70,6 +71,8 @@ class printcore():
         if port is not None and baud is not None:
             self.connect(port, baud)
 
+        self.analyzer = GCodeAnalyzer()
+        
     def disconnect(self):
         """Disconnects from printer and pauses the print
         """
@@ -335,6 +338,7 @@ class printcore():
                 self.sentlines[lineno] = command
         if self.printer:
             self.sent.append(command)
+            self.analyzer.Analyze(command) # run the command through the analyzer
             if self.loud:
                 print "SENT: ", command
             if self.sendcb:
