@@ -131,6 +131,14 @@ def estimate_duration(g):
     #print "Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration))
     return "{0:d} layers, ".format(int(layercount)) + str(datetime.timedelta(seconds = int(totalduration)))
 
+def confirm():
+   y_or_n = raw_input("y/n: ")
+   if y_or_n == "y":
+      return True
+   elif y_or_n != "n":
+      return confirm()
+   return False
+
 class Settings:
     #def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
     #def _temperature_validate(self, v):
@@ -183,15 +191,46 @@ class Settings:
     def _all_settings(self):
         return dict([(k, getattr(self, k)) for k in self.__dict__.keys() if not k.startswith("_")])
 
+class Status:
+
+    def __init__(self):
+        self.extruder_temp        = 0
+        self.extruder_temp_target = 0
+        self.bed_temp             = 0
+        self.bed_temp_target      = 0
+        self.print_job            = None
+        self.print_job_progress   = 1.0
+
+    def update_tempreading(self, tempstr):
+            r = tempstr.split()
+            # eg. r = ["ok", "T:20.5", "/0.0", "B:0.0", "/0.0", "@:0"]
+            if len(r) == 6:
+                self.extruder_temp        = float(r[1][2:])
+                self.extruder_temp_target = float(r[2][1:])
+                self.bed_temp             = float(r[3][2:])
+                self.bed_temp_target      = float(r[4][1:])
+
+    @property
+    def bed_enabled(self):
+        return self.bed_temp != 0
+
+    @property
+    def extruder_enabled(self):
+        return self.extruder_temp != 0
+
+
+
 class pronsole(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
         if not READLINE:
             self.completekey = None
+        self.status = Status()
+        self.dynamic_temp = False
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
         self.recvlisteners = []
-        self.prompt = "PC>"
+        self.in_macro = False
         self.p.onlinecb = self.online
         self.f = None
         self.listing = 0
@@ -230,6 +269,55 @@ class pronsole(cmd.Cmd):
         self.webrequested = False
         self.web_config = None
         self.web_auth_config = None
+        self.promptstrs = {"offline" : "%(bold)suninitialized>%(normal)s ",
+                          "fallback" : "%(bold)sPC>%(normal)s ", 
+                          "macro"    : "%(bold)s..>%(normal)s ",
+                          "online"   : "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
+
+    def promptf(self):
+        """A function to generate prompts so that we can do dynamic prompts. """
+        if self.in_macro:
+            promptstr = self.promptstrs["macro"]
+        elif not self.p.online:
+            promptstr = self.promptstrs["offline"]
+        elif self.status.extruder_enabled:
+            promptstr = self.promptstrs["online"]
+        else:
+            promptstr = self.promptstrs["fallback"]
+        if not "%" in promptstr:
+            return promptstr
+        else:
+            specials = {}
+            specials["extruder_temp"]        = str(int(self.status.extruder_temp))
+            specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
+            if self.status.extruder_temp_target == 0:
+                specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp))
+            else:
+                specials["extruder_temp_fancy"] = "%s/%s" % (str(int(self.status.extruder_temp)), str(int(self.status.extruder_temp_target)))
+            if self.p.printing:
+                progress = int(1000*float(self.p.queueindex)/len(self.p.mainqueue)) / 10
+            elif self.sdprinting:
+                progress = self.percentdone
+            else:
+                progress = 0.0
+            specials["progress"] = str(progress)
+            if self.p.printing or self.sdprinting:
+                specials["progress_fancy"] = str(progress) +"%"
+            else:
+                specials["progress_fancy"] = "?%"
+            specials["bold"]   = "\033[01m"
+            specials["normal"] = "\033[00m"
+            return promptstr % specials
+
+    def postcmd(self, stop, line):
+        """ A hook we override to generate prompts after 
+            each command is executed, for the next prompt.
+            We also use it to send M105 commands so that 
+            temp info gets updated for the prompt."""
+        if self.p.online and self.dynamic_temp:
+            self.p.send_now("M105")
+        self.prompt = self.promptf()
+        return stop
 
     def set_temp_preset(self, key, value):
         if not key.startswith("bed"):
@@ -257,8 +345,8 @@ class pronsole(cmd.Cmd):
         return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
 
     def online(self):
-        print "Printer is now online"
-        sys.stdout.write(self.prompt)
+        print "\rPrinter is now online"
+        sys.stdout.write(self.promptf())
         sys.stdout.flush()
 
     def help_help(self, l):
@@ -290,7 +378,8 @@ class pronsole(cmd.Cmd):
 
     def end_macro(self):
         if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
-        self.prompt = "PC>"
+        self.in_macro = False
+        self.prompt = self.promptf()
         if self.cur_macro_def!="":
             self.macros[self.cur_macro_name] = self.cur_macro_def
             macro = self.compile_macro(self.cur_macro_name, self.cur_macro_def)
@@ -342,7 +431,8 @@ class pronsole(cmd.Cmd):
         self.cur_macro_name = macro_name
         self.cur_macro_def = ""
         self.onecmd = self.hook_macro # override onecmd temporarily
-        self.prompt = "..>"
+        self.in_macro = False
+        self.prompt = self.promptf()
 
     def delete_macro(self, macro_name):
         if macro_name in self.macros.keys():
@@ -520,6 +610,7 @@ class pronsole(cmd.Cmd):
 
     def preloop(self):
         print "Welcome to the printer console! Type \"help\" for a list of available commands."
+        self.prompt = self.promptf()
         cmd.Cmd.preloop(self)
 
     def do_connect(self, l):
@@ -813,10 +904,13 @@ class pronsole(cmd.Cmd):
     def recvcb(self, l):
         if "T:" in l:
             self.tempreadings = l
+            self.status.update_tempreading(l)
         tstring = l.rstrip()
         if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
-            print tstring
-            sys.stdout.write(self.prompt)
+            if tstring[:5] == "echo:":
+                tstring = tstring[5:].lstrip()
+            print "\r" + tstring.ljust(15)
+            sys.stdout.write(self.promptf())
             sys.stdout.flush()
         for i in self.recvlisteners:
             i(l)
@@ -848,16 +942,17 @@ class pronsole(cmd.Cmd):
     def help_help(self):
         self.do_help("")
 
-    def tempcb(self, l):
-        if "T:" in l:
-            print l.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", "")
-
     def do_gettemp(self, l):
+        if "dynamic" in l:
+            self.dynamic_temp = True
         if self.p.online:
-            self.recvlisteners+=[self.tempcb]
             self.p.send_now("M105")
             time.sleep(0.75)
-            self.recvlisteners.remove(self.tempcb)
+            if not self.status.bed_enabled:
+                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
+            else:
+                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
+                print "Bed:    %s/%s" % (self.status.bed_temp, self.status.bed_temp_target)
 
     def help_gettemp(self):
         print "Read the extruder and bed temperature."
@@ -869,6 +964,10 @@ class pronsole(cmd.Cmd):
                 l = l.replace(i, self.temps[i])
             f = float(l)
             if f>=0:
+                if f > 250:
+                   print f, " is a high temperature to set your extruder to. Are you sure you want to do that?"
+                   if not confirm():
+                      return
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
                     print "Setting hotend temperature to ", f, " degrees Celsius."
@@ -1045,9 +1144,22 @@ class pronsole(cmd.Cmd):
         print "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
 
     def do_exit(self, l):
+        if self.status.extruder_temp_target != 0:
+            print "Setting extruder temp to 0"
+        self.p.send_now("M104 S0.0")
+        if self.status.bed_enabled:
+            if self.status.bed_temp_taret != 0:
+                print "Setting bed temp to 0"
+            self.p.send_now("M140 S0.0")
         print "Disconnecting from printer..."
-        self.p.disconnect()
+        print self.p.printing
+        if self.p.printing:
+            print "Are you sure you want to exit while printing?"
+            print "(this will terminate the print)."
+            if not confirm():
+                return False
         print "Exiting program. Goodbye!"
+        self.p.disconnect()
         return True
 
     def help_exit(self):
@@ -1058,6 +1170,9 @@ class pronsole(cmd.Cmd):
         if not self.p.online:
             print "Printer is not online. Please connect first."
             return
+        if not (self.p.printing or self.sdprinting):
+            print "Printer not printing. Please print something before monitoring."
+            return
         print "Monitoring printer, use ^C to interrupt."
         if len(l):
             try:
@@ -1066,22 +1181,27 @@ class pronsole(cmd.Cmd):
                 print "Invalid period given."
         print "Updating values every %f seconds."%(interval,)
         self.monitoring = 1
+        prev_msg_len = 0
         try:
-            while(1):
+            while True:
                 self.p.send_now("M105")
                 if(self.sdprinting):
                     self.p.send_now("M27")
                 time.sleep(interval)
                 #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
-                if(self.p.printing):
-                    print "Print progress: ", 100*float(self.p.queueindex)/len(self.p.mainqueue), "%"
-
-                if(self.sdprinting):
-                    print "SD print progress: ", self.percentdone, "%"
-
-        except:
+                if self.p.printing:
+                    preface  = "Print progress: "
+                    progress = 100*float(self.p.queueindex)/len(self.p.mainqueue)
+                elif self.sdprinting:
+                    preface  = "Print progress: "
+                    progress = self.percentdone
+                progress = int(progress*10)/10.0 #limit precision
+                prev_msg = preface + str(progress) + "%"
+                sys.stdout.write("\r" + prev_msg.ljust(prev_msg_len))
+                sys.stdout.flush()
+                prev_msg_len = len(prev_msg)
+        except KeyboardInterrupt:
             print "Done monitoring."
-            pass
         self.monitoring = 0
 
     def help_monitor(self):
@@ -1192,6 +1312,69 @@ class pronsole(cmd.Cmd):
                 self.processing_args = True
                 self.onecmd(a)
                 self.processing_args = False
+
+
+    # We replace this function, defined in cmd.py .
+    # It's default behavior with reagrds to Ctr-C
+    # and Ctr-D doesn't make much sense...
+
+    def cmdloop(self, intro=None):
+        """Repeatedly issue a prompt, accept input, parse an initial prefix
+        off the received input, and dispatch to action methods, passing them
+        the remainder of the line as argument.
+
+        """
+
+        self.preloop()
+        if self.use_rawinput and self.completekey:
+            try:
+                import readline
+                self.old_completer = readline.get_completer()
+                readline.set_completer(self.complete)
+                readline.parse_and_bind(self.completekey+": complete")
+            except ImportError:
+                pass
+        try:
+            if intro is not None:
+                self.intro = intro
+            if self.intro:
+                self.stdout.write(str(self.intro)+"\n")
+            stop = None
+            while not stop:
+                if self.cmdqueue:
+                    line = self.cmdqueue.pop(0)
+                else:
+                    if self.use_rawinput:
+                        try:
+                            line = raw_input(self.prompt)
+                        except EOFError:
+                            print ""
+                            should_exit = self.do_exit("")
+                            if should_exit: 
+                                exit()
+                        except KeyboardInterrupt:
+                            print ""
+                            line = ""
+                    else:
+                        self.stdout.write(self.prompt)
+                        self.stdout.flush()
+                        line = self.stdin.readline()
+                        if not len(line):
+                            line = ""
+                        else:
+                            line = line.rstrip('\r\n')
+                line = self.precmd(line)
+                stop = self.onecmd(line)
+                stop = self.postcmd(stop, line)
+            self.postloop()
+        finally:
+            if self.use_rawinput and self.completekey:
+                try:
+                    import readline
+                    readline.set_completer(self.old_completer)
+                except ImportError:
+                    pass
+
 
 if __name__ == "__main__":
 

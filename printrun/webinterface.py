@@ -291,7 +291,7 @@ class WebInterface(object):
         pageText+="<li><a href='/pausebutton'>Pause</a></li>\n"
 
         for i in gPronterPtr.cpbuttons:
-            pageText+="<li><a href='/custom/button/"+i[1]+"'>"+i[0]+"</a></li>\n"
+            pageText+="<li><a href='/custom/button/"+i.command+"'>"+i.label+"</a></li>\n"
 
         #for i in gPronterPtr.custombuttons:
         #    print(str(i));

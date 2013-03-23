@@ -222,6 +222,7 @@ class printcore():
     def pause(self):
         """Pauses the print, saving the current position.
         """
+        if not self.printing: return False
         self.paused = True
         self.printing = False
         self.print_thread.join()
@@ -230,6 +231,7 @@ class printcore():
     def resume(self):
         """Resumes a paused print.
         """
+        if not self.paused: return False
         self.paused = False
         self.printing = True
         self.print_thread = Thread(target = self._print)
@@ -287,6 +289,8 @@ class printcore():
         self.sentlines = {}
         self.log = []
         self.sent = []
+        self.print_thread.join()
+        self.print_thread = None
         if self.endcb:
             #callback for printing done
             try: self.endcb()
