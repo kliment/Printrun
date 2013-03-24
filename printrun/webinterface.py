@@ -23,7 +23,7 @@ from printrun.printrun_utils import configfile, imagefile, sharedfile
 users = {}
 
 def PrintHeader():
-    return '<html>\n<head>\n<title>Pronterface-Web</title>\n<link rel = "stylesheet" type = "text/css" href = "/css/style.css" type = "text/css"></link>\n</head>\n<body>\n'
+    return '<html>\n<head>\n<title>Pronterface-Web</title>\n<link rel = "stylesheet" type = "text/css" href = "/css/style.css" type = "text/css"></link>\n<script src="/js/asyncCommand.js"></script>\n</head>\n<body>\n'
 
 def PrintMenu():
     return '<div id = "mainmenu"><ul><li><a href = "/">home</a></li><li><a href = "/settings">settings</a></li><li><a href = "/console">console</a></li><li><a href = "/status">status (XML)</a></li></ul></div>'
@@ -284,14 +284,14 @@ class WebInterface(object):
         pageText = PrintHeader()+self.name+PrintMenu()
         pageText+="<div id='content'>\n"
         pageText+="<div id='controls'>\n"
-        pageText+="<ul><li><a href='/connect'>Connect</a></li>\n"
-        pageText+="<li><a href='/disconnect'>Disconnect</a></li>\n"
-        pageText+="<li><a href='/reset'>Reset</a></li>\n"
-        pageText+="<li><a href='/printbutton'>Print</a></li>\n"
-        pageText+="<li><a href='/pausebutton'>Pause</a></li>\n"
+        pageText+="<ul><li><a class='command' href='/connect'>Connect</a></li>\n"
+        pageText+="<li><a class='command' href='/disconnect'>Disconnect</a></li>\n"
+        pageText+="<li><a class='command' href='/reset'>Reset</a></li>\n"
+        pageText+="<li><a class='command' href='/printbutton'>Print</a></li>\n"
+        pageText+="<li><a class='command' href='/pausebutton'>Pause</a></li>\n"
 
         for i in gPronterPtr.cpbuttons:
-            pageText+="<li><a href='/custom/button/"+i.command+"'>"+i.label+"</a></li>\n"
+            pageText+="<li><a class='command' href='/custom/button/"+i.command+"'>"+i.label+"</a></li>\n"
 
         #for i in gPronterPtr.custombuttons:
         #    print(str(i));
@@ -303,38 +303,38 @@ class WebInterface(object):
         pageText+="<img src='/images/control_xy.png' usemap='#xymap'/>"
         pageText+='<map name = "xymap">'
 
-        pageText+='<area shape = "rect" coords = "8, 5, 51, 48" href = "/home/axis/x" alt = "X Home" title = "X Home"    />'
-        pageText+='<area shape = "rect" coords = "195, 6, 236, 46" href = "/home/axis/y" alt = "Y Home" title = "Y Home"    />'
-        pageText+='<area shape = "rect" coords = "7, 192, 48, 232" href = "/home/axis/all" alt = "All Home" title = "All Home"    />'
-        pageText+='<area shape = "rect" coords = "194, 192, 235, 232" href = "/home/axis/z" alt = "Z Home" title = "Z Home"    />'
-        pageText+='<area shape = "rect" coords = "62, 7, 185, 34" href = "/move/axis/y/100" alt = "Y 100" title = "Y 100"    />'
-        pageText+='<area shape = "rect" coords = "68, 34, 175, 61" href = "/move/axis/y/10" alt = "Y 10" title = "Y 10"    />'
-        pageText+='<area shape = "rect" coords = "80, 60, 163, 84" href = "/move/axis/y/1" alt = "Y 1" title = "Y 1"    />'
-        pageText+='<area shape = "rect" coords = "106, 83, 138, 107" href = "/move/axis/y/.1" alt = "Y .1" title = "Y .1"    />'
-        pageText+='<area shape = "rect" coords = "110, 135, 142, 159" href = "/move/axis/y/-.1" alt = "Y -.1" title = "Y -.1"    />'
-        pageText+='<area shape = "rect" coords = "81, 157, 169, 181" href = "/move/axis/y/-1" alt = "Y -1" title = "Y -1"    />'
-        pageText+='<area shape = "rect" coords = "69, 180, 178, 206" href = "/move/axis/y/-10" alt = "Y -10" title = "Y -10"    />'
-        pageText+='<area shape = "rect" coords = "60, 205, 186, 231" href = "/move/axis/y/-100" alt = "Y -100" title = "Y -100"    />'
-        pageText+='<area shape = "rect" coords = "11, 53, 37, 179" href = "/move/axis/x/-100" alt = "X -100" title = "X -100"    />'
-        pageText+='<area shape = "rect" coords = "210, 59, 236, 185" href = "/move/axis/x/100" alt = "X 100" title = "X 100"    />'
-        pageText+='<area shape = "rect" coords = "38, 60, 64, 172" href = "/move/axis/x/-10" alt = "X -10" title = "X -10"    />'
-        pageText+='<area shape = "rect" coords = "185, 66, 211, 178" href = "/move/axis/x/10" alt = "X 10" title = "X 10"    />'
-        pageText+='<area shape = "rect" coords = "62, 84, 83, 157" href = "/move/axis/x/-1" alt = "X -1" title = "X -1"    />'
-        pageText+='<area shape = "rect" coords = "163, 87, 187, 160" href = "/move/axis/x/1" alt = "X 1" title = "X 1"    />'
-        pageText+='<area shape = "rect" coords = "82, 104, 110, 139" href = "/move/axis/x/-.1" alt = "X -.1" title = "X -.1"    />'
-        pageText+='<area shape = "rect" coords = "137, 105, 165, 140" href = "/move/axis/x/.1" alt = "X .1" title = "X .1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "8, 5, 51, 48" href = "/home/axis/x" alt = "X Home" title = "X Home"    />'
+        pageText+='<area shape = "rect" class="command" coords = "195, 6, 236, 46" href = "/home/axis/y" alt = "Y Home" title = "Y Home"    />'
+        pageText+='<area shape = "rect" class="command" coords = "7, 192, 48, 232" href = "/home/axis/all" alt = "All Home" title = "All Home"    />'
+        pageText+='<area shape = "rect" class="command" coords = "194, 192, 235, 232" href = "/home/axis/z" alt = "Z Home" title = "Z Home"    />'
+        pageText+='<area shape = "rect" class="command" coords = "62, 7, 185, 34" href = "/move/axis/y/100" alt = "Y 100" title = "Y 100"    />'
+        pageText+='<area shape = "rect" class="command" coords = "68, 34, 175, 61" href = "/move/axis/y/10" alt = "Y 10" title = "Y 10"    />'
+        pageText+='<area shape = "rect" class="command" coords = "80, 60, 163, 84" href = "/move/axis/y/1" alt = "Y 1" title = "Y 1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "106, 83, 138, 107" href = "/move/axis/y/.1" alt = "Y .1" title = "Y .1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "110, 135, 142, 159" href = "/move/axis/y/-.1" alt = "Y -.1" title = "Y -.1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "81, 157, 169, 181" href = "/move/axis/y/-1" alt = "Y -1" title = "Y -1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "69, 180, 178, 206" href = "/move/axis/y/-10" alt = "Y -10" title = "Y -10"    />'
+        pageText+='<area shape = "rect" class="command" coords = "60, 205, 186, 231" href = "/move/axis/y/-100" alt = "Y -100" title = "Y -100"    />'
+        pageText+='<area shape = "rect" class="command" coords = "11, 53, 37, 179" href = "/move/axis/x/-100" alt = "X -100" title = "X -100"    />'
+        pageText+='<area shape = "rect" class="command" coords = "210, 59, 236, 185" href = "/move/axis/x/100" alt = "X 100" title = "X 100"    />'
+        pageText+='<area shape = "rect" class="command" coords = "38, 60, 64, 172" href = "/move/axis/x/-10" alt = "X -10" title = "X -10"    />'
+        pageText+='<area shape = "rect" class="command" coords = "185, 66, 211, 178" href = "/move/axis/x/10" alt = "X 10" title = "X 10"    />'
+        pageText+='<area shape = "rect" class="command" coords = "62, 84, 83, 157" href = "/move/axis/x/-1" alt = "X -1" title = "X -1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "163, 87, 187, 160" href = "/move/axis/x/1" alt = "X 1" title = "X 1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "82, 104, 110, 139" href = "/move/axis/x/-.1" alt = "X -.1" title = "X -.1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "137, 105, 165, 140" href = "/move/axis/x/.1" alt = "X .1" title = "X .1"    />'
 
         pageText+="</map>"
         pageText+="</div>\n" #endxy
         pageText+="<div id='control_z'>"
         pageText+="<img src='/images/control_z.png' usemap='#zmap'/>"
         pageText+='<map name = "zmap">'
-        pageText+='<area shape = "rect" coords = "4, 35, 54, 64" href = "/move/axis/z/10" alt = "Z 10" title = "Z 10"    />'
-        pageText+='<area shape = "rect" coords = "4, 60, 54, 89" href = "/move/axis/z/1" alt = "Z 1" title = "Z 1"    />'
-        pageText+='<area shape = "rect" coords = "4, 87, 54, 116" href = "/move/axis/z/.1" alt = "Z .1" title = "Z .1"    />'
-        pageText+='<area shape = "rect" coords = "4, 121, 54, 150" href = "/move/axis/z/-.1" alt = "Z -.1" title = "Z -.1"    />'
-        pageText+='<area shape = "rect" coords = "4, 147, 54, 176" href = "/move/axis/z/-1" alt = "Z -1" title = "Z -1"    />'
-        pageText+='<area shape = "rect" coords = "4, 173, 54, 202" href = "/move/axis/z/-10" alt = "Z -10" title = "Z -10"    />'
+        pageText+='<area shape = "rect" class="command" coords = "4, 35, 54, 64" href = "/move/axis/z/10" alt = "Z 10" title = "Z 10"    />'
+        pageText+='<area shape = "rect" class="command" coords = "4, 60, 54, 89" href = "/move/axis/z/1" alt = "Z 1" title = "Z 1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "4, 87, 54, 116" href = "/move/axis/z/.1" alt = "Z .1" title = "Z .1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "4, 121, 54, 150" href = "/move/axis/z/-.1" alt = "Z -.1" title = "Z -.1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "4, 147, 54, 176" href = "/move/axis/z/-1" alt = "Z -1" title = "Z -1"    />'
+        pageText+='<area shape = "rect" class="command" coords = "4, 173, 54, 202" href = "/move/axis/z/-10" alt = "Z -10" title = "Z -10"    />'
         pageText+="</map>"
         #TODO Map Z Moves
         pageText+="</div>\n" #endz
@@ -374,11 +374,14 @@ def KillWebInterfaceThread():
     cherrypy.engine.exit()
 
 def StartWebInterfaceThread(webInterface):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    current_dir = os.path.dirname(os.path.abspath(__file__))    
     cherrypy.config.update({'engine.autoreload_on':False})
     cherrypy.config.update(configfile(webInterface.pface.web_config or "http.config"))
     conf = {'/css/style.css': {'tools.staticfile.on': True,
-                      'tools.staticfile.filename': sharedfile('css/style.css'),
+                      'tools.staticfile.filename': sharedfile('web/style.css'),
+                     },
+             '/js/asyncCommand.js': {'tools.staticfile.on': True,
+                      'tools.staticfile.filename': sharedfile('web/js/asyncCommand.js'),
                      },
              '/images/control_xy.png': {'tools.staticfile.on': True,
                       'tools.staticfile.filename': imagefile('control_xy.png'),
