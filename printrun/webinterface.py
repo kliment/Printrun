@@ -378,7 +378,7 @@ def StartWebInterfaceThread(webInterface):
     cherrypy.config.update({'engine.autoreload_on':False})
     cherrypy.config.update(configfile(webInterface.pface.web_config or "http.config"))
     conf = {'/css/style.css': {'tools.staticfile.on': True,
-                      'tools.staticfile.filename': sharedfile('web/style.css'),
+                      'tools.staticfile.filename': sharedfile('web/css/style.css'),
                      },
              '/js/asyncCommand.js': {'tools.staticfile.on': True,
                       'tools.staticfile.filename': sharedfile('web/js/asyncCommand.js'),
