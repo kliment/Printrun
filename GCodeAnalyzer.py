@@ -58,6 +58,9 @@ class GCodeAnalyzer():
     self.maxX = 150
     self.maxY = 150
     self.maxZ = 150
+    self.minX = 0
+    self.minY = 0
+    self.minZ = 0
     self.hasHomeX = False
     self.hasHomeY = False
     self.hasHomeZ = False
@@ -65,8 +68,8 @@ class GCodeAnalyzer():
       
   # find a code in a gstring line   
   def findCode(self, gcode, codeStr):
-      pattern = re.compile(codeStr + "s*([\d.]*)",re.I)
-      m=re.match(pattern, gcode)
+      pattern = re.compile(codeStr + "\\s*([\d.-]*)",re.I)
+      m=re.search(pattern, gcode)
       if m == None:
         return None
       else:
@@ -85,7 +88,7 @@ class GCodeAnalyzer():
       self.lastY = self.y
       self.lastZ = self.z
       self.lastE = self.e
-      eChanged = false;
+      eChanged = False;
       code_f = self.findCode(gcode, "F")
       if code_f != None:
         self.f=float(code_f)
@@ -94,7 +97,7 @@ class GCodeAnalyzer():
       code_y = self.findCode(gcode, "Y")
       code_z = self.findCode(gcode, "Z")
       code_e = self.findCode(gcode, "E")
-      
+
       if self.relative:
         if code_x != None: self.x += float(code_x)
         if code_y != None: self.y += float(code_y)
@@ -120,7 +123,15 @@ class GCodeAnalyzer():
             if self.e != self.eOffset + e:
               eChanged = True
               self.e = self.eOffset + e
-        #Repetier has a bunch of limit-checking code here and time calculations: we are leaving them for now
+      #limit checking
+      if self.x < self.minX: self.x = self.minX
+      if self.y < self.minY: self.y = self.minY
+      if self.z < self.minZ: self.z = self.minZ
+      
+      if self.x > self.maxX: self.x = self.maxX
+      if self.y > self.maxY: self.y = self.maxY
+      if self.z > self.maxZ: self.z = self.maxZ
+      #Repetier has a bunch of limit-checking code here and time calculations: we are leaving them for now
     elif code_g == 28 or code_g == 161:
       self.lastX = self.x
       self.lastY = self.y
@@ -193,5 +204,8 @@ class GCodeAnalyzer():
         code_m = int(code_m)
         if code_m == 82: self.eRelative = False
         elif code_m == 83: self.eRelative = True
-    
+        
+  def print_status(self):
+    attrs = vars(self)
+    print '\n'.join("%s: %s" % item for item in attrs.items())
     

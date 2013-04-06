@@ -128,6 +128,23 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.btndict = {}
         self.parse_cmdline(sys.argv[1:])
         self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
+        
+        #initialize the code analyzer with the correct sizes. There must be a more general way to do so
+        self.p.analyzer.maxX = self.build_dimensions_list[0];
+        self.p.analyzer.maxY = self.build_dimensions_list[1];
+        self.p.analyzer.maxZ = self.build_dimensions_list[2];
+        
+        self.p.analyzer.homeX = self.build_dimensions_list[3];
+        self.p.analyzer.homeY = self.build_dimensions_list[4];
+        self.p.analyzer.homeZ = self.build_dimensions_list[5];
+        
+        self.p.analyzer.print_status()
+        
+        #set feedrates in printcore for pause/resume
+        self.p.xy_feedrate = self.settings.xy_feedrate
+        self.p.z_feedrate = self.settings.z_feedrate
+        
+        
         self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict = {}
         try:

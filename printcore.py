@@ -70,8 +70,9 @@ class printcore():
         self.print_thread = None
         if port is not None and baud is not None:
             self.connect(port, baud)
-
         self.analyzer = GCodeAnalyzer()
+        self.xy_feedrate = None
+        self.z_feedrate = None
         
     def disconnect(self):
         """Disconnects from printer and pauses the print
@@ -229,10 +230,38 @@ class printcore():
         self.printing = False
         self.print_thread.join()
         self.print_thread = None
+        
+        # saves the status
+        self.pauseX = analyzer.x-analyzer.xOffset;
+        self.pauseY = analyzer.y-analyzer.yOffset;
+        self.pauseZ = analyzer.z-analyzer.zOffset;
+        self.pauseE = analyzer.e-analyzer.eOffset;
+        self.pauseF = analyzer.f;
+        self.pauseRelative = analyzer.relative;
+
+
 
     def resume(self):
         """Resumes a paused print.
         """
+        
+        if self.paused:
+          #restores the status
+          self.send("G90") # go to absolute coordinates
+        
+          xyFeedString = ""
+          zFeedString = ""
+          if self.xy_feedrate != None: xyFeedString = " F" + str(self.xy_feedrate)
+          if self.z_feedrate != None: zFeedString = " F" + str(self.z_feedrate)
+        
+          self.send("G1 X" + str(self.pauseX) + " Y" + str(self.pauseY) + xyFeedString)
+          self.send("G1 Z" + str(self.pauseZ) + zFeedString)
+          self.send("G92 E" + str(self.pauseE))
+        
+          if self.pauseRelative: self.send("G91") # go back to relative if needed
+          #reset old feed rate
+          self.send("G1 F" + str(self.pauseF))
+        
         self.paused = False
         self.printing = True
         self.print_thread = Thread(target = self._print)
