@@ -76,6 +76,7 @@ class GCodeAnalyzer():
         return m.group(1)
     
   def Analyze(self, gcode):
+    gcode = gcode[:gcode.find(";")] # remove comments
     code_g = self.findCode(gcode, "G")
     code_m = self.findCode(gcode, "M")
     # we have a g_code

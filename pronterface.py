@@ -85,7 +85,7 @@ class Tee(object):
 class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
-        self.settings.build_dimensions = '200x200x100+0+0+0' #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed
+        self.settings.build_dimensions = '200x200x100+0+0+0+0+0+0' #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed
         self.settings.last_bed_temperature = 0.0
         self.settings.last_file_path = ""
         self.settings.last_temperature = 0.0
@@ -93,7 +93,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings.preview_grid_step1 = 10.
         self.settings.preview_grid_step2 = 50.
         self.settings.bgcolor = "#FFFFFF"
-        self.helpdict["build_dimensions"] = _("Dimensions of Build Platform\n & optional offset of origin\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ")
+        
+        self.pauseScript = "pause.gcode"
+        self.endScript = "end.gcode"
+        
+        self.helpdict["build_dimensions"] = _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ")
         self.helpdict["last_bed_temperature"] = _("Last Set Temperature for the Heated Print Bed")
         self.helpdict["last_file_path"] = _("Folder of last opened file")
         self.helpdict["last_temperature"] = _("Last Temperature of the Hot End")
@@ -130,20 +134,24 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
         
         #initialize the code analyzer with the correct sizes. There must be a more general way to do so
-        self.p.analyzer.maxX = self.build_dimensions_list[0];
-        self.p.analyzer.maxY = self.build_dimensions_list[1];
-        self.p.analyzer.maxZ = self.build_dimensions_list[2];
+        self.p.analyzer.maxX = self.build_dimensions_list[0] if self.build_dimensions_list[0] >= self.build_dimensions_list[6] else self.build_dimensions_list[6] # maximum x is maximum x if maximum X > home X, else it is home X
+        self.p.analyzer.maxY = self.build_dimensions_list[1] if self.build_dimensions_list[1] >= self.build_dimensions_list[7] else self.build_dimensions_list[7]
+        self.p.analyzer.maxZ = self.build_dimensions_list[2] if self.build_dimensions_list[2] >= self.build_dimensions_list[8] else self.build_dimensions_list[8]
         
-        self.p.analyzer.homeX = self.build_dimensions_list[3];
-        self.p.analyzer.homeY = self.build_dimensions_list[4];
-        self.p.analyzer.homeZ = self.build_dimensions_list[5];
+        self.p.analyzer.minX = self.build_dimensions_list[3]
+        self.p.analyzer.minY = self.build_dimensions_list[4]
+        self.p.analyzer.minZ = self.build_dimensions_list[5]
         
-        self.p.analyzer.print_status()
-        
+        self.p.analyzer.homeX = self.build_dimensions_list[6]
+        self.p.analyzer.homeY = self.build_dimensions_list[7]
+        self.p.analyzer.homeZ = self.build_dimensions_list[8]
+                
         #set feedrates in printcore for pause/resume
         self.p.xy_feedrate = self.settings.xy_feedrate
         self.p.z_feedrate = self.settings.z_feedrate
         
+        #make printcore aware of me
+        self.p.pronterface = self
         
         self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict = {}
@@ -215,6 +223,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
+            self.p.runSmallScript(self.endScript)
+            
             param = self.settings.final_command
             if not param:
                 return
@@ -1405,7 +1415,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     #print "Not printing, cannot pause."
                     return
                 self.p.pause()
+                self.p.runSmallScript(self.pauseScript)
             self.paused = True
+            #self.p.runSmallScript(self.pauseScript)
             self.extra_print_time += int(time.time() - self.starttime)
             wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
         else:
@@ -1544,9 +1556,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         "[^\d+-]*(\d+)?" + # Z build size
         "[^\d+-]*([+-]\d+)?" + # X corner coordinate
         "[^\d+-]*([+-]\d+)?" + # Y corner coordinate
-        "[^\d+-]*([+-]\d+)?"   # Z corner coordinate
+        "[^\d+-]*([+-]\d+)?" + # Z corner coordinate
+        "[^\d+-]*([+-]\d+)?" + # X endstop
+        "[^\d+-]*([+-]\d+)?" + # Y endstop
+        "[^\d+-]*([+-]\d+)?"  # Z endstop
         ,bdim).groups()
-        defaults = [200, 200, 100, 0, 0, 0]
+        defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
         bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
         return bdl_float
 
