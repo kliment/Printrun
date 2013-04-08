@@ -20,6 +20,7 @@ from threading import Thread
 from select import error as SelectError
 import time, getopt, sys
 import platform, os
+from GCodeAnalyzer import GCodeAnalyzer
 
 def control_ttyhup(port, disable_hup):
     """Controls the HUPCL"""
@@ -69,7 +70,11 @@ class printcore():
         self.print_thread = None
         if port is not None and baud is not None:
             self.connect(port, baud)
-
+        self.analyzer = GCodeAnalyzer()
+        self.xy_feedrate = None
+        self.z_feedrate = None
+        self.pronterface = None
+        
     def disconnect(self):
         """Disconnects from printer and pauses the print
         """
@@ -219,19 +224,69 @@ class printcore():
         self.print_thread.start()
         return True
 
+    # run a simple script if it exists, no multithreading    
+    def runSmallScript(self, filename):
+        if filename == None: return
+        f = None
+        try:
+          f = open(filename)
+        except:
+          pass
+
+        if f != None:
+          for i in f:
+            l = i.replace("\n", "")
+            l = l[:l.find(";")] #remove comment
+            self.send_now(l)
+          f.close()
+        
     def pause(self):
         """Pauses the print, saving the current position.
         """
         if not self.printing: return False
         self.paused = True
         self.printing = False
-        self.print_thread.join()
+        
+        # try joining the print thread: enclose it in try/except because we might be calling it from the thread itself
+        
+        try:
+          self.print_thread.join()
+        except:
+          pass
+        
         self.print_thread = None
+        
+        # saves the status
+        self.pauseX = self.analyzer.x-self.analyzer.xOffset;
+        self.pauseY = self.analyzer.y-self.analyzer.yOffset;
+        self.pauseZ = self.analyzer.z-self.analyzer.zOffset;
+        self.pauseE = self.analyzer.e-self.analyzer.eOffset;
+        self.pauseF = self.analyzer.f;
+        self.pauseRelative = self.analyzer.relative;
+        
+        
 
     def resume(self):
         """Resumes a paused print.
         """
         if not self.paused: return False
+        if self.paused:
+          #restores the status
+          self.send_now("G90") # go to absolute coordinates
+        
+          xyFeedString = ""
+          zFeedString = ""
+          if self.xy_feedrate != None: xyFeedString = " F" + str(self.xy_feedrate)
+          if self.z_feedrate != None: zFeedString = " F" + str(self.z_feedrate)
+        
+          self.send_now("G1 X" + str(self.pauseX) + " Y" + str(self.pauseY) + xyFeedString)
+          self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
+          self.send_now("G92 E" + str(self.pauseE))
+        
+          if self.pauseRelative: self.send_now("G91") # go back to relative if needed
+          #reset old feed rate
+          self.send_now("G1 F" + str(self.pauseF))
+        
         self.paused = False
         self.printing = True
         self.print_thread = Thread(target = self._print)
@@ -296,6 +351,15 @@ class printcore():
             try: self.endcb()
             except: pass
 
+    #now only "pause" is implemented as host command
+    def processHostCommand(self, command):
+        command = command.lstrip()
+        if command.startswith(";@pause"):
+          if self.pronterface != None:
+            self.pronterface.pause(None)
+          else:
+            self.pause()
+            
     def _sendnext(self):
         if not self.printer:
             return
@@ -316,6 +380,13 @@ class printcore():
             return
         if self.printing and self.queueindex < len(self.mainqueue):
             tline = self.mainqueue[self.queueindex]
+            #check for host command
+            if tline.lstrip().startswith(";@"):
+              #it is a host command: pop it from the list
+              self.mainqueue.pop(self.queueindex)
+              self.processHostCommand(tline)
+              return
+      
             tline = tline.split(";")[0]
             if len(tline) > 0:
                 self._send(tline, self.lineno, True)
@@ -339,6 +410,7 @@ class printcore():
                 self.sentlines[lineno] = command
         if self.printer:
             self.sent.append(command)
+            self.analyzer.Analyze(command) # run the command through the analyzer
             if self.loud:
                 print "SENT: ", command
             if self.sendcb:
