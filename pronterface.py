@@ -313,16 +313,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if f>0:
             wx.CallAfter(self.btemp.SetValue, str(f))
             self.set("last_bed_temperature", str(f))
-            wx.CallAfter(self.setboff.SetBackgroundColour, "")
-            wx.CallAfter(self.setboff.SetForegroundColour, "")
+            wx.CallAfter(self.setboff.SetBackgroundColour, None)
+            wx.CallAfter(self.setboff.SetForegroundColour, None)
             wx.CallAfter(self.setbbtn.SetBackgroundColour, "#FFAA66")
             wx.CallAfter(self.setbbtn.SetForegroundColour, "#660000")
             wx.CallAfter(self.btemp.SetBackgroundColour, "#FFDABB")
         else:
             wx.CallAfter(self.setboff.SetBackgroundColour, "#0044CC")
             wx.CallAfter(self.setboff.SetForegroundColour, "white")
-            wx.CallAfter(self.setbbtn.SetBackgroundColour, "")
-            wx.CallAfter(self.setbbtn.SetForegroundColour, "")
+            wx.CallAfter(self.setbbtn.SetBackgroundColour, None)
+            wx.CallAfter(self.setbbtn.SetForegroundColour, None)
             wx.CallAfter(self.btemp.SetBackgroundColour, "white")
             wx.CallAfter(self.btemp.Refresh)
 
@@ -332,16 +332,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if f > 0:
             wx.CallAfter(self.htemp.SetValue, str(f))
             self.set("last_temperature", str(f))
-            wx.CallAfter(self.settoff.SetBackgroundColour, "")
-            wx.CallAfter(self.settoff.SetForegroundColour, "")
+            wx.CallAfter(self.settoff.SetBackgroundColour, None)
+            wx.CallAfter(self.settoff.SetForegroundColour, None)
             wx.CallAfter(self.settbtn.SetBackgroundColour, "#FFAA66")
             wx.CallAfter(self.settbtn.SetForegroundColour, "#660000")
             wx.CallAfter(self.htemp.SetBackgroundColour, "#FFDABB")
         else:
             wx.CallAfter(self.settoff.SetBackgroundColour, "#0044CC")
             wx.CallAfter(self.settoff.SetForegroundColour, "white")
-            wx.CallAfter(self.settbtn.SetBackgroundColour, "")
-            wx.CallAfter(self.settbtn.SetForegroundColour, "")
+            wx.CallAfter(self.settbtn.SetBackgroundColour, None)
+            wx.CallAfter(self.settbtn.SetForegroundColour, None)
             wx.CallAfter(self.htemp.SetBackgroundColour, "white")
             wx.CallAfter(self.htemp.Refresh)
 
