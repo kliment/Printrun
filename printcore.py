@@ -344,7 +344,9 @@ class printcore():
         self.sentlines = {}
         self.log = []
         self.sent = []
-        self.print_thread.join()
+        try:
+          self.print_thread.join()
+        except: pass
         self.print_thread = None
         if self.endcb:
             #callback for printing done
