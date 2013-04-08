@@ -30,10 +30,6 @@ class Line(object):
 		self.imperial = False
 		self.relative = False
 		
-		#ignore host commands
-		if self.raw.startswith("@"):
-		  self.raw = ""
-		
 		if ";" in self.raw:
 			self.raw = self.raw.split(";")[0]
 		
