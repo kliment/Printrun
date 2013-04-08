@@ -31,7 +31,7 @@ class Line(object):
 		self.relative = False
 		
 		#ignore host commands
-		if "@" in self.raw:
+		if self.raw.startswith("@"):
 		  self.raw = ""
 		
 		if ";" in self.raw:

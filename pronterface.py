@@ -134,13 +134,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
         
         #initialize the code analyzer with the correct sizes. There must be a more general way to do so
-        self.p.analyzer.maxX = self.build_dimensions_list[0] if self.build_dimensions_list[0] >= self.build_dimensions_list[6] else self.build_dimensions_list[6] # maximum x is maximum x if maximum X > home X, else it is home X
-        self.p.analyzer.maxY = self.build_dimensions_list[1] if self.build_dimensions_list[1] >= self.build_dimensions_list[7] else self.build_dimensions_list[7]
-        self.p.analyzer.maxZ = self.build_dimensions_list[2] if self.build_dimensions_list[2] >= self.build_dimensions_list[8] else self.build_dimensions_list[8]
-        
+
+        # minimum = offset
         self.p.analyzer.minX = self.build_dimensions_list[3]
         self.p.analyzer.minY = self.build_dimensions_list[4]
         self.p.analyzer.minZ = self.build_dimensions_list[5]
+        
+        #max = offset + bedsize
+        self.p.analyzer.maxX = self.build_dimensions_list[3] + self.build_dimensions_list[0]
+        self.p.analyzer.maxY = self.build_dimensions_list[4] + self.build_dimensions_list[1]
+        self.p.analyzer.maxZ = self.build_dimensions_list[5] + self.build_dimensions_list[2]
         
         self.p.analyzer.homeX = self.build_dimensions_list[6]
         self.p.analyzer.homeY = self.build_dimensions_list[7]

@@ -229,16 +229,16 @@ class printcore():
         if filename == None: return
         f = None
         try:
-	  f = open(filename)
+          f = open(filename)
         except:
-	  pass
-	
-	if f != None:
-	  for i in f:
-	    l = i.replace("\n", "")
-	    l = l[:l.find(";")] #remove comment
-	    self.send_now(l)
-	  f.close()
+          pass
+
+        if f != None:
+          for i in f:
+            l = i.replace("\n", "")
+            l = l[:l.find(";")] #remove comment
+            self.send_now(l)
+          f.close()
         
     def pause(self):
         """Pauses the print, saving the current position.
@@ -249,9 +249,10 @@ class printcore():
         # try joining the print thread: enclose it in try/except because we might be calling it from the thread itself
         
         try:
-	  self.print_thread.join()
-	except: pass
-	
+          self.print_thread.join()
+        except:
+          pass
+        
         self.print_thread = None
         
         # saves the status
@@ -349,11 +350,12 @@ class printcore():
 
     #now only "pause" is implemented as host command
     def processHostCommand(self, command):
+        command = command.lstrip()
         if command == "@pause":
-	  if self.pronterface != None:
-	    self.pronterface.pause(None)
-	  else:
-	    self.pause()
+          if self.pronterface != None:
+            self.pronterface.pause(None)
+          else:
+            self.pause()
             
     def _sendnext(self):
         if not self.printer:
@@ -376,12 +378,12 @@ class printcore():
         if self.printing and self.queueindex < len(self.mainqueue):
             tline = self.mainqueue[self.queueindex]
             #check for host command
-            if tline.startswith("@"):
-	      #it is a host command: pop it from the list
-	      self.mainqueue.pop(self.queueindex)
-	      self.processHostCommand(tline)
-	      return
-	      
+            if tline.lstrip().startswith("@"):
+              #it is a host command: pop it from the list
+              self.mainqueue.pop(self.queueindex)
+              self.processHostCommand(tline)
+             return
+      
             tline = tline.split(";")[0]
             if len(tline) > 0:
                 self._send(tline, self.lineno, True)

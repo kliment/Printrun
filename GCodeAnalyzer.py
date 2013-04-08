@@ -68,7 +68,7 @@ class GCodeAnalyzer():
       
   # find a code in a gstring line   
   def findCode(self, gcode, codeStr):
-      pattern = re.compile(codeStr + "\\s*([\d.-]*)",re.I)
+      pattern = re.compile(codeStr + "\\s*(-?[\d.]*)",re.I)
       m=re.search(pattern, gcode)
       if m == None:
         return None
@@ -76,7 +76,8 @@ class GCodeAnalyzer():
         return m.group(1)
     
   def Analyze(self, gcode):
-    gcode = gcode[:gcode.find(";")] # remove comments
+    gcode = gcode[:gcode.find(";")].lstrip() # remove comments
+    if gcode.startswith("@"): return # code is a host command
     code_g = self.findCode(gcode, "G")
     code_m = self.findCode(gcode, "M")
     # we have a g_code
