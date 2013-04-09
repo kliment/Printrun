@@ -168,21 +168,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.predisconnect_layer = None
         self.hsetpoint = 0.0
         self.bsetpoint = 0.0
-        self.webInterface = None
-        if self.webrequested:
-            try :
-                import cherrypy
-                from printrun import webinterface
-                try:
-                    self.webInterface = webinterface.WebInterface(self)
-                    self.webThread = threading.Thread(target = webinterface.StartWebInterfaceThread, args = (self.webInterface, ))
-                    self.webThread.start()
-                except:
-                    print _("Failed to start web interface")
-                    traceback.print_exc(file = sys.stdout)
-                    self.webInterface = None
-            except:
-                print _("CherryPy is not installed. Web Interface Disabled.")
         if self.filename is not None:
             self.do_load(self.filename)
 
@@ -334,8 +319,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
         except Exception, x:
             print _("You must enter a temperature. (%s)") % (repr(x),)
-            if self.webInterface:
-                self.webInterface.AddLog("You must enter a temperature. (%s)" % (repr(x),))
 
     def do_bedtemp(self, l = ""):
         try:
@@ -352,16 +335,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.setbedgui(f)
                 else:
                     print _("Printer is not online.")
-                    if self.webInterface:
-                        self.webInterface.AddLog("Printer is not online.")
             else:
                 print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
-                if self.webInterface:
-                    self.webInterface.AddLog("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
         except Exception, x:
             print _("You must enter a temperature. (%s)") % (repr(x),)
-            if self.webInterface:
-                self.webInterface.AddLog("You must enter a temperature.")
 
     def end_macro(self):
         pronsole.pronsole.end_macro(self)
@@ -381,8 +358,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                             self.delete_macro(macro_name)
                             return
                     print _("Cancelled.")
-                    if self.webInterface:
-                        self.webInterface.AddLog("Cancelled.")
                     return
                 self.cur_macro_name = macro_name
                 self.cur_macro_def = definition
@@ -422,8 +397,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             projectlayer.setframe(self,self.p).Show()
         else:
             print _("Printer is not online.")
-            if self.webInterface:
-                self.webInterface.AddLog("Printer is not online.")
 
     def popmenu(self):
         self.menustrip = wx.MenuBar()
@@ -500,8 +473,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             old_def = self.macros[macro]
         elif len([c for c in macro.encode("ascii", "replace") if not c.isalnum() and c != "_"]):
             print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
-            if self.webInterface:
-                self.webInterface.AddLog("Macro name may contain only alphanumeric symbols and underscores")
             return
         elif hasattr(self.__class__, "do_"+macro):
             print _("Name '%s' is being used by built-in command") % macro
@@ -683,8 +654,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
-        if self.webInterface:
-            self.webInterface.AddLog('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
 
     def do_button(self, argstr):
         def nextarg(rest):
@@ -707,8 +676,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         command = argstr.strip()
         if num<0 or num>=64:
             print _("Custom button number should be between 0 and 63")
-            if self.webInterface:
-                self.webInterface.AddLog("Custom button number should be between 0 and 63")
             return
         while num >= len(self.custombuttons):
             self.custombuttons.append(None)
@@ -974,8 +941,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.cur_button = None
         except:
             print _("event object missing")
-            if self.webInterface:
-                self.webInterface.AddLog("event object missing")
             self.cur_button = None
             raise
 
@@ -995,9 +960,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except:
             pass
         self.Destroy()
-        if self.webInterface:
-            from printrun import webinterface
-            webinterface.KillWebInterfaceThread()
 
     def do_monitor(self, l = ""):
         if l.strip()=="":
@@ -1010,17 +972,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 wx.CallAfter(self.monitorbox.SetValue, self.monitor_interval>0)
             except:
                 print _("Invalid period given.")
-                if self.webInterface:
-                    self.webInterface.AddLog("Invalid period given.")
         self.setmonitor(None)
         if self.monitor:
             print _("Monitoring printer.")
-            if self.webInterface:
-                self.webInterface.AddLog("Monitoring printer.")
         else:
             print _("Done monitoring.")
-            if self.webInterface:
-                self.webInterface.AddLog("Done monitoring.")
 
     def setmonitor(self, e):
         self.monitor = self.monitorbox.GetValue()
@@ -1035,8 +991,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except:
             print "attempted to write invalid text to console"
             pass
-        if self.webInterface:
-            self.webInterface.AppendLog(text)
 
     def setloud(self,e):
         self.p.loud=e.IsChecked()
@@ -1199,8 +1153,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             import shlex
             param = self.expandcommand(self.settings.slicecommand).encode()
             print "Slicing: ", param
-            if self.webInterface:
-                self.webInterface.AddLog("Slicing: "+param)
             pararray = [i.replace("$s", self.filename).replace("$o", self.filename.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
                 #print pararray
             self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
@@ -1212,8 +1164,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.stopsf = 1
         except:
             print _("Failed to execute slicing software: ")
-            if self.webInterface:
-                self.webInterface.AddLog("Failed to execute slicing software: ")
             self.stopsf = 1
             traceback.print_exc(file = sys.stdout)
 
@@ -1306,8 +1256,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         Xtot, Ytot, Ztot, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax = pronsole.measurements(self.f)
         print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
         print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
-        if self.webInterface:
-            self.webInterface.AddLog(_("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot))
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
         try:
