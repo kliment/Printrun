@@ -258,6 +258,9 @@ class pronsole(cmd.Cmd):
 
     def online(self):
         self.log("printer is now online")
+        self.write_prompt()
+
+    def write_prompt(self):
         sys.stdout.write(self.prompt)
         sys.stdout.flush()
 
@@ -817,8 +820,7 @@ class pronsole(cmd.Cmd):
         tstring = l.rstrip()
         if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
             self.log(tstring)
-            sys.stdout.write(self.prompt)
-            sys.stdout.flush()
+            self.write_prompt()
         for i in self.recvlisteners:
             i(l)
 

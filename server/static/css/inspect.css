@@ -1,0 +1,36 @@
+.sensors
+{
+  margin-bottom: 20px;
+}
+
+.sensors>*
+{
+  margin-left: 40px;
+  font-weight: bold;
+  font-size: 120%;
+}
+
+.sensors .val
+{
+  display: inline-block;
+  width: 50px;
+  text-align: right;
+}
+
+.sensors .val, .sensors .deg
+{
+  font-weight: normal;
+}
+
+.console
+{
+  height: 300px;
+  overflow-y: scroll;
+}
+
+.console pre
+{
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+}

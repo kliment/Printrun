@@ -49,7 +49,20 @@ The command box recognizes all pronsole commands, but has no tabcompletion.
 
 If you want to load stl files, you need to install a slicing program such as Slic3r and add its path to the settings.
 See the Slic3r readme for more details on integration.
- 
+
+
+# USING PRONSERVE
+
+Pronserve runs a server for remote controlling your 3D printer over your network. To use pronserve you need:
+
+  * python (ideally 2.6.x or 2.7.x),
+  * pyserial (or python-serial on ubuntu/debian) and
+  * tornado
+  * D1plo1d's py-mdns fork (https://github.com/D1plo1d/py-mdns)
+  * pybonjour
+  * bonjour for windows (Windows ONLY)
+
+When you're done setting up Printrun, you can start `pronserve.py` in the directory you unpacked it. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
 
 
 # USING PRONSOLE
