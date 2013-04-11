@@ -175,7 +175,6 @@ class Pronserve(pronsole.pronsole):
     #self.mdns = MdnsServer()
     services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
     self.mdns = mdns.publisher().save_group({'name': 'pronserve', 'services': services })
-    self.recvcb("T:10 B:20")
 
   def run_sensor_loop(self):
     self.request_sensor_update()
@@ -190,7 +189,6 @@ class Pronserve(pronsole.pronsole):
     """ Parses a line of output from the printer via printcore """
     l = l.rstrip()
 
-    print l
     if "T:" in l:
       self._receive_sensor_update(l)
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
@@ -200,12 +198,10 @@ class Pronserve(pronsole.pronsole):
     words = l.split(" ")
     words.pop(0)
     d = dict([ s.split(":") for s in words])
-    print list([ (key, value) for key, value in d.iteritems()])
 
     for key, value in d.iteritems():
       self.__update_item(key, value)
 
-    print "loop is over"
     self.fire("sensor_change")
 
   def __update_item(self, key, value):
