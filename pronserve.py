@@ -231,6 +231,8 @@ class Pronserve(pronsole.pronsole):
 print "Pronserve is starting..."
 pronserve = Pronserve()
 pronserve.do_connect("")
+
+time.sleep(0.2)
 pronserve.run_sensor_loop()
 
 if __name__ == "__main__":
