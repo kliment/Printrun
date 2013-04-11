@@ -206,7 +206,7 @@ class Pronserve(pronsole.pronsole):
 
   def __update_item(self, key, value):
     sensor_name = self.settings.sensor_names[key]
-    self.sensors[sensor_name] = value
+    self.sensors[sensor_name] = float(value)
 
 
   def fire(self, event_name, content=None):
