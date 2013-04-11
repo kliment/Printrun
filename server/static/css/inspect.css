@@ -1,6 +1,6 @@
 .sensors
 {
-  margin-bottom: 20px;
+  margin-top: 15px;
 }
 
 .sensors>*
@@ -24,7 +24,7 @@
 
 .console
 {
-  height: 300px;
+  height: 200px;
   overflow-y: scroll;
 }
 
@@ -33,4 +33,9 @@
   border: 0px;
   margin: 0px;
   padding: 0px;
+}
+
+#temperature-graph
+{
+  height: 200px;
 }

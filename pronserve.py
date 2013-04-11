@@ -87,7 +87,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     print "WebSocket opened. %i sockets currently open." % len(pronserve.clients)
 
   def on_sensor_change(self):
-    self.write_message({'sensors': pronserve.sensors})
+    self.write_message({'sensors': pronserve.sensors, 'timestamp': time.time()})
 
   def on_pronsole_log(self, msg):
     self.write_message({'log': {msg: msg, level: "debug"}})
@@ -169,7 +169,7 @@ class Pronserve(pronsole.pronsole):
     #self.init_Settings()
     self.ioloop = tornado.ioloop.IOLoop.instance()
     self.clients = set()
-    self.settings.sensor_poll_rate = 0.7 # seconds
+    self.settings.sensor_poll_rate = 0.3 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
     self.load_default_rc()
     #self.mdns = MdnsServer()
@@ -183,7 +183,6 @@ class Pronserve(pronsole.pronsole):
 
   def request_sensor_update(self):
     if self.p.online: self.p.send_now("M105")
-    self.fire("sensor_change")
 
   def recvcb(self, l):
     """ Parses a line of output from the printer via printcore """

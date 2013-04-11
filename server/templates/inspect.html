@@ -3,6 +3,7 @@
 <head>
   <title>Pronserve Inspector</title>
   <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="http://cdn.oesmith.co.uk/morris-0.4.1.min.css">
   <link href="/static/css/inspect.css" rel="stylesheet">
 </head>
 
@@ -14,19 +15,23 @@
         <h1>
           Pronserve Inspector
         </h1>
-        <div class="sensors">
+        <h2>Console</h2>
+        <div class="well console">
+          <pre>
+            Connecting...
+          </pre>
+        </div>
+        <div class="sensors pull-right">
           <div class="extruder pull-right">
             Extruder: <span class="val">xx.x</span><span class="deg">&deg;C</span>
           </div>
           <div class="bed pull-right">
             Bed: <span class="val"/>xx.x</span><span class="deg">&deg;C</span>
           </div>
-          <div class="clearfix"></div>
         </div>
-        <div class="well console">
-          <pre>
-            Connecting...
-          </pre>
+        <h2>Temperature</h2>
+        <div class="clearfix"></div>
+        <div id="temperature-graph">
         </div>
       </div>
     </div>
@@ -36,6 +41,8 @@
   <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sugar/1.3.9/sugar.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+  <script src="http://cdn.oesmith.co.uk/morris-0.4.1.min.js"></script>
   <script src="/static/js/inspect.js"></script>
 </body>
 
