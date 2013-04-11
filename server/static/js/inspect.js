@@ -32,7 +32,7 @@ var onConnect = function(ws) {
       {
         var name = sensorNames[i];
         var val = parseFloat(msg.sensors[name]);
-        $("."+name+" .val").html(val.format(2));
+        $("."+name+" .val").html(val.format(1));
       }
     }
     $console.append("\n"+evt.data);
