@@ -61,7 +61,6 @@ auth = basic_auth.authenticate('auth_realm', authenticator, user_extractor)
 # Routing
 # -------------------------------------------------
 
-
 class RootHandler(tornado.web.RequestHandler):
   def get(self):
     self.render("index.html")
@@ -114,49 +113,6 @@ application = tornado.web.Application([
 ], **settings)
 
 
-# MDNS Server
-# -------------------------------------------------
-
-class MdnsServer(object):
-  def __init__(self):
-    self.servers = set()
-
-    # IPV4
-    # SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
-    # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # sock.bind(('0.0.0.0', 5353))
-    # sock.listen(5)
-    # self.sockets.add(sock)
-    # self.poll_rate = 0.01 # seconds
-
-    # IPV4
-    server = SocketServer.UDPServer(('0.0.0.0', 5353), MdnsHandler, False)
-    #server.allow_reuse_address = True;
-    server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.socket.bind(('0.0.0.0', 5353))
-    # server.server_bind()     # Manually bind, to support allow_reuse_address
-
-    server.server_activate() # (see above comment)
-    server.serve_forever()
-    #server.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    self.servers.add(server)
-
-    # IPV6
-    # sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-    # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # sock.bind(('0:0:0:0:0:0:0:0', 5353))
-    # sock.listen(5)
-    # self.sockets.add(sock)
-
-class MdnsHandler(SocketServer.BaseRequestHandler):
-  def handle(self):
-    data = self.request[0].strip()
-    socket = self.request[1]
-    print "{} wrote:".format(self.client_address[0])
-    print data
-    socket.sendto(data.upper(), self.client_address)
-
 # Pronserve: Server-specific functionality
 # -------------------------------------------------
 
@@ -166,13 +122,11 @@ class Pronserve(pronsole.pronsole):
     pronsole.pronsole.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
     self.stdout = sys.stdout
-    #self.init_Settings()
     self.ioloop = tornado.ioloop.IOLoop.instance()
     self.clients = set()
     self.settings.sensor_poll_rate = 0.3 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
     self.load_default_rc()
-    #self.mdns = MdnsServer()
     services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
     self.mdns = mdns.publisher().save_group({'name': 'pronserve', 'services': services })
 
