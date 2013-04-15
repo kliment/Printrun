@@ -1,7 +1,7 @@
 (function() {
   var $console;
 
-  var windowFocus;
+  var windowFocus = true;
 
   $(window).focus(function() {
       windowFocus = true;
