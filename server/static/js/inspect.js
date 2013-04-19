@@ -5,11 +5,11 @@
 
   $(window).focus(function() {
       windowFocus = true;
-      if ($console) $console.append("Window refocused, restarting log.\n");
+      //if ($console) $console.append("Window refocused, restarting graph.\n");
       $(".focus-lost-overlay").addClass("out").removeClass("in");
   }).blur(function() {
       windowFocus = false;
-      if ($console) $console.append("Window's focus, lost stopping logging...\n");
+      //if ($console) $console.append("Window's focus, lost stopping graph...\n");
       $(".focus-lost-overlay").addClass("in").removeClass("out");
   }.debounce());
 
@@ -75,8 +75,6 @@
     if(windowFocus == false) return;
     updateSensorsUi();
     updateGraphUi();
-    $console.append($console.data("toBeWritten"));
-    $console.data("toBeWritten", "");
     $consoleWrapper.scrollTop($console.innerHeight());
   }
 
@@ -101,13 +99,12 @@
           values[name] = val;
           $("."+name+" .val").data("val", val.format(1))
         }
-        if(windowFocus)
-        {
-          var previous = $console.data("toBeWritten") || "";
-          $console.data("toBeWritten", previous + evt.data + "\n");
-        }
         updateGraphData(values);
         requestAnimationFrame(updateUi);
+      }
+      else
+      {
+        $console.append(evt.data + "\n");
       }
     };
     ws.onclose = function()
