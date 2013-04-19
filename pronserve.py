@@ -111,6 +111,20 @@ class InspectHandler(tornado.web.RequestHandler):
 #class EchoWebSocketHandler(tornado.web.RequestHandler):
 class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
 
+  def on_sensor_changed(self):
+    print "sensor change"
+    for name in ['bed', 'extruder']:
+      self.send(
+        sensor_changed= {'name': name, 'value': pronserve.sensors[name]},
+      )
+
+  def on_uncaught_event(self, event_name, data):
+    listener = "on_%s"%event_name
+
+    if event_name[:4] == 'job_':
+      data = pronserve.jobs.sanitize(data)
+    self.send({event_name: data})
+
   def _execute(self, transforms, *args, **kwargs):
     if socket_auth(self):
       super(ConstructSocketHandler, self)._execute(transforms, *args, **kwargs)
@@ -118,54 +132,14 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       self.stream.close();
 
   def open(self):
-    pronserve.clients.add(self)
+    pronserve.listeners.add(self)
     self.write_message({'connected': {'jobs': pronserve.jobs.public_list()}})
-    print "WebSocket opened. %i sockets currently open." % len(pronserve.clients)
+    print "WebSocket opened. %i sockets currently open." % len(pronserve.listeners)
 
-  def on_sensor_changed(self):
-    print "sensor change"
-    self.write_message({
-      'sensor_changed': {'name': 'bed', 'value': pronserve.sensors['bed']},
-      'timestamp': time.time()
-    })
-    self.write_message({
-      'sensor_changed': {'name': 'extruder', 'value': pronserve.sensors['extruder']},
-      'timestamp': time.time()
-    })
-  def on_job_progress_changed(self, progress):
-    self.write_message({
-      'job_progress_changed': progress,
-      'timestamp': time.time()
-    })
-
-  def on_job_started(self, job):
-    self.write_message({
-      'job_started': job,
-      'timestamp': time.time()
-    })
-
-  def on_job_finished(self, job):
-    self.write_message({
-      'job_finished': job,
-      'timestamp': time.time()
-    })
-
-  def on_job_added(self, job):
-    self.write_message({'job_added': pronserve.jobs.sanitize(job)})
-
-  def on_job_removed(self, job):
-    self.write_message({'job_removed': {
-      "id": job["id"]
-    }})
-
-  def on_job_updated(self, job):
-    print("what the hell?")
-    pprint(pronserve.jobs.sanitize(job))
-    self.write_message({'job_updated': pronserve.jobs.sanitize(job)})
-
-
-  def on_pronsole_log(self, msg):
-    self.write_message({'log': {'msg': msg, 'level': "debug"}})
+  def send(self, dict_args = {}, **kwargs):
+    args = dict(dict_args.items() + kwargs.items())
+    args['timestamp']= time.time()
+    self.write_message(args)
 
   def on_message(self, msg):
     print "message received: %s"%(msg)
@@ -173,8 +147,8 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     # self.write_message("You said: " + msg)
 
   def on_close(self):
-    pronserve.clients.remove(self)
-    print "WebSocket closed. %i sockets currently open." % len(pronserve.clients)
+    pronserve.listeners.remove(self)
+    print "WebSocket closed. %i sockets currently open." % len(pronserve.listeners)
 
 dir = os.path.dirname(__file__)
 settings = dict(
@@ -195,17 +169,39 @@ application = tornado.web.Application([
 ], **settings)
 
 
+# Event Emitter
+# -------------------------------------------------
+
+class EventEmitter(object):
+  def __init__(self):
+    self.listeners = set()
+
+  def fire(self, event_name, content=None):
+    for listener in self.listeners:
+      event_name = "on_" + event_name
+
+      if hasattr(listener, event_name):
+        callback = getattr(listener, event_name)
+      elif hasattr(listener, "on_uncaught_event"):
+        callback = listener.on_uncaught_event
+      else:
+        continue
+
+      if content == None: callback()
+      else:               callback(content)
+
+
 # Pronserve: Server-specific functionality
 # -------------------------------------------------
 
-class Pronserve(pronsole.pronsole):
+class Pronserve(pronsole.pronsole, EventEmitter):
 
   def __init__(self):
     pronsole.pronsole.__init__(self)
+    EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
-    self.clients = set()
     self.settings.sensor_poll_rate = 1 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
     self.load_default_rc()
@@ -216,7 +212,7 @@ class Pronserve(pronsole.pronsole):
     self.previous_job_progress = 0
     services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
     self.mdns = mdns.publisher().save_group({'name': 'pronserve', 'services': services })
-    self.jobs.listeners.append(self)
+    self.jobs.listeners.add(self)
 
   def do_print(self):
     if self.p.online:
@@ -264,7 +260,7 @@ class Pronserve(pronsole.pronsole):
   def recvcb(self, l):
     """ Parses a line of output from the printer via printcore """
     l = l.rstrip()
-    print l
+    #print l
     if "T:" in l:
       self._receive_sensor_update(l)
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
@@ -295,31 +291,24 @@ class Pronserve(pronsole.pronsole):
     sensor_name = self.settings.sensor_names[key]
     self.sensors[sensor_name] = float(value)
 
-  def receive_event(self, src, event_name, content=None):
+  def on_uncaught_event(self, event_name, content=None):
     self.fire(event_name, content)
-
-  def fire(self, event_name, content=None):
-    for client in self.clients:
-      if content == None:
-        getattr(client, "on_" + event_name)()
-      else:
-        getattr(client, "on_" + event_name)(content)
 
   def log(self, *msg):
     msg = ''.join(str(i) for i in msg)
     print msg
-    self.fire("pronsole_log", msg)
+    self.fire("log", {'msg': msg, 'level': "debug"})
 
   def write_prompt(self):
     None
 
 
-class PrintJobQueue():
+class PrintJobQueue(EventEmitter):
 
   def __init__(self):
+    super(PrintJobQueue, self).__init__()
     self.list = deque([])
     self.__last_id = 0
-    self.listeners = []
 
   def public_list(self):
     # A sanitized version of list for public consumption via construct
@@ -384,8 +373,7 @@ class PrintJobQueue():
 
   def fire(self, event_name, content):
     self.display_summary()
-    for listener in self.listeners:
-      listener.receive_event(self, event_name, content)
+    super(PrintJobQueue, self).fire(event_name, content)
 
 
 
