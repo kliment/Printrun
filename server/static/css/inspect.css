@@ -39,3 +39,16 @@
 {
   height: 200px;
 }
+
+#print-job-panel
+{
+  margin: 0px;
+}
+
+.job-pogress
+{
+  margin: 80px 0;
+  font-size: 40px;
+  line-height: 40px;
+  text-align: center;
+}

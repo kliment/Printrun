@@ -6,11 +6,15 @@
   $(window).focus(function() {
       windowFocus = true;
       //if ($console) $console.append("Window refocused, restarting graph.\n");
-      $(".focus-lost-overlay").addClass("out").removeClass("in");
+      $(".focus-lost-overlay").addClass("out").removeClass("in").delay(1000).hide();
   }).blur(function() {
       windowFocus = false;
       //if ($console) $console.append("Window's focus, lost stopping graph...\n");
-      $(".focus-lost-overlay").addClass("in").removeClass("out");
+      $(".focus-lost-overlay")
+        .stop(true,true)
+        .show()
+        .addClass("in")
+        .removeClass("out");
   }.debounce());
 
   var connect = function() {
@@ -75,7 +79,6 @@
     if(windowFocus == false) return;
     updateSensorsUi();
     updateGraphUi();
-    $consoleWrapper.scrollTop($console.innerHeight());
   }
 
   var onConnect = function(ws) {
@@ -85,26 +88,42 @@
       // Web Socket is connected, send data using send()
 
     };
+    var nextGraphPoint = {};
     ws.onmessage = function (evt) 
     {
       msg = JSON.parse(evt.data)
-      if(msg.sensors != undefined)
+      if(msg.sensor_changed != undefined)
       {
         var sensorNames = ["bed", "extruder"];
-        var values = {timestamp: msg.timestamp};
         for (var i = 0; i < sensorNames.length; i++)
         {
-          var name = sensorNames[i];
-          var val = parseFloat(msg.sensors[name]);
-          values[name] = val;
+          var name = msg.sensor_changed.name;
+          var val = parseFloat(msg.sensor_changed.value);
+          nextGraphPoint[name] = val;
           $("."+name+" .val").data("val", val.format(1))
         }
-        updateGraphData(values);
+        if(nextGraphPoint.bed != undefined && nextGraphPoint.extruder != undefined)
+        {
+          nextGraphPoint.timestamp = msg.timestamp
+          updateGraphData(nextGraphPoint);
+          nextGraphPoint = {};
+        }
         requestAnimationFrame(updateUi);
+      }
+      else if (msg.job_progress_changed != undefined)
+      {
+        val = Math.round(parseFloat(msg.job_progress_changed)*10)/10;
+        $(".job-pogress .val").html(val);
       }
       else
       {
+        console.log($consoleWrapper.scrollTop() - $console.innerHeight())
+        var atBottom = $consoleWrapper.scrollTop() - $console.innerHeight() > -220;
         $console.append(evt.data + "\n");
+        if (atBottom)
+        {
+          $consoleWrapper.scrollTop($console.innerHeight());
+        }
       }
     };
     ws.onclose = function()

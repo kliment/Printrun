@@ -26,6 +26,7 @@ import socket
 import mdns
 import uuid
 from operator import itemgetter, attrgetter
+from collections import deque
 
 log = logging.getLogger("root")
 __UPLOADS__ = "./uploads"
@@ -68,6 +69,21 @@ class RootHandler(tornado.web.RequestHandler):
   def get(self):
     self.render("index.html")
 
+class PrintHandler(tornado.web.RequestHandler):
+  def put(self):
+    pronserve.do_print()
+    self.finish("ACK")
+
+class PauseHandler(tornado.web.RequestHandler):
+  def put(self):
+    pronserve.do_pause()
+    self.finish("ACK")
+
+class StopHandler(tornado.web.RequestHandler):
+  def put(self):
+    pronserve.do_stop()
+    self.finish("ACK")
+
 class JobsHandler(tornado.web.RequestHandler):
   def post(self):
     fileinfo = self.request.files['job'][0]
@@ -106,8 +122,33 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     self.write_message({'connected': {'jobs': pronserve.jobs.public_list()}})
     print "WebSocket opened. %i sockets currently open." % len(pronserve.clients)
 
-  def on_sensor_change(self):
-    self.write_message({'sensors': pronserve.sensors, 'timestamp': time.time()})
+  def on_sensor_changed(self):
+    print "sensor change"
+    self.write_message({
+      'sensor_changed': {'name': 'bed', 'value': pronserve.sensors['bed']},
+      'timestamp': time.time()
+    })
+    self.write_message({
+      'sensor_changed': {'name': 'extruder', 'value': pronserve.sensors['extruder']},
+      'timestamp': time.time()
+    })
+  def on_job_progress_changed(self, progress):
+    self.write_message({
+      'job_progress_changed': progress,
+      'timestamp': time.time()
+    })
+
+  def on_job_started(self, job):
+    self.write_message({
+      'job_started': job,
+      'timestamp': time.time()
+    })
+
+  def on_job_finished(self, job):
+    self.write_message({
+      'job_finished': job,
+      'timestamp': time.time()
+    })
 
   def on_job_added(self, job):
     self.write_message({'job_added': pronserve.jobs.sanitize(job)})
@@ -124,11 +165,12 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
 
 
   def on_pronsole_log(self, msg):
-    self.write_message({'log': {msg: msg, level: "debug"}})
+    self.write_message({'log': {'msg': msg, 'level': "debug"}})
 
   def on_message(self, msg):
+    print "message received: %s"%(msg)
     # TODO: the read bit of repl!
-    self.write_message("You said: " + msg)
+    # self.write_message("You said: " + msg)
 
   def on_close(self):
     pronserve.clients.remove(self)
@@ -146,7 +188,10 @@ application = tornado.web.Application([
   (r"/inspect", InspectHandler),
   (r"/socket", ConstructSocketHandler),
   (r"/jobs", JobsHandler),
-  (r"/jobs/([0-9]*)", JobHandler)
+  (r"/jobs/([0-9]*)", JobHandler),
+  (r"/jobs/print", PrintHandler),
+  (r"/jobs/pause", PauseHandler),
+  (r"/stop", StopHandler)
 ], **settings)
 
 
@@ -161,14 +206,52 @@ class Pronserve(pronsole.pronsole):
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
     self.clients = set()
-    self.settings.sensor_poll_rate = 0.3 # seconds
+    self.settings.sensor_poll_rate = 1 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
     self.load_default_rc()
     self.jobs = PrintJobQueue()
-    self.job_id_incr = 0;
+    self.job_id_incr = 0
+    self.printing_jobs = False
+    self.current_job = None
+    self.previous_job_progress = 0
     services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
     self.mdns = mdns.publisher().save_group({'name': 'pronserve', 'services': services })
     self.jobs.listeners.append(self)
+
+  def do_print(self):
+    if self.p.online:
+      self.printing_jobs = True
+
+  def run_print_queue_loop(self):
+    # This is a polling work around to the current lack of events in printcore
+    # A better solution would be one in which a print_finised event could be 
+    # listend for asynchronously without polling.
+    p = self.p
+    if self.printing_jobs and p.printing == False and p.paused == False and p.online:
+      if self.current_job != None:
+        self.update_job_progress(100)
+        self.fire("job_finished", self.jobs.sanitize(self.current_job))
+      if len(self.jobs.list) > 0:
+        print "Starting the next print job"
+        self.current_job = self.jobs.list.popleft()
+        self.p.startprint(self.current_job['body'].split("\n"))
+        self.fire("job_started", self.jobs.sanitize(self.current_job))
+      else:
+        print "Finished all print jobs"
+        self.current_job = None
+        self.printing_jobs = False
+
+    # Updating the job progress
+    self.update_job_progress(self.print_progress())
+
+    #print "print loop"
+    next_timeout = time.time() + 0.3
+    gen.Task(self.ioloop.add_timeout(next_timeout, self.run_print_queue_loop))
+
+  def update_job_progress(self, progress):
+    if progress != self.previous_job_progress and self.current_job != None:
+      self.previous_job_progress = progress
+      self.fire("job_progress_changed", progress)
 
   def run_sensor_loop(self):
     self.request_sensor_update()
@@ -181,23 +264,34 @@ class Pronserve(pronsole.pronsole):
   def recvcb(self, l):
     """ Parses a line of output from the printer via printcore """
     l = l.rstrip()
-
+    print l
     if "T:" in l:
       self._receive_sensor_update(l)
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
       self._receive_printer_error(l)
 
+  def print_progress(self):
+    if(self.p.printing):
+      return 100*float(self.p.queueindex)/len(self.p.mainqueue)
+    if(self.sdprinting):
+      return self.percentdone
+    return 0
+
+
   def _receive_sensor_update(self, l):
-    words = l.split(" ")
-    words.pop(0)
+    words = filter(lambda s: s.find(":") > 0, l.split(" "))
     d = dict([ s.split(":") for s in words])
+
+    print "sensor update received!"
 
     for key, value in d.iteritems():
       self.__update_sensor(key, value)
 
-    self.fire("sensor_change")
+    self.fire("sensor_changed")
 
   def __update_sensor(self, key, value):
+    if (key in self.settings.sensor_names) == False:
+      return
     sensor_name = self.settings.sensor_names[key]
     self.sensors[sensor_name] = float(value)
 
@@ -219,10 +313,11 @@ class Pronserve(pronsole.pronsole):
   def write_prompt(self):
     None
 
+
 class PrintJobQueue():
 
   def __init__(self):
-    self.list = []
+    self.list = deque([])
     self.__last_id = 0
     self.listeners = []
 
@@ -246,20 +341,16 @@ class PrintJobQueue():
 
   def add(self, original_file_name, body):
     ext = os.path.splitext(original_file_name)[1]
-    file_name = str(uuid.uuid4()) + ext
     job = dict(
       id = self.__last_id,
       rank = len(self.list),
       original_file_name=original_file_name,
-      path= __UPLOADS__ + "/" + file_name,
+      body= body,
     )
     self.__last_id += 1
 
-    fh = open(job['path'], 'w')
-    fh.write(body)
-
     self.list.append(job)
-    print "Added %s as %s"%(original_file_name, file_name)
+    print "Added %s"%(original_file_name)
     self.fire("job_added", job)
 
   def display_summary(self):
@@ -305,8 +396,9 @@ print "Pronserve is starting..."
 pronserve = Pronserve()
 pronserve.do_connect("")
 
-time.sleep(0.2)
+time.sleep(1)
 pronserve.run_sensor_loop()
+pronserve.run_print_queue_loop()
 
 if __name__ == "__main__":
     application.listen(8888)
