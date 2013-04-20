@@ -112,7 +112,6 @@ class InspectHandler(tornado.web.RequestHandler):
 class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
 
   def on_sensor_changed(self):
-    print "sensor change"
     for name in ['bed', 'extruder']:
       self.send(
         sensor_changed= {'name': name, 'value': pronserve.sensors[name]},
@@ -121,7 +120,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
   def on_uncaught_event(self, event_name, data):
     listener = "on_%s"%event_name
 
-    if event_name[:4] == 'job_':
+    if event_name[:4] == 'job_' and event_name != "job_progress_changed":
       data = pronserve.jobs.sanitize(data)
     self.send({event_name: data})
 
@@ -177,18 +176,16 @@ class EventEmitter(object):
     self.listeners = set()
 
   def fire(self, event_name, content=None):
+    callback_name = "on_%s" % event_name
     for listener in self.listeners:
-      event_name = "on_" + event_name
-
-      if hasattr(listener, event_name):
-        callback = getattr(listener, event_name)
+      if hasattr(listener, callback_name):
+        callback = getattr(listener, callback_name)
+        if content == None: callback()
+        else:               callback(content)
       elif hasattr(listener, "on_uncaught_event"):
-        callback = listener.on_uncaught_event
+        listener.on_uncaught_event(event_name, content)
       else:
         continue
-
-      if content == None: callback()
-      else:               callback(content)
 
 
 # Pronserve: Server-specific functionality
@@ -210,6 +207,7 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     self.printing_jobs = False
     self.current_job = None
     self.previous_job_progress = 0
+    self.silent = True
     services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
     self.mdns = mdns.publisher().save_group({'name': 'pronserve', 'services': services })
     self.jobs.listeners.add(self)
@@ -278,7 +276,7 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     words = filter(lambda s: s.find(":") > 0, l.split(" "))
     d = dict([ s.split(":") for s in words])
 
-    print "sensor update received!"
+    # print "sensor update received!"
 
     for key, value in d.iteritems():
       self.__update_sensor(key, value)
@@ -296,6 +294,7 @@ class Pronserve(pronsole.pronsole, EventEmitter):
 
   def log(self, *msg):
     msg = ''.join(str(i) for i in msg)
+    msg.replace("\r", "")
     print msg
     self.fire("log", {'msg': msg, 'level': "debug"})
 
