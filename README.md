@@ -3,7 +3,6 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
   * printcore.py is a library that makes writing reprap hosts easy
   * pronsole.py is an interactive command-line host software with tabcompletion goodness
   * pronterface.py is a graphical host software with the same functionality as pronsole
-  * webinterface.py is a browser-usable remote control function for Pronterface
 
 # GETTING PRINTRUN
 
@@ -51,23 +50,19 @@ The command box recognizes all pronsole commands, but has no tabcompletion.
 If you want to load stl files, you need to install a slicing program such as Slic3r and add its path to the settings.
 See the Slic3r readme for more details on integration.
 
-# Using the browser interface
 
-To run the web interface, install Cherrypy and run Pronterface as described above.
-The www server will start on the port/address you have chosen.
+# USING PRONSERVE
 
-## Webinterface Dependencies 
+Pronserve runs a server for remote controlling your 3D printer over your network. To use pronserve you need:
 
-Cherrypy is required for the web interface.  Download and install it by opening a 
-command prompt in its directory and running python setup.py install.
+  * python (ideally 2.6.x or 2.7.x),
+  * pyserial (or python-serial on ubuntu/debian) and
+  * tornado
+  * D1plo1d's py-mdns fork (https://github.com/D1plo1d/py-mdns)
+  * pybonjour
+  * bonjour for windows (Windows ONLY)
 
-## Webinterface Configuration
-  * The Web interface port / ip is configurable in http.config
-  * The Default User / Password can be set in auth.config
-  
-## Webinterface Styling
-  * css/style.css can be modified to change the style of the Web Interface.
- 
+When you're done setting up Printrun, you can start `pronserve.py` in the directory you unpacked it. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
 
 
 # USING PRONSOLE

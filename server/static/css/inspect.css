@@ -1,0 +1,54 @@
+.sensors
+{
+  margin-top: 15px;
+}
+
+.sensors>*
+{
+  margin-left: 40px;
+  font-weight: bold;
+  font-size: 120%;
+}
+
+.sensors .val
+{
+  display: inline-block;
+  width: 50px;
+  text-align: right;
+}
+
+.sensors .val, .sensors .deg
+{
+  font-weight: normal;
+}
+
+.console
+{
+  height: 200px;
+  overflow-y: scroll;
+}
+
+.console pre
+{
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+}
+
+#temperature-graph
+{
+  height: 200px;
+}
+
+#print-job-panel
+{
+  margin: 0px;
+}
+
+.job-pogress
+{
+  margin: 80px 0;
+  font-size: 40px;
+  line-height: 40px;
+  text-align: center;
+}
