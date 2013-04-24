@@ -50,7 +50,7 @@ class Surface(object):
     surface_class = None
 
     @classmethod
-    def convert(cls, bytestring=None, **kwargs):
+    def convert(cls, bytestring = None, **kwargs):
         """Convert a SVG document to the format for this class.
 
         Specify the input by passing one of these:
@@ -172,7 +172,7 @@ class Surface(object):
         """Draw the root ``node``."""
         self.draw(node)
 
-    def draw(self, node, stroke_and_fill=True):
+    def draw(self, node, stroke_and_fill = True):
         """Draw ``node`` and its children."""
         old_font_size = self.font_size
         self.font_size = size(self, node.get("font-size", "12pt"))

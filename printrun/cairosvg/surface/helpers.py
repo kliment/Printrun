@@ -68,7 +68,7 @@ def node_format(surface, node):
     return width, height, viewbox
 
 
-def normalize(string=None):
+def normalize(string = None):
     """Normalize a string corresponding to an array of various values."""
     string = string.replace("-", " -")
     string = string.replace(",", " ")
@@ -91,7 +91,7 @@ def normalize(string=None):
     return string.strip()
 
 
-def point(surface, string=None):
+def point(surface, string = None):
     """Return ``(x, y, trailing_text)`` from ``string``."""
     if not string:
         return (0, 0, "")

@@ -200,7 +200,7 @@ COLORS = {
     "windowtext": "#000000"}
 
 
-def color(string=None, opacity=1):
+def color(string = None, opacity = 1):
     """Replace ``string`` representing a color by a RGBA tuple."""
     if not string or string in ("none", "transparent"):
         return (0, 0, 0, 0)

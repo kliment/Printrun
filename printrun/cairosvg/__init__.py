@@ -29,7 +29,7 @@ from . import surface
 
 VERSION = '0.4.4'
 SURFACES = {
-    'SVG': surface.SVGSurface,  # Tell us if you actually use this one!
+    'SVG': surface.SVGSurface, # Tell us if you actually use this one!
     'PNG': surface.PNGSurface,
     'PDF': surface.PDFSurface,
     'PS': surface.PSSurface}
@@ -52,14 +52,14 @@ def main():
     """Entry-point of the executable."""
     # Get command-line options
     option_parser = optparse.OptionParser(
-        usage="usage: %prog filename [options]", version=VERSION)
+        usage = "usage: %prog filename [options]", version = VERSION)
     option_parser.add_option(
-        "-f", "--format", help="output format")
+        "-f", "--format", help = "output format")
     option_parser.add_option(
-        "-d", "--dpi", help="svg resolution", default=96)
+        "-d", "--dpi", help = "svg resolution", default = 96)
     option_parser.add_option(
         "-o", "--output",
-        default="", help="output filename")
+        default = "", help = "output filename")
     options, args = option_parser.parse_args()
 
     # Print help if no argument is given
