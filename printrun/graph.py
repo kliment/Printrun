@@ -32,22 +32,22 @@ class Graph(BufferedCanvas):
 
         self.SetSize(wx.Size(150, 80))
 
-        self.extruder0temps       = [0]
+        self.extruder0temps = [0]
         self.extruder0targettemps = [0]
-        self.extruder1temps       = [0]
+        self.extruder1temps = [0]
         self.extruder1targettemps = [0]
-        self.bedtemps             = [0]
-        self.bedtargettemps       = [0]
+        self.bedtemps = [0]
+        self.bedtargettemps = [0]
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
 
-        self.maxyvalue  = 250
-        self.ybars      = 5
-        self.xbars      = 6 # One bar per 10 second
-        self.xsteps     = 60 # Covering 1 minute in the graph
+        self.maxyvalue = 250
+        self.ybars = 5
+        self.xbars = 6 # One bar per 10 second
+        self.xsteps = 60 # Covering 1 minute in the graph
 
-        self.y_offset   = 1 # This is to show the line even when value is 0 and maxyvalue
+        self.y_offset = 1 # This is to show the line even when value is 0 and maxyvalue
 
         self._lastyvalue = 0
 
@@ -105,18 +105,18 @@ class Graph(BufferedCanvas):
 
         dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
         for x in range(self.xbars):
-            dc.DrawLine(x*(float(self.width)/self.xbars), 0, x*(float(self.width)/self.xbars), self.height)
+            dc.DrawLine(x * (float(self.width) / self.xbars), 0, x * (float(self.width) / self.xbars), self.height)
 
         dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
         for y in range(self.ybars):
-            y_pos = y*(float(self.height)/self.ybars)
+            y_pos = y * (float(self.height) / self.ybars)
             dc.DrawLine(0, y_pos, self.width, y_pos)
-            gc.DrawText(unicode(int(self.maxyvalue - (y * (self.maxyvalue/self.ybars)))), 1, y_pos - (font.GetPointSize() / 2))
+            gc.DrawText(unicode(int(self.maxyvalue - (y * (self.maxyvalue / self.ybars)))), 1, y_pos - (font.GetPointSize() / 2))
 
         if self.timer.IsRunning() == False:
             font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD)
             gc.SetFont(font, wx.Colour(3, 4, 4))
-            gc.DrawText("Graph offline", self.width/2 - (font.GetPointSize() * 3), self.height/2 - (font.GetPointSize() * 1))
+            gc.DrawText("Graph offline", self.width / 2 - (font.GetPointSize() * 3), self.height / 2 - (font.GetPointSize() * 1))
 
         #dc.DrawCircle(50, 50, 1)
 
@@ -130,14 +130,14 @@ class Graph(BufferedCanvas):
         else:
             dc.SetPen(wx.Pen(wx.Colour(r, g, b, a), 1))
 
-        x_add = float(self.width)/self.xsteps
+        x_add = float(self.width) / self.xsteps
         x_pos = float(0.0)
         lastxvalue = float(0.0)
 
         for temperature in (temperature_list):
-            y_pos = int((float(self.height-self.y_offset)/self.maxyvalue)*temperature) + self.y_offset
+            y_pos = int((float(self.height - self.y_offset) / self.maxyvalue) * temperature) + self.y_offset
             if (x_pos > 0.0): # One need 2 points to draw a line.
-                dc.DrawLine(lastxvalue, self.height-self._lastyvalue, x_pos, self.height-y_pos)
+                dc.DrawLine(lastxvalue, self.height - self._lastyvalue, x_pos, self.height - y_pos)
 
             lastxvalue = x_pos
             x_pos = float(x_pos) + x_add
@@ -183,7 +183,7 @@ class Graph(BufferedCanvas):
 
     def AddBedTemperature(self, value):
         self.bedtemps.append(value)
-        if (len(self.bedtemps)-1) * float(self.width)/self.xsteps > self.width:
+        if (len(self.bedtemps) - 1) * float(self.width) / self.xsteps > self.width:
             self.bedtemps.pop(0)
 
     def SetBedTargetTemperature(self, value):
@@ -192,7 +192,7 @@ class Graph(BufferedCanvas):
 
     def AddBedTargetTemperature(self, value):
         self.bedtargettemps.append(value)
-        if (len(self.bedtargettemps)-1) * float(self.width)/self.xsteps > self.width:
+        if (len(self.bedtargettemps) - 1) * float(self.width) / self.xsteps > self.width:
             self.bedtargettemps.pop(0)
 
     def SetExtruder0Temperature(self, value):
@@ -201,7 +201,7 @@ class Graph(BufferedCanvas):
 
     def AddExtruder0Temperature(self, value):
         self.extruder0temps.append(value)
-        if (len(self.extruder0temps)-1) * float(self.width)/self.xsteps > self.width:
+        if (len(self.extruder0temps) - 1) * float(self.width) / self.xsteps > self.width:
             self.extruder0temps.pop(0)
 
     def SetExtruder0TargetTemperature(self, value):
@@ -210,7 +210,7 @@ class Graph(BufferedCanvas):
 
     def AddExtruder0TargetTemperature(self, value):
         self.extruder0targettemps.append(value)
-        if (len(self.extruder0targettemps)-1) * float(self.width)/self.xsteps > self.width:
+        if (len(self.extruder0targettemps) - 1) * float(self.width) / self.xsteps > self.width:
             self.extruder0targettemps.pop(0)
 
     def SetExtruder1Temperature(self, value):
@@ -219,7 +219,7 @@ class Graph(BufferedCanvas):
 
     def AddExtruder1Temperature(self, value):
         self.extruder1temps.append(value)
-        if (len(self.extruder1temps)-1) * float(self.width)/self.xsteps > self.width:
+        if (len(self.extruder1temps) - 1) * float(self.width) / self.xsteps > self.width:
             self.extruder1temps.pop(0)
 
     def SetExtruder1TargetTemperature(self, value):
@@ -228,7 +228,7 @@ class Graph(BufferedCanvas):
 
     def AddExtruder1TargetTemperature(self, value):
         self.extruder1targettemps.append(value)
-        if (len(self.extruder1targettemps)-1) * float(self.width)/self.xsteps > self.width:
+        if (len(self.extruder1targettemps) - 1) * float(self.width) / self.xsteps > self.width:
             self.extruder1targettemps.pop(0)
 
     def StartPlotting(self, time):

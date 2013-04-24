@@ -41,7 +41,7 @@ class XYButtons(BufferedCanvas):
     center = (124, 121)
     spacer = 7
 
-    def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1):
+    def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID = -1):
         self.bg_bmp = wx.Image(imagefile("control_xy.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
@@ -94,10 +94,10 @@ class XYButtons(BufferedCanvas):
         ylen = y2 - y1
         pxlen = x1 - pos.x
         pylen = y1 - pos.y
-        return abs(xlen*pylen-ylen*pxlen)/math.sqrt(xlen**2+ylen**2)
+        return abs(xlen * pylen - ylen * pxlen) / math.sqrt(xlen ** 2 + ylen ** 2)
 
     def distanceToPoint(self, x1, y1, x2, y2):
-        return math.sqrt((x1-x2)**2 + (y1-y2)**2)
+        return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
     def cycleKeypadIndex(self):
         idx = self.keypad_idx + 1
@@ -111,7 +111,7 @@ class XYButtons(BufferedCanvas):
     def getMovement(self):
         xdir = [1, 0, -1, 0][self.quadrant]
         ydir = [0, 1, 0, -1][self.quadrant]
-        magnitude = math.pow(10, self.concentric-1)
+        magnitude = math.pow(10, self.concentric - 1)
         return (magnitude * xdir, magnitude * ydir)
 
     def lookupConcentric(self, radius):
@@ -125,7 +125,7 @@ class XYButtons(BufferedCanvas):
     def getQuadrantConcentricFromPosition(self, pos):
         rel_x = pos[0] - XYButtons.center[0]
         rel_y = pos[1] - XYButtons.center[1]
-        radius = math.sqrt(rel_x**2 + rel_y**2)
+        radius = math.sqrt(rel_x ** 2 + rel_y ** 2)
         if rel_x > rel_y and rel_x > -rel_y:
             quadrant = 0 # Right
         elif rel_x <= rel_y and rel_x > -rel_y:
@@ -146,7 +146,7 @@ class XYButtons(BufferedCanvas):
         return None
 
     def drawPartialPie(self, gc, center, r1, r2, angle1, angle2):
-        p1 = wx.Point(center.x + r1*math.cos(angle1), center.y + r1*math.sin(angle1))
+        p1 = wx.Point(center.x + r1 * math.cos(angle1), center.y + r1 * math.sin(angle1))
 
         path = gc.CreatePath()
         path.MoveToPoint(p1.x, p1.y)
@@ -164,22 +164,22 @@ class XYButtons(BufferedCanvas):
         fudge = -0.02
         center = wx.Point(XYButtons.center[0], XYButtons.center[1])
         if quadrant == 0:
-            a1, a2 = (-math.pi*0.25, math.pi*0.25)
+            a1, a2 = (-math.pi * 0.25, math.pi * 0.25)
             center.x += inner_ring_radius
         elif quadrant == 1:
-            a1, a2 = (math.pi*1.25, math.pi*1.75)
+            a1, a2 = (math.pi * 1.25, math.pi * 1.75)
             center.y -= inner_ring_radius
         elif quadrant == 2:
-            a1, a2 = (math.pi*0.75, math.pi*1.25)
+            a1, a2 = (math.pi * 0.75, math.pi * 1.25)
             center.x -= inner_ring_radius
         elif quadrant == 3:
-            a1, a2 = (math.pi*0.25, math.pi*0.75)
+            a1, a2 = (math.pi * 0.25, math.pi * 0.75)
             center.y += inner_ring_radius
 
         r1 = XYButtons.concentric_circle_radii[concentric]
-        r2 = XYButtons.concentric_circle_radii[concentric+1]
+        r2 = XYButtons.concentric_circle_radii[concentric + 1]
 
-        self.drawPartialPie(gc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
+        self.drawPartialPie(gc, center, r1 - inner_ring_radius, r2 - inner_ring_radius, a1 + fudge, a2 - fudge)
 
     def drawCorner(self, gc, x, y, angle = 0.0):
         w, h = XYButtons.corner_size
@@ -188,12 +188,12 @@ class XYButtons(BufferedCanvas):
         gc.Translate(x, y)
         gc.Rotate(angle)
         path = gc.CreatePath()
-        path.MoveToPoint(-w/2, -h/2)
-        path.AddLineToPoint(w/2, -h/2)
-        path.AddLineToPoint(w/2, -h/2+h/3)
-        path.AddLineToPoint(-w/2+w/3, h/2)
-        path.AddLineToPoint(-w/2, h/2)
-        path.AddLineToPoint(-w/2, -h/2)
+        path.MoveToPoint(-w / 2, -h / 2)
+        path.AddLineToPoint(w / 2, -h / 2)
+        path.AddLineToPoint(w / 2, -h / 2 + h / 3)
+        path.AddLineToPoint(-w / 2 + w / 3, h / 2)
+        path.AddLineToPoint(-w / 2, h / 2)
+        path.AddLineToPoint(-w / 2, -h / 2)
         gc.DrawPath(path)
         gc.PopState()
 
@@ -204,17 +204,17 @@ class XYButtons(BufferedCanvas):
 
         inset = 10
         if corner == 0:
-            x, y = (cx - ww/2 + inset, cy - wh/2 + inset)
-            self.drawCorner(gc, x+w/2, y+h/2, 0)
+            x, y = (cx - ww / 2 + inset, cy - wh / 2 + inset)
+            self.drawCorner(gc, x + w / 2, y + h / 2, 0)
         elif corner == 1:
-            x, y = (cx + ww/2 - inset, cy - wh/2 + inset)
-            self.drawCorner(gc, x-w/2, y+h/2, math.pi/2)
+            x, y = (cx + ww / 2 - inset, cy - wh / 2 + inset)
+            self.drawCorner(gc, x - w / 2, y + h / 2, math.pi / 2)
         elif corner == 2:
-            x, y = (cx + ww/2 - inset, cy + wh/2 - inset)
-            self.drawCorner(gc, x-w/2, y-h/2, math.pi)
+            x, y = (cx + ww / 2 - inset, cy + wh / 2 - inset)
+            self.drawCorner(gc, x - w / 2, y - h / 2, math.pi)
         elif corner == 3:
-            x, y = (cx - ww/2 + inset, cy + wh/2 - inset)
-            self.drawCorner(gc, x+w/2, y-h/2, math.pi*3/2)
+            x, y = (cx - ww / 2 + inset, cy + wh / 2 - inset)
+            self.drawCorner(gc, x + w / 2, y - h / 2, math.pi * 3 / 2)
 
 
     def draw(self, dc, w, h):
@@ -242,16 +242,16 @@ class XYButtons(BufferedCanvas):
             if self.keypad_idx >= 0:
                 padw, padh = (self.keypad_bmp.GetWidth(), self.keypad_bmp.GetHeight())
                 pos = XYButtons.keypad_positions[self.keypad_idx]
-                pos = (pos[0] - padw/2 - 3, pos[1] - padh/2 - 3)
+                pos = (pos[0] - padw / 2 - 3, pos[1] - padh / 2 - 3)
                 gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], padw, padh)
 
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
-            gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128+64)))
+            gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128 + 64)))
             for idx, kpos in XYButtons.label_overlay_positions.items():
                 if idx != self.concentric:
                     r = kpos[2]
-                    gc.DrawEllipse(kpos[0]-r, kpos[1]-r, r*2, r*2)
+                    gc.DrawEllipse(kpos[0] - r, kpos[1] - r, r * 2, r * 2)
         else:
             gc.SetPen(wx.Pen(self.bgcolor, 0))
             gc.SetBrush(wx.Brush(self.bgcolormask))
@@ -311,8 +311,8 @@ class XYButtons(BufferedCanvas):
         self.concentric = None
         if idx == None:
             center = wx.Point(XYButtons.center[0], XYButtons.center[1])
-            riseDist = self.distanceToLine(mpos, center.x-1, center.y-1, center.x+1, center.y+1)
-            fallDist = self.distanceToLine(mpos, center.x-1, center.y+1, center.x+1, center.y-1)
+            riseDist = self.distanceToLine(mpos, center.x - 1, center.y - 1, center.x + 1, center.y + 1)
+            fallDist = self.distanceToLine(mpos, center.x - 1, center.y + 1, center.x + 1, center.y - 1)
             self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
 
             # If mouse hovers in space between quadrants, don't commit to a quadrant

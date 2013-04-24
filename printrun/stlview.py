@@ -41,8 +41,8 @@ class GLPanel(wx.Panel):
 
         #init gl canvas data
         self.GLinitialized = False
-        attribList = (glcanvas.WX_GL_RGBA,  # RGBA
-                      glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
+        attribList = (glcanvas.WX_GL_RGBA, # RGBA
+                      glcanvas.WX_GL_DOUBLEBUFFER, # Double Buffered
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
         # Create the canvas
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -219,7 +219,7 @@ class stlview(object):
         #print indices[:10]
         self.vertex_list = batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
-                                             None,  # group,
+                                             None, # group,
                                              indices,
                                              ('v3f/static', vertices),
                                              ('n3f/static', normals))
@@ -261,7 +261,7 @@ class gcview(object):
                     indices = range(len(layertemp[lasth][0]) // 3)  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
                     self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
                                              GL_TRIANGLES,
-                                             None,  # group,
+                                             None, # group,
                                              indices,
                                              ('v3f/static', layertemp[lasth][0]),
                                              ('n3f/static', layertemp[lasth][1])))
@@ -299,7 +299,7 @@ class gcview(object):
         indices = range(3 * 16 * len(lines))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
         self.vlists.append(batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
-                                             None,  # group,
+                                             None, # group,
                                              indices,
                                              ('v3f/static', vertices),
                                              ('n3f/static', normals)))
@@ -308,7 +308,7 @@ class gcview(object):
             indices = range(len(layertemp[lasth][0]))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
             self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
                                      GL_TRIANGLES,
-                                     None,  # group,
+                                     None, # group,
                                      indices,
                                      ('v3f/static', layertemp[lasth][0]),
                                      ('n3f/static', layertemp[lasth][1])))
@@ -489,7 +489,7 @@ class TestGlPanel(GLPanel):
         v = map(lambda m, w, b: b * m / w, p, sz, self.bedsize)
         v[1] = self.bedsize[1] - v[1]
         v += [300]
-        print "Double-click at "+str(v)+" in "
+        print "Double-click at " + str(v) + " in "
         print self
 
     def forceresize(self):
@@ -533,7 +533,7 @@ class TestGlPanel(GLPanel):
                     currentpos = event.GetPositionTuple()
                     delta = (
                             (currentpos[0] - self.initpos[0]),
-                            -(currentpos[1] - self.initpos[1])
+                            - (currentpos[1] - self.initpos[1])
                         )
                     self.move_shape(delta)
                     self.initpos = None
@@ -581,7 +581,7 @@ class TestGlPanel(GLPanel):
                 p1[1] *= -1
                 p2[1] *= -1
 
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
+                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z, list(p1) + [0], list(p2) + [0], list(sz) + [1], self.transv)
 
                 glLoadIdentity()
                 glTranslatef(self.transv[0], self.transv[1], 0)

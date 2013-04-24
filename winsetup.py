@@ -8,12 +8,12 @@ data_files = [("Microsoft.VC90.CRT", glob(r'T:\\eclipse-workspace\\Printrun-gary
 			  ("", ["plater.ico", "P-face.ico", "pronsole.ico"])]
 sys.path.append("T:\\eclipse-workspace\\Printrun-garyhodgson\\Microsoft.VC90.CRT")
 setup(
-	data_files=data_files,
-	windows=['pronterface.py'],
-	options={
+	data_files = data_files,
+	windows = ['pronterface.py'],
+	options = {
                 "py2exe":{
                         "excludes": [
-				            "Tkconstants","Tkinter","tcl"
+				            "Tkconstants", "Tkinter", "tcl"
 				            ]
                 }
         }

@@ -43,8 +43,8 @@ class GLPanel(wx.Panel):
 
         #init gl canvas data
         self.GLinitialized = False
-        attribList = (glcanvas.WX_GL_RGBA,  # RGBA
-                      glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
+        attribList = (glcanvas.WX_GL_RGBA, # RGBA
+                      glcanvas.WX_GL_DOUBLEBUFFER, # Double Buffered
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
         # Create the canvas
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -286,9 +286,9 @@ class gcline(object):
 
     def calc_len(self):
         if self.dz != 0:
-            self.length = math.sqrt(self.dx**2 + self.dy**2 + self.dz**2)
+            self.length = math.sqrt(self.dx ** 2 + self.dy ** 2 + self.dz ** 2)
         else:
-            self.length = math.sqrt(self.dx**2 + self.dy**2)
+            self.length = math.sqrt(self.dx ** 2 + self.dy ** 2)
         if self.de:
             self.extrusion_ratio = self.length / self.de
         else:
@@ -317,7 +317,7 @@ class gcline(object):
             else:
                 blue_color = 0
             if max_feedrate > 0 and self.f > 0:
-                green_color = int((self.f/max_feedrate) * 255)
+                green_color = int((self.f / max_feedrate) * 255)
 
             if green_color > 255:
                 green_color = 255
@@ -327,7 +327,7 @@ class gcline(object):
                 blue_color = 255
             if blue_color < 0:
                 blue_color = 0
-            return[255, green_color, blue_color, 128, green_color, blue_color/4]
+            return[255, green_color, blue_color, 128, green_color, blue_color / 4]
 
 
 def float_from_line(axe, line):
@@ -349,7 +349,7 @@ class gcThreadRenderer(threading.Thread):
                 self.gcview.layerlist.sort()
             self.gcview.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(self.gcview.upper_limit, self.gcview.lower_limit, self.gcview.max_feedrate)))
         self.gcview.t2 = time.time()
-        print "Rendered lines in %fs" % (self.gcview.t2-self.gcview.t1)
+        print "Rendered lines in %fs" % (self.gcview.t2 - self.gcview.t1)
 
 class gcview(object):
     """gcode visualiser
@@ -369,7 +369,7 @@ class gcview(object):
         lines = [self.transform(i) for i in lines]
         lines = [i for i in lines if i is not None]
         self.t1 = time.time()
-        print "transformed %s lines in %fs" % (len(lines), self.t1- self.t0)
+        print "transformed %s lines in %fs" % (len(lines), self.t1 - self.t0)
         self.upper_limit = 0
         self.lower_limit = None
         self.max_feedrate = 0
@@ -606,7 +606,7 @@ class TestGlPanel(GLPanel):
                     currentpos = event.GetPositionTuple()
                     delta = (
                             (currentpos[0] - self.initpos[0]),
-                            -(currentpos[1] - self.initpos[1])
+                            - (currentpos[1] - self.initpos[1])
                         )
                     self.move_shape(delta)
                     self.initpos = None
@@ -654,7 +654,7 @@ class TestGlPanel(GLPanel):
                 p1[1] *= -1
                 p2[1] *= -1
 
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
+                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z, list(p1) + [0], list(p2) + [0], list(sz) + [1], self.transv)
 
                 glLoadIdentity()
                 glTranslatef(self.transv[0], self.transv[1], 0)

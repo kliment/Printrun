@@ -56,7 +56,7 @@ def open_data_url(url):
     if header:
         semi = header.rfind(";")
         if semi >= 0 and "=" not in header[semi:]:
-            encoding = header[semi+1:]
+            encoding = header[semi + 1:]
         else:
             encoding = ""
     else:
@@ -110,7 +110,7 @@ def image(surface, node):
             del node["y"]
         if "viewBox" in node:
             del node["viewBox"]
-        tree = Tree(bytestring=image_bytes)
+        tree = Tree(bytestring = image_bytes)
         tree_width, tree_height, viewbox = node_format(surface, tree)
         if not tree_width or not tree_height:
             tree_width = tree["width"] = width

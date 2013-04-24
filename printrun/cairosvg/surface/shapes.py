@@ -49,7 +49,7 @@ def ellipse(surface, node):
     surface.context.scale(1, ratio)
     surface.context.arc(
         size(surface, node.get("x"), "x") + size(surface, node.get("cx"), "x"),
-        (size(surface, node.get("y"), "y") +
+        (size(surface, node.get("y"), "y") + 
          size(surface, node.get("cy"), "y")) / ratio,
         size(surface, node.get("rx"), "x"), 0, 2 * pi)
     surface.context.restore()

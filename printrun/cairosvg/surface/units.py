@@ -30,7 +30,7 @@ UNITS = {
     "px": None}
 
 
-def size(surface, string, reference="xy"):
+def size(surface, string, reference = "xy"):
     """Replace a ``string`` with units by a float value.
 
     If ``reference`` is a float, it is used as reference for percentages. If it

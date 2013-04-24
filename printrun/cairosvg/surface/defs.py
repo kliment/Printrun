@@ -107,7 +107,7 @@ def draw_gradient(surface, node, name):
 
     if gradient_node.get("gradientUnits") != "userSpaceOnUse":
         gradient_pattern.set_matrix(cairo.Matrix(
-            1 / width, 0, 0, 1 / height, - x / width, - y / height))
+            1 / width, 0, 0, 1 / height, -x / width, -y / height))
 
     gradient_pattern.set_extend(getattr(
         cairo, "EXTEND_%s" % node.get("spreadMethod", "pad").upper()))
@@ -141,7 +141,7 @@ def draw_pattern(surface, name):
     surface.context.set_source(pattern_pattern)
 
 
-def draw_marker(surface, node, position="mid"):
+def draw_marker(surface, node, position = "mid"):
     """Draw a marker."""
     # TODO: manage markers for other tags than path
     if position == "start":
@@ -229,7 +229,7 @@ def use(surface, node):
         del node["viewBox"]
     href = node.get("{http://www.w3.org/1999/xlink}href")
     url = list(urls(href))[0]
-    tree = Tree(url=url, parent=node)
+    tree = Tree(url = url, parent = node)
     surface.set_context_size(*node_format(surface, tree))
     surface.draw(tree)
     surface.context.restore()

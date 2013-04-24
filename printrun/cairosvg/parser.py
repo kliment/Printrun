@@ -79,7 +79,7 @@ def remove_svg_namespace(tree):
 
 class Node(dict):
     """SVG node with dict-like properties and children."""
-    def __init__(self, node, parent=None):
+    def __init__(self, node, parent = None):
         """Create the Node from ElementTree ``node``, with ``parent`` Node."""
         super(Node, self).__init__()
         self.children = ()
@@ -145,11 +145,11 @@ class Node(dict):
         children = []
 
         for child in node:
-            children.append(Node(child, parent=self))
+            children.append(Node(child, parent = self))
             if child.tail:
                 anonymous = ElementTree.Element('tspan')
                 anonymous.text = child.tail
-                children.append(Node(anonymous, parent=self))
+                children.append(Node(anonymous, parent = self))
 
         return list(children)
 
