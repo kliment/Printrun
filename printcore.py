@@ -17,7 +17,7 @@
 
 from serial import Serial, SerialException
 from threading import Thread
-from select import error as SelectError
+from select import error as SelectError, select
 import time, getopt, sys
 import platform, os
 import socket		# Network
@@ -102,6 +102,7 @@ class printcore():
             p = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")	
             if p.match(port):
                 self.printer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.timeout = 0.25
                 self.printer.connect((port, baud))
             else:
                 disable_hup(self.port)
@@ -124,11 +125,13 @@ class printcore():
             # Read line if socket
             if is_socket(self.printer):
                 line = ''
-            	while not "\n" in line:
-                    chunk = self.printer.recv(1)
-                    if chunk == '':
-                        raise RuntimeError("socket connection broken")
-                    line = line + chunk
+                ready = select([self.printer], [], [], self.timeout)
+                if ready[0]:
+                    while not "\n" in line:
+                        chunk = self.printer.recv(1)
+                        if chunk == '':
+                            raise RuntimeError("socket connection broken")
+                        line = line + chunk
             # Read if tty
             else:
                 line = self.printer.readline()
