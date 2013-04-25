@@ -42,6 +42,7 @@ class printcore():
         """
         self.baud = None
         self.port = None
+        self.analyzer = GCodeAnalyzer()
         self.printer = None #Serial instance connected to the printer, None when disconnected
         self.clear = 0 #clear to send, enabled after responses
         self.online = False #The printer has responded to the initial command and is active
@@ -70,7 +71,6 @@ class printcore():
         self.print_thread = None
         if port is not None and baud is not None:
             self.connect(port, baud)
-        self.analyzer = GCodeAnalyzer()
         self.xy_feedrate = None
         self.z_feedrate = None
         self.pronterface = None
