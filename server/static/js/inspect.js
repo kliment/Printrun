@@ -21,7 +21,7 @@
     // Let us open a web socket
     var url = "ws://localhost:8888/socket?user=admin&password=admin";
     console.log(url);
-    var ws = new WebSocket(url);
+    var ws = new WebSocket(url, "construct.text.0.0.1");
     $(function () {
       $consoleWrapper = $(".console");
       $console = $(".console pre");

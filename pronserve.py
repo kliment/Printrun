@@ -20,11 +20,13 @@ from pprint import pprint
 import pronsole
 from server import basic_auth
 import random
+import json
 import textwrap
 import SocketServer
 import socket
 import mdns
 import uuid
+import re
 from operator import itemgetter, attrgetter
 from collections import deque
 
@@ -130,9 +132,16 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     else:
       self.stream.close();
 
+  def select_subprotocol(self, subprotocols):
+    print subprotocols
+    return "construct.text.0.0.1"
+
   def open(self):
     pronserve.listeners.add(self)
-    self.write_message({'connected': {'jobs': pronserve.jobs.public_list()}})
+    self.write_message({'headers': {
+      'jobs': pronserve.jobs.public_list(),
+      'continous_movement': False
+    }})
     print "WebSocket opened. %i sockets currently open." % len(pronserve.listeners)
 
   def send(self, dict_args = {}, **kwargs):
@@ -141,9 +150,41 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     self.write_message(args)
 
   def on_message(self, msg):
+    cmds_whitelist = [
+      "home",
+      "move",
+      "stop_move",
+      "set",
+      "estop",
+      "print",
+      "pause_print",
+      "add_job",
+      "rm_job",
+      "change_job",
+      "get_jobs"
+    ]
+
     print "message received: %s"%(msg)
-    # TODO: the read bit of repl!
-    # self.write_message("You said: " + msg)
+    msg = re.sub(r'\s+', "\s" ,msg)
+    msg = msg.replace(":\s", ":")
+    words = msg.split("\s")
+
+    cmd = words[0]
+
+    args = {}
+    for w in words[1:]:
+      if w.contains(":"):
+        k, v = w.split(":")
+        args[k] = float(v)
+      else:
+        args[w] = True
+
+    print args
+
+    if cmd in cmds_whitelist:
+      getattr(pronserve, "do_%s"%cmd)(args)
+    else:
+      self.write_message({"error": "%s command does not exist."%key})
 
   def on_close(self):
     pronserve.listeners.remove(self)
@@ -193,10 +234,12 @@ class EventEmitter(object):
 
 class Pronserve(pronsole.pronsole, EventEmitter):
 
-  def __init__(self):
+  def __init__(self, **kwargs):
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
+    self.settings.name = 'Pronserve Printer'
+    self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
     self.settings.sensor_poll_rate = 1 # seconds
@@ -209,7 +252,7 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     self.previous_job_progress = 0
     self.silent = True
     services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
-    self.mdns = mdns.publisher().save_group({'name': 'pronserve', 'services': services })
+    self.mdns = mdns.publisher().save_group({'name': self.settings.name, 'services': services })
     self.jobs.listeners.add(self)
 
   def do_print(self):
@@ -248,7 +291,10 @@ class Pronserve(pronsole.pronsole, EventEmitter):
       self.fire("job_progress_changed", progress)
 
   def run_sensor_loop(self):
-    self.request_sensor_update()
+    if self.dry_run:
+      self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
+    else:
+      self.request_sensor_update()
     next_timeout = time.time() + self.settings.sensor_poll_rate
     gen.Task(self.ioloop.add_timeout(next_timeout, self.run_sensor_loop))
 
@@ -380,8 +426,8 @@ class PrintJobQueue(EventEmitter):
 # -------------------------------------------------
 
 print "Pronserve is starting..."
-pronserve = Pronserve()
-pronserve.do_connect("")
+pronserve = Pronserve(dry_run=True)
+#pronserve.do_connect("")
 
 time.sleep(1)
 pronserve.run_sensor_loop()
