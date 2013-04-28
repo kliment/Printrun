@@ -157,7 +157,6 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       "set",
       "estop",
       "print",
-      "pause_print",
       "add_job",
       "rm_job",
       "change_job",
@@ -165,24 +164,35 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     ]
 
     print "message received: %s"%(msg)
-    msg = re.sub(r'\s+', "\s" ,msg)
+    msg = re.sub(r'\s+', "\s" ,msg).strip()
     msg = msg.replace(":\s", ":")
+    msg = msg.replace("@\s", "@")
+    msg = msg.replace("@", "at:")
     words = msg.split("\s")
 
     cmd = words[0]
+    arg_words = words[1:]
+    if cmd == "set":
+      subCmd = words[1]
+      arg_words = words[2:]
 
-    args = {}
-    for w in words[1:]:
-      if w.contains(":"):
-        k, v = w.split(":")
-        args[k] = float(v)
-      else:
-        args[w] = True
-
-    print args
+    kwargs = {}
+    if not (len(arg_words) == 1 and arg_words[0] == ''):
+      for w in arg_words:
+        if w.contains(":"):
+          k, v = w.split(":")
+          kwargs[k] = float(v)
+        else:
+          kwargs[w] = True
 
     if cmd in cmds_whitelist:
-      getattr(pronserve, "do_%s"%cmd)(args)
+      try:
+        if cmd == "set":
+          getattr(pronserve, "do_set")(subCmd, **kwargs)
+        else:
+          getattr(pronserve, "do_%s"%cmd)(**kwargs)
+      except:
+        self.write_message({"error": "bad command."})
     else:
       self.write_message({"error": "%s command does not exist."%key})
 
@@ -258,6 +268,9 @@ class Pronserve(pronsole.pronsole, EventEmitter):
   def do_print(self):
     if self.p.online:
       self.printing_jobs = True
+
+  def do_home(self, **kwargs):
+    print "wut homing!"
 
   def run_print_queue_loop(self):
     # This is a polling work around to the current lack of events in printcore
