@@ -27,6 +27,7 @@ import socket
 import mdns
 import uuid
 import re
+import traceback
 from operator import itemgetter, attrgetter
 from collections import deque
 
@@ -89,17 +90,17 @@ class StopHandler(tornado.web.RequestHandler):
 class JobsHandler(tornado.web.RequestHandler):
   def post(self):
     fileinfo = self.request.files['job'][0]
-    pronserve.jobs.add(fileinfo['filename'], fileinfo['body'])
+    pronserve.do_add_job(fileinfo['filename'], fileinfo['body'])
     self.finish("ACK")
 
 class JobHandler(tornado.web.RequestHandler):
   def delete(self, job_id):
-    pronserve.jobs.remove(int(job_id))
+    pronserve.do_rm_job(job_id)
     self.finish("ACK")
 
   def put(self, job_id):
     args = {'position': int(self.get_argument("job[position]"))}
-    pronserve.jobs.update(int(job_id), args)
+    pronserve.do_change_job(job_id, **args)
     self.finish("ACK")
 
 
@@ -172,29 +173,28 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
 
     cmd = words[0]
     arg_words = words[1:]
-    if cmd == "set":
-      subCmd = words[1]
-      arg_words = words[2:]
-
+    args = []
     kwargs = {}
-    if not (len(arg_words) == 1 and arg_words[0] == ''):
-      for w in arg_words:
-        if w.contains(":"):
-          k, v = w.split(":")
-          kwargs[k] = float(v)
-        else:
-          kwargs[w] = True
+
+    for w in arg_words:
+      if len(w) == 0: continue
+      if w.find(":") > -1:
+        k, v = w.split(":")
+        kwargs[k] = v
+      else:
+        args.append(w)
 
     if cmd in cmds_whitelist:
       try:
-        if cmd == "set":
-          getattr(pronserve, "do_set")(subCmd, **kwargs)
-        else:
-          getattr(pronserve, "do_%s"%cmd)(**kwargs)
+        if cmd == "set": cmd = "construct_set"
+        response = getattr(pronserve, "do_%s"%cmd)(*args, **kwargs)
+        print response
+        if response is not None: self.write_message(response)
       except:
+        print traceback.format_exc()
         self.write_message({"error": "bad command."})
     else:
-      self.write_message({"error": "%s command does not exist."%key})
+      self.write_message({"error": "%s command does not exist."%cmd})
 
   def on_close(self):
     pronserve.listeners.remove(self)
@@ -266,11 +266,66 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     self.jobs.listeners.add(self)
 
   def do_print(self):
-    if self.p.online:
-      self.printing_jobs = True
+    if not self.p.online: raise "not online"
+    self.printing_jobs = True
 
-  def do_home(self, **kwargs):
+  def do_home(self, *args, **kwargs):
+    pronsole.pronsole.do_home(self, " ".join(args))
     print "wut homing!"
+
+  def do_move(self, **kwargs):
+    # Convert mm/s to mm/minute
+    if "at" in kwargs:
+      speed_multiplier = float(kwargs['at'].replace("%",""))*0.01
+    else:
+      speed_multiplier = 1
+
+    for k, v in kwargs.iteritems():
+      if k == "at": continue
+
+      # Getting the feedrate
+      if k in ["z", "e"]:
+        prefix = k
+      else:
+        prefix = "xy"
+      speed = getattr(self.settings, "%s_feedrate"%prefix) * speed_multiplier
+
+      # Creating the pronsole axial move command
+      args = {"axis" : k, "dist" : v, "speed" : speed }
+      cmd = "%(axis)s %(dist)s %(speed)s" % args
+      print "move %s"%cmd
+      pronsole.pronsole.do_move(self, cmd )
+
+  def do_stop_move(self):
+    raise "Continuous movement not supported"
+
+  def do_construct_set(self, subCmd, **kwargs):
+    getattr(self, "do_set_%s"%subCmd)(**kwargs)
+
+  def do_set_temp(self, **kwargs):
+    # Setting each temperature individually
+    prefixes = {'b': 'bed', 'e0': 'set', 'e': 'set'}
+    for k, prefix in prefixes.iteritems():
+      if not k in kwargs: continue
+      print "%stemp %s"%(prefix, kwargs[k])
+      setter = getattr(pronsole.pronsole, "do_%stemp"%prefix)
+      setter(self, kwargs[k])
+
+  def do_set_feedrate(self, **kwargs):
+    # TODO: kwargs[xy] * 60 and kwargs[z] * 60
+    pass
+
+  def do_add_job(self, filename, filebody):
+    self.jobs.add(filename, filebody)
+
+  def do_rm_job(self, job_id):
+    self.jobs.remove(int(job_id))
+
+  def do_change_job(self, job_id, **kwargs):
+    self.jobs.update(int(job_id), kwargs)
+
+  def do_get_jobs(self):
+    return {'jobs': self.jobs.public_list()}
 
   def run_print_queue_loop(self):
     # This is a polling work around to the current lack of events in printcore
@@ -299,6 +354,7 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     gen.Task(self.ioloop.add_timeout(next_timeout, self.run_print_queue_loop))
 
   def update_job_progress(self, progress):
+    print progress
     if progress != self.previous_job_progress and self.current_job != None:
       self.previous_job_progress = progress
       self.fire("job_progress_changed", progress)
@@ -438,9 +494,12 @@ class PrintJobQueue(EventEmitter):
 # Server Start Up
 # -------------------------------------------------
 
+#dry_run = True
+dry_run = False
+
 print "Pronserve is starting..."
-pronserve = Pronserve(dry_run=True)
-#pronserve.do_connect("")
+pronserve = Pronserve(dry_run=dry_run)
+if dry_run==False: pronserve.do_connect("")
 
 time.sleep(1)
 pronserve.run_sensor_loop()
