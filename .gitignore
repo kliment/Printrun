@@ -2,3 +2,4 @@
 .pronsolerc
 *.swp
 *.bak
+.DS_Store
