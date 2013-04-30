@@ -28,6 +28,7 @@ import mdns
 import uuid
 import re
 import traceback
+import argparse
 from operator import itemgetter, attrgetter
 from collections import deque
 
@@ -299,6 +300,12 @@ class Pronserve(pronsole.pronsole, EventEmitter):
   def do_stop_move(self):
     raise "Continuous movement not supported"
 
+  def do_estop(self):
+    pronsole.pronsole.do_pause(self, "")
+    # self.p.reset()
+    print "Emergency Stop!"
+    self.fire("estop")
+
   def do_construct_set(self, subCmd, **kwargs):
     getattr(self, "do_set_%s"%subCmd)(**kwargs)
 
@@ -494,8 +501,23 @@ class PrintJobQueue(EventEmitter):
 # Server Start Up
 # -------------------------------------------------
 
-#dry_run = True
-dry_run = False
+
+parser = argparse.ArgumentParser(
+  description='Runs a 3D printer server using the Construct Protocol'
+)
+
+parser.add_argument('--dry-run', default=False, action='store_true',
+  help='Does not connect to the 3D printer'
+)
+
+args = parser.parse_args()
+dry_run = args.dry_run
+
+def warn_if_dry_run():
+  if dry_run:
+    for i in range(0,7):
+      sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
+  print ""
 
 print "Pronserve is starting..."
 pronserve = Pronserve(dry_run=dry_run)
@@ -512,8 +534,11 @@ if __name__ == "__main__":
               +---+  \x1B[0;32mPronserve: Your printer just got a whole lot better.\x1B[0m
               | \u2713 |  Ready to print.
               +---+  More details at http://localhost:8888/""")
+    warn_if_dry_run()
     sys.stdout.write(welcome)
-    print "\n\n" + "-"*80 + "\n"
+    print "\n"
+    warn_if_dry_run()
+    print "-"*80 + "\n"
 
     try:
       pronserve.ioloop.start()
