@@ -790,7 +790,7 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M25")
         else:
             if(not self.p.printing):
-                self.log("Not self.log(ing, cannot pause.")
+                self.log("Not printing, cannot pause.")
                 return
             self.p.pause()
             #self.p.connect()# This seems to work, but is not a good solution.
