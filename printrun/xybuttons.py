@@ -60,8 +60,7 @@ class XYButtons(BufferedCanvas):
         self.bgcolor.SetFromName(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        BufferedCanvas.__init__(self, parent, ID)
-        self.SetSize(self.bg_bmp.GetSize())
+        BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)

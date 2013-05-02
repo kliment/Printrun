@@ -23,14 +23,13 @@ class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
 
     def __init__(self, parent, id, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize, style = 0):
+                 size = wx.Size(150, 80), style = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
         #call super function
-        #super(Graph, self).__init__(parent, id, pos, size, style)
-        BufferedCanvas.__init__(self, parent, id)
+        super(Graph, self).__init__(parent, id, pos, size, style)
+        #BufferedCanvas.__init__(self, parent, id)
 
-        self.SetSize(wx.Size(150, 80))
 
         self.extruder0temps       = [0]
         self.extruder0targettemps = [0]
