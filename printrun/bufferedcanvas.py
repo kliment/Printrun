@@ -77,7 +77,7 @@ class BufferedCanvas(wx.Panel):
     ## General methods
     ##
 
-    def draw(self, dc):
+    def draw(self, dc, w, h):
         """
         Stub: called when the canvas needs to be re-drawn.
         """
