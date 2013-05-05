@@ -25,12 +25,15 @@ import textwrap
 import SocketServer
 import socket
 import mdns
+from mdns.service import servicegroup, service
 import uuid
 import re
 import traceback
 import argparse
 from operator import itemgetter, attrgetter
 from collections import deque
+import codecs
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
 log = logging.getLogger("root")
 __UPLOADS__ = "./uploads"
@@ -262,8 +265,22 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     self.current_job = None
     self.previous_job_progress = 0
     self.silent = True
-    services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
-    self.mdns = mdns.publisher().save_group({'name': self.settings.name, 'services': services })
+    self.init_mdns()
+
+  def init_mdns(self):
+    # create the group
+    group = servicegroup()
+    group.name = self.settings.name
+
+    # create the services
+    svc = service(type='_construct._tcp', port=8888, name='Pronsere',
+                    sysname='training', state='SCHEMA-READY')
+    svc.txt = { }
+    group.services = [ svc ]
+
+    #services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
+    #self.mdns = mdns.publisher().save_group({'name': self.settings.name, 'services': services })
+    self.mdns = mdns.publisher().save_group(group)
     self.jobs.listeners.add(self)
 
   def do_print(self):
@@ -500,7 +517,6 @@ class PrintJobQueue(EventEmitter):
 
 # Server Start Up
 # -------------------------------------------------
-
 
 parser = argparse.ArgumentParser(
   description='Runs a 3D printer server using the Construct Protocol'

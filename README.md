@@ -14,22 +14,30 @@ If you want the newest, shiniest features, you can run Printrun from source usin
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
+*Note:* Pronserve is not currently included in the windows binary.
+
 ## Mac OS X
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
+
+*Note:* Pronserve is not currently included in the OSX binary.
 
 ## Linux
 ### Ubuntu/Debian
 
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
-`sudo apt-get install python-serial python-wxgtk2.8 python-pyglet`
+1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject`
+2. `sudo apt-get install avahi-daemon python-avahi`
+3. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
-### Fedora 15 and newer
+### Fedora 15 and newer (untested)
 
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
-`sudo yum install pyserial wxpython pyglet`
+1. `sudo yum install pyserial wxpython pyglet python-tornado`
+2. `sudo easy_install libxml2`
+2. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
 ### Archlinux
 
@@ -38,6 +46,8 @@ Packages are available in AUR. Just run
 `yaourt printrun`
 
 and enjoy the `pronterface`, `pronsole`, ... commands directly.
+
+*Note:* Pronserve is not currently included in the arch package.
 
 # USING PRONTERFACE
 
@@ -53,16 +63,9 @@ See the Slic3r readme for more details on integration.
 
 # USING PRONSERVE
 
-Pronserve runs a server for remote controlling your 3D printer over your network. To use pronserve you need:
+Pronserve runs a server for remotely monitoring and controlling your 3D printer over your network.
 
-  * python (ideally 2.6.x or 2.7.x),
-  * pyserial (or python-serial on ubuntu/debian) and
-  * tornado
-  * D1plo1d's py-mdns fork (https://github.com/D1plo1d/py-mdns)
-  * pybonjour
-  * bonjour for windows (Windows ONLY)
-
-When you're done setting up Printrun, you can start `pronserve.py` in the directory you unpacked it. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
+To start the server you can run `./pronserve.py` in the directory you git cloned printrun too. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
 
 
 # USING PRONSOLE
