@@ -329,6 +329,8 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     self.jobs.remove(int(job_id))
 
   def do_change_job(self, job_id, **kwargs):
+    print job_id
+    print kwargs
     self.jobs.update(int(job_id), kwargs)
 
   def do_get_jobs(self):
@@ -345,7 +347,7 @@ class Pronserve(pronsole.pronsole, EventEmitter):
         self.fire("job_finished", self.jobs.sanitize(self.current_job))
       if len(self.jobs.list) > 0:
         print "Starting the next print job"
-        self.current_job = self.jobs.list.popleft()
+        self.current_job = self.jobs.list.pop(0)
         self.p.startprint(self.current_job['body'].split("\n"))
         self.fire("job_started", self.jobs.sanitize(self.current_job))
       else:
@@ -361,7 +363,6 @@ class Pronserve(pronsole.pronsole, EventEmitter):
     gen.Task(self.ioloop.add_timeout(next_timeout, self.run_print_queue_loop))
 
   def update_job_progress(self, progress):
-    print progress
     if progress != self.previous_job_progress and self.current_job != None:
       self.previous_job_progress = progress
       self.fire("job_progress_changed", progress)
@@ -428,7 +429,7 @@ class PrintJobQueue(EventEmitter):
 
   def __init__(self):
     super(PrintJobQueue, self).__init__()
-    self.list = deque([])
+    self.list = []
     self.__last_id = 0
 
   def public_list(self):
@@ -441,19 +442,13 @@ class PrintJobQueue(EventEmitter):
   def sanitize(self, job):
     return dict(
       id = job["id"],
-      original_file_name = job["original_file_name"],
-      rank = job["rank"]
+      file_name = job["original_file_name"],
     )
-
-  def order(self):
-    sorted(self.list, key=lambda job: job['rank'])
-
 
   def add(self, original_file_name, body):
     ext = os.path.splitext(original_file_name)[1]
     job = dict(
       id = self.__last_id,
-      rank = len(self.list),
       original_file_name=original_file_name,
       body= body,
     )
@@ -482,9 +477,14 @@ class PrintJobQueue(EventEmitter):
     job = self.find_by_id(job_id)
     if job == None:
       return False
-    job['rank'] = job_attrs['position']
-    self.order()
-    print "Print Job Updated"
+    # proposed future print quantity functionality
+    # if hasattr(job_attrs, 'qty'): job['qty'] = qty
+    if job_attrs['position']:
+      position = int(job_attrs['position'])
+      self.list.remove(job)
+      self.list.insert(position, job)
+    print int(job_attrs['position'])
+    print "Print #%s Job Updated ( %s )."%(job['id'], job['original_file_name'])
     self.fire("job_updated", job)
 
   def find_by_id(self, job_id):
