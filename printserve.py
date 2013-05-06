@@ -253,6 +253,7 @@ class Printserve(pronsole.pronsole, EventEmitter):
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
     self.settings.name = 'Printserve Printer'
+    self.settings.pause_between_prints = True
     self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
@@ -357,8 +358,13 @@ class Printserve(pronsole.pronsole, EventEmitter):
       if self.current_job != None:
         self.update_job_progress(100)
         self.fire("job_finished", self.jobs.sanitize(self.current_job))
-      if len(self.jobs.list) > 0:
-        print "Starting the next print job"
+
+      if self.settings.pause_between_prints:
+        print "Print job complete. Pausing between jobs."
+        self.current_job = None
+        self.printing_jobs = False
+      elif len(self.jobs.list) > 0:
+        print "Print job complete. Starting the next print job"
         self.current_job = self.jobs.list.pop(0)
         self.p.startprint(self.current_job['body'].split("\n"))
         self.fire("job_started", self.jobs.sanitize(self.current_job))
