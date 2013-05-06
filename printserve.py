@@ -94,7 +94,6 @@ class JobsHandler(tornado.web.RequestHandler):
   def post(self):
     fileinfo = self.request.files['job'][0]
     printserve.do_add_job(fileinfo['filename'], fileinfo['body'])
-    
     self.finish("ACK")
 
 class JobHandler(tornado.web.RequestHandler):
