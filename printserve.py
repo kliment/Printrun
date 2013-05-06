@@ -31,7 +31,6 @@ import re
 import traceback
 import argparse
 from operator import itemgetter, attrgetter
-from collections import deque
 import codecs
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
