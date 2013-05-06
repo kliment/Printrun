@@ -95,6 +95,7 @@ class JobsHandler(tornado.web.RequestHandler):
   def post(self):
     fileinfo = self.request.files['job'][0]
     printserve.do_add_job(fileinfo['filename'], fileinfo['body'])
+    
     self.finish("ACK")
 
 class JobHandler(tornado.web.RequestHandler):
@@ -359,12 +360,12 @@ class Printserve(pronsole.pronsole, EventEmitter):
         self.update_job_progress(100)
         self.fire("job_finished", self.jobs.sanitize(self.current_job))
 
-      if self.settings.pause_between_prints:
+      if self.settings.pause_between_prints and self.current_job != None:
         print "Print job complete. Pausing between jobs."
         self.current_job = None
         self.printing_jobs = False
       elif len(self.jobs.list) > 0:
-        print "Print job complete. Starting the next print job"
+        print "Starting the next print job"
         self.current_job = self.jobs.list.pop(0)
         self.p.startprint(self.current_job['body'].split("\n"))
         self.fire("job_started", self.jobs.sanitize(self.current_job))
@@ -460,26 +461,26 @@ class PrintJobQueue(EventEmitter):
   def sanitize(self, job):
     return dict(
       id = job["id"],
-      file_name = job["original_file_name"],
+      file_name = job["file_name"],
     )
 
-  def add(self, original_file_name, body):
-    ext = os.path.splitext(original_file_name)[1]
+  def add(self, file_name, body):
+    ext = os.path.splitext(file_name)[1]
     job = dict(
       id = self.__last_id,
-      original_file_name=original_file_name,
+      file_name=file_name,
       body= body,
     )
     self.__last_id += 1
 
     self.list.append(job)
-    print "Added %s"%(original_file_name)
+    print "Added %s"%(file_name)
     self.fire("job_added", job)
 
   def display_summary(self):
     print "Print Jobs:"
     for job in self.list:
-      print "  %i: %s"%(job['id'], job['original_file_name'])
+      print "  %i: %s"%(job['id'], job['file_name'])
     print ""
     return True
 
@@ -502,7 +503,7 @@ class PrintJobQueue(EventEmitter):
       self.list.remove(job)
       self.list.insert(position, job)
     print int(job_attrs['position'])
-    print "Print #%s Job Updated ( %s )."%(job['id'], job['original_file_name'])
+    print "Print #%s Job Updated ( %s )."%(job['id'], job['file_name'])
     self.fire("job_updated", job)
 
   def find_by_id(self, job_id):
