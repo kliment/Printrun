@@ -27,8 +27,8 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
-1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject`
-2. `sudo apt-get install avahi-daemon python-avahi tornado`
+1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
+2. `sudo easy_install pybonjour tornado`
 3. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
 ### Fedora 15 and newer (untested)

@@ -24,8 +24,8 @@ import json
 import textwrap
 import SocketServer
 import socket
-import mdns
-from mdns.service import servicegroup, service
+import pybonjour
+import atexit
 import uuid
 import re
 import traceback
@@ -266,22 +266,17 @@ class Printserve(pronsole.pronsole, EventEmitter):
     self.previous_job_progress = 0
     self.silent = True
     self.init_mdns()
+    self.jobs.listeners.add(self)
 
   def init_mdns(self):
-    # create the group
-    group = servicegroup()
-    group.name = self.settings.name
+    sdRef = pybonjour.DNSServiceRegister(name = self.settings.name,
+                                         regtype = '_construct._tcp',
+                                         port = 8888,
+                                         domain = "local.")
+    atexit.register(self.cleanup_service, sdRef)
 
-    # create the services
-    svc = service(type='_construct._tcp', port=8888, name='Pronsere',
-                    sysname='training', state='SCHEMA-READY')
-    svc.txt = { }
-    group.services = [ svc ]
-
-    #services = ({'type': '_construct._tcp', 'port': 8888, 'domain': "local."})
-    #self.mdns = mdns.publisher().save_group({'name': self.settings.name, 'services': services })
-    self.mdns = mdns.publisher().save_group(group)
-    self.jobs.listeners.add(self)
+  def cleanup_service(self, sdRef):
+    sdRef.close()
 
   def do_print(self):
     if not self.p.online: raise "not online"
