@@ -14,13 +14,13 @@ If you want the newest, shiniest features, you can run Printrun from source usin
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
-*Note:* Pronserve is not currently included in the windows binary.
+*Note:* Printserve is not currently included in the windows binary.
 
 ## Mac OS X
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
-*Note:* Pronserve is not currently included in the OSX binary.
+*Note:* Printserve is not currently included in the OSX binary.
 
 ## Linux
 ### Ubuntu/Debian
@@ -47,7 +47,7 @@ Packages are available in AUR. Just run
 
 and enjoy the `pronterface`, `pronsole`, ... commands directly.
 
-*Note:* Pronserve is not currently included in the arch package.
+*Note:* Printserve is not currently included in the arch package.
 
 # USING PRONTERFACE
 
@@ -63,9 +63,9 @@ See the Slic3r readme for more details on integration.
 
 # USING PRONSERVE
 
-Pronserve runs a server for remotely monitoring and controlling your 3D printer over your network.
+Printserve runs a server for remotely monitoring and controlling your 3D printer over your network.
 
-To start the server you can run `./pronserve.py` in the directory you git cloned printrun too. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
+To start the server you can run `./printserve.py` in the directory you git cloned printrun too. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
 
 
 # USING PRONSOLE
