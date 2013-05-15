@@ -1283,15 +1283,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 threading.Thread(target = self.loadviz).start()
 
     def loadviz(self):
-        Xtot, Ytot, Ztot, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax = pronsole.measurements(self.f)
-        print pronsole.totalelength(self.f), _("mm of filament used in this print\n")
+        gcode = pronsole.GCode(self.f)
+        gcode.measure()
+        Xtot, Ytot, Ztot, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax = (gcode.width, gcode.depth, gcode.height, gcode.xmin, gcode.xmax, gcode.ymin, gcode.ymax, gcode.zmin, gcode.zmax)
+        print gcode.filament_length(), _("mm of filament used in this print\n")
         print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
-        try:
-            print _("Estimated duration (pessimistic): "), pronsole.estimate_duration(self.f)
-        except:
-            pass
+        print _("Estimated duration (pessimistic): "), gcode.estimate_duration(self.f)
         #import time
         #t0 = time.time()
         self.gviz.clear()

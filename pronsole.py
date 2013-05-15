@@ -20,7 +20,6 @@ import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
 from math import sqrt
-from gcoder import GCode
 
 import printcore
 from printrun.printrun_utils import install_locale
@@ -43,93 +42,6 @@ except:
 
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
-
-def measurements(g):
-    gcode = GCode(g)
-    gcode.measure()
-    return (gcode.width, gcode.depth, gcode.height, gcode.xmin, gcode.xmax, gcode.ymin, gcode.ymax, gcode.zmin, gcode.zmax)
-
-def totalelength(g):
-    gcode = GCode(g)
-    return gcode.filament_length()
-
-def get_coordinate_value(axis, parts):
-    for i in parts:
-        if (axis in i):
-            return float(i[1:])
-    return None
-
-def hypot3d(X1, Y1, Z1, X2 = 0.0, Y2 = 0.0, Z2 = 0.0):
-    return math.hypot(X2-X1, math.hypot(Y2-Y1, Z2-Z1))
-
-def estimate_duration(g):
-
-    lastx = lasty = lastz = laste = lastf = 0.0
-    x = y = z = e = f = 0.0
-    currenttravel = 0.0
-    totaltravel = 0.0
-    moveduration = 0.0
-    totalduration = 0.0
-    acceleration = 1500.0 #mm/s/s  ASSUMING THE DEFAULT FROM SPRINTER !!!!
-    layerduration = 0.0
-    layerbeginduration = 0.0
-    layercount = 0
-    #TODO:
-    # get device caps from firmware: max speed, acceleration/axis (including extruder)
-    # calculate the maximum move duration accounting for above ;)
-    # self.log(".... estimating ....")
-    for i in g:
-        i = i.split(";")[0]
-        if "G4" in i or "G1" in i:
-            if "G4" in i:
-                parts = i.split(" ")
-                moveduration = get_coordinate_value("P", parts[1:])
-                if moveduration is None:
-                    continue
-                else:
-                    moveduration /= 1000.0
-            if "G1" in i:
-                parts = i.split(" ")
-                x = get_coordinate_value("X", parts[1:])
-                if x is None: x = lastx
-                y = get_coordinate_value("Y", parts[1:])
-                if y is None: y = lasty
-                z = get_coordinate_value("Z", parts[1:])
-                if (z is None) or  (z<lastz): z = lastz # Do not increment z if it's below the previous (Lift z on move fix)
-                e = get_coordinate_value("E", parts[1:])
-                if e is None: e = laste
-                f = get_coordinate_value("F", parts[1:])
-                if f is None: f = lastf
-                else: f /= 60.0 # mm/s vs mm/m
-
-                # given last feedrate and current feedrate calculate the distance needed to achieve current feedrate.
-                # if travel is longer than req'd distance, then subtract distance to achieve full speed, and add the time it took to get there.
-                # then calculate the time taken to complete the remaining distance
-
-                currenttravel = hypot3d(x, y, z, lastx, lasty, lastz)
-                distance = abs(2* ((lastf+f) * (f-lastf) * 0.5 ) / acceleration)  #2x because we have to accelerate and decelerate
-                if distance <= currenttravel and ( lastf + f )!=0 and f!=0:
-                    moveduration = 2 * distance / ( lastf + f )
-                    currenttravel -= distance
-                    moveduration += currenttravel/f
-                else:
-                    moveduration = math.sqrt( 2 * distance / acceleration )
-
-            totalduration += moveduration
-
-            if z > lastz:
-                layercount +=1
-                #self.log("layer z: ", lastz, " will take: ", time.strftime('%H:%M:%S', time.gmtime(totalduration-layerbeginduration)))
-                layerbeginduration = totalduration
-
-            lastx = x
-            lasty = y
-            lastz = z
-            laste = e
-            lastf = f
-
-    #self.log("Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration)))
-    return "{0:d} layers, ".format(int(layercount)) + str(datetime.timedelta(seconds = int(totalduration)))
 
 def confirm():
    y_or_n = raw_input("y/n: ")
