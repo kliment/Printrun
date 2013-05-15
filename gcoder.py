@@ -17,6 +17,7 @@
 import sys
 import re
 import math
+import datetime
 
 def get_coordinate_value(axis, parts):
     for i in parts:
