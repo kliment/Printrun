@@ -1284,12 +1284,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def loadviz(self):
         gcode = gcoder.GCode(self.f)
         gcode.measure()
-        Xtot, Ytot, Ztot, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax = (gcode.width, gcode.depth, gcode.height, gcode.xmin, gcode.xmax, gcode.ymin, gcode.ymax, gcode.zmin, gcode.zmax)
         print gcode.filament_length(), _("mm of filament used in this print\n")
-        print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (Xmin, Xmax, Xtot)
-        print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (Ymin, Ymax, Ytot)
-        print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (Zmin, Zmax, Ztot)
-        print _("Estimated duration (pessimistic): "), gcode.estimate_duration(self.f)
+        print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (gcode.xmin, gcode.xmax, gcode.width)
+        print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (gcode.ymin, gcode.ymax, gcode.depth)
+        print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (gcode.zmin, gcode.zmax, gcode.height)
+        print _("Estimated duration (pessimistic): "), gcode.estimate_duration()
         #import time
         #t0 = time.time()
         self.gviz.clear()
