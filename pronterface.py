@@ -45,9 +45,8 @@ import printcore
 from printrun.printrun_utils import pixmapfile, configfile
 from printrun.gui import MainWindow
 import pronsole
-
-def dosify(name):
-    return os.path.split(name)[1].split(".")[0][:8]+".g"
+from pronsole import dosify
+import gcoder
 
 def parse_temperature_report(report, key):
     if key in report:
@@ -1283,7 +1282,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 threading.Thread(target = self.loadviz).start()
 
     def loadviz(self):
-        gcode = pronsole.GCode(self.f)
+        gcode = gcoder.GCode(self.f)
         gcode.measure()
         Xtot, Ytot, Ztot, Xmin, Xmax, Ymin, Ymax, Zmin, Zmax = (gcode.width, gcode.depth, gcode.height, gcode.xmin, gcode.xmax, gcode.ymin, gcode.ymax, gcode.zmin, gcode.zmax)
         print gcode.filament_length(), _("mm of filament used in this print\n")
