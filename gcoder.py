@@ -312,7 +312,7 @@ class GCode(object):
         cur_e = 0
         
         for line in self.lines:
-            if line.e != None:
+            if line.e == None:
                 continue
             if line.command() == "G92":
                 cur_e = line.e
