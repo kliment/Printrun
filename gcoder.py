@@ -18,16 +18,6 @@ import sys
 import re
 import math
 
-def deltalen(a,b):
-    d = object()
-    d.x = b.x - a.x
-    d.y = b.y - a.y
-    d.z = b.z - a.z
-    
-    return math.sqrt((d.x*d.x)+(d.y*d.y)+(d.z*d.z))
-    
-
-
 class Line(object):
     def __init__(self,l):
         self._x = None
