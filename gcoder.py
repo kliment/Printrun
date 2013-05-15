@@ -129,12 +129,12 @@ class Layer(object):
         
         
     def measure(self):
-        xmin = 999999999
-        ymin = 999999999
+        xmin = float("inf")
+        ymin = float("inf")
         zmin = 0
-        xmax = -999999999
-        ymax = -999999999
-        zmax = -999999999
+        xmax = float("-inf")
+        ymax = float("-inf")
+        zmax = float("-inf")
         relative = False
         relative_e = False
 
@@ -272,29 +272,21 @@ class GCode(object):
                 
 
     def measure(self):
-        xmin = 999999999
-        ymin = 999999999
+        xmin = float("inf")
+        ymin = float("inf")
         zmin = 0
-        xmax = -999999999
-        ymax = -999999999
-        zmax = -999999999
+        xmax = float("-inf")
+        ymax = float("-inf")
+        zmax = float("-inf")
 
         for l in self.layers:
-            xd,yd,zd = l.measure()
-            if xd[0] < xmin:
-                xmin = xd[0]
-            if xd[1] > xmax:
-                xmax = xd[1]
-
-            if yd[0] < ymin:
-                ymin = yd[0]
-            if yd[1] > ymax:
-                ymax = yd[1]
-
-            if zd[0] < zmin:
-                zmin = zd[0]
-            if zd[1] > zmax:
-                zmax = zd[1]
+            xd, yd, zd = l.measure()
+            xmin = min(xd[0], xmin)
+            xmax = max(xd[1], xmax)
+            ymin = min(yd[0], ymin)
+            ymax = max(yd[1], ymax)
+            zmin = min(zd[0], zmin)
+            zmax = max(zd[1], zmax)
 
         self.xmin = xmin
         self.xmax = xmax
