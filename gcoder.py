@@ -303,17 +303,17 @@ class GCode(object):
         cur_e = 0
         
         for line in self.lines:
+            if line.e != None:
+                continue
             if line.command() == "G92":
-                if line.e != None:
-                    total_e += cur_e
-                    cur_e = line.e
-            elif line.is_move() and line.e:
+                cur_e = line.e
+            elif line.is_move():
                 if line.relative_e:
-                    cur_e += line.e
+                    total_e += line.e
                 else:
+                    total_e += line.e - cur_e
                     cur_e = line.e
-                
-                
+
         return total_e
 
 
