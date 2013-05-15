@@ -19,15 +19,6 @@ import re
 import math
 import datetime
 
-def get_coordinate_value(axis, parts):
-    for i in parts:
-        if (axis in i):
-            return float(i[1:])
-    return None
-
-def hypot3d(X1, Y1, Z1, X2 = 0.0, Y2 = 0.0, Z2 = 0.0):
-    return math.hypot(X2-X1, math.hypot(Y2-Y1, Z2-Z1))
-
 gcode_parsed_args = ["x", "y", "e", "f", "z", "p"]
 
 class Line(object):
@@ -46,6 +37,8 @@ class Line(object):
 
     command = None
     is_move = False
+
+    duration = None
 
     def __init__(self, l):
         self.raw = l.lower()
@@ -67,14 +60,17 @@ class Line(object):
                 if code in gcode_parsed_args and len(bit) > 1:
                     setattr(self, code, float(bit[1:]))
  
-    def __str__(self):
-        return self.raw
+    def __repr__(self):
+        return self.raw.upper()
         
 class Layer(object):
-    def __init__(self,lines):
+
+    lines = None
+    duration = None
+
+    def __init__(self, lines):
         self.lines = lines
-        
-        
+
     def measure(self):
         xmin = float("inf")
         ymin = float("inf")
@@ -121,9 +117,12 @@ class Layer(object):
                 current_z = z or current_z
 
         return (xmin, xmax), (ymin, ymax), (zmin, zmax)
-    
 
 class GCode(object):
+
+    lines = None
+    layers = None
+
     def __init__(self,data):
         self.lines = [Line(l2) for l2 in
                         (l.strip() for l in data)
@@ -132,7 +131,7 @@ class GCode(object):
         self._create_layers()
 
     def _preprocess(self):
-        #checks for G20, G21, G90 and G91, sets imperial and relative flags
+        """Checks for G20, G21, G90 and G91, sets imperial and relative flags"""
         imperial = False
         relative = False
         relative_e = False
@@ -155,16 +154,14 @@ class GCode(object):
                 line.relative = relative
                 line.relative_e = relative_e
             line.parse_coordinates(imperial)
-        
+    
+    # FIXME : looks like this needs to be tested with list Z on move
     def _create_layers(self):
-        self.layers = []
+        layers = {}
 
         prev_z = None
         cur_z = 0
         cur_lines = []
-        layer_index = []
-        
-        temp_layers = {}
         for line in self.lines:
             if line.command == "G92" and line.z != None:
                 cur_z = line.z
@@ -174,40 +171,35 @@ class GCode(object):
                         cur_z += line.z
                     else:
                         cur_z = line.z
-                    
-            if cur_z != prev_z:
-                old_lines = temp_layers.pop(prev_z,[])
-                old_lines += cur_lines
-                temp_layers[prev_z] = old_lines
 
-                if not prev_z in layer_index:
-                    layer_index.append(prev_z)
-                    
+            if cur_z != prev_z:
+                old_lines = layers.get(prev_z, [])
+                old_lines += cur_lines
+                layers[prev_z] = old_lines
                 cur_lines = []
-            
+
             cur_lines.append(line)
             prev_z = cur_z
-        
-        
-        old_lines = temp_layers.pop(prev_z,[])
-        old_lines += cur_lines
-        temp_layers[prev_z] = old_lines
 
-        if not prev_z in layer_index:
-            layer_index.append(prev_z)
-            
-        layer_index.sort()
-        
-        for idx in layer_index:
-            cur_lines = temp_layers[idx]
+        old_lines = layers.pop(prev_z, [])
+        old_lines += cur_lines
+        layers[prev_z] = old_lines
+
+        for idx in layers.keys():
+            cur_lines = layers[idx]
             has_movement = False
-            for l in cur_lines:
+            for l in layers[idx]:
                 if l.is_move and l.e != None:
                     has_movement = True
                     break
-            
+            if idx > 15:
+                print idx, has_movement, cur_lines
             if has_movement:
-                self.layers.append(Layer(cur_lines))
+                layers[idx] = Layer(layers[idx])
+            else:
+                del layers[idx]
+
+        self.layers = layers
 
     def num_layers(self):
         return len(self.layers)
@@ -220,7 +212,7 @@ class GCode(object):
         ymax = float("-inf")
         zmax = float("-inf")
 
-        for l in self.layers:
+        for l in self.layers.values():
             (xm, xM), (ym, yM), (zm, zM) = l.measure()
             xmin = min(xm, xmin)
             xmax = max(xM, xmax)
@@ -257,7 +249,7 @@ class GCode(object):
 
         return total_e
 
-    def estimate_duration(self, g):
+    def estimate_duration(self):
         lastx = lasty = lastz = laste = lastf = 0.0
         x = y = z = e = f = 0.0
         currenttravel = 0.0
@@ -272,58 +264,53 @@ class GCode(object):
         # get device caps from firmware: max speed, acceleration/axis (including extruder)
         # calculate the maximum move duration accounting for above ;)
         # self.log(".... estimating ....")
-        for i in g:
-            i = i.split(";")[0]
-            if "G4" in i or "G1" in i:
-                if "G4" in i:
-                    parts = i.split(" ")
-                    moveduration = get_coordinate_value("P", parts[1:])
-                    if moveduration is None:
+        zs = self.layers.keys()
+        zs.sort()
+        for z in zs:
+            layer = self.layers[z]
+            for line in layer.lines:
+                if line.command not in ["G4", "G1"]:
+                    continue
+                if line.command == "G4":
+                    moveduration = line.p
+                    if not moveduration:
                         continue
                     else:
                         moveduration /= 1000.0
-                if "G1" in i:
-                    parts = i.split(" ")
-                    x = get_coordinate_value("X", parts[1:])
-                    if x is None: x = lastx
-                    y = get_coordinate_value("Y", parts[1:])
-                    if y is None: y = lasty
-                    z = get_coordinate_value("Z", parts[1:])
-                    if (z is None) or  (z<lastz): z = lastz # Do not increment z if it's below the previous (Lift z on move fix)
-                    e = get_coordinate_value("E", parts[1:])
-                    if e is None: e = laste
-                    f = get_coordinate_value("F", parts[1:])
-                    if f is None: f = lastf
-                    else: f /= 60.0 # mm/s vs mm/m
-
+                elif line.command == "G1":
+                    x = line.x if line.x != None else lastx
+                    y = line.y if line.y != None else lasty
+                    e = line.e if line.e != None else laste
+                    f = line.f / 60.0 if line.f != None else lastf # mm/s vs mm/m
+                    
                     # given last feedrate and current feedrate calculate the distance needed to achieve current feedrate.
                     # if travel is longer than req'd distance, then subtract distance to achieve full speed, and add the time it took to get there.
                     # then calculate the time taken to complete the remaining distance
 
-                    currenttravel = hypot3d(x, y, z, lastx, lasty, lastz)
-                    distance = abs(2* ((lastf+f) * (f-lastf) * 0.5 ) / acceleration)  #2x because we have to accelerate and decelerate
-                    if distance <= currenttravel and ( lastf + f )!=0 and f!=0:
-                        moveduration = 2 * distance / ( lastf + f )
+                    currenttravel = math.hypot(x - lastx, y - lasty)
+                    # FIXME: review this better
+                    # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
+                    # shouldn't we instead look at three consecutive moves ?
+                    distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
+                    if distance <= currenttravel and lastf + f != 0 and f != 0:
+                        # Unsure about this formula -- iXce reviewing this code
+                        moveduration = 2 * distance / (lastf + f)
                         currenttravel -= distance
                         moveduration += currenttravel/f
                     else:
-                        moveduration = math.sqrt( 2 * distance / acceleration )
+                        moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
 
                 totalduration += moveduration
 
-                if z > lastz:
-                    layercount +=1
-                    #self.log("layer z: ", lastz, " will take: ", time.strftime('%H:%M:%S', time.gmtime(totalduration-layerbeginduration)))
-                    layerbeginduration = totalduration
-
                 lastx = x
                 lasty = y
-                lastz = z
                 laste = e
                 lastf = f
 
-        #self.log("Total Duration: " #, time.strftime('%H:%M:%S', time.gmtime(totalduration)))
-        return "{0:d} layers, ".format(int(layercount)) + str(datetime.timedelta(seconds = int(totalduration)))
+            layer.duration = totalduration - layerbeginduration
+            layerbeginduration = totalduration
+
+        return "%d layers, %s" % (len(self.layers), str(datetime.timedelta(seconds = int(totalduration))))
 
 def main():
     if len(sys.argv) < 2:
@@ -332,8 +319,7 @@ def main():
 
 #    d = [i.replace("\n","") for i in open(sys.argv[1])]
 #    gcode = GCode(d)
-    d = list(open(sys.argv[1]))
-    gcode = GCode(d) 
+    gcode = GCode(open(sys.argv[1])) 
 
     gcode.measure()
 
@@ -343,7 +329,7 @@ def main():
     print "\tZ: %0.02f - %0.02f (%0.02f)" % (gcode.zmin,gcode.zmax,gcode.height)
     print "Filament used: %0.02fmm" % gcode.filament_length()
     print "Number of layers: %d" % gcode.num_layers()
-    print "Estimated duration (pessimistic): ", gcode.estimate_duration(d)
+    print "Estimated duration (pessimistic): %s" % gcode.estimate_duration()
 
 
 if __name__ == '__main__':
