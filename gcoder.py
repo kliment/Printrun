@@ -168,28 +168,22 @@ class Layer(object):
                     y = current_y + (y or 0)
                     z = current_z + (z or 0)
 
-
-                if x and line.e:
-                    if x < xmin:
-                        xmin = x
-                    if x > xmax:
-                        xmax = x
-                if y and line.e:
-                    if y < ymin:
-                        ymin = y
-                    if y > ymax:
-                        ymax = y
+                if line.e:
+                    if x:
+                        xmin = min(xmin, x)
+                        xmax = max(xmax, x)
+                    if y:
+                        ymin = min(ymin, y)
+                        ymax = max(ymax, y)
                 if z:
-                    if z < zmin:
-                        zmin = z
-                    if z > zmax:
-                        zmax = z
+                    zmin = min(zmin, z)
+                    zmax = max(zmax, z)
 
                 current_x = x or current_x
                 current_y = y or current_y
                 current_z = z or current_z
 
-        return ( (xmin,xmax),(ymin,ymax),(zmin,zmax) )
+        return (xmin, xmax), (ymin, ymax), (zmin, zmax)
     
 
 class GCode(object):
