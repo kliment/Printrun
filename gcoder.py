@@ -28,108 +28,45 @@ def get_coordinate_value(axis, parts):
 def hypot3d(X1, Y1, Z1, X2 = 0.0, Y2 = 0.0, Z2 = 0.0):
     return math.hypot(X2-X1, math.hypot(Y2-Y1, Z2-Z1))
 
+gcode_parsed_args = ["x", "y", "e", "f", "z", "p"]
+
 class Line(object):
-    def __init__(self,l):
-        self._x = None
-        self._y = None
-        self._z = None
-        self.e = None
-        self.f = 0
-        
-        self.regex = re.compile("[-]?\d+[.]?\d*")
-        self.raw = l.upper().lstrip()
-        self.imperial = False
-        self.relative = False
-        self.relative_e = False
-        
-        if ";" in self.raw:
-            self.raw = self.raw.split(";")[0]
-        
-        self._parse_coordinates()
-        
-    def _to_mm(self,v):
-        if v and self.imperial:
-            return v*25.4
-        return v
-        
-    def _getx(self):
-        return self._to_mm(self._x)
-            
-    def _setx(self,v):
-        self._x = v
 
-    def _gety(self):
-        return self._to_mm(self._y)
-
-    def _sety(self,v):
-        self._y = v
-
-    def _getz(self):
-        return self._to_mm(self._z)
-
-    def _setz(self,v):
-        self._z = v
-
-    def _gete(self):
-        return self._to_mm(self._e)
-
-    def _sete(self,v):
-        self._e = v
-
-    x = property(_getx,_setx)
-    y = property(_gety,_sety)
-    z = property(_getz,_setz)
-    e = property(_gete,_sete)
+    x = None
+    y = None
+    z = None
+    e = None
+    f = None
     
-        
-    def command(self):
-        try:
-            return self.raw.split(" ")[0]
-        except:
-            return ""
-            
-    def _get_float(self,which):
-        try:
-            return float(self.regex.findall(self.raw.split(which)[1])[0])
-        except:
-            return None
-        
-    def _parse_coordinates(self):
-        try:
-            if "X" in self.raw:
-                self._x = self._get_float("X")
-        except:
-            pass
+    relative = False
+    relative_e = False
 
-        try:
-            if "Y" in self.raw:
-                self._y = self._get_float("Y")
-        except:
-            pass
-            
-        try:
-            if "Z" in self.raw:
-                self._z = self._get_float("Z")
-        except:
-            pass
-            
-        try:
-            if "E" in self.raw:
-                self.e = self._get_float("E")
-        except:
-            pass
-            
-        try:
-            if "F" in self.raw:
-                self.f = self._get_float("F")
-        except:
-            pass
-            
-        
-    def is_move(self):
-        return self.command() and ("G1" in self.raw or "G0" in self.raw)
-        
-        
+    raw = None
+    split_raw = None
+
+    command = None
+    is_move = False
+
+    def __init__(self, l):
+        self.raw = l.lower()
+        if ";" in self.raw:
+            self.raw = self.raw.split(";")[0].rstrip()
+        self.split_raw = self.raw.split(" ")
+        self.command = self.split_raw[0].upper()
+        self.is_move = self.command in ["G0", "G1"]
+
+    def parse_coordinates(self, imperial):
+        if imperial:
+            for bit in self.split_raw:
+                code = bit[0]
+                if code in gcode_parsed_args and len(bit) > 1:
+                    setattr(self, code, 25.4*float(bit[1:]))
+        else:
+            for bit in self.split_raw:
+                code = bit[0]
+                if code in gcode_parsed_args and len(bit) > 1:
+                    setattr(self, code, float(bit[1:]))
+ 
     def __str__(self):
         return self.raw
         
@@ -153,12 +90,12 @@ class Layer(object):
         current_z = 0
 
         for line in self.lines:
-            if line.command() == "G92":
+            if line.command == "G92":
                 current_x = line.x or current_x
                 current_y = line.y or current_y
                 current_z = line.z or current_z    
 
-            if line.is_move():
+            if line.is_move:
                 x = line.x 
                 y = line.y
                 z = line.z
@@ -188,7 +125,9 @@ class Layer(object):
 
 class GCode(object):
     def __init__(self,data):
-        self.lines = [Line(i) for i in data]
+        self.lines = [Line(l2) for l2 in
+                        (l.strip() for l in data)
+                      if l2 and not l2.startswith(";")]
         self._preprocess()
         self._create_layers()
 
@@ -198,24 +137,24 @@ class GCode(object):
         relative = False
         relative_e = False
         for line in self.lines:
-            if line.command() == "G20":
+            if line.command == "G20":
                 imperial = True
-            elif line.command() == "G21":
+            elif line.command == "G21":
                 imperial = False
-            elif line.command() == "G90":
+            elif line.command == "G90":
                 relative = False
                 relative_e = False
-            elif line.command() == "G91":
+            elif line.command == "G91":
                 relative = True
                 relative_e = True
-            elif line.command() == "M82":
+            elif line.command == "M82":
                 relative_e = False
-            elif line.command() == "M83":
+            elif line.command == "M83":
                 relative_e = True
-            elif line.is_move():
-                line.imperial = imperial
+            elif line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e
+            line.parse_coordinates(imperial)
         
     def _create_layers(self):
         self.layers = []
@@ -227,9 +166,9 @@ class GCode(object):
         
         temp_layers = {}
         for line in self.lines:
-            if line.command() == "G92" and line.z != None:
+            if line.command == "G92" and line.z != None:
                 cur_z = line.z
-            elif line.is_move():
+            elif line.is_move:
                 if line.z != None:
                     if line.relative:
                         cur_z += line.z
@@ -263,17 +202,15 @@ class GCode(object):
             cur_lines = temp_layers[idx]
             has_movement = False
             for l in cur_lines:
-                if l.is_move() and l.e != None:
+                if l.is_move and l.e != None:
                     has_movement = True
                     break
             
             if has_movement:
                 self.layers.append(Layer(cur_lines))
-            
 
     def num_layers(self):
         return len(self.layers)
-                
 
     def measure(self):
         xmin = float("inf")
@@ -284,13 +221,13 @@ class GCode(object):
         zmax = float("-inf")
 
         for l in self.layers:
-            xd, yd, zd = l.measure()
-            xmin = min(xd[0], xmin)
-            xmax = max(xd[1], xmax)
-            ymin = min(yd[0], ymin)
-            ymax = max(yd[1], ymax)
-            zmin = min(zd[0], zmin)
-            zmax = max(zd[1], zmax)
+            (xm, xM), (ym, yM), (zm, zM) = l.measure()
+            xmin = min(xm, xmin)
+            xmax = max(xM, xmax)
+            ymin = min(ym, ymin)
+            ymax = max(yM, ymax)
+            zmin = min(zm, zmin)
+            zmax = max(zM, zmax)
 
         self.xmin = xmin
         self.xmax = xmax
@@ -309,9 +246,9 @@ class GCode(object):
         for line in self.lines:
             if line.e == None:
                 continue
-            if line.command() == "G92":
+            if line.command == "G92":
                 cur_e = line.e
-            elif line.is_move():
+            elif line.is_move:
                 if line.relative_e:
                     total_e += line.e
                 else:
@@ -397,7 +334,7 @@ def main():
 #    gcode = GCode(d)
     d = list(open(sys.argv[1]))
     gcode = GCode(d) 
-    
+
     gcode.measure()
 
     print "Dimensions:"
