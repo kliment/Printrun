@@ -19,7 +19,7 @@ import re
 import math
 import datetime
 
-gcode_parsed_args = ["x", "y", "e", "f", "z", "p"]
+gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j"]
 
 class Line(object):
 
@@ -28,6 +28,8 @@ class Line(object):
     z = None
     e = None
     f = None
+    i = None
+    j = None
     
     relative = False
     relative_e = False
@@ -263,7 +265,6 @@ class GCode(object):
         #TODO:
         # get device caps from firmware: max speed, acceleration/axis (including extruder)
         # calculate the maximum move duration accounting for above ;)
-        # self.log(".... estimating ....")
         zs = self.layers.keys()
         zs.sort()
         for z in zs:
@@ -281,7 +282,7 @@ class GCode(object):
                     x = line.x if line.x != None else lastx
                     y = line.y if line.y != None else lasty
                     e = line.e if line.e != None else laste
-                    f = line.f / 60.0 if line.f != None else lastf # mm/s vs mm/m
+                    f = line.f / 60.0 if line.f != None else lastf # mm/s vs mm/m => divide by 60
                     
                     # given last feedrate and current feedrate calculate the distance needed to achieve current feedrate.
                     # if travel is longer than req'd distance, then subtract distance to achieve full speed, and add the time it took to get there.
