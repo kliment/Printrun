@@ -521,7 +521,7 @@ class pronsole(cmd.Cmd):
             #else:
             #    self.log("Removed '"+key+"' from '"+self.rc_filename+"'")
         except Exception, e:
-            self.log("Saving failed for", key+":", str(e))
+            self.log("Saving failed for ", key+":", str(e))
         finally:
             del rci, rco
 
