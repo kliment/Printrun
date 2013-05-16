@@ -56,9 +56,9 @@ class LeftPane(wx.GridBagSizer):
     def __init__(self, root):
         super(LeftPane, self).__init__()
         llts = wx.BoxSizer(wx.HORIZONTAL)
-        self.Add(llts, pos = (0, 0), span = (1, 9))
+        self.Add(llts, pos = (0, 0), span = (1, 6))
         self.xyzsizer = XYZControlsSizer(root)
-        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 8), flag = wx.ALIGN_CENTER)
+        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
         
         for i in root.cpbuttons:
             btn = make_button(root.panel, i.label, root.procbutton, i.tooltip, style = wx.BU_EXACTFIT)
@@ -84,7 +84,7 @@ class LeftPane(wx.GridBagSizer):
 
         root.monitorbox = wx.CheckBox(root.panel,-1, _("Watch"))
         root.monitorbox.SetToolTip(wx.ToolTip("Monitor Temperatures in Graph"))
-        self.Add(root.monitorbox, pos = (2, 6))
+        self.Add(root.monitorbox, pos = (3, 5))
         root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
 
         self.Add(wx.StaticText(root.panel,-1, _("Heat:")), pos = (2, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
@@ -165,8 +165,8 @@ class LeftPane(wx.GridBagSizer):
         root.zfeedc.SetForegroundColour("black")
 
         root.graph = Graph(root.panel, wx.ID_ANY)
-        self.Add(root.graph, pos = (3, 5), span = (3, 3))
-        self.Add(root.tempdisp, pos = (6, 0), span = (1, 9))
+        self.Add(root.graph, pos = (4, 5), span = (2, 1))
+        self.Add(root.tempdisp, pos = (6, 0), span = (1, 6))
 
 class VizPane(wx.BoxSizer):
 
