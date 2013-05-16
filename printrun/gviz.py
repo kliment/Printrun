@@ -21,12 +21,8 @@ ID_ABOUT = 101
 ID_EXIT = 110
 class window(wx.Frame):
     def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
-        wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = (size[0], size[1]))
+        wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = size)
         self.p = gviz(self, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
-
-        if f:
-            gcode = gcoder.GCode(f)
-            self.p.addfile(gcode)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(self, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
@@ -37,7 +33,7 @@ class window(wx.Frame):
         toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
         toolbar.AddSimpleTool(5, wx.EmptyBitmap(16, 16), 'Reset view', '')
         toolbar.AddSeparator()
-        #toolbar.AddSimpleTool(5, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
+        #toolbar.AddSimpleTool(6, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
         toolbar.Realize()
         vbox.Add(toolbar, 0, border = 5)
         self.SetSizer(vbox)
@@ -46,42 +42,22 @@ class window(wx.Frame):
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
-        #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 5)
-
+        #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 6)
 
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
-        #self.bu = wx.Button(self.p,-1, "U", pos = (0, 100), size = (40, 140))
-        #self.bd = wx.Button(self.p,-1, "D", pos = (0, 140), size = (40, 140))
-        #self.bi = wx.Button(self.p,-1, "+", pos = (40, 100), size = (40, 140))
-        #self.bo = wx.Button(self.p,-1, "-", pos = (40, 140), size = (40, 140))
-        #self.bs = wx.Button(self.p, -1, "Inject", pos = (85, 103), size = (50, 20))
 
-        #self.bu.SetToolTip(wx.ToolTip("Move up one layer"))
-        #self.bd.SetToolTip(wx.ToolTip("Move down one layer"))
-        #self.bi.SetToolTip(wx.ToolTip("Zoom view in"))
-        #self.bo.SetToolTip(wx.ToolTip("Zoom view out"))
-        #self.bs.SetToolTip(wx.ToolTip("Insert Code at start of this layer"))
-
-        #self.bu.Bind(wx.EVT_BUTTON, lambda x:self.p.layerup())
-        #self.bd.Bind(wx.EVT_BUTTON, lambda x:self.p.layerdown())
-        #self.bi.Bind(wx.EVT_BUTTON, lambda x:self.p.zoom(200, 200, 1.2))
-        #self.bo.Bind(wx.EVT_BUTTON, lambda x:self.p.zoom(200, 200, 1/1.2))
-        #self.bs.Bind(wx.EVT_BUTTON, lambda x:self.p.inject())
-
-        s = time.time()
-        #print time.time()-s
         self.initpos = [0, 0]
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
-        #self.bu.Bind(wx.EVT_KEY_DOWN, self.key)
-        #self.bd.Bind(wx.EVT_KEY_DOWN, self.key)
-        #self.bi.Bind(wx.EVT_KEY_DOWN, self.key)
-        #self.bo.Bind(wx.EVT_KEY_DOWN, self.key)
         self.Bind(wx.EVT_KEY_DOWN, self.key)
         self.p.Bind(wx.EVT_MOUSEWHEEL, self.zoom)
         self.Bind(wx.EVT_MOUSEWHEEL, self.zoom)
         self.p.Bind(wx.EVT_MOUSE_EVENTS, self.mouse)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.mouse)
+
+        if f:
+            gcode = gcoder.GCode(f)
+            self.p.addfile(gcode)
 
     def resetview(self, event):
         self.p.translate = [0.0, 0.0]
@@ -97,10 +73,9 @@ class window(wx.Frame):
             if self.initpos is None or not hasattr(self, "basetrans"):
                 self.initpos = e
                 self.basetrans = self.p.translate
-            #print self.p.translate, e, self.initpos
             self.p.translate = [ self.basetrans[0]+(e[0]-self.initpos[0]),
                             self.basetrans[1]+(e[1]-self.initpos[1]) ]
-            self.p.repaint()
+            self.p.dirty = 1
             self.p.Refresh()
 
         else:
@@ -146,9 +121,10 @@ class window(wx.Frame):
 
 class gviz(wx.Panel):
     def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
-        wx.Panel.__init__(self, parent,-1, size = (size[0], size[1]))
+        wx.Panel.__init__(self, parent, -1, size = (-1, -1))
         self.parent = parent
         self.size = size
+        self.SetMinSize((300, 300))
         self.build_dimensions = build_dimensions
         self.grid = grid
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
@@ -195,13 +171,14 @@ class gviz(wx.Panel):
         self.layerindex = 0
         self.showall = 0
         self.dirty = 1
-        #self.repaint()
+        self.Refresh()
+
     def layerup(self):
         if(self.layerindex+1<len(self.layers)):
             self.layerindex+=1
             # Display layer info on statusbar (Jezmy)
             self.parent.SetStatusText("Layer "+str(self.layerindex +1)+" - Going Up - Z = "+str(self.layers[self.layerindex])+" mm", 0)
-            self.repaint()
+            self.dirty = 1
             self.Refresh()
 
     def layerdown(self):
@@ -209,13 +186,13 @@ class gviz(wx.Panel):
             self.layerindex-=1
             # Display layer info on statusbar (Jezmy)
             self.parent.SetStatusText("Layer "+str(self.layerindex + 1)+" - Going Down - Z = "+str(self.layers[self.layerindex])+ " mm", 0)
-            self.repaint()
+            self.dirty = 1
             self.Refresh()
 
     def setlayer(self, layer):
         try:
             self.layerindex = self.layers.index(layer)
-            self.repaint()
+            self.dirty = 1
             wx.CallAfter(self.Refresh)
             self.showall = 0
         except:
@@ -238,10 +215,8 @@ class gviz(wx.Panel):
         penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         for pen in self.penslist:
             pen.SetWidth(penwidth)
-        #self.dirty = 1
-        self.repaint()
+        self.dirty = 1
         self.Refresh()
-
 
     def repaint(self):
         self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
@@ -258,7 +233,6 @@ class gviz(wx.Panel):
                     dc.DrawLine(self.translate[0], self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0], self.translate[1]+y*self.scale[1]*grid_unit)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
         if not self.showall:
-            self.size = self.GetSize()
             dc.SetBrush(wx.Brush((43, 144, 255)))
             dc.DrawRectangle(self.size[0]-15, 0, 15, self.size[1])
             dc.SetBrush(wx.Brush((0, 255, 0)))
@@ -310,9 +284,9 @@ class gviz(wx.Panel):
 
     def paint(self, event):
         dc = wx.PaintDC(self)
-        if(self.dirty):
+        if self.dirty:
             self.repaint()
-        self.dirty = 0
+            self.dirty = 0
         sz = self.GetClientSize()
         dc.DrawBitmap(self.blitmap, 0, 0)
         del dc
@@ -375,9 +349,9 @@ class gviz(wx.Panel):
         gcode = gcode.split("*")[0]
         gcode = gcode.split(";")[0]
         gcode = gcode.lower().strip().split()
-        if len(gcode) == 0:
+        if not gcode:
             return
-        if gcode[0][0] == 'n':
+        if gcode[0][0] == 'n': # not sure what this check is for ?
             gcode.pop(0)
 
         def _readgcode():
