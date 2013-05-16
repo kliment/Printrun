@@ -208,8 +208,6 @@ class gviz(wx.Panel):
         newwidth, newheight = [max(1.0, newwidth), max(1.0, newheight)]
         newside = min(newwidth, newheight)
         zoomratio = float(newside) / oldside
-        print newwidth, newheight
-        print zoomratio
         self.size = self.GetClientSize()
         wx.CallAfter(self.zoom, 0, 0, zoomratio)
 
