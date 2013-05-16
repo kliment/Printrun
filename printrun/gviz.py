@@ -316,13 +316,19 @@ class gviz(wx.Panel):
         self.clear()
         self.add_parsed_gcodes(gcode.lines)
 
-    def add_parsed_gcodes(self, lines, hilight = 0):
-        def _readgcode():
+    def add_parsed_gcodes(self, lines):
+        def _y(y):
+            return self.build_dimensions[1] - (y - self.build_dimensions[4])
+        def _x(x):
+            return x - self.build_dimensions[3]
+
+        for gline in lines:
+            if gline.command not in ["G0", "G1", "G2", "G3"]:
+                continue
+            
             target = self.lastpos[:]
             target[5] = 0.0
             target[6] = 0.0
-            if hilight:
-                target = self.hilightpos[:]
             if gline.x != None: target[0] = gline.x
             if gline.y != None: target[1] = gline.y
             if gline.z != None: target[2] = gline.z
@@ -330,51 +336,34 @@ class gviz(wx.Panel):
             if gline.f != None: target[4] = gline.f
             if gline.i != None: target[5] = gline.i
             if gline.j != None: target[6] = gline.j
-            if not hilight:
-                if not target[2] in self.lines.keys():
-                    self.lines[target[2]]=[]
-                    self.pens[target[2]]=[]
-                    self.arcs[target[2]]=[]
-                    self.arcpens[target[2]]=[]
-                    self.layers+=[target[2]]
-            return target
+            z = target[2]
+            if z not in self.layers:
+                self.lines[z] = []
+                self.pens[z] = []
+                self.arcs[z] = []
+                self.arcpens[z] = []
+                self.layers.append(z)
+            
+            start_pos = self.lastpos[:]
 
-        def _y(y):
-            return self.build_dimensions[1] - (y - self.build_dimensions[4])
-        def _x(x):
-            return x - self.build_dimensions[3]
-
-        for gline in lines:
-            start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
-
-            if gline.command in [ "G0", "G1" ]:
-                target = _readgcode()
+            if gline.command in ["G0", "G1"]:
                 line = [ _x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1]) ]
-                if not hilight:
-                    self.lines[ target[2] ] += [line]
-                    self.pens[ target[2] ]  += [self.mainpen if target[3] != self.lastpos[3] else self.travelpen]
-                    self.lastpos = target
-                else:
-                    self.hilight += [line]
-                    self.hilightpos = target
+                self.lines[z].append(line)
+                self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
+                self.lastpos = target
                 self.dirty = 1
 
-            if gline.command in [ "G2", "G3" ]:
-                target = _readgcode()
-                arc = []
-                arc += [ _x(start_pos[0]), _y(start_pos[1]) ]
-                arc += [ _x(target[0]), _y(target[1]) ]
-                arc += [ _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6]) ]  # center
+            if gline.command in ["G2", "G3"]:
+                arc = [_x(start_pos[0]), _y(start_pos[1]),
+                       _x(target[0]), _y(target[1]),
+                       _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6]) ]  # center
+                # FIXME : verify this works : why not reverse endpoints 4, 5
                 if gline.command == "G2":  # clockwise, reverse endpoints
                     arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
-                if not hilight:
-                    self.arcs[ target[2] ]    += [arc]
-                    self.arcpens[ target[2] ] += [self.arcpen]
-                    self.lastpos = target
-                else:
-                    self.hilightarcs += [arc]
-                    self.hilightpos = target
+                self.arcs[z].append(arc)
+                self.arcpens[z].append(self.arcpen)
+                self.lastpos = target
                 self.dirty = 1
 
     def addgcode(self, gcode = "M105", hilight = 0):
