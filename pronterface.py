@@ -46,7 +46,7 @@ from printrun.printrun_utils import pixmapfile, configfile
 from printrun.gui import MainWindow
 import pronsole
 from pronsole import dosify
-import gcoder
+from printrun import gcoder
 
 def parse_temperature_report(report, key):
     if key in report:
