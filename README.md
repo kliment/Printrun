@@ -101,9 +101,10 @@ Run Printrun for source if you want to test out the latest features.
 To use pronterface, you need:
 
   * python (ideally 2.6.x or 2.7.x),
-  * pyserial (or python-serial on ubuntu/debian),
+  * pyserial (or python-serial on ubuntu/debian)
   * pyglet
   * pyreadline (not needed on Linux) and
+  * argparse (installed by default with python >= 2.7)
   * wxPython
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)
