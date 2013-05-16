@@ -190,8 +190,8 @@ class VizPane(wx.BoxSizer):
         root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x:root.gwindow.Hide())
         self.Add(root.gviz, 1, flag = wx.SHAPED)
-        cs = root.centersizer = wx.GridBagSizer()
-        self.Add(cs, 0, flag = wx.EXPAND)
+        root.centersizer = wx.GridBagSizer()
+        self.Add(root.centersizer, 0, flag = wx.EXPAND)
 
 class LogPane(wx.BoxSizer):
 
