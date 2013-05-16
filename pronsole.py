@@ -20,7 +20,7 @@ import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
 from math import sqrt
-import getopt
+import argparse
 
 import printcore
 from printrun.printrun_utils import install_locale
@@ -1208,25 +1208,21 @@ class pronsole(cmd.Cmd):
         self.log("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)")
 
     def parse_cmdline(self, args):
-        opts, args = getopt.getopt(args, "c:e:hw", ["conf = ", "config = ", "help"])
-        for o, a in opts:
-            if o in ("-c", "--conf", "--config"):
-                self.load_rc(a)
-            elif o in ("-h", "--help"):
-                self.log("Usage: "+sys.argv[0]+' [-c filename [-c filename2 ... ] ] [-e "command" ...]')
-                self.log("  -c | --conf | --config   - override startup .pronsolerc file")
-                self.log("     may chain config files, settings auto-save will go into last file in the chain")
-                self.log('  -e <command> - executes command after configuration/.pronsolerc is loaded')
-                self.log("     macros/settings from these commands are not autosaved")
-                sys.exit()
+        parser = argparse.ArgumentParser(description = 'Printrun 3D printer interface')
+        parser.add_argument('-c','--conf','--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
+        parser.add_argument('-e','--execute', help = _("executes command after configuration/.pronsolerc is loaded ; macros/settings from these commands are not autosaved"), action = "append", default = [])
+        parser.add_argument('filename', nargs='?', help = _("file to load"))
+        args = parser.parse_args()
+        for config in args.conf:
+            self.load_rc(config)
         if not self.rc_loaded:
             self.load_default_rc()
-        for o, a in opts:
-            if o == "-e":
-                self.processing_args = True
-                self.onecmd(a)
-                self.processing_args = False
-
+        self.processing_args = True
+        for command in args.execute:
+            self.onecmd(command)
+        self.processing_args = False
+        if args.filename:
+            self.do_load(args.filename)
 
     # We replace this function, defined in cmd.py .
     # It's default behavior with reagrds to Ctr-C
