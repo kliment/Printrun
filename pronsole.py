@@ -20,6 +20,7 @@ import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
 from math import sqrt
+import getopt
 
 import printcore
 from printrun.printrun_utils import install_locale
@@ -179,9 +180,6 @@ class pronsole(cmd.Cmd):
         self.helpdict["z_feedrate"] = _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")
         self.helpdict["final_command"] = _("Executable to run when the print is finished")
         self.commandprefixes='MGT$'
-        self.webrequested = False
-        self.web_config = None
-        self.web_auth_config = None
         self.promptstrs = {"offline" : "%(bold)suninitialized>%(normal)s ",
                           "fallback" : "%(bold)sPC>%(normal)s ", 
                           "macro"    : "%(bold)s..>%(normal)s ",
@@ -1210,10 +1208,8 @@ class pronsole(cmd.Cmd):
         self.log("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)")
 
     def parse_cmdline(self, args):
-        import getopt
         opts, args = getopt.getopt(args, "c:e:hw", ["conf = ", "config = ", "help"])
         for o, a in opts:
-            #self.log(repr((o, a)))
             if o in ("-c", "--conf", "--config"):
                 self.load_rc(a)
             elif o in ("-h", "--help"):
