@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 import wx, time
+from printrun import gcoder
 
 from printrun_utils import imagefile
 
@@ -22,6 +23,10 @@ class window(wx.Frame):
     def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
         wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = (size[0], size[1]))
         self.p = gviz(self, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
+
+        if f:
+            gcode = gcoder.GCode(f)
+            self.p.addfile(gcode)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(self, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
@@ -443,8 +448,8 @@ class gviz(wx.Panel):
             self.dirty = 1
 
 if __name__ == '__main__':
+    import sys
     app = wx.App(False)
-    #main = window(open("/home/kliment/designs/spinner/arm_export.gcode"))
-    main = window(open("jam.gcode"))
+    main = window(open(sys.argv[1]))
     main.Show()
     app.MainLoop()
