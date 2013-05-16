@@ -336,7 +336,6 @@ class gviz(wx.Panel):
                 self.lines[z].append(line)
                 self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
                 self.lastpos = target
-                self.dirty = 1
 
             if gline.command in ["G2", "G3"]:
                 arc = [_x(start_pos[0]), _y(start_pos[1]),
@@ -349,7 +348,7 @@ class gviz(wx.Panel):
                 self.arcs[z].append(arc)
                 self.arcpens[z].append(self.arcpen)
                 self.lastpos = target
-                self.dirty = 1
+        self.dirty = 1
 
     def addgcode(self, gcode = "M105", hilight = 0):
         gcode = gcode.split("*")[0]
