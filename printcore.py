@@ -461,12 +461,12 @@ if __name__ == '__main__':
     try:
         if statusreport:
             p.loud = False
-            sys.stdout.write("Progress: 00.0%")
+            sys.stdout.write("Progress: 00.0%\r")
             sys.stdout.flush()
         while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("%02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),) )
+                sys.stdout.write("Progress: %02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),) )
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)
