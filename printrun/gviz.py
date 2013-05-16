@@ -123,6 +123,17 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1/1.2)
 
 class gviz(wx.Panel):
+
+    # Mark canvas as dirty when setting showall
+    _showall = 0
+    def _get_showall(self):
+        return self._showall
+    def _set_showall(self, showall):
+        if showall != self._showall:
+            self.dirty = 1
+            self._showall = showall
+    showall = property(_get_showall, _set_showall)
+
     def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
         wx.Panel.__init__(self, parent, -1, size = size)
         self.SetMinSize((150, 150))
@@ -291,8 +302,8 @@ class gviz(wx.Panel):
     def paint(self, event):
         dc = wx.PaintDC(self)
         if self.dirty:
-            self.repaint()
             self.dirty = 0
+            self.repaint()
         sz = self.GetClientSize()
         dc.DrawBitmap(self.blitmap, 0, 0)
         del dc
