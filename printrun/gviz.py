@@ -43,8 +43,8 @@ class window(wx.Frame):
         vbox.Add(self.p, 1, wx.EXPAND)
         self.SetSizer(vbox)
         self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1.2), id = 1)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1/1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1.2), id = 1)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1/1.2), id = 2)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
@@ -211,6 +211,9 @@ class gviz(wx.Panel):
         wx.CallAfter(self.zoom, 0, 0, zoomratio)
 
     def zoom(self, x, y, factor):
+        if x == -1 and y == -1:
+            side = min(self.size)
+            x = y = side / 2
         self.scale = [s * factor for s in self.scale]
 
         self.translate = [ x - (x-self.translate[0]) * factor,
