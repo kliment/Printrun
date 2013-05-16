@@ -1288,15 +1288,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (gcode.ymin, gcode.ymax, gcode.depth)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (gcode.zmin, gcode.zmax, gcode.height)
         print _("Estimated duration (pessimistic): "), gcode.estimate_duration()
-        #import time
-        #t0 = time.time()
         self.gviz.clear()
         self.gwindow.p.clear()
-        self.gviz.addfile(self.f)
-        #print "generated 2d view in %f s"%(time.time()-t0)
-        #t0 = time.time()
-        self.gwindow.p.addfile(self.f)
-        #print "generated 3d view in %f s"%(time.time()-t0)
+        self.gviz.addfile(gcode)
+        self.gwindow.p.addfile(gcode)
         self.gviz.showall = 1
         wx.CallAfter(self.gviz.Refresh)
 
