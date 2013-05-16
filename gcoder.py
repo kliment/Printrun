@@ -194,8 +194,6 @@ class GCode(object):
                 if l.is_move and l.e != None:
                     has_movement = True
                     break
-            if idx > 15:
-                print idx, has_movement, cur_lines
             if has_movement:
                 layers[idx] = Layer(layers[idx])
             else:
