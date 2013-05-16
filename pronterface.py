@@ -205,7 +205,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def endcb(self):
         if self.p.queueindex == 0:
             print_duration = int(time.time () - self.starttime + self.extra_print_time)
-            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()))
+            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
                                                                              "duration": format_duration(print_duration)}
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
