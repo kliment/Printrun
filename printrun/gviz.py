@@ -22,6 +22,10 @@ ID_EXIT = 110
 class window(wx.Frame):
     def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
         wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = size)
+
+        self.CreateStatusBar(1);
+        self.SetStatusText("Layer number and Z position show here when you scroll");
+
         self.p = gviz(self, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -36,16 +40,15 @@ class window(wx.Frame):
         #toolbar.AddSimpleTool(6, wx.Image('./images/inject.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
         toolbar.Realize()
         vbox.Add(toolbar, 0, border = 5)
+        vbox.Add(self.p, 1, wx.EXPAND)
         self.SetSizer(vbox)
+        self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
         self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1/1.2), id = 2)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
         #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 6)
-
-        self.CreateStatusBar(1);
-        self.SetStatusText("Layer number and Z position show here when you scroll");
 
         self.initpos = [0, 0]
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
@@ -121,10 +124,10 @@ class window(wx.Frame):
 
 class gviz(wx.Panel):
     def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
-        wx.Panel.__init__(self, parent, -1, size = (-1, -1))
+        wx.Panel.__init__(self, parent, -1, size = size)
+        self.SetMinSize((150, 150))
         self.parent = parent
         self.size = size
-        self.SetMinSize((300, 300))
         self.build_dimensions = build_dimensions
         self.grid = grid
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
@@ -199,13 +202,16 @@ class gviz(wx.Panel):
             pass
 
     def resize(self, event):
-        size = self.GetClientSize()
-        size = [max(1.0, size[0]), max(1.0, size[1])]
-        self.size = [max(1.0, self.size[0]), max(1.0, self.size[1])]
-        newsize = min(float(size[0])/self.size[0], float(size[1])/self.size[1])
+        oldwidth, oldheight = max(1.0, self.size[0]), max(1.0, self.size[1])
+        oldside = min(oldwidth, oldheight)
+        newwidth, newheight = self.GetClientSizeTuple()
+        newwidth, newheight = [max(1.0, newwidth), max(1.0, newheight)]
+        newside = min(newwidth, newheight)
+        zoomratio = float(newside) / oldside
+        print newwidth, newheight
+        print zoomratio
         self.size = self.GetClientSize()
-        wx.CallAfter(self.zoom, 0, 0, newsize)
-
+        wx.CallAfter(self.zoom, 0, 0, zoomratio)
 
     def zoom(self, x, y, factor):
         self.scale = [s * factor for s in self.scale]
