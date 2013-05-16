@@ -199,6 +199,7 @@ class LogPane(wx.BoxSizer):
         super(LogPane, self).__init__(wx.VERTICAL)
         root.lowerrsizer = self
         root.logbox = wx.TextCtrl(root.panel, style = wx.TE_MULTILINE, size = (350,-1))
+        root.logbox.SetMinSize((100,-1))
         root.logbox.SetEditable(0)
         self.Add(root.logbox, 1, wx.EXPAND)
         lbrs = wx.BoxSizer(wx.HORIZONTAL)
@@ -263,10 +264,10 @@ class MainWindow(wx.Frame):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
         self.uppersizer = MainToolbar(self)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.lowersizer.Add(LeftPane(self))
+        self.lowersizer.Add(LeftPane(self), 0)
         self.lowersizer.Add(VizPane(self), 1, wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
-        self.lowersizer.Add(LogPane(self), 0, wx.EXPAND)
-        self.mainsizer.Add(self.uppersizer)
+        self.lowersizer.Add(LogPane(self), 1, wx.EXPAND)
+        self.mainsizer.Add(self.uppersizer, 0)
         self.mainsizer.Add(self.lowersizer, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
         self.status = self.CreateStatusBar()
@@ -276,6 +277,12 @@ class MainWindow(wx.Frame):
 
         self.mainsizer.Layout()
         self.mainsizer.Fit(self)
+        # This prevents resizing below a reasonnable value
+        # We sum the lowersizer (left pane / viz / log) min size
+        # the toolbar height and the statusbar/menubar sizes
+        minsize = self.lowersizer.GetMinSize() # lower pane
+        minsize[1] += self.uppersizer.GetMinSize()[1] # toolbar height
+        self.SetMinSize(self.ClientToWindowSize(minsize)) # client to window
 
         # disable all printer controls until we connect to a printer
         self.pausebtn.Disable()
