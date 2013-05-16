@@ -371,10 +371,6 @@ class gviz(wx.Panel):
             return
         gline = gcoder.Line(gcode)
         gline.parse_coordinates(False)
-        # FIXME by iXce : I commented this code out as I have no clue what it does,
-        # but it should be looked at
-        #if gcode[0][0] == 'n': # not sure what this check is for ?
-        #    gcode.pop(0)
 
         def _y(y):
             return self.build_dimensions[1] - (y - self.build_dimensions[4])
