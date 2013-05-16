@@ -51,6 +51,9 @@ class Line(object):
         self.is_move = self.command in ["G0", "G1"]
 
     def parse_coordinates(self, imperial):
+        # Not a G-line, we don't want to parse its arguments
+        if not self.command[0] == "G":
+            return
         if imperial:
             for bit in self.split_raw:
                 code = bit[0]
