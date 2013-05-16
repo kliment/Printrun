@@ -204,9 +204,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def endcb(self):
         if self.p.queueindex == 0:
-            print "Print ended at: " + format_time(time.time())
             print_duration = int(time.time () - self.starttime + self.extra_print_time)
-            print "and took: " + format_duration(print_duration)
+            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()))
+                                                                             "duration": format_duration(print_duration)}
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
@@ -591,7 +591,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
     def showwin(self, event):
-        if(self.f is not None):
+        if self.f is not None:
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
             self.gwindow.Raise()
@@ -1018,8 +1018,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         try:
             self.logbox.AppendText(text)
         except:
-            print "attempted to write invalid text to console"
-            pass
+            print _("Attempted to write invalid text to console, which could be due to an invalid baudrate")
 
     def setloud(self,e):
         self.p.loud=e.IsChecked()
@@ -1519,5 +1518,5 @@ if __name__ == '__main__':
     main.Show()
     try:
         app.MainLoop()
-    except:
+    except KeyboardInterrupt:
         pass
