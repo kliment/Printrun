@@ -318,10 +318,19 @@ class gviz(wx.Panel):
             target = self.lastpos[:]
             target[5] = 0.0
             target[6] = 0.0
-            if gline.x != None: target[0] = gline.x
-            if gline.y != None: target[1] = gline.y
-            if gline.z != None: target[2] = gline.z
-            if gline.e != None: target[3] = gline.e
+            if gline.relative:
+                if gline.x != None: target[0] += gline.x
+                if gline.y != None: target[1] += gline.y
+                if gline.z != None: target[2] += gline.z
+            else:
+                if gline.x != None: target[0] = gline.x
+                if gline.y != None: target[1] = gline.y
+                if gline.z != None: target[2] = gline.z
+            if gline.e != None:
+                if gline.relative_e:
+                    target[3] += gline.e
+                else:
+                    target[3] = gline.e
             if gline.f != None: target[4] = gline.f
             if gline.i != None: target[5] = gline.i
             if gline.j != None: target[6] = gline.j
