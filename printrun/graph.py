@@ -79,8 +79,7 @@ class Graph(BufferedCanvas):
         #b = gc.CreateLinearGradientBrush(0, 0, w, h, col1, col2)
 
         gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 4))
-        #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(245, 245, 255, 252))))
-        #gc.SetBrush(b)
+        gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0, 0, 0))))
         gc.DrawRectangle(0, 0, self.width, self.height)
 
         #gc.SetBrush(wx.Brush(wx.Colour(245, 245, 255, 52)))
