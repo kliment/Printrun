@@ -256,7 +256,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if "S" in line:
                 try:
                     temp = float(line.split("S")[1].split("*")[0])
-                    #self.hottgauge.SetTarget(temp)
+                    if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                     wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
                 except:
                     pass
@@ -268,7 +268,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if "S" in line:
                 try:
                     temp = float(line.split("S")[1].split("*")[0])
-                    #self.bedtgauge.SetTarget(temp)
+                    if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                     wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
                 except:
                     pass
@@ -295,7 +295,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def setbedgui(self, f):
         self.bsetpoint = f
-        #self.bedtgauge.SetTarget(int(f))
+        if self.display_gauges: self.bedtgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetBedTargetTemperature, int(f))
         if f>0:
             wx.CallAfter(self.btemp.SetValue, str(f))
@@ -315,7 +315,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def sethotendgui(self, f):
         self.hsetpoint = f
-        #self.hottgauge.SetTarget(int(f))
+        if self.display_gauges: self.hottgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetExtruder0TargetTemperature, int(f))
         if f > 0:
             wx.CallAfter(self.htemp.SetValue, str(f))
@@ -1040,17 +1040,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def clearOutput(self, e):
         self.logbox.Clear()
 
+    def update_tempdisplay(self):
+        try:
+            hotend_temp = parse_temperature_report(self.tempreport, "T:")
+            wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
+            if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
+            bed_temp = parse_temperature_report(self.tempreport, "B:")
+            wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
+            if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
+        except:
+            traceback.print_exc()
+
     def statuschecker(self):
         while self.statuscheck:
             string = ""
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
-            try:
-                #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
-                wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
-                #self.bedtgauge.SetValue(parse_temperature_report(self.tempreport, "B:"))
-                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
-            except:
-                pass
+            self.update_tempdisplay()
             fractioncomplete = 0.0
             if self.sdprinting:
                 fractioncomplete = float(self.percentdone / 100.0)
@@ -1111,12 +1116,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if "T:" in l:
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
-            try:
-                #self.hottgauge.SetValue(parse_temperature_report(self.tempreport, "T:"))
-                wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
-                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
-            except:
-                traceback.print_exc()
+            self.update_tempdisplay()
         tstring = l.rstrip()
         #print tstring
         if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring) and (not self.p.loud):

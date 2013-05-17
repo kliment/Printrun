@@ -26,6 +26,7 @@ from printrun import gviz
 from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
+from printrun.pronterface_widgets import TempGauge
 
 def make_button(parent, label, callback, tooltip, container = None, size = wx.DefaultSize, style = 0):
     button = wx.Button(parent, -1, label, style = style, size = size)
@@ -144,8 +145,6 @@ class LeftPane(wx.GridBagSizer):
         if( '(' not in root.htemp.Value):
             root.htemp.SetValue(root.htemp.Value + ' (user)')
 
-        #self.Add(root.btemp, pos = (4, 1), span = (1, 3))
-        #self.Add(root.setbbtn, pos = (4, 4), span = (1, 2))
         root.tempdisp = wx.StaticText(root.panel,-1, "")
 
         root.edist = wx.SpinCtrl(root.panel,-1, "5", min = 0, max = 1000, size = (60,-1))
@@ -165,22 +164,33 @@ class LeftPane(wx.GridBagSizer):
         root.zfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
         root.zfeedc.SetBackgroundColour((180, 255, 180))
         root.zfeedc.SetForegroundColour("black")
-        # self.Add((10, 0), pos = (0, 11), span = (1, 1))
 
-        #root.hottgauge = TempGauge(root.panel, size = (200, 24), title = _("Heater:"), maxval = 230)
-        #self.Add(root.hottgauge, pos = (7, 0), span = (1, 4))
-        #root.bedtgauge = TempGauge(root.panel, size = (200, 24), title = _("Bed:"), maxval = 130)
-        #self.Add(root.bedtgauge, pos = (8, 0), span = (1, 4))
-        #def scroll_setpoint(e):
-        #   if e.GetWheelRotation()>0:
-        #       root.do_settemp(str(root.hsetpoint+1))
-        #   elif e.GetWheelRotation()<0:
-        #       root.do_settemp(str(max(0, root.hsetpoint-1)))
-        #root.tgauge.Bind(wx.EVT_MOUSEWHEEL, scroll_setpoint)
+        root.display_gauges = True # FIXME : move to options or CLI options
+        if root.display_gauges:
+            root.hottgauge = TempGauge(root.panel, size = (200, 24), title = _("Heater:"), maxval = 300)
+            self.Add(root.hottgauge, pos = (6, 0), span = (1, 6))
+            root.bedtgauge = TempGauge(root.panel, size = (200, 24), title = _("Bed:"), maxval = 150)
+            self.Add(root.bedtgauge, pos = (7, 0), span = (1, 6))
+            def hotendgauge_scroll_setpoint(e):
+                rot = e.GetWheelRotation()
+                if rot > 0:
+                    root.do_settemp(str(root.hsetpoint + 1))
+                elif rot < 0:
+                    root.do_settemp(str(max(0, root.hsetpoint - 1)))
+            def bedgauge_scroll_setpoint(e):
+                rot = e.GetWheelRotation()
+                if rot > 0:
+                    root.do_settemp(str(root.bsetpoint + 1))
+                elif rot < 0:
+                    root.do_settemp(str(max(0, root.bsetpoint - 1)))
+            root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
+            root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
+            self.Add(root.tempdisp, pos = (8, 0), span = (1, 6))
+        else:
+            self.Add(root.tempdisp, pos = (6, 0), span = (1, 6))
 
         root.graph = Graph(root.panel, wx.ID_ANY)
         self.Add(root.graph, pos = (4, 5), span = (2, 1))
-        self.Add(root.tempdisp, pos = (6, 0), span = (1, 6))
 
 class VizPane(wx.BoxSizer):
 
