@@ -239,7 +239,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if "G1" in line:
             if "Z" in line:
                 try:
-                    layer = float(line.split("Z")[1].split()[0])
+                    layer = float(line.split("Z")[1].split()[0].split("*")[0])
                     if layer != self.curlayer:
                         self.curlayer = layer
                         self.gviz.hilight = []
