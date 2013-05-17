@@ -236,7 +236,6 @@ class TempGauge(wx.Panel):
 
     def SetTarget(self, value):
         self.setpoint = value
-        self.recalc()
         wx.CallAfter(self.Refresh)
 
     def interpolatedColour(self, val, vmin, vmid, vmax, cmin, cmid, cmax):
@@ -252,6 +251,8 @@ class TempGauge(wx.Panel):
         return wx.Colour(*map(int, rgb))
 
     def paint(self, ev):
+        self.width, self.height = self.GetClientSizeTuple()
+        self.recalc()
         x0, y0, x1, y1, xE, yE = 1, 1, self.ypt+1, 1, self.width+1-2, 20
         dc = wx.PaintDC(self)
         dc.SetBackground(wx.Brush((255, 255, 255)))

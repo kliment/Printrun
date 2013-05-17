@@ -166,10 +166,10 @@ class LeftPane(wx.GridBagSizer):
         root.zfeedc.SetForegroundColour("black")
 
         if root.display_gauges:
-            root.hottgauge = TempGauge(root.panel, size = (200, 24), title = _("Heater:"), maxval = 300)
-            self.Add(root.hottgauge, pos = (6, 0), span = (1, 6))
-            root.bedtgauge = TempGauge(root.panel, size = (200, 24), title = _("Bed:"), maxval = 150)
-            self.Add(root.bedtgauge, pos = (7, 0), span = (1, 6))
+            root.hottgauge = TempGauge(root.panel, size = (-1, 24), title = _("Heater:"), maxval = 300)
+            self.Add(root.hottgauge, pos = (6, 0), span = (1, 6), flag = wx.EXPAND)
+            root.bedtgauge = TempGauge(root.panel, size = (-1, 24), title = _("Bed:"), maxval = 150)
+            self.Add(root.bedtgauge, pos = (7, 0), span = (1, 6), flag = wx.EXPAND)
             def hotendgauge_scroll_setpoint(e):
                 rot = e.GetWheelRotation()
                 if rot > 0:
