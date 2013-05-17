@@ -198,6 +198,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.filename is not None:
             self.do_load(self.filename)
 
+    def add_cmdline_arguments(self, parser):
+        pronsole.pronsole.add_cmdline_arguments(self, parser)
+        parser.add_argument('-g','--gauges', help = _("display graphical temperature gauges in addition to the temperatures graph"), action = "store_true")
+
+    def process_cmdline_arguments(self, args):
+        pronsole.pronsole.process_cmdline_arguments(self, args)
+        self.display_gauges = args.gauges
+
     def startcb(self):
         self.starttime = time.time()
         print "Print Started at: " + format_time(self.starttime)

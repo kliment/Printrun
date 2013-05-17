@@ -165,7 +165,6 @@ class LeftPane(wx.GridBagSizer):
         root.zfeedc.SetBackgroundColour((180, 255, 180))
         root.zfeedc.SetForegroundColour("black")
 
-        root.display_gauges = True # FIXME : move to options or CLI options
         if root.display_gauges:
             root.hottgauge = TempGauge(root.panel, size = (200, 24), title = _("Heater:"), maxval = 300)
             self.Add(root.hottgauge, pos = (6, 0), span = (1, 6))
