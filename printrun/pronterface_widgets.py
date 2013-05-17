@@ -269,8 +269,8 @@ class TempGauge(wx.Panel):
         gc.SetBrush(gc.CreateRadialGradientBrush(x0+6, 17, x0+6, 17, 8, shadow1, shadow2))
         gc.DrawRectangle(0, 17, x0+6, 8)
         # edges
-        gc.SetBrush(gc.CreateLinearGradientBrush(xE-13, 0, xE-6, 0, shadow1, shadow2))
-        gc.DrawRectangle(xE-6, 9, 10, 8)
+        gc.SetBrush(gc.CreateLinearGradientBrush(xE-6, 0, xE+1, 0, shadow1, shadow2))
+        gc.DrawRectangle(xE-7, 9, 8, 8)
         gc.SetBrush(gc.CreateLinearGradientBrush(x0, yE-2, x0, yE+5, shadow1, shadow2))
         gc.DrawRectangle(x0+6, yE-2, xE-12, 7)
         # draw gauge background
