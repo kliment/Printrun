@@ -144,6 +144,8 @@ class LeftPane(wx.GridBagSizer):
         if( '(' not in root.htemp.Value):
             root.htemp.SetValue(root.htemp.Value + ' (user)')
 
+        #self.Add(root.btemp, pos = (4, 1), span = (1, 3))
+        #self.Add(root.setbbtn, pos = (4, 4), span = (1, 2))
         root.tempdisp = wx.StaticText(root.panel,-1, "")
 
         root.edist = wx.SpinCtrl(root.panel,-1, "5", min = 0, max = 1000, size = (60,-1))
@@ -163,6 +165,18 @@ class LeftPane(wx.GridBagSizer):
         root.zfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
         root.zfeedc.SetBackgroundColour((180, 255, 180))
         root.zfeedc.SetForegroundColour("black")
+        # self.Add((10, 0), pos = (0, 11), span = (1, 1))
+
+        #root.hottgauge = TempGauge(root.panel, size = (200, 24), title = _("Heater:"), maxval = 230)
+        #self.Add(root.hottgauge, pos = (7, 0), span = (1, 4))
+        #root.bedtgauge = TempGauge(root.panel, size = (200, 24), title = _("Bed:"), maxval = 130)
+        #self.Add(root.bedtgauge, pos = (8, 0), span = (1, 4))
+        #def scroll_setpoint(e):
+        #   if e.GetWheelRotation()>0:
+        #       root.do_settemp(str(root.hsetpoint+1))
+        #   elif e.GetWheelRotation()<0:
+        #       root.do_settemp(str(max(0, root.hsetpoint-1)))
+        #root.tgauge.Bind(wx.EVT_MOUSEWHEEL, scroll_setpoint)
 
         root.graph = Graph(root.panel, wx.ID_ANY)
         self.Add(root.graph, pos = (4, 5), span = (2, 1))
