@@ -131,6 +131,7 @@ class GCode(object):
     lines = None
     layers = None
     all_layers = None
+    idxs = None
 
     def __init__(self,data):
         self.lines = [Line(l2) for l2 in
@@ -169,6 +170,10 @@ class GCode(object):
     def _create_layers(self):
         layers = {}
         all_layers = []
+        idxs = []
+
+        layer_id = 0
+        layer_line = 0
 
         prev_z = None
         cur_z = 0
@@ -189,8 +194,12 @@ class GCode(object):
                 old_lines += cur_lines
                 layers[prev_z] = old_lines
                 cur_lines = []
+                layer_id += 1
+                layer_line = 0
 
             cur_lines.append(line)
+            idxs.append((layer_id, layer_line))
+            layer_line += 1
             prev_z = cur_z
 
         if cur_lines:
@@ -213,6 +222,7 @@ class GCode(object):
 
         self.all_layers = all_layers
         self.layers = layers
+        self.idxs = idxs
 
     def num_layers(self):
         return len(self.layers)
