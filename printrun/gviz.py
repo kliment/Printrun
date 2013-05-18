@@ -376,12 +376,12 @@ class gviz(wx.Panel):
         def _x(x):
             return x - self.build_dimensions[3]
 
-        start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
-
         if gline.command not in ["G0", "G1", "G2", "G3"]:
             return
+
+        start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
         
-        target = self.hilightpos[:] if hilight else self.lastpos[:]
+        target = start_pos[:]
         target[5] = 0.0
         target[6] = 0.0
         if gline.x != None: target[0] = gline.x
