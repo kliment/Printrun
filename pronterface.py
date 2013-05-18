@@ -1145,13 +1145,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             self.update_tempdisplay()
         tstring = l.rstrip()
-        #print tstring
-        if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring) and (not self.p.loud):
-           # print "*"+tstring+"*"
-           # print "[" + time.strftime('%H:%M:%S',time.localtime(time.time())) + "] " + tstring
+        if self.p.loud or (tstring not in ["ok", "wait"] and "ok T:" not in tstring and "ok C:" not in tstring):
             wx.CallAfter(self.addtexttolog, tstring + "\n");
-        for i in self.recvlisteners:
-            i(l)
+        for listener in self.recvlisteners:
+            listener(l)
 
     def listfiles(self, line):
         if "Begin file list" in line:
