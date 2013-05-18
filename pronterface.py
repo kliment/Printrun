@@ -1039,7 +1039,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.addtexttolog, ">>>" + command + "\n");
         self.onecmd(str(command))
         self.commandbox.SetSelection(0, len(command))
-        self.commandbox.history+=[command]
+        self.commandbox.history.append(command)
         self.commandbox.histindex = len(self.commandbox.history)
 
     def clearOutput(self, e):
