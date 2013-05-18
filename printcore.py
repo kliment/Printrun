@@ -20,6 +20,7 @@ from threading import Thread
 from select import error as SelectError
 import time, getopt, sys
 import platform, os
+from collections import deque
 from GCodeAnalyzer import GCodeAnalyzer
 
 def control_ttyhup(port, disable_hup):
@@ -54,7 +55,7 @@ class printcore():
         self.resendfrom = -1
         self.paused = False
         self.sentlines = {}
-        self.log = []
+        self.log = deque(maxlen = 10000)
         self.sent = []
         self.tempcb = None #impl (wholeline)
         self.recvcb = None #impl (wholeline)
@@ -342,7 +343,7 @@ class printcore():
         while self.printing and self.printer and self.online:
             self._sendnext()
         self.sentlines = {}
-        self.log = []
+        self.log.clear()
         self.sent = []
         try:
           self.print_thread.join()
