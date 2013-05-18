@@ -376,9 +376,8 @@ class printcore():
             self.resendfrom += 1
             return
         self.resendfrom = -1
-        for i in self.priqueue[:]:
-            self._send(i)
-            del self.priqueue[0]
+        if self.priqueue:
+            self._send(self.priqueue.pop(0))
             return
         if self.printing and self.queueindex < len(self.mainqueue):
             tline = self.mainqueue[self.queueindex]
