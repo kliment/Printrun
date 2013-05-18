@@ -1311,7 +1311,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 threading.Thread(target = self.loadviz).start()
 
     def loadviz(self):
-        gcode = gcoder.GCode(self.f)
+        gcode = self.fgcode
         gcode.measure()
         print gcode.filament_length(), _("mm of filament used in this print\n")
         print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (gcode.xmin, gcode.xmax, gcode.width)

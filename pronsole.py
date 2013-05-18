@@ -24,6 +24,7 @@ import argparse
 
 import printcore
 from printrun.printrun_utils import install_locale
+from printrun import gcoder
 install_locale('pronterface')
 
 if os.name == "nt":
@@ -146,6 +147,7 @@ class pronsole(cmd.Cmd):
         self.in_macro = False
         self.p.onlinecb = self.online
         self.f = None
+        self.fgcode = None
         self.listing = 0
         self.sdfiles = []
         self.paused = False
@@ -581,20 +583,21 @@ class pronsole(cmd.Cmd):
     def help_disconnect(self):
         self.log("Disconnects from the printer")
 
-    def do_load(self,l):
-        self._do_load(l)
+    def do_load(self, filename):
+        self._do_load(filename)
 
-    def _do_load(self,l):
-        if len(l)==0:
+    def _do_load(self, filename):
+        if not filename:
             self.log("No file name given.")
             return
-        self.log("Loading file:"+l)
-        if not(os.path.exists(l)):
+        self.log("Loading file:" + filename)
+        if not os.path.exists(filename):
             self.log("File not found!")
             return
-        self.f = [i.replace("\n", "").replace("\r", "") for i in open(l)]
-        self.filename = l
-        self.log("Loaded ", l, ", ", len(self.f)," lines.")
+        self.f = [line.strip() for line in open(filename)]
+        self.fgcode = gcoder.GCode(self.f)
+        self.filename = filename
+        self.log("Loaded %s, %d lines." % (filename, len(self.f)))
 
     def complete_load(self, text, line, begidx, endidx):
         s = line.split()
