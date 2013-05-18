@@ -21,6 +21,7 @@ import datetime
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j"]
 gcode_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
+move_gcodes = ["G0", "G1", "G2", "G3"]
 
 class Line(object):
 
@@ -49,7 +50,7 @@ class Line(object):
             self.raw = self.raw.split(";")[0].rstrip()
         self.split_raw = gcode_exp.findall(self.raw)
         self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1]
-        self.is_move = self.command in ["G0", "G1"]
+        self.is_move = self.command in move_gcodes
 
     def parse_coordinates(self, imperial):
         # Not a G-line, we don't want to parse its arguments
@@ -92,11 +93,6 @@ class Layer(object):
         current_z = 0
 
         for line in self.lines:
-            if line.command == "G92":
-                current_x = line.x or current_x
-                current_y = line.y or current_y
-                current_z = line.z or current_z    
-
             if line.is_move:
                 x = line.x 
                 y = line.y
@@ -122,6 +118,11 @@ class Layer(object):
                 current_y = y or current_y
                 current_z = z or current_z
 
+            elif line.command == "G92":
+                current_x = line.x or current_x
+                current_y = line.y or current_y
+                current_z = line.z or current_z    
+
         return (xmin, xmax), (ymin, ymax), (zmin, zmax)
 
 class GCode(object):
@@ -142,7 +143,10 @@ class GCode(object):
         relative = False
         relative_e = False
         for line in self.lines:
-            if line.command == "G20":
+            if line.is_move:
+                line.relative = relative
+                line.relative_e = relative_e
+            elif line.command == "G20":
                 imperial = True
             elif line.command == "G21":
                 imperial = False
@@ -156,10 +160,8 @@ class GCode(object):
                 relative_e = False
             elif line.command == "M83":
                 relative_e = True
-            elif line.is_move:
-                line.relative = relative
-                line.relative_e = relative_e
-            line.parse_coordinates(imperial)
+            if line.command[0] == "G":
+                line.parse_coordinates(imperial)
     
     # FIXME : looks like this needs to be tested with list Z on move
     def _create_layers(self):
@@ -243,15 +245,15 @@ class GCode(object):
         for line in self.lines:
             if line.e == None:
                 continue
-            if line.command == "G92":
-                cur_e = line.e
-            elif line.is_move:
+            if line.is_move:
                 if line.relative_e:
                     total_e += line.e
                 else:
                     total_e += line.e - cur_e
                     cur_e = line.e
                 max_e = max(max_e, total_e)
+            elif line.command == "G92":
+                cur_e = line.e
 
         return max_e
 
@@ -274,7 +276,7 @@ class GCode(object):
         for z in zs:
             layer = self.layers[z]
             for line in layer.lines:
-                if line.command not in ["G4", "G1"]:
+                if line.command not in ["G1", "G0", "G4"]:
                     continue
                 if line.command == "G4":
                     moveduration = line.p
@@ -282,7 +284,7 @@ class GCode(object):
                         continue
                     else:
                         moveduration /= 1000.0
-                elif line.command == "G1":
+                else:
                     x = line.x if line.x != None else lastx
                     y = line.y if line.y != None else lasty
                     e = line.e if line.e != None else laste
@@ -321,9 +323,7 @@ def main():
     if len(sys.argv) < 2:
         print "usage: %s filename.gcode" % sys.argv[0]
         return
-
-#    d = [i.replace("\n","") for i in open(sys.argv[1])]
-#    gcode = GCode(d)
+ 
     gcode = GCode(open(sys.argv[1])) 
 
     gcode.measure()
