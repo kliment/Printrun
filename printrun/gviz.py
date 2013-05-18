@@ -352,7 +352,6 @@ class gviz(wx.Panel):
                 arc = [_x(start_pos[0]), _y(start_pos[1]),
                        _x(target[0]), _y(target[1]),
                        _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
-                # FIXME : verify this works : why not reverse endpoints 4, 5
                 if gline.command == "G2":  # clockwise, reverse endpoints
                     arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
