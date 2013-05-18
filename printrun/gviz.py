@@ -185,7 +185,6 @@ class gviz(wx.Panel):
     def layerdown(self):
         if self.layerindex > 0:
             self.layerindex -= 1
-            # Display layer info on statusbar (Jezmy)
             self.parent.SetStatusText("Layer %d - Going Down - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
             wx.CallAfter(self.Refresh)
