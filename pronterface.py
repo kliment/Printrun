@@ -26,6 +26,7 @@ except:
     print _("WX is not installed. This program requires WX to run.")
     raise
 import sys, glob, time, datetime, threading, traceback, cStringIO, subprocess
+import shlex
 
 from printrun.pronterface_widgets import *
 from serial import SerialException
@@ -223,7 +224,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             param = self.settings.final_command
             if not param:
                 return
-            import shlex
             pararray = [i.replace("$s", str(self.filename)).replace("$t", format_duration(print_duration)).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
             self.finalp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
 
@@ -1190,7 +1190,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def skein_func(self):
         try:
-            import shlex
             param = self.expandcommand(self.settings.slicecommand).encode()
             print "Slicing: ", param
             pararray = [i.replace("$s", self.filename).replace("$o", self.filename.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
