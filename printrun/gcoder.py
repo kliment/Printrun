@@ -47,10 +47,13 @@ class Line(object):
         if ";" in self.raw:
             self.raw = self.raw.split(";")[0].rstrip()
         self.split_raw = self.raw.split(" ")
-        self.command = self.split_raw[0].upper()
+        self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1]
         self.is_move = self.command in ["G0", "G1"]
 
     def parse_coordinates(self, imperial):
+        # Not a G-line, we don't want to parse its arguments
+        if not self.command[0] == "G":
+            return
         if imperial:
             for bit in self.split_raw:
                 code = bit[0]

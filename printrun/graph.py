@@ -23,14 +23,13 @@ class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
 
     def __init__(self, parent, id, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize, style = 0):
+                 size = wx.Size(150, 80), style = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
         #call super function
-        #super(Graph, self).__init__(parent, id, pos, size, style)
-        BufferedCanvas.__init__(self, parent, id)
+        super(Graph, self).__init__(parent, id, pos, size, style)
+        #BufferedCanvas.__init__(self, parent, id)
 
-        self.SetSize(wx.Size(150, 80))
 
         self.extruder0temps       = [0]
         self.extruder0targettemps = [0]
@@ -80,8 +79,7 @@ class Graph(BufferedCanvas):
         #b = gc.CreateLinearGradientBrush(0, 0, w, h, col1, col2)
 
         gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 4))
-        #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(245, 245, 255, 252))))
-        #gc.SetBrush(b)
+        gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0, 0, 0))))
         gc.DrawRectangle(0, 0, self.width, self.height)
 
         #gc.SetBrush(wx.Brush(wx.Colour(245, 245, 255, 52)))

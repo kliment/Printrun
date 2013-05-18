@@ -1207,12 +1207,12 @@ class pronsole(cmd.Cmd):
         self.log("home e - set extruder position to zero (Using G92)")
         self.log("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)")
 
-    def parse_cmdline(self, args):
-        parser = argparse.ArgumentParser(description = 'Printrun 3D printer interface')
+    def add_cmdline_arguments(self, parser):
         parser.add_argument('-c','--conf','--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
         parser.add_argument('-e','--execute', help = _("executes command after configuration/.pronsolerc is loaded ; macros/settings from these commands are not autosaved"), action = "append", default = [])
         parser.add_argument('filename', nargs='?', help = _("file to load"))
-        args = parser.parse_args()
+
+    def process_cmdline_arguments(self, args):
         for config in args.conf:
             self.load_rc(config)
         if not self.rc_loaded:
@@ -1223,6 +1223,12 @@ class pronsole(cmd.Cmd):
         self.processing_args = False
         if args.filename:
             self.do_load(args.filename)
+
+    def parse_cmdline(self, args):
+        parser = argparse.ArgumentParser(description = 'Printrun 3D printer interface')
+        self.add_cmdline_arguments(parser)
+        args = parser.parse_args()
+        self.process_cmdline_arguments(args)
 
     # We replace this function, defined in cmd.py .
     # It's default behavior with reagrds to Ctr-C

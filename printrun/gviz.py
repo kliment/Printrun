@@ -44,8 +44,8 @@ class window(wx.Frame):
         vbox.Add(self.p, 1, wx.EXPAND)
         panel.SetSizer(vbox)
         self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1.2), id = 1)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1/1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1.2), id = 1)
+        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1/1.2), id = 2)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
@@ -123,6 +123,17 @@ class window(wx.Frame):
             elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1/1.2)
 
 class gviz(wx.Panel):
+
+    # Mark canvas as dirty when setting showall
+    _showall = 0
+    def _get_showall(self):
+        return self._showall
+    def _set_showall(self, showall):
+        if showall != self._showall:
+            self.dirty = 1
+            self._showall = showall
+    showall = property(_get_showall, _set_showall)
+
     def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
         wx.Panel.__init__(self, parent, -1, size = size)
         self.SetMinSize((150, 150))
@@ -202,18 +213,18 @@ class gviz(wx.Panel):
             pass
 
     def resize(self, event):
-        oldwidth, oldheight = max(1.0, self.size[0]), max(1.0, self.size[1])
-        oldside = min(oldwidth, oldheight)
-        newwidth, newheight = self.GetClientSizeTuple()
-        newwidth, newheight = [max(1.0, newwidth), max(1.0, newheight)]
-        newside = min(newwidth, newheight)
+        oldside = max(1.0, min(self.size))
+        self.size = self.GetClientSizeTuple()
+        newside = max(1.0, min(self.size))
+        self.basescale = 2*[min(float(self.size[0])/self.build_dimensions[0],
+                                float(self.size[1])/self.build_dimensions[1])]
         zoomratio = float(newside) / oldside
-        print newwidth, newheight
-        print zoomratio
-        self.size = self.GetClientSize()
         wx.CallAfter(self.zoom, 0, 0, zoomratio)
 
     def zoom(self, x, y, factor):
+        if x == -1 and y == -1:
+            side = min(self.size)
+            x = y = side / 2
         self.scale = [s * factor for s in self.scale]
 
         self.translate = [ x - (x-self.translate[0]) * factor,
@@ -291,14 +302,18 @@ class gviz(wx.Panel):
     def paint(self, event):
         dc = wx.PaintDC(self)
         if self.dirty:
-            self.repaint()
             self.dirty = 0
+            self.repaint()
         dc.DrawBitmap(self.blitmap, 0, 0)
 
     def addfile(self, gcode):
         self.clear()
         self.add_parsed_gcodes(gcode.lines)
 
+    # FIXME : there's code duplication going on there, we should factor it (but
+    # the reason addgcode is not factored as a add_parsed_gcodes([gline]) is
+    # because when loading a file there's no hilight, so it simply lets us not
+    # do the if hilight: all the time for nothing when loading a lot of lines
     def add_parsed_gcodes(self, lines):
         def _y(y):
             return self.build_dimensions[1] - (y - self.build_dimensions[4])
@@ -312,10 +327,19 @@ class gviz(wx.Panel):
             target = self.lastpos[:]
             target[5] = 0.0
             target[6] = 0.0
-            if gline.x != None: target[0] = gline.x
-            if gline.y != None: target[1] = gline.y
-            if gline.z != None: target[2] = gline.z
-            if gline.e != None: target[3] = gline.e
+            if gline.relative:
+                if gline.x != None: target[0] += gline.x
+                if gline.y != None: target[1] += gline.y
+                if gline.z != None: target[2] += gline.z
+            else:
+                if gline.x != None: target[0] = gline.x
+                if gline.y != None: target[1] = gline.y
+                if gline.z != None: target[2] = gline.z
+            if gline.e != None:
+                if gline.relative_e:
+                    target[3] += gline.e
+                else:
+                    target[3] = gline.e
             if gline.f != None: target[4] = gline.f
             if gline.i != None: target[5] = gline.i
             if gline.j != None: target[6] = gline.j
@@ -330,100 +354,88 @@ class gviz(wx.Panel):
             start_pos = self.lastpos[:]
 
             if gline.command in ["G0", "G1"]:
-                line = [ _x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1]) ]
-                self.lines[z].append(line)
+                self.lines[z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
                 self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
-                self.lastpos = target
-                self.dirty = 1
-
-            if gline.command in ["G2", "G3"]:
+            elif gline.command in ["G2", "G3"]:
+                # startpos, endpos, arc center
                 arc = [_x(start_pos[0]), _y(start_pos[1]),
                        _x(target[0]), _y(target[1]),
-                       _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6]) ]  # center
+                       _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
                 # FIXME : verify this works : why not reverse endpoints 4, 5
                 if gline.command == "G2":  # clockwise, reverse endpoints
                     arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
                 self.arcs[z].append(arc)
                 self.arcpens[z].append(self.arcpen)
-                self.lastpos = target
-                self.dirty = 1
+
+            self.lastpos = target
+        self.dirty = 1
+        self.Refresh()
 
     def addgcode(self, gcode = "M105", hilight = 0):
         gcode = gcode.split("*")[0]
         gcode = gcode.split(";")[0]
-        gcode = gcode.lower().strip().split()
+        gcode = gcode.lower().strip()
         if not gcode:
             return
-        if gcode[0][0] == 'n': # not sure what this check is for ?
-            gcode.pop(0)
-
-        def _readgcode():
-            target = self.lastpos[:]
-            target[5]=0.0
-            target[6]=0.0
-            if hilight:
-                target = self.hilightpos[:]
-            for i in gcode:
-                if i[0]=="x":
-                    target[0]=float(i[1:])
-                elif i[0]=="y":
-                    target[1]=float(i[1:])
-                elif i[0]=="z":
-                    target[2]=float(i[1:])
-                elif i[0]=="e":
-                    target[3]=float(i[1:])
-                elif i[0]=="f":
-                    target[4]=float(i[1:])
-                elif i[0]=="i":
-                    target[5]=float(i[1:])
-                elif i[0]=="j":
-                    target[6]=float(i[1:])
-            if not hilight:
-                if not target[2] in self.lines.keys():
-                    self.lines[target[2]]=[]
-                    self.pens[target[2]]=[]
-                    self.arcs[target[2]]=[]
-                    self.arcpens[target[2]]=[]
-                    self.layers+=[target[2]]
-            return target
+        gline = gcoder.Line(gcode)
+        gline.parse_coordinates(False)
 
         def _y(y):
-            return self.build_dimensions[1]-(y-self.build_dimensions[4])
+            return self.build_dimensions[1] - (y - self.build_dimensions[4])
         def _x(x):
-            return x-self.build_dimensions[3]
+            return x - self.build_dimensions[3]
 
         start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
 
-        if gcode[0] in [ "g0", "g1" ]:
-            target = _readgcode()
-            line = [ _x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1]) ]
-            if not hilight:
-                self.lines[ target[2] ] += [line]
-                self.pens[ target[2] ]  += [self.mainpen if target[3] != self.lastpos[3] else self.travelpen]
-                self.lastpos = target
-            else:
-                self.hilight += [line]
-                self.hilightpos = target
-            self.dirty = 1
+        if gline.command not in ["G0", "G1", "G2", "G3"]:
+            return
+        
+        target = self.hilightpos[:] if hilight else self.lastpos[:]
+        target[5] = 0.0
+        target[6] = 0.0
+        if gline.x != None: target[0] = gline.x
+        if gline.y != None: target[1] = gline.y
+        if gline.z != None: target[2] = gline.z
+        if gline.e != None: target[3] = gline.e
+        if gline.f != None: target[4] = gline.f
+        if gline.i != None: target[5] = gline.i
+        if gline.j != None: target[6] = gline.j
 
-        if gcode[0] in [ "g2", "g3" ]:
-            target = _readgcode()
-            arc = []
-            arc += [ _x(start_pos[0]), _y(start_pos[1]) ]
-            arc += [ _x(target[0]), _y(target[1]) ]
-            arc += [ _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6]) ]  # center
-            if gcode[0] == "g2":  # clockwise, reverse endpoints
+        z = target[2]
+        if not hilight and z not in self.layers:
+            self.lines[z] = []
+            self.pens[z] = []
+            self.arcs[z] = []
+            self.arcpens[z] = []
+            self.layers.append(z)
+
+        if gline.command in ["G0", "G1"]:
+            line = [_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])]
+            if not hilight:
+                self.lines[z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
+                self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
+            else:
+                self.hilight.append(line)
+        elif gline.command in ["G2", "G3"]:
+            # startpos, endpos, arc center
+            arc = [_x(start_pos[0]), _y(start_pos[1]),
+                   _x(target[0]), _y(target[1]),
+                   _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
+            if gline.command == "G2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
-            if not hilight:
-                self.arcs[ target[2] ]    += [arc]
-                self.arcpens[ target[2] ] += [self.arcpen]
-                self.lastpos = target
+                self.arcs[z].append(arc)
+                self.arcpens[z].append(self.arcpen)
             else:
-                self.hilightarcs += [arc]
-                self.hilightpos = target
-            self.dirty = 1
+                self.hilightarcs.append(arc)
+
+        if not hilight:
+            self.lastpos = target
+        else:
+            self.hilightpos = target
+        self.dirty = 1
+        self.Refresh()
 
 if __name__ == '__main__':
     import sys

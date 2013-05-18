@@ -26,6 +26,7 @@ from printrun import gviz
 from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
+from printrun.pronterface_widgets import TempGauge
 
 def make_button(parent, label, callback, tooltip, container = None, size = wx.DefaultSize, style = 0):
     button = wx.Button(parent, -1, label, style = style, size = size)
@@ -56,9 +57,9 @@ class LeftPane(wx.GridBagSizer):
     def __init__(self, root):
         super(LeftPane, self).__init__()
         llts = wx.BoxSizer(wx.HORIZONTAL)
-        self.Add(llts, pos = (0, 0), span = (1, 9))
+        self.Add(llts, pos = (0, 0), span = (1, 6))
         self.xyzsizer = XYZControlsSizer(root)
-        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 8), flag = wx.ALIGN_CENTER)
+        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
         
         for i in root.cpbuttons:
             btn = make_button(root.panel, i.label, root.procbutton, i.tooltip, style = wx.BU_EXACTFIT)
@@ -84,7 +85,7 @@ class LeftPane(wx.GridBagSizer):
 
         root.monitorbox = wx.CheckBox(root.panel,-1, _("Watch"))
         root.monitorbox.SetToolTip(wx.ToolTip("Monitor Temperatures in Graph"))
-        self.Add(root.monitorbox, pos = (2, 6))
+        self.Add(root.monitorbox, pos = (3, 5))
         root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
 
         self.Add(wx.StaticText(root.panel,-1, _("Heat:")), pos = (2, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
@@ -164,9 +165,31 @@ class LeftPane(wx.GridBagSizer):
         root.zfeedc.SetBackgroundColour((180, 255, 180))
         root.zfeedc.SetForegroundColour("black")
 
+        if root.display_gauges:
+            root.hottgauge = TempGauge(root.panel, size = (-1, 24), title = _("Heater:"), maxval = 300)
+            self.Add(root.hottgauge, pos = (6, 0), span = (1, 6), flag = wx.EXPAND)
+            root.bedtgauge = TempGauge(root.panel, size = (-1, 24), title = _("Bed:"), maxval = 150)
+            self.Add(root.bedtgauge, pos = (7, 0), span = (1, 6), flag = wx.EXPAND)
+            def hotendgauge_scroll_setpoint(e):
+                rot = e.GetWheelRotation()
+                if rot > 0:
+                    root.do_settemp(str(root.hsetpoint + 1))
+                elif rot < 0:
+                    root.do_settemp(str(max(0, root.hsetpoint - 1)))
+            def bedgauge_scroll_setpoint(e):
+                rot = e.GetWheelRotation()
+                if rot > 0:
+                    root.do_settemp(str(root.bsetpoint + 1))
+                elif rot < 0:
+                    root.do_settemp(str(max(0, root.bsetpoint - 1)))
+            root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
+            root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
+            self.Add(root.tempdisp, pos = (8, 0), span = (1, 6))
+        else:
+            self.Add(root.tempdisp, pos = (6, 0), span = (1, 6))
+
         root.graph = Graph(root.panel, wx.ID_ANY)
-        self.Add(root.graph, pos = (3, 5), span = (3, 3))
-        self.Add(root.tempdisp, pos = (6, 0), span = (1, 9))
+        self.Add(root.graph, pos = (4, 5), span = (2, 1))
 
 class VizPane(wx.BoxSizer):
 
@@ -199,6 +222,7 @@ class LogPane(wx.BoxSizer):
         super(LogPane, self).__init__(wx.VERTICAL)
         root.lowerrsizer = self
         root.logbox = wx.TextCtrl(root.panel, style = wx.TE_MULTILINE, size = (350,-1))
+        root.logbox.SetMinSize((100,-1))
         root.logbox.SetEditable(0)
         self.Add(root.logbox, 1, wx.EXPAND)
         lbrs = wx.BoxSizer(wx.HORIZONTAL)
@@ -223,7 +247,7 @@ class MainToolbar(wx.BoxSizer):
 
         root.serialport = wx.ComboBox(root.panel, -1,
                 choices = root.scanserial(),
-                style = wx.CB_DROPDOWN, size = (150, 25))
+                style = wx.CB_DROPDOWN, size = (-1, 25))
         root.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
         root.rescanports()
         self.Add(root.serialport)
@@ -263,10 +287,10 @@ class MainWindow(wx.Frame):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
         self.uppersizer = MainToolbar(self)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.lowersizer.Add(LeftPane(self))
+        self.lowersizer.Add(LeftPane(self), 0)
         self.lowersizer.Add(VizPane(self), 1, wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
-        self.lowersizer.Add(LogPane(self), 0, wx.EXPAND)
-        self.mainsizer.Add(self.uppersizer)
+        self.lowersizer.Add(LogPane(self), 1, wx.EXPAND)
+        self.mainsizer.Add(self.uppersizer, 0)
         self.mainsizer.Add(self.lowersizer, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
         self.status = self.CreateStatusBar()
@@ -276,6 +300,12 @@ class MainWindow(wx.Frame):
 
         self.mainsizer.Layout()
         self.mainsizer.Fit(self)
+        # This prevents resizing below a reasonnable value
+        # We sum the lowersizer (left pane / viz / log) min size
+        # the toolbar height and the statusbar/menubar sizes
+        minsize = self.lowersizer.GetMinSize() # lower pane
+        minsize[1] += self.uppersizer.GetMinSize()[1] # toolbar height
+        self.SetMinSize(self.ClientToWindowSize(minsize)) # client to window
 
         # disable all printer controls until we connect to a printer
         self.pausebtn.Disable()

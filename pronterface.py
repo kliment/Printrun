@@ -198,15 +198,23 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.filename is not None:
             self.do_load(self.filename)
 
+    def add_cmdline_arguments(self, parser):
+        pronsole.pronsole.add_cmdline_arguments(self, parser)
+        parser.add_argument('-g','--gauges', help = _("display graphical temperature gauges in addition to the temperatures graph"), action = "store_true")
+
+    def process_cmdline_arguments(self, args):
+        pronsole.pronsole.process_cmdline_arguments(self, args)
+        self.display_gauges = args.gauges
+
     def startcb(self):
         self.starttime = time.time()
         print "Print Started at: " + format_time(self.starttime)
 
     def endcb(self):
         if self.p.queueindex == 0:
-            print "Print ended at: " + format_time(time.time())
             print_duration = int(time.time () - self.starttime + self.extra_print_time)
-            print "and took: " + format_duration(print_duration)
+            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
+                                                                             "duration": format_duration(print_duration)}
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
@@ -239,7 +247,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if "G1" in line:
             if "Z" in line:
                 try:
-                    layer = float(line.split("Z")[1].split()[0])
+                    layer = float(line.split("Z")[1].split()[0].split("*")[0])
                     if layer != self.curlayer:
                         self.curlayer = layer
                         self.gviz.hilight = []
@@ -256,6 +264,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if "S" in line:
                 try:
                     temp = float(line.split("S")[1].split("*")[0])
+                    if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                     wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
                 except:
                     pass
@@ -267,6 +276,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if "S" in line:
                 try:
                     temp = float(line.split("S")[1].split("*")[0])
+                    if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                     wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
                 except:
                     pass
@@ -293,6 +303,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def setbedgui(self, f):
         self.bsetpoint = f
+        if self.display_gauges: self.bedtgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetBedTargetTemperature, int(f))
         if f>0:
             wx.CallAfter(self.btemp.SetValue, str(f))
@@ -312,6 +323,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def sethotendgui(self, f):
         self.hsetpoint = f
+        if self.display_gauges: self.hottgauge.SetTarget(int(f))
         wx.CallAfter(self.graph.SetExtruder0TargetTemperature, int(f))
         if f > 0:
             wx.CallAfter(self.htemp.SetValue, str(f))
@@ -591,7 +603,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
     def showwin(self, event):
-        if(self.f is not None):
+        if self.f is not None:
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
             self.gwindow.Raise()
@@ -1015,8 +1027,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         try:
             self.logbox.AppendText(text)
         except:
-            print "attempted to write invalid text to console"
-            pass
+            print _("Attempted to write invalid text to console, which could be due to an invalid baudrate")
 
     def setloud(self,e):
         self.p.loud=e.IsChecked()
@@ -1034,15 +1045,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def clearOutput(self, e):
         self.logbox.Clear()
 
+    def update_tempdisplay(self):
+        try:
+            hotend_temp = parse_temperature_report(self.tempreport, "T:")
+            wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
+            if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
+            bed_temp = parse_temperature_report(self.tempreport, "B:")
+            wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
+            if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
+        except:
+            traceback.print_exc()
+
     def statuschecker(self):
         while self.statuscheck:
             string = ""
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
-            try:
-                wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
-                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
-            except:
-                pass
+            self.update_tempdisplay()
             fractioncomplete = 0.0
             if self.sdprinting:
                 fractioncomplete = float(self.percentdone / 100.0)
@@ -1103,11 +1121,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if "T:" in l:
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
-            try:
-                wx.CallAfter(self.graph.SetExtruder0Temperature, parse_temperature_report(self.tempreport, "T:"))
-                wx.CallAfter(self.graph.SetBedTemperature, parse_temperature_report(self.tempreport, "B:"))
-            except:
-                traceback.print_exc()
+            self.update_tempdisplay()
         tstring = l.rstrip()
         #print tstring
         if (tstring!="ok") and (tstring!="wait") and ("ok T:" not in tstring) and (not self.p.loud):
@@ -1286,15 +1300,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (gcode.ymin, gcode.ymax, gcode.depth)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (gcode.zmin, gcode.zmax, gcode.height)
         print _("Estimated duration (pessimistic): "), gcode.estimate_duration()
-        #import time
-        #t0 = time.time()
         self.gviz.clear()
         self.gwindow.p.clear()
-        self.gviz.addfile(self.f)
-        #print "generated 2d view in %f s"%(time.time()-t0)
-        #t0 = time.time()
-        self.gwindow.p.addfile(self.f)
-        #print "generated 3d view in %f s"%(time.time()-t0)
+        self.gviz.addfile(gcode)
+        self.gwindow.p.addfile(gcode)
         self.gviz.showall = 1
         wx.CallAfter(self.gviz.Refresh)
 
@@ -1516,5 +1525,5 @@ if __name__ == '__main__':
     main.Show()
     try:
         app.MainLoop()
-    except:
+    except KeyboardInterrupt:
         pass
