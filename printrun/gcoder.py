@@ -129,11 +129,12 @@ class GCode(object):
 
     lines = None
     layers = None
+    all_layers = None
 
     def __init__(self,data):
         self.lines = [Line(l2) for l2 in
                         (l.strip() for l in data)
-                      if l2 and not l2.startswith(";")]
+                      if l2 and not l2[0] == ";"]
         self._preprocess()
         self._create_layers()
 
@@ -166,6 +167,7 @@ class GCode(object):
     # FIXME : looks like this needs to be tested with list Z on move
     def _create_layers(self):
         layers = {}
+        all_layers = []
 
         prev_z = None
         cur_z = 0
@@ -181,6 +183,7 @@ class GCode(object):
                         cur_z = line.z
 
             if cur_z != prev_z:
+                all_layers.append(Layer(cur_lines))
                 old_lines = layers.get(prev_z, [])
                 old_lines += cur_lines
                 layers[prev_z] = old_lines
@@ -189,9 +192,11 @@ class GCode(object):
             cur_lines.append(line)
             prev_z = cur_z
 
-        old_lines = layers.pop(prev_z, [])
-        old_lines += cur_lines
-        layers[prev_z] = old_lines
+        if cur_lines:
+            all_layers.append(Layer(cur_lines))
+            old_lines = layers.pop(prev_z, [])
+            old_lines += cur_lines
+            layers[prev_z] = old_lines
 
         for idx in layers.keys():
             cur_lines = layers[idx]
@@ -201,10 +206,11 @@ class GCode(object):
                     has_movement = True
                     break
             if has_movement:
-                layers[idx] = Layer(layers[idx])
+                layers[idx] = Layer(cur_lines)
             else:
                 del layers[idx]
 
+        self.all_layers = all_layers
         self.layers = layers
 
     def num_layers(self):
