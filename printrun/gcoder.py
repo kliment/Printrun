@@ -235,7 +235,8 @@ class GCode(object):
         self.height = zmax - zmin
     
     def filament_length(self):
-        total_e = 0        
+        total_e = 0
+        max_e = 0
         cur_e = 0
         
         for line in self.lines:
@@ -249,8 +250,9 @@ class GCode(object):
                 else:
                     total_e += line.e - cur_e
                     cur_e = line.e
+                max_e = max(max_e, total_e)
 
-        return total_e
+        return max_e
 
     def estimate_duration(self):
         lastx = lasty = lastz = laste = lastf = 0.0
