@@ -27,7 +27,7 @@ class window(wx.Frame):
         self.SetStatusText("Layer number and Z position show here when you scroll");
 
         panel = wx.Panel(self, -1)
-        self.p = gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
+        self.p = gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, realparent = self)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
@@ -134,10 +134,10 @@ class gviz(wx.Panel):
             self._showall = showall
     showall = property(_get_showall, _set_showall)
 
-    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
+    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, realparent = None):
         wx.Panel.__init__(self, parent, -1, size = size)
         self.SetMinSize((150, 150))
-        self.parent = parent
+        self.parent = realparent if realparent else parent
         self.size = size
         self.build_dimensions = build_dimensions
         self.grid = grid
