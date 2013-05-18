@@ -20,6 +20,7 @@ import math
 import datetime
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j"]
+gcode_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
 
 class Line(object):
 
@@ -46,7 +47,7 @@ class Line(object):
         self.raw = l.lower()
         if ";" in self.raw:
             self.raw = self.raw.split(";")[0].rstrip()
-        self.split_raw = self.raw.split(" ")
+        self.split_raw = gcode_exp.findall(self.raw)
         self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1]
         self.is_move = self.command in ["G0", "G1"]
 
