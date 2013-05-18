@@ -207,7 +207,7 @@ class gviz(wx.Panel):
         self.update_basescale()
         newside = max(1.0, min(self.size))
         zoomratio = float(newside) / oldside
-        wx.CallAfter(self.zoom, 0, 0, zoomratio)
+        wx.CallLater(500, self.zoom, 0, 0, zoomratio)
 
     def zoom(self, x, y, factor):
         if x == -1 and y == -1:
