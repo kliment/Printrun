@@ -1527,3 +1527,4 @@ if __name__ == '__main__':
         app.MainLoop()
     except KeyboardInterrupt:
         pass
+    del app
