@@ -26,10 +26,11 @@ class window(wx.Frame):
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
 
-        self.p = gviz(self, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
+        panel = wx.Panel(self, -1)
+        self.p = gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        toolbar = wx.ToolBar(self, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
+        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
         toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
         toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
         toolbar.AddSeparator()
@@ -41,7 +42,7 @@ class window(wx.Frame):
         toolbar.Realize()
         vbox.Add(toolbar, 0, border = 5)
         vbox.Add(self.p, 1, wx.EXPAND)
-        self.SetSizer(vbox)
+        panel.SetSizer(vbox)
         self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
         self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(200, 200, 1/1.2), id = 2)
