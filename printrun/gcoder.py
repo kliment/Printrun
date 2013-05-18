@@ -331,7 +331,7 @@ def main():
     print "\tZ: %0.02f - %0.02f (%0.02f)" % (gcode.zmin,gcode.zmax,gcode.height)
     print "Filament used: %0.02fmm" % gcode.filament_length()
     print "Number of layers: %d" % gcode.num_layers()
-    print "Estimated duration (pessimistic): %s" % gcode.estimate_duration()
+    print "Estimated duration: %s" % gcode.estimate_duration()
 
 
 if __name__ == '__main__':
