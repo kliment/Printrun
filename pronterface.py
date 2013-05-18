@@ -1059,8 +1059,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def statuschecker(self):
         while self.statuscheck:
             string = ""
-            wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
-            self.update_tempdisplay()
             fractioncomplete = 0.0
             if self.sdprinting:
                 fractioncomplete = float(self.percentdone / 100.0)
