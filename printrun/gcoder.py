@@ -288,10 +288,7 @@ class GCode(object):
         #TODO:
         # get device caps from firmware: max speed, acceleration/axis (including extruder)
         # calculate the maximum move duration accounting for above ;)
-        zs = self.layers.keys()
-        zs.sort()
-        for z in zs:
-            layer = self.layers[z]
+        for layer in self.all_layers:
             for line in layer.lines:
                 if line.command not in ["G1", "G0", "G4"]:
                     continue
