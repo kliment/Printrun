@@ -120,7 +120,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.skeinp = None
         self.monitor_interval = 3
         self.paused = False
-        self.sentlines = Queue.Queue(30)
+        self.sentlines = Queue.Queue(0)
         self.cpbuttons = [
             SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), None, 0, _("Switch all motors off")),
             SpecialButton(_("Check temp"), ("M105"), (225, 200, 200), (2, 5), (1, 1), _("Check current hotend temperature")),
@@ -256,7 +256,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     pass
             try:
                 self.sentlines.put_nowait(line)
-            except:
+            except Queue.Full:
                 pass
             #threading.Thread(target = self.gviz.addgcode, args = (line, 1)).start()
             #self.gwindow.p.addgcode(line, hilight = 1)
@@ -1091,11 +1091,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     break
                 time.sleep(0.25)
             while not self.sentlines.empty():
-                try:
-                    gc = self.sentlines.get_nowait()
-                    wx.CallAfter(self.gviz.addgcode, gc, 1)
-                except:
-                    break
+                gc = self.sentlines.get_nowait()
+                wx.CallAfter(self.gviz.addgcode, gc, 1)
         wx.CallAfter(self.status.SetStatusText, _("Not connected to printer."))
 
     def capture(self, func, *args, **kwargs):
