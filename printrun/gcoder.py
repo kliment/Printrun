@@ -21,6 +21,7 @@ import datetime
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j"]
 gcode_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
+m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
 class Line(object):

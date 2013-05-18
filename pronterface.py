@@ -120,6 +120,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.f = None
         self.skeinp = None
         self.monitor_interval = 3
+        self.current_pos = [0, 0, 0]
         self.paused = False
         self.sentlines = Queue.Queue(0)
         self.cpbuttons = [
@@ -943,28 +944,35 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             e.Skip()
 
     def homeButtonClicked(self, corner):
+        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
+        self.zb.clearRepeat()
         if corner == 0: # upper-left
             self.onecmd('home X')
-        if corner == 1: # upper-right
+        elif corner == 1: # upper-right
             self.onecmd('home Y')
-        if corner == 2: # lower-right
+        elif corner == 2: # lower-right
             self.onecmd('home Z')
-        if corner == 3: # lower-left
+        elif corner == 3: # lower-left
             self.onecmd('home')
-        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
-        self.zb.clearRepeat()
+        else:
+            return
+        self.onecmd('M114')
 
     def moveXY(self, x, y):
-        if x != 0:
-            self.onecmd('move X %s' % x)
-        if y != 0:
-            self.onecmd('move Y %s' % y)
         # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
         self.zb.clearRepeat()
+        if x != 0:
+            self.onecmd('move X %s' % x)
+        elif y != 0:
+            self.onecmd('move Y %s' % y)
+        else:
+            return
+        self.onecmd('M114')
 
     def moveZ(self, z):
         if z != 0:
             self.onecmd('move Z %s' % z)
+            self.onecmd('M114')
         # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
         self.xyb.clearRepeat()
 
@@ -1056,6 +1064,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except:
             traceback.print_exc()
 
+    def update_pos(self, l):
+        bits = gcoder.m114_exp.findall(l)
+        x = None
+        y = None
+        z = None
+        for bit in bits:
+            if not x and bit.startswith("X"):
+                x = float(bit[1:].replace(":",""))
+            elif not y and bit.startswith("Y"):
+                y = float(bit[1:].replace(":",""))
+            elif not z and bit.startswith("Z"):
+                z = float(bit[1:].replace(":",""))
+        if x: self.current_pos[0] = x
+        if y: self.current_pos[1] = y
+        if z: self.current_pos[2] = z
+
     def statuschecker(self):
         while self.statuscheck:
             string = ""
@@ -1113,7 +1137,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         return retval
 
     def recvcb(self, l):
-        if "T:" in l:
+        if "ok C:" in l:
+            self.posreport = l
+            self.update_pos()
+        if "ok T:" in l:
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             self.update_tempdisplay()
