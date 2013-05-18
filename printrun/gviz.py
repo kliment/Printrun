@@ -69,18 +69,17 @@ class window(wx.Frame):
 
     def mouse(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
-            if(self.initpos is not None):
+            if self.initpos is not None:
                 self.initpos = None
         elif event.Dragging():
             e = event.GetPositionTuple()
             if self.initpos is None or not hasattr(self, "basetrans"):
                 self.initpos = e
                 self.basetrans = self.p.translate
-            self.p.translate = [ self.basetrans[0]+(e[0]-self.initpos[0]),
-                            self.basetrans[1]+(e[1]-self.initpos[1]) ]
+            self.p.translate = [self.basetrans[0] + (e[0] - self.initpos[0]),
+                                self.basetrans[1] + (e[1] - self.initpos[1])]
             self.p.dirty = 1
-            self.p.Refresh()
-
+            wx.CallAfter(self.p.Refresh)
         else:
             event.Skip()
 
@@ -174,7 +173,7 @@ class gviz(wx.Panel):
         self.layerindex = 0
         self.showall = 0
         self.dirty = 1
-        self.Refresh()
+        wx.CallAfter(self.Refresh)
 
     def layerup(self):
         if(self.layerindex+1<len(self.layers)):
@@ -182,7 +181,7 @@ class gviz(wx.Panel):
             # Display layer info on statusbar (Jezmy)
             self.parent.SetStatusText("Layer "+str(self.layerindex +1)+" - Going Up - Z = "+str(self.layers[self.layerindex])+" mm", 0)
             self.dirty = 1
-            self.Refresh()
+            wx.CallAfter(self.Refresh)
 
     def layerdown(self):
         if(self.layerindex>0):
@@ -190,7 +189,7 @@ class gviz(wx.Panel):
             # Display layer info on statusbar (Jezmy)
             self.parent.SetStatusText("Layer "+str(self.layerindex + 1)+" - Going Down - Z = "+str(self.layers[self.layerindex])+ " mm", 0)
             self.dirty = 1
-            self.Refresh()
+            wx.CallAfter(self.Refresh)
 
     def setlayer(self, layer):
         try:
@@ -222,7 +221,7 @@ class gviz(wx.Panel):
         for pen in self.penslist:
             pen.SetWidth(penwidth)
         self.dirty = 1
-        self.Refresh()
+        wx.CallAfter(self.Refresh)
 
     def repaint(self):
         self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
@@ -293,9 +292,7 @@ class gviz(wx.Panel):
         if self.dirty:
             self.repaint()
             self.dirty = 0
-        sz = self.GetClientSize()
         dc.DrawBitmap(self.blitmap, 0, 0)
-        del dc
 
     def addfile(self, gcode):
         self.clear()

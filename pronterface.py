@@ -984,11 +984,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
             self.save_in_rc("set z_feedrate", "set z_feedrate %d" % self.settings.z_feedrate)
             self.save_in_rc("set e_feedrate", "set e_feedrate %d" % self.settings.e_feedrate)
-        try:
-            self.gwindow.Destroy()
-        except:
-            pass
-        self.Destroy()
+        wx.CallAfter(self.gwindow.Destroy)
+        wx.CallAfter(self.Destroy)
 
     def do_monitor(self, l = ""):
         if l.strip()=="":
