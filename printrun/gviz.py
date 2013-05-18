@@ -91,18 +91,7 @@ class window(wx.Frame):
         kzi = [388, 316, 61]        # Zoom In Keys
         kzo = [390, 314, 45]       # Zoom Out Keys
         x = event.GetKeyCode()
-        #print "Key event - "+str(x)
-        #if event.ShiftDown():
         cx, cy = self.p.translate
-        #   if x == wx.WXK_UP:
-        #      self.p.zoom(cx, cy, 1.2)
-        #   if x == wx.WXK_DOWN:
-        #       self.p.zoom(cx, cy, 1/1.2)
-        #else:
-        #   if x == wx.WXK_UP:
-        #       self.p.layerup()
-        #   if x == wx.WXK_DOWN:
-        #       self.p.layerdown()
         if x in kup:
             self.p.layerup()
         if x in kdo:
@@ -112,7 +101,6 @@ class window(wx.Frame):
         if x in kzo:
             self.p.zoom(cx, cy, 1/1.2)
 
-        #print p.lines.keys()
     def zoom(self, event):
         z = event.GetWheelRotation()
         if event.ShiftDown():
