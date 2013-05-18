@@ -176,29 +176,26 @@ class gviz(wx.Panel):
         wx.CallAfter(self.Refresh)
 
     def layerup(self):
-        if(self.layerindex+1<len(self.layers)):
-            self.layerindex+=1
-            # Display layer info on statusbar (Jezmy)
-            self.parent.SetStatusText("Layer "+str(self.layerindex +1)+" - Going Up - Z = "+str(self.layers[self.layerindex])+" mm", 0)
+        if self.layerindex + 1 < len(self.layers):
+            self.layerindex += 1
+            self.parent.SetStatusText("Layer %d - Going Up - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
             wx.CallAfter(self.Refresh)
 
     def layerdown(self):
-        if(self.layerindex>0):
-            self.layerindex-=1
+        if self.layerindex > 0:
+            self.layerindex -= 1
             # Display layer info on statusbar (Jezmy)
-            self.parent.SetStatusText("Layer "+str(self.layerindex + 1)+" - Going Down - Z = "+str(self.layers[self.layerindex])+ " mm", 0)
+            self.parent.SetStatusText("Layer %d - Going Down - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
             wx.CallAfter(self.Refresh)
 
     def setlayer(self, layer):
-        try:
+        if layer in self.layers:
             self.layerindex = self.layers.index(layer)
             self.dirty = 1
-            wx.CallAfter(self.Refresh)
             self.showall = 0
-        except:
-            pass
+            wx.CallAfter(self.Refresh)
 
     def update_basescale(self):
         self.basescale = 2*[min(float(self.size[0] - 1)/self.build_dimensions[0],
