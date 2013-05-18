@@ -417,6 +417,7 @@ class gviz(wx.Panel):
             if gline.command == "G2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
+            if not hilight:
                 self.arcs[z].append(arc)
                 self.arcpens[z].append(self.arcpen)
             else:
