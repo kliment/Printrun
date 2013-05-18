@@ -1317,7 +1317,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (gcode.xmin, gcode.xmax, gcode.width)
         print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (gcode.ymin, gcode.ymax, gcode.depth)
         print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (gcode.zmin, gcode.zmax, gcode.height)
-        print _("Estimated duration: "), gcode.estimate_duration()
+        print _("Estimated duration: %s") % gcode.estimate_duration()
         self.gviz.clear()
         self.gwindow.p.clear()
         self.gviz.addfile(gcode)
