@@ -185,7 +185,6 @@ class gviz(wx.Panel):
     def layerdown(self):
         if self.layerindex > 0:
             self.layerindex -= 1
-            # Display layer info on statusbar (Jezmy)
             self.parent.SetStatusText("Layer %d - Going Down - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
             wx.CallAfter(self.Refresh)
@@ -353,7 +352,6 @@ class gviz(wx.Panel):
                 arc = [_x(start_pos[0]), _y(start_pos[1]),
                        _x(target[0]), _y(target[1]),
                        _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
-                # FIXME : verify this works : why not reverse endpoints 4, 5
                 if gline.command == "G2":  # clockwise, reverse endpoints
                     arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
@@ -378,12 +376,12 @@ class gviz(wx.Panel):
         def _x(x):
             return x - self.build_dimensions[3]
 
-        start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
-
         if gline.command not in ["G0", "G1", "G2", "G3"]:
             return
+
+        start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
         
-        target = self.hilightpos[:] if hilight else self.lastpos[:]
+        target = start_pos[:]
         target[5] = 0.0
         target[6] = 0.0
         if gline.x != None: target[0] = gline.x
@@ -417,6 +415,7 @@ class gviz(wx.Panel):
             if gline.command == "G2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
+            if not hilight:
                 self.arcs[z].append(arc)
                 self.arcpens[z].append(self.arcpen)
             else:
