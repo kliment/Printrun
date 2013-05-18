@@ -152,7 +152,7 @@ class gviz(wx.Panel):
         self.layers = []
         self.layerindex = 0
         self.filament_width = extrusion_width # set it to 0 to disable scaling lines with zoom
-        self.basescale = [min(float(size[0])/build_dimensions[0], float(size[1])/build_dimensions[1])]*2
+        self.update_basescale()
         self.scale = self.basescale
         penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         self.translate = [0.0, 0.0]
@@ -212,12 +212,15 @@ class gviz(wx.Panel):
         except:
             pass
 
+    def update_basescale(self):
+        self.basescale = 2*[min(float(self.size[0] - 1)/self.build_dimensions[0],
+                                float(self.size[1] - 1)/self.build_dimensions[1])]
+
     def resize(self, event):
         oldside = max(1.0, min(self.size))
         self.size = self.GetClientSizeTuple()
+        self.update_basescale()
         newside = max(1.0, min(self.size))
-        self.basescale = 2*[min(float(self.size[0])/self.build_dimensions[0],
-                                float(self.size[1])/self.build_dimensions[1])]
         zoomratio = float(newside) / oldside
         wx.CallAfter(self.zoom, 0, 0, zoomratio)
 
@@ -234,6 +237,20 @@ class gviz(wx.Panel):
             pen.SetWidth(penwidth)
         self.dirty = 1
         wx.CallAfter(self.Refresh)
+    
+    def _line_scaler(self, x):
+        return (self.scale[0]*x[0]+self.translate[0],
+                self.scale[1]*x[1]+self.translate[1],
+                self.scale[0]*x[2]+self.translate[0],
+                self.scale[1]*x[3]+self.translate[1],)
+    
+    def _arc_scaler(self, x):
+        return (self.scale[0]*x[0]+self.translate[0],
+                self.scale[1]*x[1]+self.translate[1],
+                self.scale[0]*x[2]+self.translate[0],
+                self.scale[1]*x[3]+self.translate[1],
+                self.scale[0]*x[4]+self.translate[0],
+                self.scale[1]*x[5]+self.translate[1],)
 
     def repaint(self):
         self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
@@ -249,6 +266,7 @@ class gviz(wx.Panel):
                 for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
                     dc.DrawLine(self.translate[0], self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0], self.translate[1]+y*self.scale[1]*grid_unit)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
+
         if not self.showall:
             dc.SetBrush(wx.Brush((43, 144, 255)))
             dc.DrawRectangle(self.size[0]-15, 0, 15, self.size[1])
@@ -257,26 +275,14 @@ class gviz(wx.Panel):
                 dc.DrawRectangle(self.size[0]-14, (1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1], 13, self.size[1]-1)
 
         def _drawlines(lines, pens):
-            def _scaler(x):
-                return (self.scale[0]*x[0]+self.translate[0],
-                        self.scale[1]*x[1]+self.translate[1],
-                        self.scale[0]*x[2]+self.translate[0],
-                        self.scale[1]*x[3]+self.translate[1],)
-            scaled_lines = map(_scaler, lines)
+            scaled_lines = map(self._line_scaler, lines)
             dc.DrawLineList(scaled_lines, pens)
 
         def _drawarcs(arcs, pens):
-            def _scaler(x):
-                return (self.scale[0]*x[0]+self.translate[0],
-                        self.scale[1]*x[1]+self.translate[1],
-                        self.scale[0]*x[2]+self.translate[0],
-                        self.scale[1]*x[3]+self.translate[1],
-                        self.scale[0]*x[4]+self.translate[0],
-                        self.scale[1]*x[5]+self.translate[1],)
-            scaled_arcs = map(_scaler, arcs)
+            scaled_arcs = map(self._arc_scaler, arcs)
+            dc.SetBrush(wx.TRANSPARENT_BRUSH)
             for i in range(len(scaled_arcs)):
-                dc.SetPen(pens[i] if type(pens).__name__ == 'list' else pens)
-                dc.SetBrush(wx.TRANSPARENT_BRUSH)
+                dc.SetPen(pens[i] if type(pens) == list else pens)
                 dc.DrawArc(*scaled_arcs[i])
 
         if self.showall:
@@ -286,6 +292,7 @@ class gviz(wx.Panel):
                 _drawlines(self.lines[i], self.pens[i])
                 _drawarcs(self.arcs[i], self.arcpens[i])
             return
+
         if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
             for layer_i in xrange(max(0, self.layerindex-6), self.layerindex):
                 #print i, self.layerindex, self.layerindex-i
