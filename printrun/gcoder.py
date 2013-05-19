@@ -50,7 +50,7 @@ class Line(object):
         if ";" in self.raw:
             self.raw = self.raw.split(";")[0].rstrip()
         self.split_raw = gcode_exp.findall(self.raw)
-        self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1]
+        self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
         self.is_move = self.command in move_gcodes
 
     def parse_coordinates(self, imperial):
