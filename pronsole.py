@@ -613,57 +613,45 @@ class pronsole(cmd.Cmd):
         self.log("Loads a gcode file (with tab-completion)")
 
     def do_upload(self, l):
-        if len(l) == 0:
-            self.log("No file name given.")
-            return
-        self.log("Loading file:"+l.split()[0])
-        if not(os.path.exists(l.split()[0])):
-            self.log("File not found!")
+        names = l.split()
+        if len(names) == 2:
+            filename = names[0]
+            targetname = names[1]
+        else:
+            self.log(_("Please enter target name in 8.3 format."))
             return
         if not self.p.online:
-            self.log("Not connected to printer.")
+            self.log(_("Not connected to printer."))
             return
-        self.f = [i.replace("\n", "") for i in open(l.split()[0])]
-        self.filename = l.split()[0]
-        self.log("Loaded ", l, ", ", len(self.f)," lines.")
-        tname = ""
-        if len(l.split())>1:
-            tname = l.split()[1]
-        else:
-            self.log("please enter target name in 8.3 format.")
-            return
-        self.log("Uploading as ", tname)
-        self.log(("Uploading "+self.filename))
-        self.p.send_now("M28 "+tname)
-        self.log(("Press Ctrl-C to interrupt upload."))
+        self._do_load(filename)
+        self.log(_("Uploading as %s") % targetname)
+        self.log(_("Uploading %s") % self.filename)
+        self.p.send_now("M28 " + targetname)
+        self.log(_("Press Ctrl-C to interrupt upload."))
         self.p.startprint(self.f)
         try:
-            sys.stdout.write("Progress: 00.0%")
+            sys.stdout.write(_("Progress: ") + "00.0%")
             sys.stdout.flush()
             time.sleep(1)
             while self.p.printing:
                 time.sleep(1)
-                sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100*float(self.p.queueindex)/len(self.p.mainqueue),) )
+                sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100*float(self.p.queueindex)/len(self.p.mainqueue),))
                 sys.stdout.flush()
             self.p.send_now("M29 "+tname)
             self.sleep(0.2)
             self.p.clear = 1
-            self.listing = 0
-            self.sdfiles = []
-            self.recvlisteners+=[self.listfiles]
-            self.p.send_now("M20")
-            time.sleep(0.5)
-            self.log("\b\b\b\b\b100%. Upload completed. ", tname, " should now be on the card.")
+            self._do_ls(False)
+            self.log("\b\b\b\b\b100%.")
+            self.log(_("Upload completed. %s should now be on the card.") % targetname)
             return
         except:
-            self.log("...interrupted!")
+            self.log(_("...interrupted!"))
             self.p.pause()
-            self.p.send_now("M29 "+tname)
+            self.p.send_now("M29 "+targetname)
             time.sleep(0.2)
             self.p.clear = 1
             self.p.startprint([])
-            self.log("A partial file named ", tname, " may have been written to the sd card.")
-
+            self.log(_("A partial file named %s may have been written to the sd card.") % targetname)
 
     def complete_upload(self, text, line, begidx, endidx):
         s = line.split()
@@ -679,44 +667,38 @@ class pronsole(cmd.Cmd):
         self.log("Uploads a gcode file to the sd card")
 
     def help_print(self):
-        if self.f is None:
-            self.log("Send a loaded gcode file to the printer. Load a file with the load command first.")
+        if not self.f:
+            self.log(_("Send a loaded gcode file to the printer. Load a file with the load command first."))
         else:
-            self.log("Send a loaded gcode file to the printer. You have "+self.filename+" loaded right now.")
+            self.log(_("Send a loaded gcode file to the printer. You have %s loaded right now.") % self.filename)
 
     def do_print(self, l):
-        if self.f is None:
-            self.log("No file loaded. Please use load first.")
+        if not self.f:
+            self.log(_("No file loaded. Please use load first."))
             return
         if not self.p.online:
-            self.log("Not connected to printer.")
+            self.log(_("Not connected to printer."))
             return
-        self.log(("printing "+self.filename))
-        self.log(("You can monitor the print with the monitor command."))
+        self.log(_("Printing %s") % self.filename)
+        self.log(_("You can monitor the print with the monitor command."))
         self.p.startprint(self.f)
-        #self.p.pause()
-        #self.paused = True
-        #self.do_resume(None)
 
     def do_pause(self, l):
         if self.sdprinting:
             self.p.send_now("M25")
         else:
-            if(not self.p.printing):
-                self.log("Not printing, cannot pause.")
+            if not self.p.printing:
+                self.log(_("Not printing, cannot pause."))
                 return
             self.p.pause()
-            #self.p.connect()# This seems to work, but is not a good solution.
         self.paused = True
 
-        #self.do_resume(None)
-
     def help_pause(self):
-        self.log("Pauses a running print")
+        self.log(_("Pauses a running print"))
 
     def do_resume(self, l):
         if not self.paused:
-            self.log("Not paused, unable to resume. Start a print first.")
+            self.log(_("Not paused, unable to resume. Start a print first."))
             return
         self.paused = False
         if self.sdprinting:
@@ -726,7 +708,7 @@ class pronsole(cmd.Cmd):
             self.p.resume()
 
     def help_resume(self):
-        self.log("Resumes a paused print.")
+        self.log(_("Resumes a paused print."))
 
     def emptyline(self):
         pass
@@ -734,38 +716,43 @@ class pronsole(cmd.Cmd):
     def do_shell(self, l):
         exec(l)
 
-    def listfiles(self, line):
+    def listfiles(self, line, echo = False):
         if "Begin file list" in line:
             self.listing = 1
         elif "End file list" in line:
             self.listing = 0
             self.recvlisteners.remove(self.listfiles)
+            if echo:
+                self.log(_("Files on SD card:"))
+                self.log("\n".join(self.sdfiles))
         elif self.listing:
-            self.sdfiles+=[line.replace("\n", "").replace("\r", "").lower()]
+            self.sdfiles.append(line.strip().lower())
+
+    def _do_ls(self, echo):
+        # FIXME: this was 2, but I think it should rather be 0 as in do_upload
+        self.listing = 0
+        self.sdfiles = []
+        self.recvlisteners.append(lambda l: self.listfiles(l, echo))
+        self.p.send_now("M20")
 
     def do_ls(self, l):
         if not self.p.online:
-            self.log("printer is not online. Try connect to it first.")
+            self.log(_("Printer is not online. Please connect to it first."))
             return
-        self.listing = 2
-        self.sdfiles = []
-        self.recvlisteners+=[self.listfiles]
-        self.p.send_now("M20")
-        time.sleep(0.5)
-        self.log(" ".join(self.sdfiles))
+        self._do_ls(True)
 
     def help_ls(self):
-        self.log("lists files on the SD card")
+        self.log(_("Lists files on the SD card"))
 
     def waitforsdresponse(self, l):
         if "file.open failed" in l:
-            self.log("Opening file failed.")
+            self.log(_("Opening file failed."))
             self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "File opened" in l:
             self.log(l)
         if "File selected" in l:
-            self.log("Starting print")
+            self.log(_("Starting print"))
             self.p.send_now("M24")
             self.sdprinting = 1
             #self.recvlisteners.remove(self.waitforsdresponse)
@@ -788,36 +775,33 @@ class pronsole(cmd.Cmd):
         self.p.reset()
 
     def help_reset(self):
-        self.log("Resets the printer.")
+        self.log(_("Resets the printer."))
 
     def do_sdprint(self, l):
         if not self.p.online:
-            self.log("printer is not online. Try connect to it first.")
+            self.log(_("Printer is not online. Please connect to it first."))
             return
-        self.listing = 2
-        self.sdfiles = []
-        self.recvlisteners+=[self.listfiles]
-        self.p.send_now("M20")
-        time.sleep(0.5)
-        if not (l.lower() in self.sdfiles):
-            self.log("File is not present on card. Upload it first")
+        self._do_ls(False)
+        while self.listfiles in self.recvlisteners:
+            time.sleep(0.1)
+        if l.lower() not in self.sdfiles:
+            self.log(_("File is not present on card. Please upload it first."))
             return
-        self.recvlisteners+=[self.waitforsdresponse]
-        self.p.send_now("M23 "+l.lower())
-        self.log("printing file: "+l.lower()+" from SD card.")
-        self.log("Requesting SD print...")
+        self.recvlisteners.append(self.waitforsdresponse)
+        self.p.send_now("M23 " + l.lower())
+        self.log(_("Printing file: %s from SD card.") % l.lower())
+        self.log(_("Requesting SD print..."))
         time.sleep(1)
 
     def help_sdprint(self):
-        self.log("print a file from the SD card. Tabcompletes with available file names.")
-        self.log("sdprint filename.g")
+        self.log(_("Print a file from the SD card. Tab completes with available file names."))
+        self.log(_("sdprint filename.g"))
 
     def complete_sdprint(self, text, line, begidx, endidx):
-        if self.sdfiles==[] and self.p.online:
-            self.listing = 2
-            self.recvlisteners+=[self.listfiles]
-            self.p.send_now("M20")
-            time.sleep(0.5)
+        if not self.sdfiles and self.p.online:
+            self._do_ls(False)
+            while self.listfiles in self.recvlisteners:
+                time.sleep(0.1)
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
             return [i for i in self.sdfiles if i.startswith(text)]
 
@@ -846,7 +830,7 @@ class pronsole(cmd.Cmd):
                     self.log("SENDING:"+l)
                 self.p.send_now(l)
             else:
-                self.log("printer is not online.")
+                self.log(_("Printer is not online."))
             return
         elif(l[0] in self.commandprefixes.lower()):
             if(self.p and self.p.online):
@@ -854,7 +838,7 @@ class pronsole(cmd.Cmd):
                     self.log("SENDING:"+l.upper())
                 self.p.send_now(l.upper())
             else:
-                self.log("printer is not online.")
+                self.log(_("Printer is not online."))
             return
         else:
             cmd.Cmd.default(self, l)
@@ -864,7 +848,7 @@ class pronsole(cmd.Cmd):
 
     def tempcb(self, l):
         if "T:" in l:
-            self.log(l.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
+            self.log(l.strip().replace("T", "Hotend").replace("B", "Bed").replace("ok ", ""))
 
     def do_gettemp(self, l):
         if "dynamic" in l:

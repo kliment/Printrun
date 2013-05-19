@@ -1150,7 +1150,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         for listener in self.recvlisteners:
             listener(l)
 
-    def listfiles(self, line):
+    def listfiles(self, line, ignored = False):
         if "Begin file list" in line:
             self.listing = 1
         elif "End file list" in line:
@@ -1158,7 +1158,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.recvlisteners.remove(self.listfiles)
             wx.CallAfter(self.filesloaded)
         elif self.listing:
-            self.sdfiles+=[line.replace("\n", "").replace("\r", "").lower()]
+            self.sdfiles.append(line.strip().lower())
 
     def waitforsdresponse(self, l):
         if "file.open failed" in l:
