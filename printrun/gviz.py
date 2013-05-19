@@ -274,16 +274,14 @@ class gviz(wx.Panel):
         if self.showall:
             l = []
             for i in self.layers:
-                dc.DrawLineList(l, self.fades[0])
                 _drawlines(self.lines[i], self.pens[i])
                 _drawarcs(self.arcs[i], self.arcpens[i])
             return
 
-        if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
-            for layer_i in xrange(max(0, self.layerindex-6), self.layerindex):
-                #print i, self.layerindex, self.layerindex-i
-                _drawlines(self.lines[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
-                _drawarcs(self.arcs[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
+        if self.layerindex < len(self.layers) and self.layers[self.layerindex] in self.lines:
+            for layer_i in range(max(0, self.layerindex - 6), self.layerindex):
+                _drawlines(self.lines[self.layers[layer_i]], self.fades[self.layerindex - layer_i - 1])
+                _drawarcs(self.arcs[self.layers[layer_i]], self.fades[self.layerindex - layer_i - 1])
             _drawlines(self.lines[self.layers[self.layerindex]], self.pens[self.layers[self.layerindex]])
             _drawarcs(self.arcs[self.layers[self.layerindex]], self.arcpens[self.layers[self.layerindex]])
 
