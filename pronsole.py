@@ -19,6 +19,7 @@ import cmd, sys
 import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
+import shlex
 from math import sqrt
 import argparse
 
@@ -863,7 +864,7 @@ class pronsole(cmd.Cmd):
                 print "Bed:    %s/%s" % (self.status.bed_temp, self.status.bed_temp_target)
 
     def help_gettemp(self):
-        self.log("Read the extruder and bed temperature.")
+        self.log(_("Read the extruder and bed temperature."))
 
     def do_settemp(self, l):
         try:
@@ -873,22 +874,22 @@ class pronsole(cmd.Cmd):
             f = float(l)
             if f>=0:
                 if f > 250:
-                   print f, " is a high temperature to set your extruder to. Are you sure you want to do that?"
+                   print _("%s is a high temperature to set your extruder to. Are you sure you want to do that?") % f
                    if not confirm():
                       return
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
-                    self.log("Setting hotend temperature to ", f, " degrees Celsius.")
+                    self.log(_("Setting hotend temperature to %s degrees Celsius.") % f)
                 else:
-                    self.log("printer is not online.")
+                    self.log(_("Printer is not online."))
             else:
-                self.log("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
+                self.log(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
         except:
-            self.log("You must enter a temperature.")
+            self.log(_("You must enter a temperature."))
 
     def help_settemp(self):
-        self.log("Sets the hotend temperature to the value entered.")
-        self.log("Enter either a temperature in celsius or one of the following keywords")
+        self.log(_("Sets the hotend temperature to the value entered."))
+        self.log(_("Enter either a temperature in celsius or one of the following keywords"))
         self.log(", ".join([i+"("+self.temps[i]+")" for i in self.temps.keys()]))
 
     def complete_settemp(self, text, line, begidx, endidx):
@@ -904,17 +905,17 @@ class pronsole(cmd.Cmd):
             if f>=0:
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
-                    self.log("Setting bed temperature to ", f, " degrees Celsius.")
+                    self.log(_("Setting bed temperature to %s degrees Celsius.") % f)
                 else:
-                    self.log("printer is not online.")
+                    self.log(_("Printer is not online."))
             else:
-                self.log("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
+                self.log(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
         except:
-            self.log("You must enter a temperature.")
+            self.log(_("You must enter a temperature."))
 
     def help_bedtemp(self):
-        self.log("Sets the bed temperature to the value entered.")
-        self.log("Enter either a temperature in celsius or one of the following keywords")
+        self.log(_("Sets the bed temperature to the value entered."))
+        self.log(_("Enter either a temperature in celsius or one of the following keywords"))
         self.log(", ".join([i+"("+self.bedtemps[i]+")" for i in self.bedtemps.keys()]))
 
     def complete_bedtemp(self, text, line, begidx, endidx):
@@ -923,13 +924,13 @@ class pronsole(cmd.Cmd):
 
     def do_move(self, l):
         if(len(l.split())<2):
-            self.log("No move specified.")
+            self.log(_("No move specified."))
             return
         if self.p.printing:
-            self.log("printer is currently printing. Please pause the print before you issue manual commands.")
+            self.log(_("Printer is currently printing. Please pause the print before you issue manual commands."))
             return
         if not self.p.online:
-            self.log("printer is not online. Unable to move.")
+            self.log(_("Printer is not online. Unable to move."))
             return
         l = l.split()
         if(l[0].lower()=="x"):
@@ -945,13 +946,13 @@ class pronsole(cmd.Cmd):
             feed = self.settings.e_feedrate
             axis = "E"
         else:
-            self.log("Unknown axis.")
+            self.log(_("Unknown axis."))
             return
         dist = 0
         try:
             dist = float(l[1])
         except:
-            self.log("Invalid distance")
+            self.log(_("Invalid distance"))
             return
         try:
             feed = int(l[2])
@@ -962,11 +963,11 @@ class pronsole(cmd.Cmd):
         self.p.send_now("G90")
 
     def help_move(self):
-        self.log("Move an axis. Specify the name of the axis and the amount. ")
-        self.log("move X 10 will move the X axis forward by 10mm at ", self.settings.xy_feedrate, "mm/min (default XY speed)")
-        self.log("move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min")
-        self.log("move Z -1 will move the Z axis down by 1mm at ", self.settings.z_feedrate, "mm/min (default Z speed)")
-        self.log("Common amounts are in the tabcomplete list.")
+        self.log(_("Move an axis. Specify the name of the axis and the amount. "))
+        self.log(_("move X 10 will move the X axis forward by 10mm at %s mm/min (default XY speed)") % self.settings.xy_feedrate)
+        self.log(_("move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"))
+        self.log(_("move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)") %  self.settings.z_feedrate)
+        self.log(_("Common amounts are in the tabcomplete list."))
 
     def complete_move(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
@@ -986,70 +987,70 @@ class pronsole(cmd.Cmd):
         length = 5#default extrusion length
         feed = self.settings.e_feedrate#default speed
         if not self.p.online:
-            self.log("printer is not online. Unable to move.")
+            self.log("Printer is not online. Unable to extrude.")
             return
         if self.p.printing:
-            self.log("printer is currently printing. Please pause the print before you issue manual commands.")
+            self.log("Printer is currently printing. Please pause the print before you issue manual commands.")
             return
         ls = l.split()
         if len(ls):
             try:
                 length = float(ls[0])
             except:
-                self.log("Invalid length given.")
+                self.log(_("Invalid length given."))
         if len(ls)>1:
             try:
                 feed = int(ls[1])
             except:
-                self.log("Invalid speed given.")
+                self.log(_("Invalid speed given."))
         if override is not None:
             length = override
             feed = overridefeed
         if length > 0:
-            self.log("Extruding %fmm of filament."%(length,))
-        elif length <0:
-            self.log("Reversing %fmm of filament."%(-1*length,))
+            self.log(_("Extruding %fmm of filament.") % (length,))
+        elif length < 0:
+            self.log(_("Reversing %fmm of filament.") % (-1*length,))
         else:
-            "Length is 0, not doing anything."
+            self.log(_("Length is 0, not doing anything."))
         self.p.send_now("G91")
         self.p.send_now("G1 E"+str(length)+" F"+str(feed))
         self.p.send_now("G90")
 
     def help_extrude(self):
-        self.log("Extrudes a length of filament, 5mm by default, or the number of mm given as a parameter")
-        self.log("extrude - extrudes 5mm of filament at 300mm/min (5mm/s)")
-        self.log("extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)")
-        self.log("extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)")
-        self.log("extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)")
+        self.log(_("Extrudes a length of filament, 5mm by default, or the number of mm given as a parameter"))
+        self.log(_("extrude - extrudes 5mm of filament at 300mm/min (5mm/s)"))
+        self.log(_("extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)"))
+        self.log(_("extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)"))
+        self.log(_("extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"))
 
     def do_reverse(self, l):
         length = 5#default extrusion length
         feed = self.settings.e_feedrate#default speed
         if not self.p.online:
-            self.log("printer is not online. Unable to move.")
+            self.log(_("Printer is not online. Unable to reverse."))
             return
         if self.p.printing:
-            self.log("printer is currently printing. Please pause the print before you issue manual commands.")
+            self.log(_("Printer is currently printing. Please pause the print before you issue manual commands."))
             return
         ls = l.split()
         if len(ls):
             try:
                 length = float(ls[0])
             except:
-                self.log("Invalid length given.")
+                self.log(_("Invalid length given."))
         if len(ls)>1:
             try:
                 feed = int(ls[1])
             except:
-                self.log("Invalid speed given.")
+                self.log(_("Invalid speed given."))
         self.do_extrude("", length*-1.0, feed)
 
     def help_reverse(self):
-        self.log("Reverses the extruder, 5mm by default, or the number of mm given as a parameter")
-        self.log("reverse - reverses 5mm of filament at 300mm/min (5mm/s)")
-        self.log("reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)")
-        self.log("reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)")
-        self.log("reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)")
+        self.log(_("Reverses the extruder, 5mm by default, or the number of mm given as a parameter"))
+        self.log(_("reverse - reverses 5mm of filament at 300mm/min (5mm/s)"))
+        self.log(_("reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)"))
+        self.log(_("reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"))
+        self.log(_("reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"))
 
     def do_exit(self, l):
         if self.status.extruder_temp_target != 0:
@@ -1066,28 +1067,28 @@ class pronsole(cmd.Cmd):
             print "(this will terminate the print)."
             if not confirm():
                 return False
-        self.log("Exiting program. Goodbye!")
+        self.log(_("Exiting program. Goodbye!"))
         self.p.disconnect()
         return True
 
     def help_exit(self):
-        self.log("Disconnects from the printer and exits the program.")
+        self.log(_("Disconnects from the printer and exits the program."))
 
     def do_monitor(self, l):
         interval = 5
         if not self.p.online:
-            self.log("printer is not online. Please connect first.")
+            self.log(_("Printer is not online. Please connect to it first."))
             return
         if not (self.p.printing or self.sdprinting):
-            self.log("Printer not printing. Please print something before monitoring.")
+            self.log(_("Printer is not printing. Please print something before monitoring."))
             return
-        self.log("Monitoring printer, use ^C to interrupt.")
+        self.log(_("Monitoring printer, use ^C to interrupt."))
         if len(l):
             try:
                 interval = float(l)
             except:
-                self.log("Invalid period given.")
-        self.log("Updating values every %f seconds."%(interval,))
+                self.log(_("Invalid period given."))
+        self.log(_("Updating values every %f seconds.") % (interval,))
         self.monitoring = 1
         prev_msg_len = 0
         try:
@@ -1098,10 +1099,10 @@ class pronsole(cmd.Cmd):
                 time.sleep(interval)
                 #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
                 if self.p.printing:
-                    preface  = "Print progress: "
+                    preface  = _("Print progress: ")
                     progress = 100*float(self.p.queueindex)/len(self.p.mainqueue)
                 elif self.sdprinting:
-                    preface  = "Print progress: "
+                    preface  = _("Print progress: ")
                     progress = self.percentdone
                 progress = int(progress*10)/10.0 #limit precision
                 prev_msg = preface + str(progress) + "%"
@@ -1110,13 +1111,13 @@ class pronsole(cmd.Cmd):
                     sys.stdout.flush()
                 prev_msg_len = len(prev_msg)
         except KeyboardInterrupt:
-            if self.silent == False: print "Done monitoring."
+            if self.silent == False: print _("Done monitoring.")
         self.monitoring = 0
 
     def help_monitor(self):
-        self.log("Monitor a machine's temperatures and an SD print's status.")
-        self.log("monitor - Reports temperature and SD print status (if SD printing) every 5 seconds")
-        self.log("monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds")
+        self.log(_("Monitor a machine's temperatures and an SD print's status."))
+        self.log(_("monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"))
+        self.log(_("monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"))
 
     def expandcommand(self, c):
         return c.replace("$python", sys.executable)
@@ -1124,31 +1125,30 @@ class pronsole(cmd.Cmd):
     def do_skein(self, l):
         l = l.split()
         if len(l) == 0:
-            self.log("No file name given.")
+            self.log(_("No file name given."))
             return
         settings = 0
         if(l[0]=="set"):
             settings = 1
         else:
-            self.log("Skeining file:"+l[0])
+            self.log(_("Skeining file: %s") % l[0])
             if not(os.path.exists(l[0])):
-                self.log("File not found!")
+                self.log(_("File not found!"))
                 return
         try:
-            import shlex
-            if(settings):
+            if settings:
                 param = self.expandcommand(self.settings.sliceoptscommand).replace("\\", "\\\\").encode()
-                self.log("Entering slicer settings: ", param)
+                self.log(_("Entering slicer settings: %s") % param)
                 subprocess.call(shlex.split(param))
             else:
                 param = self.expandcommand(self.settings.slicecommand).encode()
-                self.log("Slicing: ", param)
+                self.log(_("Slicing: ") % param)
                 params = [i.replace("$s", l[0]).replace("$o", l[0].replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
                 subprocess.call(params)
-                self.log("Loading sliced file.")
+                self.log(_("Loading sliced file."))
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
         except Exception, e:
-            self.log("Skeinforge execution failed: ", e)
+            self.log(_("Skeinforge execution failed: %s") % e)
 
     def complete_skein(self, text, line, begidx, endidx):
         s = line.split()
@@ -1161,18 +1161,17 @@ class pronsole(cmd.Cmd):
                 return glob.glob("*/")+glob.glob("*.stl")
 
     def help_skein(self):
-        self.log("Creates a gcode file from an stl model using the slicer (with tab-completion)")
-        self.log("skein filename.stl - create gcode file")
-        self.log("skein filename.stl view - create gcode file and view using skeiniso")
-        self.log("skein set - adjust slicer settings")
-
+        self.log(_("Creates a gcode file from an stl model using the slicer (with tab-completion)"))
+        self.log(_("skein filename.stl - create gcode file"))
+        self.log(_("skein filename.stl view - create gcode file and view using skeiniso"))
+        self.log(_("skein set - adjust slicer settings"))
 
     def do_home(self, l):
         if not self.p.online:
-            self.log("printer is not online. Unable to move.")
+            self.log(_("Printer is not online. Unable to move."))
             return
         if self.p.printing:
-            self.log("printer is currently printing. Please pause the print before you issue manual commands.")
+            self.log(_("Printer is currently printing. Please pause the print before you issue manual commands."))
             return
         if "x" in l.lower():
             self.p.send_now("G28 X0")
@@ -1187,12 +1186,12 @@ class pronsole(cmd.Cmd):
             self.p.send_now("G92 E0")
 
     def help_home(self):
-        self.log("Homes the printer")
-        self.log("home - homes all axes and zeroes the extruder(Using G28 and G92)")
-        self.log("home xy - homes x and y axes (Using G28)")
-        self.log("home z - homes z axis only (Using G28)")
-        self.log("home e - set extruder position to zero (Using G92)")
-        self.log("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)")
+        self.log(_("Homes the printer"))
+        self.log(_("home - homes all axes and zeroes the extruder(Using G28 and G92)"))
+        self.log(_("home xy - homes x and y axes (Using G28)"))
+        self.log(_("home z - homes z axis only (Using G28)"))
+        self.log(_("home e - set extruder position to zero (Using G92)"))
+        self.log(_("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"))
 
     def add_cmdline_arguments(self, parser):
         parser.add_argument('-c','--conf','--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
