@@ -20,7 +20,7 @@ import math
 import datetime
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j"]
-gcode_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
+gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
 m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
@@ -47,8 +47,6 @@ class Line(object):
 
     def __init__(self, l):
         self.raw = l.lower()
-        if ";" in self.raw:
-            self.raw = self.raw.split(";")[0].rstrip()
         self.split_raw = gcode_exp.findall(self.raw)
         self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
         self.is_move = self.command in move_gcodes
@@ -136,7 +134,7 @@ class GCode(object):
     def __init__(self,data):
         self.lines = [Line(l2) for l2 in
                         (l.strip() for l in data)
-                      if l2 and not l2[0] == ";"]
+                      if l2]
         self._preprocess()
         self._create_layers()
 
