@@ -841,6 +841,14 @@ class pronsole(cmd.Cmd):
             else:
                 self.log(_("Printer is not online."))
             return
+        elif(l[0] == "@"):
+            if(self.p and self.p.online):
+                if(not self.p.loud):
+                    self.log("SENDING:"+l[1:])
+                self.p.send_now(l[1:])
+            else:
+                self.log("printer is not online.")
+            return
         else:
             cmd.Cmd.default(self, l)
 
