@@ -251,7 +251,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     layer = float(line.split("Z")[1].split()[0].split("*")[0])
                     if layer != self.curlayer:
                         self.curlayer = layer
-                        self.gviz.hilight = []
+                        self.gviz.hilight.clear()
+                        self.gviz.hilightarcs.clear()
                         threading.Thread(target = wx.CallAfter, args = (self.gviz.setlayer, layer)).start()
                 except:
                     pass

@@ -12,7 +12,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
+
 import wx, time
+from collections import deque
 from printrun import gcoder
 
 from printrun_utils import imagefile
@@ -151,8 +153,8 @@ class gviz(wx.Panel):
         self.fades = [wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50), penwidth) for i in xrange(6)]
         self.penslist = [self.mainpen, self.travelpen, self.hlpen]+self.fades
         self.showall = 0
-        self.hilight = []
-        self.hilightarcs = []
+        self.hilight = deque()
+        self.hilightarcs = deque()
         self.dirty = 1
         self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
 
@@ -168,8 +170,8 @@ class gviz(wx.Panel):
         self.arcs = {}
         self.arcpens = {}
         self.layers = []
-        self.hilight = []
-        self.hilightarcs = []
+        self.hilight.clear()
+        self.hilightarcs.clear()
         self.layerindex = 0
         self.showall = 0
         self.dirty = 1
