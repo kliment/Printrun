@@ -21,7 +21,7 @@ from select import error as SelectError
 import time, getopt, sys
 import platform, os
 from collections import deque
-from GCodeAnalyzer import GCodeAnalyzer
+from printrun.GCodeAnalyzer import GCodeAnalyzer
 from printrun import gcoder
 
 def control_ttyhup(port, disable_hup):
