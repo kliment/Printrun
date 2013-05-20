@@ -1302,6 +1302,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 of = open(self.filename)
                 self.f = [i.replace("\n", "").replace("\r", "") for i in of]
                 of.close()
+                self.fgcode = gcoder.GCode(self.f)
                 self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.f)))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
