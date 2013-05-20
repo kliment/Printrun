@@ -1536,10 +1536,23 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
         return bdl_float
 
+class PronterApp(wx.App):
+
+    mainwindow = None
+
+    def __init__(self, *args, **kwargs):
+        super(PronterApp, self).__init__(*args, **kwargs)
+        self.mainwindow = PronterWindow()
+        self.mainwindow.Show()
+
+    def MacOpenFile(self, filename):
+        self.mainwindow.do_load(filename)
+
+    def MacOpenURL(self, url):
+        self.mainwindow.do_load(url)
+
 if __name__ == '__main__':
-    app = wx.App(False)
-    main = PronterWindow()
-    main.Show()
+    app = PronterApp(False)
     try:
         app.MainLoop()
     except KeyboardInterrupt:
