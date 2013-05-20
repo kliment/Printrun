@@ -31,6 +31,7 @@
 # limitations under the License.
 
 import re
+import gcoder
 
 class GCodeAnalyzer():
   def __init__(self):
@@ -65,66 +66,54 @@ class GCodeAnalyzer():
     self.hasHomeY = False
     self.hasHomeZ = False
      
-      
-  # find a code in a gstring line   
-  def findCode(self, gcode, codeStr):
-      pattern = re.compile(codeStr + "\\s*(-?[\d.]*)",re.I)
-      m=re.search(pattern, gcode)
-      if m == None:
-        return None
-      else:
-        return m.group(1)
-    
   def Analyze(self, gcode):
     gcode = gcode[:gcode.find(";")].lstrip() # remove comments
-    if gcode.startswith("@"): return # code is a host command
-    code_g = self.findCode(gcode, "G")
-    code_m = self.findCode(gcode, "M")
-    # we have a g_code
-    if code_g != None:
-      code_g = int(code_g)
+    gline = gcoder.Line(gcode)
+    if gline.command.startswith(";@"): return # code is a host command
+    if gline.command.startswith("G"):
+        code_g = int(gline.command[1:])
+    if gline.command.startswith("M"):
+        code_m = int(gline.command[1:])
     
     #get movement codes
-    if code_g == 0 or code_g == 1 or code_g == 2 or code_g == 3:
+    if gline.is_move:
       self.lastX = self.x
       self.lastY = self.y
       self.lastZ = self.z
       self.lastE = self.e
       eChanged = False;
-      code_f = self.findCode(gcode, "F")
+      code_f = gline.f
       if code_f != None:
-        self.f=float(code_f)
+        self.f = code_f
         
-      code_x = self.findCode(gcode, "X")
-      code_y = self.findCode(gcode, "Y")
-      code_z = self.findCode(gcode, "Z")
-      code_e = self.findCode(gcode, "E")
+      code_x = gline.x
+      code_y = gline.y
+      code_z = gline.z
+      code_e = gline.e
 
       if self.relative:
-        if code_x != None: self.x += float(code_x)
-        if code_y != None: self.y += float(code_y)
-        if code_z != None: self.z += float(code_z)
+        if code_x != None: self.x += code_x
+        if code_y != None: self.y += code_y
+        if code_z != None: self.z += code_z
         if code_e != None:
-          e = float(code_e)
-          if e != 0:
+          if code_e != 0:
             eChanged = True
-            self.e += e
+            self.e += code_e
       else:     
         #absolute coordinates
-        if code_x != None: self.x = self.xOffset + float(code_x)
-        if code_y != None: self.y = self.yOffset + float(code_y)
-        if code_z != None: self.z = self.zOffset + float(code_z)
+        if code_x != None: self.x = self.xOffset + code_x
+        if code_y != None: self.y = self.yOffset + code_y
+        if code_z != None: self.z = self.zOffset + code_z
         if code_e != None:
-          e = float(code_e)
           if self.eRelative:
-            if e != 0:
+            if code_e != 0:
               eChanged = True
-              self.e += e
+              self.e += code_e
           else:
           # e is absolute. Is it changed?
-            if self.e != self.eOffset + e:
+            if self.e != self.eOffset + code_e:
               eChanged = True
-              self.e = self.eOffset + e
+              self.e = self.eOffset + code_e
       #limit checking
       if self.x < self.minX: self.x = self.minX
       if self.y < self.minY: self.y = self.minY
@@ -139,10 +128,10 @@ class GCodeAnalyzer():
       self.lastY = self.y
       self.lastZ = self.z
       self.lastE = self.e
-      code_x = self.findCode(gcode, "X")
-      code_y = self.findCode(gcode, "Y")
-      code_z = self.findCode(gcode, "Z")
-      code_e = self.findCode(gcode, "E")
+      code_x = gline.x
+      code_y = gline.y
+      code_z = gline.z
+      code_e = gline.e
       homeAll = False
       if code_x == None and code_y == None and code_z == None: homeAll = True
       if code_x != None or homeAll:
@@ -165,9 +154,9 @@ class GCodeAnalyzer():
       self.lastY = self.y
       self.lastZ = self.z
       self.lastE = self.e
-      code_x = self.findCode(gcode, "X")
-      code_y = self.findCode(gcode, "Y")
-      code_z = self.findCode(gcode, "Z")
+      code_x = gline.x
+      code_y = gline.y
+      code_z = gline.z
       homeAll = False
       if code_x == None and code_y == None and code_z == None: homeAll = True
       if code_x != None or homeAll:
@@ -185,10 +174,10 @@ class GCodeAnalyzer():
     elif code_g == 90: self.relative = False
     elif code_g == 91: self.relative = True
     elif code_g == 92:
-      code_x = self.findCode(gcode, "X")
-      code_y = self.findCode(gcode, "Y")
-      code_z = self.findCode(gcode, "Z")
-      code_e = self.findCode(gcode, "E")
+      code_x = gline.x
+      code_y = gline.y
+      code_z = gline.z
+      code_e = gline.e
       if code_x != None:
         self.xOffset = self.x - float(code_x)
         self.x = self.xOffset
