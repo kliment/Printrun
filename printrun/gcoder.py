@@ -130,6 +130,12 @@ class GCode(object):
     layers = None
     all_layers = None
     idxs = None
+    append_layer = None
+    append_layer_id = None
+
+    imperial = False
+    relative = False
+    relative_e = False
 
     def __init__(self,data):
         self.lines = [Line(l2) for l2 in
@@ -138,11 +144,26 @@ class GCode(object):
         self._preprocess()
         self._create_layers()
 
-    def _preprocess(self):
+    def __len__(self):
+        return len(self.idxs)
+
+    def append(self, command):
+        command = command.strip()
+        if not command:
+            return
+        gline = Line(command)
+        self.lines.append(gline)
+        self._preprocess([gline])
+        self.append_layer.lines.append(gline)
+        self.idxs.append((self.append_layer_id, len(self.append_layer.lines)))
+
+    def _preprocess(self, lines = None):
         """Checks for G20, G21, G90 and G91, sets imperial and relative flags"""
-        imperial = False
-        relative = False
-        relative_e = False
+        if not lines:
+            lines = self.lines
+        imperial = self.imperial
+        relative = self.relative
+        relative_e = self.relative_e
         for line in self.lines:
             if line.is_move:
                 line.relative = relative
@@ -163,6 +184,9 @@ class GCode(object):
                 relative_e = True
             if line.command[0] == "G":
                 line.parse_coordinates(imperial)
+        self.imperial = imperial
+        self.relative = relative
+        self.relative_e = relative_e
     
     # FIXME : looks like this needs to be tested with list Z on move
     def _create_layers(self):
@@ -218,6 +242,9 @@ class GCode(object):
             else:
                 del layers[idx]
 
+        self.append_layer_id = len(all_layers)
+        self.append_layer = Layer([])
+        all_layers.append(self.append_layer)
         self.all_layers = all_layers
         self.layers = layers
         self.idxs = idxs

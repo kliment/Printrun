@@ -22,6 +22,7 @@ import time, getopt, sys
 import platform, os
 from collections import deque
 from GCodeAnalyzer import GCodeAnalyzer
+from printrun import gcoder
 
 def control_ttyhup(port, disable_hup):
     """Controls the HUPCL"""
@@ -48,7 +49,7 @@ class printcore():
         self.clear = 0 #clear to send, enabled after responses
         self.online = False #The printer has responded to the initial command and is active
         self.printing = False #is a print currently running, true if printing, false if paused
-        self.mainqueue = []
+        self.mainqueue = None
         self.priqueue = []
         self.queueindex = 0
         self.lineno = 0
@@ -204,8 +205,8 @@ class printcore():
     def _checksum(self, command):
         return reduce(lambda x, y:x^y, map(ord, command))
 
-    def startprint(self, data, startindex = 0):
-        """Start a print, data is an array of gcode commands.
+    def startprint(self, gcode, startindex = 0):
+        """Start a print, gcode is an array of gcode commands.
         returns True on success, False if already printing.
         The print queue will be replaced with the contents of the data array, the next line will be set to 0 and the firmware notified.
         Printing will then start in a parallel thread.
@@ -213,12 +214,12 @@ class printcore():
         if self.printing or not self.online or not self.printer:
             return False
         self.printing = True
-        self.mainqueue = [] + data
+        self.mainqueue = gcode
         self.lineno = 0
         self.queueindex = startindex
         self.resendfrom = -1
         self._send("M110", -1, True)
-        if len(data) == 0:
+        if not gcode.lines:
             return True
         self.clear = False
         self.print_thread = Thread(target = self._print)
@@ -264,8 +265,6 @@ class printcore():
         self.pauseE = self.analyzer.e-self.analyzer.eOffset;
         self.pauseF = self.analyzer.f;
         self.pauseRelative = self.analyzer.relative;
-        
-        
 
     def resume(self):
         """Resumes a paused print.
@@ -380,14 +379,14 @@ class printcore():
         if self.priqueue:
             self._send(self.priqueue.pop(0))
             return
-        if self.printing and self.queueindex < len(self.mainqueue):
-            tline = self.mainqueue[self.queueindex]
+        if self.printing and self.queueindex < len(self.mainqueue.idxs):
+            (layer, line) = self.mainqueue.idxs[self.queueindex]
+            tline = self.mainqueue.all_layers[layer].lines[line].raw
             #check for host command
             if tline.lstrip().startswith(";@"):
-              #it is a host command: pop it from the list
-              self.mainqueue.pop(self.queueindex)
-              self.processHostCommand(tline)
-              return
+                self.processHostCommand(tline)
+                self.queueindex += 1
+                return
       
             tline = tline.split(";")[0]
             if len(tline) > 0:
@@ -455,7 +454,8 @@ if __name__ == '__main__':
     p = printcore(port, baud)
     p.loud = loud
     time.sleep(2)
-    gcode = [i.replace("\n", "") for i in open(filename)]
+    gcode = [i.strip() for i in open(filename)]
+    gcode = gcoder.GCode(gcode)
     p.startprint(gcode)
 
     try:

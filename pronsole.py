@@ -629,7 +629,7 @@ class pronsole(cmd.Cmd):
         self.log(_("Uploading %s") % self.filename)
         self.p.send_now("M28 " + targetname)
         self.log(_("Press Ctrl-C to interrupt upload."))
-        self.p.startprint(self.f)
+        self.p.startprint(self.fgcode)
         try:
             sys.stdout.write(_("Progress: ") + "00.0%")
             sys.stdout.flush()
@@ -651,7 +651,7 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M29 "+targetname)
             time.sleep(0.2)
             self.p.clear = 1
-            self.p.startprint([])
+            self.p.startprint(None)
             self.log(_("A partial file named %s may have been written to the sd card.") % targetname)
 
     def complete_upload(self, text, line, begidx, endidx):
@@ -668,13 +668,13 @@ class pronsole(cmd.Cmd):
         self.log("Uploads a gcode file to the sd card")
 
     def help_print(self):
-        if not self.f:
+        if not self.fgcode:
             self.log(_("Send a loaded gcode file to the printer. Load a file with the load command first."))
         else:
             self.log(_("Send a loaded gcode file to the printer. You have %s loaded right now.") % self.filename)
 
     def do_print(self, l):
-        if not self.f:
+        if not self.fgcode:
             self.log(_("No file loaded. Please use load first."))
             return
         if not self.p.online:
@@ -682,7 +682,7 @@ class pronsole(cmd.Cmd):
             return
         self.log(_("Printing %s") % self.filename)
         self.log(_("You can monitor the print with the monitor command."))
-        self.p.startprint(self.f)
+        self.p.startprint(self.fgcode)
 
     def do_pause(self, l):
         if self.sdprinting:

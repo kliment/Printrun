@@ -587,7 +587,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         obj = e.GetEventObject()
         popupmenu = wx.Menu()
         item = popupmenu.Append(-1, _("SD Upload"))
-        if not self.f or not len(self.f):
+        if not self.f:
             item.Enable(False)
         self.Bind(wx.EVT_MENU, self.upload, id = item.GetId())
         item = popupmenu.Append(-1, _("SD Print"))
@@ -605,7 +605,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
     def showwin(self, event):
-        if self.f is not None:
+        if self.f:
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
             self.gwindow.Raise()
@@ -1236,13 +1236,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         fn = self.filename
         try:
             self.filename = self.filename.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode").replace(".obj", "_export.gcode").replace(".OBJ", "_export.gcode")
-            of = open(self.filename)
-            self.f = [i.replace("\n", "").replace("\r", "") for i in of]
-            of.close()
+            self.f = [line.strip() for line in open(self.filename)]
+            self.fgcode = gcoder.GCode(self.f)
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)
 
-            wx.CallAfter(self.status.SetStatusText, _("Loaded ")+self.filename+_(", %d lines") % (len(self.f),))
+            wx.CallAfter(self.status.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.f),))
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
@@ -1299,9 +1298,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.skein(name)
             else:
                 self.filename = name
-                of = open(self.filename)
-                self.f = [i.replace("\n", "").replace("\r", "") for i in of]
-                of.close()
+                self.f = [line.strip() for line in open(self.filename)]
+                self.fgcode = gcoder.GCode(self.f)
                 self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.f)))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
@@ -1337,14 +1335,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.p.send_now("M24")
                 return
 
-        if self.f is None or not len(self.f):
+        if not self.f:
             wx.CallAfter(self.status.SetStatusText, _("No file loaded. Please use load first."))
             return
         if not self.p.online:
             wx.CallAfter(self.status.SetStatusText, _("Not connected to printer."))
             return
         self.on_startprint()
-        self.p.startprint(self.f)
+        self.p.startprint(self.fgcode)
 
     def on_startprint(self):
         wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
@@ -1361,14 +1359,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def uploadtrigger(self, l):
         if "Writing to file" in l:
             self.uploading = True
-            self.p.startprint(self.f)
+            self.p.startprint(self.fgcode)
             self.p.endcb = self.endupload
             self.recvlisteners.remove(self.uploadtrigger)
         elif "open failed, File" in l:
             self.recvlisteners.remove(self.uploadtrigger)
 
     def upload(self, event):
-        if not self.f or not len(self.f):
+        if not self.f:
             return
         if not self.p.online:
             return
