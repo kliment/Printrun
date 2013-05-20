@@ -1221,7 +1221,8 @@ class pronsole(cmd.Cmd):
     def parse_cmdline(self, args):
         parser = argparse.ArgumentParser(description = 'Printrun 3D printer interface')
         self.add_cmdline_arguments(parser)
-        args = parser.parse_args()
+        args = [arg for arg in args if not arg.startswith("-psn")]
+        args = parser.parse_args(args = args)
         self.process_cmdline_arguments(args)
 
     # We replace this function, defined in cmd.py .
