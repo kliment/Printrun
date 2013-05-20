@@ -233,7 +233,7 @@ def vdiff(v, o):
 
 
 class gcview(object):
-    def __init__(self, lines, batch, w = 0.5, h = 0.5):
+    def __init__(self, gcode, batch, w = 0.5, h = 0.5):
         # Create the vertex and normal arrays.
         vertices = []
         normals = []
@@ -242,8 +242,12 @@ class gcview(object):
         self.vlists = []
         self.layers = {}
         t0 = time.time()
-        lines = [self.transform(i) for i in lines]
-        lines = [i for i in lines if i is not None]
+        if gcode:
+            lines = [self.transform(gline) for gline in gcode.lines]
+            lines = [line for line in lines if line]
+            print len(lines)
+        else:
+            lines = []
         print "transformed lines in %fs" % (time.time() - t0)
         t0 = time.time()
         layertemp = {}
@@ -355,29 +359,30 @@ class gcview(object):
         epoints = map(lambda x: vadd(E, x), points)
         return spoints, epoints, S, E
 
-    def transform(self, line):
-        line = line.split(";")[0]
+    def transform(self, gline):
         cur = self.prev[:]
-        if len(line) > 0:
-            if "G1" in line or "G0" in line or "G92" in line:
-                if("X" in line):
-                    cur[0] = float(line.split("X")[1].split(" ")[0])
-                if("Y" in line):
-                    cur[1] = float(line.split("Y")[1].split(" ")[0])
-                if("Z" in line):
-                    cur[2] = float(line.split("Z")[1].split(" ")[0])
-                if("E" in line):
-                    cur[3] = float(line.split("E")[1].split(" ")[0])
-                if self.prev == cur:
-                    return None
-                if self.fline or "G92" in line:
-                    self.prev = cur
-                    self.fline = 0
-                    return None
-                else:
-                    r = [self.prev, cur]
-                    self.prev = cur
-                    return r
+        isg92 = (gline.command == "G92")
+        if gline.is_move or isg92:
+            if gline.x is not None:
+                cur[0] = gline.x
+            if gline.y is not None:
+                cur[1] = gline.y
+            if gline.z is not None:
+                cur[2] = gline.z
+            if gline.e is not None:
+                cur[3] = gline.e
+            if self.prev == cur:
+                return None
+            elif self.fline or isg92:
+                self.prev = cur
+                self.fline = 0
+                return None
+            else:
+                r = [self.prev, cur]
+                self.prev = cur
+                return r
+        else:
+            return None
 
     def delete(self):
         for i in self.vlists:
@@ -833,7 +838,7 @@ class GCFrame(wx.Frame):
         m.curlayer = 0.0
         m.scale = [1.0, 1.0, 1.0]
         m.batch = pyglet.graphics.Batch()
-        m.gc = gcview([], batch = m.batch)
+        m.gc = gcview(None, batch = m.batch)
         self.models = {"": m}
         self.l = d()
         self.modelindex = 0
