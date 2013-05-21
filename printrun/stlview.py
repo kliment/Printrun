@@ -24,8 +24,8 @@ import time
 import threading
 
 import pyglet
-pyglet.options['shadow_window'] = False
-pyglet.options['debug_gl'] = False
+pyglet.options['debug_gl'] = True
+
 from pyglet.gl import *
 
 
