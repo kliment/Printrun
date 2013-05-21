@@ -280,8 +280,6 @@ class GcodeViewPanel(wxGLPanel):
             return
         self.create_objects()
 
-        #glLoadIdentity()
-        #print list(self.pmat)
         if self.rot == 1:
             glLoadIdentity()
             glMultMatrixd(self.mvmat)
