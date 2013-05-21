@@ -206,6 +206,8 @@ class GcodeModel(Model):
         [0.4, 0.1, 0.0],
     ], 'f')
 
+    color_printed = (0.2, 0.75, 0, 0.6)
+
     loaded = False
 
     def load_data(self, model_data, callback=None):
@@ -234,6 +236,7 @@ class GcodeModel(Model):
                 color_list.append(vertex_color)
 
                 prev_pos = gline.current_pos
+                gline.gcview_end_vertex = len(vertex_list)
 
             self.layer_stops.append(len(vertex_list))
 
@@ -255,6 +258,7 @@ class GcodeModel(Model):
 
         self.max_layers         = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers
+        self.printed_until      = -1
         self.arrows_enabled     = True
         self.initialized        = False
         self.loaded             = True
@@ -324,9 +328,6 @@ class GcodeModel(Model):
         self.vertex_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, None)
 
-        self.vertex_color_buffer.bind()
-        glColorPointer(4, GL_FLOAT, 0, None)
-
         if mode_2d:
             glScale(1.0, 1.0, 0.0) # discard z coordinates
             start = self.layer_stops[self.num_layers_to_draw - 1]
@@ -334,8 +335,24 @@ class GcodeModel(Model):
         else: # 3d
             start = 0
             end   = self.layer_stops[self.num_layers_to_draw]
+        
+        glDisableClientState(GL_COLOR_ARRAY)
 
-        glDrawArrays(GL_LINES, start, end)
+        glColor4f(*self.color_printed)
+
+        printed_end = min(self.printed_until, end)
+        if start < printed_end:
+            glDrawArrays(GL_LINES, start, printed_end)
+
+        glEnableClientState(GL_COLOR_ARRAY)
+
+        self.vertex_color_buffer.bind()
+        glColorPointer(4, GL_FLOAT, 0, None)
+
+        start = self.printed_until + 1
+        end = end - start
+        if end > 0:
+            glDrawArrays(GL_LINES, start, end)
 
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
