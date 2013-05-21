@@ -452,9 +452,6 @@ class GCObject(object):
         self.batch = pyglet.graphics.Batch()
         self.model = model
 
-    def GetSelection(self):
-        return wx.NOT_FOUND
-
 class GcodeViewFrame(wx.Frame):
     '''A simple class for using OpenGL with wxPython.'''
 
