@@ -61,6 +61,7 @@ class printcore():
         self.tempcb = None #impl (wholeline)
         self.recvcb = None #impl (wholeline)
         self.sendcb = None #impl (wholeline)
+        self.printsendcb = None #impl (wholeline)
         self.errorcb = None #impl (wholeline)
         self.startcb = None #impl ()
         self.endcb = None #impl ()
@@ -381,7 +382,8 @@ class printcore():
             return
         if self.printing and self.queueindex < len(self.mainqueue.idxs):
             (layer, line) = self.mainqueue.idxs[self.queueindex]
-            tline = self.mainqueue.all_layers[layer].lines[line].raw
+            gline = self.mainqueue.all_layers[layer].lines[line].raw
+            tline = gline.raw
             #check for host command
             if tline.lstrip().startswith(";@"):
                 self.processHostCommand(tline)
@@ -392,6 +394,9 @@ class printcore():
             if len(tline) > 0:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
+                if self.printsendcb:
+                    try: self.printsendcb(gline)
+                    except: pass
             else:
                 self.clear = True
             self.queueindex += 1

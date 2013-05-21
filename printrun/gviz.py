@@ -65,6 +65,9 @@ class window(wx.Frame):
             gcode = gcoder.GCode(f)
             self.p.addfile(gcode)
 
+    def set_current_gline(self, gline):
+        return
+
     def resetview(self, event):
         self.p.translate = [0.0, 0.0]
         self.p.scale = self.p.basescale

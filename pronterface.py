@@ -186,6 +186,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.skeining = 0
         self.mini = False
         self.p.sendcb = self.sentcb
+        self.p.printsendcb = self.printsentcb
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
         self.starttime = 0
@@ -270,6 +271,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         else:
             return
         self.sentlines.put_nowait(line)
+
+    def printsentcb(self, gline):
+        if gline.is_move:
+            wx.CallAfter(self.gwindow.set_current_gline, gline)
 
     def do_extrude(self, l = ""):
         try:

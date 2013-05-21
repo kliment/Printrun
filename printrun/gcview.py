@@ -464,6 +464,10 @@ class GcodeViewFrame(wx.Frame):
         self.objects = [GCObject(self.platform), GCObject(None)]
         self.glpanel = GcodeViewPanel(self)
 
+    def set_current_gline(self, gline):
+        if gline.is_move and self.model and self.model.loaded:
+            self.model.printed_until = gline.gcview_end_vertex
+
     def addfile(self, gcode = None):
         self.model = actors.GcodeModel()
         if gcode:
