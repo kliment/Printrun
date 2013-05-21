@@ -458,6 +458,7 @@ class GcodeViewFrame(wx.Frame):
     def __init__(self, parent, ID, title, build_dimensions, pos = wx.DefaultPosition,
             size = wx.DefaultSize, style = wx.DEFAULT_FRAME_STYLE):
         super(GcodeViewFrame, self).__init__(parent, ID, title, pos, size, style)
+        self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self # Hack for backwards compatibility with gviz API
         self.platform = actors.Platform(build_dimensions)
         self.model = None
@@ -467,6 +468,8 @@ class GcodeViewFrame(wx.Frame):
     def set_current_gline(self, gline):
         if gline.is_move and self.model and self.model.loaded:
             self.model.printed_until = gline.gcview_end_vertex
+            if not self.refresh_timer.IsRunning():
+                self.refresh_timer.Start()
 
     def addfile(self, gcode = None):
         self.model = actors.GcodeModel()
