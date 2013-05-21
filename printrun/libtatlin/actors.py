@@ -16,21 +16,15 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
-from __future__ import division
-
-import math
-import numpy
-import logging
 import time
+import numpy
+import math
 
-from OpenGL.GL import *
-from OpenGL.GLE import *
-from OpenGL.arrays.vbo import VBO
+from pyglet.gl import *
+from pyglet import gl
+from pyglet.graphics.vertexbuffer import create_buffer
 
-import vector
-from gcodeparser import Movement
-
+from . import vector
 
 def compile_display_list(func, *options):
     display_list = glGenLists(1)
@@ -38,6 +32,12 @@ def compile_display_list(func, *options):
     func(*options)
     glEndList()
     return display_list
+
+def numpy2vbo(nparray, target = GL_ARRAY_BUFFER, usage = GL_STATIC_DRAW):
+    vbo = create_buffer(nparray.nbytes, target = target, usage = usage, vbo = True)
+    vbo.bind()
+    vbo.set_data(nparray.ctypes.data)
+    return vbo
 
 class BoundingBox(object):
     """
@@ -69,9 +69,13 @@ class Platform(object):
     """
     graduations_major = 10
 
-    def __init__(self, width, depth):
-        self.width = width
-        self.depth = depth
+    def __init__(self, build_dimensions):
+        self.width = build_dimensions[0]
+        self.depth = build_dimensions[1]
+        self.height = build_dimensions[2]
+        self.xoffset = build_dimensions[3]
+        self.yoffset = build_dimensions[4]
+        self.zoffset = build_dimensions[5]
 
         self.color_grads_minor  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
         self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
@@ -79,6 +83,7 @@ class Platform(object):
         self.color_fill         = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
 
         self.initialized = False
+        self.loaded      = True
 
     def init(self):
         self.display_list = compile_display_list(self.draw)
@@ -87,38 +92,37 @@ class Platform(object):
     def draw(self):
         glPushMatrix()
 
-        glTranslate(-self.width / 2, -self.depth / 2, 0)
+        glTranslatef(self.xoffset, self.yoffset, self.zoffset)
 
         def color(i):
             if i % self.graduations_major == 0:
-                glColor(*self.color_grads_major)
+                glColor4f(*self.color_grads_major)
             elif i % (self.graduations_major / 2) == 0:
-                glColor(*self.color_grads_interm)
+                glColor4f(*self.color_grads_interm)
             else:
-                glColor(*self.color_grads_minor)
+                glColor4f(*self.color_grads_minor)
 
         # draw the grid
         glBegin(GL_LINES)
-        for i in range(0, self.width + 1):
+        for i in range(0, int(math.ceil(self.width + 1))):
             color(i)
             glVertex3f(float(i), 0.0,        0.0)
             glVertex3f(float(i), self.depth, 0.0)
 
-        for i in range(0, self.depth + 1):
+        for i in range(0, int(math.ceil(self.depth + 1))):
             color(i)
             glVertex3f(0,          float(i), 0.0)
             glVertex3f(self.width, float(i), 0.0)
         glEnd()
 
         # draw fill
-        glColor(*self.color_fill)
+        glColor4f(*self.color_fill)
         glRectf(0.0, 0.0, float(self.width), float(self.depth))
 
         glPopMatrix()
 
     def display(self, mode_2d=False):
         glCallList(self.display_list)
-
 
 class Model(object):
     """
@@ -185,6 +189,11 @@ class Model(object):
     def height(self):
         return self.bounding_box.height
 
+def movement_angle(src, dst, precision=0):
+    x = dst[0] - src[0]
+    y = dst[1] - src[1]
+    angle = math.degrees(math.atan2(y, -x)) # negate x for clockwise rotation angle
+    return round(angle, precision)
 
 class GcodeModel(Model):
     """
@@ -197,6 +206,8 @@ class GcodeModel(Model):
         [0.4, 0.1, 0.0],
     ], 'f')
 
+    loaded = False
+
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
@@ -204,29 +215,34 @@ class GcodeModel(Model):
         color_list       = []
         self.layer_stops = [0]
         arrow_list       = []
-        num_layers       = len(model_data)
+        num_layers       = len(model_data.all_layers)
 
-        for layer_idx, layer in enumerate(model_data):
-            for movement in layer:
-                vertex_list.append(movement.src)
-                vertex_list.append(movement.dst)
+        prev_pos = (0, 0, 0)
+        for layer_idx, layer in enumerate(model_data.all_layers):
+            for gline in layer.lines:
+                if not gline.is_move:
+                    continue
+                vertex_list.append(prev_pos)
+                vertex_list.append(gline.current_pos)
 
                 arrow = self.arrow
                 # position the arrow with respect to movement
-                arrow = vector.rotate(arrow, movement.angle(), 0.0, 0.0, 1.0)
+                arrow = vector.rotate(arrow, movement_angle(prev_pos, gline.current_pos), 0.0, 0.0, 1.0)
                 arrow_list.extend(arrow)
 
-                vertex_color = self.movement_color(movement)
+                vertex_color = self.movement_color(gline)
                 color_list.append(vertex_color)
+
+                prev_pos = gline.current_pos
 
             self.layer_stops.append(len(vertex_list))
 
             if callback:
                 callback(layer_idx + 1, num_layers)
 
-        self.vertices = numpy.array(vertex_list, 'f')
-        self.colors   = numpy.array(color_list,  'f')
-        self.arrows   = numpy.array(arrow_list,  'f')
+        self.vertices = numpy.array(vertex_list, dtype = GLfloat)
+        self.colors   = numpy.array(color_list, dtype = GLfloat)
+        self.arrows   = numpy.array(arrow_list, dtype = GLfloat)
 
         # by translating the arrow vertices outside of the loop, we achieve a
         # significant performance gain thanks to numpy. it would be really nice
@@ -241,11 +257,12 @@ class GcodeModel(Model):
         self.num_layers_to_draw = self.max_layers
         self.arrows_enabled     = True
         self.initialized        = False
+        self.loaded             = True
 
         t_end = time.time()
 
-        logging.info('Initialized Gcode model in %.2f seconds' % (t_end - t_start))
-        logging.info('Vertex count: %d' % len(self.vertices))
+        print ('Initialized Gcode model in %.2f seconds' % (t_end - t_start))
+        print ('Vertex count: %d' % len(self.vertices))
 
     def movement_color(self, move):
         """
@@ -254,6 +271,7 @@ class GcodeModel(Model):
         # default movement color is gray
         color = [0.6, 0.6, 0.6, 0.6]
 
+        """
         extruder_on = (move.flags & Movement.FLAG_EXTRUDER_ON or
                        move.delta_e > 0)
         outer_perimeter = (move.flags & Movement.FLAG_PERIMETER and
@@ -267,6 +285,9 @@ class GcodeModel(Model):
             color = [1.0, 0.875, 0.0, 0.6] # yellow
         elif extruder_on:
             color = [1.0, 0.0, 0.0, 0.6] # red
+        """
+        if move.extruding:
+            color = [1.0, 0.0, 0.0, 0.6] # red
 
         return color
 
@@ -275,18 +296,18 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
-        self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
+        self.vertex_buffer       = numpy2vbo(self.vertices)
+        self.vertex_color_buffer = numpy2vbo(self.colors.repeat(2, 0)) # each pair of vertices shares the color
 
         if self.arrows_enabled:
-            self.arrow_buffer       = VBO(self.arrows, 'GL_STATIC_DRAW')
-            self.arrow_color_buffer = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
+            self.arrow_buffer       = numpy2vbo(self.arrows)
+            self.arrow_color_buffer = numpy2vbo(self.colors.repeat(3, 0)) # each triplet of vertices shares the color
 
         self.initialized = True
 
     def display(self, mode_2d=False):
         glPushMatrix()
-        glTranslate(self.offset_x, self.offset_y, 0)
+        glTranslatef(self.offset_x, self.offset_y, 0)
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
 
