@@ -259,7 +259,7 @@ class GcodeModel(Model):
         self.max_layers         = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers
         self.printed_until      = -1
-        self.arrows_enabled     = True
+        self.arrows_enabled     = False
         self.initialized        = False
         self.loaded             = True
 
