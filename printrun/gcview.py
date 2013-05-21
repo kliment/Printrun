@@ -506,7 +506,21 @@ if __name__ == "__main__":
     app = wx.App(redirect = False)
     build_dimensions = [200, 200, 100, 0, 0, 0]
     frame = GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (400, 400), build_dimensions = build_dimensions)
-    frame.addfile(gcoder.GCode(open(sys.argv[1])))
+    gcode = gcoder.GCode(open(sys.argv[1]))
+    frame.addfile(gcode)
+
+    nsteps = 20
+    steptime = 500
+    lines = [gcode.lines[i*(len(gcode.lines)-1)/nsteps] for i in range(nsteps + 1)]
+    current_line = 0
+    def setLine():
+        global current_line
+        frame.set_current_gline(lines[current_line])
+        current_line = (current_line + 1) % len(lines)
+        timer.Start()
+    timer = wx.CallLater(steptime, setLine)
+    timer.Start()
+
     frame.Show(True)
     app.MainLoop()
     app.Destroy()
