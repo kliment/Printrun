@@ -245,47 +245,31 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             wx.CallAfter(self.printbtn.Enable)
 
     def sentcb(self, line):
-        if "G1" in line:
-            if "Z" in line:
-                try:
-                    layer = float(line.split("Z")[1].split()[0].split("*")[0])
-                    if layer != self.curlayer:
-                        self.curlayer = layer
-                        self.gviz.hilight.clear()
-                        self.gviz.hilightarcs.clear()
-                        threading.Thread(target = wx.CallAfter, args = (self.gviz.setlayer, layer)).start()
-                except:
-                    pass
-            try:
-                self.sentlines.put_nowait(line)
-            except Queue.Full:
-                pass
-            #threading.Thread(target = self.gviz.addgcode, args = (line, 1)).start()
-            #self.gwindow.p.addgcode(line, hilight = 1)
-        if "M104" in line or "M109" in line:
-            if "S" in line:
-                try:
-                    temp = float(line.split("S")[1].split("*")[0])
-                    if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
-                    wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
-                except:
-                    pass
-            try:
-                self.sentlines.put_nowait(line)
-            except:
-                pass
-        if "M140" in line:
-            if "S" in line:
-                try:
-                    temp = float(line.split("S")[1].split("*")[0])
-                    if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
-                    wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
-                except:
-                    pass
-            try:
-                self.sentlines.put_nowait(line)
-            except:
-                pass
+        gline = gcoder.Line(line)
+        gline.parse_coordinates(imperial = False)
+        if gline.is_move:
+            if gline.z != None:
+                layer = gline.z
+                if layer != self.curlayer:
+                    self.curlayer = layer
+                    self.gviz.hilight.clear()
+                    self.gviz.hilightarcs.clear()
+                    wx.CallAfter(self.gviz.setlayer, layer)
+        elif gline.command in ["M104", "M109"]:
+            gline.parse_coordinates(imperial = False, force = True)
+            if gline.s != None:
+                temp = gline.s
+                if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
+                wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
+        elif gline.command == "M140":
+            gline.parse_coordinates(imperial = False, force = True)
+            if gline.s != None:
+                temp = gline.s
+                if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
+                wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
+        else:
+            return
+        self.sentlines.put_nowait(line)
 
     def do_extrude(self, l = ""):
         try:
