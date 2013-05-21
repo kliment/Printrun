@@ -349,7 +349,7 @@ class GcodeModel(Model):
         self.vertex_color_buffer.bind()
         glColorPointer(4, GL_FLOAT, 0, None)
 
-        start = self.printed_until + 1
+        start = self.printed_until
         end = end - start
         if end > 0:
             glDrawArrays(GL_LINES, start, end)
