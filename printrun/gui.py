@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import traceback
+
 try:
     import wx
 except:
@@ -201,11 +203,17 @@ class VizPane(wx.BoxSizer):
             extrusion_width = root.settings.preview_extrusion_width)
         root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
         root.gviz.showall = 1
-        try:
-            raise ""
-            import printrun.stlview
-            root.gwindow = printrun.stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600))
-        except:
+        use3dview = False
+        if use3dview:
+            try:
+                import printrun.gcview
+                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list)
+            except:
+                use3dview = False
+                print "3D view mode requested, but we failed to initialize it."
+                print "Falling back to 2D view, and here is the backtrace:"
+                traceback.print_exc()
+        if not use3dview:
             root.gwindow = gviz.window([],
             build_dimensions = root.build_dimensions_list,
             grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
