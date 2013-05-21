@@ -33,17 +33,17 @@ class Line(object):
     f = None
     i = None
     j = None
-    
-    relative = False
-    relative_e = False
 
     raw = None
     split_raw = None
 
     command = None
     is_move = False
-
-    duration = None
+    
+    relative = False
+    relative_e = False
+    current_pos = None
+    extruding = None
 
     def __init__(self, l):
         self.raw = l.lower()
@@ -77,7 +77,7 @@ class Layer(object):
     def __init__(self, lines):
         self.lines = lines
 
-    def measure(self):
+    def _preprocess(self, current_x, current_y, current_z):
         xmin = float("inf")
         ymin = float("inf")
         zmin = 0
@@ -87,11 +87,9 @@ class Layer(object):
         relative = False
         relative_e = False
 
-        current_x = 0
-        current_y = 0
-        current_z = 0
-
         for line in self.lines:
+            if not line.is_move and line.command != "G92":
+                continue
             if line.is_move:
                 x = line.x 
                 y = line.y
@@ -109,20 +107,21 @@ class Layer(object):
                     if y:
                         ymin = min(ymin, y)
                         ymax = max(ymax, y)
-                if z:
-                    zmin = min(zmin, z)
-                    zmax = max(zmax, z)
+                    if z:
+                        zmin = min(zmin, z)
+                        zmax = max(zmax, z)
 
                 current_x = x or current_x
                 current_y = y or current_y
                 current_z = z or current_z
 
-            elif line.command == "G92":
+            else:
                 current_x = line.x or current_x
                 current_y = line.y or current_y
                 current_z = line.z or current_z    
 
-        return (xmin, xmax), (ymin, ymax), (zmin, zmax)
+            line.current_pos = (current_x, current_y, current_z)
+        return (current_x, current_y, current_z), (xmin, xmax), (ymin, ymax), (zmin, zmax)
 
 class GCode(object):
 
@@ -137,12 +136,25 @@ class GCode(object):
     relative = False
     relative_e = False
 
+    filament_length = None
+    xmin = None
+    xmax = None
+    ymin = None
+    ymax = None
+    zmin = None
+    zmax = None
+    width = None
+    depth = None
+    height = None
+
     def __init__(self,data):
         self.lines = [Line(l2) for l2 in
                         (l.strip() for l in data)
                       if l2]
-        self._preprocess()
+        self._preprocess_lines()
+        self._preprocess_extrusion()
         self._create_layers()
+        self._preprocess_layers()
 
     def __len__(self):
         return len(self.idxs)
@@ -157,7 +169,7 @@ class GCode(object):
         self.append_layer.lines.append(gline)
         self.idxs.append((self.append_layer_id, len(self.append_layer.lines)))
 
-    def _preprocess(self, lines = None):
+    def _preprocess_lines(self, lines = None):
         """Checks for G20, G21, G90 and G91, sets imperial and relative flags"""
         if not lines:
             lines = self.lines
@@ -187,6 +199,28 @@ class GCode(object):
         self.imperial = imperial
         self.relative = relative
         self.relative_e = relative_e
+    
+    def _preprocess_extrusion(self):
+        total_e = 0
+        max_e = 0
+        cur_e = 0
+        
+        for line in self.lines:
+            if line.e == None:
+                continue
+            if line.is_move:
+                if line.relative_e:
+                    line.extruding = line.e != 0
+                    total_e += line.e
+                else:
+                    line.extruding = line.e != cur_e
+                    total_e += line.e - cur_e
+                    cur_e = line.e
+                max_e = max(max_e, total_e)
+            elif line.command == "G92":
+                cur_e = line.e
+
+        self.filament_length = max_e
     
     # FIXME : looks like this needs to be tested with list Z on move
     def _create_layers(self):
@@ -252,7 +286,7 @@ class GCode(object):
     def num_layers(self):
         return len(self.layers)
 
-    def measure(self):
+    def _preprocess_layers(self):
         xmin = float("inf")
         ymin = float("inf")
         zmin = 0
@@ -260,8 +294,12 @@ class GCode(object):
         ymax = float("-inf")
         zmax = float("-inf")
 
-        for l in self.layers.values():
-            (xm, xM), (ym, yM), (zm, zM) = l.measure()
+        current_x = 0
+        current_y = 0
+        current_z = 0
+
+        for l in self.all_layers:
+            (current_x, current_y, current_z), (xm, xM), (ym, yM), (zm, zM) = l._preprocess(current_x, current_y, current_z)
             xmin = min(xm, xmin)
             xmax = max(xM, xmax)
             ymin = min(ym, ymin)
@@ -278,26 +316,6 @@ class GCode(object):
         self.width = xmax - xmin
         self.depth = ymax - ymin
         self.height = zmax - zmin
-    
-    def filament_length(self):
-        total_e = 0
-        max_e = 0
-        cur_e = 0
-        
-        for line in self.lines:
-            if line.e == None:
-                continue
-            if line.is_move:
-                if line.relative_e:
-                    total_e += line.e
-                else:
-                    total_e += line.e - cur_e
-                    cur_e = line.e
-                max_e = max(max_e, total_e)
-            elif line.command == "G92":
-                cur_e = line.e
-
-        return max_e
 
     def estimate_duration(self):
         lastx = lasty = lastz = laste = lastf = 0.0
@@ -365,13 +383,11 @@ def main():
  
     gcode = GCode(open(sys.argv[1])) 
 
-    gcode.measure()
-
     print "Dimensions:"
     print "\tX: %0.02f - %0.02f (%0.02f)" % (gcode.xmin,gcode.xmax,gcode.width)
     print "\tY: %0.02f - %0.02f (%0.02f)" % (gcode.ymin,gcode.ymax,gcode.depth)
     print "\tZ: %0.02f - %0.02f (%0.02f)" % (gcode.zmin,gcode.zmax,gcode.height)
-    print "Filament used: %0.02fmm" % gcode.filament_length()
+    print "Filament used: %0.02fmm" % gcode.filament_length
     print "Number of layers: %d" % gcode.num_layers()
     print "Estimated duration: %s" % gcode.estimate_duration()
 
