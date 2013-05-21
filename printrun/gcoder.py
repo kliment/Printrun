@@ -19,7 +19,7 @@ import re
 import math
 import datetime
 
-gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j"]
+gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j", "s"]
 gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
 m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
 move_gcodes = ["G0", "G1", "G2", "G3"]
@@ -33,6 +33,7 @@ class Line(object):
     f = None
     i = None
     j = None
+    s = None
 
     raw = None
     split_raw = None
@@ -51,9 +52,9 @@ class Line(object):
         self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
         self.is_move = self.command in move_gcodes
 
-    def parse_coordinates(self, imperial):
+    def parse_coordinates(self, imperial = False, force = False):
         # Not a G-line, we don't want to parse its arguments
-        if not self.command[0] == "G":
+        if not force and not self.command[0] == "G":
             return
         if imperial:
             for bit in self.split_raw:
