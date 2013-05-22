@@ -1308,10 +1308,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def loadviz(self):
         gcode = self.fgcode
-        print gcode.filament_length, _("mm of filament used in this print\n")
-        print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (gcode.xmin, gcode.xmax, gcode.width)
-        print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (gcode.ymin, gcode.ymax, gcode.depth)
-        print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (gcode.zmin, gcode.zmax, gcode.height)
+        print gcode.filament_length, _("mm of filament used in this print")
+        print _("The print goes:")
+        print _("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width)
+        print _("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth)
+        print _("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height)
         print _("Estimated duration: %s") % gcode.estimate_duration()
         self.gviz.clear()
         self.gwindow.p.clear()
