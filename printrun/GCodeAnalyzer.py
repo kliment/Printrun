@@ -67,7 +67,6 @@ class GCodeAnalyzer():
         self.hasHomeZ = False
 
     def Analyze(self, gcode):
-        gcode = gcode[:gcode.find(";")].lstrip() # remove comments
         gline = gcoder.Line(gcode)
         if gline.command.startswith(";@"): return # code is a host command
         if gline.command.startswith("G"):
