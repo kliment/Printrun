@@ -69,10 +69,8 @@ class GCodeAnalyzer():
     def Analyze(self, gcode):
         gline = gcoder.Line(gcode)
         if gline.command.startswith(";@"): return # code is a host command
-        if gline.command.startswith("G"):
-            code_g = int(gline.command[1:])
-        if gline.command.startswith("M"):
-            code_m = int(gline.command[1:])
+        code_g = int(gline.command[1:]) if gline.command.startswith("G") else None
+        code_m = int(gline.command[1:]) if gline.command.startswith("M") else None
 
         #get movement codes
         if gline.is_move:
