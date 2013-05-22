@@ -89,18 +89,9 @@ def parse_build_dimensions(bdim):
     # "XXXxYYY+xxx-yyy"
     # "XXX,YYY,ZZZ+xxx+yyy-zzz"
     # etc
-    bdl = re.match(
-    "[^\d+-]*(\d+)?" + # X build size
-    "[^\d+-]*(\d+)?" + # Y build size
-    "[^\d+-]*(\d+)?" + # Z build size
-    "[^\d+-]*([+-]\d+)?" + # X corner coordinate
-    "[^\d+-]*([+-]\d+)?" + # Y corner coordinate
-    "[^\d+-]*([+-]\d+)?" + # Z corner coordinate
-    "[^\d+-]*([+-]\d+)?" + # X endstop
-    "[^\d+-]*([+-]\d+)?" + # Y endstop
-    "[^\d+-]*([+-]\d+)?"  # Z endstop
-    ,bdim).groups()
+    bdl = re.findall("([-+]?[0-9]*\.?[0-9]*)", bdim)
     defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
+    bdl = filter(None, bdl)
     bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
     return bdl_float
 
@@ -116,7 +107,8 @@ class BuildDimensionsSetting(wxSetting):
 
     def _set_widgets_values(self, value):
         build_dimensions_list = parse_build_dimensions(value)
-        for i in range(len(widgets)):
+        print build_dimensions_list
+        for i in range(len(self.widgets)):
             self.widgets[i].SetValue(build_dimensions_list[i])        
 
     def get_widget(self, parent):
@@ -158,7 +150,8 @@ class BuildDimensionsSetting(wxSetting):
         return self.widget
 
     def update(self):
-        self.value = "%.02fx%.02fx%.02f+%.02f+%.02f+%.02f+%.02f+%.02f+%.02f" % (w.GetValue() for w in self.widgets)
+        values = [w.GetValue() for w in self.widgets]
+        self.value = "%.02fx%.02fx%.02f+%.02f+%.02f+%.02f+%.02f+%.02f+%.02f" % tuple(values)
 
 class StringSetting(wxSetting):
 
