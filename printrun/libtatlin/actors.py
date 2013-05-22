@@ -19,12 +19,16 @@
 import time
 import numpy
 import math
+import sys
 
 from pyglet.gl import *
 from pyglet import gl
 from pyglet.graphics.vertexbuffer import create_buffer
 
 from . import vector
+
+from printrun.printrun_utils import install_locale
+install_locale('pronterface')
 
 def compile_display_list(func, *options):
     display_list = glGenLists(1)
@@ -265,8 +269,8 @@ class GcodeModel(Model):
 
         t_end = time.time()
 
-        print ('Initialized Gcode model in %.2f seconds' % (t_end - t_start))
-        print ('Vertex count: %d' % len(self.vertices))
+        print >> sys.stderr, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start)
+        print >> sys.stderr, _('Vertex count: %d') % len(self.vertices)
 
     def movement_color(self, move):
         """
