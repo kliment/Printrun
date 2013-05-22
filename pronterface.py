@@ -131,6 +131,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         ]
         self.custombuttons = []
         self.btndict = {}
+        self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
         self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
         
@@ -198,16 +199,20 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.predisconnect_layer = None
         self.hsetpoint = 0.0
         self.bsetpoint = 0.0
+        if self.autoconnect:
+            self.connect()
         if self.filename is not None:
             self.do_load(self.filename)
 
     def add_cmdline_arguments(self, parser):
         pronsole.pronsole.add_cmdline_arguments(self, parser)
         parser.add_argument('-g','--gauges', help = _("display graphical temperature gauges in addition to the temperatures graph"), action = "store_true")
+        parser.add_argument('-a','--autoconnect', help = _("automatically try to connect to printer on startup"), action = "store_true")
 
     def process_cmdline_arguments(self, args):
         pronsole.pronsole.process_cmdline_arguments(self, args)
         self.display_gauges = args.gauges
+        self.autoconnect = args.autoconnect
 
     def startcb(self):
         self.starttime = time.time()
@@ -1394,7 +1399,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.on_startprint()
         threading.Thread(target = self.getfiles).start()
 
-    def connect(self, event):
+    def connect(self, event = None):
         print _("Connecting...")
         port = None
         try:
