@@ -47,8 +47,8 @@ class Line(object):
     extruding = None
 
     def __init__(self, l):
-        self.raw = l.lower()
-        self.split_raw = gcode_exp.findall(self.raw)
+        self.raw = l
+        self.split_raw = gcode_exp.findall(self.raw.lower())
         self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
         self.is_move = self.command in move_gcodes
 
@@ -68,7 +68,7 @@ class Line(object):
                     setattr(self, code, float(bit[1:]))
  
     def __repr__(self):
-        return self.raw.upper()
+        return self.raw
         
 class Layer(object):
 
