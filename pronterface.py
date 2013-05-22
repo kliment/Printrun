@@ -764,8 +764,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if bedit.color.GetValue().strip()!="":
                 self.custombuttons[n].background = bedit.color.GetValue()
             self.cbutton_save(n, self.custombuttons[n])
-        bedit.Destroy()
-        self.cbuttons_reload()
+        wx.CallAfter(bedit.Destroy)
+        wx.CallAfter(self.cbuttons_reload)
 
     def cbutton_remove(self, e, button):
         n = button.custombutton
@@ -787,7 +787,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.cbutton_save(n+1, self.custombuttons[n+1])
         #if self.custombuttons[-1] is None:
         #    del self.custombuttons[-1]
-        self.cbuttons_reload()
+        wx.CallAfter(self.cbuttons_reload)
 
     def editbutton(self, e):
         if e.IsCommandEvent() or e.ButtonUp(wx.MOUSE_BTN_RIGHT):
