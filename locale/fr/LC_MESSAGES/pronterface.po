@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2013-05-22 12:58+CEST\n"
-"PO-Revision-Date: 2013-05-22 14:20+0100\n"
+"PO-Revision-Date: 2013-05-22 14:23+0100\n"
 "Last-Translator: Guillaume Seguin <guillaume@segu.in>\n"
 "Language-Team: FR <c.laguilhon.debat@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -1163,7 +1163,7 @@ msgstr "- de %.02f mm à %.02f mm en Y et mesure %.02f mm de haut"
 
 #: pronterface.py:1316
 msgid "Estimated duration: %s"
-msgstr "Durée estimée : "
+msgstr "Durée estimée : %s"
 
 #: pronterface.py:1347
 msgid "Restart"
