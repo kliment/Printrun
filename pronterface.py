@@ -957,7 +957,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.onecmd('home')
         else:
             return
-        self.onecmd('M114')
+        self.p.send_now('M114')
 
     def moveXY(self, x, y):
         # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
@@ -968,12 +968,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.onecmd('move Y %s' % y)
         else:
             return
-        self.onecmd('M114')
+        self.p.send_now('M114')
 
     def moveZ(self, z):
         if z != 0:
             self.onecmd('move Z %s' % z)
-            self.onecmd('M114')
+            self.p.send_now('M114')
         # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
         self.xyb.clearRepeat()
 
