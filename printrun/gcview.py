@@ -364,12 +364,15 @@ class GcodeViewPanel(wxGLPanel):
                 p1 = self.initpos
                 p2 = event.GetPositionTuple()
                 sz = self.GetClientSize()
-                p1 = list(p1)
-                p2 = list(p2)
+                p1 = list(p1) + [0]
+                p2 = list(p2) + [0]
                 p1[1] *= -1
                 p2[1] *= -1
+                sz = list(sz) + [1]
+                sz[0] *= 2
+                sz[1] *= 2
 
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
+                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  p1, p2,  sz,  self.transv)
 
                 glLoadIdentity()
                 glTranslatef(self.transv[0], self.transv[1], 0)
