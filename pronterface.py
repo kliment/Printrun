@@ -946,7 +946,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.onecmd('home')
         else:
             return
-        self.onecmd('M114')
+        self.p.send_now('M114')
 
     def moveXY(self, x, y):
         # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
@@ -957,12 +957,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.onecmd('move Y %s' % y)
         else:
             return
-        self.onecmd('M114')
+        self.p.send_now('M114')
 
     def moveZ(self, z):
         if z != 0:
             self.onecmd('move Z %s' % z)
-            self.onecmd('M114')
+            self.p.send_now('M114')
         # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
         self.xyb.clearRepeat()
 
@@ -1127,15 +1127,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         return retval
 
     def recvcb(self, l):
-        if "ok C:" in l:
+        isreport = False
+        if "ok C:" in l or "Count" in l:
             self.posreport = l
             self.update_pos()
+            isreport = True
         if "ok T:" in l:
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             self.update_tempdisplay()
+            isreport = True
         tstring = l.rstrip()
-        if self.p.loud or (tstring not in ["ok", "wait"] and "ok T:" not in tstring and "ok C:" not in tstring):
+        if self.p.loud or (tstring not in ["ok", "wait"] and not isreport):
             wx.CallAfter(self.addtexttolog, tstring + "\n");
         for listener in self.recvlisteners:
             listener(l)

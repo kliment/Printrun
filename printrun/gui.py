@@ -190,7 +190,7 @@ class LeftPane(wx.GridBagSizer):
         else:
             self.Add(root.tempdisp, pos = (6, 0), span = (1, 6))
 
-        root.graph = Graph(root.panel, wx.ID_ANY)
+        root.graph = Graph(root.panel, wx.ID_ANY, root)
         self.Add(root.graph, pos = (4, 5), span = (2, 1))
 
 class VizPane(wx.BoxSizer):

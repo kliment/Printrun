@@ -825,25 +825,25 @@ class pronsole(cmd.Cmd):
         self.log("! os.listdir('.')")
 
     def default(self, l):
-        if(l[0] in self.commandprefixes.upper()):
-            if(self.p and self.p.online):
-                if(not self.p.loud):
+        if l[0] in self.commandprefixes.upper():
+            if self.p and self.p.online:
+                if not self.p.loud:
                     self.log("SENDING:"+l)
                 self.p.send_now(l)
             else:
                 self.log(_("Printer is not online."))
             return
-        elif(l[0] in self.commandprefixes.lower()):
-            if(self.p and self.p.online):
-                if(not self.p.loud):
+        elif l[0] in self.commandprefixes.lower():
+            if self.p and self.p.online:
+                if not self.p.loud:
                     self.log("SENDING:"+l.upper())
                 self.p.send_now(l.upper())
             else:
                 self.log(_("Printer is not online."))
             return
-        elif(l[0] == "@"):
-            if(self.p and self.p.online):
-                if(not self.p.loud):
+        elif l[0] == "@":
+            if self.p and self.p.online:
+                if not self.p.loud:
                     self.log("SENDING:"+l[1:])
                 self.p.send_now(l[1:])
             else:
