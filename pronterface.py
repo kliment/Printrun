@@ -1065,15 +1065,15 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         y = None
         z = None
         for bit in bits:
-            if not x and bit.startswith("X"):
+            if x is None and bit.startswith("X"):
                 x = float(bit[1:].replace(":",""))
-            elif not y and bit.startswith("Y"):
+            elif y is None and bit.startswith("Y"):
                 y = float(bit[1:].replace(":",""))
-            elif not z and bit.startswith("Z"):
+            elif z is None and bit.startswith("Z"):
                 z = float(bit[1:].replace(":",""))
-        if x: self.current_pos[0] = x
-        if y: self.current_pos[1] = y
-        if z: self.current_pos[2] = z
+        if x is not None: self.current_pos[0] = x
+        if y is not None: self.current_pos[1] = y
+        if z is not None: self.current_pos[2] = z
 
     def statuschecker(self):
         while self.statuscheck:
@@ -1135,7 +1135,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         isreport = False
         if "ok C:" in l or "Count" in l:
             self.posreport = l
-            self.update_pos()
+            self.update_pos(l)
             isreport = True
         if "ok T:" in l:
             self.tempreport = l
