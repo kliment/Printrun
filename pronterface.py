@@ -216,7 +216,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def startcb(self):
         self.starttime = time.time()
-        print "Print Started at: " + format_time(self.starttime)
+        print _("Print Started at: %s") % format_time(self.starttime)
 
     def endcb(self):
         if self.p.queueindex == 0:
