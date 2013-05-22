@@ -160,10 +160,13 @@ class LeftPane(wx.GridBagSizer):
         root.efeedc.SetBackgroundColour((225, 200, 200))
         root.efeedc.SetForegroundColour("black")
         root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+        root.efeedc.Bind(wx.EVT_TEXT, root.setfeeds)
         self.Add(root.efeedc, pos = (5, 2), span = (1, 2))
         self.Add(wx.StaticText(root.panel,-1, _("mm/\nmin")), pos = (5, 4), span = (1, 1))
         root.xyfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
         root.zfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+        root.xyfeedc.Bind(wx.EVT_TEXT, root.setfeeds)
+        root.zfeedc.Bind(wx.EVT_TEXT, root.setfeeds)
         root.zfeedc.SetBackgroundColour((180, 255, 180))
         root.zfeedc.SetForegroundColour("black")
 
