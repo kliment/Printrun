@@ -382,7 +382,7 @@ class printcore():
             return
         if self.printing and self.queueindex < len(self.mainqueue.idxs):
             (layer, line) = self.mainqueue.idxs[self.queueindex]
-            gline = self.mainqueue.all_layers[layer].lines[line].raw
+            gline = self.mainqueue.all_layers[layer].lines[line]
             tline = gline.raw
             #check for host command
             if tline.lstrip().startswith(";@"):
