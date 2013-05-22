@@ -509,9 +509,19 @@ if __name__ == "__main__":
     gcode = gcoder.GCode(open(sys.argv[1]))
     frame.addfile(gcode)
 
+    first_move = None
+    for i in range(len(gcode.lines)):
+        if gcode.lines[i].is_move:
+            first_move = gcode.lines[i]
+            break
+    last_move = None
+    for i in range(len(gcode.lines)-1,-1,-1):
+        if gcode.lines[i].is_move:
+            last_move = gcode.lines[i]
+            break
     nsteps = 20
     steptime = 500
-    lines = [gcode.lines[i*(len(gcode.lines)-1)/nsteps] for i in range(nsteps + 1)]
+    lines = [first_move] + [gcode.lines[int(float(i)*(len(gcode.lines)-1)/nsteps)] for i in range(1, nsteps)] + [last_move]
     current_line = 0
     def setLine():
         global current_line
