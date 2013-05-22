@@ -189,7 +189,7 @@ class pronsole(cmd.Cmd):
                           "online"   : "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
 
     def log(self, *msg):
-        print ''.join(str(i) for i in msg)
+        print u"".join(unicode(i) for i in msg)
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
