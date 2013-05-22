@@ -28,6 +28,8 @@ from printrun.printrun_utils import install_locale
 from printrun import gcoder
 install_locale('pronterface')
 
+from functools import wraps
+
 if os.name == "nt":
     try:
         import _winreg
@@ -54,27 +56,169 @@ def confirm():
       return confirm()
    return False
 
-class Settings:
+def setting_add_tooltip(func):
+    @wraps(func)
+    def decorator(self, *args, **kwargs):
+        widget = func(self, *args, **kwargs)
+        if self.help:
+            widget.SetToolTipString(self.help)
+        return widget
+    return decorator
+
+class Setting(object):
+
+    hidden = False
+
+    def __init__(self, name, default, label = None, help = None):
+        self.name = name
+        self.default = default
+        self._value = default
+        self.label = label
+        self.help = help
+
+    def _get_value(self):
+        return self._value
+    def _set_value(self, value):
+        raise NotImplementedError
+    value = property(_get_value, _set_value)
+
+    @setting_add_tooltip
+    def get_label(self, parent):
+        import wx
+        widget = wx.StaticText(parent, -1, self.label or self.name)
+        return widget
+
+    @setting_add_tooltip
+    def get_widget(self, parent):
+        return self.get_specific_widget(parent)
+
+    def get_specific_widget(self, parent):
+        raise NotImplementedError
+
+    def set(self, value):
+        raise NotImplementedError
+
+    def get(self):
+        raise NotImplementedError
+
+    def update(self):
+        raise NotImplementedError
+    
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
+class HiddenSetting(Setting):
+   
+    hidden = True
+
+    def _set_value(self, value):
+        self._value = value
+    value = property(Setting._get_value, _set_value)
+
+class wxSetting(Setting):
+    
+    widget = None
+
+    def _set_value(self, value):
+        self._value = value
+        if self.widget:
+            self.widget.SetValue(value)
+    value = property(Setting._get_value, _set_value)
+
+    def update(self):
+        self.value = self.widget.GetValue()
+
+class StringSetting(wxSetting):
+
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.TextCtrl(parent, -1, str(self.value))
+        return self.widget
+
+class ComboSetting(wxSetting):
+    
+    def __init__(self, name, default, choices, label = None, help = None):
+        super(ComboSetting, self).__init__(name, default, label, help)
+        self.choices = choices
+
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
+        return self.widget
+
+class SpinSetting(wxSetting):
+    
+    def __init__(self, name, default, min, max, label = None, help = None):
+        super(SpinSetting, self).__init__(name, default, label, help)
+        self.min = min
+        self.max = max
+
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.SpinCtrl(parent, -1, min = self.min, max = self.max)
+        self.widget.SetValue(self.value)
+        return self.widget
+
+class FloatSpinSetting(SpinSetting):
+
+    def get_specific_widget(self, parent):
+        from wx.lib.agw.floatspin import FloatSpin
+        self.widget = FloatSpin(parent, -1, value = self.value, min_val = self.min, max_val = self.max, digits = 2)
+        return self.widget
+
+class BooleanSetting(wxSetting):
+
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.CheckBox(parent, -1)
+        self.widget.SetValue(bool(self.value))
+        return self.widget
+
+class Settings(object):
     #def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
     #def _temperature_validate(self, v):
     #    if v < 0: raise ValueError("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
     #def _bedtemperature_alias(self): return {"pla":60, "abs":110, "off":0}
-    def _baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200"]
+    def _baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
     def __init__(self):
         # defaults here.
         # the initial value determines the type
-        self.port = ""
-        self.baudrate = 115200
-        self.bedtemp_abs = 110
-        self.bedtemp_pla = 60
-        self.temperature_abs = 230
-        self.temperature_pla = 185
-        self.xy_feedrate = 3000
-        self.z_feedrate = 200
-        self.e_feedrate = 300
-        self.slicecommand = "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s"
-        self.sliceoptscommand = "python skeinforge/skeinforge_application/skeinforge.py"
-        self.final_command = ""
+        self._add(StringSetting("port", "", _("Serial port"), _("Port used to communicate with printer")))
+        self._add(ComboSetting("baudrate", 115200, self._baudrate_list(), _("Baud rate"), _("Communications Speed (default: 115200)")))
+        self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (default: 110 deg C)")))
+        self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (default: 60 deg C)")))
+        self._add(SpinSetting("temperature_abs", 230, 0, 400, _("Bed temperature for ABS"), _("Extruder temp for ABS (default: 230 deg C)")))
+        self._add(SpinSetting("temperature_pla", 185, 0, 400, _("Bed temperature for PLA"), _("Extruder temp for PLA (default: 185 deg C)")))
+        self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X & Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")))
+        self._add(SpinSetting("z_feedrate", 200, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")))
+        self._add(SpinSetting("e_feedrate", 300, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)")))
+        self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)")))
+        self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")))
+        self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished")))
+
+    _settings = []
+    def __setattr__(self, name, value):
+        if name.startswith("_"):
+            return object.__setattr__(self, name, value)
+        if isinstance(value, Setting):
+            if not value.hidden:
+                self._settings.append(value)
+            object.__setattr__(self, "_" + name, value)
+        elif hasattr(self, "_" + name):
+            getattr(self, "_" + name).value = value
+        else:
+            setattr(self, name, StringSetting(name = name, default = value))
+
+    def __getattr__(self, name):
+        if name.startswith("_"):
+            return object.__getattribute__(self, name)
+        return getattr(self, "_" + name).value
+
+    def _add(self, setting):
+        setattr(self, setting.name, setting)
 
     def _set(self, key, value):
         try:
@@ -93,6 +237,7 @@ class Settings:
         except AttributeError:
             pass
         return value
+
     def _tabcomplete(self, key):
         try:
             return getattr(self, "_%s_list"%key)()
@@ -103,8 +248,9 @@ class Settings:
         except AttributeError:
             pass
         return []
+
     def _all_settings(self):
-        return dict([(k, getattr(self, k)) for k in self.__dict__.keys() if not k.startswith("_")])
+        return self._settings
 
 class Status:
 
@@ -169,19 +315,6 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.monitoring = 0
         self.silent = False
-        self.helpdict = {}
-        self.helpdict["baudrate"] = _("Communications Speed (default: 115200)")
-        self.helpdict["bedtemp_abs"] = _("Heated Build Platform temp for ABS (default: 110 deg C)")
-        self.helpdict["bedtemp_pla"] = _("Heated Build Platform temp for PLA (default: 60 deg C)")
-        self.helpdict["e_feedrate"] = _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)")
-        self.helpdict["port"] = _("Port used to communicate with printer")
-        self.helpdict["slicecommand"] = _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)")
-        self.helpdict["sliceoptscommand"] = _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")
-        self.helpdict["temperature_abs"] = _("Extruder temp for ABS (default: 230 deg C)")
-        self.helpdict["temperature_pla"] = _("Extruder temp for PLA (default: 185 deg C)")
-        self.helpdict["xy_feedrate"] = _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")
-        self.helpdict["z_feedrate"] = _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")
-        self.helpdict["final_command"] = _("Executable to run when the print is finished")
         self.commandprefixes='MGT$'
         self.promptstrs = {"offline" : "%(bold)suninitialized>%(normal)s ",
                           "fallback" : "%(bold)sPC>%(normal)s ", 

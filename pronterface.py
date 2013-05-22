@@ -46,7 +46,7 @@ import printcore
 from printrun.printrun_utils import pixmapfile, configfile
 from printrun.gui import MainWindow
 import pronsole
-from pronsole import dosify
+from pronsole import dosify, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting
 from printrun import gcoder
 
 def parse_temperature_report(report, key):
@@ -85,26 +85,20 @@ class Tee(object):
 class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
-        self.settings.build_dimensions = '200x200x100+0+0+0+0+0+0' #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed
-        self.settings.last_bed_temperature = 0.0
-        self.settings.last_file_path = ""
-        self.settings.last_temperature = 0.0
-        self.settings.preview_extrusion_width = 0.5
-        self.settings.preview_grid_step1 = 10.
-        self.settings.preview_grid_step2 = 50.
-        self.settings.bgcolor = "#FFFFFF"
+        #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed and endstops at 0, 0 and 0
+        self.settings._add(StringSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ")))
+        self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer"), _("Use 3D visualization instead of 2D layered visualization")))
+        self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
+        self.settings._add(HiddenSetting("last_file_path", ""))
+        self.settings._add(HiddenSetting("last_temperature", 0.0))
+        self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview (default: 0.5)")))
+        self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing (default: 10)")))
+        self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing (default: 50)")))
+        self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color (default: #FFFFFF)")))
         
         self.pauseScript = "pause.gcode"
         self.endScript = "end.gcode"
-        
-        self.helpdict["build_dimensions"] = _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ")
-        self.helpdict["last_bed_temperature"] = _("Last Set Temperature for the Heated Print Bed")
-        self.helpdict["last_file_path"] = _("Folder of last opened file")
-        self.helpdict["last_temperature"] = _("Last Temperature of the Hot End")
-        self.helpdict["preview_extrusion_width"] = _("Width of Extrusion in Preview (default: 0.5)")
-        self.helpdict["preview_grid_step1"] = _("Fine Grid Spacing (default: 10)")
-        self.helpdict["preview_grid_step2"] = _("Coarse Grid Spacing (default: 50)")
-        self.helpdict["bgcolor"] = _("Pronterface background color (default: #FFFFFF)")
+       
         self.filename = filename
         os.putenv("UBUNTU_MENUPROXY", "0")
         MainWindow.__init__(self, None, title = _("Printer Interface"), size = size);
@@ -451,7 +445,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.macros_menu = wx.Menu()
         m.AppendSubMenu(self.macros_menu, _("&Macros"))
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
-        self.Bind(wx.EVT_MENU, lambda *e:options(self), m.Append(-1, _("&Options"), _(" Options dialog")))
+        self.Bind(wx.EVT_MENU, lambda *e: PronterOptions(self), m.Append(-1, _("&Options"), _(" Options dialog")))
 
         self.Bind(wx.EVT_MENU, lambda x: threading.Thread(target = lambda:self.do_skein("set")).start(), m.Append(-1, _("Slicing Settings"), _(" Adjust slicing settings")))
 

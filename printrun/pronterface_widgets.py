@@ -120,35 +120,31 @@ class MacroEditor(wx.Dialog):
                 reindented += self.indent_chars + line + "\n"
         return reindented
 
-class options(wx.Dialog):
+class PronterOptions(wx.Dialog):
     """Options editor"""
     def __init__(self, pronterface):
         wx.Dialog.__init__(self, None, title = _("Edit settings"), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         topsizer = wx.BoxSizer(wx.VERTICAL)
-        vbox = wx.StaticBoxSizer(wx.StaticBox(self, label = _("Defaults")) ,wx.VERTICAL)
+        vbox = wx.StaticBoxSizer(wx.StaticBox(self, label = _("Settings")) ,wx.VERTICAL)
         topsizer.Add(vbox, 1, wx.ALL+wx.EXPAND)
         grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = 8, vgap = 2)
         grid.SetFlexibleDirection( wx.BOTH )
         grid.AddGrowableCol( 1 )
         grid.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
         vbox.Add(grid, 0, wx.EXPAND)
-        ctrls = {}
-        for k, v in sorted(pronterface.settings._all_settings().items()):
-            ctrls[k, 0] = wx.StaticText(self,-1, k)
-            ctrls[k, 1] = wx.TextCtrl(self,-1, str(v))
-            if k in pronterface.helpdict:
-                ctrls[k, 0].SetToolTipString(pronterface.helpdict.get(k))
-                ctrls[k, 1].SetToolTipString(pronterface.helpdict.get(k))
-            grid.Add(ctrls[k, 0], 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
-            grid.Add(ctrls[k, 1], 1, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
+        for setting in pronterface.settings._all_settings():
+            grid.Add(setting.get_label(self), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
+            grid.Add(setting.get_widget(self), 1, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
         topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK+wx.CANCEL), 0, wx.EXPAND)
         self.SetSizer(topsizer)
         topsizer.Layout()
         topsizer.Fit(self)
         if self.ShowModal() == wx.ID_OK:
-            for k, v in pronterface.settings._all_settings().items():
-                if ctrls[k, 1].GetValue() != str(v):
-                    pronterface.set(k, str(ctrls[k, 1].GetValue()))
+            for setting in pronterface.settings._all_settings():
+                old_value = setting.value
+                setting.update()
+                if setting.value != old_value:
+                    pronterface.set(setting.name, setting.value)
         self.Destroy()
 
 class ButtonEdit(wx.Dialog):
