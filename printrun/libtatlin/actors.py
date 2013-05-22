@@ -351,7 +351,7 @@ class GcodeModel(Model):
 
         start = self.printed_until
         end = end - start
-        if end > 0:
+        if start >= 0 and end > 0:
             glDrawArrays(GL_LINES, start, end)
 
         self.vertex_buffer.unbind()
