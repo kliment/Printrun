@@ -46,7 +46,7 @@ import printcore
 from printrun.printrun_utils import pixmapfile, configfile
 from printrun.gui import MainWindow
 import pronsole
-from pronsole import dosify, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting
+from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting
 from printrun import gcoder
 
 def parse_temperature_report(report, key):
@@ -81,12 +81,108 @@ class Tee(object):
     def flush(self):
         self.stdout.flush()
 
+def parse_build_dimensions(bdim):
+    # a string containing up to six numbers delimited by almost anything
+    # first 0-3 numbers specify the build volume, no sign, always positive
+    # remaining 0-3 numbers specify the coordinates of the "southwest" corner of the build platform
+    # "XXX,YYY"
+    # "XXXxYYY+xxx-yyy"
+    # "XXX,YYY,ZZZ+xxx+yyy-zzz"
+    # etc
+    bdl = re.match(
+    "[^\d+-]*(\d+)?" + # X build size
+    "[^\d+-]*(\d+)?" + # Y build size
+    "[^\d+-]*(\d+)?" + # Z build size
+    "[^\d+-]*([+-]\d+)?" + # X corner coordinate
+    "[^\d+-]*([+-]\d+)?" + # Y corner coordinate
+    "[^\d+-]*([+-]\d+)?" + # Z corner coordinate
+    "[^\d+-]*([+-]\d+)?" + # X endstop
+    "[^\d+-]*([+-]\d+)?" + # Y endstop
+    "[^\d+-]*([+-]\d+)?"  # Z endstop
+    ,bdim).groups()
+    defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
+    bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
+    return bdl_float
+
+class BuildDimensionsSetting(wxSetting):
+
+    widgets = None
+
+    def _set_value(self, value):
+        self._value = value
+        if self.widgets:
+            self._set_widgets_values(value)
+    value = property(wxSetting._get_value, _set_value)
+
+    def _set_widgets_values(self, value):
+        build_dimensions_list = parse_build_dimensions(value)
+        for i in range(len(widgets)):
+            self.widgets[i].SetValue(build_dimensions_list[i])        
+
+    def get_widget(self, parent):
+        from wx.lib.agw.floatspin import FloatSpin
+        import wx
+        build_dimensions = parse_build_dimensions(self.value)
+        self.widgets = []
+        w = lambda val, m, M: self.widgets.append(FloatSpin(parent, -1, value = val, min_val = m, max_val = M, digits = 2))
+        addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
+        addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
+        self.widget = wx.GridBagSizer()
+        addlabel(_("Width"), (0, 0))
+        w(build_dimensions[0], 0, 2000)
+        addwidget(0, 1)
+        addlabel(_("Depth"), (0, 2))
+        w(build_dimensions[1], 0, 2000)
+        addwidget(0, 3)
+        addlabel(_("Height"), (0, 4))
+        w(build_dimensions[2], 0, 2000)
+        addwidget(0, 5)
+        addlabel(_("X offset"), (1, 0))
+        w(build_dimensions[3], -2000, 2000)
+        addwidget(1, 1)
+        addlabel(_("Y offset"), (1, 2))
+        w(build_dimensions[4], -2000, 2000)
+        addwidget(1, 3)
+        addlabel(_("Z offset"), (1, 4))
+        w(build_dimensions[5], -2000, 2000)
+        addwidget(1, 5)
+        addlabel(_("X home pos."), (2, 0))
+        w(build_dimensions[6], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 1))
+        addlabel(_("Y home pos."), (2, 2))
+        w(build_dimensions[7], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 3))
+        addlabel(_("Z home pos."), (2, 4))
+        w(build_dimensions[8], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 5))
+        return self.widget
+
+    def update(self):
+        self.value = "%.02fx%.02fx%.02f+%.02f+%.02f+%.02f+%.02f+%.02f+%.02f" % (w.GetValue() for w in self.widgets)
+
+class StringSetting(wxSetting):
+
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.TextCtrl(parent, -1, str(self.value))
+        return self.widget
+
+class ComboSetting(wxSetting):
+    
+    def __init__(self, name, default, choices, label = None, help = None):
+        super(ComboSetting, self).__init__(name, default, label, help)
+        self.choices = choices
+
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
+        return self.widget
 
 class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed and endstops at 0, 0 and 0
-        self.settings._add(StringSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ")))
+        self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ")))
         self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer"), _("Use 3D visualization instead of 2D layered visualization")))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
@@ -127,7 +223,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.btndict = {}
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
-        self.build_dimensions_list = self.get_build_dimensions(self.settings.build_dimensions)
+        self.build_dimensions_list = parse_build_dimensions(self.settings.build_dimensions)
         
         #initialize the code analyzer with the correct sizes. There must be a more general way to do so
 
@@ -1502,30 +1598,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.p.paused = 0
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 self.paused = 0
-
-    def get_build_dimensions(self, bdim):
-        import re
-        # a string containing up to six numbers delimited by almost anything
-        # first 0-3 numbers specify the build volume, no sign, always positive
-        # remaining 0-3 numbers specify the coordinates of the "southwest" corner of the build platform
-        # "XXX,YYY"
-        # "XXXxYYY+xxx-yyy"
-        # "XXX,YYY,ZZZ+xxx+yyy-zzz"
-        # etc
-        bdl = re.match(
-        "[^\d+-]*(\d+)?" + # X build size
-        "[^\d+-]*(\d+)?" + # Y build size
-        "[^\d+-]*(\d+)?" + # Z build size
-        "[^\d+-]*([+-]\d+)?" + # X corner coordinate
-        "[^\d+-]*([+-]\d+)?" + # Y corner coordinate
-        "[^\d+-]*([+-]\d+)?" + # Z corner coordinate
-        "[^\d+-]*([+-]\d+)?" + # X endstop
-        "[^\d+-]*([+-]\d+)?" + # Y endstop
-        "[^\d+-]*([+-]\d+)?"  # Z endstop
-        ,bdim).groups()
-        defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
-        bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
-        return bdl_float
 
 class PronterApp(wx.App):
 
