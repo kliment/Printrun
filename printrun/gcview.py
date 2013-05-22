@@ -254,6 +254,7 @@ class GcodeViewPanel(wxGLPanel):
         self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
+        self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
         self.initialized = 0
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.parent = parent
@@ -317,6 +318,10 @@ class GcodeViewPanel(wxGLPanel):
         LMB: rotate viewport
         RMB: move viewport
         """
+        if event.Entering():
+            self.canvas.SetFocus()
+            event.Skip()
+            return
         if event.Dragging() and event.LeftIsDown():
             if self.initpos == None:
                 self.initpos = event.GetPositionTuple()
@@ -375,35 +380,30 @@ class GcodeViewPanel(wxGLPanel):
                 self.rot = 1
                 self.initpos = None
         else:
+            event.Skip()
             return
+        event.Skip()
         wx.CallAfter(self.Refresh)
 
-    def wheel(self, event):
-        """react to mouse wheel actions:
-            without shift: set max layer
-            with shift: zoom viewport
-        """
-        z = event.GetWheelRotation()
-        angle = 10
-        if event.ShiftDown():
-            if not self.parent.model:
-                return
-            if z > 0:
-                max_layers = self.parent.model.max_layers
-                current_layer = self.parent.model.num_layers_to_draw
-                new_layer = min(max_layers, current_layer + 1)
-                self.parent.model.num_layers_to_draw = new_layer
-            else:
-                current_layer = self.parent.model.num_layers_to_draw
-                new_layer = max(1, current_layer - 1)
-                self.parent.model.num_layers_to_draw = new_layer
-            wx.CallAfter(self.Refresh)
+    def layerup(self):
+        if not self.parent.model:
             return
-        if z > 0:
-            self.transv[2] += angle
-        else:
-            self.transv[2] -= angle
+        max_layers = self.parent.model.max_layers
+        current_layer = self.parent.model.num_layers_to_draw
+        new_layer = min(max_layers, current_layer + 1)
+        self.parent.model.num_layers_to_draw = new_layer
+        wx.CallAfter(self.Refresh)
 
+    def layerdown(self):
+        if not self.parent.model:
+            return
+        current_layer = self.parent.model.num_layers_to_draw
+        new_layer = max(1, current_layer - 1)
+        self.parent.model.num_layers_to_draw = new_layer
+        wx.CallAfter(self.Refresh)
+
+    def zoom(self, dist):
+        self.transv[2] += dist
         glLoadIdentity()
         glTranslatef(*self.transv)
         if self.rot:
@@ -412,33 +412,45 @@ class GcodeViewPanel(wxGLPanel):
         self.rot = 1
         wx.CallAfter(self.Refresh)
 
+    def wheel(self, event):
+        """react to mouse wheel actions:
+            without shift: set max layer
+            with shift: zoom viewport
+        """
+        z = event.GetWheelRotation()
+        dist = 10
+        if event.ShiftDown():
+            if not self.parent.model:
+                return
+            if z > 0:
+                self.layerup()
+            else:
+                self.layerdown()
+            return
+        if z > 0:
+            self.zoom(dist)
+        else:
+            self.zoom(-dist)
+
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
         keycode = event.GetKeyCode()
-        print keycode
-        step = 5
-        angle = 18
+        step = 10
         if event.ControlDown():
-            step = 1
-            angle = 1
-        #h
-        if keycode == 72:
-            self.move_shape((-step, 0))
-        #l
-        if keycode == 76:
-            self.move_shape((step, 0))
-        #j
-        if keycode == 75:
-            self.move_shape((0, step))
-        #k
-        if keycode == 74:
-            self.move_shape((0, -step))
-        #[
-        if keycode == 91:
-            self.rotate_shape(-angle)
-        #]
-        if keycode == 93:
-            self.rotate_shape(angle)
+            step = 3
+        kup = [85, 315]               # Up keys
+        kdo = [68, 317]               # Down Keys
+        kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
+        kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
+        x = event.GetKeyCode()
+        if x in kup:
+            self.layerup()
+        if x in kdo:
+            self.layerdown()
+        if x in kzi:
+            self.zoom(step)
+        if x in kzo:
+            self.zoom(-step)
         event.Skip()
         wx.CallAfter(self.Refresh)
 
@@ -488,18 +500,6 @@ class GcodeViewFrame(wx.Frame):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
         self.Refresh()
-
-    def setlayerindex(self, z):
-        model = self.objects[-1].model
-        if not model:
-            return
-        mlk = sorted(m.gc.layers.keys())
-        if z > 0 and self.modelindex < len(mlk) - 1:
-            self.modelindex += 1
-        if z < 0 and self.modelindex > 0:
-            self.modelindex -= 1
-        m.curlayer = mlk[self.modelindex]
-        wx.CallAfter(self.SetTitle, "Gcode view, shift to move. Layer %d, Z = %f" % (self.modelindex, m.curlayer))
 
 if __name__ == "__main__":
     import sys
