@@ -64,7 +64,7 @@ class LeftPane(wx.GridBagSizer):
         self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
         
         for i in root.cpbuttons:
-            btn = make_button(root.panel, i.label, root.procbutton, i.tooltip, style = wx.BU_EXACTFIT)
+            btn = make_button(root.panel, i.label, root.procbutton, i.tooltip)
             btn.SetBackgroundColour(i.background)
             btn.SetForegroundColour("black")
             btn.properties = i
@@ -74,7 +74,7 @@ class LeftPane(wx.GridBagSizer):
                 if i.span == 0:
                     llts.Add(btn)
             else:
-                self.Add(btn, pos = i.pos, span = i.span)
+                self.Add(btn, pos = i.pos, span = i.span, flag = wx.EXPAND)
 
         root.xyfeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70,-1))
         root.xyfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for X & Y axes (mm/min)"))
@@ -100,7 +100,7 @@ class LeftPane(wx.GridBagSizer):
         if root.settings.last_temperature not in map(float, root.temps.values()):
             htemp_choices = [str(root.settings.last_temperature)] + htemp_choices
         root.htemp = wx.ComboBox(root.panel, -1,
-                choices = htemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
+                choices = htemp_choices, style = wx.CB_DROPDOWN, size = (80,-1))
         root.htemp.SetToolTip(wx.ToolTip("Select Temperature for Hotend"))
         root.htemp.Bind(wx.EVT_COMBOBOX, root.htemp_change)
 
@@ -119,7 +119,7 @@ class LeftPane(wx.GridBagSizer):
         if root.settings.last_bed_temperature not in map(float, root.bedtemps.values()):
             btemp_choices = [str(root.settings.last_bed_temperature)] + btemp_choices
         root.btemp = wx.ComboBox(root.panel, -1,
-                choices = btemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
+                choices = btemp_choices, style = wx.CB_DROPDOWN, size = (80,-1))
         root.btemp.SetToolTip(wx.ToolTip("Select Temperature for Heated Bed"))
         root.btemp.Bind(wx.EVT_COMBOBOX, root.btemp_change)
         self.Add(root.btemp, pos = (3, 2), span = (1, 2))
@@ -149,20 +149,20 @@ class LeftPane(wx.GridBagSizer):
 
         root.tempdisp = wx.StaticText(root.panel,-1, "")
 
-        root.edist = wx.SpinCtrl(root.panel,-1, "5", min = 0, max = 1000, size = (60,-1))
+        root.edist = wx.SpinCtrl(root.panel,-1, "5", min = 0, max = 1000, size = (70,-1))
         root.edist.SetBackgroundColour((225, 200, 200))
         root.edist.SetForegroundColour("black")
-        self.Add(root.edist, pos = (4, 2), span = (1, 2))
+        self.Add(root.edist, pos = (4, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 10)
         self.Add(wx.StaticText(root.panel,-1, _("mm")), pos = (4, 4), span = (1, 1))
         root.edist.SetToolTip(wx.ToolTip("Amount to Extrude or Retract (mm)"))
-        root.efeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (60,-1))
+        root.efeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (70,-1))
         root.efeedc.SetToolTip(wx.ToolTip("Extrude / Retract speed (mm/min)"))
         root.efeedc.SetBackgroundColour((225, 200, 200))
         root.efeedc.SetForegroundColour("black")
         root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
         root.efeedc.Bind(wx.EVT_TEXT, root.setfeeds)
-        self.Add(root.efeedc, pos = (5, 2), span = (1, 2))
-        self.Add(wx.StaticText(root.panel,-1, _("mm/\nmin")), pos = (5, 4), span = (1, 1))
+        self.Add(root.efeedc, pos = (5, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 10)
+        self.Add(wx.StaticText(root.panel,-1, _("mm/\nmin")), pos = (5, 4), span = (2, 1))
         root.xyfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
         root.zfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
         root.xyfeedc.Bind(wx.EVT_TEXT, root.setfeeds)
@@ -172,9 +172,9 @@ class LeftPane(wx.GridBagSizer):
 
         if root.display_gauges:
             root.hottgauge = TempGauge(root.panel, size = (-1, 24), title = _("Heater:"), maxval = 300)
-            self.Add(root.hottgauge, pos = (6, 0), span = (1, 6), flag = wx.EXPAND)
+            self.Add(root.hottgauge, pos = (7, 0), span = (1, 6), flag = wx.EXPAND)
             root.bedtgauge = TempGauge(root.panel, size = (-1, 24), title = _("Bed:"), maxval = 150)
-            self.Add(root.bedtgauge, pos = (7, 0), span = (1, 6), flag = wx.EXPAND)
+            self.Add(root.bedtgauge, pos = (8, 0), span = (1, 6), flag = wx.EXPAND)
             def hotendgauge_scroll_setpoint(e):
                 rot = e.GetWheelRotation()
                 if rot > 0:
@@ -189,12 +189,12 @@ class LeftPane(wx.GridBagSizer):
                     root.do_settemp(str(max(0, root.bsetpoint - 1)))
             root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
             root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
-            self.Add(root.tempdisp, pos = (8, 0), span = (1, 6))
+            self.Add(root.tempdisp, pos = (9, 0), span = (1, 6))
         else:
-            self.Add(root.tempdisp, pos = (6, 0), span = (1, 6))
+            self.Add(root.tempdisp, pos = (7, 0), span = (1, 6))
 
         root.graph = Graph(root.panel, wx.ID_ANY, root)
-        self.Add(root.graph, pos = (4, 5), span = (2, 1))
+        self.Add(root.graph, pos = (4, 5), span = (3, 1))
 
 class VizPane(wx.BoxSizer):
 
