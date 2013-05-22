@@ -150,8 +150,8 @@ class BuildDimensionsSetting(wxSetting):
         return self.widget
 
     def update(self):
-        values = [w.GetValue() for w in self.widgets]
-        self.value = "%.02fx%.02fx%.02f+%.02f+%.02f+%.02f+%.02f+%.02f+%.02f" % tuple(values)
+        values = [float(w.GetValue()) for w in self.widgets]
+        self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
 
 class StringSetting(wxSetting):
 
