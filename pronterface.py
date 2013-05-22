@@ -1138,15 +1138,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         return retval
 
     def recvcb(self, l):
-        if "ok C:" in l:
+        isreport = False
+        if "ok C:" in l or "Count" in l:
             self.posreport = l
             self.update_pos()
+            isreport = True
         if "ok T:" in l:
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             self.update_tempdisplay()
+            isreport = True
         tstring = l.rstrip()
-        if self.p.loud or (tstring not in ["ok", "wait"] and "ok T:" not in tstring and "ok C:" not in tstring):
+        if self.p.loud or (tstring not in ["ok", "wait"] and not isreport):
             wx.CallAfter(self.addtexttolog, tstring + "\n");
         for listener in self.recvlisteners:
             listener(l)
