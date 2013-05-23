@@ -206,7 +206,7 @@ class VizPane(wx.BoxSizer):
             extrusion_width = root.settings.preview_extrusion_width)
         root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
         root.gviz.showall = 1
-        use3dview = False
+        use3dview = root.settings.viz3d
         if use3dview:
             try:
                 import printrun.gcview
