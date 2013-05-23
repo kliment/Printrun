@@ -86,6 +86,7 @@ class LeftPane(wx.GridBagSizer):
         llts.Add(root.zfeedc,)
 
         root.monitorbox = wx.CheckBox(root.panel,-1, _("Watch"))
+        root.monitorbox.SetValue(bool(root.settings.monitor))
         root.monitorbox.SetToolTip(wx.ToolTip("Monitor Temperatures in Graph"))
         self.Add(root.monitorbox, pos = (3, 5))
         root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)

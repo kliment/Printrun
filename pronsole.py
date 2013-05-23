@@ -171,6 +171,12 @@ class FloatSpinSetting(SpinSetting):
 
 class BooleanSetting(wxSetting):
 
+    def _get_value(self):
+        return bool(self._value)
+    def _set_value(self, value):
+        self._value = value
+    value = property(_get_value, _set_value)
+
     def get_specific_widget(self, parent):
         import wx
         self.widget = wx.CheckBox(parent, -1)
@@ -231,7 +237,9 @@ class Settings(object):
             getattr(self, "_%s_validate"%key)(value)
         except AttributeError:
             pass
-        setattr(self, key, type(getattr(self, key))(value))
+        t = type(getattr(self, key))
+        if t == bool and value == "False": setattr(self, key, False)
+        else: setattr(self, key, t(value))
         try:
             getattr(self, "_%s_cb"%key)(key, value)
         except AttributeError:
