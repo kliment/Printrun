@@ -107,7 +107,6 @@ class BuildDimensionsSetting(wxSetting):
 
     def _set_widgets_values(self, value):
         build_dimensions_list = parse_build_dimensions(value)
-        print build_dimensions_list
         for i in range(len(self.widgets)):
             self.widgets[i].SetValue(build_dimensions_list[i])        
 
