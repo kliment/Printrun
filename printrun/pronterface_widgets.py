@@ -143,7 +143,6 @@ class PronterOptionsDialog(wx.Dialog):
         topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT)
         self.SetSizerAndFit(topsizer)
         self.SetMinSize(self.GetSize())
-        #self.CentreOnScreen()
 
 def PronterOptions(pronterface):
     dialog = PronterOptionsDialog(pronterface)
