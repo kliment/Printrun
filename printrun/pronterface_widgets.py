@@ -123,7 +123,7 @@ class MacroEditor(wx.Dialog):
 class PronterOptionsDialog(wx.Dialog):
     """Options editor"""
     def __init__(self, pronterface):
-        wx.Dialog.__init__(self, parent = None, title = _("Edit settings"), size = (400, 500), style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
+        wx.Dialog.__init__(self, parent = None, title = _("Edit settings"), size = (400, 500), style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         panel = wx.Panel(self)
         header = wx.StaticBox(panel, label = _("Settings"))
         sbox = wx.StaticBoxSizer(header, wx.VERTICAL)
