@@ -27,7 +27,7 @@ move_gcodes = ["G0", "G1", "G2", "G3"]
 
 class Line(object):
 
-    __slots__ = ('x','y','z','e','f','i','j','s',
+    __slots__ = ('x','y','z','e','f','i','j','s','p',
                  'raw','split_raw',
                  'command','is_move',
                  'relative','relative_e',
