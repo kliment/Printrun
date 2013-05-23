@@ -26,31 +26,20 @@ move_gcodes = ["G0", "G1", "G2", "G3"]
 
 class Line(object):
 
-    x = None
-    y = None
-    z = None
-    e = None
-    f = None
-    i = None
-    j = None
-    s = None
-
-    raw = None
-    split_raw = None
-
-    command = None
-    is_move = False
-    
-    relative = False
-    relative_e = False
-    current_pos = None
-    extruding = None
+    __slots__ = ('x','y','z','e','f','i','j','s',
+                 'raw','split_raw',
+                 'command','is_move',
+                 'relative','relative_e', 'current_pos', 'extruding',
+                 'gcview_end_vertex')
 
     def __init__(self, l):
         self.raw = l
         self.split_raw = gcode_exp.findall(self.raw.lower())
         self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
         self.is_move = self.command in move_gcodes
+
+    def __getattr__(self, name):
+        return None
 
     def parse_coordinates(self, imperial = False, force = False):
         # Not a G-line, we don't want to parse its arguments
