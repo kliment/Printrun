@@ -18,6 +18,7 @@ import sys
 import re
 import math
 import datetime
+from array import array
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j", "s"]
 gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
@@ -119,7 +120,8 @@ class GCode(object):
     lines = None
     layers = None
     all_layers = None
-    idxs = None
+    layer_idxs = None
+    line_idxs = None
     append_layer = None
     append_layer_id = None
 
@@ -148,7 +150,7 @@ class GCode(object):
         self._preprocess_layers()
 
     def __len__(self):
-        return len(self.idxs)
+        return len(self.line_idxs)
 
     def append(self, command):
         command = command.strip()
@@ -158,7 +160,8 @@ class GCode(object):
         self.lines.append(gline)
         self._preprocess([gline])
         self.append_layer.lines.append(gline)
-        self.idxs.append((self.append_layer_id, len(self.append_layer.lines)))
+        self.layer_idxs.append(self.append_layer_id)
+        self.line_idxs.append(len(self.append_layer.lines))
 
     def _preprocess_lines(self, lines = None):
         """Checks for G20, G21, G90 and G91, sets imperial and relative flags"""
@@ -217,7 +220,8 @@ class GCode(object):
     def _create_layers(self):
         layers = {}
         all_layers = []
-        idxs = []
+        layer_idxs = []
+        line_idxs = []
 
         layer_id = 0
         layer_line = 0
@@ -245,7 +249,8 @@ class GCode(object):
                 layer_line = 0
 
             cur_lines.append(line)
-            idxs.append((layer_id, layer_line))
+            layer_idxs.append(layer_id)
+            line_idxs.append(layer_line)
             layer_line += 1
             prev_z = cur_z
 
@@ -272,7 +277,11 @@ class GCode(object):
         all_layers.append(self.append_layer)
         self.all_layers = all_layers
         self.layers = layers
-        self.idxs = idxs
+        self.layer_idxs = array('I', layer_idxs)
+        self.line_idxs = array('I', line_idxs)
+
+    def idxs(self, i):
+        return self.layer_idxs[i], self.line_idxs[i]
 
     def num_layers(self):
         return len(self.layers)

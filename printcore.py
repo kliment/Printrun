@@ -380,8 +380,8 @@ class printcore():
         if self.priqueue:
             self._send(self.priqueue.pop(0))
             return
-        if self.printing and self.queueindex < len(self.mainqueue.idxs):
-            (layer, line) = self.mainqueue.idxs[self.queueindex]
+        if self.printing and self.queueindex < len(self.mainqueue):
+            (layer, line) = self.mainqueue.idxs(self.queueindex)
             gline = self.mainqueue.all_layers[layer].lines[line]
             tline = gline.raw
             #check for host command
