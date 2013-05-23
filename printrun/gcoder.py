@@ -30,7 +30,8 @@ class Line(object):
     __slots__ = ('x','y','z','e','f','i','j','s',
                  'raw','split_raw',
                  'command','is_move',
-                 'relative','relative_e', 'current_pos', 'extruding',
+                 'relative','relative_e',
+                 'current_x', 'current_y', 'current_z', 'extruding',
                  'gcview_end_vertex')
 
     def __init__(self, l):
@@ -112,7 +113,9 @@ class Layer(object):
                 current_y = line.y or current_y
                 current_z = line.z or current_z    
 
-            line.current_pos = (current_x, current_y, current_z)
+            line.current_x = current_x
+            line.current_y = current_y
+            line.current_z = current_z
         return (current_x, current_y, current_z), (xmin, xmax), (ymin, ymax), (zmin, zmax)
 
 class GCode(object):

@@ -229,17 +229,18 @@ class GcodeModel(Model):
                 if not gline.is_move:
                     continue
                 vertex_list.append(prev_pos)
-                vertex_list.append(gline.current_pos)
+                current_pos = (gline.current_x, gline.current_y, gline.current_z)
+                vertex_list.append(current_pos)
 
                 arrow = self.arrow
                 # position the arrow with respect to movement
-                arrow = vector.rotate(arrow, movement_angle(prev_pos, gline.current_pos), 0.0, 0.0, 1.0)
+                arrow = vector.rotate(arrow, movement_angle(prev_pos, current_pos), 0.0, 0.0, 1.0)
                 arrow_list.extend(arrow)
 
                 vertex_color = self.movement_color(gline)
                 color_list.append(vertex_color)
 
-                prev_pos = gline.current_pos
+                prev_pos = current_pos
                 gline.gcview_end_vertex = len(vertex_list)
 
             self.layer_stops.append(len(vertex_list))
