@@ -92,6 +92,10 @@ class Layer(object):
                     x = current_x + (x or 0)
                     y = current_y + (y or 0)
                     z = current_z + (z or 0)
+                
+                current_x = x or current_x
+                current_y = y or current_y
+                current_z = z or current_z
 
                 if line.e:
                     if x:
@@ -100,13 +104,9 @@ class Layer(object):
                     if y:
                         ymin = min(ymin, y)
                         ymax = max(ymax, y)
-                    if z:
-                        zmin = min(zmin, z)
-                        zmax = max(zmax, z)
-
-                current_x = x or current_x
-                current_y = y or current_y
-                current_z = z or current_z
+                    if current_z:
+                        zmin = min(zmin, current_z)
+                        zmax = max(zmax, current_z)
 
             else:
                 current_x = line.x or current_x
