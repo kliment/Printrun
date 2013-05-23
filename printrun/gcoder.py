@@ -66,6 +66,7 @@ class Line(object):
                 code = bit[0]
                 if code in gcode_parsed_args and len(bit) > 1:
                     setattr(self, code, float(bit[1:]))
+        del self.split_raw
  
     def __repr__(self):
         return self.raw
