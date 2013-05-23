@@ -16,6 +16,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, random
+from math import log10,floor
 
 from bufferedcanvas import *
 
@@ -39,6 +40,7 @@ class Graph(BufferedCanvas):
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
 
+        self.minyvalue  = 0
         self.maxyvalue  = 250
         self.ybars      = 5
         self.xbars      = 6 # One bar per 10 second
@@ -59,7 +61,12 @@ class Graph(BufferedCanvas):
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
         #self.AddExtruder1Temperature(self.extruder1temps[-1])
         #self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
+        self.updateYBounds()
         self.Refresh()
+
+    def updateYBounds(self):
+        self.minyvalue = 0
+        self.maxyvalue = 250
 
     def drawgrid(self, dc, gc):
         #cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
@@ -89,15 +96,21 @@ class Graph(BufferedCanvas):
         font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD)
         gc.SetFont(font, wx.Colour(23, 44, 44))
 
+        # draw vertical bars
         dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
         for x in range(self.xbars):
             dc.DrawLine(x*(float(self.width)/self.xbars), 0, x*(float(self.width)/self.xbars), self.height)
 
+        # draw horizontal bars
+        spacing = self.calculate_spacing()
+        yspan = self.maxyvalue-self.minyvalue
+        bars = int(yspan/spacing)
+
         dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
-        for y in range(self.ybars):
+        for y in xrange(bars):
             y_pos = y*(float(self.height)/self.ybars)
             dc.DrawLine(0, y_pos, self.width, y_pos)
-            gc.DrawText(unicode(int(self.maxyvalue - (y * (self.maxyvalue/self.ybars)))), 1, y_pos - (font.GetPointSize() / 2))
+            gc.DrawText(unicode(y*spacing), 1, y_pos - (font.GetPointSize() / 2))
 
         if self.timer.IsRunning() == False:
             font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD)
@@ -109,6 +122,30 @@ class Graph(BufferedCanvas):
         #gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
         #gc.DrawLines([[20, 30], [10, 53]])
         #dc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
+
+    def calculate_spacing(self):
+        # Allow grids of spacings 1,2.5,5,10,25,50,100,etc
+
+        yspan = float(self.maxyvalue-self.minyvalue)
+        print "yspan=%f"%yspan
+        log_yspan = log10( yspan/self.ybars )
+        print "log_yspan=%f"%log_yspan
+        exponent = int( floor(log_yspan) )
+        print "exponent=%f"%exponent
+
+        #calculate boundary points between allowed spacings
+        log1_25 = log10(2)+log10(1)+log10(2.5)-log10(1+2.5)
+        log25_5 = log10(2)+log10(2.5)+log10(5)-log10(2.5+5)
+        log5_10 = log10(2)+log10(5)+log10(10)-log10(5+10)
+
+        if log_yspan-exponent < log1_25:
+            return 10**exponent
+        elif log1_25 <= log_yspan-exponent < log25_5:
+            return 25*10**(exponent-1)
+        elif log25_5 <= log_yspan-exponent < log5_10:
+            return 5*10**exponent
+        else:
+            return 10**(exponent+1)
 
     def drawtemperature(self, dc, gc, temperature_list, text, text_xoffset, r, g, b, a):
         if self.timer.IsRunning() == False:
