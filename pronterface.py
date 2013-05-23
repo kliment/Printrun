@@ -1600,12 +1600,6 @@ class PronterApp(wx.App):
         self.mainwindow = PronterWindow()
         self.mainwindow.Show()
 
-    def MacOpenFile(self, filename):
-        self.mainwindow.do_load(filename)
-
-    def MacOpenURL(self, url):
-        self.mainwindow.do_load(url)
-
 if __name__ == '__main__':
     app = PronterApp(False)
     try:
