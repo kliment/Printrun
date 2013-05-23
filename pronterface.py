@@ -176,7 +176,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         pronsole.pronsole.__init__(self)
         #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed and endstops at 0, 0 and 0
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ")))
-        self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer"), _("Use 3D visualization instead of 2D layered visualization")))
+        self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer (requires restarting)"), _("Use 3D visualization instead of 2D layered visualization")))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
