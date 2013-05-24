@@ -179,6 +179,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(monitorsetting)
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ")))
         self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer (requires restarting)"), _("Use 3D visualization instead of 2D layered visualization")))
+        self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window.")))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -343,8 +344,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 layer = gline.z
                 if layer != self.curlayer:
                     self.curlayer = layer
-                    self.gviz.hilight.clear()
-                    self.gviz.hilightarcs.clear()
+                    self.gviz.clearhilights()
                     wx.CallAfter(self.gviz.setlayer, layer)
         elif gline.command in ["M104", "M109"]:
             gline.parse_coordinates(imperial = False, force = True)
@@ -363,8 +363,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.sentlines.put_nowait(line)
 
     def printsentcb(self, gline):
-        if gline.is_move:
+        if gline.is_move and hasattr(self.gwindow, "set_current_gline"):
             wx.CallAfter(self.gwindow.set_current_gline, gline)
+        if gline.is_move and hasattr(self.gviz, "set_current_gline"):
+            wx.CallAfter(self.gviz.set_current_gline, gline)
 
     def do_extrude(self, l = ""):
         try:

@@ -129,6 +129,7 @@ class gviz(wx.Panel):
 
     def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, realparent = None):
         wx.Panel.__init__(self, parent, -1, size = size)
+        self.widget = self
         self.SetMinSize((150, 150))
         self.parent = realparent if realparent else parent
         self.size = size
@@ -165,6 +166,10 @@ class gviz(wx.Panel):
         #import pdb; pdb.set_trace()
         print"Inject code here..."
         print  "Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm"
+
+    def clearhilights(self):
+        self.hilight.clear()
+        self.hilightarcs.clear()
 
     def clear(self):
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]

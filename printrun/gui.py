@@ -197,16 +197,44 @@ class LeftPane(wx.GridBagSizer):
         root.graph = Graph(root.panel, wx.ID_ANY, root)
         self.Add(root.graph, pos = (4, 5), span = (3, 1))
 
+class NoViz(object):
+
+    showall = False
+
+    def clear(self):
+        pass
+    def addfile(self, gcode):
+        pass
+    def addgcode(self, gcode):
+        pass
+    def Refresh(self):
+        pass
+    def setlayer(self, layer):
+        pass
+
 class VizPane(wx.BoxSizer):
 
     def __init__(self, root):
         super(VizPane, self).__init__(wx.VERTICAL)
-        root.gviz = gviz.gviz(root.panel, (300, 300),
-            build_dimensions = root.build_dimensions_list,
-            grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
-            extrusion_width = root.settings.preview_extrusion_width)
-        root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
-        root.gviz.showall = 1
+        if root.settings.mainviz == "None":
+            root.gviz = NoViz()
+        use2dview = root.settings.mainviz == "2D"
+        if root.settings.mainviz == "3D":
+            try:
+                import printrun.gcview
+                root.gviz = printrun.gcview.GcodeViewMainWrapper(root.panel, root.build_dimensions_list)
+            except:
+                use2dview = True
+                print "3D view mode requested, but we failed to initialize it."
+                print "Falling back to 2D view, and here is the backtrace:"
+                traceback.print_exc()
+        if use2dview:
+            root.gviz = gviz.gviz(root.panel, (300, 300),
+                build_dimensions = root.build_dimensions_list,
+                grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
+                extrusion_width = root.settings.preview_extrusion_width)
+            root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
+            root.gviz.showall = 1
         use3dview = root.settings.viz3d
         if use3dview:
             try:
@@ -222,9 +250,10 @@ class VizPane(wx.BoxSizer):
             build_dimensions = root.build_dimensions_list,
             grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
             extrusion_width = root.settings.preview_extrusion_width)
-        root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x:root.gwindow.Hide())
-        self.Add(root.gviz, 1, flag = wx.SHAPED)
+        if not isinstance(root.gviz, NoViz):
+            root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
+            self.Add(root.gviz.widget, 1, flag = wx.SHAPED)
         root.centersizer = wx.GridBagSizer()
         self.Add(root.centersizer, 0, flag = wx.EXPAND)
 

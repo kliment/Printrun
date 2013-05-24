@@ -248,7 +248,7 @@ def mulquat(q1, rq):
 
 class GcodeViewPanel(wxGLPanel):
 
-    def __init__(self, parent, id = wx.ID_ANY):
+    def __init__(self, parent, id = wx.ID_ANY, realparent = None):
         super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition, wx.DefaultSize, 0)
         self.batches = []
         self.rot = 0
@@ -257,7 +257,7 @@ class GcodeViewPanel(wxGLPanel):
         self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
         self.initialized = 0
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
-        self.parent = parent
+        self.parent = realparent if realparent else parent
         self.initpos = None
         self.dist = 200
         self.bedsize = [200, 200]
@@ -467,6 +467,40 @@ class GCObject(object):
         self.batch = pyglet.graphics.Batch()
         self.model = model
 
+class GcodeViewMainWrapper(object):
+    
+    def __init__(self, parent, build_dimensions, *args, **kwargs):
+        self.glpanel = GcodeViewPanel(parent, realparent = self)
+        self.glpanel.SetMinSize((150, 150))
+        self.widget = self.glpanel
+        self.refresh_timer = wx.CallLater(100, self.Refresh)
+        self.p = self # Hack for backwards compatibility with gviz API
+        self.platform = actors.Platform(build_dimensions)
+        self.model = None
+        self.objects = [GCObject(self.platform), GCObject(None)]
+        #super(GcodeViewMainPanel, self).__init__(parent, -1, size = (200, 200))
+
+    def __getattr__(self, name):
+        return getattr(self.glpanel, name)
+
+    def set_current_gline(self, gline):
+        if gline.is_move and self.model and self.model.loaded:
+            self.model.printed_until = gline.gcview_end_vertex
+            if not self.refresh_timer.IsRunning():
+                self.refresh_timer.Start()
+
+    def addfile(self, gcode = None):
+        self.model = actors.GcodeModel()
+        if gcode:
+            self.model.load_data(gcode)
+        self.objects[-1].model = self.model
+        wx.CallAfter(self.Refresh)
+
+    def clear(self):
+        self.model = None
+        self.objects[-1].model = None
+        wx.CallAfter(self.Refresh)
+
 class GcodeViewFrame(wx.Frame):
     '''A simple class for using OpenGL with wxPython.'''
 
@@ -497,12 +531,6 @@ class GcodeViewFrame(wx.Frame):
         self.model = None
         self.objects[-1].model = None
         wx.CallAfter(self.Refresh)
-
-    def Show(self, arg = True):
-        wx.Frame.Show(self, arg)
-        self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
-        self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
-        self.Refresh()
 
 if __name__ == "__main__":
     import sys
