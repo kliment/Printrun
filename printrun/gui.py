@@ -48,7 +48,7 @@ class XYZControlsSizer(wx.GridBagSizer):
 
     def __init__(self, root):
         super(XYZControlsSizer, self).__init__()
-        root.xyb = XYButtons(root.panel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor)
+        root.xyb = XYButtons(root.panel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor, zcallback=root.moveZ)
         self.Add(root.xyb, pos = (0, 1), flag = wx.ALIGN_CENTER)
         root.zb = ZButtons(root.panel, root.moveZ, root.settings.bgcolor)
         self.Add(root.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
