@@ -291,11 +291,20 @@ class Graph(BufferedCanvas):
             self.min_scale = minimum_scale
             self.buffer = buffer
 
-        def update(self):
+            # Frequency to rescale the graph
+            self.update_freq = 10
+            self._last_update = self.update_freq #number of updates since last full refresh
+
+        def update(self,forceUpdate=False):
             """Updates graph.minyvalue and graph.maxyvalue based on current temperatures
             """
+            self._last_update += 1
             #TODO Smart update. Only do full calculation every 10s. Otherwise, just look at current graph & expand if necessary
-            self.graph.minyvalue, self.graph.maxyvalue = self.getBounds()
+            if forceUpdate or self._last_update >= self.update_freq:
+                self.graph.minyvalue, self.graph.maxyvalue = self.getBounds()
+                self._last_update = 0
+            else:
+                self.graph.minyvalue, self.graph.maxyvalue = self.getBoundsQuick()
 
         def getBounds(self):
             """
@@ -329,7 +338,7 @@ class Graph(BufferedCanvas):
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
 
-            padding = (maxy-miny)*self.buffer/(1-2*self.buffer)
+            padding = (maxy-miny)*self.buffer/(1.0-2*self.buffer)
             miny -= padding
             maxy += padding
 
@@ -339,3 +348,35 @@ class Graph(BufferedCanvas):
                 maxy += extrapadding
 
             return (miny,maxy)
+
+        def getBoundsQuick(self):
+            # Only look at current temps
+            extruder0_min = self.graph.extruder0temps[-1]
+            extruder0_max = self.graph.extruder0temps[-1]
+            extruder0_target = self.graph.extruder0targettemps[-1]
+            extruder1_min = self.graph.extruder1temps[-1]
+            extruder1_max = self.graph.extruder1temps[-1]
+            extruder1_target = self.graph.extruder1targettemps[-1]
+            bed_min = self.graph.bedtemps[-1]
+            bed_max = self.graph.bedtemps[-1]
+            bed_target = self.graph.bedtargettemps[-1]
+
+            miny = min(extruder0_min, extruder0_target)
+            maxy = max(extruder0_max, extruder0_target)
+            if extruder1_target > 0 or extruder1_max > 5: #use extruder1
+                miny = min(miny, extruder1_min, extruder1_target)
+                maxy = max(maxy, extruder1_max, extruder1_target)
+            if bed_target > 0 or bed_max > 5: #use HBP
+                miny = min(miny, bed_min, bed_target)
+                maxy = max(maxy, bed_max, bed_target)
+
+            #We have to rescale, so add padding
+            if miny < self.graph.minyvalue:
+                padding = (self.graph.maxyvalue-miny)*self.buffer/(1.0-self.buffer)
+                miny -= padding
+            if maxy > self.graph.maxyvalue:
+                padding = (maxy-self.graph.minyvalue)*self.buffer/(1.0-self.buffer)
+                maxy += padding
+
+            return min(miny,self.graph.minyvalue),max(maxy,self.graph.maxyvalue)
+
