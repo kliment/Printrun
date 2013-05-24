@@ -201,15 +201,15 @@ class NoViz(object):
 
     showall = False
 
-    def clear(self):
+    def clear(self, *a):
         pass
-    def addfile(self, gcode):
+    def addfile(self, *a, **kw):
         pass
-    def addgcode(self, gcode):
+    def addgcode(self, *a, **kw):
         pass
-    def Refresh(self):
+    def Refresh(self, *a):
         pass
-    def setlayer(self, layer):
+    def setlayer(self, *a):
         pass
 
 class VizPane(wx.BoxSizer):
