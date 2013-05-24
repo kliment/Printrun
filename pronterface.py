@@ -1285,6 +1285,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if len(target):
                 self.recvlisteners+=[self.waitforsdresponse]
                 self.p.send_now("M23 "+target.lower())
+        dlg.Destroy()
         #print self.sdfiles
 
     def getfiles(self):
@@ -1368,8 +1369,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 basedir = os.path.split(self.filename)[0]
             except:
                 pass
-        dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
+	dlg=None
+	if filename is None:
+	        dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+        	dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
         if(filename is not None or dlg.ShowModal() == wx.ID_OK):
             if filename is not None:
                 name = filename
@@ -1377,6 +1380,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 name = dlg.GetPath()
             if not(os.path.exists(name)):
                 self.status.SetStatusText(_("File not found!"))
+                if dlg is not None:
+                    dlg.Destroy()
                 return
             path = os.path.split(name)[0]
             if path != self.settings.last_file_path:
@@ -1397,6 +1402,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target = self.loadviz).start()
+            if dlg is not None:
+                dlg.Destroy()	
 
     def loadviz(self):
         gcode = self.fgcode
@@ -1464,6 +1471,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.p.send_now("M21")
             self.p.send_now("M28 "+str(dlg.GetValue()))
             self.recvlisteners+=[self.uploadtrigger]
+        dlg.Destroy()
 
     def pause(self, event):
         print _("Paused.")
@@ -1600,6 +1608,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.p.paused = 0
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 self.paused = 0
+        dlg.Destroy()
 
 class PronterApp(wx.App):
 
