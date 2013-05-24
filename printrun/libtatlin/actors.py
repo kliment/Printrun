@@ -273,6 +273,14 @@ class GcodeModel(Model):
         print >> sys.stderr, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start)
         print >> sys.stderr, _('Vertex count: %d') % len(self.vertices)
 
+    def copy(self):
+        copy = GcodeModel()
+        for var in ["vertices", "arrows", "colors", "max_layers", "num_layers_to_draw", "printed_until", "arrows_enabled", "layer_stops"]:
+            setattr(copy, var, getattr(self, var))
+        copy.loaded = True
+        copy.initialized = False
+        return copy
+
     def movement_color(self, move):
         """
         Return the color to use for particular type of movement.

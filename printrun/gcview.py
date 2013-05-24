@@ -17,7 +17,6 @@
 
 import os
 import math
-import copy
 
 import wx
 from wx import glcanvas
@@ -530,7 +529,7 @@ class GcodeViewFrame(wx.Frame):
 
     def addfile(self, gcode = None):
         if self.clonefrom:
-            self.model = copy.deepcopy(self.clonefrom[-1].model)
+            self.model = self.clonefrom[-1].model.copy()
         else:
             self.model = actors.GcodeModel()
             if gcode:
