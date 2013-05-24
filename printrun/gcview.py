@@ -509,7 +509,10 @@ class GcodeViewFrame(wx.Frame):
         self.p = self # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
         self.platform = actors.Platform(build_dimensions)
-        self.model = objects[1].model
+        if objects:
+            self.model = objects[1].model
+        else:
+            self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
         self.glpanel = GcodeViewPanel(self)
 
