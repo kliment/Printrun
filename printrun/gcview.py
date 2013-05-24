@@ -304,13 +304,8 @@ class GcodeViewPanel(wxGLPanel):
         glPopMatrix()
 
     def double(self, event):
-        p = event.GetPositionTuple()
-        sz = self.GetClientSize()
-        v = map(lambda m, w, b: b * m / w, p, sz, self.bedsize)
-        v[1] = self.bedsize[1] - v[1]
-        v += [300]
-        print "Double-click at "+str(v)+" in "
-        print self
+        if self.parent.clickcb:
+            self.parent.clickcb(event)
 
     def move(self, event):
         """react to mouse actions:
@@ -472,6 +467,7 @@ class GcodeViewMainWrapper(object):
     def __init__(self, parent, build_dimensions, *args, **kwargs):
         self.glpanel = GcodeViewPanel(parent, realparent = self)
         self.glpanel.SetMinSize((150, 150))
+        self.clickcb = None
         self.widget = self.glpanel
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self # Hack for backwards compatibility with gviz API

@@ -223,6 +223,7 @@ class VizPane(wx.BoxSizer):
             try:
                 import printrun.gcview
                 root.gviz = printrun.gcview.GcodeViewMainWrapper(root.panel, root.build_dimensions_list)
+                root.gviz.clickcb = root.showwin
             except:
                 use2dview = True
                 print "3D view mode requested, but we failed to initialize it."
@@ -235,6 +236,7 @@ class VizPane(wx.BoxSizer):
                 extrusion_width = root.settings.preview_extrusion_width)
             root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
             root.gviz.showall = 1
+            root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
         use3dview = root.settings.viz3d
         if use3dview:
             try:
@@ -250,9 +252,8 @@ class VizPane(wx.BoxSizer):
             build_dimensions = root.build_dimensions_list,
             grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
             extrusion_width = root.settings.preview_extrusion_width)
-        root.gwindow.Bind(wx.EVT_CLOSE, lambda x:root.gwindow.Hide())
+        root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
         if not isinstance(root.gviz, NoViz):
-            root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
             self.Add(root.gviz.widget, 1, flag = wx.SHAPED)
         root.centersizer = wx.GridBagSizer()
         self.Add(root.centersizer, 0, flag = wx.EXPAND)
