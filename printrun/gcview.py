@@ -17,10 +17,10 @@
 
 import os
 import math
-import stltool
+import copy
+
 import wx
 from wx import glcanvas
-import gcoder
 
 import pyglet
 pyglet.options['debug_gl'] = True
@@ -29,6 +29,8 @@ from pyglet.gl import *
 from pyglet import gl
 from pyglet.graphics.vertexbuffer import create_buffer
 
+from printrun import gcoder
+from printrun import stltool
 from printrun.libtatlin import actors
 
 class wxGLPanel(wx.Panel):
@@ -464,7 +466,7 @@ class GCObject(object):
 
 class GcodeViewMainWrapper(object):
     
-    def __init__(self, parent, build_dimensions, *args, **kwargs):
+    def __init__(self, parent, build_dimensions):
         self.glpanel = GcodeViewPanel(parent, realparent = self)
         self.glpanel.SetMinSize((150, 150))
         self.clickcb = None
@@ -474,7 +476,6 @@ class GcodeViewMainWrapper(object):
         self.platform = actors.Platform(build_dimensions)
         self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
-        #super(GcodeViewMainPanel, self).__init__(parent, -1, size = (200, 200))
 
     def __getattr__(self, name):
         return getattr(self.glpanel, name)
@@ -500,13 +501,15 @@ class GcodeViewMainWrapper(object):
 class GcodeViewFrame(wx.Frame):
     '''A simple class for using OpenGL with wxPython.'''
 
-    def __init__(self, parent, ID, title, build_dimensions, pos = wx.DefaultPosition,
-            size = wx.DefaultSize, style = wx.DEFAULT_FRAME_STYLE):
+    def __init__(self, parent, ID, title, build_dimensions, objects = None,
+                 pos = wx.DefaultPosition, size = wx.DefaultSize,
+                 style = wx.DEFAULT_FRAME_STYLE):
         super(GcodeViewFrame, self).__init__(parent, ID, title, pos, size, style)
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self # Hack for backwards compatibility with gviz API
+        self.clonefrom = objects
         self.platform = actors.Platform(build_dimensions)
-        self.model = None
+        self.model = objects[1].model
         self.objects = [GCObject(self.platform), GCObject(None)]
         self.glpanel = GcodeViewPanel(self)
 
@@ -517,9 +520,12 @@ class GcodeViewFrame(wx.Frame):
                 self.refresh_timer.Start()
 
     def addfile(self, gcode = None):
-        self.model = actors.GcodeModel()
-        if gcode:
-            self.model.load_data(gcode)
+        if self.clonefrom:
+            self.model = copy.deepcopy(self.clonefrom[-1].model)
+        else:
+            self.model = actors.GcodeModel()
+            if gcode:
+                self.model.load_data(gcode)
         self.objects[-1].model = self.model
         wx.CallAfter(self.Refresh)
 
