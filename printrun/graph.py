@@ -16,7 +16,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, random
-from math import log10,floor
+from math import log10,floor,ceil
 
 from bufferedcanvas import *
 
@@ -42,13 +42,15 @@ class Graph(BufferedCanvas):
 
         self.minyvalue  = 0
         self.maxyvalue  = 250
+        self.rescaley = True # should the Y axis be rescaled dynamically?
+        if self.rescaley:
+            self._ybounds = Graph._YBounds(self)
+
+        #If rescaley is set then ybars gives merely an estimate
+        #Note that "bars" actually indicate the number of grid _intervals_
         self.ybars      = 5
         self.xbars      = 6 # One bar per 10 second
         self.xsteps     = 60 # Covering 1 minute in the graph
-
-        self.y_offset   = 1 # This is to show the line even when value is 0 and maxyvalue
-
-        self._lastyvalue = 0
 
     def OnPaint(self, evt):
         dc = wx.PaintDC(self)
@@ -59,14 +61,11 @@ class Graph(BufferedCanvas):
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
         self.AddExtruder0Temperature(self.extruder0temps[-1])
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
-        #self.AddExtruder1Temperature(self.extruder1temps[-1])
-        #self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
-        self.updateYBounds()
+        self.AddExtruder1Temperature(self.extruder1temps[-1])
+        self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
+        if self.rescaley:
+            self._ybounds.update()
         self.Refresh()
-
-    def updateYBounds(self):
-        self.minyvalue = 0
-        self.maxyvalue = 250
 
     def drawgrid(self, dc, gc):
         #cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
@@ -75,40 +74,33 @@ class Graph(BufferedCanvas):
 
         #b = gc.CreateLinearGradientBrush(0, 0, w, h, col1, col2)
 
-        gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 4))
+        gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
 
         #gc.SetBrush(wx.Brush(wx.Colour(245, 245, 255, 52)))
 
         #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0, 0, 255))))
-        #gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 4))
+        gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 255), 1))
 
         #gc.DrawLines(wx.Point(0, 0), wx.Point(50, 10))
-
-        #path = gc.CreatePath()
-        #path.MoveToPoint(0.0, 0.0)
-        #path.AddLineToPoint(0.0, 100.0)
-        #path.AddLineToPoint(100.0, 0.0)
-        #path.AddCircle( 50.0, 50.0, 50.0 )
-        #path.CloseSubpath()
-        #gc.DrawPath(path)
-        #gc.StrokePath(path)
 
         font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD)
         gc.SetFont(font, wx.Colour(23, 44, 44))
 
         # draw vertical bars
         dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
-        for x in range(self.xbars):
-            dc.DrawLine(x*(float(self.width)/self.xbars), 0, x*(float(self.width)/self.xbars), self.height)
+        for x in range(self.xbars+1):
+            dc.DrawLine(x*(float(self.width-1)/(self.xbars-1)), 0, x*(float(self.width-1)/(self.xbars-1)), self.height)
 
         # draw horizontal bars
-        spacing = self.calculate_spacing()
+        spacing = self._calculate_spacing() #spacing between bars, in degrees
         yspan = self.maxyvalue-self.minyvalue
-        bars = int(yspan/spacing)
-
+        ybars = int(yspan/spacing) #Should be close to self.ybars
+        firstbar = int(ceil(self.minyvalue/spacing)) #in degrees
         dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
-        for y in xrange(bars):
-            y_pos = y*(float(self.height)/self.ybars)
+        for y in xrange(firstbar,firstbar+ybars+1):
+            #y_pos = y*(float(self.height)/self.ybars)
+            degrees = y*spacing
+            y_pos = self._y_pos(degrees)
             dc.DrawLine(0, y_pos, self.width, y_pos)
             gc.DrawText(unicode(y*spacing), 1, y_pos - (font.GetPointSize() / 2))
 
@@ -123,15 +115,18 @@ class Graph(BufferedCanvas):
         #gc.DrawLines([[20, 30], [10, 53]])
         #dc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
 
-    def calculate_spacing(self):
+    def _y_pos(self,temperature):
+        """Converts a temperature, in degrees, to a pixel position"""
+        #fraction of the screen from the bottom
+        frac = float(temperature-self.minyvalue)/(self.maxyvalue-self.minyvalue)
+        return int( (1.0-frac)*(self.height-1) )
+
+    def _calculate_spacing(self):
         # Allow grids of spacings 1,2.5,5,10,25,50,100,etc
 
         yspan = float(self.maxyvalue-self.minyvalue)
-        print "yspan=%f"%yspan
         log_yspan = log10( yspan/self.ybars )
-        print "log_yspan=%f"%log_yspan
         exponent = int( floor(log_yspan) )
-        print "exponent=%f"%exponent
 
         #calculate boundary points between allowed spacings
         log1_25 = log10(2)+log10(1)+log10(2.5)-log10(1+2.5)
@@ -154,11 +149,14 @@ class Graph(BufferedCanvas):
             dc.SetPen(wx.Pen(wx.Colour(r, g, b, a), 1))
 
         x_add = float(self.width)/self.xsteps
-        x_pos = float(0.0)
-        lastxvalue = float(0.0)
+        x_pos = 0.0
+        lastxvalue = 0.0
+        lastyvalue = 0.0
 
         for temperature in (temperature_list):
-            y_pos = int((float(self.height-self.y_offset)/self.maxyvalue)*temperature) + self.y_offset
+            #y_pos = int((float(self.height-self.y_offset)/self.maxyvalue)*temperature) + self.y_offset
+            #y_pos = int( float(temperature-self.minyvalue)/(self.maxyvalue-self.minyvalue)*(self.height-self.y_offset) + self.y_offset )
+            y_pos = self._y_pos(temperature)
             if (x_pos > 0.0): # One need 2 points to draw a line.
                 dc.DrawLine(lastxvalue, self.height-self._lastyvalue, x_pos, self.height-y_pos)
 
@@ -275,3 +273,69 @@ class Graph(BufferedCanvas):
         self.drawextruder0temp(dc, gc)
         self.drawextruder1targettemp(dc, gc)
         self.drawextruder1temp(dc, gc)
+
+    class _YBounds(object):
+        """Small helper class to claculate y bounds dynamically"""
+
+        def __init__(self, graph, minimum_scale=1.0,buffer=0.10):
+            """_YBounds(Graph,float,float)
+
+            graph           parent object to calculate scales for
+            minimum_scale   minimum range to show on the graph
+            buffer          amount of padding to add above & below the
+                            displayed temperatures. Given as a fraction of the
+                            total range. (Eg .05 to use 90% of the range for
+                            temperatures)
+            """
+            self.graph = graph
+            self.min_scale = minimum_scale
+            self.buffer = buffer
+
+        def update(self):
+            """Updates graph.minyvalue and graph.maxyvalue based on current temperatures
+            """
+            #TODO Smart update. Only do full calculation every 10s. Otherwise, just look at current graph & expand if necessary
+            self.graph.minyvalue, self.graph.maxyvalue = self.getBounds()
+
+        def getBounds(self):
+            """
+            Calculates the bounds based on the current temperatures
+
+            Rules:
+             * Include the full extruder0 history
+             * Include the current target temp (but not necessarily old settings)
+             * Include the extruder1 and/or bed temp if
+                1) The target temp is >0
+                2) The history has ever been above 5
+             * Include at least min_scale
+             * Include at least buffer above & below the extreme temps
+            """
+            extruder0_min = min(self.graph.extruder0temps)
+            extruder0_max = max(self.graph.extruder0temps)
+            extruder0_target = self.graph.extruder0targettemps[-1]
+            extruder1_min = min(self.graph.extruder1temps)
+            extruder1_max = max(self.graph.extruder1temps)
+            extruder1_target = self.graph.extruder1targettemps[-1]
+            bed_min = min(self.graph.bedtemps)
+            bed_max = max(self.graph.bedtemps)
+            bed_target = self.graph.bedtargettemps[-1]
+
+            miny = min(extruder0_min, extruder0_target)
+            maxy = max(extruder0_max, extruder0_target)
+            if extruder1_target > 0 or extruder1_max > 5: #use extruder1
+                miny = min(miny, extruder1_min, extruder1_target)
+                maxy = max(maxy, extruder1_max, extruder1_target)
+            if bed_target > 0 or bed_max > 5: #use HBP
+                miny = min(miny, bed_min, bed_target)
+                maxy = max(maxy, bed_max, bed_target)
+
+            padding = (maxy-miny)*self.buffer/(1-2*self.buffer)
+            miny -= padding
+            maxy += padding
+
+            if maxy-miny < self.min_scale:
+                extrapadding = (self.min_scale-maxy+miny)/2.0
+                miny -= extrapadding
+                maxy += extrapadding
+
+            return (miny,maxy)
