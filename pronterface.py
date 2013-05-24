@@ -291,6 +291,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.connect()
         if self.filename is not None:
             self.do_load(self.filename)
+        if self.settings.monitor:
+            self.setmonitor(None)
 
     def add_cmdline_arguments(self, parser):
         pronsole.pronsole.add_cmdline_arguments(self, parser)
