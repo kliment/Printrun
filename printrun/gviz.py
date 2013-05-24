@@ -14,6 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 from Queue import Queue
+from collections import deque
 import wx, time
 from printrun import gcoder
 
@@ -157,8 +158,10 @@ class gviz(wx.Panel):
         self.fades = [wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50), penwidth) for i in xrange(6)]
         self.penslist = [self.mainpen, self.travelpen, self.hlpen]+self.fades
         self.showall = 0
-        self.hilight = Queue(0)
-        self.hilightarcs = Queue(0)
+        self.hilight = deque()
+        self.hilightarcs = deque()
+        self.hilightqueue = Queue(0)
+        self.hilightarcsqueue = Queue(0)
         self.dirty = 1
         self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
 
@@ -168,10 +171,12 @@ class gviz(wx.Panel):
         print  "Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm"
 
     def clearhilights(self):
-        while not self.hilight.empty():
-            self.hilight.get_nowait()
-        while not self.hilightarcs.empty():
-            self.hilightarcs.get_nowait()
+        self.hilight.clear()
+        self.hilightarcs.clear()
+        while not self.hilightqueue.empty():
+            self.hilightqueue.get_nowait()
+        while not self.hilightarcsqueue.empty():
+            self.hilightarcsqueue.get_nowait()
 
     def clear(self):
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
@@ -294,21 +299,26 @@ class gviz(wx.Panel):
             self._drawlines(dc, self.lines[self.layers[self.layerindex]], self.pens[self.layers[self.layerindex]])
             self._drawarcs(dc, self.arcs[self.layers[self.layerindex]], self.arcpens[self.layers[self.layerindex]])
 
+        self._drawlines(dc, self.hilight, self.hlpen)
+        self._drawarcs(dc, self.hilightarcs, self.hlpen)
+
         self.paint_hilights(dc)
 
         dc.SelectObject(wx.NullBitmap)
 
     def paint_hilights(self, dc = None):
+        if self.hilightqueue.empty() and self.hilightarcsqueue.empty():
+            return
         hl = []
         if not dc:
             dc = wx.MemoryDC()
             dc.SelectObject(self.blitmap)
-        while not self.hilight.empty():
-            hl.append(self.hilight.get_nowait())
+        while not self.hilightqueue.empty():
+            hl.append(self.hilightqueue.get_nowait())
         self._drawlines(dc, hl, self.hlpen)
         hlarcs = []
-        while not self.hilightarcs.empty():
-            hlarcs.append(self.hilightarcs.get_nowait())
+        while not self.hilightarcsqueue.empty():
+            hlarcs.append(self.hilightarcsqueue.get_nowait())
         self._drawarcs(dc, hlarcs, self.hlpen)
 
     def paint(self, event):
@@ -428,7 +438,8 @@ class gviz(wx.Panel):
                 self.lines[z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
                 self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
             else:
-                self.hilight.put_nowait(line)
+                self.hilight.append(line)
+                self.hilightqueue.put_nowait(line)
         elif gline.command in ["G2", "G3"]:
             # startpos, endpos, arc center
             arc = [_x(start_pos[0]), _y(start_pos[1]),
@@ -441,7 +452,8 @@ class gviz(wx.Panel):
                 self.arcs[z].append(arc)
                 self.arcpens[z].append(self.arcpen)
             else:
-                self.hilightarcs.put_nowait(arc)
+                self.hilightarcs.append(arc)
+                self.hilightarcsqueue.put_nowait(arc)
 
         if not hilight:
             self.lastpos = target
