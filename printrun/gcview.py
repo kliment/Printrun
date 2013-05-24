@@ -115,6 +115,7 @@ class wxGLPanel(wx.Panel):
         self.pmat = (GLdouble * 16)()
         self.mvmat = (GLdouble * 16)()
         self.pygletcontext = gl.Context(gl.current_context)
+        self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
         self.dist = 1000
         self.vpmat = None
