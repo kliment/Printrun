@@ -93,6 +93,8 @@ def parse_build_dimensions(bdim):
     defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
     bdl = filter(None, bdl)
     bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
+    if len(bdl_float) < len(defaults):
+        bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
     return bdl_float
 
 class BuildDimensionsSetting(wxSetting):
