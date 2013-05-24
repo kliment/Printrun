@@ -486,6 +486,12 @@ class GcodeViewMainWrapper(object):
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
+    def addgcode(self, *a):
+        pass
+
+    def setlayer(self, *a):
+        pass
+
     def addfile(self, gcode = None):
         self.model = actors.GcodeModel()
         if gcode:

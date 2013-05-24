@@ -93,6 +93,8 @@ def parse_build_dimensions(bdim):
     defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
     bdl = filter(None, bdl)
     bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
+    if len(bdl_float) < len(defaults):
+        bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
     return bdl_float
 
 class BuildDimensionsSetting(wxSetting):
@@ -289,6 +291,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.connect()
         if self.filename is not None:
             self.do_load(self.filename)
+        if self.settings.monitor:
+            self.setmonitor(None)
 
     def add_cmdline_arguments(self, parser):
         pronsole.pronsole.add_cmdline_arguments(self, parser)
