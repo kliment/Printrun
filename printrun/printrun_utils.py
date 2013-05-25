@@ -56,3 +56,30 @@ def sharedfile(filename):
 
 def configfile(filename):
     return lookup_file(filename, [os.path.expanduser("~/.printrun/"),])
+
+class RemainingTimeEstimator(object):
+
+    drift = None
+    gcode = None
+
+    def __init__(self, gcode):
+        self.drift = 1
+        self.previous_layers_estimate = 0
+        self.current_layer_estimate = 0
+        self.current_layer_lines = 0
+        self.remaining_layers_estimate = 0
+        self.gcode = gcode
+
+    def update_layer(self, layer, printtime):
+        self.previous_layers_estimate += self.current_layer_estimate
+        if self.previous_layers_estimate > 0 and printtime > 0:
+            self.drift = printtime / self.previous_layers_estimate
+        self.current_layer_estimate = self.gcode.all_layers[layer].duration
+        self.current_layer_lines = len(self.gcode.all_layers[layer].lines)
+        self.remaining_layers_estimate -= self.current_layer_estimate
+
+    def __call__(self, idx):
+        layer, line = self.gcode.idxs(idx)
+        layer_progress = (1 - ((line+1) / self.current_layer_lines))
+        remaining = layer_progress * self.current_layer_estimate + self.remaining_layers_estimate
+        return drift * remaining

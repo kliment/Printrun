@@ -17,7 +17,7 @@
 
 import os, Queue, re
 
-from printrun.printrun_utils import install_locale
+from printrun.printrun_utils import install_locale, RemainingTimeEstimator
 install_locale('pronterface')
 
 try:
@@ -276,8 +276,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.mini = False
         self.p.sendcb = self.sentcb
         self.p.printsendcb = self.printsentcb
+        self.p.layerchangecb = self.layer_change_cb
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
+        self.compute_eta = None
         self.starttime = 0
         self.extra_print_time = 0
         self.curlayer = 0
@@ -306,6 +308,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def startcb(self):
         self.starttime = time.time()
+        self.compute_eta = RemainingTimeEstimator(self.p.mainqueue)
         print _("Print Started at: %s") % format_time(self.starttime)
 
     def endcb(self):
@@ -339,6 +342,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         if self.filename:
             wx.CallAfter(self.printbtn.Enable)
+
+    def layer_change_cb(self, newlayer):
+        if self.compute_eta:
+            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+            self.compute_eta.update_layer(newlayer, secondselapsed)
 
     def sentcb(self, line):
         gline = gcoder.Line(line)
@@ -1174,17 +1182,24 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if self.sdprinting:
                 fractioncomplete = float(self.percentdone / 100.0)
                 string += _(" SD printing:%04.2f %%") % (self.percentdone,)
+                if fractioncomplete > 0.0:
+                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+                    secondsestimate = secondselapsed / fractioncomplete
+                    secondsremain = secondsestimate - secondselapsed
+                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
+                                                                  format_duration(secondsestimate))
+                    string += _(" Z: %.3f mm") % self.curlayer
             if self.p.printing:
                 fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
                 string += _(" Printing: %04.2f%% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
                 string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
-            if fractioncomplete > 0.0:
-                secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                secondsestimate = secondselapsed / fractioncomplete
-                secondsremain = secondsestimate - secondselapsed
-                string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
-                                                              format_duration(secondsestimate))
-                string += _(" Z: %0.2f mm") % self.curlayer
+                if self.p.queueindex > 0:
+                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+                    secondsremain = self.compute_eta(self.p.queueindex)
+                    secondsestimate = secondselapsed + secondsremain
+                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
+                                                                  format_duration(secondsestimate))
+                    string += _(" Z: %.3f mm") % self.curlayer
             wx.CallAfter(self.status.SetStatusText, string)
             wx.CallAfter(self.gviz.Refresh)
             if(self.monitor and self.p.online):

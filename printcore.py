@@ -62,6 +62,7 @@ class printcore():
         self.recvcb = None #impl (wholeline)
         self.sendcb = None #impl (wholeline)
         self.printsendcb = None #impl (wholeline)
+        self.layerchangecb = None #impl (wholeline)
         self.errorcb = None #impl (wholeline)
         self.startcb = None #impl ()
         self.endcb = None #impl ()
@@ -383,6 +384,10 @@ class printcore():
         if self.printing and self.queueindex < len(self.mainqueue):
             (layer, line) = self.mainqueue.idxs(self.queueindex)
             gline = self.mainqueue.all_layers[layer].lines[line]
+            if self.layerchangecb and self.queueindex > 0:
+                (prev_layer, prev_line) = self.mainqueue.idxs(self.queuindex - 1)
+                if prev_layer != layer:
+                    self.layerchangecb(layer)
             tline = gline.raw
             #check for host command
             if tline.lstrip().startswith(";@"):
