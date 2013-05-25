@@ -200,7 +200,7 @@ class Settings(object):
         self._add(SpinSetting("temperature_pla", 185, 0, 400, _("Bed temperature for PLA"), _("Extruder temp for PLA (default: 185 deg C)")))
         self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X & Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")))
         self._add(SpinSetting("z_feedrate", 200, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")))
-        self._add(SpinSetting("e_feedrate", 300, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)")))
+        self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)")))
         self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)")))
         self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished")))
