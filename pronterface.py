@@ -205,7 +205,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.capture_skip_newline = False
         self.tempreport = ""
         self.monitor = 0
-        self.f = None
+        self.fgcode = None
         self.skeinp = None
         self.monitor_interval = 3
         self.current_pos = [0, 0, 0]
@@ -570,14 +570,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.SetMenuBar(self.menustrip)
 
     def doneediting(self, gcode):
-        f = open(self.filename, "w")
-        f.write("\n".join(gcode))
-        f.close()
+        open(self.filename, "w").write("\n".join(gcode))
         wx.CallAfter(self.loadfile, None, self.filename)
 
     def do_editgcode(self, e = None):
         if self.filename is not None:
-            MacroEditor(self.filename, self.f, self.doneediting, 1)
+            MacroEditor(self.filename, "\n".join([line.raw for line in self.fgcode]), self.doneediting, 1)
 
     def new_macro(self, e = None):
         dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))
@@ -680,7 +678,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         obj = e.GetEventObject()
         popupmenu = wx.Menu()
         item = popupmenu.Append(-1, _("SD Upload"))
-        if not self.f:
+        if not self.fgcode:
             item.Enable(False)
         self.Bind(wx.EVT_MENU, self.upload, id = item.GetId())
         item = popupmenu.Append(-1, _("SD Print"))
@@ -698,7 +696,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
     def showwin(self, event):
-        if self.f:
+        if self.fgcode:
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
             self.gwindow.Raise()
@@ -1341,12 +1339,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         fn = self.filename
         try:
             self.filename = self.filename.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode").replace(".obj", "_export.gcode").replace(".OBJ", "_export.gcode")
-            self.f = [line.strip() for line in open(self.filename)]
-            self.fgcode = gcoder.GCode(self.f)
+            self.fgcode = gcoder.GCode(open(self.filename))
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)
 
-            wx.CallAfter(self.status.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.f),))
+            wx.CallAfter(self.status.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
@@ -1407,9 +1404,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.skein(name)
             else:
                 self.filename = name
-                self.f = [line.strip() for line in open(self.filename)]
-                self.fgcode = gcoder.GCode(self.f)
-                self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.f)))
+                self.fgcode = gcoder.GCode(open(self.filename))
+                self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 wx.CallAfter(self.pausebtn.Disable)
@@ -1446,7 +1442,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.p.send_now("M24")
                 return
 
-        if not self.f:
+        if not self.fgcode:
             wx.CallAfter(self.status.SetStatusText, _("No file loaded. Please use load first."))
             return
         if not self.p.online:
@@ -1477,7 +1473,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.recvlisteners.remove(self.uploadtrigger)
 
     def upload(self, event):
-        if not self.f:
+        if not self.fgcode:
             return
         if not self.p.online:
             return
