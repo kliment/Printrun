@@ -57,6 +57,7 @@ class Graph(BufferedCanvas):
         gc = wx.GraphicsContext.Create(dc)
 
     def updateTemperatures(self, event):
+	#print "ypos(%f)=%d"%(self.extruder0temps[-1],self._y_pos(self.extruder0temps[-1]))
         self.AddBedTemperature(self.bedtemps[-1])
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
         self.AddExtruder0Temperature(self.extruder0temps[-1])
@@ -151,18 +152,16 @@ class Graph(BufferedCanvas):
         x_add = float(self.width)/self.xsteps
         x_pos = 0.0
         lastxvalue = 0.0
-        lastyvalue = 0.0
+        lastyvalue = temperature_list[-1]
 
         for temperature in (temperature_list):
-            #y_pos = int((float(self.height-self.y_offset)/self.maxyvalue)*temperature) + self.y_offset
-            #y_pos = int( float(temperature-self.minyvalue)/(self.maxyvalue-self.minyvalue)*(self.height-self.y_offset) + self.y_offset )
             y_pos = self._y_pos(temperature)
             if (x_pos > 0.0): # One need 2 points to draw a line.
-                dc.DrawLine(lastxvalue, self.height-self._lastyvalue, x_pos, self.height-y_pos)
+                dc.DrawLine(lastxvalue, lastyvalue, x_pos, y_pos)
 
             lastxvalue = x_pos
             x_pos = float(x_pos) + x_add
-            self._lastyvalue = y_pos
+            lastyvalue = y_pos
 
         if len(text) > 0:
             font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD)
@@ -172,9 +171,7 @@ class Graph(BufferedCanvas):
             else:
                 gc.SetFont(font, wx.Colour(r, g, b))
 
-            #gc.DrawText(text, self.width - (font.GetPointSize() * ((len(text) * text_xoffset + 1))), self.height - self._lastyvalue - (font.GetPointSize() / 2))
-            gc.DrawText(text, x_pos - x_add - (font.GetPointSize() * ((len(text) * text_xoffset + 1))), self.height - self._lastyvalue - (font.GetPointSize() / 2))
-            #gc.DrawText(text, self.width - (font.GetPixelSize().GetWidth() * ((len(text) * text_xoffset + 1) + 1)), self.height - self._lastyvalue - (font.GetPointSize() / 2))
+            gc.DrawText(text, x_pos - x_add - (font.GetPointSize() * ((len(text) * text_xoffset + 1))), lastyvalue - (font.GetPointSize() / 2))
 
 
     def drawbedtemp(self, dc, gc):
