@@ -132,6 +132,9 @@ class wxGLPanel(wx.Panel):
 
     def OnReshape(self, width, height):
         '''Reshape the OpenGL viewport based on the dimensions of the window.'''
+        if not self.GLinitialized:
+            self.GLinitialized = True
+            self.OnInitGL()
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()

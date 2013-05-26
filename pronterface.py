@@ -1344,6 +1344,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 wx.CallAfter(self.printbtn.Enable)
 
             wx.CallAfter(self.status.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
+            print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
@@ -1406,6 +1407,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.filename = name
                 self.fgcode = gcoder.GCode(open(self.filename))
                 self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
+                print _("Loaded %s, %d lines") % (name, len(self.fgcode))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 wx.CallAfter(self.pausebtn.Disable)
