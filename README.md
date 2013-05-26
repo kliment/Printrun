@@ -25,9 +25,19 @@ You can run Printrun directly from source, as there are no packages available ye
 
 `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet`
 
-### Fedora 15 and newer
+### Fedora 17 and newer
 
-You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
+You can install Printrun from official packages. Install the whole package using
+
+`sudo yum install printrun`
+
+Or get only apps you need by
+
+`sudo yum install pronsole` or `pronterface` or `plater`
+
+Adding `--enablerepo updates-testing` option to `yum` might give you newer packages (but also not very tested).
+
+You can also run Printrun directly from source, if the packages are too old for you anyway, or you have Fedora 15 or 16. Fetch and install the dependencies using
 
 `sudo yum install pyserial wxpython pyglet`
 
@@ -101,9 +111,10 @@ Run Printrun for source if you want to test out the latest features.
 To use pronterface, you need:
 
   * python (ideally 2.6.x or 2.7.x),
-  * pyserial (or python-serial on ubuntu/debian),
+  * pyserial (or python-serial on ubuntu/debian)
   * pyglet
   * pyreadline (not needed on Linux) and
+  * argparse (installed by default with python >= 2.7)
   * wxPython
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)

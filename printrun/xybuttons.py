@@ -41,7 +41,7 @@ class XYButtons(BufferedCanvas):
     center = (124, 121)
     spacer = 7
 
-    def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1):
+    def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1, zcallback=None):
         self.bg_bmp = wx.Image(imagefile("control_xy.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
@@ -51,6 +51,7 @@ class XYButtons(BufferedCanvas):
         self.moveCallback = moveCallback
         self.cornerCallback = cornerCallback
         self.spacebarCallback = spacebarCallback
+        self.zCallback = zcallback
         self.enabled = False
         # Remember the last clicked buttons, so we can repeat when spacebar pressed
         self.lastMove = None
@@ -60,8 +61,7 @@ class XYButtons(BufferedCanvas):
         self.bgcolor.SetFromName(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        BufferedCanvas.__init__(self, parent, ID)
-        self.SetSize(self.bg_bmp.GetSize())
+        BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -109,10 +109,13 @@ class XYButtons(BufferedCanvas):
         self.update()
 
     def getMovement(self):
-        xdir = [1, 0, -1, 0][self.quadrant]
-        ydir = [0, 1, 0, -1][self.quadrant]
+        xdir = [1, 0, -1, 0, 0, 0][self.quadrant]
+        ydir = [0, 1, 0, -1, 0 ,0][self.quadrant]
+        zdir = [0, 0, 0, 0, 1 ,-1][self.quadrant]
         magnitude = math.pow(10, self.concentric-1)
-        return (magnitude * xdir, magnitude * ydir)
+        if not zdir == 0:
+            magnitude=min(magnitude,10)
+        return (magnitude * xdir, magnitude * ydir, magnitude * zdir)
 
     def lookupConcentric(self, radius):
         idx = 0
@@ -286,14 +289,21 @@ class XYButtons(BufferedCanvas):
                 self.quadrant = 2
             elif evt.GetKeyCode() == wx.WXK_RIGHT:
                 self.quadrant = 0
+            elif evt.GetKeyCode() == wx.WXK_PAGEUP:
+                self.quadrant = 4
+            elif evt.GetKeyCode() == wx.WXK_PAGEDOWN:
+                self.quadrant = 5
             else:
                 evt.Skip()
                 return
+            
+            self.concentric = self.keypad_idx
+            x, y, z = self.getMovement()
 
-            if self.moveCallback:
-                self.concentric = self.keypad_idx
-                x, y = self.getMovement()
+            if x!=0 or y!=0 and self.moveCallback:
                 self.moveCallback(x, y)
+            if z!=0 and self.zCallback:
+                self.zCallback(z)
         elif evt.GetKeyCode() == wx.WXK_SPACE:
             self.spacebarCallback()
 
@@ -347,7 +357,7 @@ class XYButtons(BufferedCanvas):
             if self.concentric != None:
                 if self.concentric < len(XYButtons.concentric_circle_radii):
                     if self.quadrant != None:
-                        x, y = self.getMovement()
+                        x, y, z  = self.getMovement()
                         if self.moveCallback:
                             self.lastMove = (x, y)
                             self.lastCorner = None

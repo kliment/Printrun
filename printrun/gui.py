@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import traceback
+
 try:
     import wx
 except:
@@ -26,6 +28,7 @@ from printrun import gviz
 from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
+from printrun.pronterface_widgets import TempGauge
 
 def make_button(parent, label, callback, tooltip, container = None, size = wx.DefaultSize, style = 0):
     button = wx.Button(parent, -1, label, style = style, size = size)
@@ -45,7 +48,7 @@ class XYZControlsSizer(wx.GridBagSizer):
 
     def __init__(self, root):
         super(XYZControlsSizer, self).__init__()
-        root.xyb = XYButtons(root.panel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor)
+        root.xyb = XYButtons(root.panel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor, zcallback=root.moveZ)
         self.Add(root.xyb, pos = (0, 1), flag = wx.ALIGN_CENTER)
         root.zb = ZButtons(root.panel, root.moveZ, root.settings.bgcolor)
         self.Add(root.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
@@ -56,12 +59,12 @@ class LeftPane(wx.GridBagSizer):
     def __init__(self, root):
         super(LeftPane, self).__init__()
         llts = wx.BoxSizer(wx.HORIZONTAL)
-        self.Add(llts, pos = (0, 0), span = (1, 9))
+        self.Add(llts, pos = (0, 0), span = (1, 6))
         self.xyzsizer = XYZControlsSizer(root)
-        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 8), flag = wx.ALIGN_CENTER)
+        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
         
         for i in root.cpbuttons:
-            btn = make_button(root.panel, i.label, root.procbutton, i.tooltip, style = wx.BU_EXACTFIT)
+            btn = make_button(root.panel, i.label, root.procbutton, i.tooltip)
             btn.SetBackgroundColour(i.background)
             btn.SetForegroundColour("black")
             btn.properties = i
@@ -71,20 +74,21 @@ class LeftPane(wx.GridBagSizer):
                 if i.span == 0:
                     llts.Add(btn)
             else:
-                self.Add(btn, pos = i.pos, span = i.span)
+                self.Add(btn, pos = i.pos, span = i.span, flag = wx.EXPAND)
 
         root.xyfeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70,-1))
         root.xyfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for X & Y axes (mm/min)"))
         llts.Add(wx.StaticText(root.panel,-1, _("XY:")), flag = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         llts.Add(root.xyfeedc)
-        llts.Add(wx.StaticText(root.panel,-1, _("mm/min   Z:")), flag = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        llts.Add(wx.StaticText(root.panel,-1, _("mm/min Z:")), flag = wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         root.zfeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.z_feedrate), min = 0, max = 50000, size = (70,-1))
         root.zfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for Z axis (mm/min)"))
         llts.Add(root.zfeedc,)
 
         root.monitorbox = wx.CheckBox(root.panel,-1, _("Watch"))
+        root.monitorbox.SetValue(bool(root.settings.monitor))
         root.monitorbox.SetToolTip(wx.ToolTip("Monitor Temperatures in Graph"))
-        self.Add(root.monitorbox, pos = (2, 6))
+        self.Add(root.monitorbox, pos = (3, 5))
         root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
 
         self.Add(wx.StaticText(root.panel,-1, _("Heat:")), pos = (2, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
@@ -97,7 +101,7 @@ class LeftPane(wx.GridBagSizer):
         if root.settings.last_temperature not in map(float, root.temps.values()):
             htemp_choices = [str(root.settings.last_temperature)] + htemp_choices
         root.htemp = wx.ComboBox(root.panel, -1,
-                choices = htemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
+                choices = htemp_choices, style = wx.CB_DROPDOWN, size = (80,-1))
         root.htemp.SetToolTip(wx.ToolTip("Select Temperature for Hotend"))
         root.htemp.Bind(wx.EVT_COMBOBOX, root.htemp_change)
 
@@ -116,7 +120,7 @@ class LeftPane(wx.GridBagSizer):
         if root.settings.last_bed_temperature not in map(float, root.bedtemps.values()):
             btemp_choices = [str(root.settings.last_bed_temperature)] + btemp_choices
         root.btemp = wx.ComboBox(root.panel, -1,
-                choices = btemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
+                choices = btemp_choices, style = wx.CB_DROPDOWN, size = (80,-1))
         root.btemp.SetToolTip(wx.ToolTip("Select Temperature for Heated Bed"))
         root.btemp.Bind(wx.EVT_COMBOBOX, root.btemp_change)
         self.Add(root.btemp, pos = (3, 2), span = (1, 2))
@@ -146,52 +150,116 @@ class LeftPane(wx.GridBagSizer):
 
         root.tempdisp = wx.StaticText(root.panel,-1, "")
 
-        root.edist = wx.SpinCtrl(root.panel,-1, "5", min = 0, max = 1000, size = (60,-1))
+        root.edist = wx.SpinCtrl(root.panel,-1, "5", min = 0, max = 1000, size = (70,-1))
         root.edist.SetBackgroundColour((225, 200, 200))
         root.edist.SetForegroundColour("black")
-        self.Add(root.edist, pos = (4, 2), span = (1, 2))
+        self.Add(root.edist, pos = (4, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 10)
         self.Add(wx.StaticText(root.panel,-1, _("mm")), pos = (4, 4), span = (1, 1))
         root.edist.SetToolTip(wx.ToolTip("Amount to Extrude or Retract (mm)"))
-        root.efeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (60,-1))
+        root.efeedc = wx.SpinCtrl(root.panel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (70,-1))
         root.efeedc.SetToolTip(wx.ToolTip("Extrude / Retract speed (mm/min)"))
         root.efeedc.SetBackgroundColour((225, 200, 200))
         root.efeedc.SetForegroundColour("black")
         root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
-        self.Add(root.efeedc, pos = (5, 2), span = (1, 2))
-        self.Add(wx.StaticText(root.panel,-1, _("mm/\nmin")), pos = (5, 4), span = (1, 1))
+        root.efeedc.Bind(wx.EVT_TEXT, root.setfeeds)
+        self.Add(root.efeedc, pos = (5, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 10)
+        self.Add(wx.StaticText(root.panel,-1, _("mm/\nmin")), pos = (5, 4), span = (2, 1))
         root.xyfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
         root.zfeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+        root.xyfeedc.Bind(wx.EVT_TEXT, root.setfeeds)
+        root.zfeedc.Bind(wx.EVT_TEXT, root.setfeeds)
         root.zfeedc.SetBackgroundColour((180, 255, 180))
         root.zfeedc.SetForegroundColour("black")
 
-        root.graph = Graph(root.panel, wx.ID_ANY)
-        self.Add(root.graph, pos = (3, 5), span = (3, 3))
-        self.Add(root.tempdisp, pos = (6, 0), span = (1, 9))
+        if root.display_gauges:
+            root.hottgauge = TempGauge(root.panel, size = (-1, 24), title = _("Heater:"), maxval = 300)
+            self.Add(root.hottgauge, pos = (7, 0), span = (1, 6), flag = wx.EXPAND)
+            root.bedtgauge = TempGauge(root.panel, size = (-1, 24), title = _("Bed:"), maxval = 150)
+            self.Add(root.bedtgauge, pos = (8, 0), span = (1, 6), flag = wx.EXPAND)
+            def hotendgauge_scroll_setpoint(e):
+                rot = e.GetWheelRotation()
+                if rot > 0:
+                    root.do_settemp(str(root.hsetpoint + 1))
+                elif rot < 0:
+                    root.do_settemp(str(max(0, root.hsetpoint - 1)))
+            def bedgauge_scroll_setpoint(e):
+                rot = e.GetWheelRotation()
+                if rot > 0:
+                    root.do_settemp(str(root.bsetpoint + 1))
+                elif rot < 0:
+                    root.do_settemp(str(max(0, root.bsetpoint - 1)))
+            root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
+            root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
+            self.Add(root.tempdisp, pos = (9, 0), span = (1, 6))
+        else:
+            self.Add(root.tempdisp, pos = (7, 0), span = (1, 6))
+
+        root.graph = Graph(root.panel, wx.ID_ANY, root)
+        self.Add(root.graph, pos = (4, 5), span = (3, 1))
+
+class NoViz(object):
+
+    showall = False
+
+    def clear(self, *a):
+        pass
+    def addfile(self, *a, **kw):
+        pass
+    def addgcode(self, *a, **kw):
+        pass
+    def Refresh(self, *a):
+        pass
+    def setlayer(self, *a):
+        pass
 
 class VizPane(wx.BoxSizer):
 
     def __init__(self, root):
         super(VizPane, self).__init__(wx.VERTICAL)
-        root.gviz = gviz.gviz(root.panel, (300, 300),
-            build_dimensions = root.build_dimensions_list,
-            grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
-            extrusion_width = root.settings.preview_extrusion_width)
-        root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
-        root.gviz.showall = 1
-        try:
-            raise ""
-            import printrun.stlview
-            root.gwindow = printrun.stlview.GCFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600))
-        except:
+        if root.settings.mainviz == "None":
+            root.gviz = NoViz()
+        use2dview = root.settings.mainviz == "2D"
+        if root.settings.mainviz == "3D":
+            try:
+                import printrun.gcview
+                root.gviz = printrun.gcview.GcodeViewMainWrapper(root.panel, root.build_dimensions_list)
+                root.gviz.clickcb = root.showwin
+            except:
+                use2dview = True
+                print "3D view mode requested, but we failed to initialize it."
+                print "Falling back to 2D view, and here is the backtrace:"
+                traceback.print_exc()
+        if use2dview:
+            root.gviz = gviz.gviz(root.panel, (300, 300),
+                build_dimensions = root.build_dimensions_list,
+                grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
+                extrusion_width = root.settings.preview_extrusion_width)
+            root.gviz.SetToolTip(wx.ToolTip("Click to examine / edit\n  layers of loaded file"))
+            root.gviz.showall = 1
+            root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
+        use3dview = root.settings.viz3d
+        if use3dview:
+            try:
+                import printrun.gcview
+                objects = None
+                if isinstance(root.gviz, printrun.gcview.GcodeViewMainWrapper):
+                    objects = root.gviz.objects
+                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list, objects = objects)
+            except:
+                use3dview = False
+                print "3D view mode requested, but we failed to initialize it."
+                print "Falling back to 2D view, and here is the backtrace:"
+                traceback.print_exc()
+        if not use3dview:
             root.gwindow = gviz.window([],
             build_dimensions = root.build_dimensions_list,
             grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
             extrusion_width = root.settings.preview_extrusion_width)
-        root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
-        root.gwindow.Bind(wx.EVT_CLOSE, lambda x:root.gwindow.Hide())
-        self.Add(root.gviz, 1, flag = wx.SHAPED)
-        cs = root.centersizer = wx.GridBagSizer()
-        self.Add(cs, 0, flag = wx.EXPAND)
+        root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
+        if not isinstance(root.gviz, NoViz):
+            self.Add(root.gviz.widget, 1, flag = wx.SHAPED)
+        root.centersizer = wx.GridBagSizer()
+        self.Add(root.centersizer, 0, flag = wx.EXPAND)
 
 class LogPane(wx.BoxSizer):
 
@@ -199,6 +267,7 @@ class LogPane(wx.BoxSizer):
         super(LogPane, self).__init__(wx.VERTICAL)
         root.lowerrsizer = self
         root.logbox = wx.TextCtrl(root.panel, style = wx.TE_MULTILINE, size = (350,-1))
+        root.logbox.SetMinSize((100,-1))
         root.logbox.SetEditable(0)
         self.Add(root.logbox, 1, wx.EXPAND)
         lbrs = wx.BoxSizer(wx.HORIZONTAL)
@@ -223,7 +292,7 @@ class MainToolbar(wx.BoxSizer):
 
         root.serialport = wx.ComboBox(root.panel, -1,
                 choices = root.scanserial(),
-                style = wx.CB_DROPDOWN, size = (150, 25))
+                style = wx.CB_DROPDOWN, size = (-1, 25))
         root.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
         root.rescanports()
         self.Add(root.serialport)
@@ -263,10 +332,10 @@ class MainWindow(wx.Frame):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
         self.uppersizer = MainToolbar(self)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.lowersizer.Add(LeftPane(self))
+        self.lowersizer.Add(LeftPane(self), 0)
         self.lowersizer.Add(VizPane(self), 1, wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
-        self.lowersizer.Add(LogPane(self), 0, wx.EXPAND)
-        self.mainsizer.Add(self.uppersizer)
+        self.lowersizer.Add(LogPane(self), 1, wx.EXPAND)
+        self.mainsizer.Add(self.uppersizer, 0)
         self.mainsizer.Add(self.lowersizer, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
         self.status = self.CreateStatusBar()
@@ -276,6 +345,12 @@ class MainWindow(wx.Frame):
 
         self.mainsizer.Layout()
         self.mainsizer.Fit(self)
+        # This prevents resizing below a reasonnable value
+        # We sum the lowersizer (left pane / viz / log) min size
+        # the toolbar height and the statusbar/menubar sizes
+        minsize = self.lowersizer.GetMinSize() # lower pane
+        minsize[1] += self.uppersizer.GetMinSize()[1] # toolbar height
+        self.SetMinSize(self.ClientToWindowSize(minsize)) # client to window
 
         # disable all printer controls until we connect to a printer
         self.pausebtn.Disable()

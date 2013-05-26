@@ -22,15 +22,12 @@ from bufferedcanvas import *
 class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
 
-    def __init__(self, parent, id, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize, style = 0):
+    def __init__(self, parent, id, root, pos = wx.DefaultPosition,
+                 size = wx.Size(150, 80), style = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
-        #call super function
-        #super(Graph, self).__init__(parent, id, pos, size, style)
-        BufferedCanvas.__init__(self, parent, id)
-
-        self.SetSize(wx.Size(150, 80))
+        super(Graph, self).__init__(parent, id, pos, size, style)
+        self.root = root
 
         self.extruder0temps       = [0]
         self.extruder0targettemps = [0]
@@ -51,17 +48,9 @@ class Graph(BufferedCanvas):
 
         self._lastyvalue = 0
 
-        #self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        #self.sizer.Add(wx.Button(self, -1, "Button1", (0, 0)))
-        #self.SetSizer(self.sizer)
-
     def OnPaint(self, evt):
         dc = wx.PaintDC(self)
         gc = wx.GraphicsContext.Create(dc)
-
-    def Destroy(self):
-        #call the super method
-        super(wx.Panel, self).Destroy()
 
     def updateTemperatures(self, event):
         self.AddBedTemperature(self.bedtemps[-1])
@@ -80,9 +69,6 @@ class Graph(BufferedCanvas):
         #b = gc.CreateLinearGradientBrush(0, 0, w, h, col1, col2)
 
         gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 4))
-        #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(245, 245, 255, 252))))
-        #gc.SetBrush(b)
-        gc.DrawRectangle(0, 0, self.width, self.height)
 
         #gc.SetBrush(wx.Brush(wx.Colour(245, 245, 255, 52)))
 
@@ -240,6 +226,7 @@ class Graph(BufferedCanvas):
         self.Refresh()
 
     def draw(self, dc, w, h):
+        dc.SetBackground(wx.Brush(self.root.settings.bgcolor))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         self.width = w

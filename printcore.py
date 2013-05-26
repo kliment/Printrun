@@ -23,6 +23,9 @@ import platform, os
 from GCodeAnalyzer import GCodeAnalyzer
 import socket		# Network
 import re			# Regex
+from collections import deque
+from printrun.GCodeAnalyzer import GCodeAnalyzer
+from printrun import gcoder
 
 def control_ttyhup(port, disable_hup):
     """Controls the HUPCL"""
@@ -47,6 +50,7 @@ class printcore():
         """
         self.baud = None
         self.port = None
+        self.analyzer = GCodeAnalyzer()
         self.printer = None #Serial instance connected to the printer, None when disconnected
         self.clear = 0 #clear to send, enabled after responses
         self.online = False #The printer has responded to the initial command and is active
@@ -63,6 +67,7 @@ class printcore():
         self.tempcb = None #impl (wholeline)
         self.recvcb = None #impl (wholeline)
         self.sendcb = None #impl (wholeline)
+        self.printsendcb = None #impl (wholeline)
         self.errorcb = None #impl (wholeline)
         self.startcb = None #impl ()
         self.endcb = None #impl ()
@@ -230,8 +235,8 @@ class printcore():
     def _checksum(self, command):
         return reduce(lambda x, y:x^y, map(ord, command))
 
-    def startprint(self, data, startindex = 0):
-        """Start a print, data is an array of gcode commands.
+    def startprint(self, gcode, startindex = 0):
+        """Start a print, gcode is an array of gcode commands.
         returns True on success, False if already printing.
         The print queue will be replaced with the contents of the data array, the next line will be set to 0 and the firmware notified.
         Printing will then start in a parallel thread.
@@ -239,12 +244,12 @@ class printcore():
         if self.printing or not self.online or not self.printer:
             return False
         self.printing = True
-        self.mainqueue = [] + data
+        self.mainqueue = gcode
         self.lineno = 0
         self.queueindex = startindex
         self.resendfrom = -1
         self._send("M110", -1, True)
-        if len(data) == 0:
+        if not gcode.lines:
             return True
         self.clear = False
         self.print_thread = Thread(target = self._print)
@@ -369,7 +374,7 @@ class printcore():
         while self.printing and self.printer and self.online:
             self._sendnext()
         self.sentlines = {}
-        self.log = []
+        self.log.clear()
         self.sent = []
         try:
           self.print_thread.join()
@@ -403,23 +408,26 @@ class printcore():
             self.resendfrom += 1
             return
         self.resendfrom = -1
-        for i in self.priqueue[:]:
-            self._send(i)
-            del self.priqueue[0]
+        if self.priqueue:
+            self._send(self.priqueue.pop(0))
             return
         if self.printing and self.queueindex < len(self.mainqueue):
-            tline = self.mainqueue[self.queueindex]
+            (layer, line) = self.mainqueue.idxs(self.queueindex)
+            gline = self.mainqueue.all_layers[layer].lines[line]
+            tline = gline.raw
             #check for host command
             if tline.lstrip().startswith(";@"):
-              #it is a host command: pop it from the list
-              self.mainqueue.pop(self.queueindex)
-              self.processHostCommand(tline)
-              return
+                self.processHostCommand(tline)
+                self.queueindex += 1
+                return
       
             tline = tline.split(";")[0]
             if len(tline) > 0:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
+                if self.printsendcb:
+                    try: self.printsendcb(gline)
+                    except: pass
             else:
                 self.clear = True
             self.queueindex += 1
@@ -493,18 +501,19 @@ if __name__ == '__main__':
     p = printcore(port, baud)
     p.loud = loud
     time.sleep(2)
-    gcode = [i.replace("\n", "") for i in open(filename)]
+    gcode = [i.strip() for i in open(filename)]
+    gcode = gcoder.GCode(gcode)
     p.startprint(gcode)
 
     try:
         if statusreport:
             p.loud = False
-            sys.stdout.write("Progress: 00.0%")
+            sys.stdout.write("Progress: 00.0%\r")
             sys.stdout.flush()
         while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("%02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),) )
+                sys.stdout.write("Progress: %02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),) )
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)
