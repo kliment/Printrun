@@ -17,10 +17,11 @@
 
 from serial import Serial, SerialException
 from threading import Thread
-from select import error as SelectError
+from select import error as SelectError, select
 import time, getopt, sys
 import platform, os
-from GCodeAnalyzer import GCodeAnalyzer
+import socket		# Network
+import re			# Regex
 
 def control_ttyhup(port, disable_hup):
     """Controls the HUPCL"""
@@ -35,6 +36,9 @@ def enable_hup(port):
 
 def disable_hup(port):
     control_ttyhup(port, True)
+
+def is_socket(printer):
+    return (type(printer) == socket._socketobject)
 
 class printcore():
     def __init__(self, port = None, baud = None):
@@ -70,11 +74,7 @@ class printcore():
         self.print_thread = None
         if port is not None and baud is not None:
             self.connect(port, baud)
-        self.analyzer = GCodeAnalyzer()
-        self.xy_feedrate = None
-        self.z_feedrate = None
-        self.pronterface = None
-        
+
     def disconnect(self):
         """Disconnects from printer and pauses the print
         """
@@ -98,8 +98,16 @@ class printcore():
         if baud is not None:
             self.baud = baud
         if self.port is not None and self.baud is not None:
-            disable_hup(self.port)
-            self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 0.25)
+            # Connect to socket if "port" is an IP, device if not
+            p = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")	
+            if p.match(port):
+                self.printer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.timeout = 0.25
+                self.printer.connect((port, baud))
+            else:
+                disable_hup(self.port)
+                self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 0.25)
+           
             self.stop_read_thread = False
             self.read_thread = Thread(target = self._listen)
             self.read_thread.start()
@@ -107,14 +115,27 @@ class printcore():
     def reset(self):
         """Reset the printer
         """
-        if self.printer:
+        if self.printer and not is_socket(self.printer):
             self.printer.setDTR(1)
             time.sleep(0.2)
             self.printer.setDTR(0)
 
     def _readline(self):
         try:
-            line = self.printer.readline()
+            # Read line if socket
+            if is_socket(self.printer):
+                line = ''
+                ready = select([self.printer], [], [], self.timeout)
+                if ready[0]:
+                    while not "\n" in line:
+                        chunk = self.printer.recv(1)
+                        if chunk == '':
+                            raise RuntimeError("socket connection broken")
+                        line = line + chunk
+            # Read if tty
+            else:
+                line = self.printer.readline()
+
             if len(line) > 1:
                 self.log.append(line)
                 if self.recvcb:
@@ -136,6 +157,8 @@ class printcore():
             return None
 
     def _listen_can_continue(self):
+        if is_socket(self.printer):
+            return not self.stop_read_thread and self.printer            
         return not self.stop_read_thread and self.printer and self.printer.isOpen()
 
     def _listen_until_online(self):
@@ -224,69 +247,17 @@ class printcore():
         self.print_thread.start()
         return True
 
-    # run a simple script if it exists, no multithreading    
-    def runSmallScript(self, filename):
-        if filename == None: return
-        f = None
-        try:
-          f = open(filename)
-        except:
-          pass
-
-        if f != None:
-          for i in f:
-            l = i.replace("\n", "")
-            l = l[:l.find(";")] #remove comment
-            self.send_now(l)
-          f.close()
-        
     def pause(self):
         """Pauses the print, saving the current position.
         """
-        if not self.printing: return False
         self.paused = True
         self.printing = False
-        
-        # try joining the print thread: enclose it in try/except because we might be calling it from the thread itself
-        
-        try:
-          self.print_thread.join()
-        except:
-          pass
-        
+        self.print_thread.join()
         self.print_thread = None
-        
-        # saves the status
-        self.pauseX = self.analyzer.x-self.analyzer.xOffset;
-        self.pauseY = self.analyzer.y-self.analyzer.yOffset;
-        self.pauseZ = self.analyzer.z-self.analyzer.zOffset;
-        self.pauseE = self.analyzer.e-self.analyzer.eOffset;
-        self.pauseF = self.analyzer.f;
-        self.pauseRelative = self.analyzer.relative;
-        
-        
 
     def resume(self):
         """Resumes a paused print.
         """
-        if not self.paused: return False
-        if self.paused:
-          #restores the status
-          self.send_now("G90") # go to absolute coordinates
-        
-          xyFeedString = ""
-          zFeedString = ""
-          if self.xy_feedrate != None: xyFeedString = " F" + str(self.xy_feedrate)
-          if self.z_feedrate != None: zFeedString = " F" + str(self.z_feedrate)
-        
-          self.send_now("G1 X" + str(self.pauseX) + " Y" + str(self.pauseY) + xyFeedString)
-          self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
-          self.send_now("G92 E" + str(self.pauseE))
-        
-          if self.pauseRelative: self.send_now("G91") # go back to relative if needed
-          #reset old feed rate
-          self.send_now("G1 F" + str(self.pauseF))
-        
         self.paused = False
         self.printing = True
         self.print_thread = Thread(target = self._print)
@@ -344,24 +315,11 @@ class printcore():
         self.sentlines = {}
         self.log = []
         self.sent = []
-        try:
-          self.print_thread.join()
-        except: pass
-        self.print_thread = None
         if self.endcb:
             #callback for printing done
             try: self.endcb()
             except: pass
 
-    #now only "pause" is implemented as host command
-    def processHostCommand(self, command):
-        command = command.lstrip()
-        if command.startswith(";@pause"):
-          if self.pronterface != None:
-            self.pronterface.pause(None)
-          else:
-            self.pause()
-            
     def _sendnext(self):
         if not self.printer:
             return
@@ -382,13 +340,6 @@ class printcore():
             return
         if self.printing and self.queueindex < len(self.mainqueue):
             tline = self.mainqueue[self.queueindex]
-            #check for host command
-            if tline.lstrip().startswith(";@"):
-              #it is a host command: pop it from the list
-              self.mainqueue.pop(self.queueindex)
-              self.processHostCommand(tline)
-              return
-      
             tline = tline.split(";")[0]
             if len(tline) > 0:
                 self._send(tline, self.lineno, True)
@@ -412,16 +363,26 @@ class printcore():
                 self.sentlines[lineno] = command
         if self.printer:
             self.sent.append(command)
-            self.analyzer.Analyze(command) # run the command through the analyzer
             if self.loud:
                 print "SENT: ", command
             if self.sendcb:
                 try: self.sendcb(command)
                 except: pass
-            try:
-                self.printer.write(str(command+"\n"))
-            except SerialException, e:
-                print "Can't write to printer (disconnected?)."
+           
+            # If the printer is connected via Ethernet, use send
+            if is_socket(self.printer):
+                msg = str(command+"\n")
+            	totalsent = 0
+            	while totalsent < len(msg):
+                    sent = self.printer.send(msg[totalsent:])
+                    if sent == 0:
+                        raise RuntimeError("socket connection broken")
+                    totalsent = totalsent + sent
+            else:
+                try:
+                    self.printer.write(str(command+"\n"))
+                except SerialException, e:
+                    print "Can't write to printer (disconnected?)."
 
 if __name__ == '__main__':
     baud = 115200
