@@ -451,21 +451,22 @@ class printcore():
             if self.sendcb:
                 try: self.sendcb(command)
                 except: pass
-
+            try:
             # If the printer is connected via Ethernet, use send
-            if is_socket(self.printer):
-                msg = str(command+"\n")
-            	totalsent = 0
-            	while totalsent < len(msg):
-                    sent = self.printer.send(msg[totalsent:])
-                    if sent == 0:
-                        raise RuntimeError("socket connection broken")
-                    totalsent = totalsent + sent
-            else:
-                try:
+                if is_socket(self.printer):
+                    msg = str(command+"\n")
+                    totalsent = 0
+                    while totalsent < len(msg):
+                        sent = self.printer.send(msg[totalsent:])
+                        if sent == 0:
+                            raise RuntimeError("socket connection broken")
+                        totalsent = totalsent + sent
+                else:
                     self.printer.write(str(command+"\n"))
-                except SerialException, e:
-                    print "Can't write to printer (disconnected?)."
+            except SerialException, e:
+                print "Can't write to printer (disconnected?)."
+            except RuntimeError, e:
+                print "Socket connection broken, disconnected."
 
 if __name__ == '__main__':
     baud = 115200
