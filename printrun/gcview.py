@@ -252,7 +252,7 @@ def mulquat(q1, rq):
 
 class GcodeViewPanel(wxGLPanel):
 
-    def __init__(self, parent, id = wx.ID_ANY, realparent = None):
+    def __init__(self, parent, id = wx.ID_ANY, build_dimensions = None, realparent = None):
         super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition, wx.DefaultSize, 0)
         self.batches = []
         self.rot = 0
@@ -263,8 +263,10 @@ class GcodeViewPanel(wxGLPanel):
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.parent = realparent if realparent else parent
         self.initpos = None
-        self.dist = 200
-        self.bedsize = [200, 200]
+        if build_dimensions:
+            self.dist = max(build_dimensions[0], build_dimensions[1])
+        else:
+            self.dist = 200
         self.transv = [0, 0, -self.dist]
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
@@ -469,7 +471,7 @@ class GCObject(object):
 class GcodeViewMainWrapper(object):
     
     def __init__(self, parent, build_dimensions):
-        self.glpanel = GcodeViewPanel(parent, realparent = self)
+        self.glpanel = GcodeViewPanel(parent, realparent = self, build_dimensions = build_dimensions)
         self.glpanel.SetMinSize((150, 150))
         self.clickcb = None
         self.widget = self.glpanel
@@ -522,7 +524,7 @@ class GcodeViewFrame(wx.Frame):
         else:
             self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
-        self.glpanel = GcodeViewPanel(self)
+        self.glpanel = GcodeViewPanel(self, build_dimensions = build_dimensions)
 
     def set_current_gline(self, gline):
         if gline.is_move and self.model and self.model.loaded:
