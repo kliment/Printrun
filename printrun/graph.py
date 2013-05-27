@@ -274,7 +274,7 @@ class Graph(BufferedCanvas):
     class _YBounds(object):
         """Small helper class to claculate y bounds dynamically"""
 
-        def __init__(self, graph, minimum_scale=1.0,buffer=0.10):
+        def __init__(self, graph, minimum_scale=5.0,buffer=0.10):
             """_YBounds(Graph,float,float)
 
             graph           parent object to calculate scales for
