@@ -20,9 +20,8 @@ from threading import Thread
 from select import error as SelectError, select
 import time, getopt, sys
 import platform, os
-from GCodeAnalyzer import GCodeAnalyzer
 import socket		# Network
-import re			# Regex
+import re		# Regex
 from collections import deque
 from printrun.GCodeAnalyzer import GCodeAnalyzer
 from printrun import gcoder
@@ -55,14 +54,14 @@ class printcore():
         self.clear = 0 #clear to send, enabled after responses
         self.online = False #The printer has responded to the initial command and is active
         self.printing = False #is a print currently running, true if printing, false if paused
-        self.mainqueue = []
+        self.mainqueue = None
         self.priqueue = []
         self.queueindex = 0
         self.lineno = 0
         self.resendfrom = -1
         self.paused = False
         self.sentlines = {}
-        self.log = []
+        self.log = deque(maxlen = 10000)
         self.sent = []
         self.tempcb = None #impl (wholeline)
         self.recvcb = None #impl (wholeline)
@@ -80,7 +79,6 @@ class printcore():
         self.print_thread = None
         if port is not None and baud is not None:
             self.connect(port, baud)
-        self.analyzer = GCodeAnalyzer()
         self.xy_feedrate = None
         self.z_feedrate = None
         self.pronterface = None
