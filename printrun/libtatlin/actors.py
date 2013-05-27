@@ -23,7 +23,7 @@ import sys
 
 from pyglet.gl import *
 from pyglet import gl
-from pyglet.graphics.vertexbuffer import create_buffer
+from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from . import vector
 
@@ -339,7 +339,11 @@ class GcodeModel(Model):
 
     def _display_movements(self, mode_2d=False):
         self.vertex_buffer.bind()
-        glVertexPointer(3, GL_FLOAT, 0, None)
+        has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
+        if has_vbo:
+            glVertexPointer(3, GL_FLOAT, 0, None)
+        else:
+            glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
 
         if mode_2d:
             glScale(1.0, 1.0, 0.0) # discard z coordinates
@@ -360,7 +364,10 @@ class GcodeModel(Model):
         glEnableClientState(GL_COLOR_ARRAY)
 
         self.vertex_color_buffer.bind()
-        glColorPointer(4, GL_FLOAT, 0, None)
+        if has_vbo:
+            glColorPointer(4, GL_FLOAT, 0, None)
+        else:
+            glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
 
         start = max(self.printed_until, 0)
         end = end - start
@@ -372,10 +379,17 @@ class GcodeModel(Model):
 
     def _display_arrows(self):
         self.arrow_buffer.bind()
-        glVertexPointer(3, GL_FLOAT, 0, None)
+        has_vbo = isinstance(self.arrow_buffer, VertexBufferObject)
+        if has_vbo:
+            glVertexPointer(3, GL_FLOAT, 0, None)
+        else:
+            glVertexPointer(3, GL_FLOAT, 0, self.arrow_buffer.ptr)
 
         self.arrow_color_buffer.bind()
-        glColorPointer(4, GL_FLOAT, 0, None)
+        if has_vbo:
+            glColorPointer(4, GL_FLOAT, 0, None)
+        else:
+            glColorPointer(4, GL_FLOAT, 0, self.arrow_color_buffer.ptr)
 
         start = (self.layer_stops[self.num_layers_to_draw - 1] // 2) * 3
         end   = (self.layer_stops[self.num_layers_to_draw] // 2) * 3

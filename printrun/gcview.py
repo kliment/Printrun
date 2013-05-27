@@ -26,7 +26,6 @@ pyglet.options['debug_gl'] = True
 
 from pyglet.gl import *
 from pyglet import gl
-from pyglet.graphics.vertexbuffer import create_buffer
 
 from printrun import gcoder
 from printrun import stltool
