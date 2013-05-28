@@ -310,15 +310,15 @@ class GCode(object):
             zmin = min(zm, zmin)
             zmax = max(zM, zmax)
 
-        self.xmin = xmin
-        self.xmax = xmax
-        self.ymin = ymin
-        self.ymax = ymax
-        self.zmin = zmin
-        self.zmax = zmax
-        self.width = xmax - xmin
-        self.depth = ymax - ymin
-        self.height = zmax - zmin
+        self.xmin = xmin if not math.isinf(xmin) else 0
+        self.xmax = xmax if not math.isinf(xmax) else 0
+        self.ymin = ymin if not math.isinf(ymin) else 0
+        self.ymax = ymax if not math.isinf(ymax) else 0
+        self.zmin = zmin if not math.isinf(zmin) else 0
+        self.zmax = zmax if not math.isinf(zmax) else 0
+        self.width = self.xmax - self.xmin
+        self.depth = self.ymax - self.ymin
+        self.height = self.zmax - self.zmin
 
     def estimate_duration(self):
         lastx = lasty = lastz = laste = lastf = 0.0
