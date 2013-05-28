@@ -161,7 +161,7 @@ class GCode(object):
             return
         gline = Line(command)
         self.lines.append(gline)
-        self._preprocess([gline])
+        self._preprocess_lines([gline])
         self.append_layer.lines.append(gline)
         self.layer_idxs.append(self.append_layer_id)
         self.line_idxs.append(len(self.append_layer.lines))
