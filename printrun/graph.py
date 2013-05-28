@@ -16,7 +16,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, random
-from math import log10,floor,ceil
+from math import log10, floor, ceil
 
 from bufferedcanvas import *
 
