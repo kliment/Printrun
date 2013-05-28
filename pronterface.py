@@ -196,7 +196,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filename = filename
         os.putenv("UBUNTU_MENUPROXY", "0")
         MainWindow.__init__(self, None, title = _("Printer Interface"), size = size);
-        self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
+            self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
+        else:
+            self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
         self.panel = wx.Panel(self,-1, size = size)
 
         self.statuscheck = False

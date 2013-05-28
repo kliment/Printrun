@@ -609,6 +609,8 @@ class pronsole(cmd.Cmd):
             self.processing_rc = False
 
     def load_default_rc(self, rc_filename = ".pronsolerc"):
+        if rc_filename == ".pronsolerc" and hasattr(sys,"frozen") and sys.frozen in ["windows_exe", "console_exe"]:
+            rc_filename="printrunconf.ini"
         try:
             try:
                 self.load_rc(os.path.join(os.path.expanduser("~"), rc_filename))
