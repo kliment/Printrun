@@ -57,7 +57,6 @@ class Graph(BufferedCanvas):
         gc = wx.GraphicsContext.Create(dc)
 
     def updateTemperatures(self, event):
-	#print "ypos(%f)=%d"%(self.extruder0temps[-1],self._y_pos(self.extruder0temps[-1]))
         self.AddBedTemperature(self.bedtemps[-1])
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
         self.AddExtruder0Temperature(self.extruder0temps[-1])
