@@ -166,12 +166,6 @@ class printcore():
                     except: pass
                 if self.loud: print "RECV: ", line.rstrip()
             return line
-        except SelectError, e:
-            if 'Bad file descriptor' in e.args[1]:
-                print "Can't read from printer (disconnected?)."
-                return None
-            else:
-                raise
         except SerialException, e:
             print "Can't read from printer (disconnected?)."
             return None
