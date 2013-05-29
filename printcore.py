@@ -17,7 +17,6 @@
 
 from serial import Serial, SerialException
 from threading import Thread
-from select import error as SelectError, select
 import time, getopt, sys
 import platform, os, traceback
 import socket
