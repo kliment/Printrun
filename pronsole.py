@@ -17,7 +17,7 @@
 
 import cmd, sys
 import glob, os, time, datetime
-import sys, subprocess
+import sys, subprocess, traceback
 import math, codecs
 import shlex
 from math import sqrt
@@ -1210,7 +1210,6 @@ class pronsole(cmd.Cmd):
                 print "Setting bed temp to 0"
             self.p.send_now("M140 S0.0")
         self.log("Disconnecting from printer...")
-        print self.p.printing
         if self.p.printing:
             print "Are you sure you want to exit while printing?"
             print "(this will terminate the print)."
@@ -1434,6 +1433,9 @@ if __name__ == "__main__":
     interp.parse_cmdline(sys.argv[1:])
     try:
         interp.cmdloop()
-    except:
+    except SystemExit:
         interp.p.disconnect()
-        #raise
+    except:
+        print _("Caught an exception, exiting:")
+        traceback.print_exc()
+        interp.p.disconnect()
