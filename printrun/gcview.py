@@ -63,13 +63,12 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        if self.canvas.GetContext():
+        if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
-            self.Show()
-            self.canvas.SetCurrent(self.context)
-            size = self.canvas.GetClientSize()
+            size = self.GetClientSize()
             self.winsize = (size.width, size.height)
             self.width, self.height = size.width, size.height
+            self.canvas.SetCurrent(self.context)
             self.OnReshape(size.width, size.height)
             self.canvas.Refresh(False)
         event.Skip()
@@ -127,7 +126,6 @@ class wxGLPanel(wx.Panel):
         gluPerspective(60., width / float(height), .1, 1000.)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        #pyglet stuff
         self.vpmat = (GLint * 4)(0, 0, *list(self.GetClientSize()))
         glGetDoublev(GL_PROJECTION_MATRIX, self.pmat)
 
