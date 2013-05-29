@@ -25,8 +25,6 @@ from pyglet.gl import *
 from pyglet import gl
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
-from . import vector
-
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
 
@@ -37,8 +35,8 @@ def compile_display_list(func, *options):
     glEndList()
     return display_list
 
-def numpy2vbo(nparray, target = GL_ARRAY_BUFFER, usage = GL_STATIC_DRAW):
-    vbo = create_buffer(nparray.nbytes, target = target, usage = usage, vbo = True)
+def numpy2vbo(nparray, target = GL_ARRAY_BUFFER, usage = GL_STATIC_DRAW, use_vbos = True):
+    vbo = create_buffer(nparray.nbytes, target = target, usage = usage, vbo = use_vbos)
     vbo.bind()
     vbo.set_data(nparray.ctypes.data)
     return vbo
@@ -203,15 +201,10 @@ class GcodeModel(Model):
     """
     Model for displaying Gcode data.
     """
-    # vertices for arrow to display the direction of movement
-    arrow = numpy.require([
-        [0.0, 0.0, 0.0],
-        [0.4, -0.1, 0.0],
-        [0.4, 0.1, 0.0],
-    ], 'f')
 
     color_printed = (0.2, 0.75, 0, 0.6)
 
+    use_vbos = True
     loaded = False
 
     def load_data(self, model_data, callback=None):
@@ -232,11 +225,6 @@ class GcodeModel(Model):
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
                 vertex_list.append(current_pos)
 
-                arrow = self.arrow
-                # position the arrow with respect to movement
-                arrow = vector.rotate(arrow, movement_angle(prev_pos, current_pos), 0.0, 0.0, 1.0)
-                arrow_list.extend(arrow)
-
                 vertex_color = self.movement_color(gline)
                 color_list.append(vertex_color)
 
@@ -249,22 +237,11 @@ class GcodeModel(Model):
                 callback(layer_idx + 1, num_layers)
 
         self.vertices = numpy.array(vertex_list, dtype = GLfloat)
-        self.colors   = numpy.array(color_list, dtype = GLfloat)
-        self.arrows   = numpy.array(arrow_list, dtype = GLfloat)
-
-        # by translating the arrow vertices outside of the loop, we achieve a
-        # significant performance gain thanks to numpy. it would be really nice
-        # if we could rotate in a similar fashion...
-        self.arrows = self.arrows + self.vertices[1::2].repeat(3, 0)
-
-        # for every pair of vertices of the model, there are 3 vertices for the arrow
-        assert len(self.arrows) == ((len(self.vertices) // 2) * 3), \
-            'The 2:3 ratio of model vertices to arrow vertices does not hold.'
+        self.colors   = numpy.array(color_list, dtype = GLfloat).repeat(2, 0)
 
         self.max_layers         = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers
         self.printed_until      = -1
-        self.arrows_enabled     = False
         self.initialized        = False
         self.loaded             = True
 
@@ -275,7 +252,7 @@ class GcodeModel(Model):
 
     def copy(self):
         copy = GcodeModel()
-        for var in ["vertices", "arrows", "colors", "max_layers", "num_layers_to_draw", "printed_until", "arrows_enabled", "layer_stops"]:
+        for var in ["vertices", "colors", "max_layers", "num_layers_to_draw", "printed_until", "layer_stops"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False
@@ -313,13 +290,8 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.vertex_buffer       = numpy2vbo(self.vertices)
-        self.vertex_color_buffer = numpy2vbo(self.colors.repeat(2, 0)) # each pair of vertices shares the color
-
-        if self.arrows_enabled:
-            self.arrow_buffer       = numpy2vbo(self.arrows)
-            self.arrow_color_buffer = numpy2vbo(self.colors.repeat(3, 0)) # each triplet of vertices shares the color
-
+        self.vertex_buffer       = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
+        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos) # each pair of vertices shares the color
         self.initialized = True
 
     def display(self, mode_2d=False):
@@ -329,9 +301,6 @@ class GcodeModel(Model):
         glEnableClientState(GL_COLOR_ARRAY)
 
         self._display_movements(mode_2d)
-
-        if self.arrows_enabled:
-            self._display_arrows()
 
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
@@ -377,24 +346,3 @@ class GcodeModel(Model):
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
 
-    def _display_arrows(self):
-        self.arrow_buffer.bind()
-        has_vbo = isinstance(self.arrow_buffer, VertexBufferObject)
-        if has_vbo:
-            glVertexPointer(3, GL_FLOAT, 0, None)
-        else:
-            glVertexPointer(3, GL_FLOAT, 0, self.arrow_buffer.ptr)
-
-        self.arrow_color_buffer.bind()
-        if has_vbo:
-            glColorPointer(4, GL_FLOAT, 0, None)
-        else:
-            glColorPointer(4, GL_FLOAT, 0, self.arrow_color_buffer.ptr)
-
-        start = (self.layer_stops[self.num_layers_to_draw - 1] // 2) * 3
-        end   = (self.layer_stops[self.num_layers_to_draw] // 2) * 3
-
-        glDrawArrays(GL_TRIANGLES, start, end - start)
-
-        self.arrow_buffer.unbind()
-        self.arrow_color_buffer.unbind()
