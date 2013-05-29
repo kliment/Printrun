@@ -1187,7 +1187,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     string += _(" Z: %.3f mm") % self.curlayer
             wx.CallAfter(self.status.SetStatusText, string)
             wx.CallAfter(self.gviz.Refresh)
-            if(self.monitor and self.p.online):
+            if self.monitor and self.p.online:
                 if self.sdprinting:
                     self.p.send_now("M27")
                 if not hasattr(self, "auto_monitor_pattern"):
