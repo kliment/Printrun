@@ -1181,8 +1181,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
                 if self.p.queueindex > 0:
                     secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                    secondsremain = self.compute_eta(self.p.queueindex)
-                    secondsestimate = secondselapsed + secondsremain
+                    secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
                     string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
                                                                   format_duration(secondsestimate))
                     string += _(" Z: %.3f mm") % self.curlayer
