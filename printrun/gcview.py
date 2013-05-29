@@ -27,9 +27,9 @@ pyglet.options['debug_gl'] = True
 from pyglet.gl import *
 from pyglet import gl
 
-from printrun import gcoder
-from printrun import stltool
-from printrun.libtatlin import actors
+from . import gcoder
+from . import stltool
+from .libtatlin import actors
 
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
