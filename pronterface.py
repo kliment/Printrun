@@ -49,11 +49,11 @@ import pronsole
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting
 from printrun import gcoder
 
-def parse_temperature_report(report, key):
-    if key in report:
-        return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
-    else: 
-        return -1.0
+tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)\/?([-+]?\d*\.?\d*)")
+
+def parse_temperature_report(report):
+    matches = tempreport_exp.findall(report)
+    return dict((m[0], (m[1], m[2])) for m in matches)
 
 def format_time(timestamp):
     return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
@@ -1136,10 +1136,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def update_tempdisplay(self):
         try:
-            hotend_temp = parse_temperature_report(self.tempreport, "T:")
+            # FIXME : we don't use setpoints here, we should probably exploit them
+            temps = parse_temperature_report(self.tempreport)
+            if "T0" in temps:
+                hotend_temp = float(temps["T0"][0])
+            else:
+                hotend_temp = float(temps["T"][0]) if "T" in temps else -1.0
             wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
             if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
-            bed_temp = parse_temperature_report(self.tempreport, "B:")
+            if "T1" in temps:
+                hotend_temp = float(temps["T1"][0])
+                wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
+            bed_temp = float(temps["B"][0]) if "B" in temps else -1.0
             wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
             if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
         except:
