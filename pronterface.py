@@ -716,21 +716,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except:
             pass
 
-    def toggleview(self, e):
-        if(self.mini):
-            self.mini = False
-            self.mainsizer.Fit(self)
-
-            #self.SetSize(winsize)
-            wx.CallAfter(self.minibtn.SetLabel, _("Mini mode"))
-
-        else:
-            self.mini = True
-            self.uppersizer.Fit(self)
-
-            #self.SetSize(winssize)
-            wx.CallAfter(self.minibtn.SetLabel, _("Full mode"))
-
     def cbuttons_reload(self):
         allcbs = []
         ubs = self.uppersizer
