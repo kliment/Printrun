@@ -359,7 +359,7 @@ class printcore():
     def send_now(self, command, wait = 0):
         """Sends a command to the printer ahead of the command queue, without a checksum
         """
-        if self.online or force:
+        if self.online:
             if self.printing:
                 self.priqueue.append(command)
             else:
