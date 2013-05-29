@@ -414,7 +414,7 @@ class printcore():
             (layer, line) = self.mainqueue.idxs(self.queueindex)
             gline = self.mainqueue.all_layers[layer].lines[line]
             if self.layerchangecb and self.queueindex > 0:
-                (prev_layer, prev_line) = self.mainqueue.idxs(self.queuindex - 1)
+                (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
                     self.layerchangecb(layer)
             tline = gline.raw
