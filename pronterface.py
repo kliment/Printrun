@@ -196,7 +196,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filename = filename
         os.putenv("UBUNTU_MENUPROXY", "0")
         MainWindow.__init__(self, None, title = _("Printer Interface"), size = size);
-        self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
+            self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
+        else:
+            self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
         self.panel = wx.Panel(self,-1, size = size)
 
         self.statuscheck = False
@@ -1367,19 +1370,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 basedir = os.path.split(self.filename)[0]
             except:
                 pass
-	dlg=None
-	if filename is None:
-	        dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
-        	dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
-        if(filename is not None or dlg.ShowModal() == wx.ID_OK):
-            if filename is not None:
+        dlg = None
+        if filename is None:
+            dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+            dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
+        if filename or dlg.ShowModal() == wx.ID_OK:
+            if filename:
                 name = filename
             else:
                 name = dlg.GetPath()
-            if not(os.path.exists(name)):
+                dlg.Destroy()
+            if not os.path.exists(name):
                 self.status.SetStatusText(_("File not found!"))
-                if dlg is not None:
-                    dlg.Destroy()
                 return
             path = os.path.split(name)[0]
             if path != self.settings.last_file_path:
@@ -1400,8 +1402,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
                 threading.Thread(target = self.loadviz).start()
-            if dlg is not None:
-                dlg.Destroy()	
+        else:
+            dlg.Destroy()
 
     def loadviz(self):
         gcode = self.fgcode
