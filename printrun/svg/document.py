@@ -25,8 +25,8 @@ from functools import wraps
 
 import pathdata
 import css
-from svg.css.colour import colourValue
-from svg.css import values
+from css.colour import colourValue
+from css import values
 from attributes import paintValue
 
 document = """<?xml version = "1.0" standalone = "no"?>
