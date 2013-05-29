@@ -148,7 +148,7 @@ class GCode(object):
                         (l.strip() for l in data)
                       if l2]
         self._preprocess_lines()
-        self._preprocess_extrusion()
+        self.filament_length = self._preprocess_extrusion()
         self._create_layers()
         self._preprocess_layers()
 
@@ -162,9 +162,11 @@ class GCode(object):
         gline = Line(command)
         self.lines.append(gline)
         self._preprocess_lines([gline])
+        self._preprocess_extrusion([gline])
         self.append_layer.lines.append(gline)
         self.layer_idxs.append(self.append_layer_id)
         self.line_idxs.append(len(self.append_layer.lines))
+        return gline
 
     def _preprocess_lines(self, lines = None):
         """Checks for G20, G21, G90 and G91, sets imperial and relative flags"""
@@ -173,7 +175,7 @@ class GCode(object):
         imperial = self.imperial
         relative = self.relative
         relative_e = self.relative_e
-        for line in self.lines:
+        for line in lines:
             if line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e
@@ -197,12 +199,14 @@ class GCode(object):
         self.relative = relative
         self.relative_e = relative_e
     
-    def _preprocess_extrusion(self):
+    def _preprocess_extrusion(self, lines = None, cur_e = 0):
+        if not lines:
+            lines = self.lines
+
         total_e = 0
         max_e = 0
-        cur_e = 0
         
-        for line in self.lines:
+        for line in lines:
             if line.e == None:
                 continue
             if line.is_move:
@@ -217,7 +221,7 @@ class GCode(object):
             elif line.command == "G92":
                 cur_e = line.e
 
-        self.filament_length = max_e
+        return max_e
     
     # FIXME : looks like this needs to be tested with list Z on move
     def _create_layers(self):
