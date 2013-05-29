@@ -108,11 +108,22 @@ class printcore():
             self.baud = baud
         if self.port is not None and self.baud is not None:
             # Connect to socket if "port" is an IP, device if not
-            p = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")	
-            if p.match(port):
+            host_regexp = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
+            is_serial = True
+            if ":" in port:
+                bits = port.split(":")
+                if len(bits) == 2:
+                    hostname = bits[0]
+                    try:
+                        port = int(bits[1])
+                        if host_regexp.match(hostname) and 1 <= port <= 65535:
+                            is_serial = False
+                    except:
+                        pass
+            if not is_serial:
                 self.printer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.timeout = 0.25
-                self.printer.connect((port, baud))
+                self.printer.connect((hostname, port))
             else:
                 disable_hup(self.port)
                 self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 0.25)
