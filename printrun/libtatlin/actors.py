@@ -19,7 +19,7 @@
 import time
 import numpy
 import math
-import sys
+import logging
 
 from pyglet.gl import *
 from pyglet import gl
@@ -247,8 +247,8 @@ class GcodeModel(Model):
 
         t_end = time.time()
 
-        print >> sys.stderr, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start)
-        print >> sys.stderr, _('Vertex count: %d') % len(self.vertices)
+        logging.log(logging.INFO, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
+        logging.log(logging.INFO, _('Vertex count: %d') % len(self.vertices))
 
     def copy(self):
         copy = GcodeModel()
