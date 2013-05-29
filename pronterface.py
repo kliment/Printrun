@@ -49,7 +49,7 @@ import pronsole
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting
 from printrun import gcoder
 
-tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)\/?([-+]?\d*\.?\d*)")
+tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: \/)?([-+]?\d*\.?\d*)")
 
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
