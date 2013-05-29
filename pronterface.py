@@ -859,10 +859,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def cbutton_remove(self, e, button):
         n = button.custombutton
-        self.custombuttons[n]=None
         self.cbutton_save(n, None)
-        #while len(self.custombuttons) and self.custombuttons[-1] is None:
-        #    del self.custombuttons[-1]
+        del self.custombuttons[n]
+        for i in range(n, len(self.custombuttons)):
+            self.cbutton_save(i, self.custombuttons[i])
         wx.CallAfter(self.cbuttons_reload)
 
     def cbutton_order(self, e, button, dir):
