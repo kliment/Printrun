@@ -952,7 +952,7 @@ class pronsole(cmd.Cmd):
             self.tempreadings = l
             self.status.update_tempreading(l)
         tstring = l.rstrip()
-        if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
+        if tstring != "ok" and not self.listing and not self.monitoring:
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()
             if self.silent == False: print "\r" + tstring.ljust(15)
