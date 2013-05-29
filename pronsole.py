@@ -301,7 +301,6 @@ class pronsole(cmd.Cmd):
         self.recvlisteners = []
         self.in_macro = False
         self.p.onlinecb = self.online
-        self.f = None
         self.fgcode = None
         self.listing = 0
         self.sdfiles = []
@@ -738,10 +737,9 @@ class pronsole(cmd.Cmd):
         if not os.path.exists(filename):
             self.log("File not found!")
             return
-        self.f = [line.strip() for line in open(filename)]
-        self.fgcode = gcoder.GCode(self.f)
+        self.fgcode = gcoder.GCode(open(filename))
         self.filename = filename
-        self.log("Loaded %s, %d lines." % (filename, len(self.f)))
+        self.log("Loaded %s, %d lines." % (filename, len(self.fgcode)))
 
     def complete_load(self, text, line, begidx, endidx):
         s = line.split()
