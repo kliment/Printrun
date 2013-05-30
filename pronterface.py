@@ -577,7 +577,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_editgcode(self, e = None):
         if self.filename is not None:
-            MacroEditor(self.filename, "\n".join([line.raw for line in self.fgcode]), self.doneediting, 1)
+            MacroEditor(self.filename, [line.raw for line in self.fgcode], self.doneediting, 1)
 
     def new_macro(self, e = None):
         dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))

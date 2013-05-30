@@ -155,6 +155,9 @@ class GCode(object):
     def __len__(self):
         return len(self.line_idxs)
 
+    def __iter__(self):
+        return self.lines.__iter__()
+
     def append(self, command):
         command = command.strip()
         if not command:
