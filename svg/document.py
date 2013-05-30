@@ -1,18 +1,3 @@
-# This file is part of the Printrun suite.
-#
-# Printrun is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Printrun is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
-
 """
     SVGDocument
 """
@@ -25,26 +10,26 @@ from functools import wraps
 
 import pathdata
 import css
-from css.colour import colourValue
-from css import values
+from svg.css.colour import colourValue
+from svg.css import values
 from attributes import paintValue
 
-document = """<?xml version = "1.0" standalone = "no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+document = """<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width = "4cm" height = "4cm" viewBox = "0 0 400 400"
-     xmlns = "http://www.w3.org/2000/svg" version = "1.1">
+<svg width="4cm" height="4cm" viewBox="0 0 400 400"
+     xmlns="http://www.w3.org/2000/svg" version="1.1">
   <title>Example triangle01- simple example of a 'path'</title>
   <desc>A path that draws a triangle</desc>
-  <rect x = "1" y = "1" width = "398" height = "398"
-        fill = "none" stroke = "blue" />
-  <path d = "M 100 100 L 300 100 L 200 300 z"
-        fill = "red" stroke = "blue" stroke-width = "3" />
+  <rect x="1" y="1" width="398" height="398"
+        fill="none" stroke="blue" />
+  <path d="M 100 100 L 300 100 L 200 300 z"
+        fill="red" stroke="blue" stroke-width="3" />
 </svg>"""
 
 makePath = lambda: wx.GraphicsRenderer_GetDefaultRenderer().CreatePath()
 
-def attrAsFloat(node, attr, defaultValue = "0"):
+def attrAsFloat(node, attr, defaultValue="0"):
     val = node.get(attr, defaultValue)
     #TODO: process stuff like "inherit" by walking back up the nodes
     #fast path optimization - if it's a valid float, don't
@@ -53,8 +38,8 @@ def attrAsFloat(node, attr, defaultValue = "0"):
         return float(val)
     except ValueError:
         return valueToPixels(val)
-
-def valueToPixels(val, defaultUnits = "px"):
+    
+def valueToPixels(val, defaultUnits="px"):
     #TODO manage default units
     from pyparsing import ParseException
     try:
@@ -82,7 +67,7 @@ def pathHandler(func):
         ops = self.generatePathOps(path)
         return path, ops
     return inner
-
+        
 
 class SVGDocument(object):
     lastControl = None
@@ -117,12 +102,12 @@ class SVGDocument(object):
     def state(self):
         """ Retrieve the current state, without popping"""
         return self.stateStack[-1]
-
+        
     def processElement(self, element):
         """ Process one element of the XML tree.
         Returns the path representing the node,
         and an operation list for drawing the node.
-
+        
         Parent nodes should return a path (for hittesting), but
         no draw operations
         """
@@ -141,7 +126,7 @@ class SVGDocument(object):
         """ Returns an oplist for transformations.
         This applies to a node, not the current state because
         the transform stack is saved in the wxGraphicsContext.
-
+        
         This oplist does *not* include the push/pop state commands
         """
         ops = []
@@ -190,21 +175,21 @@ class SVGDocument(object):
                     )
                 if transform == 'skewX':
                     matrix = wx.GraphicsRenderer_GetDefaultRenderer().CreateMatrix(
-                        1, 0, math.tan(math.radians(args[0])), 1, 0, 0
+                        1,0,math.tan(math.radians(args[0])),1,0,0
                     )
                     ops.append(
                         (wx.GraphicsContext.ConcatTransform, (matrix,))
                     )
                 if transform == 'skewY':
                     matrix = wx.GraphicsRenderer_GetDefaultRenderer().CreateMatrix(
-                        1, math.tan(math.radians(args[0])), 0, 1, 0, 0
+                        1,math.tan(math.radians(args[0])),0,1,0,0
                     )
                     ops.append(
                         (wx.GraphicsContext.ConcatTransform, (matrix,))
                     )
         return ops
-
-
+        
+    
     def addGroupToDocument(self, node):
         """ For parent elements: push on a state,
         then process all child elements
@@ -212,7 +197,7 @@ class SVGDocument(object):
         ops = [
             (wx.GraphicsContext.PushState, ())
         ]
-
+        
         path = makePath()
         ops.extend(self.createTransformOpsFromNode(node))
         for child in node.getchildren():
@@ -225,7 +210,7 @@ class SVGDocument(object):
             (wx.GraphicsContext.PopState, ())
         )
         return path, ops
-
+        
     def getFontFromState(self):
         font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         family = self.state.get("font-family")
@@ -242,11 +227,11 @@ class SVGDocument(object):
             else:
                 font.SetPointSize(int(val))
         return font
-
+    
     def addTextToDocument(self, node):
         x, y = [attrAsFloat(node, attr) for attr in ('x', 'y')]
-
-        def DoDrawText(context, text, x, y, brush = wx.NullGraphicsBrush):
+        
+        def DoDrawText(context, text, x, y, brush=wx.NullGraphicsBrush):
             #SVG spec appears to originate text from the bottom
             #rather than the top as with our API. This function
             #will measure and then re-orient the text as needed.
@@ -267,14 +252,14 @@ class SVGDocument(object):
             (DoDrawText, (text, x, y))
         ]
         return None, ops
-
+        
     @pathHandler
     def addRectToDocument(self, node, path):
         x, y, w, h = (attrAsFloat(node, attr) for attr in ['x', 'y', 'width', 'height'])
         rx = node.get('rx')
         ry = node.get('ry')
         if not (w and h):
-            path.MoveToPoint(x, y) #keep the current point correct
+            path.MoveToPoint(x,y) #keep the current point correct
             return
         if rx or ry:
             if rx and ry:
@@ -286,7 +271,7 @@ class SVGDocument(object):
             #value clamping as per spec section 9.2
             rx = min(rx, w/2)
             ry = min(ry, h/2)
-
+            
             #origin
             path.MoveToPoint(x+rx, y)
             path.AddLineToPoint(x+w-rx, y)
@@ -330,12 +315,12 @@ class SVGDocument(object):
             path.AddRectangle(
                 x, y, w, h
             )
-
+    
     @pathHandler
     def addCircleToDocument(self, node, path):
         cx, cy, r = [attrAsFloat(node, attr) for attr in ('cx', 'cy', 'r')]
         path.AddCircle(cx, cy, r)
-
+        
     @pathHandler
     def addEllipseToDocument(self, node, path):
         cx, cy, rx, ry = [float(node.get(attr, 0)) for attr in ('cx', 'cy', 'rx', 'ry')]
@@ -347,29 +332,29 @@ class SVGDocument(object):
         x = cx - rx
         y = cy - ry
         path.AddEllipse(x, y, rx*2, ry*2)
-
-    @pathHandler
+    
+    @pathHandler            
     def addLineToDocument(self, node, path):
         x1, y1, x2, y2 = [attrAsFloat(node, attr) for attr in ('x1', 'y1', 'x2', 'y2')]
         path.MoveToPoint(x1, y1)
         path.AddLineToPoint(x2, y2)
-
+        
     @pathHandler
     def addPolyLineToDocument(self, node, path):
         #translate to pathdata and render that
         data = "M " + node.get("points")
         self.addPathDataToPath(data, path)
-
-    @pathHandler
+    
+    @pathHandler    
     def addPolygonToDocument(self, node, path):
         #translate to pathdata and render that
         data = "M " + node.get("points") + " Z"
         self.addPathDataToPath(data, path)
-
+        
     @pathHandler
     def addPathDataToDocument(self, node, path):
         self.addPathDataToPath(node.get('d', ''), path)
-
+    
     def addPathDataToPath(self, data, path):
         self.lastControl = None
         self.lastControlQ = None
@@ -379,7 +364,7 @@ class SVGDocument(object):
             form of (command, [list of arguments]).
             We translate that to [(command, args[0]), (command, args[1])]
             via a generator.
-
+            
             M is special cased because its subsequent arguments
             become linetos.
             """
@@ -403,10 +388,10 @@ class SVGDocument(object):
         #print "parsed in", time.time()-t
         for stroke in normalizeStrokes(parsed):
             self.addStrokeToPath(path, stroke)
-
-
+        
+        
     def generatePathOps(self, path):
-        """ Look at the current state and generate the
+        """ Look at the current state and generate the 
         draw operations (fill, stroke, neither) for the path"""
         ops = []
         brush = self.getBrushFromState(path)
@@ -429,7 +414,7 @@ class SVGDocument(object):
                 (wx.GraphicsContext.StrokePath, (path,))
             )
         return ops
-
+        
     def getPenFromState(self):
         pencolour = self.state.get('stroke', 'none')
         if pencolour == 'currentColor':
@@ -464,7 +449,7 @@ class SVGDocument(object):
         pen.SetJoin(joinmap.get(self.state.get('stroke-linejoin', None), wx.JOIN_MITER))
         return wx.GraphicsRenderer_GetDefaultRenderer().CreatePen(pen)
 
-    def getBrushFromState(self, path = None):
+    def getBrushFromState(self, path=None):
         brushcolour = self.state.get('fill', 'black').strip()
         type, details = paintValue.parseString(brushcolour)
         if type == "URL":
@@ -480,51 +465,51 @@ class SVGDocument(object):
                     box = path.GetBox()
                     x, y, w, h = box.Get()
                     return wx.GraphicsRenderer.GetDefaultRenderer().CreateLinearGradientBrush(
-                        x, y, x+w, y+h, wx.Colour(0, 0, 255, 128), wx.RED
+                        x,y,x+w,y+h,wx.Colour(0,0,255,128), wx.RED
                     )
                 elif element.tag == '{http://www.w3.org/2000/svg}radialGradient':
                     box = path.GetBox()
                     x, y, w, h = box.Get()
                     #print w
-                    mx = wx.GraphicsRenderer.GetDefaultRenderer().CreateMatrix(x, y, w, h)
+                    mx = wx.GraphicsRenderer.GetDefaultRenderer().CreateMatrix(x,y,w,h)
                     cx, cy = mx.TransformPoint(0.5, 0.5)
                     fx, fy = cx, cy
                     return wx.GraphicsRenderer.GetDefaultRenderer().CreateRadialGradientBrush(
-                        cx, cy,
-                        fx, fy,
-                        (max(w, h))/2,
-                        wx.Colour(0, 0, 255, 128), wx.RED
+                        cx,cy,
+                        fx,fy,
+                        (max(w,h))/2,
+                        wx.Colour(0,0,255,128), wx.RED
                     )
                 else:
                     #invlid gradient specified
                     return wx.NullBrush
-            r, g, b  = 0, 0, 0
+            r,g,b  = 0,0,0
         if type == 'CURRENTCOLOR':
             type, details = paintValue.parseString(self.state.get('color', 'none'))
         if type == 'RGB':
-            r, g, b = details
+            r,g,b = details
         elif type == "NONE":
             return wx.NullBrush
         opacity = self.state.get('fill-opacity', self.state.get('opacity', '1'))
         opacity = float(opacity)
         opacity = min(max(opacity, 0.0), 1.0)
         a = 255 * opacity
-        #using try/except block instead of
+        #using try/except block instead of 
         #just setdefault because the wxBrush and wxColour would
         #be created every time anyway in order to pass them,
         #defeating the purpose of the cache
         try:
-            return SVGDocument.brushCache[(r, g, b, a)]
+            return SVGDocument.brushCache[(r,g,b,a)]
         except KeyError:
-            return SVGDocument.brushCache.setdefault((r, g, b, a), wx.Brush(wx.Colour(r, g, b, a)))
-
-
+            return SVGDocument.brushCache.setdefault((r,g,b,a), wx.Brush(wx.Colour(r,g,b,a)))
+        
+        
     def resolveURL(self, urlData):
         """
             Resolve a URL and return an elementTree Element from it.
-
+            
             Return None if unresolvable
-
+            
         """
         scheme, netloc, path, query, fragment = urlData
         if scheme == netloc == path == '':
@@ -539,15 +524,15 @@ class SVGDocument(object):
             return None
         else:
             return self.resolveRemoteURL(urlData)
-
+        
     def resolveRemoteURL(self, url):
         return None
-
+        
     def addStrokeToPath(self, path, stroke):
         """ Given a stroke from a path command
         (in the form (command, arguments)) create the path
         commands that represent it.
-
+        
         TODO: break out into (yet another) class/module,
         especially so we can get O(1) dispatch on type?
         """
@@ -579,17 +564,17 @@ class SVGDocument(object):
             )
             self.lastControl = control2
             path.AddCurveToPoint(
-                control1,
-                control2,
+                control1, 
+                control2, 
                 endpoint
             )
             #~ cp = path.GetCurrentPoint()
             #~ path.AddCircle(c1x, c1y, 5)
             #~ path.AddCircle(c2x, c2y, 3)
-            #~ path.AddCircle(x, y, 7)
+            #~ path.AddCircle(x,y, 7)
             #~ path.MoveToPoint(cp)
             #~ print "C", control1, control2, endpoint
-
+        
         elif type == 'S':
             #control2, endpoint = arg
             control2, endpoint = map(
@@ -599,15 +584,15 @@ class SVGDocument(object):
                 control1 = reflectPoint(self.lastControl, path.GetCurrentPoint())
             else:
                 control1 = path.GetCurrentPoint()
-            #~ print "S", self.lastControl, ":", control1, control2, endpoint
+            #~ print "S", self.lastControl,":",control1, control2, endpoint    
             self.lastControl = control2
             path.AddCurveToPoint(
-                control1,
-                control2,
+                control1, 
+                control2, 
                 endpoint
             )
         elif type == "Q":
-            (cx, cy), (x, y) = map(normalizePoint, arg)
+            (cx, cy), (x,y) = map(normalizePoint, arg)
             self.lastControlQ = (cx, cy)
             path.AddQuadCurveToPoint(cx, cy, x, y)
         elif type == "T":
@@ -618,50 +603,50 @@ class SVGDocument(object):
                 cx, cy = path.GetCurrentPoint()
             self.lastControlQ = (cx, cy)
             path.AddQuadCurveToPoint(cx, cy, x, y)
-
+                
         elif type == "V":
             _, y = normalizePoint((0, arg))
             x, _ = path.GetCurrentPoint()
-            path.AddLineToPoint(x, y)
-
+            path.AddLineToPoint(x,y)
+        
         elif type == "H":
             x, _ = normalizePoint((arg, 0))
             _, y = path.GetCurrentPoint()
-            path.AddLineToPoint(x, y)
-
+            path.AddLineToPoint(x,y)
+            
         elif type == "A":
             #wxGC currently only supports circular arcs,
             #not eliptical ones
-
+            
             (
             (rx, ry), #radii of ellipse
             angle, #angle of rotation on the ellipse in degrees
             (fa, fs), #arc and stroke angle flags
             (x, y) #endpoint on the arc
-            ) = arg
-
-            x, y = normalizePoint((x, y))
+            ) = arg 
+            
+            x, y = normalizePoint((x,y))
             cx, cy = path.GetCurrentPoint()
             if (cx, cy) == (x, y):
                 return #noop
-
+                
             if (rx == 0 or ry == 0):
                 #no radius is effectively a line
-                path.AddLineToPoint(x, y)
+                path.AddLineToPoint(x,y)
                 return
-
+            
             #find the center point for the ellipse
             #translation via the angle
             angle = angle % 360
             angle = math.radians(angle)
-
+            
             #translated endpoint
             xPrime = math.cos(angle) * ((cx-x)/2)
             xPrime += math.sin(angle) * ((cx-x)/2)
             yPrime = -(math.sin(angle)) * ((cy-y)/2)
             yPrime += (math.cos(angle)) * ((cy-y)/2)
-
-
+            
+            
             temp = ((rx**2) * (ry**2)) - ((rx**2) * (yPrime**2)) - ((ry**2) * (xPrime**2))
             temp /= ((rx**2) * (yPrime**2)) + ((ry**2)*(xPrime**2))
             temp = abs(temp)
@@ -674,7 +659,7 @@ class SVGDocument(object):
             cyPrime = temp * -((ry * xPrime) / rx)
             if fa == fs:
                 cxPrime, cyPrime = -cxPrime, -cyPrime
-
+            
             #reflect backwards now for the origin
             cnx = math.cos(angle) * cxPrime
             cnx += math.sin(angle) * cxPrime
@@ -682,27 +667,27 @@ class SVGDocument(object):
             cny += (math.cos(angle)) * cyPrime
             cnx += ((cx+x)/2.0)
             cny += ((cy+y)/2.0)
-
+            
             #calculate the angle between the two endpoints
             lastArc = wx.Point2D(x-cnx, y-cny).GetVectorAngle()
             firstArc = wx.Point2D(cx-cnx, cy-cny).GetVectorAngle()
             lastArc = math.radians(lastArc)
             firstArc = math.radians(firstArc)
-
-
+            
+            
             #aargh buggines.
             #AddArc draws a straight line between
             #the endpoints of the arc.
-            #putting it in a subpath makes the strokes come out
+            #putting it in a subpath makes the strokes come out 
             #correctly, but it still only fills the slice
             #taking out the MoveToPoint fills correctly.
             path.AddEllipse(cnx-rx, cny-ry, rx*2, ry*2)
             path.MoveToPoint(x, y)
             #~ npath = makePath()
             #~ npath.AddEllipticalArc(cnx-rx, cny-ry, rx*2, ry*2, firstArc, lastArc, False)
-            #~ npath.MoveToPoint(x, y)
+            #~ npath.MoveToPoint(x,y)
             #~ path.AddPath(npath)
-
+            
         elif type == 'Z':
             #~ Bugginess:
             #~ CloseSubpath() doesn't change the
@@ -714,17 +699,17 @@ class SVGDocument(object):
             #~ results
             #~ Manually closing the path *and* calling CloseSubpath() appears
             #~ to give correct results on win32
-
+                
             pt = self.firstPoints.pop()
             path.AddLineToPoint(pt)
             path.CloseSubpath()
-
+                
     def render(self, context):
         if not hasattr(self, "ops"):
             return
         for op, args in self.ops:
             op(context, *args)
-
+            
 if __name__ == '__main__':
     from tests.test_document import *
     unittest.main()

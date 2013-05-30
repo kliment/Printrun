@@ -1,18 +1,3 @@
-# This file is part of the Printrun suite.
-#
-# Printrun is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Printrun is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
-
 """
     Parsing for CSS colour values.
     Supported formats:
@@ -36,31 +21,31 @@ comma = Literal(",").suppress()
 def clampColourByte(val):
     val = int(val)
     return min(max(0,val), 255)
-
+    
 def clampColourPerc(val):
     val = float(val)
     return min(max(0,val), 100)
-
+    
 def parseColorPerc(token):
     val = token[0]
     val = clampColourPerc(val)
     #normalize to bytes
     return int(255 * (val / 100.0))
-
+    
 
 colorByte = Optional(sign) + integerConstant.setParseAction(lambda t: clampColourByte(t[0]))
 colorPerc = number.setParseAction(parseColorPerc) + Literal("%").suppress()
 
 rgb = (
-    Literal("rgb(").setParseAction(lambda t: "RGB") +
-
+    Literal("rgb(").setParseAction(lambda t: "RGB") + 
+    
     (
     #integer constants, ie 255,255,255
     Group(colorByte + comma + colorByte + comma + colorByte) ^
     #percentage values, ie 100%, 50%
     Group(colorPerc + comma + colorPerc + comma + colorPerc)
     )
-    +
+    + 
     Literal(")").suppress() + StringEnd()
 )
 
@@ -69,10 +54,10 @@ def parseShortHex(t):
 
 
 doubleHex = Word(hexnums, exact=2).setParseAction(lambda t: int(t[0], 16))
-hexLiteral = (Literal("#").setParseAction(lambda t: "RGB") +
+hexLiteral = (Literal("#").setParseAction(lambda t: "RGB") + 
     (
     Group(doubleHex + doubleHex + doubleHex) |
-    Word(hexnums, exact=3).setParseAction(parseShortHex)
+    Word(hexnums, exact=3).setParseAction(parseShortHex) 
     ) + StringEnd()
 )
 
@@ -81,7 +66,7 @@ def parseNamedColour(t):
         return ["RGB", NamedColours[t[0].lower()]]
     except KeyError:
         return ["RGB", (0,0,0)]
-
+    
 namedColour = Word(alphas).setParseAction(parseNamedColour)
 
 
@@ -261,7 +246,7 @@ NamedColours = {
 
 def fillCSS2SystemColours():
     #The system colours require a wxApp to be present to retrieve,
-    #so if you wnat support for them you'll need
+    #so if you wnat support for them you'll need 
     #to call this function after your wxApp instance starts
     systemColors = {
         "ActiveBorder": wx.SYS_COLOUR_ACTIVEBORDER,
