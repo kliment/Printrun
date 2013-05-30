@@ -117,6 +117,7 @@ To use pronterface, you need:
   * pyreadline (not needed on Linux) and
   * argparse (installed by default with python >= 2.7)
   * wxPython
+  * pycairo (to use Projector feature)
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)
 
