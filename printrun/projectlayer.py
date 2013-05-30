@@ -229,9 +229,8 @@ class SettingsFrame(wx.Frame):
     def _get_setting(self,name, val):
         if self.pronterface:
             try:
-                return getattr(self.pronterface.settings,name)
+                return getattr(self.pronterface.settings, name)
             except AttributeError, x:
-                print x
                 return val
         else: 
             return val
