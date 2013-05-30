@@ -482,9 +482,11 @@ class printcore():
             try:
                 self.printer.write(str(command + "\n"))
                 self.printer.flush()
-            except SerialException, e:
-                print "Can't write to printer (disconnected?) ({0}): {1}".format(e.errno, e.strerror)
-            except RuntimeError, e:
+            except socket.error as e:
+                print "Can't write to printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
+            except SerialException as e:
+                print "Can't write to printer (disconnected?) (SerialException {0}): {1}".format(e.errno, e.strerror)
+            except RuntimeError as e:
                 print "Socket connection broken, disconnected. ({0}): {1}".format(e.errno, e.strerror)
 
 if __name__ == '__main__':
