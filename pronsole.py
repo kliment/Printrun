@@ -205,6 +205,21 @@ class Settings(object):
         self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished")))
 
+        self.project_offset_x = 0.0
+        self.project_offset_y = 0.0
+        self.project_interval = 2.0
+        self.project_pause = 2.5
+        self.project_scale = 1.0
+        self.project_x = 1024.0
+        self.project_y = 768.0
+        self.project_projected_x = 150.0
+        self.project_direction = "Top Down"
+        self.project_overshoot = 3.0
+        self.project_z_axis_rate = 200
+        self.project_layer = 0.1
+        self.project_prelift_gcode = ""
+        self.project_postlift_gcode = ""
+
     _settings = []
     def __setattr__(self, name, value):
         if name.startswith("_"):
