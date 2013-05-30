@@ -126,6 +126,41 @@ class Platform(object):
     def display(self, mode_2d=False):
         glCallList(self.display_list)
 
+class PrintHead(object):
+    def __init__(self):
+        self.color = (43. / 255, 0., 175. / 255, 1.0)
+        self.scale = 5
+        self.height = 5
+
+        self.initialized = False
+        self.loaded      = True
+
+    def init(self):
+        self.display_list = compile_display_list(self.draw)
+        self.initialized = True
+
+    def draw(self):
+        glPushMatrix()
+
+        glBegin(GL_LINES)
+        glColor4f(*self.color)
+        for di in [-1, 1]:
+            for dj in [-1, 1]:
+                glVertex3f(0, 0, 0)
+                glVertex3f(self.scale * di, self.scale * dj, self.height)
+        glEnd()
+
+        glPopMatrix()
+
+    def display(self, mode_2d=False):
+        glEnable(GL_LINE_SMOOTH)
+        orig_linewidth = (GLfloat)()
+        glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
+        glLineWidth(3.0)
+        glCallList(self.display_list)
+        glLineWidth(orig_linewidth)
+        glDisable(GL_LINE_SMOOTH)
+
 class Model(object):
     """
     Parent class for models that provides common functionality.
