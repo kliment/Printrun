@@ -31,7 +31,7 @@ class Line(object):
                  'raw','split_raw',
                  'command','is_move',
                  'relative','relative_e',
-                 'current_x', 'current_y', 'current_z', 'extruding',
+                 'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
                  'gcview_end_vertex')
 
     def __init__(self, l):
@@ -131,6 +131,7 @@ class GCode(object):
     imperial = False
     relative = False
     relative_e = False
+    current_tool = 0
 
     filament_length = None
     xmin = None
@@ -178,10 +179,12 @@ class GCode(object):
         imperial = self.imperial
         relative = self.relative
         relative_e = self.relative_e
+        current_tool = self.current_tool
         for line in lines:
             if line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e
+                line.current_tool = current_tool
             elif line.command == "G20":
                 imperial = True
             elif line.command == "G21":
@@ -196,11 +199,14 @@ class GCode(object):
                 relative_e = False
             elif line.command == "M83":
                 relative_e = True
+            elif line.command[0] == "T":
+                current_tool = int(line.command[1:])
             if line.command[0] == "G":
                 line.parse_coordinates(imperial)
         self.imperial = imperial
         self.relative = relative
         self.relative_e = relative_e
+        self.current_tool = current_tool
     
     def _preprocess_extrusion(self, lines = None, cur_e = 0):
         if not lines:

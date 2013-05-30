@@ -237,6 +237,9 @@ class GcodeModel(Model):
     Model for displaying Gcode data.
     """
 
+    color_travel = (0.6, 0.6, 0.6, 0.6)
+    color_tool0 = (1.0, 0.0, 0.0, 0.6)
+    color_tool1 = (0.0, 0.0, 1.0, 0.6)
     color_printed = (0.2, 0.75, 0, 0.6)
 
     use_vbos = True
@@ -297,28 +300,13 @@ class GcodeModel(Model):
         """
         Return the color to use for particular type of movement.
         """
-        # default movement color is gray
-        color = [0.6, 0.6, 0.6, 0.6]
-
-        """
-        extruder_on = (move.flags & Movement.FLAG_EXTRUDER_ON or
-                       move.delta_e > 0)
-        outer_perimeter = (move.flags & Movement.FLAG_PERIMETER and
-                           move.flags & Movement.FLAG_PERIMETER_OUTER)
-
-        if extruder_on and outer_perimeter:
-            color = [0.0, 0.875, 0.875, 0.6] # cyan
-        elif extruder_on and move.flags & Movement.FLAG_PERIMETER:
-            color = [0.0, 1.0, 0.0, 0.6] # green
-        elif extruder_on and move.flags & Movement.FLAG_LOOP:
-            color = [1.0, 0.875, 0.0, 0.6] # yellow
-        elif extruder_on:
-            color = [1.0, 0.0, 0.0, 0.6] # red
-        """
         if move.extruding:
-            color = [1.0, 0.0, 0.0, 0.6] # red
+            if move.current_tool == 0:
+                return self.color_tool0
+            else:
+                return self.color_tool1
 
-        return color
+        return self.color_travel
 
     # ------------------------------------------------------------------------
     # DRAWING
