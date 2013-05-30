@@ -84,7 +84,7 @@ class RemainingTimeEstimator(object):
 
     def __call__(self, idx, printtime):
         if not self.current_layer_lines:
-            return 0
+            return (0, 0)
         if idx == self.last_idx:
             return self.last_estimate
         layer, line = self.gcode.idxs(idx)
