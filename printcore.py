@@ -89,7 +89,10 @@ class printcore():
                 self.stop_read_thread = True
                 self.read_thread.join()
                 self.read_thread = None
-            self.printer.close()
+            try:
+                self.printer.close()
+            except socket.error:
+                pass
         self.printer = None
         self.online = False
         self.printing = False
@@ -156,7 +159,7 @@ class printcore():
             try:
                 line = self.printer.readline()
                 if self.printer_tcp and not line:
-                    raise OSError("Read EOF from socket")
+                    raise OSError(-1, "Read EOF from socket")
             except socket.timeout:
                 return ""
 
@@ -176,6 +179,9 @@ class printcore():
                 raise
         except SerialException as e:
             print "Can't read from printer (disconnected?) (SerialException {0}): {1}".format(e.errno, e.strerror)
+            return None
+        except socket.error as e:
+            print "Can't read from printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
             return None
         except OSError as e:
             print "Can't read from printer (disconnected?) (OS Error {0}): {1}".format(e.errno, e.strerror)
