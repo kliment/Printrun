@@ -95,6 +95,8 @@ def parse_build_dimensions(bdim):
     bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
     if len(bdl_float) < len(defaults):
         bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
+    for i in range(3): # Check for nonpositive dimensions for build volume
+        if bdl_float[i] <= 0: bdl_float[i] = 1
     return bdl_float
 
 class BuildDimensionsSetting(wxSetting):
