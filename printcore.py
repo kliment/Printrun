@@ -16,6 +16,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 from serial import Serial, SerialException
+from select import error as SelectError
 from threading import Thread
 import time, getopt, sys
 import platform, os, traceback
@@ -166,6 +167,12 @@ class printcore():
                     except: pass
                 if self.loud: print "RECV: ", line.rstrip()
             return line
+        except SelectError, e:
+            if 'Bad file descriptor' in e.args[1]:
+                print "Can't read from printer (disconnected?)."
+                return None
+            else:
+                raise
         except SerialException, e:
             print "Can't read from printer (disconnected?)."
             return None
