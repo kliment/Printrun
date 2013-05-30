@@ -113,6 +113,7 @@ To use pronterface, you need:
   * python (ideally 2.6.x or 2.7.x),
   * pyserial (or python-serial on ubuntu/debian)
   * pyglet
+  * numpy (for 3D view)
   * pyreadline (not needed on Linux) and
   * argparse (installed by default with python >= 2.7)
   * wxPython
