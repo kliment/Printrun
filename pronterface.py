@@ -49,11 +49,11 @@ import pronsole
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting
 from printrun import gcoder
 
-def parse_temperature_report(report, key):
-    if key in report:
-        return float(filter(lambda x: x.startswith(key), report.split())[0].split(":")[1].split("/")[0])
-    else: 
-        return -1.0
+tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: \/)?([-+]?\d*\.?\d*)")
+
+def parse_temperature_report(report):
+    matches = tempreport_exp.findall(report)
+    return dict((m[0], (m[1], m[2])) for m in matches)
 
 def format_time(timestamp):
     return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
@@ -95,6 +95,8 @@ def parse_build_dimensions(bdim):
     bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
     if len(bdl_float) < len(defaults):
         bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
+    for i in range(3): # Check for nonpositive dimensions for build volume
+        if bdl_float[i] <= 0: bdl_float[i] = 1
     return bdl_float
 
 class BuildDimensionsSetting(wxSetting):
@@ -532,10 +534,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def project(self,event):
         from printrun import projectlayer
-        if self.p.online:
-            projectlayer.setframe(self,self.p).Show()
-        else:
-            print _("Printer is not online.")
+        projectlayer.SettingsFrame(self, self.p).Show()
 
     def popmenu(self):
         self.menustrip = wx.MenuBar()
@@ -578,7 +577,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_editgcode(self, e = None):
         if self.filename is not None:
-            MacroEditor(self.filename, "\n".join([line.raw for line in self.fgcode]), self.doneediting, 1)
+            MacroEditor(self.filename, [line.raw for line in self.fgcode], self.doneediting, 1)
 
     def new_macro(self, e = None):
         dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))
@@ -859,10 +858,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def cbutton_remove(self, e, button):
         n = button.custombutton
-        self.custombuttons[n]=None
         self.cbutton_save(n, None)
-        #while len(self.custombuttons) and self.custombuttons[-1] is None:
-        #    del self.custombuttons[-1]
+        del self.custombuttons[n]
+        for i in range(n, len(self.custombuttons)):
+            self.cbutton_save(i, self.custombuttons[i])
         wx.CallAfter(self.cbuttons_reload)
 
     def cbutton_order(self, e, button, dir):
@@ -1136,10 +1135,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def update_tempdisplay(self):
         try:
-            hotend_temp = parse_temperature_report(self.tempreport, "T:")
+            # FIXME : we don't use setpoints here, we should probably exploit them
+            temps = parse_temperature_report(self.tempreport)
+            if "T0" in temps:
+                hotend_temp = float(temps["T0"][0])
+            else:
+                hotend_temp = float(temps["T"][0]) if "T" in temps else -1.0
             wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
             if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
-            bed_temp = parse_temperature_report(self.tempreport, "B:")
+            if "T1" in temps:
+                hotend_temp = float(temps["T1"][0])
+                wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
+            bed_temp = float(temps["B"][0]) if "B" in temps else -1.0
             wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
             if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
         except:
@@ -1181,14 +1188,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
                 if self.p.queueindex > 0:
                     secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                    secondsremain = self.compute_eta(self.p.queueindex)
-                    secondsestimate = secondselapsed + secondsremain
+                    secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
                     string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
                                                                   format_duration(secondsestimate))
                     string += _(" Z: %.3f mm") % self.curlayer
             wx.CallAfter(self.status.SetStatusText, string)
             wx.CallAfter(self.gviz.Refresh)
-            if(self.monitor and self.p.online):
+            if self.monitor and self.p.online:
                 if self.sdprinting:
                     self.p.send_now("M27")
                 if not hasattr(self, "auto_monitor_pattern"):

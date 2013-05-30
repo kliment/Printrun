@@ -47,6 +47,7 @@ class wxGLPanel(wx.Panel):
 
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
+        self.context = glcanvas.GLContext(self.canvas)
         self.sizer.Add(self.canvas, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.sizer.Fit(self)
@@ -56,33 +57,18 @@ class wxGLPanel(wx.Panel):
         self.canvas.Bind(wx.EVT_SIZE, self.processSizeEvent)
         self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
 
-    #==========================================================================
-    # Canvas Proxy Methods
-    #==========================================================================
-    def GetGLExtents(self):
-        '''Get the extents of the OpenGL canvas.'''
-        return self.canvas.GetClientSize()
-
-    def SwapBuffers(self):
-        '''Swap the OpenGL buffers.'''
-        self.canvas.SwapBuffers()
-
-    #==========================================================================
-    # wxPython Window Handlers
-    #==========================================================================
     def processEraseBackgroundEvent(self, event):
         '''Process the erase background event.'''
         pass  # Do nothing, to avoid flashing on MSWin
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        if self.canvas.GetContext():
+        if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
-            self.Show()
-            self.canvas.SetCurrent()
-            size = self.GetGLExtents()
+            size = self.GetClientSize()
             self.winsize = (size.width, size.height)
             self.width, self.height = size.width, size.height
+            self.canvas.SetCurrent(self.context)
             self.OnReshape(size.width, size.height)
             self.canvas.Refresh(False)
         event.Skip()
@@ -90,7 +76,7 @@ class wxGLPanel(wx.Panel):
 
     def processPaintEvent(self, event):
         '''Process the drawing event.'''
-        self.canvas.SetCurrent()
+        self.canvas.SetCurrent(self.context)
  
         if not self.GLinitialized:
             self.OnInitGL()
@@ -140,7 +126,6 @@ class wxGLPanel(wx.Panel):
         gluPerspective(60., width / float(height), .1, 1000.)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        #pyglet stuff
         self.vpmat = (GLint * 4)(0, 0, *list(self.GetClientSize()))
         glGetDoublev(GL_PROJECTION_MATRIX, self.pmat)
 
@@ -154,7 +139,7 @@ class wxGLPanel(wx.Panel):
         self.pygletcontext.set_current()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.draw_objects()
-        self.SwapBuffers()
+        self.canvas.SwapBuffers()
 
     #==========================================================================
     # To be implemented by a sub class

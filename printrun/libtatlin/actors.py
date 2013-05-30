@@ -19,7 +19,7 @@
 import time
 import numpy
 import math
-import sys
+import logging
 
 from pyglet.gl import *
 from pyglet import gl
@@ -126,6 +126,41 @@ class Platform(object):
     def display(self, mode_2d=False):
         glCallList(self.display_list)
 
+class PrintHead(object):
+    def __init__(self):
+        self.color = (43. / 255, 0., 175. / 255, 1.0)
+        self.scale = 5
+        self.height = 5
+
+        self.initialized = False
+        self.loaded      = True
+
+    def init(self):
+        self.display_list = compile_display_list(self.draw)
+        self.initialized = True
+
+    def draw(self):
+        glPushMatrix()
+
+        glBegin(GL_LINES)
+        glColor4f(*self.color)
+        for di in [-1, 1]:
+            for dj in [-1, 1]:
+                glVertex3f(0, 0, 0)
+                glVertex3f(self.scale * di, self.scale * dj, self.height)
+        glEnd()
+
+        glPopMatrix()
+
+    def display(self, mode_2d=False):
+        glEnable(GL_LINE_SMOOTH)
+        orig_linewidth = (GLfloat)()
+        glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
+        glLineWidth(3.0)
+        glCallList(self.display_list)
+        glLineWidth(orig_linewidth)
+        glDisable(GL_LINE_SMOOTH)
+
 class Model(object):
     """
     Parent class for models that provides common functionality.
@@ -202,6 +237,9 @@ class GcodeModel(Model):
     Model for displaying Gcode data.
     """
 
+    color_travel = (0.6, 0.6, 0.6, 0.6)
+    color_tool0 = (1.0, 0.0, 0.0, 0.6)
+    color_tool1 = (0.0, 0.0, 1.0, 0.6)
     color_printed = (0.2, 0.75, 0, 0.6)
 
     use_vbos = True
@@ -247,8 +285,8 @@ class GcodeModel(Model):
 
         t_end = time.time()
 
-        print >> sys.stderr, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start)
-        print >> sys.stderr, _('Vertex count: %d') % len(self.vertices)
+        logging.log(logging.INFO, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
+        logging.log(logging.INFO, _('Vertex count: %d') % len(self.vertices))
 
     def copy(self):
         copy = GcodeModel()
@@ -262,28 +300,13 @@ class GcodeModel(Model):
         """
         Return the color to use for particular type of movement.
         """
-        # default movement color is gray
-        color = [0.6, 0.6, 0.6, 0.6]
-
-        """
-        extruder_on = (move.flags & Movement.FLAG_EXTRUDER_ON or
-                       move.delta_e > 0)
-        outer_perimeter = (move.flags & Movement.FLAG_PERIMETER and
-                           move.flags & Movement.FLAG_PERIMETER_OUTER)
-
-        if extruder_on and outer_perimeter:
-            color = [0.0, 0.875, 0.875, 0.6] # cyan
-        elif extruder_on and move.flags & Movement.FLAG_PERIMETER:
-            color = [0.0, 1.0, 0.0, 0.6] # green
-        elif extruder_on and move.flags & Movement.FLAG_LOOP:
-            color = [1.0, 0.875, 0.0, 0.6] # yellow
-        elif extruder_on:
-            color = [1.0, 0.0, 0.0, 0.6] # red
-        """
         if move.extruding:
-            color = [1.0, 0.0, 0.0, 0.6] # red
+            if move.current_tool == 0:
+                return self.color_tool0
+            else:
+                return self.color_tool1
 
-        return color
+        return self.color_travel
 
     # ------------------------------------------------------------------------
     # DRAWING

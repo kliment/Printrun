@@ -17,7 +17,7 @@
 
 import cmd, sys
 import glob, os, time, datetime
-import sys, subprocess
+import sys, subprocess, traceback
 import math, codecs
 import shlex
 from math import sqrt
@@ -204,6 +204,21 @@ class Settings(object):
         self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)")))
         self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished")))
+
+        self._add(HiddenSetting("project_offset_x", 0.0))
+        self._add(HiddenSetting("project_offset_y", 0.0))
+        self._add(HiddenSetting("project_interval", 2.0))
+        self._add(HiddenSetting("project_pause", 2.5))
+        self._add(HiddenSetting("project_scale", 1.0))
+        self._add(HiddenSetting("project_x", 1024.0))
+        self._add(HiddenSetting("project_y", 768.0))
+        self._add(HiddenSetting("project_projected_x", 150.0))
+        self._add(HiddenSetting("project_direction", "Top Down"))
+        self._add(HiddenSetting("project_overshoot", 3.0))
+        self._add(HiddenSetting("project_z_axis_rate", 200))
+        self._add(HiddenSetting("project_layer", 0.1))
+        self._add(HiddenSetting("project_prelift_gcode", ""))
+        self._add(HiddenSetting("project_postlift_gcode", ""))
 
     _settings = []
     def __setattr__(self, name, value):
@@ -952,7 +967,7 @@ class pronsole(cmd.Cmd):
             self.tempreadings = l
             self.status.update_tempreading(l)
         tstring = l.rstrip()
-        if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
+        if tstring != "ok" and not self.listing and not self.monitoring:
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()
             if self.silent == False: print "\r" + tstring.ljust(15)
@@ -1210,7 +1225,6 @@ class pronsole(cmd.Cmd):
                 print "Setting bed temp to 0"
             self.p.send_now("M140 S0.0")
         self.log("Disconnecting from printer...")
-        print self.p.printing
         if self.p.printing:
             print "Are you sure you want to exit while printing?"
             print "(this will terminate the print)."
@@ -1434,6 +1448,9 @@ if __name__ == "__main__":
     interp.parse_cmdline(sys.argv[1:])
     try:
         interp.cmdloop()
-    except:
+    except SystemExit:
         interp.p.disconnect()
-        #raise
+    except:
+        print _("Caught an exception, exiting:")
+        traceback.print_exc()
+        interp.p.disconnect()
