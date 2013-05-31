@@ -191,6 +191,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing (default: 10)")))
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing (default: 50)")))
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color (default: #FFFFFF)")))
+        self.settings._add(BooleanSetting("tabbed", False, _("Use tabbed interface"), _("Use tabbed interface instead of the single window one")))
         
         self.pauseScript = "pause.gcode"
         self.endScript = "end.gcode"
@@ -274,7 +275,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except:
             pass
         self.popmenu()
-        self.createGui()
+        if self.settings.tabbed:
+            self.createTabbedGui()
+        else:
+            self.createGui()
         self.t = Tee(self.catchprint)
         self.stdout = sys.stdout
         self.skeining = 0
@@ -740,7 +744,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         for i in xrange(len(self.custombuttons)):
             btndef = self.custombuttons[i]
             try:
-                b = wx.Button(self.panel, -1, btndef.label, style = wx.BU_EXACTFIT)
+                b = wx.Button(self.cbuttons_panel, -1, btndef.label, style = wx.BU_EXACTFIT)
                 b.SetToolTip(wx.ToolTip(_("Execute command: ")+btndef.command))
                 if btndef.background:
                     b.SetBackgroundColour(btndef.background)
@@ -749,13 +753,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                         b.SetForegroundColour("#ffffff")
             except:
                 if i == newbuttonbuttonindex:
-                    self.newbuttonbutton = b = wx.Button(self.panel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
+                    self.newbuttonbutton = b = wx.Button(self.cbuttons_panel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
                     #b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
                 else:
-                    b = wx.Button(self.panel,-1, ".", size = (1, 1))
+                    b = wx.Button(self.cbuttons_panel,-1, ".", size = (1, 1))
                     #b = wx.StaticText(self.panel,-1, "", size = (72, 22), style = wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
                     b.Disable()
                     #continue
