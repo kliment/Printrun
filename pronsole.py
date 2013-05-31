@@ -67,14 +67,17 @@ def setting_add_tooltip(func):
 
 class Setting(object):
 
+    DEFAULT_GROUP = "General"
+
     hidden = False
 
-    def __init__(self, name, default, label = None, help = None):
+    def __init__(self, name, default, label = None, help = None, group = None):
         self.name = name
         self.default = default
         self._value = default
         self.label = label
         self.help = help
+        self.group = group if group else Setting.DEFAULT_GROUP
 
     def _get_value(self):
         return self._value
@@ -140,8 +143,8 @@ class StringSetting(wxSetting):
 
 class ComboSetting(wxSetting):
     
-    def __init__(self, name, default, choices, label = None, help = None):
-        super(ComboSetting, self).__init__(name, default, label, help)
+    def __init__(self, name, default, choices, label = None, help = None, group = None):
+        super(ComboSetting, self).__init__(name, default, label, help, group)
         self.choices = choices
 
     def get_specific_widget(self, parent):
@@ -151,8 +154,8 @@ class ComboSetting(wxSetting):
 
 class SpinSetting(wxSetting):
     
-    def __init__(self, name, default, min, max, label = None, help = None):
-        super(SpinSetting, self).__init__(name, default, label, help)
+    def __init__(self, name, default, min, max, label = None, help = None, group = None):
+        super(SpinSetting, self).__init__(name, default, label, help, group)
         self.min = min
         self.max = max
 
@@ -194,16 +197,16 @@ class Settings(object):
         # the initial value determines the type
         self._add(StringSetting("port", "", _("Serial port"), _("Port used to communicate with printer")))
         self._add(ComboSetting("baudrate", 115200, self._baudrate_list(), _("Baud rate"), _("Communications Speed (default: 115200)")))
-        self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (default: 110 deg C)")))
-        self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (default: 60 deg C)")))
-        self._add(SpinSetting("temperature_abs", 230, 0, 400, _("Bed temperature for ABS"), _("Extruder temp for ABS (default: 230 deg C)")))
-        self._add(SpinSetting("temperature_pla", 185, 0, 400, _("Bed temperature for PLA"), _("Extruder temp for PLA (default: 185 deg C)")))
-        self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X & Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)")))
-        self._add(SpinSetting("z_feedrate", 200, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (default: 200mm/min)")))
-        self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)")))
-        self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)")))
-        self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py")))
-        self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished")))
+        self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (default: 110 deg C)"), "Printer"))
+        self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (default: 60 deg C)"), "Printer"))
+        self._add(SpinSetting("temperature_abs", 230, 0, 400, _("Bed temperature for ABS"), _("Extruder temp for ABS (default: 230 deg C)"), "Printer"))
+        self._add(SpinSetting("temperature_pla", 185, 0, 400, _("Bed temperature for PLA"), _("Extruder temp for PLA (default: 185 deg C)"), "Printer"))
+        self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)"), "Printer"))
+        self._add(SpinSetting("z_feedrate", 200, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (default: 200mm/min)"), "Printer"))
+        self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)"), "Printer"))
+        self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)"), "External"))
+        self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py"), "External"))
+        self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))
