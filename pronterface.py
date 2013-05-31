@@ -186,6 +186,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("tabbed", False, _("Use tabbed interface"), _("Use tabbed interface instead of the single window one"), "UI"))
         self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer (requires restarting)"), _("Use 3D visualization instead of 2D layered visualization"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
+        self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -228,6 +229,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
         self.build_dimensions_list = parse_build_dimensions(self.settings.build_dimensions)
+        self.display_gauges = self.settings.tempgauges
         
         #initialize the code analyzer with the correct sizes. There must be a more general way to do so
 
@@ -307,12 +309,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def add_cmdline_arguments(self, parser):
         pronsole.pronsole.add_cmdline_arguments(self, parser)
-        parser.add_argument('-g','--gauges', help = _("display graphical temperature gauges in addition to the temperatures graph"), action = "store_true")
         parser.add_argument('-a','--autoconnect', help = _("automatically try to connect to printer on startup"), action = "store_true")
 
     def process_cmdline_arguments(self, args):
         pronsole.pronsole.process_cmdline_arguments(self, args)
-        self.display_gauges = args.gauges
         self.autoconnect = args.autoconnect
 
     def startcb(self):
