@@ -55,11 +55,16 @@ class XYZControlsSizer(wx.GridBagSizer):
         self.Add(root.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
         wx.CallAfter(root.xyb.SetFocus)
 
-def add_extra_controls(self, root, parentpanel, base_line):
+def add_extra_controls(self, root, parentpanel, extra_buttons = None):
+    standalone_mode = extra_buttons is not None
+    base_line = 1 if standalone_mode else 2
     root.monitorbox = wx.CheckBox(parentpanel,-1, _("Watch"))
     root.monitorbox.SetValue(bool(root.settings.monitor))
     root.monitorbox.SetToolTip(wx.ToolTip("Monitor Temperatures in Graph"))
-    self.Add(root.monitorbox, pos = (base_line + 1, 5))
+    if standalone_mode:
+        self.Add(root.monitorbox, pos = (0, 3), span = (1, 3))
+    else:
+        self.Add(root.monitorbox, pos = (base_line + 1, 5))
     root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
 
     self.Add(wx.StaticText(parentpanel,-1, _("Heat:")), pos = (base_line + 0, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
@@ -136,11 +141,12 @@ def add_extra_controls(self, root, parentpanel, base_line):
     self.Add(root.efeedc, pos = (base_line + 3, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 10)
     self.Add(wx.StaticText(parentpanel,-1, _("mm/\nmin")), pos = (base_line + 3, 4), span = (2, 1))
 
+    gauges_base_line = base_line + 8 if standalone_mode else base_line + 5
     if root.display_gauges:
         root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300)
-        self.Add(root.hottgauge, pos = (base_line + 5, 0), span = (1, 6), flag = wx.EXPAND)
+        self.Add(root.hottgauge, pos = (gauges_base_line + 0, 0), span = (1, 6), flag = wx.EXPAND)
         root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed:"), maxval = 150)
-        self.Add(root.bedtgauge, pos = (base_line + 6, 0), span = (1, 6), flag = wx.EXPAND)
+        self.Add(root.bedtgauge, pos = (gauges_base_line + 1, 0), span = (1, 6), flag = wx.EXPAND)
         def hotendgauge_scroll_setpoint(e):
             rot = e.GetWheelRotation()
             if rot > 0:
@@ -155,25 +161,42 @@ def add_extra_controls(self, root, parentpanel, base_line):
                 root.do_settemp(str(max(0, root.bsetpoint - 1)))
         root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
         root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
-        self.Add(root.tempdisp, pos = (base_line + 7, 0), span = (1, 6))
+        self.Add(root.tempdisp, pos = (gauges_base_line + 2, 0), span = (1, 6))
     else:
-        self.Add(root.tempdisp, pos = (base_line + 5, 0), span = (1, 6))
+        self.Add(root.tempdisp, pos = (gauges_base_line + 0, 0), span = (1, 6))
 
     root.graph = Graph(parentpanel, wx.ID_ANY, root)
-    self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
+    if standalone_mode:
+        self.Add(root.graph, pos = (base_line + 5, 0), span = (3, 6))
+    else:
+        self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
+
+    if extra_buttons:
+        pos_mapping = {
+                        (2,5):(0,0),
+                        (4,0):(3,0),
+                        (5,0):(4,0),
+                      }
+        span_mapping = {
+                        (2,5):(1,3),
+                        (4,0):(1,2),
+                        (5,0):(1,2),
+                      }
+        for i in extra_buttons:
+            btn = extra_buttons[i]
+            self.Add(btn, pos = pos_mapping[i.pos], span = span_mapping[i.pos], flag = wx.EXPAND)
 
 class LeftPane(wx.GridBagSizer):
 
-    extra_base_line = 2
-
-    def __init__(self, root, parentpanel = None, extra_controls = None):
+    def __init__(self, root, parentpanel = None, standalone_mode = False):
         super(LeftPane, self).__init__()
         if not parentpanel: parentpanel = root.panel
         llts = wx.BoxSizer(wx.HORIZONTAL)
         self.Add(llts, pos = (0, 0), span = (1, 6))
         self.xyzsizer = XYZControlsSizer(root, parentpanel)
         self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
-        
+       
+        self.extra_buttons = {}
         for i in root.cpbuttons:
             btn = make_button(parentpanel, i.label, root.procbutton, i.tooltip)
             btn.SetBackgroundColour(i.background)
@@ -184,10 +207,10 @@ class LeftPane(wx.GridBagSizer):
             if i.pos == None:
                 if i.span == 0:
                     llts.Add(btn)
-            elif not extra_controls:
+            elif not standalone_mode:
                 self.Add(btn, pos = i.pos, span = i.span, flag = wx.EXPAND)
             else:
-                extra_controls.Add(btn, pos = (i.pos[0] - self.extra_base_line, i.pos[1]), span = i.span, flag = wx.EXPAND)
+                self.extra_buttons[i] = btn
 
         root.xyfeedc = wx.SpinCtrl(parentpanel,-1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70,-1))
         root.xyfeedc.SetToolTip(wx.ToolTip("Set Maximum Speed for X & Y axes (mm/min)"))
@@ -205,8 +228,8 @@ class LeftPane(wx.GridBagSizer):
         root.zfeedc.SetBackgroundColour((180, 255, 180))
         root.zfeedc.SetForegroundColour("black")
 
-        if not extra_controls:
-            add_extra_controls(self, root, parentpanel, self.extra_base_line)
+        if not standalone_mode:
+            add_extra_controls(self, root, parentpanel, None)
 
 class NoViz(object):
 
@@ -295,45 +318,44 @@ class LogPane(wx.BoxSizer):
         #root.printerControls.append(root.sendbtn)
         self.Add(lbrs, 0, wx.EXPAND)
 
-ToolbarSizer = wx.WrapSizer if wx.VERSION > (2, 9) else wx.BoxSizer
 
-class MainToolbar(ToolbarSizer):
+def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
+    ToolbarSizer = wx.WrapSizer if use_wrapsizer and wx.VERSION > (2, 9) else wx.BoxSizer
+    self = ToolbarSizer(wx.HORIZONTAL)
+    if not parentpanel: parentpanel = root.panel
+    root.rescanbtn = make_sized_button(parentpanel, _("Port"), root.rescanports, _("Communication Settings\nClick to rescan ports"))
+    self.Add(root.rescanbtn, 0, wx.TOP|wx.LEFT, 0)
 
-    def __init__(self, root, parentpanel = None):
-        super(MainToolbar, self).__init__(wx.HORIZONTAL)
-        if not parentpanel: parentpanel = root.panel
-        root.rescanbtn = make_sized_button(parentpanel, _("Port"), root.rescanports, _("Communication Settings\nClick to rescan ports"))
-        self.Add(root.rescanbtn, 0, wx.TOP|wx.LEFT, 0)
+    root.serialport = wx.ComboBox(parentpanel, -1,
+            choices = root.scanserial(),
+            style = wx.CB_DROPDOWN, size = (-1, 25))
+    root.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
+    root.rescanports()
+    self.Add(root.serialport)
 
-        root.serialport = wx.ComboBox(parentpanel, -1,
-                choices = root.scanserial(),
-                style = wx.CB_DROPDOWN, size = (-1, 25))
-        root.serialport.SetToolTip(wx.ToolTip("Select Port Printer is connected to"))
-        root.rescanports()
-        self.Add(root.serialport)
+    self.Add(wx.StaticText(parentpanel,-1, "@"), 0, wx.RIGHT|wx.ALIGN_CENTER, 0)
+    root.baud = wx.ComboBox(parentpanel, -1,
+            choices = ["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
+            style = wx.CB_DROPDOWN,  size = (100, 25))
+    root.baud.SetToolTip(wx.ToolTip("Select Baud rate for printer communication"))
+    try:
+        root.baud.SetValue("115200")
+        root.baud.SetValue(str(root.settings.baudrate))
+    except:
+        pass
+    self.Add(root.baud)
+    root.connectbtn = make_sized_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"), self)
 
-        self.Add(wx.StaticText(parentpanel,-1, "@"), 0, wx.RIGHT|wx.ALIGN_CENTER, 0)
-        root.baud = wx.ComboBox(parentpanel, -1,
-                choices = ["2400", "9600", "19200", "38400", "57600", "115200", "250000"],
-                style = wx.CB_DROPDOWN,  size = (100, 25))
-        root.baud.SetToolTip(wx.ToolTip("Select Baud rate for printer communication"))
-        try:
-            root.baud.SetValue("115200")
-            root.baud.SetValue(str(root.settings.baudrate))
-        except:
-            pass
-        self.Add(root.baud)
-        root.connectbtn = make_sized_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"), self)
-
-        root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"), self)
-        root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
-        root.platebtn = make_autosize_button(parentpanel, _("Compose"), root.plate, _("Simple Plater System"), self)
-        root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
-        root.printerControls.append(root.sdbtn)
-        root.printbtn = make_sized_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
-        root.printbtn.Disable()
-        root.pausebtn = make_sized_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
-        root.recoverbtn = make_sized_button(parentpanel, _("Recover"), root.recover, _("Recover previous Print"), self)
+    root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"), self)
+    root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
+    root.platebtn = make_autosize_button(parentpanel, _("Compose"), root.plate, _("Simple Plater System"), self)
+    root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
+    root.printerControls.append(root.sdbtn)
+    root.printbtn = make_sized_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
+    root.printbtn.Disable()
+    root.pausebtn = make_sized_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
+    root.recoverbtn = make_sized_button(parentpanel, _("Recover"), root.recover, _("Recover previous Print"), self)
+    return self
 
 class MainWindow(wx.Frame):
     
@@ -357,16 +379,17 @@ class MainWindow(wx.Frame):
         self.mainsizer_page1 = wx.BoxSizer(wx.VERTICAL)
         page1panel1 = self.newPanel(page1panel)
         page1panel2 = self.newPanel(page1panel)
-        self.uppersizer = MainToolbar(self, page1panel1)
+        self.uppersizer = MainToolbar(self, page1panel1, use_wrapsizer = True)
         page1panel1.SetSizer(self.uppersizer)
         self.mainsizer_page1.Add(page1panel1, 0, wx.EXPAND)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
         page1panel2.SetSizer(self.lowersizer)
-        extracontrols = wx.GridBagSizer()
-        add_extra_controls(extracontrols, self, page1panel2, 0)
         leftsizer = wx.BoxSizer(wx.VERTICAL)
-        leftsizer.Add(LeftPane(self, page1panel2, extracontrols), 1, wx.ALIGN_CENTER)
+        left_pane = LeftPane(self, page1panel2, True)
+        leftsizer.Add(left_pane, 1, wx.ALIGN_CENTER)
         rightsizer = wx.BoxSizer(wx.VERTICAL)
+        extracontrols = wx.GridBagSizer()
+        add_extra_controls(extracontrols, self, page1panel2, left_pane.extra_buttons)
         rightsizer.Add(extracontrols, 1, wx.ALIGN_CENTER)
         self.lowersizer.Add(leftsizer, 1, wx.ALIGN_CENTER)
         self.lowersizer.Add(rightsizer, 1, wx.ALIGN_CENTER)
