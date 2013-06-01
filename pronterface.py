@@ -723,26 +723,15 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             pass
 
     def cbuttons_reload(self):
-        allcbs = []
-        ubs = self.uppersizer
+        allcbs = getattr(self, "custombuttonbuttons", [])
         cs = self.centersizer
-        #for item in ubs.GetChildren():
-        #    if hasattr(item.GetWindow(),"custombutton"):
-        #        allcbs += [(ubs, item.GetWindow())]
-        for item in cs.GetChildren():
-            if hasattr(item.GetWindow(),"custombutton"):
-                allcbs += [(cs, item.GetWindow())]
-        for sizer, button in allcbs:
-            #sizer.Remove(button)
-            button.Destroy()
+        for button in allcbs:
+            cs.Detach(button)
         self.custombuttonbuttons = []
         newbuttonbuttonindex = len(self.custombuttons)
         while newbuttonbuttonindex>0 and self.custombuttons[newbuttonbuttonindex-1] is None:
             newbuttonbuttonindex -= 1
-        while len(self.custombuttons) < 13:
-            self.custombuttons.append(None)
-        for i in xrange(len(self.custombuttons)):
-            btndef = self.custombuttons[i]
+        for i, btndef in enumerate(self.custombuttons):
             try:
                 b = wx.Button(self.cbuttons_panel, -1, btndef.label, style = wx.BU_EXACTFIT)
                 b.SetToolTip(wx.ToolTip(_("Execute command: ")+btndef.command))
@@ -768,14 +757,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if btndef is not None:
                 b.Bind(wx.EVT_BUTTON, self.procbutton)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
-            #else:
-            #    b.Bind(wx.EVT_BUTTON, lambda e:e.Skip())
             self.custombuttonbuttons.append(b)
-            #if i<4:
-            #    ubs.Add(b)
-            #else:
-            cs.Add(b, pos = ((i)/4, (i)%4))
-        self.mainsizer.Layout()
+            cs.Add(b, pos = (i // 4, i % 4))
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')

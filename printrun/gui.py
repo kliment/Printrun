@@ -390,7 +390,8 @@ class MainWindow(wx.Frame):
         rightsizer = wx.BoxSizer(wx.VERTICAL)
         extracontrols = wx.GridBagSizer()
         add_extra_controls(extracontrols, self, page1panel2, left_pane.extra_buttons)
-        rightsizer.Add(extracontrols, 1, wx.ALIGN_CENTER)
+        rightsizer.AddStretchSpacer()
+        rightsizer.Add(extracontrols, 0, wx.ALIGN_CENTER)
         self.lowersizer.Add(leftsizer, 1, wx.ALIGN_CENTER)
         self.lowersizer.Add(rightsizer, 1, wx.ALIGN_CENTER)
         self.mainsizer_page1.Add(page1panel2, 1, wx.EXPAND)
@@ -420,7 +421,8 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.kill)
 
         vizpane.Detach(self.centersizer)
-        rightsizer.Add(self.centersizer, 0, wx.EXPAND)
+        rightsizer.Add(self.centersizer, 0, wx.ALIGN_CENTER)
+        rightsizer.AddStretchSpacer()
 
         self.panel.SetSizerAndFit(self.notesizer)
 
@@ -431,7 +433,7 @@ class MainWindow(wx.Frame):
             i.Disable()
 
         #self.panel.Fit()
-        self.cbuttons_panel = page1panel
+        self.cbuttons_panel = page1panel2
         self.cbuttons_reload()
 
     def createGui(self):
