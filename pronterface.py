@@ -317,10 +317,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         pronsole.pronsole.process_cmdline_arguments(self, args)
         self.autoconnect = args.autoconnect
 
-    def startcb(self):
+    def startcb(self, resuming = False):
         self.starttime = time.time()
-        self.compute_eta = RemainingTimeEstimator(self.p.mainqueue)
-        print _("Print Started at: %s") % format_time(self.starttime)
+        if resuming:
+            print _("Print resumed at: %s") % format_time(self.starttime)
+        else:
+            print _("Print started at: %s") % format_time(self.starttime)
+            self.compute_eta = RemainingTimeEstimator(self.fgcode)
 
     def endcb(self):
         if self.p.queueindex == 0:
@@ -1434,8 +1437,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.paused:
             self.p.paused = 0
             self.paused = 0
-            self.on_startprint()
             if self.sdprinting:
+                self.on_startprint()
                 self.p.send_now("M26 S0")
                 self.p.send_now("M24")
                 return
@@ -1483,8 +1486,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         dlg.Destroy()
 
     def pause(self, event):
-        print _("Paused.")
         if not self.paused:
+            print _("Print paused at: %s") % format_time(time.time())
             if self.sdprinting:
                 self.p.send_now("M25")
             else:
@@ -1498,6 +1501,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.extra_print_time += int(time.time() - self.starttime)
             wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
         else:
+            print _("Resuming.")
             self.paused = False
             if self.sdprinting:
                 self.p.send_now("M24")

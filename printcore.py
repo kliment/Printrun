@@ -332,7 +332,7 @@ class printcore():
           zFeedString = ""
           if self.xy_feedrate != None: xyFeedString = " F" + str(self.xy_feedrate)
           if self.z_feedrate != None: zFeedString = " F" + str(self.z_feedrate)
-        
+
           self.send_now("G1 X" + str(self.pauseX) + " Y" + str(self.pauseY) + xyFeedString)
           self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
           self.send_now("G92 E" + str(self.pauseE))
@@ -343,7 +343,7 @@ class printcore():
         
         self.paused = False
         self.printing = True
-        self.print_thread = Thread(target = self._print)
+        self.print_thread = Thread(target = self._print, kwargs = {"resuming": True})
         self.print_thread.start()
 
     def send(self, command, wait = 0):
@@ -388,10 +388,10 @@ class printcore():
         else:
             print "Not connected to printer."
 
-    def _print(self):
+    def _print(self, resuming = False):
         if self.startcb:
             #callback for printing started
-            try: self.startcb()
+            try: self.startcb(resuming)
             except: pass
         while self.printing and self.printer and self.online:
             self._sendnext()
