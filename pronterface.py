@@ -211,6 +211,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.capture_skip = {}
         self.capture_skip_newline = False
         self.tempreport = ""
+        self.userm114 = 0
+        self.userm105 = 0
         self.monitor = 0
         self.fgcode = None
         self.skeinp = None
@@ -1045,13 +1047,21 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.zb.repeatLast()
         self.xyb.repeatLast()
 
+    def parseusercmd(self, line):
+        if line.startswith("M114"):
+            self.userm114 += 1
+        elif line.startswith("M105"):
+            self.userm105 += 1
+
     def procbutton(self, e):
         try:
             if hasattr(e.GetEventObject(),"custombutton"):
                 if wx.GetKeyState(wx.WXK_CONTROL) or wx.GetKeyState(wx.WXK_ALT):
                     return self.editbutton(e)
                 self.cur_button = e.GetEventObject().custombutton
-            self.onecmd(e.GetEventObject().properties.command)
+            command = e.GetEventObject().properties.command
+            self.parseusercmd(command)
+            self.onecmd(command)
             self.cur_button = None
         except:
             print _("event object missing")
@@ -1111,6 +1121,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if not len(command):
             return
         wx.CallAfter(self.addtexttolog, ">>>" + command + "\n");
+        self.parseusercmd(str(command))
         self.onecmd(str(command))
         self.commandbox.SetSelection(0, len(command))
         self.commandbox.history.append(command)
@@ -1221,12 +1232,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if "ok C:" in l or "Count" in l:
             self.posreport = l
             self.update_pos(l)
-            isreport = True
+            if self.userm114 > 0:
+                self.userm114 -= 1
+            else:
+                isreport = True
         if "ok T:" in l:
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             self.update_tempdisplay()
-            isreport = True
+            if self.userm105 > 0:
+                self.userm105 -= 1
+            else:
+                isreport = True
         tstring = l.rstrip()
         if self.p.loud or (tstring not in ["ok", "wait"] and not isreport):
             wx.CallAfter(self.addtexttolog, tstring + "\n");
