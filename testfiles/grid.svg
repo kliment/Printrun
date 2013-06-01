@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" onload='init()' width="150mm" height="150mm" version="1.1">
+<script type='text/ecmascript'>
+	<![CDATA[
+	function getParameterByName(name)
+	{
+	  name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+	  var regexS = "[\\?&]" + name + "=([^&#]*)";
+	  var regex = new RegExp(regexS);
+	  var results = regex.exec(window.location.search);
+	  if(results == null)
+	    return "";
+	  else
+	    return decodeURIComponent(results[1].replace(/\+/g, " "));
+	}
+
+	function init() {
+	  var width = getParameterByName('width') || 150;
+	  var height = getParameterByName('height') || 150;
+	  var gridheight = getParameterByName('gridheight') || 10;
+	  var gridwidth = getParameterByName('gridwidth') || 10;
+	  var lineheight = getParameterByName('lineheight') || 0.5;
+	  var linewidth = getParameterByName('linewidth') || 0.5;
+
+	  var lineblockheight = (gridheight/2)-lineheight;
+	  var lineblockwidth = (gridwidth/2)-linewidth;
+
+console.log(lineblockheight,lineblockwidth)
+
+
+	  document.getElementsByTagName('svg')[0].setAttribute('width',width+'mm');
+	  document.getElementsByTagName('svg')[0].setAttribute('height',height+'mm');
+
+
+	  document.getElementsByTagName('pattern')[0].setAttribute('height',gridheight+'mm');
+	  document.getElementsByTagName('pattern')[0].setAttribute('width',gridwidth+'mm');
+
+	  document.getElementsByClassName('background')[0].setAttribute('height',gridheight+'mm');
+	  document.getElementsByClassName('background')[0].setAttribute('width',gridwidth+'mm');
+
+	  var blocks = document.getElementsByClassName('block');
+	  for (var i in blocks){
+		  if (blocks[i] instanceof SVGRectElement){
+		  	blocks[i].setAttribute('height', lineblockheight+'mm');
+		  	blocks[i].setAttribute('width', lineblockwidth+'mm');
+		  }
+	  }
+
+	  document.getElementsByClassName('topright')[0].setAttribute('x',lineblockwidth+'mm');
+	  document.getElementsByClassName('bottomleft')[0].setAttribute('y',lineblockheight+'mm');
+	  document.getElementsByClassName('bottomright')[0].setAttribute('x',lineblockwidth+'mm');
+	  document.getElementsByClassName('bottomright')[0].setAttribute('y',lineblockheight+'mm');
+
+	}
+	]]>
+</script>
+
+<defs>
+	<pattern id="grd" patternUnits="userSpaceOnUse" width="10mm" height="10mm">
+		<rect class="background" width="10mm" height="10mm" fill="red"/>
+		<rect class="block topleft" width="4.9mm" height="4.9mm"/>
+		<rect class="block topright" width="4.9mm" height="4.9mm" x="4.9mm"/>
+		<rect class="block bottomleft" width="4.9mm" height="4.9mm" y="4.9mm"/>
+		<rect class="block bottomright" width="4.9mm" height="4.9mm" x="4.9mm" y="4.9mm"/>
+	</pattern>
+</defs>
+<rect height="100%" width="100%" fill="url(#grd)"/>
+</svg>

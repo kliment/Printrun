@@ -31,9 +31,19 @@ You can run Printrun directly from source, as there are no packages available ye
 2. `sudo easy_install pybonjour tornado`
 3. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
-### Fedora 15 and newer (untested)
+### Fedora 17 and newer
 
-You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
+You can install Printrun from official packages. Install the whole package using
+
+`sudo yum install printrun`
+
+Or get only apps you need by
+
+`sudo yum install pronsole` or `pronterface` or `plater`
+
+Adding `--enablerepo updates-testing` option to `yum` might give you newer packages (but also not very tested).
+
+You can also run Printrun directly from source, if the packages are too old for you anyway, or you have Fedora 15 or 16. Fetch and install the dependencies using
 
 1. `sudo yum install pyserial wxpython pyglet python-tornado`
 2. `sudo apt-get install avahi-daemon python-avahi tornado`
@@ -104,10 +114,13 @@ Run Printrun for source if you want to test out the latest features.
 To use pronterface, you need:
 
   * python (ideally 2.6.x or 2.7.x),
-  * pyserial (or python-serial on ubuntu/debian),
+  * pyserial (or python-serial on ubuntu/debian)
   * pyglet
+  * numpy (for 3D view)
   * pyreadline (not needed on Linux) and
+  * argparse (installed by default with python >= 2.7)
   * wxPython
+  * pycairo (to use Projector feature)
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)
 
