@@ -724,14 +724,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def cbuttons_reload(self):
         allcbs = getattr(self, "custombuttonbuttons", [])
-        cs = self.centersizer
         for button in allcbs:
-            cs.Detach(button)
+            self.centersizer.Detach(button)
         self.custombuttonbuttons = []
-        newbuttonbuttonindex = len(self.custombuttons)
-        while newbuttonbuttonindex>0 and self.custombuttons[newbuttonbuttonindex-1] is None:
-            newbuttonbuttonindex -= 1
-        for i, btndef in enumerate(self.custombuttons):
+        custombuttons = self.custombuttons[:] + [None]
+        for i, btndef in enumerate(custombuttons):
             try:
                 b = wx.Button(self.cbuttons_panel, -1, btndef.label, style = wx.BU_EXACTFIT)
                 b.SetToolTip(wx.ToolTip(_("Execute command: ")+btndef.command))
@@ -741,7 +738,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     if 0.3*rr+0.59*gg+0.11*bb < 60:
                         b.SetForegroundColour("#ffffff")
             except:
-                if i == newbuttonbuttonindex:
+                if i == len(custombuttons) - 1:
                     self.newbuttonbutton = b = wx.Button(self.cbuttons_panel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
                     #b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
@@ -758,7 +755,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 b.Bind(wx.EVT_BUTTON, self.procbutton)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttonbuttons.append(b)
-            cs.Add(b, pos = (i // 4, i % 4))
+            self.centersizer.Add(b, pos = (i // 4, i % 4))
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
