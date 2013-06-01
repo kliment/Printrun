@@ -292,9 +292,9 @@ class VizPane(wx.BoxSizer):
             extrusion_width = root.settings.preview_extrusion_width)
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
         if not isinstance(root.gviz, NoViz):
-            self.Add(root.gviz.widget, 1, flag = wx.SHAPED)
+            self.Add(root.gviz.widget, 1, flag = wx.SHAPED | wx.ALIGN_CENTER_HORIZONTAL)
         root.centersizer = wx.GridBagSizer()
-        self.Add(root.centersizer, 0, flag = wx.EXPAND)
+        self.Add(root.centersizer, 0, flag = wx.ALIGN_CENTER)
 
 class LogPane(wx.BoxSizer):
 
@@ -436,15 +436,29 @@ class MainWindow(wx.Frame):
         self.cbuttons_panel = page1panel2
         self.cbuttons_reload()
 
-    def createGui(self):
+    def createGui(self, compact = False):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
-        self.uppersizer = MainToolbar(self)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.lowersizer.Add(LeftPane(self), 0)
-        self.lowersizer.Add(VizPane(self), 1, wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
-        self.lowersizer.Add(LogPane(self), 1, wx.EXPAND)
-        self.mainsizer.Add(self.uppersizer, 0)
-        self.mainsizer.Add(self.lowersizer, 1, wx.EXPAND)
+        upperpanel = self.newPanel(self.panel)
+        self.uppersizer = MainToolbar(self, upperpanel)
+        lowerpanel = self.newPanel(self.panel)
+        upperpanel.SetSizer(self.uppersizer)
+        lowerpanel.SetSizer(self.lowersizer)
+        left_pane = LeftPane(self, lowerpanel)
+        left_pane.Layout() # required to get correct rows/cols counts
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
+        left_sizer.Add(left_pane, 0)
+        self.lowersizer.Add(left_sizer, 0, wx.EXPAND)
+        self.lowersizer.Add(VizPane(self, lowerpanel), 1, wx.EXPAND | wx.ALIGN_CENTER)
+        logpanel = self.newPanel(lowerpanel)
+        log_pane = LogPane(self, logpanel)
+        logpanel.SetSizer(log_pane)
+        if compact:
+            left_sizer.Add(logpanel, 1, wx.EXPAND)
+        else:
+            self.lowersizer.Add(logpanel, 1, wx.EXPAND)
+        self.mainsizer.Add(upperpanel, 0)
+        self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
         self.status = self.CreateStatusBar()
         self.status.SetStatusText(_("Not connected to printer."))
@@ -467,5 +481,5 @@ class MainWindow(wx.Frame):
             i.Disable()
 
         #self.panel.Fit()
-        self.cbuttons_panel = self.panel
+        self.cbuttons_panel = lowerpanel
         self.cbuttons_reload()
