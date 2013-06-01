@@ -4,3 +4,4 @@
 *.bak
 uploads
 .DS_Store
+.vagrant
