@@ -466,3 +466,4 @@ class MainWindow(wx.Frame):
 
         #self.panel.Fit()
         self.cbuttons_panel = self.panel
+        self.cbuttons_reload()
