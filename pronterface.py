@@ -726,6 +726,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         allcbs = getattr(self, "custombuttonbuttons", [])
         for button in allcbs:
             self.centersizer.Detach(button)
+            button.Destroy()
         self.custombuttonbuttons = []
         custombuttons = self.custombuttons[:] + [None]
         for i, btndef in enumerate(custombuttons):
@@ -756,6 +757,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttonbuttons.append(b)
             self.centersizer.Add(b, pos = (i // 4, i % 4))
+        self.centersizer.Layout()
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
