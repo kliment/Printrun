@@ -1540,12 +1540,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except SerialException as e:
             # Currently, there is no errno, but it should be there in the future
             if e.errno == 2:
-                print _("Error: You are trying to connect to a non-exisiting port.")
+                print _("Error: You are trying to connect to a non-existing port.")
             elif e.errno == 8:
                 print _("Error: You don't have permission to open %s.") % port
                 print _("You might need to add yourself to the dialout group.")
             else:
-                print e
+                traceback.print_exc()
             # Kill the scope anyway
             return
         self.statuscheck = True
