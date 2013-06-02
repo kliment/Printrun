@@ -180,7 +180,7 @@ class printcore():
                 print "SelectError ({0}): {1}".format(e.errno, e.strerror)
                 raise
         except SerialException as e:
-            print "Can't read from printer (disconnected?) (SerialException {0}): {1}".format(e.errno, e.strerror)
+            print "Can't read from printer (disconnected?) (SerialException): {0}".format(e)
             return None
         except socket.error as e:
             print "Can't read from printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
@@ -487,7 +487,7 @@ class printcore():
             except socket.error as e:
                 print "Can't write to printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
             except SerialException as e:
-                print "Can't write to printer (disconnected?) (SerialException {0}): {1}".format(e.errno, e.strerror)
+                print "Can't write to printer (disconnected?) (SerialException): {0}".format(e)
             except RuntimeError as e:
                 print "Socket connection broken, disconnected. ({0}): {1}".format(e.errno, e.strerror)
 
