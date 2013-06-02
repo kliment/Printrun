@@ -123,8 +123,10 @@ class printcore():
             if not is_serial:
                 self.printer_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.timeout = 0.25
+                self.printer_tcp.settimeout(1.0)
                 try:
                     self.printer_tcp.connect((hostname, port))
+                    self.printer_tcp.settimeout(self.timeout)
                     self.printer = self.printer_tcp.makefile()
                 except socket.error:
                     print _("Could not connect to %s:%s:") % (hostname, port)
