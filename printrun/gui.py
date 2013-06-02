@@ -415,8 +415,8 @@ class MainWindow(wx.Frame):
         self.notebook.AddPage(page1panel, _("Commands"))
         self.notebook.AddPage(page2panel, _("Status"))
         self.panel.SetSizer(self.notesizer)
-        self.status = self.CreateStatusBar()
-        self.status.SetStatusText(_("Not connected to printer."))
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText(_("Not connected to printer."))
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
 
@@ -460,8 +460,8 @@ class MainWindow(wx.Frame):
         self.mainsizer.Add(upperpanel, 0)
         self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
-        self.status = self.CreateStatusBar()
-        self.status.SetStatusText(_("Not connected to printer."))
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText(_("Not connected to printer."))
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
 

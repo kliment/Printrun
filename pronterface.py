@@ -1192,7 +1192,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
                                                                   format_duration(secondsestimate))
                     string += _(" Z: %.3f mm") % self.curlayer
-            wx.CallAfter(self.status.SetStatusText, string)
+            wx.CallAfter(self.statusbar.SetStatusText, string)
             wx.CallAfter(self.gviz.Refresh)
             if self.monitor and self.p.online:
                 if self.sdprinting:
@@ -1209,7 +1209,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             while not self.sentlines.empty():
                 gc = self.sentlines.get_nowait()
                 wx.CallAfter(self.gviz.addgcode, gc, 1)
-        wx.CallAfter(self.status.SetStatusText, _("Not connected to printer."))
+        wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
 
     def capture(self, func, *args, **kwargs):
         stdout = sys.stdout
@@ -1265,19 +1265,19 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def waitforsdresponse(self, l):
         if "file.open failed" in l:
-            wx.CallAfter(self.status.SetStatusText, _("Opening file failed."))
+            wx.CallAfter(self.statusbar.SetStatusText, _("Opening file failed."))
             self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "File opened" in l:
-            wx.CallAfter(self.status.SetStatusText, l)
+            wx.CallAfter(self.statusbar.SetStatusText, l)
         if "File selected" in l:
-            wx.CallAfter(self.status.SetStatusText, _("Starting print"))
+            wx.CallAfter(self.statusbar.SetStatusText, _("Starting print"))
             self.sdprinting = 1
             self.p.send_now("M24")
             self.startcb()
             return
         if "Done printing file" in l:
-            wx.CallAfter(self.status.SetStatusText, l)
+            wx.CallAfter(self.statusbar.SetStatusText, l)
             self.sdprinting = 0
             self.recvlisteners.remove(self.waitforsdresponse)
             self.endcb()
@@ -1332,7 +1332,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def skein_monitor(self):
         while(not self.stopsf):
             try:
-                wx.CallAfter(self.status.SetStatusText, _("Slicing..."))#+self.cout.getvalue().split("\n")[-1])
+                wx.CallAfter(self.statusbar.SetStatusText, _("Slicing..."))#+self.cout.getvalue().split("\n")[-1])
             except:
                 pass
             time.sleep(0.1)
@@ -1343,7 +1343,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)
 
-            wx.CallAfter(self.status.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
+            wx.CallAfter(self.statusbar.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
             print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
@@ -1393,7 +1393,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 name = dlg.GetPath()
                 dlg.Destroy()
             if not os.path.exists(name):
-                self.status.SetStatusText(_("File not found!"))
+                self.statusbar.SetStatusText(_("File not found!"))
                 return
             path = os.path.split(name)[0]
             if path != self.settings.last_file_path:
@@ -1405,7 +1405,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             else:
                 self.filename = name
                 self.fgcode = gcoder.GCode(open(self.filename))
-                self.status.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
+                self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
                 print _("Loaded %s, %d lines") % (name, len(self.fgcode))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
@@ -1444,10 +1444,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 return
 
         if not self.fgcode:
-            wx.CallAfter(self.status.SetStatusText, _("No file loaded. Please use load first."))
+            wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
             return
         if not self.p.online:
-            wx.CallAfter(self.status.SetStatusText, _("Not connected to printer."))
+            wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
             return
         self.on_startprint()
         self.p.startprint(self.fgcode)
@@ -1459,7 +1459,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def endupload(self):
         self.p.send_now("M29 ")
-        wx.CallAfter(self.status.SetStatusText, _("File upload complete"))
+        wx.CallAfter(self.statusbar.SetStatusText, _("File upload complete"))
         time.sleep(0.5)
         self.p.clear = True
         self.uploading = False
@@ -1561,7 +1561,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def recover(self, event):
         self.extra_print_time = 0
         if not self.p.online:
-            wx.CallAfter(self.status.SetStatusText, _("Not connected to printer."))
+            wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
             return
         # Reset Z
         self.p.send_now("G92 Z%f" % self.predisconnect_layer)
