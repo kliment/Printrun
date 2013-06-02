@@ -633,7 +633,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         try:
             while True:
                 item = self.macros_menu.FindItemByPosition(1)
-                if item is None: return
+                if item is None: break
                 self.macros_menu.DeleteItem(item)
         except:
             pass
