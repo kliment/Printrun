@@ -189,7 +189,7 @@ class printcore():
 
     def _listen_can_continue(self):
         if self.printer_tcp:
-            return not self.stop_read_thread and self.printer            
+            return not self.stop_read_thread and self.printer
         return not self.stop_read_thread and self.printer and self.printer.isOpen()
 
     def _listen_until_online(self):
