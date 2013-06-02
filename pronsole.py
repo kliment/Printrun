@@ -479,6 +479,9 @@ class pronsole(cmd.Cmd):
             self.log("Empty macro - cancelled")
         del self.cur_macro_name, self.cur_macro_def
 
+    def parseusercmd(self, line):
+        pass
+
     def compile_macro_line(self, line):
         line = line.rstrip()
         ls = line.lstrip()
@@ -487,7 +490,8 @@ class pronsole(cmd.Cmd):
         if ls.startswith('!'):
             return ws + ls[1:] + "\n" # python mode
         else:
-            return ws + 'self.onecmd("'+ls+'".format(*arg))\n' # parametric command mode
+            ret = ws + 'self.parseusercmd("'+ls+'".format(*arg))\n' # parametric command mode
+            return ret + ws + 'self.onecmd("'+ls+'".format(*arg))\n'
 
     def compile_macro(self, macro_name, macro_def):
         if macro_def.strip() == "":
