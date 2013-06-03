@@ -17,14 +17,23 @@
 
 from serial import Serial, SerialException
 from select import error as SelectError
-from threading import Thread
+from threading import Thread, Lock
 import time, getopt, sys
 import platform, os, traceback
 import socket
 import re
+from functools import wraps
 from collections import deque
 from printrun.GCodeAnalyzer import GCodeAnalyzer
 from printrun import gcoder
+
+def locked(f):
+    @wraps(f)
+    def inner(*args, **kw):
+        with inner.lock:
+            return f(*args, **kw)
+    inner.lock = Lock()
+    return inner
 
 def control_ttyhup(port, disable_hup):
     """Controls the HUPCL"""
@@ -97,6 +106,7 @@ class printcore():
         self.online = False
         self.printing = False
 
+    @locked
     def connect(self, port = None, baud = None):
         """Set port and baudrate if given, then connect to printer
         """
