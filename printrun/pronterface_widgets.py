@@ -120,8 +120,7 @@ class MacroEditor(wx.Dialog):
                 reindented += self.indent_chars + line + "\n"
         return reindented
 
-SETTINGS_GROUPS = {"General": _("General"),
-                   "Printer": _("Printer settings"),
+SETTINGS_GROUPS = {"Printer": _("Printer settings"),
                    "UI": _("User interface"),
                    "External": _("External commands")}
 
@@ -136,7 +135,7 @@ class PronterOptionsDialog(wx.Dialog):
         all_settings = pronterface.settings._all_settings()
         group_list = []
         groups = {}
-        for group in ["General", "UI", "Printer"]:
+        for group in ["Printer", "UI", "External"]:
             group_list.append(group)
             groups[group] = []
         for setting in all_settings:

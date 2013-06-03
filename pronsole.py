@@ -67,7 +67,7 @@ def setting_add_tooltip(func):
 
 class Setting(object):
 
-    DEFAULT_GROUP = "General"
+    DEFAULT_GROUP = "Printer"
 
     hidden = False
 
