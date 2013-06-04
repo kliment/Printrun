@@ -191,6 +191,9 @@ class BooleanSetting(wxSetting):
         return bool(self._value)
     def _set_value(self, value):
         self._value = value
+        if self.widget:
+            self.widget.SetValue(bool(value))
+
     value = property(_get_value, _set_value)
 
     def get_specific_widget(self, parent):
