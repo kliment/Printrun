@@ -731,7 +731,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if trueparam == "grid":
             try:
                 item = int(param[-1]) # extract list item position
-                grid = list(self.gviz.grid)
+                grid = list(gviz.grid)
                 grid[item - 1] = value
                 value = tuple(grid)
             except:
