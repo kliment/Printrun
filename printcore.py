@@ -242,12 +242,12 @@ class printcore():
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
             if line.startswith('ok') and "T:" in line and self.tempcb:
-                    #callback for temp, status, whatever
+                #callback for temp, status, whatever
                 try: self.tempcb(line)
                 except: pass
             elif line.startswith('Error'):
                 if self.errorcb:
-                #callback for errors
+                    #callback for errors
                     try: self.errorcb(line)
                     except: pass
             # Teststrings for resend parsing       # Firmware     exp. result
@@ -373,7 +373,7 @@ class printcore():
                 self.lineno += 1
                 while wait > 0 and self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
-                    wait -= 1
+                    wait -= 0.001
         else:
             print "Not connected to printer."
 
@@ -393,7 +393,7 @@ class printcore():
                 self._send(command)
                 while (wait > 0) and self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
-                    wait -= 1
+                    wait -= 0.001
         else:
             print "Not connected to printer."
 
