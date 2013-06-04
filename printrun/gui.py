@@ -165,11 +165,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     else:
         self.Add(root.tempdisp, pos = (gauges_base_line + 0, 0), span = (1, 6))
 
-    root.graph = Graph(parentpanel, wx.ID_ANY, root)
-    if standalone_mode:
-        self.Add(root.graph, pos = (base_line + 5, 0), span = (3, 6))
-    else:
-        self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
+    if root.display_graph:
+        root.graph = Graph(parentpanel, wx.ID_ANY, root)
+        if standalone_mode:
+            self.Add(root.graph, pos = (base_line + 5, 0), span = (3, 6))
+        else:
+            self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
 
     if extra_buttons:
         pos_mapping = {

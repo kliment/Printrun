@@ -186,6 +186,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
         self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer (requires restarting)"), _("Use 3D visualization instead of 2D layered visualization"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
+        self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"))
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
@@ -231,6 +232,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
         self.build_dimensions_list = parse_build_dimensions(self.settings.build_dimensions)
+        self.display_graph = self.settings.tempgraph
         self.display_gauges = self.settings.tempgauges
         
         #initialize the code analyzer with the correct sizes. There must be a more general way to do so
@@ -377,13 +379,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if gline.s != None:
                 temp = gline.s
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
-                wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
+                if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
         elif gline.command == "M140":
             gline.parse_coordinates(imperial = False, force = True)
             if gline.s != None:
                 temp = gline.s
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
-                wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
+                if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
         else:
             return
         self.sentlines.put_nowait(line)
@@ -413,7 +415,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def setbedgui(self, f):
         self.bsetpoint = f
         if self.display_gauges: self.bedtgauge.SetTarget(int(f))
-        wx.CallAfter(self.graph.SetBedTargetTemperature, int(f))
+        if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, int(f))
         if f>0:
             wx.CallAfter(self.btemp.SetValue, str(f))
             self.set("last_bed_temperature", str(f))
@@ -433,7 +435,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def sethotendgui(self, f):
         self.hsetpoint = f
         if self.display_gauges: self.hottgauge.SetTarget(int(f))
-        wx.CallAfter(self.graph.SetExtruder0TargetTemperature, int(f))
+        if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, int(f))
         if f > 0:
             wx.CallAfter(self.htemp.SetValue, str(f))
             self.set("last_temperature", str(f))
@@ -1105,10 +1107,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def setmonitor(self, e):
         self.monitor = self.monitorbox.GetValue()
         self.set("monitor", self.monitor)
-        if self.monitor:
-            wx.CallAfter(self.graph.StartPlotting, 1000)
-        else:
-            wx.CallAfter(self.graph.StopPlotting)
+        if self.display_graph:
+            if self.monitor:
+                wx.CallAfter(self.graph.StartPlotting, 1000)
+            else:
+                wx.CallAfter(self.graph.StopPlotting)
 
     def addtexttolog(self,text):
         try:
@@ -1141,13 +1144,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 hotend_temp = float(temps["T0"][0])
             else:
                 hotend_temp = float(temps["T"][0]) if "T" in temps else -1.0
-            wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
+            if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
             if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
             if "T1" in temps:
                 hotend_temp = float(temps["T1"][0])
-                wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
+                if self.display_graph: wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
             bed_temp = float(temps["B"][0]) if "B" in temps else -1.0
-            wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
+            if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
             if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
         except:
             traceback.print_exc()
