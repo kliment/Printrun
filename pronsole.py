@@ -205,6 +205,12 @@ class StaticTextSetting(wxSetting):
         super(StaticTextSetting, self).__init__(name, "", label, help, group)
         self.text = text
 
+    def update(self):
+        pass
+    def _get_value(self):
+        return ""
+    def _set_value(self, value):
+        pass
     def get_specific_widget(self, parent):
         import wx
         self.widget = wx.StaticText(parent, -1, self.text)
