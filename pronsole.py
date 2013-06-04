@@ -1161,7 +1161,7 @@ class pronsole(cmd.Cmd):
             self.log("Printer is not online. Unable to extrude.")
             return
         if self.p.printing:
-            self.log("Printer is currently printing. Please pause the print before you issue manual commands.")
+            self.log(_("Printer is currently printing. Please pause the print before you issue manual commands."))
             return
         ls = l.split()
         if len(ls):

@@ -314,7 +314,6 @@ class printcore():
         self.printing = False
         
         # try joining the print thread: enclose it in try/except because we might be calling it from the thread itself
-        
         try:
           self.print_thread.join()
         except:
@@ -329,8 +328,6 @@ class printcore():
         self.pauseE = self.analyzer.e-self.analyzer.eOffset;
         self.pauseF = self.analyzer.f;
         self.pauseRelative = self.analyzer.relative;
-        
-        
 
     def resume(self):
         """Resumes a paused print.
@@ -451,10 +448,10 @@ class printcore():
             if self.layerchangecb and self.queueindex > 0:
                 (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
-                    self.layerchangecb(layer)
+                    try: self.layerchangecb(layer)
+                    except: traceback.print_exc()
             tline = gline.raw
-            #check for host command
-            if tline.lstrip().startswith(";@"):
+            if tline.lstrip().startswith(";@"): # check for host command
                 self.processHostCommand(tline)
                 self.queueindex += 1
                 return
@@ -465,7 +462,7 @@ class printcore():
                 self.lineno += 1
                 if self.printsendcb:
                     try: self.printsendcb(gline)
-                    except: pass
+                    except: traceback.print_exc()
             else:
                 self.clear = True
             self.queueindex += 1
