@@ -405,21 +405,26 @@ class printcore():
 
     def _print(self, resuming = False):
         self._stop_sender()
-        if self.startcb:
-            #callback for printing started
-            try: self.startcb(resuming)
-            except: pass
-        while self.printing and self.printer and self.online:
-            self._sendnext()
-        self.sentlines = {}
-        self.log.clear()
-        self.sent = []
-        if self.endcb:
-            #callback for printing done
-            try: self.endcb()
-            except: pass
-        self.print_thread = None
-        self._start_sender()
+        try:
+            if self.startcb:
+                #callback for printing started
+                try: self.startcb(resuming)
+                except: pass
+            while self.printing and self.printer and self.online:
+                self._sendnext()
+            self.sentlines = {}
+            self.log.clear()
+            self.sent = []
+            if self.endcb:
+                #callback for printing done
+                try: self.endcb()
+                except: pass
+        except:
+            print "Print thread died due to the following error:"
+            traceback.print_exc()
+        finally:
+            self.print_thread = None
+            self._start_sender()
 
     #now only "pause" is implemented as host command
     def processHostCommand(self, command):
