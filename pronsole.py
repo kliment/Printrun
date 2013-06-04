@@ -122,12 +122,6 @@ class Setting(object):
     def get_specific_widget(self, parent):
         raise NotImplementedError
 
-    def set(self, value):
-        raise NotImplementedError
-
-    def get(self):
-        raise NotImplementedError
-
     def update(self):
         raise NotImplementedError
     
