@@ -191,9 +191,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
-        self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"))
-        self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"))
-        self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"))
+        self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"), self.update_gviz_params)
+        self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"), self.update_gviz_params)
+        self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing most settings here will require restart to get effect"), group = "UI"))
         
         self.pauseScript = "pause.gcode"
@@ -714,6 +714,37 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
             self.gwindow.Raise()
+
+    def update_gviz_params(self, param, value):
+        params_map = {"preview_extrusion_width": "extrusion_width",
+                      "preview_grid_step1": "grid",
+                      "preview_grid_step2": "grid",}
+        if param not in params_map:
+            return
+        trueparam = params_map[param]
+        if hasattr(self.gviz, trueparam):
+            gviz = self.gviz
+        elif hasattr(self.gwindow, "p") and hasattr(self.gwindow.p, trueparam):
+            gviz = self.gwindow.p
+        else:
+            return
+        if trueparam == "grid":
+            try:
+                item = int(param[-1]) # extract list item position
+                grid = list(self.gviz.grid)
+                grid[item - 1] = value
+                value = tuple(grid)
+            except:
+                traceback.print_exc()
+        if hasattr(self.gviz, trueparam):
+            self.apply_gviz_params(self.gviz, trueparam, value)
+        if hasattr(self.gwindow, "p") and hasattr(self.gwindow.p, trueparam):
+            self.apply_gviz_params(self.gwindow.p, trueparam, value)
+
+    def apply_gviz_params(self, widget, param, value):
+        setattr(widget, param, value)
+        widget.dirty = 1
+        wx.CallAfter(widget.Refresh)
 
     def setfeeds(self, e):
         self.feedrates_changed = True

@@ -279,8 +279,10 @@ class Settings(object):
             return object.__getattribute__(self, name)
         return getattr(self, "_" + name).value
 
-    def _add(self, setting):
+    def _add(self, setting, callback = None):
         setattr(self, setting.name, setting)
+        if callback:
+            setattr(self, "_" + setting.name + "_cb", callback)
 
     def _set(self, key, value):
         try:
