@@ -736,7 +736,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         custombuttons = self.custombuttons[:] + [None]
         for i, btndef in enumerate(custombuttons):
             try:
-                b = wx.Button(self.cbuttons_panel, -1, btndef.label, style = wx.BU_EXACTFIT)
+                b = wx.Button(self.centerpanel, -1, btndef.label, style = wx.BU_EXACTFIT)
                 b.SetToolTip(wx.ToolTip(_("Execute command: ")+btndef.command))
                 if btndef.background:
                     b.SetBackgroundColour(btndef.background)
@@ -745,13 +745,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                         b.SetForegroundColour("#ffffff")
             except:
                 if i == len(custombuttons) - 1:
-                    self.newbuttonbutton = b = wx.Button(self.cbuttons_panel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
+                    self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
                     #b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
                 else:
-                    b = wx.Button(self.cbuttons_panel,-1, ".", size = (1, 1))
+                    b = wx.Button(self.centerpanel,-1, ".", size = (1, 1))
                     #b = wx.StaticText(self.panel,-1, "", size = (72, 22), style = wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
                     b.Disable()
                     #continue
@@ -762,7 +762,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttonbuttons.append(b)
             self.centersizer.Add(b, pos = (i // 4, i % 4))
-        self.centersizer.Layout()
+        self.panel.GetSizer().Layout()
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')

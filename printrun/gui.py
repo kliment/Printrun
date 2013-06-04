@@ -293,8 +293,6 @@ class VizPane(wx.BoxSizer):
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
         if not isinstance(root.gviz, NoViz):
             self.Add(root.gviz.widget, 1, flag = wx.SHAPED | wx.ALIGN_CENTER_HORIZONTAL)
-        root.centersizer = wx.GridBagSizer()
-        self.Add(root.centersizer, 0, flag = wx.ALIGN_CENTER)
 
 class LogPane(wx.BoxSizer):
 
@@ -420,8 +418,11 @@ class MainWindow(wx.Frame):
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
 
-        vizpane.Detach(self.centersizer)
-        rightsizer.Add(self.centersizer, 0, wx.ALIGN_CENTER)
+        # Custom buttons
+        self.centersizer = wx.GridBagSizer()
+        self.centerpanel = self.newPanel(page1panel2)
+        self.centerpanel.SetSizer(self.centersizer)
+        rightsizer.Add(self.centerpanel, 0, wx.ALIGN_CENTER)
         rightsizer.AddStretchSpacer()
 
         self.panel.SetSizerAndFit(self.notesizer)
@@ -432,8 +433,6 @@ class MainWindow(wx.Frame):
         for i in self.printerControls:
             i.Disable()
 
-        #self.panel.Fit()
-        self.cbuttons_panel = page1panel2
         self.cbuttons_reload()
 
     def createGui(self, compact = False):
@@ -449,7 +448,15 @@ class MainWindow(wx.Frame):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer.Add(left_pane, 0)
         self.lowersizer.Add(left_sizer, 0, wx.EXPAND)
-        self.lowersizer.Add(VizPane(self, lowerpanel), 1, wx.EXPAND | wx.ALIGN_CENTER)
+        vizpanel = self.newPanel(lowerpanel)
+        viz_pane = VizPane(self, vizpanel)
+        # Custom buttons
+        self.centersizer = wx.GridBagSizer()
+        self.centerpanel = self.newPanel(vizpanel)
+        self.centerpanel.SetSizer(self.centersizer)
+        viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
+        vizpanel.SetSizer(viz_pane)
+        self.lowersizer.Add(vizpanel, 1, wx.EXPAND | wx.ALIGN_CENTER)
         logpanel = self.newPanel(lowerpanel)
         log_pane = LogPane(self, logpanel)
         logpanel.SetSizer(log_pane)
@@ -480,6 +487,4 @@ class MainWindow(wx.Frame):
         for i in self.printerControls:
             i.Disable()
 
-        #self.panel.Fit()
-        self.cbuttons_panel = lowerpanel
         self.cbuttons_reload()
