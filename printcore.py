@@ -18,6 +18,7 @@
 from serial import Serial, SerialException
 from select import error as SelectError
 from threading import Thread, Lock
+from Queue import Queue
 import time, getopt, sys
 import platform, os, traceback
 import socket
@@ -61,7 +62,7 @@ class printcore():
         self.online = False #The printer has responded to the initial command and is active
         self.printing = False #is a print currently running, true if printing, false if paused
         self.mainqueue = None
-        self.priqueue = []
+        self.priqueue = Queue(0)
         self.queueindex = 0
         self.lineno = 0
         self.resendfrom = -1
@@ -382,7 +383,7 @@ class printcore():
         """
         if self.online:
             if self.printing:
-                self.priqueue.append(command)
+                self.priqueue.put_nowait(command)
             else:
                 while self.printer and self.printing and not self.clear:
                     time.sleep(0.001)
@@ -439,8 +440,9 @@ class printcore():
             self.resendfrom += 1
             return
         self.resendfrom = -1
-        if self.priqueue:
-            self._send(self.priqueue.pop(0))
+        if not self.priqueue.empty():
+            self._send(self.priqueue.get_nowait())
+            self.priqueue.task_done()
             return
         if self.printing and self.queueindex < len(self.mainqueue):
             (layer, line) = self.mainqueue.idxs(self.queueindex)
