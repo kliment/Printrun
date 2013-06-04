@@ -105,6 +105,8 @@ class Setting(object):
             confirmation = wx.MessageDialog(None,_("Are you sure you want to reset the setting to the default value: {0!r} ?").format(self.default),_("Confirm set default"),wx.ICON_EXCLAMATION|wx.YES_NO|wx.NO_DEFAULT)
             if confirmation.ShowModal() == wx.ID_YES:
                 self._set_value(self.default)
+        else:
+            e.Skip()
 
     @setting_add_tooltip
     def get_label(self, parent):
