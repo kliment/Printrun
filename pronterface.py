@@ -1241,9 +1241,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if not self.statuscheck:
                     break
                 time.sleep(0.25)
-            while not self.sentlines.empty():
-                gc = self.sentlines.get_nowait()
-                wx.CallAfter(self.gviz.addgcode, gc, 1)
+            try:
+                while not self.sentlines.empty():
+                    gc = self.sentlines.get_nowait()
+                    wx.CallAfter(self.gviz.addgcode, gc, 1)
+                    self.sentlines.task_done()
+            except Queue.Empty:
+                pass
         wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
 
     def capture(self, func, *args, **kwargs):
