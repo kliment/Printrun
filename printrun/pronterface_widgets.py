@@ -152,8 +152,13 @@ class PronterOptionsDialog(wx.Dialog):
             grid.AddGrowableCol(1)
             grid.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
             for setting in settings:
-                grid.Add(setting.get_label(grouppanel), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
-                grid.Add(setting.get_widget(grouppanel), 1, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
+                label,widget = setting.get_label(grouppanel),setting.get_widget(grouppanel)
+                grid.Add(label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
+                grid.Add(widget, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
+                if hasattr(label,"set_default"):
+                    label.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
+                    if hasattr(widget,"Bind"):
+                        widget.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
             grouppanel.SetSizer(grid)
         sbox.Add(notebook, 1, wx.EXPAND)
         panel.SetSizer(sbox)
