@@ -68,10 +68,11 @@ def setting_add_tooltip(func):
                 sep = "\n\n"
         if self.default is not "":
             deftxt = _("Default: ")
+            resethelp = _("(Control-doubleclick to reset to default value)")
             if len(repr(self.default)) > 10:
-                deftxt += "\n    " + repr(self.default).strip("'")
+                deftxt += "\n    " + repr(self.default).strip("'") + "\n" + resethelp
             else:
-                deftxt += repr(self.default)
+                deftxt += repr(self.default) + "  " + resethelp
         helptxt += sep + deftxt
         if len(helptxt):
             widget.SetToolTipString(helptxt)
@@ -98,10 +99,18 @@ class Setting(object):
         raise NotImplementedError
     value = property(_get_value, _set_value)
 
+    def set_default(self, e):
+        import wx
+        if e.CmdDown() and e.ButtonDClick() and self.default is not "":
+            confirmation = wx.MessageDialog(None,_("Are you sure you want to reset the setting to the default value: {0!r} ?").format(self.default),_("Confirm set default"),wx.ICON_EXCLAMATION|wx.YES_NO|wx.NO_DEFAULT)
+            if confirmation.ShowModal() == wx.ID_YES:
+                self._set_value(self.default)
+
     @setting_add_tooltip
     def get_label(self, parent):
         import wx
         widget = wx.StaticText(parent, -1, self.label or self.name)
+        widget.set_default = self.set_default
         return widget
 
     @setting_add_tooltip
