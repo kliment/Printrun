@@ -144,21 +144,21 @@ class printcore():
                     self.printer_tcp.connect((hostname, port))
                     self.printer_tcp.settimeout(self.timeout)
                     self.printer = self.printer_tcp.makefile()
-                except socket.error:
+                except socket.error as e:
                     print _("Could not connect to %s:%s:") % (hostname, port)
                     self.printer = None
                     self.printer_tcp = None
-                    traceback.print_exc()
+                    print _("Socket error %s: %s") % (e.errno, e.strerror)
                     return
             else:
                 disable_hup(self.port)
                 self.printer_tcp = None
                 try:
                     self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 0.25)
-                except SerialException:
+                except SerialException as e:
                     print _("Could not connect to %s at baudrate %s:") % (self.port, self.baud)
                     self.printer = None
-                    traceback.print_exc()
+                    print _("Serial error: %s") % e
                     return
             self.stop_read_thread = False
             self.read_thread = Thread(target = self._listen)
