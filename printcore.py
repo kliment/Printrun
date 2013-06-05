@@ -70,6 +70,7 @@ class printcore():
         self.sentlines = {}
         self.log = deque(maxlen = 10000)
         self.sent = []
+        self.writefailures = 0
         self.tempcb = None #impl (wholeline)
         self.recvcb = None #impl (wholeline)
         self.sendcb = None #impl (wholeline)
@@ -134,6 +135,7 @@ class printcore():
                             is_serial = False
                     except:
                         pass
+            self.writefailures = 0
             if not is_serial:
                 self.printer_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.timeout = 0.25
@@ -502,12 +504,16 @@ class printcore():
             try:
                 self.printer.write(str(command + "\n"))
                 self.printer.flush()
+                self.writefailures = 0
             except socket.error as e:
                 print "Can't write to printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
+                self.writefailures += 1
             except SerialException as e:
                 print "Can't write to printer (disconnected?) (SerialException): {0}".format(e)
+                self.writefailures += 1
             except RuntimeError as e:
                 print "Socket connection broken, disconnected. ({0}): {1}".format(e.errno, e.strerror)
+                self.writefailures += 1
 
 if __name__ == '__main__':
     baud = 115200

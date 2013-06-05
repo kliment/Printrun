@@ -1229,6 +1229,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     string += _(" Z: %.3f mm") % self.curlayer
             wx.CallAfter(self.statusbar.SetStatusText, string)
             wx.CallAfter(self.gviz.Refresh)
+            if self.p.online:
+                if self.p.writefailures >= 4:
+                    print _("Disconnecting after 4 failed writes.")
+                    self.status_thread = None
+                    self.disconnect()
+                    return
             if self.monitor and self.p.online:
                 if self.sdprinting:
                     self.p.send_now("M27")
@@ -1614,7 +1620,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.predisconnect_queueindex = self.p.queueindex
         self.predisconnect_layer = self.curlayer
 
-    def disconnect(self, event):
+    def disconnect(self, event = None):
         print _("Disconnected.")
         if self.p.printing or self.p.paused or self.paused:
             self.store_predisconnect_state()
