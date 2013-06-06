@@ -165,11 +165,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     else:
         self.Add(root.tempdisp, pos = (gauges_base_line + 0, 0), span = (1, 6))
 
-    root.graph = Graph(parentpanel, wx.ID_ANY, root)
-    if standalone_mode:
-        self.Add(root.graph, pos = (base_line + 5, 0), span = (3, 6))
-    else:
-        self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
+    if root.display_graph:
+        root.graph = Graph(parentpanel, wx.ID_ANY, root)
+        if standalone_mode:
+            self.Add(root.graph, pos = (base_line + 5, 0), span = (3, 6))
+        else:
+            self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
 
     if extra_buttons:
         pos_mapping = {
@@ -292,9 +293,7 @@ class VizPane(wx.BoxSizer):
             extrusion_width = root.settings.preview_extrusion_width)
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
         if not isinstance(root.gviz, NoViz):
-            self.Add(root.gviz.widget, 1, flag = wx.SHAPED)
-        root.centersizer = wx.GridBagSizer()
-        self.Add(root.centersizer, 0, flag = wx.EXPAND)
+            self.Add(root.gviz.widget, 1, flag = wx.SHAPED | wx.ALIGN_CENTER_HORIZONTAL)
 
 class LogPane(wx.BoxSizer):
 
@@ -390,7 +389,8 @@ class MainWindow(wx.Frame):
         rightsizer = wx.BoxSizer(wx.VERTICAL)
         extracontrols = wx.GridBagSizer()
         add_extra_controls(extracontrols, self, page1panel2, left_pane.extra_buttons)
-        rightsizer.Add(extracontrols, 1, wx.ALIGN_CENTER)
+        rightsizer.AddStretchSpacer()
+        rightsizer.Add(extracontrols, 0, wx.ALIGN_CENTER)
         self.lowersizer.Add(leftsizer, 1, wx.ALIGN_CENTER)
         self.lowersizer.Add(rightsizer, 1, wx.ALIGN_CENTER)
         self.mainsizer_page1.Add(page1panel2, 1, wx.EXPAND)
@@ -414,13 +414,17 @@ class MainWindow(wx.Frame):
         self.notebook.AddPage(page1panel, _("Commands"))
         self.notebook.AddPage(page2panel, _("Status"))
         self.panel.SetSizer(self.notesizer)
-        self.status = self.CreateStatusBar()
-        self.status.SetStatusText(_("Not connected to printer."))
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText(_("Not connected to printer."))
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
 
-        vizpane.Detach(self.centersizer)
-        rightsizer.Add(self.centersizer, 0, wx.EXPAND)
+        # Custom buttons
+        self.centersizer = wx.GridBagSizer()
+        self.centerpanel = self.newPanel(page1panel2)
+        self.centerpanel.SetSizer(self.centersizer)
+        rightsizer.Add(self.centerpanel, 0, wx.ALIGN_CENTER)
+        rightsizer.AddStretchSpacer()
 
         self.panel.SetSizerAndFit(self.notesizer)
 
@@ -430,22 +434,42 @@ class MainWindow(wx.Frame):
         for i in self.printerControls:
             i.Disable()
 
-        #self.panel.Fit()
-        self.cbuttons_panel = page1panel
         self.cbuttons_reload()
 
-    def createGui(self):
+    def createGui(self, compact = False):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
-        self.uppersizer = MainToolbar(self)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.lowersizer.Add(LeftPane(self), 0)
-        self.lowersizer.Add(VizPane(self), 1, wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL)
-        self.lowersizer.Add(LogPane(self), 1, wx.EXPAND)
-        self.mainsizer.Add(self.uppersizer, 0)
-        self.mainsizer.Add(self.lowersizer, 1, wx.EXPAND)
+        upperpanel = self.newPanel(self.panel)
+        self.uppersizer = MainToolbar(self, upperpanel)
+        lowerpanel = self.newPanel(self.panel)
+        upperpanel.SetSizer(self.uppersizer)
+        lowerpanel.SetSizer(self.lowersizer)
+        left_pane = LeftPane(self, lowerpanel)
+        left_pane.Layout() # required to get correct rows/cols counts
+        left_sizer = wx.BoxSizer(wx.VERTICAL)
+        left_sizer.Add(left_pane, 0)
+        self.lowersizer.Add(left_sizer, 0, wx.EXPAND)
+        vizpanel = self.newPanel(lowerpanel)
+        viz_pane = VizPane(self, vizpanel)
+        # Custom buttons
+        self.centersizer = wx.GridBagSizer()
+        self.centerpanel = self.newPanel(vizpanel)
+        self.centerpanel.SetSizer(self.centersizer)
+        viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
+        vizpanel.SetSizer(viz_pane)
+        self.lowersizer.Add(vizpanel, 1, wx.EXPAND | wx.ALIGN_CENTER)
+        logpanel = self.newPanel(lowerpanel)
+        log_pane = LogPane(self, logpanel)
+        logpanel.SetSizer(log_pane)
+        if compact:
+            left_sizer.Add(logpanel, 1, wx.EXPAND)
+        else:
+            self.lowersizer.Add(logpanel, 1, wx.EXPAND)
+        self.mainsizer.Add(upperpanel, 0)
+        self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
-        self.status = self.CreateStatusBar()
-        self.status.SetStatusText(_("Not connected to printer."))
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText(_("Not connected to printer."))
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
 
@@ -464,5 +488,4 @@ class MainWindow(wx.Frame):
         for i in self.printerControls:
             i.Disable()
 
-        #self.panel.Fit()
-        self.cbuttons_panel = self.panel
+        self.cbuttons_reload()

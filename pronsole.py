@@ -60,14 +60,28 @@ def setting_add_tooltip(func):
     @wraps(func)
     def decorator(self, *args, **kwargs):
         widget = func(self, *args, **kwargs)
-        if self.help:
-            widget.SetToolTipString(self.help)
+        helptxt = self.help or ""
+        sep,deftxt = "",""
+        if len(helptxt):
+            sep = "\n"
+            if helptxt.find("\n") >= 0:
+                sep = "\n\n"
+        if self.default is not "":
+            deftxt = _("Default: ")
+            resethelp = _("(Control-doubleclick to reset to default value)")
+            if len(repr(self.default)) > 10:
+                deftxt += "\n    " + repr(self.default).strip("'") + "\n" + resethelp
+            else:
+                deftxt += repr(self.default) + "  " + resethelp
+        helptxt += sep + deftxt
+        if len(helptxt):
+            widget.SetToolTipString(helptxt)
         return widget
     return decorator
 
 class Setting(object):
 
-    DEFAULT_GROUP = "General"
+    DEFAULT_GROUP = "Printer"
 
     hidden = False
 
@@ -85,10 +99,20 @@ class Setting(object):
         raise NotImplementedError
     value = property(_get_value, _set_value)
 
+    def set_default(self, e):
+        import wx
+        if e.CmdDown() and e.ButtonDClick() and self.default is not "":
+            confirmation = wx.MessageDialog(None,_("Are you sure you want to reset the setting to the default value: {0!r} ?").format(self.default),_("Confirm set default"),wx.ICON_EXCLAMATION|wx.YES_NO|wx.NO_DEFAULT)
+            if confirmation.ShowModal() == wx.ID_YES:
+                self._set_value(self.default)
+        else:
+            e.Skip()
+
     @setting_add_tooltip
     def get_label(self, parent):
         import wx
         widget = wx.StaticText(parent, -1, self.label or self.name)
+        widget.set_default = self.set_default
         return widget
 
     @setting_add_tooltip
@@ -96,12 +120,6 @@ class Setting(object):
         return self.get_specific_widget(parent)
 
     def get_specific_widget(self, parent):
-        raise NotImplementedError
-
-    def set(self, value):
-        raise NotImplementedError
-
-    def get(self):
         raise NotImplementedError
 
     def update(self):
@@ -178,12 +196,32 @@ class BooleanSetting(wxSetting):
         return bool(self._value)
     def _set_value(self, value):
         self._value = value
+        if self.widget:
+            self.widget.SetValue(bool(value))
+
     value = property(_get_value, _set_value)
 
     def get_specific_widget(self, parent):
         import wx
         self.widget = wx.CheckBox(parent, -1)
         self.widget.SetValue(bool(self.value))
+        return self.widget
+
+class StaticTextSetting(wxSetting):
+
+    def __init__(self, name, label = " ", text = "", help = None, group = None):
+        super(StaticTextSetting, self).__init__(name, "", label, help, group)
+        self.text = text
+
+    def update(self):
+        pass
+    def _get_value(self):
+        return ""
+    def _set_value(self, value):
+        pass
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.StaticText(parent, -1, self.text)
         return self.widget
 
 class Settings(object):
@@ -196,16 +234,16 @@ class Settings(object):
         # defaults here.
         # the initial value determines the type
         self._add(StringSetting("port", "", _("Serial port"), _("Port used to communicate with printer")))
-        self._add(ComboSetting("baudrate", 115200, self._baudrate_list(), _("Baud rate"), _("Communications Speed (default: 115200)")))
-        self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (default: 110 deg C)"), "Printer"))
-        self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (default: 60 deg C)"), "Printer"))
-        self._add(SpinSetting("temperature_abs", 230, 0, 400, _("Extruder temperature for ABS"), _("Extruder temp for ABS (default: 230 deg C)"), "Printer"))
-        self._add(SpinSetting("temperature_pla", 185, 0, 400, _("Extruder temperature for PLA"), _("Extruder temp for PLA (default: 185 deg C)"), "Printer"))
-        self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (default: 3000mm/min)"), "Printer"))
-        self._add(SpinSetting("z_feedrate", 200, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (default: 200mm/min)"), "Printer"))
-        self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (default: 300mm/min)"), "Printer"))
-        self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command\n   default:\n       python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s)"), "External"))
-        self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command\n   default:\n       python skeinforge/skeinforge_application/skeinforge.py"), "External"))
+        self._add(ComboSetting("baudrate", 115200, self._baudrate_list(), _("Baud rate"), _("Communications Speed")))
+        self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"))
+        self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (deg C)"), "Printer"))
+        self._add(SpinSetting("temperature_abs", 230, 0, 400, _("Extruder temperature for ABS"), _("Extruder temp for ABS (deg C)"), "Printer"))
+        self._add(SpinSetting("temperature_pla", 185, 0, 400, _("Extruder temperature for PLA"), _("Extruder temp for PLA (deg C)"), "Printer"))
+        self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (mm/min)"), "Printer"))
+        self._add(SpinSetting("z_feedrate", 200, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (mm/min)"), "Printer"))
+        self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (mm/min)"), "Printer"))
+        self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command"), "External"))
+        self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
@@ -241,8 +279,10 @@ class Settings(object):
             return object.__getattribute__(self, name)
         return getattr(self, "_" + name).value
 
-    def _add(self, setting):
+    def _add(self, setting, callback = None):
         setattr(self, setting.name, setting)
+        if callback:
+            setattr(self, "_" + setting.name + "_cb", callback)
 
     def _set(self, key, value):
         try:
@@ -479,6 +519,9 @@ class pronsole(cmd.Cmd):
             self.log("Empty macro - cancelled")
         del self.cur_macro_name, self.cur_macro_def
 
+    def parseusercmd(self, line):
+        pass
+
     def compile_macro_line(self, line):
         line = line.rstrip()
         ls = line.lstrip()
@@ -487,7 +530,8 @@ class pronsole(cmd.Cmd):
         if ls.startswith('!'):
             return ws + ls[1:] + "\n" # python mode
         else:
-            return ws + 'self.onecmd("'+ls+'".format(*arg))\n' # parametric command mode
+            ret = ws + 'self.parseusercmd("'+ls+'".format(*arg))\n' # parametric command mode
+            return ret + ws + 'self.onecmd("'+ls+'".format(*arg))\n'
 
     def compile_macro(self, macro_name, macro_def):
         if macro_def.strip() == "":
@@ -1157,7 +1201,7 @@ class pronsole(cmd.Cmd):
             self.log("Printer is not online. Unable to extrude.")
             return
         if self.p.printing:
-            self.log("Printer is currently printing. Please pause the print before you issue manual commands.")
+            self.log(_("Printer is currently printing. Please pause the print before you issue manual commands."))
             return
         ls = l.split()
         if len(ls):

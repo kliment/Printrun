@@ -119,7 +119,7 @@ To use pronterface, you need:
   * numpy (for 3D view)
   * pyreadline (not needed on Linux) and
   * argparse (installed by default with python >= 2.7)
-  * wxPython
+  * wxPython (some features such as Tabbed mode work better with wx 2.9)
   * pycairo (to use Projector feature)
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)
