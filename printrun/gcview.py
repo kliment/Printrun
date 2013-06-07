@@ -97,13 +97,11 @@ class wxGLPanel(wx.Panel):
     def OnInitGL(self):
         '''Initialize OpenGL for use in the window.'''
         #create a pyglet context for this panel
-        self.pmat = (GLdouble * 16)()
         self.mvmat = (GLdouble * 16)()
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
         self.dist = 1000
-        self.vpmat = None
         #normal gl init
         glClearColor(0.98, 0.98, 0.78, 1)
         glClearDepth(1.0)                # set depth value to 1
@@ -126,8 +124,9 @@ class wxGLPanel(wx.Panel):
         gluPerspective(60., width / float(height), .1, 1000.)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        self.vpmat = (GLint * 4)(0, 0, *list(self.GetClientSize()))
-        glGetDoublev(GL_PROJECTION_MATRIX, self.pmat)
+        glTranslatef(*self.transv)
+        glMultMatrixd(build_rotmatrix(self.basequat))
+        glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
 
         # Wrap text to the width of the window
         if self.GLinitialized:
@@ -240,7 +239,6 @@ class GcodeViewPanel(wxGLPanel):
     def __init__(self, parent, id = wx.ID_ANY, build_dimensions = None, realparent = None):
         super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition, wx.DefaultSize, 0)
         self.batches = []
-        self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
         self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
@@ -268,16 +266,10 @@ class GcodeViewPanel(wxGLPanel):
 
     def draw_objects(self):
         '''called in the middle of ondraw after the buffer has been cleared'''
-        if self.vpmat is None:
-            return
         self.create_objects()
 
-        if self.rot == 1:
-            glLoadIdentity()
-            glMultMatrixd(self.mvmat)
-        else:
-            glLoadIdentity()
-            glTranslatef(*self.transv)
+        glLoadIdentity()
+        glMultMatrixd(self.mvmat)
         
         glPushMatrix()
         glTranslatef(-self.parent.platform.width/2, -self.parent.platform.depth/2, 0)
@@ -323,18 +315,12 @@ class GcodeViewPanel(wxGLPanel):
                 p2y = -(float(p2[1]) - sz[1] / 2) / (sz[1] / 2)
                 #print p1x, p1y, p2x, p2y
                 quat = trackball(p1x, p1y, p2x, p2y, -self.transv[2] / 250.0)
-                if self.rot:
-                    self.basequat = mulquat(self.basequat, quat)
-                #else:
-                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                #self.basequat = quatx
+                self.basequat = mulquat(self.basequat, quat)
                 mat = build_rotmatrix(self.basequat)
                 glLoadIdentity()
-                glTranslatef(self.transv[0], self.transv[1], 0)
-                glTranslatef(0, 0, self.transv[2])
+                glTranslatef(*self.transv)
                 glMultMatrixd(mat)
                 glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                self.rot = 1
 
         elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if self.initpos is not None:
@@ -361,12 +347,9 @@ class GcodeViewPanel(wxGLPanel):
                 self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  p1, p2,  sz,  self.transv)
 
                 glLoadIdentity()
-                glTranslatef(self.transv[0], self.transv[1], 0)
-                glTranslatef(0, 0, self.transv[2])
-                if self.rot:
-                    glMultMatrixd(build_rotmatrix(self.basequat))
+                glTranslatef(*self.transv)
+                glMultMatrixd(build_rotmatrix(self.basequat))
                 glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                self.rot = 1
                 self.initpos = None
         else:
             event.Skip()
@@ -393,12 +376,11 @@ class GcodeViewPanel(wxGLPanel):
 
     def zoom(self, dist):
         self.transv[2] += dist
+        glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         glTranslatef(*self.transv)
-        if self.rot:
-            glMultMatrixd(build_rotmatrix(self.basequat))
+        glMultMatrixd(build_rotmatrix(self.basequat))
         glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-        self.rot = 1
         wx.CallAfter(self.Refresh)
 
     def wheel(self, event):
