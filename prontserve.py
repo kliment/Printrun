@@ -14,9 +14,9 @@ import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
 from math import sqrt
-from gcoder import GCode
-import printcore
 from pprint import pprint
+import printcore
+from printrun import gcoder
 import pronsole
 from server import basic_auth
 import random
