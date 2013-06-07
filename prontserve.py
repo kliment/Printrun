@@ -14,9 +14,9 @@ import glob, os, time, datetime
 import sys, subprocess
 import math, codecs
 from math import sqrt
-from gcoder import GCode
-import printcore
 from pprint import pprint
+import printcore
+from printrun import gcoder
 import pronsole
 from server import basic_auth
 import random
@@ -365,7 +365,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       elif len(self.jobs.list) > 0:
         print "Starting the next print job"
         self.current_job = self.jobs.list.pop(0)
-        self.p.startprint(self.current_job['body'].split("\n"))
+        gc = gcoder.GCode(self.current_job['body'].split("\n"))
+        self.p.startprint(gc)
         self.fire("job_started", self.jobs.sanitize(self.current_job))
       else:
         print "Finished all print jobs"
