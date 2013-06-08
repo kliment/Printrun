@@ -1366,9 +1366,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def skein_func(self):
         try:
             param = self.expandcommand(self.settings.slicecommand)
-            print "Slicing: ", param
             output_filename = self.model_to_gcode_filename(self.filename)
             pararray = [i.replace("$s", self.filename).replace("$o", output_filename) for i in shlex.split(param.replace("\\", "\\\\"))]
+            print "Slicing: " + " ".join(pararray)
             self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
                 o = self.skeinp.stdout.read(1)
@@ -1382,7 +1382,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             traceback.print_exc(file = sys.stdout)
 
     def skein_monitor(self):
-        while(not self.stopsf):
+        while not self.stopsf:
             try:
                 wx.CallAfter(self.statusbar.SetStatusText, _("Slicing..."))#+self.cout.getvalue().split("\n")[-1])
             except:
