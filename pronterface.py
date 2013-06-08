@@ -1356,12 +1356,19 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.send_now("M21")
         self.p.send_now("M20")
 
+    def model_to_gcode_filename(self, filename):
+        suffix = "_export.gcode"
+        for ext in [".stl", ".obj"]:
+            filename = filename.replace(ext, suffix)
+            filename = filename.replace(ext.upper(), suffix)
+        return filename
+
     def skein_func(self):
         try:
-            param = self.expandcommand(self.settings.slicecommand).encode()
+            param = self.expandcommand(self.settings.slicecommand)
             print "Slicing: ", param
-            pararray = [i.replace("$s", self.filename).replace("$o", self.filename.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
-                #print pararray
+            output_filename = self.model_to_gcode_filename(self.filename)
+            pararray = [i.replace("$s", self.filename).replace("$o", output_filename) for i in shlex.split(param.replace("\\", "\\\\"))]
             self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
                 o = self.skeinp.stdout.read(1)
@@ -1383,7 +1390,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             time.sleep(0.1)
         fn = self.filename
         try:
-            self.filename = self.filename.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode").replace(".obj", "_export.gcode").replace(".OBJ", "_export.gcode")
+            self.filename = self.model_to_gcode_filename(self.filename)
             self.fgcode = gcoder.GCode(open(self.filename))
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)

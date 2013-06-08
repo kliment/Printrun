@@ -22,6 +22,7 @@ import math, codecs
 import shlex
 from math import sqrt
 import argparse
+import locale
 
 import printcore
 from printrun.printrun_utils import install_locale
@@ -795,7 +796,7 @@ class pronsole(cmd.Cmd):
         if not filename:
             self.log("No file name given.")
             return
-        self.log("Loading file:" + filename)
+        self.log("Loading file: " + filename)
         if not os.path.exists(filename):
             self.log("File not found!")
             return
@@ -1418,7 +1419,8 @@ class pronsole(cmd.Cmd):
             self.onecmd(command)
         self.processing_args = False
         if args.filename:
-            self.do_load(args.filename)
+            filename = args.filename.decode(locale.getpreferredencoding())
+            self.do_load(filename)
 
     def parse_cmdline(self, args):
         parser = argparse.ArgumentParser(description = 'Printrun 3D printer interface')
