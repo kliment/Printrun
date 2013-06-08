@@ -391,9 +391,9 @@ class MainWindow(wx.Frame):
         add_extra_controls(extracontrols, self, page1panel2, left_pane.extra_buttons)
         rightsizer.AddStretchSpacer()
         rightsizer.Add(extracontrols, 0, wx.ALIGN_CENTER)
-        self.lowersizer.Add(leftsizer, 1, wx.ALIGN_CENTER)
+        self.lowersizer.Add(leftsizer, 0, wx.ALIGN_CENTER | wx.RIGHT, border = 10)
         self.lowersizer.Add(rightsizer, 1, wx.ALIGN_CENTER)
-        self.mainsizer_page1.Add(page1panel2, 1, wx.EXPAND)
+        self.mainsizer_page1.Add(page1panel2, 1)
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.splitterwindow = wx.SplitterWindow(page2panel, style = wx.SP_3D)
         page2sizer1 =  wx.BoxSizer(wx.HORIZONTAL)
@@ -435,6 +435,10 @@ class MainWindow(wx.Frame):
             i.Disable()
 
         self.cbuttons_reload()
+        minsize = self.lowersizer.GetMinSize() # lower pane
+        minsize[1] = self.notebook.GetSize()[1]
+        self.SetMinSize(self.ClientToWindowSize(minsize)) # client to window
+        self.Fit()
 
     def createGui(self, compact = False):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
