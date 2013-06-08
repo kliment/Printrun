@@ -129,8 +129,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     root.edist = wx.SpinCtrl(parentpanel,-1, "5", min = 0, max = 1000, size = (70,-1))
     root.edist.SetBackgroundColour((225, 200, 200))
     root.edist.SetForegroundColour("black")
-    self.Add(root.edist, pos = (base_line + 2, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 10)
-    self.Add(wx.StaticText(parentpanel,-1, _("mm")), pos = (base_line + 2, 4), span = (1, 1))
+    self.Add(root.edist, pos = (base_line + 3, 0), span = (1, 1), flag = wx.EXPAND | wx.RIGHT, border = 5)
+    self.Add(wx.StaticText(parentpanel, -1, _("mm")), pos = (base_line + 3, 1), span = (1, 1))
     root.edist.SetToolTip(wx.ToolTip("Amount to Extrude or Retract (mm)"))
     root.efeedc = wx.SpinCtrl(parentpanel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (70,-1))
     root.efeedc.SetToolTip(wx.ToolTip("Extrude / Retract speed (mm/min)"))
@@ -138,8 +138,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     root.efeedc.SetForegroundColour("black")
     root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
     root.efeedc.Bind(wx.EVT_TEXT, root.setfeeds)
-    self.Add(root.efeedc, pos = (base_line + 3, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 10)
-    self.Add(wx.StaticText(parentpanel,-1, _("mm/\nmin")), pos = (base_line + 3, 4), span = (2, 1))
+    self.Add(root.efeedc, pos = (base_line + 3, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 5)
+    self.Add(wx.StaticText(parentpanel, -1, _("mm/\nmin")), pos = (base_line + 3, 4), span = (2, 1))
 
     gauges_base_line = base_line + 8 if standalone_mode else base_line + 5
     if root.display_gauges:
@@ -176,12 +176,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         pos_mapping = {
                         (2,5):(0,0),
                         (4,0):(3,0),
-                        (5,0):(4,0),
+                        (4,2):(3,2),
                       }
         span_mapping = {
                         (2,5):(1,3),
                         (4,0):(1,2),
-                        (5,0):(1,2),
+                        (4,2):(1,3),
                       }
         for i in extra_buttons:
             btn = extra_buttons[i]
