@@ -1352,7 +1352,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             return
         self.listing = 0
         self.sdfiles = []
-        self.recvlisteners+=[self.listfiles]
+        self.recvlisteners.append(self.listfiles)
         self.p.send_now("M21")
         self.p.send_now("M20")
 
