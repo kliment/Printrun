@@ -362,7 +362,10 @@ class GcodeViewPanel(wxGLPanel):
             return
         max_layers = self.parent.model.max_layers
         current_layer = self.parent.model.num_layers_to_draw
-        new_layer = min(max_layers, current_layer + 1)
+        # accept going up to max_layers + 1
+        # max_layers means visualizing the last layer differently,
+        # max_layers + 1 means visualizing all layers with the same color
+        new_layer = min(max_layers + 1, current_layer + 1)
         self.parent.model.num_layers_to_draw = new_layer
         wx.CallAfter(self.Refresh)
 
