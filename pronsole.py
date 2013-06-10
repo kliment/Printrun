@@ -539,6 +539,7 @@ class pronsole(cmd.Cmd):
         if ls.startswith('!'):
             return ws + ls[1:] + "\n" # python mode
         else:
+            ls = ls.replace('"','\\"') # need to escape double quotes
             ret = ws + 'self.parseusercmd("'+ls+'".format(*arg))\n' # parametric command mode
             return ret + ws + 'self.onecmd("'+ls+'".format(*arg))\n'
 
