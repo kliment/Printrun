@@ -150,6 +150,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     self.on_sensor_changed()
     for k, v in prontserve.target_values.iteritems():
       self.on_uncaught_event("target_temp_changed", {k: v})
+    self.on_uncaught_event("job_progress_changed", prontserve.previous_job_progress)
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
 
   def send(self, dict_args = {}, **kwargs):
