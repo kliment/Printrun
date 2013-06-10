@@ -329,6 +329,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       print "%stemp %s"%(prefix, kwargs[k])
       setter = getattr(pronsole.pronsole, "do_%stemp"%prefix)
       setter(self, kwargs[k])
+      pprint({prefix: kwargs[k]})
+      self.fire("target_temp_changed", {k: kwargs[k]})
 
   def do_set_feedrate(self, **kwargs):
     # TODO: kwargs[xy] * 60 and kwargs[z] * 60
