@@ -256,7 +256,6 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
-    self.settings.name = 'Prontserve Printer'
     self.settings.pause_between_prints = True
     self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
@@ -275,7 +274,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.jobs.listeners.add(self)
 
   def init_mdns(self):
-    sdRef = pybonjour.DNSServiceRegister(name = self.settings.name,
+    sdRef = pybonjour.DNSServiceRegister(name = None,
                                          regtype = '_construct._tcp',
                                          port = 8888,
                                          domain = "local.")
