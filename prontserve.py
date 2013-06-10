@@ -521,45 +521,46 @@ class PrintJobQueue(EventEmitter):
 # Server Start Up
 # -------------------------------------------------
 
-parser = argparse.ArgumentParser(
-  description='Runs a 3D printer server using the Construct Protocol'
-)
-
-parser.add_argument('--dry-run', default=False, action='store_true',
-  help='Does not connect to the 3D printer'
-)
-
-args = parser.parse_args()
-dry_run = args.dry_run
-
-def warn_if_dry_run():
-  if dry_run:
-    for i in range(0,7):
-      sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
-  print ""
-
-print "Prontserve is starting..."
-prontserve = Prontserve(dry_run=dry_run)
-if dry_run==False: prontserve.do_connect("")
-
-time.sleep(1)
-prontserve.run_sensor_loop()
-prontserve.run_print_queue_loop()
-
 if __name__ == "__main__":
-    application.listen(8888)
-    print "\n"+"-"*80
-    welcome = textwrap.dedent(u"""
-              +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
-              | \u2713 |  Ready to print.
-              +---+  More details at http://localhost:8888/""")
-    warn_if_dry_run()
-    sys.stdout.write(welcome)
-    print "\n"
-    warn_if_dry_run()
-    print "-"*80 + "\n"
 
-    try:
-      prontserve.ioloop.start()
-    except:
-      prontserve.p.disconnect()
+  parser = argparse.ArgumentParser(
+    description='Runs a 3D printer server using the Construct Protocol'
+  )
+
+  parser.add_argument('--dry-run', default=False, action='store_true',
+    help='Does not connect to the 3D printer'
+  )
+
+  args = parser.parse_args()
+  dry_run = args.dry_run
+
+  def warn_if_dry_run():
+    if dry_run:
+      for i in range(0,7):
+        sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
+    print ""
+
+  print "Prontserve is starting..."
+  prontserve = Prontserve(dry_run=dry_run)
+  if dry_run==False: prontserve.do_connect("")
+
+  time.sleep(1)
+  prontserve.run_sensor_loop()
+  prontserve.run_print_queue_loop()
+
+  application.listen(8888)
+  print "\n"+"-"*80
+  welcome = textwrap.dedent(u"""
+            +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
+            | \u2713 |  Ready to print.
+            +---+  More details at http://localhost:8888/""")
+  warn_if_dry_run()
+  sys.stdout.write(welcome)
+  print "\n"
+  warn_if_dry_run()
+  print "-"*80 + "\n"
+
+  try:
+    prontserve.ioloop.start()
+  except:
+    prontserve.p.disconnect()
