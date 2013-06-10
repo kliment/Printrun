@@ -146,7 +146,10 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       'jobs': prontserve.jobs.public_list(),
       'continous_movement': False
     }})
+    # Send events to initialize the machine's state
     self.on_sensor_changed()
+    for k, v in prontserve.target_values.iteritems():
+      self.on_uncaught_event("target_temp_changed", {k: v})
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
 
   def send(self, dict_args = {}, **kwargs):
@@ -259,6 +262,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.ioloop = tornado.ioloop.IOLoop.instance()
     self.settings.sensor_poll_rate = 1 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
+    self.target_values = {'e': 0, 'b': 0}
     self.load_default_rc()
     self.jobs = PrintJobQueue()
     self.job_id_incr = 0
@@ -331,6 +335,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       setter = getattr(pronsole.pronsole, "do_%stemp"%prefix)
       setter(self, kwargs[k])
       pprint({prefix: kwargs[k]})
+      self.target_values[k] = kwargs[k]
       self.fire("target_temp_changed", {k: kwargs[k]})
 
   def do_set_feedrate(self, **kwargs):
