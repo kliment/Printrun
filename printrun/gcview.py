@@ -337,9 +337,7 @@ class GcodeViewPanel(wxGLPanel):
 
                 self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  p1, p2,  sz,  self.transv)
 
-                glLoadIdentity()
-                glTranslatef(*self.transv)
-                glMultMatrixd(build_rotmatrix(self.basequat))
+                glTranslatef(p2[0] - p1[0], p2[1] - p1[1], 0)
                 self.initpos = None
         else:
             event.Skip()
