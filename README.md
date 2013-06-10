@@ -92,6 +92,130 @@ All commands have internal help, which you can access by typing "help commandnam
 If you want to load stl files, you need to put a version of skeinforge (doesn't matter which one) in a folder called "skeinforge".
 The "skeinforge" folder must be in the same folder as pronsole.py
 
+# USING MACROS AND CUSTOM BUTTONS
+
+## Macros in pronsole and pronterface
+
+To send simple G-code (or pronsole command) sequence is as simple as entering them one by one in macro definition.
+If you want to use parameters for your macros, substitute them with {0} {1} {2} ... etc.
+
+All macros are saved automatically immediately after being entered.
+
+Example 1, simple one-line alias:
+
+    PC> macro where M114
+    
+Instead of having to remember the code to query position, you can query the position:
+
+    PC> where
+    X:25.00Y:11.43Z:5.11E:0.00
+
+Example 2 - macros to switch between different slicer programs, using "set" command to change options:
+
+    PC> macro use_slicer
+    Enter macro using indented lines, end with empty line
+    ..> set sliceoptscommand Slic3r/slic3r.exe --load slic3r.ini
+    ..> set slicecommand Slic3r/slic3r.exe $s --load slic3r.ini --output $o
+    Macro 'use_slicer' defined
+    PC> macro use_sfact
+    ..> set sliceoptscommand python skeinforge/skeinforge_application/skeinforge.py
+    ..> set slicecommand python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s
+    Macro 'use_sfact' defined
+
+
+Example 3, simple parametric macro:
+
+    PC> macro move_down_by
+    Enter macro using indented lines, end with empty line
+    ..> G91
+    ..> G1 Z-{0}
+    ..> G92
+    ..>
+
+Invoke the macro to move the printhead down by 5 millimeters:
+
+    PC> move_down_by 5
+
+
+For more powerful macro programming, it is possible to use python code escaping using ! symbol in front of macro commands.
+Note that this python code invocation also works in interactive prompt:
+
+    PC> !print "Hello, printer!"
+    Hello printer!
+
+    PC> macro debug_on !self.p.loud = 1
+    Macro 'debug_on' defined
+    PC> debug_on
+    PC> M114
+    SENT:  M114
+    X:0.00Y:0.00Z:0.00E:0.00 Count X:0.00Y:0.00Z:0.00
+    RECV:  X:0.00Y:0.00Z:0.00E:0.00 Count X:0.00Y:0.00Z:0.00
+    RECV:  ok
+
+You can use macro command itself to create simple self-modify or toggle functionality:
+
+Example: swapping two macros to implement toggle:
+
+    PC> macro toggle_debug_on
+    Enter macro using indented lines, end with empty line
+    ..> !self.p.loud = 1
+    ..> !print "Diagnostic information ON"
+    ..> macro toggle_debug toggle_debug_off
+    ..>
+    Macro 'toggle_debug_on' defined
+    PC> macro toggle_debug_off
+    Enter macro using indented lines, end with empty line
+    ..> !self.p.loud = 0
+    ..> !print "Diagnostic information OFF"
+    ..> macro toggle_debug toggle_debug_on
+    ..>
+    Macro 'toggle_debug_off' defined
+    PC> macro toggle_debug toggle_debug_on
+    Macro 'toggle_debug' defined
+
+Now, each time we invoke "toggle_debug" macro, it toggles debug information on and off:
+
+    PC> toggle_debug
+    Diagnostic information ON
+    
+    PC> toggle_debug
+    Diagnostic information OFF
+
+When python code (using ! symbol) is used in macros, it is even possible to use blocks/conditionals/loops.
+It is okay to mix python code with pronsole commands, just keep the python indentation.
+For example, following macro toggles the diagnostic information similarily to the previous example:
+
+    !if self.p.loud:
+      !self.p.loud = 0
+      !print "Diagnostic information OFF"
+    !else:
+      !self.p.loud = 1
+      !print "Diagnostic information ON"
+
+Macro parameters are available in '!'-escaped python code as locally defined list variable: arg[0] arg[1] ... arg[N]
+
+All python code is executed in the context of the pronsole (or PronterWindow) object, 
+so it is possible to use all internal variables and methods, which provide great deal of functionality.
+However the internal variables and methods are not very well documented and may be subject of change, as the program is developed.
+Therefore it is best to use pronsole commands, which easily contain majority of the functionality that might be needed.
+
+Some useful python-mode-only variables:
+
+    !self.settings - contains all settings, e.g. 
+      port (!self.settings.port), baudrate, xy_feedrate, e_feedrate, slicecommand, final_command, build_dimensions
+      You can set them also via pronsole command "set", but you can query the values only via python code.
+    !self.p - printcore object (see USING PRINTCORE section for using printcore object)
+    !self.cur_button - if macro was invoked via custom button, the number of the custom button, e.g. for usage in "button" command
+    !self.gwindow - wx graphical interface object for pronterface (highly risky to use because the GUI implementation details may change a lot between versions)
+
+Some useful methods:
+
+    !self.onecmd - invokes raw command, e.g. 
+        !self.onecmd("move x 10")
+        !self.onecmd("!print self.p.loud")
+        !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
+    !self.project - invoke Projector
+
 # USING PRINTCORE
 
 To use printcore you need python (ideally 2.6.x or 2.7.x) and pyserial (or python-serial on ubuntu/debian)
