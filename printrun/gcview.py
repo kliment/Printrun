@@ -245,7 +245,6 @@ class GcodeViewPanel(wxGLPanel):
             self.dist = max(build_dimensions[0], build_dimensions[1])
         else:
             self.dist = 200
-        self.transv = [0, 0, -self.dist]
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
@@ -296,7 +295,6 @@ class GcodeViewPanel(wxGLPanel):
             if self.initpos == None:
                 self.initpos = event.GetPositionTuple()
             else:
-                #print self.initpos
                 p1 = self.initpos
                 self.initpos = None
                 p2 = event.GetPositionTuple()
@@ -326,18 +324,8 @@ class GcodeViewPanel(wxGLPanel):
             else:
                 p1 = self.initpos
                 p2 = event.GetPositionTuple()
-                sz = self.GetClientSize()
-                p1 = list(p1) + [0]
-                p2 = list(p2) + [0]
-                p1[1] *= -1
-                p2[1] *= -1
-                sz = list(sz) + [1]
-                sz[0] *= 2
-                sz[1] *= 2
 
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  p1, p2,  sz,  self.transv)
-
-                glTranslatef(p2[0] - p1[0], p2[1] - p1[1], 0)
+                glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
                 self.initpos = None
         else:
             event.Skip()
