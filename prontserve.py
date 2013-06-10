@@ -146,6 +146,11 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       'jobs': prontserve.jobs.public_list(),
       'continous_movement': False
     }})
+    # Send events to initialize the machine's state
+    self.on_sensor_changed()
+    for k, v in prontserve.target_values.iteritems():
+      self.on_uncaught_event("target_temp_changed", {k: v})
+    self.on_uncaught_event("job_progress_changed", prontserve.previous_job_progress)
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
 
   def send(self, dict_args = {}, **kwargs):
@@ -251,13 +256,13 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
-    self.settings.name = 'Prontserve Printer'
     self.settings.pause_between_prints = True
     self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
     self.settings.sensor_poll_rate = 1 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
+    self.target_values = {'e': 0, 'b': 0}
     self.load_default_rc()
     self.jobs = PrintJobQueue()
     self.job_id_incr = 0
@@ -269,7 +274,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.jobs.listeners.add(self)
 
   def init_mdns(self):
-    sdRef = pybonjour.DNSServiceRegister(name = self.settings.name,
+    sdRef = pybonjour.DNSServiceRegister(name = None,
                                          regtype = '_construct._tcp',
                                          port = 8888,
                                          domain = "local.")
@@ -329,6 +334,9 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       print "%stemp %s"%(prefix, kwargs[k])
       setter = getattr(pronsole.pronsole, "do_%stemp"%prefix)
       setter(self, kwargs[k])
+      pprint({prefix: kwargs[k]})
+      self.target_values[k] = kwargs[k]
+      self.fire("target_temp_changed", {k: kwargs[k]})
 
   def do_set_feedrate(self, **kwargs):
     # TODO: kwargs[xy] * 60 and kwargs[z] * 60
@@ -346,7 +354,17 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.jobs.update(int(job_id), kwargs)
 
   def do_get_jobs(self):
-    return {'jobs': self.jobs.public_list()}
+    jobexport = []
+    if self.current_job != None:
+      jobexport.append(
+        dict(
+          id = self.current_job["id"],
+          file_name = self.current_job["file_name"],
+          printing = True
+        )
+      )
+    jobexport.extend(self.jobs.public_list())
+    return {'jobs': jobexport}
 
   def run_print_queue_loop(self):
     # This is a polling work around to the current lack of events in printcore
@@ -461,6 +479,7 @@ class PrintJobQueue(EventEmitter):
     return dict(
       id = job["id"],
       file_name = job["file_name"],
+      printing = False,
     )
 
   def add(self, file_name, body):
@@ -519,45 +538,46 @@ class PrintJobQueue(EventEmitter):
 # Server Start Up
 # -------------------------------------------------
 
-parser = argparse.ArgumentParser(
-  description='Runs a 3D printer server using the Construct Protocol'
-)
-
-parser.add_argument('--dry-run', default=False, action='store_true',
-  help='Does not connect to the 3D printer'
-)
-
-args = parser.parse_args()
-dry_run = args.dry_run
-
-def warn_if_dry_run():
-  if dry_run:
-    for i in range(0,7):
-      sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
-  print ""
-
-print "Prontserve is starting..."
-prontserve = Prontserve(dry_run=dry_run)
-if dry_run==False: prontserve.do_connect("")
-
-time.sleep(1)
-prontserve.run_sensor_loop()
-prontserve.run_print_queue_loop()
-
 if __name__ == "__main__":
-    application.listen(8888)
-    print "\n"+"-"*80
-    welcome = textwrap.dedent(u"""
-              +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
-              | \u2713 |  Ready to print.
-              +---+  More details at http://localhost:8888/""")
-    warn_if_dry_run()
-    sys.stdout.write(welcome)
-    print "\n"
-    warn_if_dry_run()
-    print "-"*80 + "\n"
 
-    try:
-      prontserve.ioloop.start()
-    except:
-      prontserve.p.disconnect()
+  parser = argparse.ArgumentParser(
+    description='Runs a 3D printer server using the Construct Protocol'
+  )
+
+  parser.add_argument('--dry-run', default=False, action='store_true',
+    help='Does not connect to the 3D printer'
+  )
+
+  args = parser.parse_args()
+  dry_run = args.dry_run
+
+  def warn_if_dry_run():
+    if dry_run:
+      for i in range(0,7):
+        sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
+    print ""
+
+  print "Prontserve is starting..."
+  prontserve = Prontserve(dry_run=dry_run)
+  if dry_run==False: prontserve.do_connect("")
+
+  time.sleep(1)
+  prontserve.run_sensor_loop()
+  prontserve.run_print_queue_loop()
+
+  application.listen(8888)
+  print "\n"+"-"*80
+  welcome = textwrap.dedent(u"""
+            +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
+            | \u2713 |  Ready to print.
+            +---+  More details at http://localhost:8888/""")
+  warn_if_dry_run()
+  sys.stdout.write(welcome)
+  print "\n"
+  warn_if_dry_run()
+  print "-"*80 + "\n"
+
+  try:
+    prontserve.ioloop.start()
+  except:
+    prontserve.p.disconnect()
