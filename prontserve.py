@@ -146,6 +146,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       'jobs': prontserve.jobs.public_list(),
       'continous_movement': False
     }})
+    self.on_sensor_changed()
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
 
   def send(self, dict_args = {}, **kwargs):
