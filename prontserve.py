@@ -354,7 +354,17 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.jobs.update(int(job_id), kwargs)
 
   def do_get_jobs(self):
-    return {'jobs': self.jobs.public_list()}
+    jobexport = []
+    if self.current_job != None:
+      jobexport.append(
+        dict(
+          id = self.current_job["id"],
+          file_name = self.current_job["file_name"],
+          printing = True
+        )
+      )
+    jobexport.extend(self.jobs.public_list())
+    return {'jobs': jobexport}
 
   def run_print_queue_loop(self):
     # This is a polling work around to the current lack of events in printcore
@@ -469,6 +479,7 @@ class PrintJobQueue(EventEmitter):
     return dict(
       id = job["id"],
       file_name = job["file_name"],
+      printing = False,
     )
 
   def add(self, file_name, body):
