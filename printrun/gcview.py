@@ -63,11 +63,11 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
+        size = self.GetClientSize()
+        self.winsize = (size.width, size.height)
+        self.width, self.height = size.width, size.height
         if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
-            size = self.GetClientSize()
-            self.winsize = (size.width, size.height)
-            self.width, self.height = size.width, size.height
             self.canvas.SetCurrent(self.context)
             self.OnReshape(size.width, size.height)
             self.canvas.Refresh(False)
@@ -97,11 +97,9 @@ class wxGLPanel(wx.Panel):
     def OnInitGL(self):
         '''Initialize OpenGL for use in the window.'''
         #create a pyglet context for this panel
-        self.mvmat = (GLdouble * 16)()
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
-        self.dist = 1000
         #normal gl init
         glClearColor(0.98, 0.98, 0.78, 1)
         glClearDepth(1.0)                # set depth value to 1
@@ -121,12 +119,9 @@ class wxGLPanel(wx.Panel):
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(60., width / float(height), .1, 1000.)
+        gluPerspective(60., width / float(height), 10.0, self.dist)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        glTranslatef(*self.transv)
-        glMultMatrixd(build_rotmatrix(self.basequat))
-        glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
 
         # Wrap text to the width of the window
         if self.GLinitialized:
@@ -267,12 +262,9 @@ class GcodeViewPanel(wxGLPanel):
     def draw_objects(self):
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()
-
-        glLoadIdentity()
-        glMultMatrixd(self.mvmat)
         
         glPushMatrix()
-        glTranslatef(-self.parent.platform.width/2, -self.parent.platform.depth/2, 0)
+        glTranslatef(-self.parent.platform.width/2, -self.parent.platform.depth/2, -self.dist)
 
         for obj in self.parent.objects:
             if not obj.model or not obj.model.loaded or not obj.model.initialized:
@@ -320,7 +312,6 @@ class GcodeViewPanel(wxGLPanel):
                 glLoadIdentity()
                 glTranslatef(*self.transv)
                 glMultMatrixd(mat)
-                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
 
         elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if self.initpos is not None:
@@ -349,7 +340,6 @@ class GcodeViewPanel(wxGLPanel):
                 glLoadIdentity()
                 glTranslatef(*self.transv)
                 glMultMatrixd(build_rotmatrix(self.basequat))
-                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
                 self.initpos = None
         else:
             event.Skip()
@@ -377,13 +367,15 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.model.num_layers_to_draw = new_layer
         wx.CallAfter(self.Refresh)
 
-    def zoom(self, dist):
-        self.transv[2] += dist
+    def zoom(self, factor, to = None):
         glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glTranslatef(*self.transv)
-        glMultMatrixd(build_rotmatrix(self.basequat))
-        glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
+        if to:
+            delta_x = to[0]
+            delta_y = to[1]
+            glTranslatef(delta_x, delta_y, 0)
+        glScalef(factor, factor, 1)
+        if to:
+            glTranslatef(-delta_x, -delta_y, 0)
         wx.CallAfter(self.Refresh)
 
     def wheel(self, event):
@@ -391,20 +383,37 @@ class GcodeViewPanel(wxGLPanel):
             without shift: set max layer
             with shift: zoom viewport
         """
-        z = event.GetWheelRotation()
-        dist = 10
+        delta = event.GetWheelRotation()
+        factor = 1.05
         if event.ShiftDown():
             if not self.parent.model:
                 return
-            if z > 0:
+            if delta > 0:
                 self.layerup()
             else:
                 self.layerdown()
             return
-        if z > 0:
-            self.zoom(dist)
+        x, y = event.GetPositionTuple()
+        x, y, _ = self.mouse_to_3d(x, y)
+        if delta > 0:
+            self.zoom(factor, (x, y))
         else:
-            self.zoom(-dist)
+            self.zoom(1/factor, (x, y))
+
+    def mouse_to_3d(self, x, y):
+        x = float(x)
+        y = self.height - float(y)
+        pmat = (GLdouble * 16)()
+        mvmat = (GLdouble * 16)()
+        viewport = (GLint * 4)()
+        px = (GLdouble)()
+        py = (GLdouble)()
+        pz = (GLdouble)()
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        glGetDoublev(GL_PROJECTION_MATRIX, pmat)
+        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
+        return (px.value, py.value, pz.value)
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
