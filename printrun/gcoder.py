@@ -37,10 +37,17 @@ class PyLine(object):
     def __getattr__(self, name):
         return None
 
+    def setstring(self, name, value):
+        self.set(name, value)
+
     def set(self, name, value):
         setattr(self, name, value)
 
-LineBase = PyLine
+try:
+    import gcoder_line
+    LineBase = gcoder_line.GLine
+except ImportError:
+    LineBase = PyLine
 
 class Line(LineBase):
 
@@ -48,9 +55,9 @@ class Line(LineBase):
 
     def __init__(self, l):
         super(Line, self).__init__()
-        self.set("raw", l)
+        self.setstring("raw", l)
         self.set("split_raw", gcode_exp.findall(self.raw.lower()))
-        self.set("command", self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper())
+        self.setstring("command", self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper())
         self.set("is_move", self.command in move_gcodes)
 
     def parse_coordinates(self, imperial = False, force = False):
@@ -416,7 +423,6 @@ def main():
     print "Filament used: %0.02fmm" % gcode.filament_length
     print "Number of layers: %d" % gcode.num_layers()
     print "Estimated duration: %s" % gcode.estimate_duration()
-
 
 if __name__ == '__main__':
     main()
