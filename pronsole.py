@@ -1082,25 +1082,27 @@ class pronsole(cmd.Cmd):
         self.log(_("Read the extruder and bed temperature."))
 
     def do_settemp(self, l):
+        l = l.lower().replace(", ",".")
+        for i in self.temps.keys():
+            l = l.replace(i, self.temps[i])
         try:
-            l = l.lower().replace(", ",".")
-            for i in self.temps.keys():
-                l = l.replace(i, self.temps[i])
-            f = float(l)
-            if f>=0:
-                if f > 250:
-                   print _("%s is a high temperature to set your extruder to. Are you sure you want to do that?") % f
-                   if not confirm():
-                      return
-                if self.p.online:
-                    self.p.send_now("M104 S"+l)
-                    self.log(_("Setting hotend temperature to %s degrees Celsius.") % f)
-                else:
-                    self.logError(_("Printer is not online."))
-            else:
-                self.logError(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
+           f = float(l)
         except:
             self.logError(_("You must enter a temperature."))
+            return
+
+        if f>=0:
+            if f > 250:
+               print _("%s is a high temperature to set your extruder to. Are you sure you want to do that?") % f
+               if not confirm():
+                  return
+            if self.p.online:
+                self.p.send_now("M104 S"+l)
+                self.log(_("Setting hotend temperature to %s degrees Celsius.") % f)
+            else:
+                self.logError(_("Printer is not online."))
+        else:
+            self.logError(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
 
     def help_settemp(self):
         self.log(_("Sets the hotend temperature to the value entered."))
