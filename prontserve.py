@@ -270,6 +270,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.current_job = None
     self.previous_job_progress = 0
     self.silent = True
+    self._sensor_update_received = True
     self.init_mdns()
     self.jobs.listeners.add(self)
 
@@ -403,11 +404,20 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       self.previous_job_progress = progress
       self.fire("job_progress_changed", progress)
 
+  def print_progress(self):
+    if(self.p.printing):
+      return 100*float(self.p.queueindex)/len(self.p.mainqueue)
+    if(self.sdprinting):
+      return self.percentdone
+    return 0
+
   def run_sensor_loop(self):
-    if self.dry_run:
-      self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
-    else:
-      self.request_sensor_update()
+    if self._sensor_update_received:
+      self._sensor_update_received = False
+      if self.dry_run:
+        self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
+      else:
+        self.request_sensor_update()
     next_timeout = time.time() + self.settings.sensor_poll_rate
     gen.Task(self.ioloop.add_timeout(next_timeout, self.run_sensor_loop))
 
@@ -423,19 +433,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
       self._receive_printer_error(l)
 
-  def print_progress(self):
-    if(self.p.printing):
-      return 100*float(self.p.queueindex)/len(self.p.mainqueue)
-    if(self.sdprinting):
-      return self.percentdone
-    return 0
-
-
   def _receive_sensor_update(self, l):
+    self._sensor_update_received = True
     words = filter(lambda s: s.find(":") > 0, l.split(" "))
     d = dict([ s.split(":") for s in words])
-
-    # print "sensor update received!"
 
     for key, value in d.iteritems():
       self.__update_sensor(key, value)
