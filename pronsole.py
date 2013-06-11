@@ -49,14 +49,6 @@ except:
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
-def confirm():
-   y_or_n = raw_input("y/n: ")
-   if y_or_n == "y":
-      return True
-   elif y_or_n != "n":
-      return confirm()
-   return False
-
 def setting_add_tooltip(func):
     @wraps(func)
     def decorator(self, *args, **kwargs):
@@ -386,6 +378,14 @@ class pronsole(cmd.Cmd):
                           "fallback" : "%(bold)sPC>%(normal)s ", 
                           "macro"    : "%(bold)s..>%(normal)s ",
                           "online"   : "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
+
+    def confirm(self):
+       y_or_n = raw_input("y/n: ")
+       if y_or_n == "y":
+          return True
+       elif y_or_n != "n":
+          return self.confirm()
+       return False
 
     def log(self, *msg):
         print u"".join(unicode(i) for i in msg)
@@ -1094,7 +1094,7 @@ class pronsole(cmd.Cmd):
         if f>=0:
             if f > 250:
                print _("%s is a high temperature to set your extruder to. Are you sure you want to do that?") % f
-               if not confirm():
+               if not self.confirm():
                   return
             if self.p.online:
                 self.p.send_now("M104 S"+l)
@@ -1281,7 +1281,7 @@ class pronsole(cmd.Cmd):
         if self.p.printing:
             print "Are you sure you want to exit while printing?"
             print "(this will terminate the print)."
-            if not confirm():
+            if not self.confirm():
                 return False
         self.log(_("Exiting program. Goodbye!"))
         self.p.disconnect()

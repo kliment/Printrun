@@ -467,6 +467,9 @@ class Prontserve(pronsole.pronsole, EventEmitter):
   def write_prompt(self):
     None
 
+  def confirm(self):
+    True
+
 
 class PrintJobQueue(EventEmitter):
 
