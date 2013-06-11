@@ -285,7 +285,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     sdRef.close()
 
   def do_print(self):
-    if not self.p.online: raise "not online"
+    if not self.p.online: raise Exception("not online")
     self.printing_jobs = True
 
   def do_home(self, *args, **kwargs):
@@ -316,7 +316,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       pronsole.pronsole.do_move(self, cmd )
 
   def do_stop_move(self):
-    raise "Continuous movement not supported"
+    raise Exception("Continuous movement not supported")
 
   def do_estop(self):
     pronsole.pronsole.do_pause(self, "")
