@@ -196,11 +196,10 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       try:
         if cmd == "set": cmd = "construct_set"
         response = getattr(prontserve, "do_%s"%cmd)(*args, **kwargs)
-        print response
-        if response is not None: self.write_message(response)
-      except:
+        self.write_message({"ack": response})
+      except Exception as ex:
         print traceback.format_exc()
-        self.write_message({"error": "bad command."})
+        self.write_message({"error": str(ex)})
     else:
       self.write_message({"error": "%s command does not exist."%cmd})
 
@@ -253,6 +252,7 @@ class EventEmitter(object):
 class Prontserve(pronsole.pronsole, EventEmitter):
 
   def __init__(self, **kwargs):
+    self.initializing = True
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
@@ -273,6 +273,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self._sensor_update_received = True
     self.init_mdns()
     self.jobs.listeners.add(self)
+    self.initializing = False
 
   def init_mdns(self):
     sdRef = pybonjour.DNSServiceRegister(name = None,
@@ -457,6 +458,11 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     msg.replace("\r", "")
     print msg
     self.fire("log", {'msg': msg, 'level': "debug"})
+
+  def logError(self, *msg):
+    print u"".join(unicode(i) for i in msg)
+    if self.initializing == False:
+      raise Exception(u"".join(unicode(i) for i in msg))
 
   def write_prompt(self):
     None
