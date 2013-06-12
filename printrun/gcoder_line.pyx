@@ -59,10 +59,12 @@ cdef inline uint32_t has_var(uint32_t status, uint32_t pos):
 cdef inline uint32_t set_has_var(uint32_t status, uint32_t pos):
     return status | pos
 
+cdef inline uint32_t unset_has_var(uint32_t status, uint32_t pos):
+    return status & ~pos
+
 cdef class GLine(object):
     
     cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
-    cdef bool _is_move, _relative, _relative_e, _extruding
     cdef float _current_x, _current_y, _current_z
     cdef char _current_tool
     cdef uint32_t _gcview_end_vertex
@@ -148,32 +150,32 @@ cdef class GLine(object):
             self._status = set_has_var(self._status, pos_p)
     property is_move:
         def __get__(self):
-            if has_var(self._status, pos_is_move): return self._is_move
-            else: return None
+            if has_var(self._status, pos_is_move): return True
+            else: return False
         def __set__(self, value):
-            self._is_move = value
-            self._status = set_has_var(self._status, pos_is_move)
+            if value: self._status = set_has_var(self._status, pos_is_move)
+            else: self._status = unset_has_var(self._status, pos_is_move)
     property relative:
         def __get__(self):
-            if has_var(self._status, pos_relative): return self._relative
-            else: return None
+            if has_var(self._status, pos_relative): return True
+            else: return False
         def __set__(self, value):
-            self._relative = value
-            self._status = set_has_var(self._status, pos_relative)
+            if value: self._status = set_has_var(self._status, pos_relative)
+            else: self._status = unset_has_var(self._status, pos_relative)
     property relative_e:
         def __get__(self):
-            if has_var(self._status, pos_relative_e): return self._relative_e
-            else: return None
+            if has_var(self._status, pos_relative_e): return True
+            else: return False
         def __set__(self, value):
-            self._relative_e = value
-            self._status = set_has_var(self._status, pos_relative_e)
+            if value: self._status = set_has_var(self._status, pos_relative_e)
+            else: self._status = unset_has_var(self._status, pos_relative_e)
     property extruding:
         def __get__(self):
-            if has_var(self._status, pos_extruding): return self._extruding
-            else: return None
+            if has_var(self._status, pos_extruding): return True
+            else: return False
         def __set__(self, value):
-            self._extruding = value
-            self._status = set_has_var(self._status, pos_extruding)
+            if value: self._status = set_has_var(self._status, pos_extruding)
+            else: self._status = unset_has_var(self._status, pos_extruding)
     property current_x:
         def __get__(self):
             if has_var(self._status, pos_current_x): return self._current_x
