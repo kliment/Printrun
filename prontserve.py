@@ -577,6 +577,7 @@ if __name__ == "__main__":
   try:
     if dry_run==False:
       prontserve.do_connect("")
+      if prontserve.p.printer == None: sys.exit(1)
       print "Connecting to printer..."
       for x in range(0,50-1):
         if prontserve.p.online == True: break
