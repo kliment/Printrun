@@ -25,7 +25,7 @@ gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*")
 m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
-class Line(object):
+class PyLine(object):
 
     __slots__ = ('x','y','z','e','f','i','j','s','p',
                  'raw','split_raw',
@@ -34,14 +34,24 @@ class Line(object):
                  'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
                  'gcview_end_vertex')
 
-    def __init__(self, l):
-        self.raw = l
-        self.split_raw = gcode_exp.findall(self.raw.lower())
-        self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
-        self.is_move = self.command in move_gcodes
-
     def __getattr__(self, name):
         return None
+
+    def set(self, name, value):
+        setattr(self, name, value)
+
+LineBase = PyLine
+
+class Line(LineBase):
+
+    __slots__ = ()
+
+    def __init__(self, l):
+        super(Line, self).__init__()
+        self.set("raw", l)
+        self.set("split_raw", gcode_exp.findall(self.raw.lower()))
+        self.set("command", self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper())
+        self.set("is_move", self.command in move_gcodes)
 
     def parse_coordinates(self, imperial = False, force = False):
         # Not a G-line, we don't want to parse its arguments
@@ -51,13 +61,13 @@ class Line(object):
             for bit in self.split_raw:
                 code = bit[0]
                 if code in gcode_parsed_args and len(bit) > 1:
-                    setattr(self, code, 25.4*float(bit[1:]))
+                    self.set(code, 25.4*float(bit[1:]))
         else:
             for bit in self.split_raw:
                 code = bit[0]
                 if code in gcode_parsed_args and len(bit) > 1:
-                    setattr(self, code, float(bit[1:]))
-        del self.split_raw
+                    self.set(code, float(bit[1:]))
+        self.set("split_raw", None)
  
     def __repr__(self):
         return self.raw
@@ -113,9 +123,9 @@ class Layer(object):
                 current_y = line.y or current_y
                 current_z = line.z or current_z    
 
-            line.current_x = current_x
-            line.current_y = current_y
-            line.current_z = current_z
+            line.set("current_x", current_x)
+            line.set("current_y", current_y)
+            line.set("current_z", current_z)
         return (current_x, current_y, current_z), (xmin, xmax), (ymin, ymax), (zmin, zmax)
 
 class GCode(object):
@@ -182,9 +192,9 @@ class GCode(object):
         current_tool = self.current_tool
         for line in lines:
             if line.is_move:
-                line.relative = relative
-                line.relative_e = relative_e
-                line.current_tool = current_tool
+                line.set("relative", relative)
+                line.set("relative_e", relative_e)
+                line.set("current_tool", current_tool)
             elif line.command == "G20":
                 imperial = True
             elif line.command == "G21":
@@ -220,10 +230,10 @@ class GCode(object):
                 continue
             if line.is_move:
                 if line.relative_e:
-                    line.extruding = line.e != 0
+                    line.set("extruding", line.e != 0)
                     total_e += line.e
                 else:
-                    line.extruding = line.e != cur_e
+                    line.set("extruding", line.e != cur_e)
                     total_e += line.e - cur_e
                     cur_e = line.e
                 max_e = max(max_e, total_e)
