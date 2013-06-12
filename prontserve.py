@@ -567,13 +567,12 @@ if __name__ == "__main__":
         sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
     print ""
 
-  print "Prontserve is starting..."
   prontserve = Prontserve(dry_run=dry_run)
 
   try:
     if dry_run==False:
       prontserve.do_connect("")
-      print "Connecting"
+      print "Connecting to printer..."
       for x in range(0,50-1):
         if prontserve.p.online == True: break
         sys.stdout.write(".")
