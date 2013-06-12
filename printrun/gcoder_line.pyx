@@ -16,6 +16,7 @@
 
 from libcpp cimport bool
 from libc.stdlib cimport malloc, free
+from libc.stdint cimport uint32_t
 
 cdef extern from "string.h":
        char *strncpy(char *dest, char *src, size_t n)
@@ -29,29 +30,52 @@ cdef char* copy_string(object value):
     array[str_len] = 0;
     return array
 
+cdef enum BitPos:
+    pos_x =                 1 << 0
+    pos_y =                 1 << 1
+    pos_z =                 1 << 2
+    pos_e =                 1 << 3
+    pos_f =                 1 << 4
+    pos_i =                 1 << 5
+    pos_j =                 1 << 6
+    pos_s =                 1 << 7
+    pos_p =                 1 << 8
+    pos_is_move =           1 << 9
+    pos_relative =          1 << 10
+    pos_relative_e =        1 << 11
+    pos_extruding =         1 << 12
+    pos_current_x =         1 << 13
+    pos_current_y =         1 << 14
+    pos_current_z =         1 << 15
+    pos_current_tool =      1 << 16
+    pos_raw =               1 << 17
+    pos_split_raw =         1 << 18
+    pos_command =           1 << 19
+    pos_gcview_end_vertex = 1 << 20
+
+cdef inline uint32_t has_var(uint32_t status, uint32_t pos):
+    return status & pos
+
+cdef inline uint32_t set_has_var(uint32_t status, uint32_t pos):
+    return status | pos
+
 cdef class GLine(object):
     
     cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
     cdef bool _is_move, _relative, _relative_e, _extruding
     cdef float _current_x, _current_y, _current_z
     cdef char _current_tool
-    cdef long _gcview_end_vertex
+    cdef uint32_t _gcview_end_vertex
     cdef char* _raw
     cdef char* _command
     cdef object _split_raw
-    
-    cdef bool has_x, has_y, has_z, has_e, has_f, has_i, has_j, has_s, has_p
-    cdef bool has_is_move, has_relative, has_relative_e, has_extruding
-    cdef bool has_current_x, has_current_y, has_current_z
-    cdef bool has_current_tool
-    cdef bool has_gcview_end_vertex
-    cdef bool has_raw
-    cdef bool has_command
-    cdef bool has_split_raw
+
+    cdef uint32_t _status
 
     __slots__ = ()
 
     def __cinit__(self):
+        self._status = 0
         self._raw = NULL
         self._command = NULL
 
@@ -61,150 +85,150 @@ cdef class GLine(object):
 
     property x:
         def __get__(self):
-            if self.has_x: return self._x
+            if has_var(self._status, pos_x): return self._x
             else: return None
         def __set__(self, value):
             self._x = value
-            self.has_x = True
+            self._status = set_has_var(self._status, pos_x)
     property y:
         def __get__(self):
-            if self.has_y: return self._y
+            if has_var(self._status, pos_y): return self._y
             else: return None
         def __set__(self, value):
             self._y = value
-            self.has_y = True
+            self._status = set_has_var(self._status, pos_y)
     property z:
         def __get__(self):
-            if self.has_z: return self._z
+            if has_var(self._status, pos_z): return self._z
             else: return None
         def __set__(self, value):
             self._z = value
-            self.has_z = True
+            self._status = set_has_var(self._status, pos_z)
     property e:
         def __get__(self):
-            if self.has_e: return self._e
+            if has_var(self._status, pos_e): return self._e
             else: return None
         def __set__(self, value):
             self._e = value
-            self.has_e = True
+            self._status = set_has_var(self._status, pos_e)
     property f:
         def __get__(self):
-            if self.has_f: return self._f
+            if has_var(self._status, pos_f): return self._f
             else: return None
         def __set__(self, value):
             self._f = value
-            self.has_f = True
+            self._status = set_has_var(self._status, pos_f)
     property i:
         def __get__(self):
-            if self.has_i: return self._i
+            if has_var(self._status, pos_i): return self._i
             else: return None
         def __set__(self, value):
             self._i = value
-            self.has_i = True
+            self._status = set_has_var(self._status, pos_i)
     property j:
         def __get__(self):
-            if self.has_j: return self._j
+            if has_var(self._status, pos_j): return self._j
             else: return None
         def __set__(self, value):
             self._j = value
-            self.has_j = True
+            self._status = set_has_var(self._status, pos_j)
     property s:
         def __get__(self):
-            if self.has_s: return self._s
+            if has_var(self._status, pos_s): return self._s
             else: return None
         def __set__(self, value):
             self._s = value
-            self.has_s = True
+            self._status = set_has_var(self._status, pos_s)
     property p:
         def __get__(self):
-            if self.has_p: return self._p
+            if has_var(self._status, pos_p): return self._p
             else: return None
         def __set__(self, value):
             self._p = value
-            self.has_p = True
+            self._status = set_has_var(self._status, pos_p)
     property is_move:
         def __get__(self):
-            if self.has_is_move: return self._is_move
+            if has_var(self._status, pos_is_move): return self._is_move
             else: return None
         def __set__(self, value):
             self._is_move = value
-            self.has_is_move = True
+            self._status = set_has_var(self._status, pos_is_move)
     property relative:
         def __get__(self):
-            if self.has_relative: return self._relative
+            if has_var(self._status, pos_relative): return self._relative
             else: return None
         def __set__(self, value):
             self._relative = value
-            self.has_relative = True
+            self._status = set_has_var(self._status, pos_relative)
     property relative_e:
         def __get__(self):
-            if self.has_relative_e: return self._relative_e
+            if has_var(self._status, pos_relative_e): return self._relative_e
             else: return None
         def __set__(self, value):
             self._relative_e = value
-            self.has_relative_e = True
+            self._status = set_has_var(self._status, pos_relative_e)
     property extruding:
         def __get__(self):
-            if self.has_extruding: return self._extruding
+            if has_var(self._status, pos_extruding): return self._extruding
             else: return None
         def __set__(self, value):
             self._extruding = value
-            self.has_extruding = True
+            self._status = set_has_var(self._status, pos_extruding)
     property current_x:
         def __get__(self):
-            if self.has_current_x: return self._current_x
+            if has_var(self._status, pos_current_x): return self._current_x
             else: return None
         def __set__(self, value):
             self._current_x = value
-            self.has_current_x = True
+            self._status = set_has_var(self._status, pos_current_x)
     property current_y:
         def __get__(self):
-            if self.has_current_y: return self._current_y
+            if has_var(self._status, pos_current_y): return self._current_y
             else: return None
         def __set__(self, value):
             self._current_y = value
-            self.has_current_y = True
+            self._status = set_has_var(self._status, pos_current_y)
     property current_z:
         def __get__(self):
-            if self.has_current_z: return self._current_z
+            if has_var(self._status, pos_current_z): return self._current_z
             else: return None
         def __set__(self, value):
             self._current_z = value
-            self.has_current_z = True
+            self._status = set_has_var(self._status, pos_current_z)
     property current_tool:
         def __get__(self):
-            if self.has_current_tool: return self._current_tool
+            if has_var(self._status, pos_current_tool): return self._current_tool
             else: return None
         def __set__(self, value):
             self._current_tool = value
-            self.has_current_tool = True
+            self._status = set_has_var(self._status, pos_current_tool)
     property gcview_end_vertex:
         def __get__(self):
-            if self.has_gcview_end_vertex: return self._gcview_end_vertex
+            if has_var(self._status, pos_gcview_end_vertex): return self._gcview_end_vertex
             else: return None
         def __set__(self, value):
             self._gcview_end_vertex = value
-            self.has_gcview_end_vertex = True
+            self._status = set_has_var(self._status, pos_gcview_end_vertex)
     property split_raw:
         def __get__(self):
-            if self.has_split_raw: return self._split_raw
+            if has_var(self._status, pos_split_raw): return self._split_raw
             else: return None
         def __set__(self, value):
             self._split_raw = value
-            self.has_split_raw = True
+            self._status = set_has_var(self._status, pos_split_raw)
         def __del__(self):
             self._split_raw = None
     property raw:
         def __get__(self):
-            if self.has_raw: return self._raw
+            if has_var(self._status, pos_raw): return self._raw
             else: return None
         def __set__(self, value):
             self._raw = copy_string(value)
-            self.has_raw = True
+            self._status = set_has_var(self._status, pos_raw)
     property command:
         def __get__(self):
-            if self.has_command: return self._command
+            if has_var(self._status, pos_command): return self._command
             else: return None
         def __set__(self, value):
             self._command = copy_string(value)
-            self.has_command = True
+            self._status = set_has_var(self._status, pos_command)
