@@ -569,25 +569,37 @@ if __name__ == "__main__":
 
   print "Prontserve is starting..."
   prontserve = Prontserve(dry_run=dry_run)
-  if dry_run==False: prontserve.do_connect("")
-
-  time.sleep(1)
-  prontserve.run_sensor_loop()
-  prontserve.run_print_queue_loop()
-
-  application.listen(8888)
-  print "\n"+"-"*80
-  welcome = textwrap.dedent(u"""
-            +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
-            | \u2713 |  Ready to print.
-            +---+  More details at http://localhost:8888/""")
-  warn_if_dry_run()
-  sys.stdout.write(welcome)
-  print "\n"
-  warn_if_dry_run()
-  print "-"*80 + "\n"
 
   try:
+    if dry_run==False:
+      prontserve.do_connect("")
+      print "Connecting"
+      for x in range(0,50-1):
+        if prontserve.p.online == True: break
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.1)
+      print ""
+      if prontserve.p.online == False:
+        print "Unable to connect to printer: Connection timed-out."
+        sys.exit(1)
+
+    time.sleep(1)
+    prontserve.run_sensor_loop()
+    prontserve.run_print_queue_loop()
+
+    application.listen(8888)
+    print "\n"+"-"*80
+    welcome = textwrap.dedent(u"""
+              +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
+              | \u2713 |  Ready to print.
+              +---+  More details at http://localhost:8888/""")
+    warn_if_dry_run()
+    sys.stdout.write(welcome)
+    print "\n"
+    warn_if_dry_run()
+    print "-"*80 + "\n"
+
     prontserve.ioloop.start()
   except:
     prontserve.p.disconnect()
