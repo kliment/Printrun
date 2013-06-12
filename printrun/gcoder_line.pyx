@@ -31,23 +31,23 @@ cdef char* copy_string(object value):
 
 cdef class GLine(object):
     
-    cdef public float _x, _y, _z, _e, _f, _i, _j, _s, _p
-    cdef public bool _is_move, _relative, _relative_e, _extruding
-    cdef public float _current_x, _current_y, _current_z
-    cdef public char _current_tool
-    cdef public long _gcview_end_vertex
+    cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
+    cdef bool _is_move, _relative, _relative_e, _extruding
+    cdef float _current_x, _current_y, _current_z
+    cdef char _current_tool
+    cdef long _gcview_end_vertex
     cdef char* _raw
     cdef char* _command
-    cdef public object _split_raw
+    cdef object _split_raw
     
-    cdef public bool has_x, has_y, has_z, has_e, has_f, has_i, has_j, has_s, has_p
-    cdef public bool has_is_move, has_relative, has_relative_e, has_extruding
-    cdef public bool has_current_x, has_current_y, has_current_z
-    cdef public bool has_current_tool
-    cdef public bool has_gcview_end_vertex
-    cdef public bool has_raw
-    cdef public bool has_command
-    cdef public bool has_split_raw
+    cdef bool has_x, has_y, has_z, has_e, has_f, has_i, has_j, has_s, has_p
+    cdef bool has_is_move, has_relative, has_relative_e, has_extruding
+    cdef bool has_current_x, has_current_y, has_current_z
+    cdef bool has_current_tool
+    cdef bool has_gcview_end_vertex
+    cdef bool has_raw
+    cdef bool has_command
+    cdef bool has_split_raw
 
     __slots__ = ()
 
@@ -193,8 +193,7 @@ cdef class GLine(object):
             self._split_raw = value
             self.has_split_raw = True
         def __del__(self):
-            del self._split_raw
-            self.has_split_raw = False
+            self._split_raw = None
     property raw:
         def __get__(self):
             if self.has_raw: return self._raw
