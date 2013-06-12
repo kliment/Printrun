@@ -21,6 +21,14 @@ cdef extern from "string.h":
        char *strncpy(char *dest, char *src, size_t n)
        size_t strlen(const char *s)
 
+cdef char* copy_string(object value):
+    cdef char* orig = value
+    str_len = len(orig)
+    cdef char* array = <char *>malloc(str_len + 1)
+    strncpy(array, orig, str_len)
+    array[str_len] = 0;
+    return array
+
 cdef class GLine(object):
     
     cdef public float _x, _y, _z, _e, _f, _i, _j, _s, _p
@@ -184,32 +192,20 @@ cdef class GLine(object):
         def __set__(self, value):
             self._split_raw = value
             self.has_split_raw = True
+        def __del__(self):
+            del self._split_raw
+            self.has_split_raw = False
     property raw:
         def __get__(self):
             if self.has_raw: return self._raw
             else: return None
         def __set__(self, value):
-            self._raw = value
+            self._raw = copy_string(value)
             self.has_raw = True
     property command:
         def __get__(self):
             if self.has_command: return self._command
             else: return None
         def __set__(self, value):
-            self._command = value
+            self._command = copy_string(value)
             self.has_command = True
-
-    def setstring(self, name, value):
-        cdef char* orig = value
-        str_len = len(orig)
-        cdef char* array = <char *>malloc(str_len + 1)
-        strncpy(array, orig, str_len);
-        array[str_len] = 0;
-        if name == "raw":
-            self._raw = array
-        elif name == "command":
-            self._command = array
-        setattr(self, "has_" + name, True)
-
-    def set(self, name, value):
-        setattr(self, name, value)
