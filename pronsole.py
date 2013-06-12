@@ -461,7 +461,12 @@ class pronsole(cmd.Cmd):
             except:
                 pass
 
-        return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +glob.glob("/dev/tty.*")+glob.glob("/dev/cu.*")+glob.glob("/dev/rfcomm*")
+        for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*", "/dev/cu.*", "/dev/rfcomm*"]:
+            baselist+=glob.glob(g)
+        return filter(self._bluetoothSerialFilter, baselist)
+
+    def _bluetoothSerialFilter(self, serial):
+        return not ("Bluetooth" in serial or "FireFly" in serial)
 
     def online(self):
         self.log("\rPrinter is now online")
