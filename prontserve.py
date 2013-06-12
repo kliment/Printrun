@@ -558,6 +558,10 @@ if __name__ == "__main__":
     help='Does not connect to the 3D printer'
   )
 
+  parser.add_argument('--loud', default=False, action='store_true',
+    help='Enables verbose printer output'
+  )
+
   args = parser.parse_args()
   dry_run = args.dry_run
 
@@ -568,6 +572,7 @@ if __name__ == "__main__":
     print ""
 
   prontserve = Prontserve(dry_run=dry_run)
+  prontserve.p.loud = args.loud
 
   try:
     if dry_run==False:
