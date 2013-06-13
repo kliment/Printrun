@@ -219,11 +219,10 @@ class gviz(wx.Panel):
                                 float(self.size[1] - 1)/self.build_dimensions[1])]
 
     def resize(self, event):
-        oldside = max(1.0, min(self.size))
+        old_basescale = self.basescale 
         self.size = self.GetClientSizeTuple()
         self.update_basescale()
-        newside = max(1.0, min(self.size))
-        zoomratio = float(newside) / oldside
+        zoomratio = float(self.basescale[0]) / old_basescale[0]
         wx.CallLater(200, self.zoom, 0, 0, zoomratio)
 
     def zoom(self, x, y, factor):
