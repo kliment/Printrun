@@ -273,9 +273,11 @@ class gviz(wx.Panel):
         for grid_unit in self.grid:
             if grid_unit > 0:
                 for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1], self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1]+self.scale[1]*self.build_dimensions[1])
+                    draw_x = self.translate[0]+self.scale[0]*x*grid_unit
+                    dc.DrawLine(draw_x, self.translate[1], draw_x, self.translate[1]+self.scale[1]*self.build_dimensions[1])
                 for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0], self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0], self.translate[1]+y*self.scale[1]*grid_unit)
+                    draw_y = self.translate[1]+self.scale[1]*(self.build_dimensions[1]-y*grid_unit)
+                    dc.DrawLine(self.translate[0], draw_y, self.translate[0]+self.scale[0]*self.build_dimensions[0], draw_y)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
 
         if not self.showall:
