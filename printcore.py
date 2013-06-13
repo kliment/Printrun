@@ -102,10 +102,10 @@ class printcore():
                 self.stop_read_thread = True
                 self.read_thread.join()
                 self.read_thread = None
-            self._stop_sender()
             if self.print_thread:
                 self.printing = False
                 self.print_thread.join()
+            self._stop_sender()
             try:
                 self.printer.close()
             except socket.error:
@@ -429,7 +429,7 @@ class printcore():
             traceback.print_exc()
         finally:
             self.print_thread = None
-            if self.stop_send_thread == False: self._start_sender()
+            self._start_sender()
 
     #now only "pause" is implemented as host command
     def processHostCommand(self, command):
