@@ -1,4 +1,3 @@
-# distutils: language = c++
 # This file is copied from GCoder.
 #
 # GCoder is free software: you can redistribute it and/or modify
@@ -14,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from libcpp cimport bool
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint32_t
 
