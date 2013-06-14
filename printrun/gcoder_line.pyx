@@ -64,15 +64,14 @@ cdef inline uint32_t unset_has_var(uint32_t status, uint32_t pos):
 
 cdef class GLine(object):
     
-    cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
-    cdef float _current_x, _current_y, _current_z
-    cdef char _current_tool
-    cdef uint32_t _gcview_end_vertex
     cdef char* _raw
     cdef char* _command
     cdef object _split_raw
-
+    cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
+    cdef float _current_x, _current_y, _current_z
+    cdef uint32_t _gcview_end_vertex
     cdef uint32_t _status
+    cdef char _current_tool
 
     __slots__ = ()
 
