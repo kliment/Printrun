@@ -69,8 +69,9 @@ class GCodeAnalyzer():
 
     def Analyze(self, gcode):
         gline = gcoder.Line(gcode)
+        split_raw = gcoder.split(gline)
         if gline.command.startswith(";@"): return # code is a host command
-        gline.parse_coordinates(self.imperial)
+        gcoder.parse_coordinates(gline, split_raw, self.imperial)
         code_g = int(gline.command[1:]) if gline.command.startswith("G") else None
         code_m = int(gline.command[1:]) if gline.command.startswith("M") else None
 

@@ -47,9 +47,8 @@ cdef enum BitPos:
     pos_current_z =         1 << 15
     pos_current_tool =      1 << 16
     pos_raw =               1 << 17
-    pos_split_raw =         1 << 18
-    pos_command =           1 << 19
-    pos_gcview_end_vertex = 1 << 20
+    pos_command =           1 << 18
+    pos_gcview_end_vertex = 1 << 19
 
 cdef inline uint32_t has_var(uint32_t status, uint32_t pos):
     return status & pos
@@ -60,11 +59,10 @@ cdef inline uint32_t set_has_var(uint32_t status, uint32_t pos):
 cdef inline uint32_t unset_has_var(uint32_t status, uint32_t pos):
     return status & ~pos
 
-cdef class GLine(object):
+cdef class GLine:
     
     cdef char* _raw
     cdef char* _command
-    cdef object _split_raw
     cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
     cdef float _current_x, _current_y, _current_z
     cdef uint32_t _gcview_end_vertex
@@ -77,6 +75,9 @@ cdef class GLine(object):
         self._status = 0
         self._raw = NULL
         self._command = NULL
+
+    def __init__(self, line):
+        self.raw = line
 
     def __dealloc__(self):
         if self._raw != NULL: free(self._raw)
@@ -208,15 +209,6 @@ cdef class GLine(object):
         def __set__(self, value):
             self._gcview_end_vertex = value
             self._status = set_has_var(self._status, pos_gcview_end_vertex)
-    property split_raw:
-        def __get__(self):
-            if has_var(self._status, pos_split_raw): return self._split_raw
-            else: return None
-        def __set__(self, value):
-            self._split_raw = value
-            self._status = set_has_var(self._status, pos_split_raw)
-        def __del__(self):
-            self._split_raw = None
     property raw:
         def __get__(self):
             if has_var(self._status, pos_raw): return self._raw

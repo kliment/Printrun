@@ -34,45 +34,39 @@ class PyLine(object):
                  'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
                  'gcview_end_vertex')
 
+    def __init__(self, l):
+        self.raw = l
+
     def __getattr__(self, name):
         return None
 
 try:
     import gcoder_line
-    LineBase = gcoder_line.GLine
+    Line = gcoder_line.GLine
 except ImportError:
-    LineBase = PyLine
+    Line = PyLine
 
-class Line(LineBase):
+def split(line):
+    split_raw = gcode_exp.findall(line.raw.lower())
+    line.command = split_raw[0].upper() if not split_raw[0].startswith("n") else split_raw[1].upper()
+    line.is_move = line.command in move_gcodes
+    return split_raw
 
-    __slots__ = ()
+def parse_coordinates(line, split_raw, imperial = False, force = False):
+    # Not a G-line, we don't want to parse its arguments
+    if not force and line.command[0] != "G":
+        return
+    if imperial:
+        for bit in split_raw:
+            code = bit[0]
+            if code in gcode_parsed_args and len(bit) > 1:
+                setattr(line, code, 25.4*float(bit[1:]))
+    else:
+        for bit in split_raw:
+            code = bit[0]
+            if code in gcode_parsed_args and len(bit) > 1:
+                setattr(line, code, float(bit[1:]))
 
-    def __init__(self, l):
-        super(Line, self).__init__()
-        self.raw = l
-        self.split_raw = gcode_exp.findall(self.raw.lower())
-        self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
-        self.is_move = self.command in move_gcodes
-
-    def parse_coordinates(self, imperial = False, force = False):
-        # Not a G-line, we don't want to parse its arguments
-        if not force and not self.command[0] == "G":
-            return
-        if imperial:
-            for bit in self.split_raw:
-                code = bit[0]
-                if code in gcode_parsed_args and len(bit) > 1:
-                    setattr(self, code, 25.4*float(bit[1:]))
-        else:
-            for bit in self.split_raw:
-                code = bit[0]
-                if code in gcode_parsed_args and len(bit) > 1:
-                    setattr(self, code, float(bit[1:]))
-        del self.split_raw
- 
-    def __repr__(self):
-        return self.raw
-        
 class Layer(object):
 
     lines = None
@@ -192,6 +186,7 @@ class GCode(object):
         relative_e = self.relative_e
         current_tool = self.current_tool
         for line in lines:
+            split_raw = split(line)
             if line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e
@@ -213,7 +208,7 @@ class GCode(object):
             elif line.command[0] == "T":
                 current_tool = int(line.command[1:])
             if line.command[0] == "G":
-                line.parse_coordinates(imperial)
+                parse_coordinates(line, split_raw, imperial)
         self.imperial = imperial
         self.relative = relative
         self.relative_e = relative_e
@@ -408,6 +403,7 @@ def main():
         print "usage: %s filename.gcode" % sys.argv[0]
         return
  
+    print "Line object size:", sys.getsizeof(Line("G0 X0"))
     gcode = GCode(open(sys.argv[1])) 
 
     print "Dimensions:"
