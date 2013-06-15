@@ -3,8 +3,10 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+from tornado.web import asynchronous
 from tornado import gen
 import tornado.httpserver
+import uuid
 import time
 import base64
 import logging
@@ -90,11 +92,50 @@ class StopHandler(tornado.web.RequestHandler):
     prontserve.do_stop()
     self.finish("ACK")
 
+@tornado.web.stream_body
 class JobsHandler(tornado.web.RequestHandler):
+
   def post(self):
+    self.read_bytes = 0
+    self.total_bytes = self.request.content_length
+    self.body = ''
+    print self.request
+    session_uuid = self.get_argument("session_uuid", None)
+    print "me"
+    print session_uuid
+    print "them"
+    self.websocket = None
+    for c in ConstructSocketHandler.clients:
+      print c.session_uuid
+      if c.session_uuid == session_uuid: self.websocket = c
+    self.request.request_continue()
+    self.read_chunks()
+
+  def read_chunks(self, chunk=''):
+    self.read_bytes += len(chunk)
+    self.body += chunk
+    if chunk: self.process_chunk()
+
+    chunk_length = min(100000, self.request.content_length - self.read_bytes)
+    if chunk_length > 0:
+      self.request.connection.stream.read_bytes(
+              chunk_length, self.read_chunks)
+    else:
+      self.request._on_request_body(self.body, self.uploaded)
+
+  def process_chunk(self):
+    print self.get_argument("session_uuid", None)
+    print "bytes: (%i / %i)"%(self.read_bytes, self.total_bytes)
+    msg = {'uploaded': self.read_bytes, 'total': self.total_bytes}
+    if self.websocket != None:
+      self.websocket.send(job_upload_progress_changed = msg)
+
+  def uploaded(self):
     fileinfo = self.request.files['job'][0]
     prontserve.do_add_job(fileinfo['filename'], fileinfo['body'])
+
     self.finish("ACK")
+
 
 class JobHandler(tornado.web.RequestHandler):
   def delete(self, job_id):
@@ -116,6 +157,7 @@ class InspectHandler(tornado.web.RequestHandler):
 
 #class EchoWebSocketHandler(tornado.web.RequestHandler):
 class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
+  clients = []
 
   def on_sensor_changed(self):
     for name in ['bed', 'extruder']:
@@ -141,6 +183,8 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     return "construct.text.0.0.1"
 
   def open(self):
+    self.session_uuid = str(uuid.uuid4())
+    self.clients.append(self)
     prontserve.listeners.add(self)
     self.write_message({'headers': {
       'jobs': prontserve.jobs.public_list(),
@@ -151,6 +195,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     for k, v in prontserve.target_values.iteritems():
       self.on_uncaught_event("target_temp_changed", {k: v})
     self.on_uncaught_event("job_progress_changed", prontserve.previous_job_progress)
+    self.send(initialized= {'session_uuid': self.session_uuid} )
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
 
   def send(self, dict_args = {}, **kwargs):
@@ -204,6 +249,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       self.write_message({"error": "%s command does not exist."%cmd})
 
   def on_close(self):
+    self.clients.remove(self)
     prontserve.listeners.remove(self)
     print "WebSocket closed. %i sockets currently open." % len(prontserve.listeners)
 
