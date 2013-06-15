@@ -34,6 +34,8 @@ from .libtatlin import actors
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
 
+    orthographic = True
+
     def __init__(self, parent, id, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0):
         # Forcing a no full repaint to stop flickering
@@ -119,9 +121,15 @@ class wxGLPanel(wx.Panel):
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(60., width / float(height), 10.0, 3 * self.dist)
+        if self.orthographic:
+            glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 3 * self.dist)
+        else:
+            gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+        if self.orthographic:
+            ratio = 0.9 * float(min(self.width, self.height)) / self.dist
+            glScalef(ratio, ratio, 1)
 
         # Wrap text to the width of the window
         if self.GLinitialized:
@@ -386,6 +394,9 @@ class GcodeViewPanel(wxGLPanel):
     def mouse_to_3d(self, x, y):
         x = float(x)
         y = self.height - float(y)
+        # The following could work if we were not initially scaling to zoom on the bed
+        #if self.orthographic:
+        #    return (x - self.width / 2, y - self.height / 2, 0)
         pmat = (GLdouble * 16)()
         mvmat = (GLdouble * 16)()
         viewport = (GLint * 4)()
