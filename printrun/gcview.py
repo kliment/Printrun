@@ -411,23 +411,22 @@ class GcodeViewPanel(wxGLPanel):
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
-        keycode = event.GetKeyCode()
-        step = 10
+        step = 1.1
         if event.ControlDown():
-            step = 3
+            step = 1.05
         kup = [85, 315]               # Up keys
         kdo = [68, 317]               # Down Keys
         kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
         kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
-        x = event.GetKeyCode()
-        if x in kup:
+        key = event.GetKeyCode()
+        if key in kup:
             self.layerup()
-        if x in kdo:
+        if key in kdo:
             self.layerdown()
-        if x in kzi:
+        if key in kzi:
             self.zoom(step)
-        if x in kzo:
-            self.zoom(-step)
+        if key in kzo:
+            self.zoom(1 / step)
         event.Skip()
         wx.CallAfter(self.Refresh)
 
