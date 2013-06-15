@@ -102,6 +102,9 @@ class printcore():
                 self.stop_read_thread = True
                 self.read_thread.join()
                 self.read_thread = None
+            if self.print_thread:
+                self.printing = False
+                self.print_thread.join()
             self._stop_sender()
             try:
                 self.printer.close()

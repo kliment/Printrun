@@ -21,6 +21,11 @@ from stat import *
 from distutils.core import setup
 from distutils.command.install import install as _install
 from distutils.command.install_data import install_data as _install_data
+try:
+    from Cython.Build import cythonize
+    extensions = cythonize("printrun/gcoder_line.pyx")
+except ImportError:
+    extensions = None
 
 INSTALLED_FILES = "installed_files"
 
@@ -84,7 +89,7 @@ class uninstall (_install):
             except:
                 self.warn ("Could not remove file %s" % file)
 
-ops = ("install", "build", "sdist", "uninstall", "clean")
+ops = ("install", "build", "sdist", "uninstall", "clean", "build_ext")
 
 if len (sys.argv) < 2 or sys.argv[1] not in ops:
     print "Please specify operation : %s" % " | ".join (ops)
@@ -148,5 +153,6 @@ setup (
         scripts          = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py", "prontserve.py"],
         cmdclass         = {"uninstall" : uninstall,
                             "install" : install,
-                            "install_data" : install_data}
+                            "install_data" : install_data},
+        ext_modules      = extensions,
      )

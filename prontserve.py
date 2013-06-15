@@ -3,8 +3,10 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+from tornado.web import asynchronous
 from tornado import gen
 import tornado.httpserver
+import uuid
 import time
 import base64
 import logging
@@ -90,11 +92,50 @@ class StopHandler(tornado.web.RequestHandler):
     prontserve.do_stop()
     self.finish("ACK")
 
+@tornado.web.stream_body
 class JobsHandler(tornado.web.RequestHandler):
+
   def post(self):
+    self.read_bytes = 0
+    self.total_bytes = self.request.content_length
+    self.body = ''
+    print self.request
+    session_uuid = self.get_argument("session_uuid", None)
+    print "me"
+    print session_uuid
+    print "them"
+    self.websocket = None
+    for c in ConstructSocketHandler.clients:
+      print c.session_uuid
+      if c.session_uuid == session_uuid: self.websocket = c
+    self.request.request_continue()
+    self.read_chunks()
+
+  def read_chunks(self, chunk=''):
+    self.read_bytes += len(chunk)
+    self.body += chunk
+    if chunk: self.process_chunk()
+
+    chunk_length = min(100000, self.request.content_length - self.read_bytes)
+    if chunk_length > 0:
+      self.request.connection.stream.read_bytes(
+              chunk_length, self.read_chunks)
+    else:
+      self.request._on_request_body(self.body, self.uploaded)
+
+  def process_chunk(self):
+    print self.get_argument("session_uuid", None)
+    print "bytes: (%i / %i)"%(self.read_bytes, self.total_bytes)
+    msg = {'uploaded': self.read_bytes, 'total': self.total_bytes}
+    if self.websocket != None:
+      self.websocket.send(job_upload_progress_changed = msg)
+
+  def uploaded(self):
     fileinfo = self.request.files['job'][0]
     prontserve.do_add_job(fileinfo['filename'], fileinfo['body'])
+
     self.finish("ACK")
+
 
 class JobHandler(tornado.web.RequestHandler):
   def delete(self, job_id):
@@ -116,6 +157,7 @@ class InspectHandler(tornado.web.RequestHandler):
 
 #class EchoWebSocketHandler(tornado.web.RequestHandler):
 class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
+  clients = []
 
   def on_sensor_changed(self):
     for name in ['bed', 'extruder']:
@@ -141,6 +183,8 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     return "construct.text.0.0.1"
 
   def open(self):
+    self.session_uuid = str(uuid.uuid4())
+    self.clients.append(self)
     prontserve.listeners.add(self)
     self.write_message({'headers': {
       'jobs': prontserve.jobs.public_list(),
@@ -151,6 +195,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     for k, v in prontserve.target_values.iteritems():
       self.on_uncaught_event("target_temp_changed", {k: v})
     self.on_uncaught_event("job_progress_changed", prontserve.previous_job_progress)
+    self.send(initialized= {'session_uuid': self.session_uuid} )
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
 
   def send(self, dict_args = {}, **kwargs):
@@ -196,15 +241,15 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       try:
         if cmd == "set": cmd = "construct_set"
         response = getattr(prontserve, "do_%s"%cmd)(*args, **kwargs)
-        print response
-        if response is not None: self.write_message(response)
-      except:
+        self.write_message({"ack": response})
+      except Exception as ex:
         print traceback.format_exc()
-        self.write_message({"error": "bad command."})
+        self.write_message({"error": str(ex)})
     else:
       self.write_message({"error": "%s command does not exist."%cmd})
 
   def on_close(self):
+    self.clients.remove(self)
     prontserve.listeners.remove(self)
     print "WebSocket closed. %i sockets currently open." % len(prontserve.listeners)
 
@@ -253,6 +298,7 @@ class EventEmitter(object):
 class Prontserve(pronsole.pronsole, EventEmitter):
 
   def __init__(self, **kwargs):
+    self.initializing = True
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
@@ -270,8 +316,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.current_job = None
     self.previous_job_progress = 0
     self.silent = True
+    self._sensor_update_received = True
     self.init_mdns()
     self.jobs.listeners.add(self)
+    self.initializing = False
 
   def init_mdns(self):
     sdRef = pybonjour.DNSServiceRegister(name = None,
@@ -284,7 +332,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     sdRef.close()
 
   def do_print(self):
-    if not self.p.online: raise "not online"
+    if not self.p.online: raise Exception("not online")
     self.printing_jobs = True
 
   def do_home(self, *args, **kwargs):
@@ -315,7 +363,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       pronsole.pronsole.do_move(self, cmd )
 
   def do_stop_move(self):
-    raise "Continuous movement not supported"
+    raise Exception("Continuous movement not supported")
 
   def do_estop(self):
     pronsole.pronsole.do_pause(self, "")
@@ -403,11 +451,20 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       self.previous_job_progress = progress
       self.fire("job_progress_changed", progress)
 
+  def print_progress(self):
+    if(self.p.printing):
+      return 100*float(self.p.queueindex)/len(self.p.mainqueue)
+    if(self.sdprinting):
+      return self.percentdone
+    return 0
+
   def run_sensor_loop(self):
-    if self.dry_run:
-      self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
-    else:
-      self.request_sensor_update()
+    if self._sensor_update_received:
+      self._sensor_update_received = False
+      if self.dry_run:
+        self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
+      else:
+        self.request_sensor_update()
     next_timeout = time.time() + self.settings.sensor_poll_rate
     gen.Task(self.ioloop.add_timeout(next_timeout, self.run_sensor_loop))
 
@@ -423,19 +480,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
       self._receive_printer_error(l)
 
-  def print_progress(self):
-    if(self.p.printing):
-      return 100*float(self.p.queueindex)/len(self.p.mainqueue)
-    if(self.sdprinting):
-      return self.percentdone
-    return 0
-
-
   def _receive_sensor_update(self, l):
+    self._sensor_update_received = True
     words = filter(lambda s: s.find(":") > 0, l.split(" "))
     d = dict([ s.split(":") for s in words])
-
-    # print "sensor update received!"
 
     for key, value in d.iteritems():
       self.__update_sensor(key, value)
@@ -457,8 +505,16 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     print msg
     self.fire("log", {'msg': msg, 'level': "debug"})
 
+  def logError(self, *msg):
+    print u"".join(unicode(i) for i in msg)
+    if self.initializing == False:
+      raise Exception(u"".join(unicode(i) for i in msg))
+
   def write_prompt(self):
     None
+
+  def confirm(self):
+    True
 
 
 class PrintJobQueue(EventEmitter):
@@ -548,6 +604,10 @@ if __name__ == "__main__":
     help='Does not connect to the 3D printer'
   )
 
+  parser.add_argument('--loud', default=False, action='store_true',
+    help='Enables verbose printer output'
+  )
+
   args = parser.parse_args()
   dry_run = args.dry_run
 
@@ -557,27 +617,40 @@ if __name__ == "__main__":
         sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
     print ""
 
-  print "Prontserve is starting..."
   prontserve = Prontserve(dry_run=dry_run)
-  if dry_run==False: prontserve.do_connect("")
-
-  time.sleep(1)
-  prontserve.run_sensor_loop()
-  prontserve.run_print_queue_loop()
-
-  application.listen(8888)
-  print "\n"+"-"*80
-  welcome = textwrap.dedent(u"""
-            +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
-            | \u2713 |  Ready to print.
-            +---+  More details at http://localhost:8888/""")
-  warn_if_dry_run()
-  sys.stdout.write(welcome)
-  print "\n"
-  warn_if_dry_run()
-  print "-"*80 + "\n"
+  prontserve.p.loud = args.loud
 
   try:
+    if dry_run==False:
+      prontserve.do_connect("")
+      if prontserve.p.printer == None: sys.exit(1)
+      print "Connecting to printer..."
+      for x in range(0,50-1):
+        if prontserve.p.online == True: break
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.1)
+      print ""
+      if prontserve.p.online == False:
+        print "Unable to connect to printer: Connection timed-out."
+        sys.exit(1)
+
+    time.sleep(1)
+    prontserve.run_sensor_loop()
+    prontserve.run_print_queue_loop()
+
+    application.listen(8888)
+    print "\n"+"-"*80
+    welcome = textwrap.dedent(u"""
+              +---+  \x1B[0;32mProntserve: Your printer just got a whole lot better.\x1B[0m
+              | \u2713 |  Ready to print.
+              +---+  More details at http://localhost:8888/""")
+    warn_if_dry_run()
+    sys.stdout.write(welcome)
+    print "\n"
+    warn_if_dry_run()
+    print "-"*80 + "\n"
+
     prontserve.ioloop.start()
   except:
     prontserve.p.disconnect()

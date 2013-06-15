@@ -25,7 +25,7 @@ gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*")
 m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
-class Line(object):
+class PyLine(object):
 
     __slots__ = ('x','y','z','e','f','i','j','s','p',
                  'raw','split_raw',
@@ -34,14 +34,25 @@ class Line(object):
                  'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
                  'gcview_end_vertex')
 
+    def __getattr__(self, name):
+        return None
+
+try:
+    import gcoder_line
+    LineBase = gcoder_line.GLine
+except ImportError:
+    LineBase = PyLine
+
+class Line(LineBase):
+
+    __slots__ = ()
+
     def __init__(self, l):
+        super(Line, self).__init__()
         self.raw = l
         self.split_raw = gcode_exp.findall(self.raw.lower())
         self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
         self.is_move = self.command in move_gcodes
-
-    def __getattr__(self, name):
-        return None
 
     def parse_coordinates(self, imperial = False, force = False):
         # Not a G-line, we don't want to parse its arguments
@@ -406,7 +417,6 @@ def main():
     print "Filament used: %0.02fmm" % gcode.filament_length
     print "Number of layers: %d" % gcode.num_layers()
     print "Estimated duration: %s" % gcode.estimate_duration()
-
 
 if __name__ == '__main__':
     main()

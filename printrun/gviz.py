@@ -23,14 +23,14 @@ from printrun_utils import imagefile
 ID_ABOUT = 101
 ID_EXIT = 110
 class window(wx.Frame):
-    def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
+    def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
         wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = size)
 
         self.CreateStatusBar(1);
         self.SetStatusText("Layer number and Z position show here when you scroll");
 
         panel = wx.Panel(self, -1)
-        self.p = gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, realparent = self)
+        self.p = gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
@@ -128,10 +128,12 @@ class gviz(wx.Panel):
             self._showall = showall
     showall = property(_get_showall, _set_showall)
 
-    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, realparent = None):
-        wx.Panel.__init__(self, parent, -1, size = size)
+    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000", realparent = None):
+        wx.Panel.__init__(self, parent, -1)
         self.widget = self
-        self.SetMinSize((150, 150))
+        size = [max(1.0, x) for x in size]
+        ratio = size[0] / size[1]
+        self.SetMinSize((150, 150/ratio))
         self.parent = realparent if realparent else parent
         self.size = size
         self.build_dimensions = build_dimensions
@@ -163,7 +165,9 @@ class gviz(wx.Panel):
         self.hilightqueue = Queue(0)
         self.hilightarcsqueue = Queue(0)
         self.dirty = 1
-        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
+        self.bgcolor = wx.Colour()
+        self.bgcolor.SetFromName(bgcolor)
+        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
 
     def inject(self):
         #import pdb; pdb.set_trace()
@@ -217,11 +221,10 @@ class gviz(wx.Panel):
                                 float(self.size[1] - 1)/self.build_dimensions[1])]
 
     def resize(self, event):
-        oldside = max(1.0, min(self.size))
+        old_basescale = self.basescale 
         self.size = self.GetClientSizeTuple()
         self.update_basescale()
-        newside = max(1.0, min(self.size))
-        zoomratio = float(newside) / oldside
+        zoomratio = float(self.basescale[0]) / old_basescale[0]
         wx.CallLater(200, self.zoom, 0, 0, zoomratio)
 
     def zoom(self, x, y, factor):
@@ -230,8 +233,8 @@ class gviz(wx.Panel):
             x = y = side / 2
         self.scale = [s * factor for s in self.scale]
 
-        self.translate = [ x - (x-self.translate[0]) * factor,
-                            y - (y-self.translate[1]) * factor]
+        self.translate = [x - (x - self.translate[0]) * factor,
+                          y - (y - self.translate[1]) * factor]
         penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
         for pen in self.penslist:
             pen.SetWidth(penwidth)
@@ -239,18 +242,18 @@ class gviz(wx.Panel):
         wx.CallAfter(self.Refresh)
     
     def _line_scaler(self, x):
-        return (self.scale[0]*x[0]+self.translate[0],
-                self.scale[1]*x[1]+self.translate[1],
-                self.scale[0]*x[2]+self.translate[0],
-                self.scale[1]*x[3]+self.translate[1],)
+        return (self.scale[0]*x[0],
+                self.scale[1]*x[1],
+                self.scale[0]*x[2],
+                self.scale[1]*x[3],)
     
     def _arc_scaler(self, x):
-        return (self.scale[0]*x[0]+self.translate[0],
-                self.scale[1]*x[1]+self.translate[1],
-                self.scale[0]*x[2]+self.translate[0],
-                self.scale[1]*x[3]+self.translate[1],
-                self.scale[0]*x[4]+self.translate[0],
-                self.scale[1]*x[5]+self.translate[1],)
+        return (self.scale[0]*x[0],
+                self.scale[1]*x[1],
+                self.scale[0]*x[2],
+                self.scale[1]*x[3],
+                self.scale[0]*x[4],
+                self.scale[1]*x[5],)
 
     def _drawlines(self, dc, lines, pens):
         scaled_lines = map(self._line_scaler, lines)
@@ -264,7 +267,9 @@ class gviz(wx.Panel):
             dc.DrawArc(*scaled_arcs[i])
 
     def repaint_everything(self):
-        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
+        width = self.scale[0]*self.build_dimensions[0]
+        height = self.scale[1]*self.build_dimensions[1]
+        self.blitmap = wx.EmptyBitmap(width + 1, height + 1, -1)
         dc = wx.MemoryDC()
         dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250, 250, 200)))
@@ -273,9 +278,11 @@ class gviz(wx.Panel):
         for grid_unit in self.grid:
             if grid_unit > 0:
                 for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1], self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1]+self.scale[1]*self.build_dimensions[1])
+                    draw_x = self.scale[0]*x*grid_unit
+                    dc.DrawLine(draw_x, 0, draw_x, height)
                 for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0], self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0], self.translate[1]+y*self.scale[1]*grid_unit)
+                    draw_y = self.scale[1]*(self.build_dimensions[1]-y*grid_unit)
+                    dc.DrawLine(0, draw_y, width, draw_y)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
 
         if not self.showall:
@@ -327,7 +334,9 @@ class gviz(wx.Panel):
             self.repaint_everything()
         self.paint_hilights()
         dc = wx.PaintDC(self)
-        dc.DrawBitmap(self.blitmap, 0, 0)
+        dc.SetBackground(wx.Brush(self.bgcolor))
+        dc.Clear()
+        dc.DrawBitmap(self.blitmap, self.translate[0], self.translate[1])
 
     def addfile(self, gcode):
         self.clear()
