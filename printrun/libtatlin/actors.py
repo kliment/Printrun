@@ -267,7 +267,7 @@ class GcodeModel(Model):
                 color_list.append(vertex_color)
 
                 prev_pos = current_pos
-                gline.set("gcview_end_vertex", len(vertex_list))
+                gline.gcview_end_vertex = len(vertex_list)
 
             self.layer_stops.append(len(vertex_list))
 
