@@ -18,30 +18,31 @@ from collections import deque
 import wx, time
 from printrun import gcoder
 
-from printrun_utils import imagefile
+from printrun_utils import imagefile, install_locale
+install_locale('pronterface')
 
 ID_ABOUT = 101
 ID_EXIT = 110
 class GvizWindow(wx.Frame):
     def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
-        wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = size)
+        wx.Frame.__init__(self, None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
 
         self.CreateStatusBar(1);
-        self.SetStatusText("Layer number and Z position show here when you scroll");
+        self.SetStatusText(_("Layer number and Z position show here when you scroll"))
 
         panel = wx.Panel(self, -1)
         self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
-        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
+        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
+        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
         toolbar.AddSeparator()
-        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
-        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
-        toolbar.AddSimpleTool(5, wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Reset view', '')
+        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
+        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
+        toolbar.AddSimpleTool(5, wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Reset view"), '')
         toolbar.AddSeparator()
-        #toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
+        #toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Insert Code at start of this layer"), '')
         toolbar.Realize()
         vbox.Add(toolbar, 0, border = 5)
         vbox.Add(self.p, 1, wx.EXPAND)
@@ -75,7 +76,7 @@ class GvizWindow(wx.Frame):
         self.p.zoom(0, 0, 1.0)
 
     def mouse(self, event):
-        if event.ButtonUp(wx.MOUSE_BTN_LEFT):
+        if event.ButtonUp(wx.MOUSE_BTN_LEFT) or event.ButtonUp(wx.MOUSE_BTN_RIGHT):
             if self.initpos is not None:
                 self.initpos = None
         elif event.Dragging():
@@ -198,14 +199,14 @@ class Gviz(wx.Panel):
     def layerup(self):
         if self.layerindex + 1 < len(self.layers):
             self.layerindex += 1
-            self.parent.SetStatusText("Layer %d - Going Up - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
+            self.parent.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
             wx.CallAfter(self.Refresh)
 
     def layerdown(self):
         if self.layerindex > 0:
             self.layerindex -= 1
-            self.parent.SetStatusText("Layer %d - Going Down - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
+            self.parent.SetStatusText(_("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
             wx.CallAfter(self.Refresh)
 
