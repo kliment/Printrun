@@ -257,7 +257,7 @@ class GcodeModel(Model):
 
         prev_pos = (0, 0, 0)
         for layer_idx, layer in enumerate(model_data.all_layers):
-            for gline in layer.lines:
+            for gline in layer:
                 if not gline.is_move:
                     continue
                 vertex_list.append(prev_pos)

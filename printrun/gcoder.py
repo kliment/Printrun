@@ -78,13 +78,9 @@ def parse_coordinates(line, split_raw, imperial = False, force = False):
         if code not in gcode_parsed_nonargs and bit[1]:
             setattr(line, code, unit_factor*float(bit[1]))
 
-class Layer(object):
+class Layer(list):
 
-    lines = None
-    duration = None
-
-    def __init__(self, lines):
-        self.lines = lines
+    __slots__ = ("duration")
 
     def _preprocess(self, current_x, current_y, current_z):
         xmin = float("inf")
@@ -96,7 +92,7 @@ class Layer(object):
         relative = False
         relative_e = False
 
-        for line in self.lines:
+        for line in self:
             if not line.is_move and line.command != "G92":
                 continue
             if line.is_move:
@@ -183,9 +179,9 @@ class GCode(object):
         self.lines.append(gline)
         self._preprocess_lines([gline])
         self._preprocess_extrusion([gline])
-        self.append_layer.lines.append(gline)
+        self.append_layer.append(gline)
         self.layer_idxs.append(self.append_layer_id)
-        self.line_idxs.append(len(self.append_layer.lines))
+        self.line_idxs.append(len(self.append_layer))
         return gline
 
     def _preprocess_lines(self, lines = None):
@@ -275,9 +271,8 @@ class GCode(object):
                         cur_z = line.z
 
             if cur_z != prev_z:
-                cur_lines = tuple(cur_lines)
                 all_layers.append(Layer(cur_lines))
-                old_lines = layers.get(prev_z, ())
+                old_lines = layers.get(prev_z, [])
                 old_lines += cur_lines
                 layers[prev_z] = old_lines
                 cur_lines = []
@@ -291,11 +286,10 @@ class GCode(object):
             prev_z = cur_z
 
         if cur_lines:
-            cur_lines = tuple(cur_lines)
-            all_layers.append(Layer(tuple(cur_lines)))
-            old_lines = layers.get(prev_z, ())
+            all_layers.append(Layer(cur_lines))
+            old_lines = layers.get(prev_z, [])
             old_lines += cur_lines
-            layers[prev_z] = tuple(old_lines)
+            layers[prev_z] = old_lines
 
         for idx in layers.keys():
             cur_lines = layers[idx]
@@ -369,7 +363,7 @@ class GCode(object):
         # get device caps from firmware: max speed, acceleration/axis (including extruder)
         # calculate the maximum move duration accounting for above ;)
         for layer in self.all_layers:
-            for line in layer.lines:
+            for line in layer:
                 if line.command not in ["G1", "G0", "G4"]:
                     continue
                 if line.command == "G4":
