@@ -36,8 +36,7 @@ cdef enum BitPos:
     pos_f =                 1 << 4
     pos_i =                 1 << 5
     pos_j =                 1 << 6
-    pos_s =                 1 << 7
-    pos_p =                 1 << 8
+
     pos_is_move =           1 << 9
     pos_relative =          1 << 10
     pos_relative_e =        1 << 11
@@ -63,7 +62,7 @@ cdef class GLine:
     
     cdef char* _raw
     cdef char* _command
-    cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
+    cdef float _x, _y, _z, _e, _f, _i, _j
     cdef float _current_x, _current_y, _current_z
     cdef uint32_t _gcview_end_vertex
     cdef uint32_t _status
@@ -132,20 +131,6 @@ cdef class GLine:
         def __set__(self, value):
             self._j = value
             self._status = set_has_var(self._status, pos_j)
-    property s:
-        def __get__(self):
-            if has_var(self._status, pos_s): return self._s
-            else: return None
-        def __set__(self, value):
-            self._s = value
-            self._status = set_has_var(self._status, pos_s)
-    property p:
-        def __get__(self):
-            if has_var(self._status, pos_p): return self._p
-            else: return None
-        def __set__(self, value):
-            self._p = value
-            self._status = set_has_var(self._status, pos_p)
     property is_move:
         def __get__(self):
             if has_var(self._status, pos_is_move): return True

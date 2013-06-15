@@ -20,14 +20,15 @@ import math
 import datetime
 from array import array
 
-gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j", "s"]
+gcode_parsed_args = ["x", "y", "e", "f", "z", "i", "j"]
 gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
 m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
+specific_exp = "(?:\([^\(\)]*\))|(?:;.*)|(?:[/\*].*\n)|(%s[-+]?[0-9]*\.?[0-9]*)"
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
 class PyLine(object):
 
-    __slots__ = ('x','y','z','e','f','i','j','s','p',
+    __slots__ = ('x','y','z','e','f','i','j',
                  'raw','split_raw',
                  'command','is_move',
                  'relative','relative_e',
@@ -45,6 +46,18 @@ try:
     Line = gcoder_line.GLine
 except ImportError:
     Line = PyLine
+
+def find_specific_code(line, code):
+    exp = specific_exp % code
+    bits = [bit for bit in re.findall(exp, line.raw) if bit]
+    if not bits: return None
+    else: return float(bits[0][1:])
+
+def S(line):
+    return find_specific_code(line, "S")
+
+def P(line):
+    return find_specific_code(line, "P")
 
 def split(line):
     split_raw = gcode_exp.findall(line.raw.lower())
@@ -402,7 +415,7 @@ def main():
     if len(sys.argv) < 2:
         print "usage: %s filename.gcode" % sys.argv[0]
         return
- 
+
     print "Line object size:", sys.getsizeof(Line("G0 X0"))
     gcode = GCode(open(sys.argv[1])) 
 

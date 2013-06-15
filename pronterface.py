@@ -367,7 +367,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def sentcb(self, line):
         gline = gcoder.Line(line)
-        split_raw = gcoder.split_line(gline)
+        split_raw = gcoder.split(gline)
         gcoder.parse_coordinates(gline, split_raw, imperial = False)
         if gline.is_move:
             if gline.z != None:
@@ -378,14 +378,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     wx.CallAfter(self.gviz.setlayer, layer)
         elif gline.command in ["M104", "M109"]:
             gcoder.parse_coordinates(gline, split_raw, imperial = False, force = True)
-            if gline.s != None:
-                temp = gline.s
+            gline_s = gcoder.S(gline)
+            if gline_s != None:
+                temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
         elif gline.command == "M140":
             gline.parse_coordinates(gline, split_raw, imperial = False, force = True)
-            if gline.s != None:
-                temp = gline.s
+            gline_s = gcoder.S(gline)
+            if gline_s != None:
+                temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
         else:
