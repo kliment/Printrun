@@ -119,7 +119,7 @@ class wxGLPanel(wx.Panel):
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(60., width / float(height), 10.0, self.dist)
+        gluPerspective(60., width / float(height), 10.0, 3 * self.dist)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
@@ -263,7 +263,9 @@ class GcodeViewPanel(wxGLPanel):
         self.create_objects()
         
         glPushMatrix()
-        glTranslatef(-self.parent.platform.width/2, -self.parent.platform.depth/2, -self.dist)
+        glTranslatef(0, 0, -self.dist) # Move back
+        glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
+        glTranslatef(-self.parent.platform.width/2, -self.parent.platform.depth/2, 0) # Move origin to bottom left of platform
 
         for obj in self.parent.objects:
             if not obj.model or not obj.model.loaded or not obj.model.initialized:
@@ -299,17 +301,12 @@ class GcodeViewPanel(wxGLPanel):
                 self.initpos = None
                 p2 = event.GetPositionTuple()
                 sz = self.GetClientSize()
-                p1x = (float(p1[0]) - sz[0] / 2) / (sz[0] / 2)
-                p1y = -(float(p1[1]) - sz[1] / 2) / (sz[1] / 2)
-                p2x = (float(p2[0]) - sz[0] / 2) / (sz[0] / 2)
-                p2y = -(float(p2[1]) - sz[1] / 2) / (sz[1] / 2)
-                #print p1x, p1y, p2x, p2y
-                quat = trackball(p1x, p1y, p2x, p2y, -self.transv[2] / 250.0)
+                p1x = float(p1[0]) / (sz[0] / 2) - 1
+                p1y = 1 - float(p1[1]) / (sz[1] / 2)
+                p2x = float(p2[0]) / (sz[0] / 2) - 1
+                p2y = 1 - float(p2[1]) / (sz[1] / 2)
+                quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
                 self.basequat = mulquat(self.basequat, quat)
-                mat = build_rotmatrix(self.basequat)
-                glLoadIdentity()
-                glTranslatef(*self.transv)
-                glMultMatrixd(mat)
 
         elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if self.initpos is not None:
