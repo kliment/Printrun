@@ -69,16 +69,11 @@ def parse_coordinates(line, split_raw, imperial = False, force = False):
     # Not a G-line, we don't want to parse its arguments
     if not force and line.command[0] != "G":
         return
-    if imperial:
-        for bit in split_raw:
-            code = bit[0]
-            if code in gcode_parsed_args and len(bit) > 1:
-                setattr(line, code, 25.4*float(bit[1:]))
-    else:
-        for bit in split_raw:
-            code = bit[0]
-            if code in gcode_parsed_args and len(bit) > 1:
-                setattr(line, code, float(bit[1:]))
+    unit_factor = 25.4 if imperial else 1
+    for bit in split_raw:
+        code = bit[0]
+        if code in gcode_parsed_args and len(bit) > 1:
+            setattr(line, code, unit_factor*float(bit[1:]))
 
 class Layer(object):
 
