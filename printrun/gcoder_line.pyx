@@ -198,6 +198,8 @@ cdef class GLine:
             if has_var(self._status, pos_raw): return self._raw
             else: return None
         def __set__(self, value):
+            # WARNING: memory leak could happen here, as we don't do the following :
+            # if self._raw != NULL: free(self._raw)
             self._raw = copy_string(value)
             self._status = set_has_var(self._status, pos_raw)
     property command:
@@ -205,5 +207,7 @@ cdef class GLine:
             if has_var(self._status, pos_command): return self._command
             else: return None
         def __set__(self, value):
+            # WARNING: memory leak could happen here, as we don't do the following :
+            # if self._command != NULL: free(self._command)
             self._command = copy_string(value)
             self._status = set_has_var(self._status, pos_command)
