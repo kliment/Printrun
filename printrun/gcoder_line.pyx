@@ -36,18 +36,18 @@ cdef enum BitPos:
     pos_f =                 1 << 4
     pos_i =                 1 << 5
     pos_j =                 1 << 6
-
-    pos_is_move =           1 << 9
-    pos_relative =          1 << 10
-    pos_relative_e =        1 << 11
-    pos_extruding =         1 << 12
-    pos_current_x =         1 << 13
-    pos_current_y =         1 << 14
-    pos_current_z =         1 << 15
-    pos_current_tool =      1 << 16
-    pos_raw =               1 << 17
-    pos_command =           1 << 18
-    pos_gcview_end_vertex = 1 << 19
+    pos_is_move =           1 << 7
+    pos_relative =          1 << 8
+    pos_relative_e =        1 << 9
+    pos_extruding =         1 << 10
+    pos_current_x =         1 << 11
+    pos_current_y =         1 << 12
+    pos_current_z =         1 << 13
+    pos_current_tool =      1 << 14
+    pos_raw =               1 << 15
+    pos_command =           1 << 16
+    pos_gcview_end_vertex = 1 << 17
+    # WARNING: don't use bits 24 to 31 as we store current_tool there
 
 cdef inline uint32_t has_var(uint32_t status, uint32_t pos):
     return status & pos
@@ -66,7 +66,6 @@ cdef class GLine:
     cdef float _current_x, _current_y, _current_z
     cdef uint32_t _gcview_end_vertex
     cdef uint32_t _status
-    cdef char _current_tool
 
     __slots__ = ()
 
@@ -182,10 +181,10 @@ cdef class GLine:
             self._status = set_has_var(self._status, pos_current_z)
     property current_tool:
         def __get__(self):
-            if has_var(self._status, pos_current_tool): return self._current_tool
+            if has_var(self._status, pos_current_tool): return self._status >> 24
             else: return None
         def __set__(self, value):
-            self._current_tool = value
+            self._status = (self._status & ((1 << 24) - 1)) | (value << 24)
             self._status = set_has_var(self._status, pos_current_tool)
     property gcview_end_vertex:
         def __get__(self):
