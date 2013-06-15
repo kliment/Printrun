@@ -182,6 +182,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         monitorsetting.hidden = True
         self.settings._add(monitorsetting)
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"))
+        self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
         self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer"), _("Use 3D visualization instead of 2D layered visualization"), "UI"))
@@ -1065,12 +1066,25 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             return
         self.p.send_now('M114')
 
+    def clamped_move_message(self):
+        print _("Manual move outside of the build volume prevented (see the \"Clamp manual moves\" option).")
+
     def moveXY(self, x, y):
         # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
         self.zb.clearRepeat()
         if x != 0:
+            if self.settings.clamp_jogging:
+                new_x = self.current_pos[0] + x
+                if new_x < self.build_dimensions_list[3] or new_x > self.build_dimensions_list[0] + self.build_dimensions_list[3]:
+                    self.clamped_move_message()
+                    return
             self.onecmd('move X %s' % x)
         elif y != 0:
+            if self.settings.clamp_jogging:
+                new_y = self.current_pos[1] + y
+                if new_y < self.build_dimensions_list[4] or new_y > self.build_dimensions_list[1] + self.build_dimensions_list[4]:
+                    self.clamped_move_message()
+                    return
             self.onecmd('move Y %s' % y)
         else:
             return
@@ -1078,6 +1092,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def moveZ(self, z):
         if z != 0:
+            if self.settings.clamp_jogging:
+                new_z = self.current_pos[2] + z
+                if new_z < self.build_dimensions_list[5] or new_z > self.build_dimensions_list[2] + self.build_dimensions_list[5]:
+                    self.clamped_move_message()
+                    return
             self.onecmd('move Z %s' % z)
             self.p.send_now('M114')
         # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
