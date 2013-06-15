@@ -423,10 +423,11 @@ class GcodeViewPanel(wxGLPanel):
             self.layerup()
         if key in kdo:
             self.layerdown()
+        x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
         if key in kzi:
-            self.zoom(step)
+            self.zoom(step, (x, y))
         if key in kzo:
-            self.zoom(1 / step)
+            self.zoom(1 / step, (x, y))
         event.Skip()
         wx.CallAfter(self.Refresh)
 
