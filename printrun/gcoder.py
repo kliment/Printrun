@@ -275,8 +275,9 @@ class GCode(object):
                         cur_z = line.z
 
             if cur_z != prev_z:
+                cur_lines = tuple(cur_lines)
                 all_layers.append(Layer(cur_lines))
-                old_lines = layers.get(prev_z, [])
+                old_lines = layers.get(prev_z, ())
                 old_lines += cur_lines
                 layers[prev_z] = old_lines
                 cur_lines = []
@@ -290,10 +291,11 @@ class GCode(object):
             prev_z = cur_z
 
         if cur_lines:
-            all_layers.append(Layer(cur_lines))
-            old_lines = layers.pop(prev_z, [])
+            cur_lines = tuple(cur_lines)
+            all_layers.append(Layer(tuple(cur_lines)))
+            old_lines = layers.get(prev_z, ())
             old_lines += cur_lines
-            layers[prev_z] = old_lines
+            layers[prev_z] = tuple(old_lines)
 
         for idx in layers.keys():
             cur_lines = layers[idx]
