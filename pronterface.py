@@ -534,20 +534,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 return
         wx.CallAfter(self.addtexttolog,l);
 
-    def scanserial(self):
-        """scan for available ports. return a list of device names."""
-        baselist = []
-        if os.name == "nt":
-            try:
-                key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
-                i = 0
-                while True:
-                    baselist += [_winreg.EnumValue(key, i)[1]]
-                    i += 1
-            except:
-                pass
-        return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') + glob.glob("/dev/tty.*") + glob.glob("/dev/cu.*") + glob.glob("/dev/rfcomm*")
-
     def project(self,event):
         from printrun import projectlayer
         projectlayer.SettingsFrame(self, self.p).Show()
@@ -651,19 +637,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Close()
 
     def rescanports(self, event = None):
-        scan = self.scanserial()
-        portslist = list(scan)
+        scanned = self.scanserial()
+        portslist = list(scanned)
         if self.settings.port != "" and self.settings.port not in portslist:
-            portslist += [self.settings.port]
+            portslist.append(self.settings.port)
             self.serialport.Clear()
             self.serialport.AppendItems(portslist)
-        try:
-            if os.path.exists(self.settings.port) or self.settings.port in scan:
-                self.serialport.SetValue(self.settings.port)
-            elif len(portslist) > 0:
-                self.serialport.SetValue(portslist[0])
-        except:
-            pass
+        if os.path.exists(self.settings.port) or self.settings.port in scanned:
+            self.serialport.SetValue(self.settings.port)
+        elif portslist:
+            self.serialport.SetValue(portslist[0])
 
     def cbkey(self, e):
         if e.GetKeyCode() == wx.WXK_UP:
@@ -1591,17 +1574,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def connect(self, event = None):
         print _("Connecting...")
         port = None
-        try:
-            port = self.scanserial()[0]
-        except:
-            pass
-        if self.serialport.GetValue()!="":
+        if self.serialport.GetValue():
             port = str(self.serialport.GetValue())
+        else:
+            scanned = self.scanserial()
+            if scanned:
+                port = scanned[0]
         baud = 115200
         try:
             baud = int(self.baud.GetValue())
         except:
-            pass
+            print _("Could not parse baud rate: ")
+            traceback.print_exc(file = sys.stdout)
         if self.paused:
             self.p.paused = 0
             self.p.printing = 0
