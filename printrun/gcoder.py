@@ -21,8 +21,10 @@ import datetime
 from array import array
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "i", "j"]
-gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
-m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
+gcode_parsed_nonargs = ["g", "t", "m", "n"]
+to_parse = "".join(gcode_parsed_args + gcode_parsed_nonargs)
+gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|([%s])([-+]?[0-9]*\.?[0-9]*)" % to_parse) 
+m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|([XYZ]):?([-+]?[0-9]*\.?[0-9]*)") 
 specific_exp = "(?:\([^\(\)]*\))|(?:;.*)|(?:[/\*].*\n)|(%s[-+]?[0-9]*\.?[0-9]*)"
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
@@ -61,7 +63,8 @@ def P(line):
 
 def split(line):
     split_raw = gcode_exp.findall(line.raw.lower())
-    line.command = split_raw[0].upper() if not split_raw[0].startswith("n") else split_raw[1].upper()
+    command = split_raw[0] if not split_raw[0] == "n" else split_raw[1]
+    line.command = command[0].upper() + command[1]
     line.is_move = line.command in move_gcodes
     return split_raw
 
@@ -72,8 +75,8 @@ def parse_coordinates(line, split_raw, imperial = False, force = False):
     unit_factor = 25.4 if imperial else 1
     for bit in split_raw:
         code = bit[0]
-        if code in gcode_parsed_args and len(bit) > 1:
-            setattr(line, code, unit_factor*float(bit[1:]))
+        if code not in gcode_parsed_nonargs and bit[1]:
+            setattr(line, code, unit_factor*float(bit[1]))
 
 class Layer(object):
 
@@ -195,6 +198,8 @@ class GCode(object):
         current_tool = self.current_tool
         for line in lines:
             split_raw = split(line)
+            if not line.command:
+                continue
             if line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e

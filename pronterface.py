@@ -1196,12 +1196,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         y = None
         z = None
         for bit in bits:
-            if x is None and bit.startswith("X"):
-                x = float(bit[1:].replace(":",""))
-            elif y is None and bit.startswith("Y"):
-                y = float(bit[1:].replace(":",""))
-            elif z is None and bit.startswith("Z"):
-                z = float(bit[1:].replace(":",""))
+            if not bit[0]: continue
+            if x is None and bit[0] == "X":
+                x = float(bit[1])
+            elif y is None and bit[0] == "Y":
+                y = float(bit[1])
+            elif z is None and bit[0] == "Z":
+                z = float(bit[1])
         if x is not None: self.current_pos[0] = x
         if y is not None: self.current_pos[1] = y
         if z is not None: self.current_pos[2] = z
