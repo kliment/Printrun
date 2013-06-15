@@ -22,7 +22,7 @@ from printrun_utils import imagefile
 
 ID_ABOUT = 101
 ID_EXIT = 110
-class window(wx.Frame):
+class GvizWindow(wx.Frame):
     def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
         wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = size)
 
@@ -30,7 +30,7 @@ class window(wx.Frame):
         self.SetStatusText("Layer number and Z position show here when you scroll");
 
         panel = wx.Panel(self, -1)
-        self.p = gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
+        self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
@@ -116,7 +116,7 @@ class window(wx.Frame):
             if z > 0:   self.p.zoom(event.GetX(), event.GetY(), 1.2)
             elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1/1.2)
 
-class gviz(wx.Panel):
+class Gviz(wx.Panel):
 
     # Mark canvas as dirty when setting showall
     _showall = 0
@@ -474,6 +474,6 @@ class gviz(wx.Panel):
 if __name__ == '__main__':
     import sys
     app = wx.App(False)
-    main = window(open(sys.argv[1]))
+    main = GvizWindow(open(sys.argv[1]))
     main.Show()
     app.MainLoop()
