@@ -24,7 +24,7 @@ install_locale('pronterface')
 ID_ABOUT = 101
 ID_EXIT = 110
 class GvizWindow(wx.Frame):
-    def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
+    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
         wx.Frame.__init__(self, None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
 
         self.CreateStatusBar(1);
@@ -34,16 +34,17 @@ class GvizWindow(wx.Frame):
         self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
+        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
         toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
         toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
         toolbar.AddSeparator()
         toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
         toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
-        toolbar.AddSimpleTool(5, wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Reset view"), '')
+        toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"), longHelp = '')
         toolbar.AddSeparator()
         #toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Insert Code at start of this layer"), '')
         toolbar.Realize()
+        self.toolbar = toolbar
         vbox.Add(toolbar, 0, border = 5)
         vbox.Add(self.p, 1, wx.EXPAND)
         panel.SetSizer(vbox)
@@ -55,7 +56,7 @@ class GvizWindow(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
         #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 6)
 
-        self.initpos = [0, 0]
+        self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
         self.Bind(wx.EVT_KEY_DOWN, self.key)
         self.p.Bind(wx.EVT_MOUSEWHEEL, self.zoom)
@@ -81,7 +82,7 @@ class GvizWindow(wx.Frame):
                 self.initpos = None
         elif event.Dragging():
             e = event.GetPositionTuple()
-            if self.initpos is None or not hasattr(self, "basetrans"):
+            if self.initpos is None:
                 self.initpos = e
                 self.basetrans = self.p.translate
             self.p.translate = [self.basetrans[0] + (e[0] - self.initpos[0]),
@@ -169,6 +170,7 @@ class Gviz(wx.Panel):
         self.bgcolor = wx.Colour()
         self.bgcolor.SetFromName(bgcolor)
         self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
+        self.paint_overlay = None
 
     def inject(self):
         #import pdb; pdb.set_trace()
@@ -338,6 +340,8 @@ class Gviz(wx.Panel):
         dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         dc.DrawBitmap(self.blitmap, self.translate[0], self.translate[1])
+        if self.paint_overlay:
+            self.paint_overlay(dc)
 
     def addfile(self, gcode):
         self.clear()
