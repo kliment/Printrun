@@ -408,10 +408,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.sentlines.put_nowait(line)
 
     def preprintsendcb(self, gline):
-        if not self.excluder or not self.excluder.rectangles:
+        if not gline.is_move or not self.excluder or not self.excluder.rectangles:
+            return gline
+        if gline.x == None and gline.y == None:
             return gline
         for (x0, y0, x1, y1) in self.excluder.rectangles:
-            if not gline.is_move: continue
             if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
                 if gline.e != None and not gline.relative_e:
                     return gcoder.Line("G92 E%.5f" % gline.e)
