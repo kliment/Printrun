@@ -45,6 +45,7 @@ if os.name == "nt":
 import printcore
 from printrun.printrun_utils import pixmapfile, configfile
 from printrun.gui import MainWindow
+from printrun.excluder import Excluder
 import pronsole
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
@@ -175,6 +176,15 @@ class ComboSetting(wxSetting):
         return self.widget
 
 class PronterWindow(MainWindow, pronsole.pronsole):
+
+    _fgcode = None
+    def _get_fgcode(self):
+        return self._fgcode
+    def _set_fgcode(self, value):
+        self._fgcode = value
+        self.excluder = None
+    fgcode = property(_get_fgcode, _set_fgcode)
+
     def __init__(self, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed and endstops at 0, 0 and 0
@@ -218,6 +228,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.userm105 = 0
         self.monitor = 0
         self.fgcode = None
+        self.excluder = None
         self.skeinp = None
         self.monitor_interval = 3
         self.current_pos = [0, 0, 0]
@@ -292,6 +303,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.skeining = 0
         self.mini = False
         self.p.sendcb = self.sentcb
+        self.p.preprintsendcb = self.preprintsendcb
         self.p.printsendcb = self.printsentcb
         self.p.layerchangecb = self.layer_change_cb
         self.p.startcb = self.startcb
@@ -394,6 +406,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         else:
             return
         self.sentlines.put_nowait(line)
+
+    def preprintsendcb(self, gline):
+        if not self.excluder or not self.excluder.rectangles:
+            return gline
+        for (x0, y0, x1, y1) in self.excluder.rectangles:
+            if not gline.is_move: continue
+            if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
+                if gline.e != None and not gline.relative_e:
+                    return gcoder.Line("G92 E%.5f" % gline.e)
+                else:
+                    return None
+        return gline
 
     def printsentcb(self, gline):
         if gline.is_move and hasattr(self.gwindow, "set_current_gline"):
@@ -538,6 +562,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         from printrun import projectlayer
         projectlayer.SettingsFrame(self, self.p).Show()
 
+    def exclude(self, event):
+        if not self.fgcode:
+            wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
+            return 
+        if not self.excluder:
+            self.excluder = Excluder()
+        self.excluder.pop_window(self.fgcode, bgcolor = self.settings.bgcolor)
+
     def popmenu(self):
         self.menustrip = wx.MenuBar()
         # File menu
@@ -545,6 +577,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Opens file")))
         self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
         self.Bind(wx.EVT_MENU, self.clearOutput, m.Append(-1, _("Clear console"), _(" Clear output console")))
+        self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
         self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
@@ -1121,6 +1154,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
             self.save_in_rc("set z_feedrate", "set z_feedrate %d" % self.settings.z_feedrate)
             self.save_in_rc("set e_feedrate", "set e_feedrate %d" % self.settings.e_feedrate)
+        if self.excluder:
+            self.excluder.close_window()
         wx.CallAfter(self.gwindow.Destroy)
         wx.CallAfter(self.Destroy)
 
