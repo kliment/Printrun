@@ -74,6 +74,7 @@ class printcore():
         self.tempcb = None #impl (wholeline)
         self.recvcb = None #impl (wholeline)
         self.sendcb = None #impl (wholeline)
+        self.preprintsendcb = None #impl (wholeline)
         self.printsendcb = None #impl (wholeline)
         self.layerchangecb = None #impl (wholeline)
         self.errorcb = None #impl (wholeline)
@@ -414,7 +415,9 @@ class printcore():
             if self.startcb:
                 #callback for printing started
                 try: self.startcb(resuming)
-                except: pass
+                except:
+                    print "Print start callback failed with:"
+                    traceback.print_exc(file = sys.stdout)
             while self.printing and self.printer and self.online:
                 self._sendnext()
             self.sentlines = {}
@@ -423,10 +426,12 @@ class printcore():
             if self.endcb:
                 #callback for printing done
                 try: self.endcb()
-                except: pass
+                except:
+                    print "Print end callback failed with:"
+                    traceback.print_exc(file = sys.stdout)
         except:
             print "Print thread died due to the following error:"
-            traceback.print_exc()
+            traceback.print_exc(file = sys.stdout)
         finally:
             self.print_thread = None
             self._start_sender()
@@ -460,16 +465,23 @@ class printcore():
             return
         if self.printing and self.queueindex < len(self.mainqueue):
             (layer, line) = self.mainqueue.idxs(self.queueindex)
-            gline = self.mainqueue.all_layers[layer].lines[line]
+            gline = self.mainqueue.all_layers[layer][line]
             if self.layerchangecb and self.queueindex > 0:
                 (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
                     try: self.layerchangecb(layer)
                     except: traceback.print_exc()
+            if self.preprintsendcb:
+                gline = self.preprintsendcb(gline)
+            if gline == None:
+                self.queueindex += 1
+                self.clear = True
+                return
             tline = gline.raw
             if tline.lstrip().startswith(";@"): # check for host command
                 self.processHostCommand(tline)
                 self.queueindex += 1
+                self.clear = True
                 return
       
             tline = tline.split(";")[0]

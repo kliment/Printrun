@@ -266,7 +266,7 @@ class VizPane(wx.BoxSizer):
                 print "Falling back to 2D view, and here is the backtrace:"
                 traceback.print_exc()
         if use2dview:
-            root.gviz = gviz.gviz(parentpanel, (300, 300),
+            root.gviz = gviz.Gviz(parentpanel, (300, 300),
                 build_dimensions = root.build_dimensions_list,
                 grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
                 extrusion_width = root.settings.preview_extrusion_width,
@@ -288,7 +288,7 @@ class VizPane(wx.BoxSizer):
                 print "Falling back to 2D view, and here is the backtrace:"
                 traceback.print_exc()
         if not use3dview:
-            root.gwindow = gviz.window([],
+            root.gwindow = gviz.GvizWindow(
             build_dimensions = root.build_dimensions_list,
             grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
             extrusion_width = root.settings.preview_extrusion_width,

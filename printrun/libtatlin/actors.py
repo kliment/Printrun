@@ -241,6 +241,7 @@ class GcodeModel(Model):
     color_tool0 = (1.0, 0.0, 0.0, 0.6)
     color_tool1 = (0.0, 0.0, 1.0, 0.6)
     color_printed = (0.2, 0.75, 0, 0.6)
+    color_current = (0.6, 0.3, 0, 1)
 
     use_vbos = True
     loaded = False
@@ -256,7 +257,7 @@ class GcodeModel(Model):
 
         prev_pos = (0, 0, 0)
         for layer_idx, layer in enumerate(model_data.all_layers):
-            for gline in layer.lines:
+            for gline in layer:
                 if not gline.is_move:
                     continue
                 vertex_list.append(prev_pos)
@@ -337,33 +338,56 @@ class GcodeModel(Model):
         else:
             glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
 
-        if mode_2d:
-            glScale(1.0, 1.0, 0.0) # discard z coordinates
-            start = self.layer_stops[self.num_layers_to_draw - 1]
-            end   = self.layer_stops[self.num_layers_to_draw] - start
-        else: # 3d
-            start = 0
-            end   = self.layer_stops[self.num_layers_to_draw]
-        
-        glDisableClientState(GL_COLOR_ARRAY)
-
-        glColor4f(*self.color_printed)
-
-        printed_end = min(self.printed_until, end)
-        if start < printed_end:
-            glDrawArrays(GL_LINES, start, printed_end)
-
-        glEnableClientState(GL_COLOR_ARRAY)
-
         self.vertex_color_buffer.bind()
         if has_vbo:
             glColorPointer(4, GL_FLOAT, 0, None)
         else:
             glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
 
+        start = 0
+        if self.num_layers_to_draw <= self.max_layers:
+            end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
+        else:
+            end_prev_layer = -1
+        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        
+        glDisableClientState(GL_COLOR_ARRAY)
+
+        glColor4f(*self.color_printed)
+
+        # Draw printed stuff until end or end_prev_layer
+        cur_end = min(self.printed_until, end)
+        if end_prev_layer >= 0:
+            cur_end = min(cur_end, end_prev_layer)
+        if cur_end >= 0:
+            glDrawArrays(GL_LINES, start, cur_end)
+
+        glEnableClientState(GL_COLOR_ARRAY)
+
+        # Draw nonprinted stuff until end_prev_layer
+        start = max(cur_end, 0)
+        if end_prev_layer >= start:
+            glDrawArrays(GL_LINES, start, end_prev_layer - start)
+            cur_end = end_prev_layer
+
+        glDisableClientState(GL_COLOR_ARRAY)
+
+        glColor4f(*self.color_current)
+
+        # Draw current layer
+        orig_linewidth = (GLfloat)()
+        glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
+        glLineWidth(2.0)
+        if end_prev_layer >= 0 and end > end_prev_layer:
+            glDrawArrays(GL_LINES, end_prev_layer, end - end_prev_layer)
+        glLineWidth(orig_linewidth)
+
+        glEnableClientState(GL_COLOR_ARRAY)
+
+        # Draw non printed stuff until end (if not ending at a given layer)
         start = max(self.printed_until, 0)
         end = end - start
-        if start >= 0 and end > 0:
+        if end_prev_layer < 0 and end > 0:
             glDrawArrays(GL_LINES, start, end)
 
         self.vertex_buffer.unbind()

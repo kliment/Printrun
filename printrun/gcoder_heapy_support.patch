@@ -1,0 +1,15 @@
+--- printrun/gcoder_line.c	2013-06-15 16:08:53.260081109 +0200
++++ printrun/gcoder_line.c	2013-06-15 16:08:57.083439793 +0200
+@@ -3945,2 +3945,4 @@ static int __Pyx_InitGlobals(void) {
+ 
++#include "gcoder_line_extra.h"
++
+ #if PY_MAJOR_VERSION < 3
+@@ -4032,2 +4034,7 @@ PyMODINIT_FUNC PyInit_gcoder_line(void)
+   /*--- Execution code ---*/
++  nysets_heapdefs[0].type = &__pyx_type_8printrun_11gcoder_line_GLine;
++  if (PyDict_SetItemString(__pyx_d,
++         "_NyHeapDefs_",
++         PyCObject_FromVoidPtrAndDesc(&nysets_heapdefs, "NyHeapDef[] v1.0", 0)) < 0)
++{__pyx_filename = __pyx_f[0]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+ 

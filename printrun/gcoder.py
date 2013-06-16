@@ -20,66 +20,67 @@ import math
 import datetime
 from array import array
 
-gcode_parsed_args = ["x", "y", "e", "f", "z", "p", "i", "j", "s"]
-gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|[a-z][-+]?[0-9]*\.?[0-9]*") 
-m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|[A-Z]:?[-+]?[0-9]*\.?[0-9]*") 
+gcode_parsed_args = ["x", "y", "e", "f", "z", "i", "j"]
+gcode_parsed_nonargs = ["g", "t", "m", "n"]
+to_parse = "".join(gcode_parsed_args + gcode_parsed_nonargs)
+gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|([%s])([-+]?[0-9]*\.?[0-9]*)" % to_parse) 
+m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|([XYZ]):?([-+]?[0-9]*\.?[0-9]*)") 
+specific_exp = "(?:\([^\(\)]*\))|(?:;.*)|(?:[/\*].*\n)|(%s[-+]?[0-9]*\.?[0-9]*)"
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
 class PyLine(object):
 
-    __slots__ = ('x','y','z','e','f','i','j','s','p',
+    __slots__ = ('x','y','z','e','f','i','j',
                  'raw','split_raw',
                  'command','is_move',
                  'relative','relative_e',
                  'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
                  'gcview_end_vertex')
 
+    def __init__(self, l):
+        self.raw = l
+
     def __getattr__(self, name):
         return None
 
 try:
     import gcoder_line
-    LineBase = gcoder_line.GLine
+    Line = gcoder_line.GLine
 except ImportError:
-    LineBase = PyLine
+    Line = PyLine
 
-class Line(LineBase):
+def find_specific_code(line, code):
+    exp = specific_exp % code
+    bits = [bit for bit in re.findall(exp, line.raw) if bit]
+    if not bits: return None
+    else: return float(bits[0][1:])
 
-    __slots__ = ()
+def S(line):
+    return find_specific_code(line, "S")
 
-    def __init__(self, l):
-        super(Line, self).__init__()
-        self.raw = l
-        self.split_raw = gcode_exp.findall(self.raw.lower())
-        self.command = self.split_raw[0].upper() if not self.split_raw[0].startswith("n") else self.split_raw[1].upper()
-        self.is_move = self.command in move_gcodes
+def P(line):
+    return find_specific_code(line, "P")
 
-    def parse_coordinates(self, imperial = False, force = False):
-        # Not a G-line, we don't want to parse its arguments
-        if not force and not self.command[0] == "G":
-            return
-        if imperial:
-            for bit in self.split_raw:
-                code = bit[0]
-                if code in gcode_parsed_args and len(bit) > 1:
-                    setattr(self, code, 25.4*float(bit[1:]))
-        else:
-            for bit in self.split_raw:
-                code = bit[0]
-                if code in gcode_parsed_args and len(bit) > 1:
-                    setattr(self, code, float(bit[1:]))
-        del self.split_raw
- 
-    def __repr__(self):
-        return self.raw
-        
-class Layer(object):
+def split(line):
+    split_raw = gcode_exp.findall(line.raw.lower())
+    command = split_raw[0] if split_raw[0][0] != "n" else split_raw[1]
+    line.command = command[0].upper() + command[1]
+    line.is_move = line.command in move_gcodes
+    return split_raw
 
-    lines = None
-    duration = None
+def parse_coordinates(line, split_raw, imperial = False, force = False):
+    # Not a G-line, we don't want to parse its arguments
+    if not force and line.command[0] != "G":
+        return
+    unit_factor = 25.4 if imperial else 1
+    for bit in split_raw:
+        code = bit[0]
+        if code not in gcode_parsed_nonargs and bit[1]:
+            setattr(line, code, unit_factor*float(bit[1]))
 
-    def __init__(self, lines):
-        self.lines = lines
+class Layer(list):
+
+    __slots__ = ("duration")
 
     def _preprocess(self, current_x, current_y, current_z):
         xmin = float("inf")
@@ -91,7 +92,7 @@ class Layer(object):
         relative = False
         relative_e = False
 
-        for line in self.lines:
+        for line in self:
             if not line.is_move and line.command != "G92":
                 continue
             if line.is_move:
@@ -178,9 +179,9 @@ class GCode(object):
         self.lines.append(gline)
         self._preprocess_lines([gline])
         self._preprocess_extrusion([gline])
-        self.append_layer.lines.append(gline)
+        self.append_layer.append(gline)
         self.layer_idxs.append(self.append_layer_id)
-        self.line_idxs.append(len(self.append_layer.lines))
+        self.line_idxs.append(len(self.append_layer))
         return gline
 
     def _preprocess_lines(self, lines = None):
@@ -192,6 +193,9 @@ class GCode(object):
         relative_e = self.relative_e
         current_tool = self.current_tool
         for line in lines:
+            split_raw = split(line)
+            if not line.command:
+                continue
             if line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e
@@ -213,7 +217,7 @@ class GCode(object):
             elif line.command[0] == "T":
                 current_tool = int(line.command[1:])
             if line.command[0] == "G":
-                line.parse_coordinates(imperial)
+                parse_coordinates(line, split_raw, imperial)
         self.imperial = imperial
         self.relative = relative
         self.relative_e = relative_e
@@ -283,7 +287,7 @@ class GCode(object):
 
         if cur_lines:
             all_layers.append(Layer(cur_lines))
-            old_lines = layers.pop(prev_z, [])
+            old_lines = layers.get(prev_z, [])
             old_lines += cur_lines
             layers[prev_z] = old_lines
 
@@ -359,7 +363,7 @@ class GCode(object):
         # get device caps from firmware: max speed, acceleration/axis (including extruder)
         # calculate the maximum move duration accounting for above ;)
         for layer in self.all_layers:
-            for line in layer.lines:
+            for line in layer:
                 if line.command not in ["G1", "G0", "G4"]:
                     continue
                 if line.command == "G4":
@@ -407,7 +411,8 @@ def main():
     if len(sys.argv) < 2:
         print "usage: %s filename.gcode" % sys.argv[0]
         return
- 
+
+    print "Line object size:", sys.getsizeof(Line("G0 X0"))
     gcode = GCode(open(sys.argv[1])) 
 
     print "Dimensions:"

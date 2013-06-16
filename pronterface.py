@@ -45,6 +45,7 @@ if os.name == "nt":
 import printcore
 from printrun.printrun_utils import pixmapfile, configfile
 from printrun.gui import MainWindow
+from printrun.excluder import Excluder
 import pronsole
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
@@ -175,6 +176,15 @@ class ComboSetting(wxSetting):
         return self.widget
 
 class PronterWindow(MainWindow, pronsole.pronsole):
+
+    _fgcode = None
+    def _get_fgcode(self):
+        return self._fgcode
+    def _set_fgcode(self, value):
+        self._fgcode = value
+        self.excluder = None
+    fgcode = property(_get_fgcode, _set_fgcode)
+
     def __init__(self, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed and endstops at 0, 0 and 0
@@ -182,6 +192,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         monitorsetting.hidden = True
         self.settings._add(monitorsetting)
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"))
+        self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
         self.settings._add(BooleanSetting("viz3d", False, _("Enable 3D viewer"), _("Use 3D visualization instead of 2D layered visualization"), "UI"))
@@ -217,6 +228,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.userm105 = 0
         self.monitor = 0
         self.fgcode = None
+        self.excluder = None
         self.skeinp = None
         self.monitor_interval = 3
         self.current_pos = [0, 0, 0]
@@ -291,6 +303,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.skeining = 0
         self.mini = False
         self.p.sendcb = self.sentcb
+        self.p.preprintsendcb = self.preprintsendcb
         self.p.printsendcb = self.printsentcb
         self.p.layerchangecb = self.layer_change_cb
         self.p.startcb = self.startcb
@@ -367,7 +380,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def sentcb(self, line):
         gline = gcoder.Line(line)
-        gline.parse_coordinates(imperial = False)
+        split_raw = gcoder.split(gline)
+        gcoder.parse_coordinates(gline, split_raw, imperial = False)
         if gline.is_move:
             if gline.z != None:
                 layer = gline.z
@@ -376,20 +390,35 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.gviz.clearhilights()
                     wx.CallAfter(self.gviz.setlayer, layer)
         elif gline.command in ["M104", "M109"]:
-            gline.parse_coordinates(imperial = False, force = True)
-            if gline.s != None:
-                temp = gline.s
+            gcoder.parse_coordinates(gline, split_raw, imperial = False, force = True)
+            gline_s = gcoder.S(gline)
+            if gline_s != None:
+                temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
         elif gline.command == "M140":
-            gline.parse_coordinates(imperial = False, force = True)
-            if gline.s != None:
-                temp = gline.s
+            gline.parse_coordinates(gline, split_raw, imperial = False, force = True)
+            gline_s = gcoder.S(gline)
+            if gline_s != None:
+                temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
         else:
             return
         self.sentlines.put_nowait(line)
+
+    def preprintsendcb(self, gline):
+        if not gline.is_move or not self.excluder or not self.excluder.rectangles:
+            return gline
+        if gline.x == None and gline.y == None:
+            return gline
+        for (x0, y0, x1, y1) in self.excluder.rectangles:
+            if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
+                if gline.e != None and not gline.relative_e:
+                    return gcoder.Line("G92 E%.5f" % gline.e)
+                else:
+                    return None
+        return gline
 
     def printsentcb(self, gline):
         if gline.is_move and hasattr(self.gwindow, "set_current_gline"):
@@ -530,23 +559,17 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 return
         wx.CallAfter(self.addtexttolog,l);
 
-    def scanserial(self):
-        """scan for available ports. return a list of device names."""
-        baselist = []
-        if os.name == "nt":
-            try:
-                key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
-                i = 0
-                while True:
-                    baselist += [_winreg.EnumValue(key, i)[1]]
-                    i += 1
-            except:
-                pass
-        return baselist+glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') + glob.glob("/dev/tty.*") + glob.glob("/dev/cu.*") + glob.glob("/dev/rfcomm*")
-
     def project(self,event):
         from printrun import projectlayer
         projectlayer.SettingsFrame(self, self.p).Show()
+
+    def exclude(self, event):
+        if not self.fgcode:
+            wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
+            return 
+        if not self.excluder:
+            self.excluder = Excluder()
+        self.excluder.pop_window(self.fgcode, bgcolor = self.settings.bgcolor)
 
     def popmenu(self):
         self.menustrip = wx.MenuBar()
@@ -555,6 +578,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Opens file")))
         self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
         self.Bind(wx.EVT_MENU, self.clearOutput, m.Append(-1, _("Clear console"), _(" Clear output console")))
+        self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
         self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
@@ -647,19 +671,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Close()
 
     def rescanports(self, event = None):
-        scan = self.scanserial()
-        portslist = list(scan)
+        scanned = self.scanserial()
+        portslist = list(scanned)
         if self.settings.port != "" and self.settings.port not in portslist:
-            portslist += [self.settings.port]
+            portslist.append(self.settings.port)
             self.serialport.Clear()
             self.serialport.AppendItems(portslist)
-        try:
-            if os.path.exists(self.settings.port) or self.settings.port in scan:
-                self.serialport.SetValue(self.settings.port)
-            elif len(portslist) > 0:
-                self.serialport.SetValue(portslist[0])
-        except:
-            pass
+        if os.path.exists(self.settings.port) or self.settings.port in scanned:
+            self.serialport.SetValue(self.settings.port)
+        elif portslist:
+            self.serialport.SetValue(portslist[0])
 
     def cbkey(self, e):
         if e.GetKeyCode() == wx.WXK_UP:
@@ -1062,12 +1083,25 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             return
         self.p.send_now('M114')
 
+    def clamped_move_message(self):
+        print _("Manual move outside of the build volume prevented (see the \"Clamp manual moves\" option).")
+
     def moveXY(self, x, y):
         # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
         self.zb.clearRepeat()
         if x != 0:
+            if self.settings.clamp_jogging:
+                new_x = self.current_pos[0] + x
+                if new_x < self.build_dimensions_list[3] or new_x > self.build_dimensions_list[0] + self.build_dimensions_list[3]:
+                    self.clamped_move_message()
+                    return
             self.onecmd('move X %s' % x)
         elif y != 0:
+            if self.settings.clamp_jogging:
+                new_y = self.current_pos[1] + y
+                if new_y < self.build_dimensions_list[4] or new_y > self.build_dimensions_list[1] + self.build_dimensions_list[4]:
+                    self.clamped_move_message()
+                    return
             self.onecmd('move Y %s' % y)
         else:
             return
@@ -1075,6 +1109,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def moveZ(self, z):
         if z != 0:
+            if self.settings.clamp_jogging:
+                new_z = self.current_pos[2] + z
+                if new_z < self.build_dimensions_list[5] or new_z > self.build_dimensions_list[2] + self.build_dimensions_list[5]:
+                    self.clamped_move_message()
+                    return
             self.onecmd('move Z %s' % z)
             self.p.send_now('M114')
         # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
@@ -1116,6 +1155,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
             self.save_in_rc("set z_feedrate", "set z_feedrate %d" % self.settings.z_feedrate)
             self.save_in_rc("set e_feedrate", "set e_feedrate %d" % self.settings.e_feedrate)
+        if self.excluder:
+            self.excluder.close_window()
         wx.CallAfter(self.gwindow.Destroy)
         wx.CallAfter(self.Destroy)
 
@@ -1193,12 +1234,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         y = None
         z = None
         for bit in bits:
-            if x is None and bit.startswith("X"):
-                x = float(bit[1:].replace(":",""))
-            elif y is None and bit.startswith("Y"):
-                y = float(bit[1:].replace(":",""))
-            elif z is None and bit.startswith("Z"):
-                z = float(bit[1:].replace(":",""))
+            if not bit[0]: continue
+            if x is None and bit[0] == "X":
+                x = float(bit[1])
+            elif y is None and bit[0] == "Y":
+                y = float(bit[1])
+            elif z is None and bit[0] == "Z":
+                z = float(bit[1])
         if x is not None: self.current_pos[0] = x
         if y is not None: self.current_pos[1] = y
         if z is not None: self.current_pos[2] = z
@@ -1568,17 +1610,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def connect(self, event = None):
         print _("Connecting...")
         port = None
-        try:
-            port = self.scanserial()[0]
-        except:
-            pass
-        if self.serialport.GetValue()!="":
+        if self.serialport.GetValue():
             port = str(self.serialport.GetValue())
+        else:
+            scanned = self.scanserial()
+            if scanned:
+                port = scanned[0]
         baud = 115200
         try:
             baud = int(self.baud.GetValue())
         except:
-            pass
+            print _("Could not parse baud rate: ")
+            traceback.print_exc(file = sys.stdout)
         if self.paused:
             self.p.paused = 0
             self.p.printing = 0

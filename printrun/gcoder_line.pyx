@@ -36,20 +36,18 @@ cdef enum BitPos:
     pos_f =                 1 << 4
     pos_i =                 1 << 5
     pos_j =                 1 << 6
-    pos_s =                 1 << 7
-    pos_p =                 1 << 8
-    pos_is_move =           1 << 9
-    pos_relative =          1 << 10
-    pos_relative_e =        1 << 11
-    pos_extruding =         1 << 12
-    pos_current_x =         1 << 13
-    pos_current_y =         1 << 14
-    pos_current_z =         1 << 15
-    pos_current_tool =      1 << 16
-    pos_raw =               1 << 17
-    pos_split_raw =         1 << 18
-    pos_command =           1 << 19
-    pos_gcview_end_vertex = 1 << 20
+    pos_is_move =           1 << 7
+    pos_relative =          1 << 8
+    pos_relative_e =        1 << 9
+    pos_extruding =         1 << 10
+    pos_current_x =         1 << 11
+    pos_current_y =         1 << 12
+    pos_current_z =         1 << 13
+    pos_current_tool =      1 << 14
+    pos_raw =               1 << 15
+    pos_command =           1 << 16
+    pos_gcview_end_vertex = 1 << 17
+    # WARNING: don't use bits 24 to 31 as we store current_tool there
 
 cdef inline uint32_t has_var(uint32_t status, uint32_t pos):
     return status & pos
@@ -60,16 +58,14 @@ cdef inline uint32_t set_has_var(uint32_t status, uint32_t pos):
 cdef inline uint32_t unset_has_var(uint32_t status, uint32_t pos):
     return status & ~pos
 
-cdef class GLine(object):
+cdef class GLine:
     
     cdef char* _raw
     cdef char* _command
-    cdef object _split_raw
-    cdef float _x, _y, _z, _e, _f, _i, _j, _s, _p
+    cdef float _x, _y, _z, _e, _f, _i, _j
     cdef float _current_x, _current_y, _current_z
     cdef uint32_t _gcview_end_vertex
     cdef uint32_t _status
-    cdef char _current_tool
 
     __slots__ = ()
 
@@ -77,6 +73,9 @@ cdef class GLine(object):
         self._status = 0
         self._raw = NULL
         self._command = NULL
+
+    def __init__(self, line):
+        self.raw = line
 
     def __dealloc__(self):
         if self._raw != NULL: free(self._raw)
@@ -131,20 +130,6 @@ cdef class GLine(object):
         def __set__(self, value):
             self._j = value
             self._status = set_has_var(self._status, pos_j)
-    property s:
-        def __get__(self):
-            if has_var(self._status, pos_s): return self._s
-            else: return None
-        def __set__(self, value):
-            self._s = value
-            self._status = set_has_var(self._status, pos_s)
-    property p:
-        def __get__(self):
-            if has_var(self._status, pos_p): return self._p
-            else: return None
-        def __set__(self, value):
-            self._p = value
-            self._status = set_has_var(self._status, pos_p)
     property is_move:
         def __get__(self):
             if has_var(self._status, pos_is_move): return True
@@ -196,10 +181,10 @@ cdef class GLine(object):
             self._status = set_has_var(self._status, pos_current_z)
     property current_tool:
         def __get__(self):
-            if has_var(self._status, pos_current_tool): return self._current_tool
+            if has_var(self._status, pos_current_tool): return self._status >> 24
             else: return None
         def __set__(self, value):
-            self._current_tool = value
+            self._status = (self._status & ((1 << 24) - 1)) | (value << 24)
             self._status = set_has_var(self._status, pos_current_tool)
     property gcview_end_vertex:
         def __get__(self):
@@ -208,20 +193,13 @@ cdef class GLine(object):
         def __set__(self, value):
             self._gcview_end_vertex = value
             self._status = set_has_var(self._status, pos_gcview_end_vertex)
-    property split_raw:
-        def __get__(self):
-            if has_var(self._status, pos_split_raw): return self._split_raw
-            else: return None
-        def __set__(self, value):
-            self._split_raw = value
-            self._status = set_has_var(self._status, pos_split_raw)
-        def __del__(self):
-            self._split_raw = None
     property raw:
         def __get__(self):
             if has_var(self._status, pos_raw): return self._raw
             else: return None
         def __set__(self, value):
+            # WARNING: memory leak could happen here, as we don't do the following :
+            # if self._raw != NULL: free(self._raw)
             self._raw = copy_string(value)
             self._status = set_has_var(self._status, pos_raw)
     property command:
@@ -229,5 +207,7 @@ cdef class GLine(object):
             if has_var(self._status, pos_command): return self._command
             else: return None
         def __set__(self, value):
+            # WARNING: memory leak could happen here, as we don't do the following :
+            # if self._command != NULL: free(self._command)
             self._command = copy_string(value)
             self._status = set_has_var(self._status, pos_command)

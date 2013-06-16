@@ -462,7 +462,7 @@ class pronsole(cmd.Cmd):
                 pass
 
         for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*", "/dev/cu.*", "/dev/rfcomm*"]:
-            baselist+=glob.glob(g)
+            baselist += glob.glob(g)
         return filter(self._bluetoothSerialFilter, baselist)
 
     def _bluetoothSerialFilter(self, serial):
@@ -1369,7 +1369,7 @@ class pronsole(cmd.Cmd):
                 self.log(_("Loading sliced file."))
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
         except Exception, e:
-            self.logError(_("Skeinforge execution failed: %s") % e)
+            self.logError(_("Slicing failed: %s") % e)
 
     def complete_skein(self, text, line, begidx, endidx):
         s = line.split()
