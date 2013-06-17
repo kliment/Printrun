@@ -445,7 +445,8 @@ class GcodeViewPanel(wxGLPanel):
         kdo = [68, 317]               # Down Keys
         kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
         kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
-        kfit = [70]       # Zoom Out Keys
+        kfit = [70]       # Fit to print keys
+        kreset = [82]       # Reset keys
         key = event.GetKeyCode()
         if key in kup:
             self.layerup()
@@ -458,6 +459,9 @@ class GcodeViewPanel(wxGLPanel):
             self.zoom(1 / step, (x, y))
         if key in kfit:
             self.fit()
+        if key in kreset:
+            self.reset_mview(0.9)
+            self.basequat = [0, 0, 0, 1]
         event.Skip()
         wx.CallAfter(self.Refresh)
 
