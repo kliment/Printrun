@@ -28,8 +28,9 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
 1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
-2. `sudo easy_install pybonjour tornado`
-3. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
+2. `sudo easy_install pybonjour`
+3. `sudo easy_install https://github.com/nephics/tornado/archive/streambody.zip`
+4. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
 ### Fedora 17 and newer
 
@@ -45,9 +46,14 @@ Adding `--enablerepo updates-testing` option to `yum` might give you newer packa
 
 You can also run Printrun directly from source, if the packages are too old for you anyway, or you have Fedora 15 or 16. Fetch and install the dependencies using
 
-1. `sudo yum install pyserial wxpython pyglet python-tornado`
-2. `sudo apt-get install avahi-daemon python-avahi tornado`
-2. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
+1. `sudo yum install pyserial wxpython pyglet`
+
+To enable Prontserve you need to also install something along the following 
+lines. Unforunately this has yet to be tested on a real Fedora system:
+1. `sudo yum install avahi avahi-python`
+2. `sudo easy_install pybonjour`
+3. `sudo easy_install https://github.com/nephics/tornado/archive/streambody.zip`
+4. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
 ### Archlinux
 
@@ -71,7 +77,7 @@ If you want to load stl files, you need to install a slicing program such as Sli
 See the Slic3r readme for more details on integration.
 
 
-# USING PRONSERVE
+# USING PRONTSERVE
 
 Prontserve runs a server for remotely monitoring and controlling your 3D printer over your network.
 
