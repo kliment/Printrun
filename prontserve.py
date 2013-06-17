@@ -204,18 +204,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     self.write_message(args)
 
   def on_message(self, msg):
-    cmds_whitelist = [
-      "home",
-      "move",
-      "stop_move",
-      "set",
-      "estop",
-      "print",
-      "add_job",
-      "rm_job",
-      "change_job",
-      "get_jobs"
-    ]
+    cmds = self._cmds()
 
     print "message received: %s"%(msg)
     msg = re.sub(r'\s+', "\s" ,msg).strip()
@@ -237,9 +226,12 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
       else:
         args.append(w)
 
-    if cmd in cmds_whitelist:
+    if cmd in cmds.keys():
       try:
+        self._throwArgErrors(cmd, args, kwargs)
+        # Set is already used by pronsole so we use construct_set
         if cmd == "set": cmd = "construct_set"
+        # Run the command
         response = getattr(prontserve, "do_%s"%cmd)(*args, **kwargs)
         self.write_message({"ack": response})
       except Exception as ex:
@@ -247,6 +239,58 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
         self.write_message({"error": str(ex)})
     else:
       self.write_message({"error": "%s command does not exist."%cmd})
+
+  def _cmds(self):
+    return {
+      "home": {
+        'array_args': True,
+        'args_error': "Home only (optionally) accepts axe names."
+      },
+      "move": {
+        'named_args': True,
+        'args_error': textwrap.dedent("""
+          Move only takes a list of axes, distance pairs and optionally @ 
+          prefixed feedrates.
+        """).strip()
+      },
+      "set": {
+        'namespaced': True, # namespaced by the machine aspect (temp)
+        'named_args': True,
+        'args_error': textwrap.dedent("""
+          Set only accepts a namespace and a list of heater, value pairs.
+        """).strip()
+      },
+      "estop": {
+        'args_error': "Estop does not accept any parameters."
+      },
+      "print": {
+        'args_error': "Print does not accept any parameters."
+      },
+      "rm_job": {
+        'namespaced': True, # namespaced by the job id
+        'args_error': "Rm_job only accepts a job_id."
+      },
+      "change_job": {
+        'namespaced': True, # namespaced by the job id
+        'named_args': True,
+        'args_error': textwrap.dedent("""
+          Change_job only accepts a job_id and a list of key/value pairs.
+        """).strip()
+      },
+      "get_jobs": {
+        'args_error': "Get_jobs does not accept any parameters."
+      }
+    }
+
+  def _throwArgErrors(self, cmd, args, kwargs):
+    meta = self._cmds()[cmd]
+
+    arg_errors = (len(kwargs) > 0 and not 'named_args' in meta)
+    arg_errors = arg_errors or (len(args) == 0 and 'namespaced' in meta)
+    minArgs = 0
+    if 'namespaced' in meta: minArgs = 1
+    arg_errors = arg_errors or (len(args) > minArgs and not 'array_args' in meta)
+    if arg_errors: raise Exception(meta['args_error'])
 
   def on_close(self):
     self.clients.remove(self)
@@ -372,7 +416,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.fire("estop")
 
   def do_construct_set(self, subCmd, **kwargs):
-    getattr(self, "do_set_%s"%subCmd)(**kwargs)
+    method = "do_set_%s"%subCmd
+    if not hasattr(self, method):
+      raise Exception("%s is not a real namespace"%subCmd)
+    getattr(self, method)(**kwargs)
 
   def do_set_temp(self, **kwargs):
     # Setting each temperature individually
@@ -399,7 +446,12 @@ class Prontserve(pronsole.pronsole, EventEmitter):
   def do_change_job(self, job_id, **kwargs):
     print job_id
     print kwargs
-    self.jobs.update(int(job_id), kwargs)
+    try:
+      job_id = int(job_id)
+    except:
+      raise Exception("job_id must be a number")
+
+    self.jobs.update(job_id, kwargs)
 
   def do_get_jobs(self):
     jobexport = []
@@ -569,7 +621,7 @@ class PrintJobQueue(EventEmitter):
   def update(self, job_id, job_attrs):
     job = self.find_by_id(job_id)
     if job == None:
-      return False
+      raise Exception("There is no job #%i."%job_id)
     # proposed future print quantity functionality
     # if hasattr(job_attrs, 'qty'): job['qty'] = qty
     if job_attrs['position']:
