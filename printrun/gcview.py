@@ -279,7 +279,8 @@ class GcodeViewPanel(wxGLPanel):
         glPushMatrix()
         glTranslatef(0, 0, -self.dist) # Move back
         glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
-        glTranslatef(-self.parent.platform.width/2, -self.parent.platform.depth/2, 0) # Move origin to bottom left of platform
+        glTranslatef(- self.build_dimensions[3] - self.parent.platform.width/2,
+                     - self.build_dimensions[4] - self.parent.platform.depth/2, 0) # Move origin to bottom left of platform
 
         for obj in self.parent.objects:
             if not obj.model or not obj.model.loaded or not obj.model.initialized:
