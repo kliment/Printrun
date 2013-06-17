@@ -125,16 +125,20 @@ class wxGLPanel(wx.Panel):
             glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 3 * self.dist)
         else:
             gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        if self.orthographic:
-            ratio = 0.9 * float(min(self.width, self.height)) / self.dist
-            glScalef(ratio, ratio, 1)
+
+        self.reset_mview(0.9)
 
         # Wrap text to the width of the window
         if self.GLinitialized:
             self.pygletcontext.set_current()
             self.update_object_resize()
+
+    def reset_mview(self, factor):
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        if self.orthographic:
+            ratio = factor * float(min(self.width, self.height)) / self.dist
+            glScalef(ratio, ratio, 1)
 
     def OnDraw(self, *args, **kwargs):
         """Draw the window."""
@@ -251,8 +255,10 @@ class GcodeViewPanel(wxGLPanel):
         self.initpos = None
         if build_dimensions:
             self.dist = max(build_dimensions[0], build_dimensions[1])
+            self.build_dimensions = build_dimensions
         else:
             self.dist = 200
+            self.build_dimensions = [200, 200, 100, 0, 0, 0]
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
@@ -415,6 +421,20 @@ class GcodeViewPanel(wxGLPanel):
         gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
         return (px.value, py.value, pz.value)
 
+    def fit(self):
+        if not self.parent.model or not self.parent.model.loaded:
+            return
+        dims = self.parent.model.dims
+        self.reset_mview(1.0)
+        center_x = (dims[0][0] + dims[0][1]) / 2
+        center_y = (dims[1][0] + dims[1][1]) / 2
+        center_x = self.build_dimensions[0] / 2 - center_x
+        center_y = self.build_dimensions[1] / 2 - center_y
+        if self.orthographic:
+            ratio = float(self.dist) / max(dims[0][2], dims[1][2])
+            glScalef(ratio, ratio, 1)
+        glTranslatef(center_x, center_y, 0)
+
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
         step = 1.1
@@ -424,6 +444,7 @@ class GcodeViewPanel(wxGLPanel):
         kdo = [68, 317]               # Down Keys
         kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
         kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
+        kfit = [70]       # Zoom Out Keys
         key = event.GetKeyCode()
         if key in kup:
             self.layerup()
@@ -434,6 +455,8 @@ class GcodeViewPanel(wxGLPanel):
             self.zoom(step, (x, y))
         if key in kzo:
             self.zoom(1 / step, (x, y))
+        if key in kfit:
+            self.fit()
         event.Skip()
         wx.CallAfter(self.Refresh)
 
