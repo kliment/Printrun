@@ -407,18 +407,24 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             return
         self.sentlines.put_nowait(line)
 
-    def preprintsendcb(self, gline):
+    def is_excluded_move(self, gline):
         if not gline.is_move or not self.excluder or not self.excluder.rectangles:
-            return gline
+            return False
         if gline.x == None and gline.y == None:
-            return gline
+            return False
         for (x0, y0, x1, y1) in self.excluder.rectangles:
             if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
-                if gline.e != None and not gline.relative_e:
-                    return gcoder.Line("G92 E%.5f" % gline.e)
-                else:
-                    return None
-        return gline
+                return True
+        return False
+
+    def preprintsendcb(self, gline):
+        if self.is_excluded_move(gline):
+            if gline.e != None and not gline.relative_e:
+                return gcoder.Line("G92 E%.5f" % gline.e)
+            else:
+                return None
+        else:
+            return gline
 
     def printsentcb(self, gline):
         if gline.is_move and hasattr(self.gwindow, "set_current_gline"):
