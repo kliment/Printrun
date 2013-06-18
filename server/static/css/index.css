@@ -1,0 +1,34 @@
+html, body
+{
+  margin: 0px;
+  padding: 0px;
+  height: 100%;
+}
+
+body
+{
+  background: url("/static/img/background.jpg");
+  background-color: black;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: auto 100%;
+}
+
+.lead-box
+{
+  position: absolute;
+  text-align: right;
+  top: 80%;
+  margin-top: -40px;
+  padding: 0px;
+  color: white;
+  padding-left: 100px;
+  padding-right: 20px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.lead-box a, .lead-box a:hover
+{
+  color: #3198EC;
+  font-weight: bold;
+}

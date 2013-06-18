@@ -244,7 +244,10 @@ class showstl(wx.Window):
 class stlwin(wx.Frame):
     def __init__(self, size = (800, 580), callback = None, parent = None):
         wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
-        self.SetIcon(wx.Icon(pixmapfile("plater.ico"), wx.BITMAP_TYPE_ICO))
+        if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
+            self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
+        else:
+            self.SetIcon(wx.Icon(pixmapfile("plater.ico"), wx.BITMAP_TYPE_ICO))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.panel = wx.Panel(self, -1, size = (150, 600), pos = (0, 0))
         #self.panel.SetBackgroundColour((10, 10, 10))
