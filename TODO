@@ -1,0 +1,5 @@
+* Rework gcview zooming/rotation/move behavior
+* Improve stlview
+* Add tool to select gcode area to ignore
+* Add calibration helper
+* Improve tabbed mode for wx 2.8 ? (the main toolbar is not wrapping as in 2.9)

@@ -51,6 +51,7 @@ class GCodeAnalyzer():
         self.eOffset = 0
         self.lastZPrint = 0
         self.layerZ = 0
+        self.imperial = False
         self.relative = False
         self.eRelative = False
         self.homeX = 0
@@ -68,7 +69,9 @@ class GCodeAnalyzer():
 
     def Analyze(self, gcode):
         gline = gcoder.Line(gcode)
+        split_raw = gcoder.split(gline)
         if gline.command.startswith(";@"): return # code is a host command
+        gcoder.parse_coordinates(gline, split_raw, self.imperial)
         code_g = int(gline.command[1:]) if gline.command.startswith("G") else None
         code_m = int(gline.command[1:]) if gline.command.startswith("M") else None
 
@@ -97,7 +100,7 @@ class GCodeAnalyzer():
                         eChanged = True
                         self.e += code_e
             else:
-                #absolute coordinates
+                # absolute coordinates
                 if code_x != None: self.x = self.xOffset + code_x
                 if code_y != None: self.y = self.yOffset + code_y
                 if code_z != None: self.z = self.zOffset + code_z
@@ -112,6 +115,7 @@ class GCodeAnalyzer():
                             eChanged = True
                             self.e = self.eOffset + code_e
             #limit checking
+            """
             if self.x < self.minX: self.x = self.minX
             if self.y < self.minY: self.y = self.minY
             if self.z < self.minZ: self.z = self.minZ
@@ -119,7 +123,10 @@ class GCodeAnalyzer():
             if self.x > self.maxX: self.x = self.maxX
             if self.y > self.maxY: self.y = self.maxY
             if self.z > self.maxZ: self.z = self.maxZ
+            """
             #Repetier has a bunch of limit-checking code here and time calculations: we are leaving them for now
+        elif code_g == 20: self.imperial = True
+        elif code_g == 21: self.imperial = False
         elif code_g == 28 or code_g == 161:
             self.lastX = self.x
             self.lastY = self.y
@@ -189,7 +196,6 @@ class GCodeAnalyzer():
                 self.e = self.eOffset
             #End code_g != None
             if code_m != None:
-                code_m = int(code_m)
                 if code_m == 82: self.eRelative = False
                 elif code_m == 83: self.eRelative = True
 

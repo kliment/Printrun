@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # This file is part of the Printrun suite.
 #
@@ -34,6 +34,8 @@ from .libtatlin import actors
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
 
+    orthographic = True
+
     def __init__(self, parent, id, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0):
         # Forcing a no full repaint to stop flickering
@@ -63,11 +65,11 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
+        size = self.GetClientSize()
+        self.winsize = (size.width, size.height)
+        self.width, self.height = size.width, size.height
         if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
-            size = self.GetClientSize()
-            self.winsize = (size.width, size.height)
-            self.width, self.height = size.width, size.height
             self.canvas.SetCurrent(self.context)
             self.OnReshape(size.width, size.height)
             self.canvas.Refresh(False)
@@ -97,13 +99,9 @@ class wxGLPanel(wx.Panel):
     def OnInitGL(self):
         '''Initialize OpenGL for use in the window.'''
         #create a pyglet context for this panel
-        self.pmat = (GLdouble * 16)()
-        self.mvmat = (GLdouble * 16)()
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
-        self.dist = 1000
-        self.vpmat = None
         #normal gl init
         glClearColor(0.98, 0.98, 0.78, 1)
         glClearDepth(1.0)                # set depth value to 1
@@ -123,16 +121,24 @@ class wxGLPanel(wx.Panel):
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(60., width / float(height), .1, 1000.)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        self.vpmat = (GLint * 4)(0, 0, *list(self.GetClientSize()))
-        glGetDoublev(GL_PROJECTION_MATRIX, self.pmat)
+        if self.orthographic:
+            glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 3 * self.dist)
+        else:
+            gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
+
+        self.reset_mview(0.9)
 
         # Wrap text to the width of the window
         if self.GLinitialized:
             self.pygletcontext.set_current()
             self.update_object_resize()
+
+    def reset_mview(self, factor):
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        if self.orthographic:
+            ratio = factor * float(min(self.width, self.height)) / self.dist
+            glScalef(ratio, ratio, 1)
 
     def OnDraw(self, *args, **kwargs):
         """Draw the window."""
@@ -240,7 +246,6 @@ class GcodeViewPanel(wxGLPanel):
     def __init__(self, parent, id = wx.ID_ANY, build_dimensions = None, realparent = None):
         super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition, wx.DefaultSize, 0)
         self.batches = []
-        self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
         self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
@@ -250,9 +255,10 @@ class GcodeViewPanel(wxGLPanel):
         self.initpos = None
         if build_dimensions:
             self.dist = max(build_dimensions[0], build_dimensions[1])
+            self.build_dimensions = build_dimensions
         else:
             self.dist = 200
-        self.transv = [0, 0, -self.dist]
+            self.build_dimensions = [200, 200, 100, 0, 0, 0]
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
@@ -268,19 +274,13 @@ class GcodeViewPanel(wxGLPanel):
 
     def draw_objects(self):
         '''called in the middle of ondraw after the buffer has been cleared'''
-        if self.vpmat is None:
-            return
         self.create_objects()
-
-        if self.rot == 1:
-            glLoadIdentity()
-            glMultMatrixd(self.mvmat)
-        else:
-            glLoadIdentity()
-            glTranslatef(*self.transv)
         
         glPushMatrix()
-        glTranslatef(-self.parent.platform.width/2, -self.parent.platform.depth/2, 0)
+        glTranslatef(0, 0, -self.dist) # Move back
+        glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
+        glTranslatef(- self.build_dimensions[3] - self.parent.platform.width/2,
+                     - self.build_dimensions[4] - self.parent.platform.depth/2, 0) # Move origin to bottom left of platform
 
         for obj in self.parent.objects:
             if not obj.model or not obj.model.loaded or not obj.model.initialized:
@@ -298,6 +298,35 @@ class GcodeViewPanel(wxGLPanel):
         if self.parent.clickcb:
             self.parent.clickcb(event)
 
+    def handle_rotation(self, event):
+        if self.initpos == None:
+            self.initpos = event.GetPositionTuple()
+        else:
+            p1 = self.initpos
+            p2 = event.GetPositionTuple()
+            sz = self.GetClientSize()
+            p1x = float(p1[0]) / (sz[0] / 2) - 1
+            p1y = 1 - float(p1[1]) / (sz[1] / 2)
+            p2x = float(p2[0]) / (sz[0] / 2) - 1
+            p2y = 1 - float(p2[1]) / (sz[1] / 2)
+            quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
+            self.basequat = mulquat(self.basequat, quat)
+            self.initpos = p2
+
+    def handle_translation(self, event):
+        if self.initpos is None:
+            self.initpos = event.GetPositionTuple()
+        else:
+            p1 = self.initpos
+            p2 = event.GetPositionTuple()
+            if self.orthographic:
+                x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
+                x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
+                glTranslatef(x2 - x1, y2 - y1, 0)
+            else:
+                glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
+            self.initpos = p2
+
     def move(self, event):
         """react to mouse actions:
         no mouse: show red mousedrop
@@ -309,65 +338,13 @@ class GcodeViewPanel(wxGLPanel):
             event.Skip()
             return
         if event.Dragging() and event.LeftIsDown():
-            if self.initpos == None:
-                self.initpos = event.GetPositionTuple()
-            else:
-                #print self.initpos
-                p1 = self.initpos
-                self.initpos = None
-                p2 = event.GetPositionTuple()
-                sz = self.GetClientSize()
-                p1x = (float(p1[0]) - sz[0] / 2) / (sz[0] / 2)
-                p1y = -(float(p1[1]) - sz[1] / 2) / (sz[1] / 2)
-                p2x = (float(p2[0]) - sz[0] / 2) / (sz[0] / 2)
-                p2y = -(float(p2[1]) - sz[1] / 2) / (sz[1] / 2)
-                #print p1x, p1y, p2x, p2y
-                quat = trackball(p1x, p1y, p2x, p2y, -self.transv[2] / 250.0)
-                if self.rot:
-                    self.basequat = mulquat(self.basequat, quat)
-                #else:
-                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                #self.basequat = quatx
-                mat = build_rotmatrix(self.basequat)
-                glLoadIdentity()
-                glTranslatef(self.transv[0], self.transv[1], 0)
-                glTranslatef(0, 0, self.transv[2])
-                glMultMatrixd(mat)
-                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                self.rot = 1
-
-        elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
-            if self.initpos is not None:
-                self.initpos = None
-        elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
-            if self.initpos is not None:
-                self.initpos = None
-
+            self.handle_rotation(event)
         elif event.Dragging() and event.RightIsDown():
-            if self.initpos is None:
-                self.initpos = event.GetPositionTuple()
-            else:
-                p1 = self.initpos
-                p2 = event.GetPositionTuple()
-                sz = self.GetClientSize()
-                p1 = list(p1) + [0]
-                p2 = list(p2) + [0]
-                p1[1] *= -1
-                p2[1] *= -1
-                sz = list(sz) + [1]
-                sz[0] *= 2
-                sz[1] *= 2
-
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  p1, p2,  sz,  self.transv)
-
-                glLoadIdentity()
-                glTranslatef(self.transv[0], self.transv[1], 0)
-                glTranslatef(0, 0, self.transv[2])
-                if self.rot:
-                    glMultMatrixd(build_rotmatrix(self.basequat))
-                glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-                self.rot = 1
-                self.initpos = None
+            self.handle_translation(event)
+        elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
+            self.initpos = None
+        elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
+            self.initpos = None
         else:
             event.Skip()
             return
@@ -379,7 +356,10 @@ class GcodeViewPanel(wxGLPanel):
             return
         max_layers = self.parent.model.max_layers
         current_layer = self.parent.model.num_layers_to_draw
-        new_layer = min(max_layers, current_layer + 1)
+        # accept going up to max_layers + 1
+        # max_layers means visualizing the last layer differently,
+        # max_layers + 1 means visualizing all layers with the same color
+        new_layer = min(max_layers + 1, current_layer + 1)
         self.parent.model.num_layers_to_draw = new_layer
         wx.CallAfter(self.Refresh)
 
@@ -391,14 +371,15 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.model.num_layers_to_draw = new_layer
         wx.CallAfter(self.Refresh)
 
-    def zoom(self, dist):
-        self.transv[2] += dist
-        glLoadIdentity()
-        glTranslatef(*self.transv)
-        if self.rot:
-            glMultMatrixd(build_rotmatrix(self.basequat))
-        glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-        self.rot = 1
+    def zoom(self, factor, to = None):
+        glMatrixMode(GL_MODELVIEW)
+        if to:
+            delta_x = to[0]
+            delta_y = to[1]
+            glTranslatef(delta_x, delta_y, 0)
+        glScalef(factor, factor, 1)
+        if to:
+            glTranslatef(-delta_x, -delta_y, 0)
         wx.CallAfter(self.Refresh)
 
     def wheel(self, event):
@@ -406,40 +387,81 @@ class GcodeViewPanel(wxGLPanel):
             without shift: set max layer
             with shift: zoom viewport
         """
-        z = event.GetWheelRotation()
-        dist = 10
+        delta = event.GetWheelRotation()
+        factor = 1.05
         if event.ShiftDown():
             if not self.parent.model:
                 return
-            if z > 0:
+            if delta > 0:
                 self.layerup()
             else:
                 self.layerdown()
             return
-        if z > 0:
-            self.zoom(dist)
+        x, y = event.GetPositionTuple()
+        x, y, _ = self.mouse_to_3d(x, y)
+        if delta > 0:
+            self.zoom(factor, (x, y))
         else:
-            self.zoom(-dist)
+            self.zoom(1/factor, (x, y))
+
+    def mouse_to_3d(self, x, y):
+        x = float(x)
+        y = self.height - float(y)
+        # The following could work if we were not initially scaling to zoom on the bed
+        #if self.orthographic:
+        #    return (x - self.width / 2, y - self.height / 2, 0)
+        pmat = (GLdouble * 16)()
+        mvmat = (GLdouble * 16)()
+        viewport = (GLint * 4)()
+        px = (GLdouble)()
+        py = (GLdouble)()
+        pz = (GLdouble)()
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        glGetDoublev(GL_PROJECTION_MATRIX, pmat)
+        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
+        return (px.value, py.value, pz.value)
+
+    def fit(self):
+        if not self.parent.model or not self.parent.model.loaded:
+            return
+        dims = self.parent.model.dims
+        self.reset_mview(1.0)
+        center_x = (dims[0][0] + dims[0][1]) / 2
+        center_y = (dims[1][0] + dims[1][1]) / 2
+        center_x = self.build_dimensions[0] / 2 - center_x
+        center_y = self.build_dimensions[1] / 2 - center_y
+        if self.orthographic:
+            ratio = float(self.dist) / max(dims[0][2], dims[1][2])
+            glScalef(ratio, ratio, 1)
+        glTranslatef(center_x, center_y, 0)
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
-        keycode = event.GetKeyCode()
-        step = 10
+        step = 1.1
         if event.ControlDown():
-            step = 3
+            step = 1.05
         kup = [85, 315]               # Up keys
         kdo = [68, 317]               # Down Keys
         kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
         kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
-        x = event.GetKeyCode()
-        if x in kup:
+        kfit = [70]       # Fit to print keys
+        kreset = [82]       # Reset keys
+        key = event.GetKeyCode()
+        if key in kup:
             self.layerup()
-        if x in kdo:
+        if key in kdo:
             self.layerdown()
-        if x in kzi:
-            self.zoom(step)
-        if x in kzo:
-            self.zoom(-step)
+        x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
+        if key in kzi:
+            self.zoom(step, (x, y))
+        if key in kzo:
+            self.zoom(1 / step, (x, y))
+        if key in kfit:
+            self.fit()
+        if key in kreset:
+            self.reset_mview(0.9)
+            self.basequat = [0, 0, 0, 1]
         event.Skip()
         wx.CallAfter(self.Refresh)
 

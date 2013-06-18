@@ -120,6 +120,10 @@ class MacroEditor(wx.Dialog):
                 reindented += self.indent_chars + line + "\n"
         return reindented
 
+SETTINGS_GROUPS = {"Printer": _("Printer settings"),
+                   "UI": _("User interface"),
+                   "External": _("External commands")}
+
 class PronterOptionsDialog(wx.Dialog):
     """Options editor"""
     def __init__(self, pronterface):
@@ -127,16 +131,36 @@ class PronterOptionsDialog(wx.Dialog):
         panel = wx.Panel(self)
         header = wx.StaticBox(panel, label = _("Settings"))
         sbox = wx.StaticBoxSizer(header, wx.VERTICAL)
-        panel2 = wx.Panel(panel)
-        grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = 8, vgap = 2)
-        grid.SetFlexibleDirection(wx.BOTH)
-        grid.AddGrowableCol(1)
-        grid.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
-        for setting in pronterface.settings._all_settings():
-            grid.Add(setting.get_label(panel2), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
-            grid.Add(setting.get_widget(panel2), 1, wx.ALIGN_CENTER_VERTICAL|wx.ALL)
-        panel2.SetSizer(grid)
-        sbox.Add(panel2, 1, wx.EXPAND)
+        notebook = wx.Notebook(panel)
+        all_settings = pronterface.settings._all_settings()
+        group_list = []
+        groups = {}
+        for group in ["Printer", "UI", "External"]:
+            group_list.append(group)
+            groups[group] = []
+        for setting in all_settings:
+            if setting.group not in group_list:
+                group_list.append(setting.group)
+                groups[setting.group] = []
+            groups[setting.group].append(setting)
+        for group in group_list:
+            grouppanel = wx.Panel(notebook, -1)
+            notebook.AddPage(grouppanel, SETTINGS_GROUPS[group])
+            settings = groups[group]
+            grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = 8, vgap = 2)
+            grid.SetFlexibleDirection(wx.BOTH)
+            grid.AddGrowableCol(1)
+            grid.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+            for setting in settings:
+                label,widget = setting.get_label(grouppanel),setting.get_widget(grouppanel)
+                grid.Add(label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.ALIGN_RIGHT)
+                grid.Add(widget, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND)
+                if hasattr(label,"set_default"):
+                    label.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
+                    if hasattr(widget,"Bind"):
+                        widget.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
+            grouppanel.SetSizer(grid)
+        sbox.Add(notebook, 1, wx.EXPAND)
         panel.SetSizer(sbox)
         topsizer = wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(panel, 1, wx.ALL | wx.EXPAND)

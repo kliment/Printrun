@@ -89,5 +89,3 @@ def interceptor(func):
         cls._execute = wrapper(cls._execute)
         return cls
     return classwrapper
-
-print "moo"
