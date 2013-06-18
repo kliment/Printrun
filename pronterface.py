@@ -417,14 +417,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 return True
         return False
 
-    def preprintsendcb(self, gline):
-        if self.is_excluded_move(gline):
-            if gline.e != None and not gline.relative_e:
-                return gcoder.Line("G92 E%.5f" % gline.e)
-            else:
-                return None
-        else:
+    def preprintsendcb(self, gline, next_gline):
+        if not self.is_excluded_move(gline):
             return gline
+        else:
+            # Check if next move will be excluded too and if it will emit an absolute E set
+            if self.is_excluded_move(next_gline) and next_gline.e != None and not next_gline.relative_e:
+                return None # nothing to do: next move will set absolute E if needed
+            else: # else, check if this is an extrusion move with non relative E and replace it
+                if gline.e != None and not gline.relative_e:
+                    return gcoder.Line("G92 E%.5f" % gline.e)
+                else: # or just do nothing
+                    return None
 
     def printsentcb(self, gline):
         if gline.is_move and hasattr(self.gwindow, "set_current_gline"):

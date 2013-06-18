@@ -472,7 +472,12 @@ class printcore():
                     try: self.layerchangecb(layer)
                     except: traceback.print_exc()
             if self.preprintsendcb:
-                gline = self.preprintsendcb(gline)
+                if self.queueindex + 1 < len(self.mainqueue):
+                    (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
+                    next_gline = self.mainqueue.all_layers[next_layer][next_line]
+                else:
+                    next_gline = None
+                gline = self.preprintsendcb(gline, next_gline)
             if gline == None:
                 self.queueindex += 1
                 self.clear = True
