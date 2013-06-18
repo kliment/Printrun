@@ -28,9 +28,7 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
 1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
-2. `sudo easy_install pybonjour`
-3. `sudo easy_install https://github.com/nephics/tornado/archive/streambody.zip`
-4. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
+2. `pip install -r requirements.txt`
 
 ### Fedora 17 and newer
 
@@ -51,9 +49,7 @@ You can also run Printrun directly from source, if the packages are too old for 
 To enable Prontserve you need to also install something along the following 
 lines. Unforunately this has yet to be tested on a real Fedora system:
 1. `sudo yum install avahi avahi-python`
-2. `sudo easy_install pybonjour`
-3. `sudo easy_install https://github.com/nephics/tornado/archive/streambody.zip`
-4. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
+2. `pip install -r requirements.txt`
 
 ### Archlinux
 
