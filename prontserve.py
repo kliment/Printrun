@@ -20,7 +20,7 @@ from pprint import pprint
 import printcore
 from printrun import gcoder
 import pronsole
-from server import basic_auth
+from printrun.server import basic_auth
 import random
 import json
 import textwrap
@@ -299,8 +299,8 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
 
 dir = os.path.dirname(__file__)
 settings = dict(
-  template_path=os.path.join(dir, "server", "templates"),
-  static_path=os.path.join(dir, "server", "static"),
+  template_path=os.path.join(dir, "printrun", "server", "templates"),
+  static_path=os.path.join(dir, "printrun", "server", "static"),
   debug=True
 )
 
