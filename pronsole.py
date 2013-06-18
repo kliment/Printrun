@@ -1287,10 +1287,10 @@ class pronsole(cmd.Cmd):
             print "Are you sure you want to exit while printing?"
             print "(this will terminate the print)."
             if not self.confirm():
-                return False
+                return
         self.log(_("Exiting program. Goodbye!"))
         self.p.disconnect()
-        return True
+        sys.exit()
 
     def help_exit(self):
         self.log(_("Disconnects from the printer and exits the program."))
@@ -1474,9 +1474,7 @@ class pronsole(cmd.Cmd):
                             line = raw_input(self.prompt)
                         except EOFError:
                             print ""
-                            should_exit = self.do_exit("")
-                            if should_exit: 
-                                exit()
+                            self.do_exit("")
                         except KeyboardInterrupt:
                             print ""
                             line = ""
