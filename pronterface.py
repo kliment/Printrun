@@ -422,7 +422,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             return gline
         else:
             # Check if next move will be excluded too and if it will emit an absolute E set
-            if self.is_excluded_move(next_gline) and next_gline.e != None and not next_gline.relative_e:
+            if next_gline != None and self.is_excluded_move(next_gline) and next_gline.e != None and not next_gline.relative_e:
                 return None # nothing to do: next move will set absolute E if needed
             else: # else, check if this is an extrusion move with non relative E and replace it
                 if gline.e != None and not gline.relative_e:
