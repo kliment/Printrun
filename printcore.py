@@ -230,7 +230,7 @@ class printcore():
                 if not line: empty_lines += 1
                 else: empty_lines = 0
                 if empty_lines == 5: break
-                if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
+                if line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line:
                     if self.onlinecb:
                         try: self.onlinecb()
                         except: pass
