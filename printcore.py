@@ -523,7 +523,7 @@ class printcore():
                 except: pass
             try:
                 self.printer.write(str(command + "\n"))
-                self.printer.flush()
+                if self.printer_tcp: self.printer.flush()
                 self.writefailures = 0
             except socket.error as e:
                 print "Can't write to printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
