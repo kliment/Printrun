@@ -225,11 +225,15 @@ class printcore():
                 # workaround cases where M105 was sent before printer Serial
                 # was online an empty line means read timeout was reached,
                 # meaning no data was received thus we count those empty lines,
-                # and once we have seen 5 in a row, we just break and send a
+                # and once we have seen 15 in a row, we just break and send a
                 # new M105
+                # 15 was chosen based on the fact that it gives enough time for
+                # Gen7 bootloader to time out, and that the non received M105
+                # issues should be quite rare so we can wait for a long time
+                # before resending
                 if not line:
                     empty_lines += 1
-                    if empty_lines == 5: break
+                    if empty_lines == 15: break
                 else: empty_lines = 0
                 if line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line:
                     if self.onlinecb:
@@ -237,7 +241,6 @@ class printcore():
                         except: pass
                     self.online = True
                     return
-                time.sleep(0.25)
 
     def _listen(self):
         """This function acts on messages from the firmware
