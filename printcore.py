@@ -227,16 +227,17 @@ class printcore():
                 # meaning no data was received thus we count those empty lines,
                 # and once we have seen 5 in a row, we just break and send a
                 # new M105
-                if not line: empty_lines += 1
+                if not line:
+                    empty_lines += 1
+                    if empty_lines == 5: break
                 else: empty_lines = 0
-                if empty_lines == 5: break
                 if line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line:
                     if self.onlinecb:
                         try: self.onlinecb()
                         except: pass
                     self.online = True
                     return
-            time.sleep(0.25)
+                time.sleep(0.25)
 
     def _listen(self):
         """This function acts on messages from the firmware
