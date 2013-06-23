@@ -1431,7 +1431,10 @@ class pronsole(cmd.Cmd):
         self.processing_args = False
         if args.filename:
             filename = args.filename.decode(locale.getpreferredencoding())
-            self.do_load(filename)
+            self.cmdline_filename_callback(filename)
+
+    def cmdline_filename_callback(self, filename):
+        self.do_load(filename)
 
     def parse_cmdline(self, args):
         parser = argparse.ArgumentParser(description = 'Printrun 3D printer interface')

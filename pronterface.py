@@ -1486,6 +1486,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         threading.Thread(target = self.skein_func).start()
         threading.Thread(target = self.skein_monitor).start()
 
+    def cmdline_filename_callback(self, filename):
+        # Do nothing when processing a filename from command line, as we'll
+        # handle it when everything has been prepared
+        self.filename = filename
+
     def do_load(self,l):
         if hasattr(self, 'skeining'):
             self.loadfile(None, l)
