@@ -152,7 +152,8 @@ class printcore():
                     print _("Could not connect to %s:%s:") % (hostname, port)
                     self.printer = None
                     self.printer_tcp = None
-                    print _("Socket error %s: %s") % (e.errno, e.strerror)
+                    print _("Socket error %s:") % e.errno,
+                    print e.strerror
                     return
             else:
                 disable_hup(self.port)
