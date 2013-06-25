@@ -295,7 +295,7 @@ class GcodeModel(Model):
 
     def copy(self):
         copy = GcodeModel()
-        for var in ["vertices", "colors", "max_layers", "num_layers_to_draw", "printed_until", "layer_stops"]:
+        for var in ["vertices", "colors", "max_layers", "num_layers_to_draw", "printed_until", "layer_stops", "dims"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False

@@ -171,6 +171,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
             self.Add(root.graph, pos = (base_line + 5, 0), span = (3, 6))
         else:
             self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
+        root.graph.Bind(wx.EVT_LEFT_DOWN, root.graph.showwin)
 
     if extra_buttons:
         pos_mapping = {

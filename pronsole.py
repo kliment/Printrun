@@ -539,6 +539,7 @@ class pronsole(cmd.Cmd):
         if ls.startswith('!'):
             return ws + ls[1:] + "\n" # python mode
         else:
+            ls = ls.replace('"','\\"') # need to escape double quotes
             ret = ws + 'self.parseusercmd("'+ls+'".format(*arg))\n' # parametric command mode
             return ret + ws + 'self.onecmd("'+ls+'".format(*arg))\n'
 
@@ -576,7 +577,7 @@ class pronsole(cmd.Cmd):
             self.logError("Macro '"+macro_name+"' is not defined")
     def do_macro(self, args):
         if args.strip()=="":
-            self.print_topics("User-defined macros", self.macros.keys(), 15, 80)
+            self.print_topics("User-defined macros", map(str,self.macros.keys()), 15, 80)
             return
         arglist = args.split(None, 1)
         macro_name = arglist[0]
@@ -1430,7 +1431,10 @@ class pronsole(cmd.Cmd):
         self.processing_args = False
         if args.filename:
             filename = args.filename.decode(locale.getpreferredencoding())
-            self.do_load(filename)
+            self.cmdline_filename_callback(filename)
+
+    def cmdline_filename_callback(self, filename):
+        self.do_load(filename)
 
     def parse_cmdline(self, args):
         parser = argparse.ArgumentParser(description = 'Printrun 3D printer interface')

@@ -31,8 +31,7 @@ move_gcodes = ["G0", "G1", "G2", "G3"]
 class PyLine(object):
 
     __slots__ = ('x','y','z','e','f','i','j',
-                 'raw','split_raw',
-                 'command','is_move',
+                 'raw', 'command', 'is_move',
                  'relative','relative_e',
                  'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
                  'gcview_end_vertex')

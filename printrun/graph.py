@@ -20,6 +20,15 @@ from math import log10, floor, ceil
 
 from bufferedcanvas import *
 
+class GraphWindow(wx.Frame):
+    def __init__(self, root, size = (600, 600)):
+        wx.Frame.__init__(self, None, title = _("Temperature graph"), size = size)
+        panel = wx.Panel(self, -1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        self.graph = Graph(panel, wx.ID_ANY, root)
+        vbox.Add(self.graph, 1, wx.EXPAND)
+        panel.SetSizer(vbox)
+
 class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
 
@@ -51,6 +60,20 @@ class Graph(BufferedCanvas):
         self.ybars      = 5
         self.xbars      = 6 # One bar per 10 second
         self.xsteps     = 60 # Covering 1 minute in the graph
+
+        self.window = None
+
+    def showwin(self, event = None):
+        if not self.window:
+            self.window = GraphWindow(self.root)
+            self.window.Show()
+            if self.timer.IsRunning():
+                self.window.graph.StartPlotting(self.timer.Interval)
+        else:
+            self.window.Raise()
+
+    def __del__(self):
+        if self.window: self.window.Close()
 
     def OnPaint(self, evt):
         dc = wx.PaintDC(self)
@@ -197,6 +220,7 @@ class Graph(BufferedCanvas):
     def SetBedTemperature(self, value):
         self.bedtemps.pop()
         self.bedtemps.append(value)
+        if self.window: self.window.graph.SetBedTemperature(value)
 
     def AddBedTemperature(self, value):
         self.bedtemps.append(value)
@@ -206,6 +230,7 @@ class Graph(BufferedCanvas):
     def SetBedTargetTemperature(self, value):
         self.bedtargettemps.pop()
         self.bedtargettemps.append(value)
+        if self.window: self.window.graph.SetBedTargetTemperature(value)
 
     def AddBedTargetTemperature(self, value):
         self.bedtargettemps.append(value)
@@ -215,6 +240,7 @@ class Graph(BufferedCanvas):
     def SetExtruder0Temperature(self, value):
         self.extruder0temps.pop()
         self.extruder0temps.append(value)
+        if self.window: self.window.graph.SetExtruder0Temperature(value)
 
     def AddExtruder0Temperature(self, value):
         self.extruder0temps.append(value)
@@ -224,6 +250,7 @@ class Graph(BufferedCanvas):
     def SetExtruder0TargetTemperature(self, value):
         self.extruder0targettemps.pop()
         self.extruder0targettemps.append(value)
+        if self.window: self.window.graph.SetExtruder0TargetTemperature(value)
 
     def AddExtruder0TargetTemperature(self, value):
         self.extruder0targettemps.append(value)
@@ -233,6 +260,7 @@ class Graph(BufferedCanvas):
     def SetExtruder1Temperature(self, value):
         self.extruder1temps.pop()
         self.extruder1temps.append(value)
+        if self.window: self.window.graph.SetExtruder1Temperature(value)
 
     def AddExtruder1Temperature(self, value):
         self.extruder1temps.append(value)
@@ -242,6 +270,7 @@ class Graph(BufferedCanvas):
     def SetExtruder1TargetTemperature(self, value):
         self.extruder1targettemps.pop()
         self.extruder1targettemps.append(value)
+        if self.window: self.window.graph.SetExtruder1TargetTemperature(value)
 
     def AddExtruder1TargetTemperature(self, value):
         self.extruder1targettemps.append(value)
@@ -251,10 +280,12 @@ class Graph(BufferedCanvas):
     def StartPlotting(self, time):
         self.Refresh()
         self.timer.Start(time)
+        if self.window: self.window.graph.StartPlotting(time)
 
     def StopPlotting(self):
         self.timer.Stop()
         self.Refresh()
+        if self.window: self.window.graph.StopPlotting()
 
     def draw(self, dc, w, h):
         dc.SetBackground(wx.Brush(self.root.settings.bgcolor))

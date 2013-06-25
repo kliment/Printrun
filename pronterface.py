@@ -50,7 +50,7 @@ import pronsole
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
 
-tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: \/)?([-+]?\d*\.?\d*)")
+tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)")
 
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
@@ -1226,15 +1226,32 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if "T0" in temps:
                 hotend_temp = float(temps["T0"][0])
             else:
-                hotend_temp = float(temps["T"][0]) if "T" in temps else -1.0
-            if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
-            if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
+                hotend_temp = float(temps["T"][0]) if "T" in temps else None
+            if hotend_temp is not None:
+                if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
+                if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
+                setpoint = None
+                if "T0" in temps and temps["T0"][1]: setpoint = float(temps["T0"][1])
+                elif temps["T"][1]: setpoint = float(temps["T"][1])
+                if setpoint is not None:
+                    if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, setpoint)
+                    if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, setpoint)
             if "T1" in temps:
                 hotend_temp = float(temps["T1"][0])
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
-            bed_temp = float(temps["B"][0]) if "B" in temps else -1.0
-            if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
-            if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
+                setpoint = temps["T1"][1]
+                if setpoint and self.display_graph:
+                    wx.CallAfter(self.graph.SetExtruder1TargetTemperature, float(setpoint))
+            bed_temp = float(temps["B"][0]) if "B" in temps else None
+            if bed_temp is not None:
+                if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
+                if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
+                setpoint = temps["B"][1]
+                if setpoint:
+                    setpoint = float(setpoint)
+                    if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
+                    if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
+                    
         except:
             traceback.print_exc()
 
@@ -1468,6 +1485,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.skeining = 1
         threading.Thread(target = self.skein_func).start()
         threading.Thread(target = self.skein_monitor).start()
+
+    def cmdline_filename_callback(self, filename):
+        # Do nothing when processing a filename from command line, as we'll
+        # handle it when everything has been prepared
+        self.filename = filename
 
     def do_load(self,l):
         if hasattr(self, 'skeining'):
