@@ -379,6 +379,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
 
   def do_print(self):
     if not self.p.online: raise Exception("not online")
+    if self.printing_jobs: raise Exception("already printing")
     self.printing_jobs = True
 
   def do_home(self, *args, **kwargs):
@@ -412,6 +413,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     raise Exception("Continuous movement not supported")
 
   def do_estop(self):
+    self.printing_jobs = False
+    self.current_job = None
     pronsole.pronsole.do_pause(self, "")
     # self.p.reset()
     print "Emergency Stop!"
@@ -486,7 +489,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     # A better solution would be one in which a print_finised event could be 
     # listend for asynchronously without polling.
     p = self.p
-    if self.printing_jobs and p.printing == False and p.paused == False and p.online:
+    if self.printing_jobs and p.printing == False and p.online:
       if self.current_job != None:
         self.update_job_progress(100)
         self.fire("job_finished", self.jobs.sanitize(self.current_job))
@@ -500,6 +503,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
         self.current_job = self.jobs.list.pop(0)
         gc = gcoder.GCode(self.current_job['body'].split("\n"))
         self.p.startprint(gc)
+        self.p.paused = False
         self.fire("job_started", self.jobs.sanitize(self.current_job))
       else:
         print "Finished all print jobs"
