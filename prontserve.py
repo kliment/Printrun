@@ -254,10 +254,13 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
         """).strip()
       },
       "set": {
-        'namespaced': True, # namespaced by the machine aspect (temp)
+        'namespaced': True, # namespaced by the machine aspect (temp/motors/fan)
         'named_args': True,
+        'array_args': True,
         'args_error': textwrap.dedent("""
-          Set only accepts a namespace and a list of heater, value pairs.
+          Set only accepts a namespace (temp, motors or fan) and a list of 
+          heater, value pairs for the temp or on or off for the motor and fan 
+          namespaces.
         """).strip()
       },
       "estop": {
@@ -415,11 +418,11 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     print "Emergency Stop!"
     self.fire("estop")
 
-  def do_construct_set(self, subCmd, **kwargs):
+  def do_construct_set(self, subCmd, *args, **kwargs):
     method = "do_set_%s"%subCmd
     if not hasattr(self, method):
       raise Exception("%s is not a real namespace"%subCmd)
-    getattr(self, method)(**kwargs)
+    getattr(self, method)(*args, **kwargs)
 
   def do_set_temp(self, **kwargs):
     # Setting each temperature individually
@@ -432,6 +435,19 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       pprint({prefix: kwargs[k]})
       self.target_values[k] = kwargs[k]
       self.fire("target_temp_changed", {k: kwargs[k]})
+
+  def do_set_fan(self, *args):
+    value = {"on": True, "off": False}[args[0].lower()]
+    if value:
+      self.p.send_now("M106 S255")
+    else:
+      self.p.send_now("M106 S0")
+    self.fire("fan_speed_changed", 255)
+
+  def do_set_motors(self, *args):
+    value = {"on": True, "off": False}[args[0].lower()]
+    self.p.send_now({True: "M17", False: "M18"}[value])
+    self.fire("motors_enabled_changed", value)
 
   def do_set_feedrate(self, **kwargs):
     # TODO: kwargs[xy] * 60 and kwargs[z] * 60
