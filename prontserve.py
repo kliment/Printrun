@@ -349,7 +349,6 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
-    self.settings.pause_between_prints = True
     self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
