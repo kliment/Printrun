@@ -250,6 +250,12 @@ To use pronterface, you need:
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)
 
+## Cython-based G-Code parser
+
+Printrun default G-Code parser is quite memory hungry, but we also provide a much lighter one which just needs an extra build-time dependency (Cython), plus compiling the extension with:
+
+    python setup.py build_ext --inplace
+
 ## Windows
 
 Download the following, and install in this order:
