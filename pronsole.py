@@ -253,6 +253,7 @@ class Settings(object):
         self._add(HiddenSetting("project_layer", 0.1))
         self._add(HiddenSetting("project_prelift_gcode", ""))
         self._add(HiddenSetting("project_postlift_gcode", ""))
+        self._add(HiddenSetting("pause_between_prints", True))
 
     _settings = []
     def __setattr__(self, name, value):

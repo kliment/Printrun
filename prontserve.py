@@ -254,10 +254,13 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
         """).strip()
       },
       "set": {
-        'namespaced': True, # namespaced by the machine aspect (temp)
+        'namespaced': True, # namespaced by the machine aspect (temp/motors/fan)
         'named_args': True,
+        'array_args': True,
         'args_error': textwrap.dedent("""
-          Set only accepts a namespace and a list of heater, value pairs.
+          Set only accepts a namespace (temp, motors or fan) and a list of 
+          heater, value pairs for the temp or on or off for the motor and fan 
+          namespaces.
         """).strip()
       },
       "estop": {
@@ -346,7 +349,6 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
-    self.settings.pause_between_prints = True
     self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
@@ -377,6 +379,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
 
   def do_print(self):
     if not self.p.online: raise Exception("not online")
+    if self.printing_jobs: raise Exception("already printing")
     self.printing_jobs = True
 
   def do_home(self, *args, **kwargs):
@@ -410,16 +413,18 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     raise Exception("Continuous movement not supported")
 
   def do_estop(self):
+    self.printing_jobs = False
+    self.current_job = None
     pronsole.pronsole.do_pause(self, "")
     # self.p.reset()
     print "Emergency Stop!"
     self.fire("estop")
 
-  def do_construct_set(self, subCmd, **kwargs):
+  def do_construct_set(self, subCmd, *args, **kwargs):
     method = "do_set_%s"%subCmd
     if not hasattr(self, method):
       raise Exception("%s is not a real namespace"%subCmd)
-    getattr(self, method)(**kwargs)
+    getattr(self, method)(*args, **kwargs)
 
   def do_set_temp(self, **kwargs):
     # Setting each temperature individually
@@ -432,6 +437,19 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       pprint({prefix: kwargs[k]})
       self.target_values[k] = kwargs[k]
       self.fire("target_temp_changed", {k: kwargs[k]})
+
+  def do_set_fan(self, *args):
+    value = {"on": True, "off": False}[args[0].lower()]
+    if value:
+      self.p.send_now("M106 S255")
+    else:
+      self.p.send_now("M106 S0")
+    self.fire("fan_speed_changed", 255)
+
+  def do_set_motors(self, *args):
+    value = {"on": True, "off": False}[args[0].lower()]
+    self.p.send_now({True: "M17", False: "M18"}[value])
+    self.fire("motors_enabled_changed", value)
 
   def do_set_feedrate(self, **kwargs):
     # TODO: kwargs[xy] * 60 and kwargs[z] * 60
@@ -471,7 +489,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     # A better solution would be one in which a print_finised event could be 
     # listend for asynchronously without polling.
     p = self.p
-    if self.printing_jobs and p.printing == False and p.paused == False and p.online:
+    if self.printing_jobs and p.printing == False and p.online:
       if self.current_job != None:
         self.update_job_progress(100)
         self.fire("job_finished", self.jobs.sanitize(self.current_job))
@@ -485,6 +503,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
         self.current_job = self.jobs.list.pop(0)
         gc = gcoder.GCode(self.current_job['body'].split("\n"))
         self.p.startprint(gc)
+        self.p.paused = False
         self.fire("job_started", self.jobs.sanitize(self.current_job))
       else:
         print "Finished all print jobs"
