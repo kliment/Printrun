@@ -192,7 +192,7 @@ class printcore():
                 if self.recvcb:
                     try: self.recvcb(line)
                     except: pass
-                if self.loud: print "RECV: ", line.rstrip()
+                if self.loud: print "RECV:", line.rstrip()
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
@@ -522,7 +522,7 @@ class printcore():
             self.sent.append(command)
             self.analyzer.Analyze(command) # run the command through the analyzer
             if self.loud:
-                print "SENT: ", command
+                print "SENT:", command
             if self.sendcb:
                 try: self.sendcb(command)
                 except: pass
