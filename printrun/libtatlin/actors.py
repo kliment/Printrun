@@ -241,7 +241,8 @@ class GcodeModel(Model):
     color_tool0 = (1.0, 0.0, 0.0, 0.6)
     color_tool1 = (0.0, 0.0, 1.0, 0.6)
     color_printed = (0.2, 0.75, 0, 0.6)
-    color_current = (0.6, 0.3, 0, 1)
+    color_current = (0.6, 0.3, 0, 0.8)
+    color_current_printed = (0.1, 0.4, 0, 0.8)
 
     use_vbos = True
     loaded = False
@@ -361,9 +362,9 @@ class GcodeModel(Model):
 
         # Draw printed stuff until end or end_prev_layer
         cur_end = min(self.printed_until, end)
-        if end_prev_layer >= 0:
-            cur_end = min(cur_end, end_prev_layer)
-        if cur_end >= 0:
+        if 0 <= end_prev_layer <= cur_end:
+            glDrawArrays(GL_LINES, start, end_prev_layer)
+        elif cur_end >= 0:
             glDrawArrays(GL_LINES, start, cur_end)
 
         glEnableClientState(GL_COLOR_ARRAY)
@@ -374,19 +375,29 @@ class GcodeModel(Model):
             glDrawArrays(GL_LINES, start, end_prev_layer - start)
             cur_end = end_prev_layer
 
-        glDisableClientState(GL_COLOR_ARRAY)
-
-        glColor4f(*self.color_current)
-
         # Draw current layer
-        orig_linewidth = (GLfloat)()
-        glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
-        glLineWidth(2.0)
-        if end_prev_layer >= 0 and end > end_prev_layer:
-            glDrawArrays(GL_LINES, end_prev_layer, end - end_prev_layer)
-        glLineWidth(orig_linewidth)
+        if end_prev_layer >= 0:
+            glDisableClientState(GL_COLOR_ARRAY)
+            
+            # Backup & increase line width
+            orig_linewidth = (GLfloat)()
+            glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
+            glLineWidth(2.0)
+        
+            glColor4f(*self.color_current_printed)
+        
+            if cur_end > end_prev_layer:
+                glDrawArrays(GL_LINES, end_prev_layer, cur_end - end_prev_layer)
 
-        glEnableClientState(GL_COLOR_ARRAY)
+            glColor4f(*self.color_current)
+
+            if end > cur_end:
+                glDrawArrays(GL_LINES, cur_end, end - cur_end)
+
+            # Restore line width
+            glLineWidth(orig_linewidth)
+
+            glEnableClientState(GL_COLOR_ARRAY)
 
         # Draw non printed stuff until end (if not ending at a given layer)
         start = max(self.printed_until, 0)
