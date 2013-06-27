@@ -1338,7 +1338,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             else:
                 isreport = True
         tstring = l.rstrip()
-        if self.p.loud or (tstring not in ["ok", "wait"] and not isreport):
+        if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
             wx.CallAfter(self.addtexttolog, tstring + "\n");
         for listener in self.recvlisteners:
             listener(l)
