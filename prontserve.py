@@ -348,13 +348,14 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.initializing = True
     pronsole.pronsole.__init__(self)
     EventEmitter.__init__(self)
+    self.reset_timeout = 0
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
     self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
     self.settings.sensor_poll_rate = 1 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
-    self.target_values = {'e': 0, 'b': 0}
+    self.target_values = {'e0': 0, 'b': 0}
     self.load_default_rc()
     self.jobs = PrintJobQueue()
     self.job_id_incr = 0
@@ -363,6 +364,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.previous_job_progress = 0
     self.silent = True
     self._sensor_update_received = True
+    self.max_w_val = 0
+    self.p.sendcb = self.sendcb
     self.init_mdns()
     self.jobs.listeners.add(self)
     self.initializing = False
@@ -384,7 +387,6 @@ class Prontserve(pronsole.pronsole, EventEmitter):
 
   def do_home(self, *args, **kwargs):
     pronsole.pronsole.do_home(self, " ".join(args))
-    print "wut homing!"
 
   def do_move(self, **kwargs):
     # Convert mm/s to mm/minute
@@ -415,8 +417,16 @@ class Prontserve(pronsole.pronsole, EventEmitter):
   def do_estop(self):
     self.printing_jobs = False
     self.current_job = None
-    pronsole.pronsole.do_pause(self, "")
-    # self.p.reset()
+    # pause the print job if any is printing
+    if self.p.printing:
+      pronsole.pronsole.do_pause(self, "")
+    # Prevent the sensor from polling for 2 seconds while the firmware 
+    # restarts
+    self.reset_timeout = time.time() + 2
+    self._sensor_update_received = True
+    # restart the firmware
+    pronsole.pronsole.do_reset(self, "")
+
     print "Emergency Stop!"
     self.fire("estop")
 
@@ -435,8 +445,6 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       setter = getattr(pronsole.pronsole, "do_%stemp"%prefix)
       setter(self, kwargs[k])
       pprint({prefix: kwargs[k]})
-      self.target_values[k] = kwargs[k]
-      self.fire("target_temp_changed", {k: kwargs[k]})
 
   def do_set_fan(self, *args):
     value = {"on": True, "off": False}[args[0].lower()]
@@ -530,7 +538,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     return 0
 
   def run_sensor_loop(self):
-    if self._sensor_update_received:
+    if self._sensor_update_received and (time.time() - self.reset_timeout) > 0:
       self._sensor_update_received = False
       if self.dry_run:
         self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
@@ -551,15 +559,46 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
       self._receive_printer_error(l)
 
+  def sendcb(self, l):
+    # Monitor the sent commands for new extruder target temperatures
+    if ("M109" in l) or ("M104" in l):
+      temp = float(re.search('S([0-9]+)', l).group(1))
+      self._set_target_temp("e0", temp)      
+
+  def _set_target_temp(self, key, temp):
+    self.target_values[key] = temp
+    self.fire("target_temp_changed", {key: temp})
+
+
   def _receive_sensor_update(self, l):
-    self._sensor_update_received = True
-    words = filter(lambda s: s.find(":") > 0, l.split(" "))
-    d = dict([ s.split(":") for s in words])
+    try:
+      self._sensor_update_received = True
+      words = filter(lambda s: s.find(":") > 0, l.split(" "))
+      d = dict([ s.split(":") for s in words])
 
-    for key, value in d.iteritems():
-      self.__update_sensor(key, value)
+      for key, value in d.iteritems():
+        self.__update_sensor(key, value)
 
-    self.fire("sensor_changed")
+      self.fire("sensor_changed")
+
+      # Fire a event if the extruder is giving us a countdown till it's online
+      # see: TEMP_RESIDENCY_TIME (via the googles)
+      # see: https://github.com/ErikZalm/Marlin/blob/Marlin_v1/Marlin/Marlin_main.cpp#L1191
+      if ("W" in d):
+        percent = 0
+        if not d["W"] == "?":
+          w_val = float(d["W"])
+          if w_val > self.max_w_val: self.max_w_val = w_val
+          percent = (100 - w_val*100/self.max_w_val)
+          progress = {'eta': w_val, 'percent': percent}
+        else:
+          progress = {'percent': percent}
+        self.fire("target_temp_progress_changed", {'e0': progress})
+    except Exception as ex:
+      print traceback.format_exc()
+
+
+
 
   def __update_sensor(self, key, value):
     if (key in self.settings.sensor_names) == False:
@@ -706,7 +745,8 @@ if __name__ == "__main__":
         print "Unable to connect to printer: Connection timed-out."
         sys.exit(1)
 
-    time.sleep(1)
+    time.sleep(2)
+    prontserve.do_estop()
     prontserve.run_sensor_loop()
     prontserve.run_print_queue_loop()
 
