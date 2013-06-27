@@ -1121,21 +1121,22 @@ class pronsole(cmd.Cmd):
             return [i for i in self.temps.keys() if i.startswith(text)]
 
     def do_bedtemp(self, l):
-            try:
-                l = l.lower().replace(", ",".")
-                for i in self.bedtemps.keys():
-                    l = l.replace(i, self.bedtemps[i])
-                f = float(l)
-            except:
-                self.logError(_("You must enter a temperature."))
-            if f>=0:
-                if self.p.online:
-                    self.p.send_now("M140 S"+l)
-                    self.log(_("Setting bed temperature to %s degrees Celsius.") % f)
-                else:
-                    self.logError(_("Printer is not online."))
+        f = None
+        try:
+            l = l.lower().replace(", ",".")
+            for i in self.bedtemps.keys():
+                l = l.replace(i, self.bedtemps[i])
+            f = float(l)
+        except:
+            self.logError(_("You must enter a temperature."))
+        if f is not None and f >= 0:
+            if self.p.online:
+                self.p.send_now("M140 S" + l)
+                self.log(_("Setting bed temperature to %s degrees Celsius.") % f)
             else:
-                self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
+                self.logError(_("Printer is not online."))
+        else:
+            self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
 
     def help_bedtemp(self):
         self.log(_("Sets the bed temperature to the value entered."))

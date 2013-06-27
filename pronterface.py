@@ -233,6 +233,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.monitor_interval = 3
         self.current_pos = [0, 0, 0]
         self.paused = False
+        self.uploading = False
         self.sentlines = Queue.Queue(0)
         self.cpbuttons = [
             SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), None, 0, _("Switch all motors off")),
@@ -1276,9 +1277,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         while self.statuscheck:
             string = ""
             fractioncomplete = 0.0
-            if self.sdprinting:
-                fractioncomplete = float(self.percentdone / 100.0)
-                string += _(" SD printing:%04.2f %%") % (self.percentdone,)
+            if self.sdprinting or self.uploading:
+                if self.uploading:
+                    fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
+                    string += _("SD upload: %04.2f%% |") % (100*fractioncomplete,)
+                    string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
+                else:
+                    fractioncomplete = float(self.percentdone / 100.0)
+                    string += _("SD printing: %04.2f%% |") % (self.percentdone,)
                 if fractioncomplete > 0.0:
                     secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
                     secondsestimate = secondselapsed / fractioncomplete
@@ -1286,9 +1292,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
                                                                   format_duration(secondsestimate))
                     string += _(" Z: %.3f mm") % self.curlayer
-            if self.p.printing:
+            elif self.p.printing:
                 fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
-                string += _(" Printing: %04.2f%% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
+                string += _("Printing: %04.2f%% |") % (100*float(self.p.queueindex)/len(self.p.mainqueue),)
                 string += _(" Line# %d of %d lines |" ) % (self.p.queueindex, len(self.p.mainqueue))
                 if self.p.queueindex > 0:
                     secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
@@ -1607,8 +1613,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         dlg = wx.TextEntryDialog(self, ("Enter a target filename in 8.3 format:"), _("Pick SD filename") ,dosify(self.filename))
         if dlg.ShowModal() == wx.ID_OK:
             self.p.send_now("M21")
-            self.p.send_now("M28 "+str(dlg.GetValue()))
-            self.recvlisteners+=[self.uploadtrigger]
+            self.p.send_now("M28 " + str(dlg.GetValue()))
+            self.recvlisteners.append(self.uploadtrigger)
         dlg.Destroy()
 
     def pause(self, event):
