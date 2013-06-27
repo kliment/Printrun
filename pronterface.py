@@ -560,15 +560,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             pronsole.pronsole.start_macro(self, macro_name, old_macro_definition)
 
     def catchprint(self, l):
-        if self.capture_skip_newline and len(l) and not len(l.strip("\n\r")):
-            self.capture_skip_newline = False
-            return
-        for pat in self.capture_skip.keys():
-            if self.capture_skip[pat] > 0 and pat.match(l):
-                self.capture_skip[pat] -= 1
-                self.capture_skip_newline = True
-                return
-        wx.CallAfter(self.addtexttolog,l);
+        wx.CallAfter(self.addtexttolog, l)
 
     def project(self,event):
         from printrun import projectlayer
@@ -1313,9 +1305,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if self.monitor and self.p.online:
                 if self.sdprinting:
                     self.p.send_now("M27")
-                if not hasattr(self, "auto_monitor_pattern"):
-                    self.auto_monitor_pattern = re.compile(r"(ok\s+)?T:[\d\.]+(\s+B:[\d\.]+)?(\s+@:[\d\.]+)?\s*")
-                self.capture_skip[self.auto_monitor_pattern] = self.capture_skip.setdefault(self.auto_monitor_pattern, 0) + 1
                 self.p.send_now("M105")
             cur_time = time.time()
             while time.time() < cur_time + self.monitor_interval:
@@ -1330,25 +1319,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             except Queue.Empty:
                 pass
         wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
-
-    def capture(self, func, *args, **kwargs):
-        stdout = sys.stdout
-        cout = None
-        try:
-            cout = self.cout
-        except:
-            pass
-        if cout is None:
-            cout = cStringIO.StringIO()
-
-        sys.stdout = cout
-        retval = None
-        try:
-            retval = func(*args,**kwargs)
-        except:
-            traceback.print_exc()
-        sys.stdout = stdout
-        return retval
 
     def recvcb(self, l):
         isreport = False
