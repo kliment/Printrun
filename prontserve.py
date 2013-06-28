@@ -365,6 +365,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.silent = True
     self._sensor_update_received = True
     self.max_w_val = 0
+    self.waiting_to_reach_temp = False
     self.p.sendcb = self.sendcb
     self.init_mdns()
     self.jobs.listeners.add(self)
@@ -417,6 +418,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
   def do_estop(self):
     self.printing_jobs = False
     self.current_job = None
+    self.waiting_to_reach_temp = False
     # pause the print job if any is printing
     if self.p.printing:
       pronsole.pronsole.do_pause(self, "")
@@ -538,7 +540,14 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     return 0
 
   def run_sensor_loop(self):
-    if self._sensor_update_received and (time.time() - self.reset_timeout) > 0:
+    # A number of conditions that must be met for us to send a temperature 
+    # request to the printer. This safeguards this printer from being overloaded
+    # by temperature requests it cannot presently respond to.
+    ready = self._sensor_update_received
+    ready = ready and (time.time() - self.reset_timeout) > 0
+    ready = ready and (not self.waiting_to_reach_temp)
+
+    if ready:
       self._sensor_update_received = False
       if self.dry_run:
         self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
@@ -554,6 +563,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     """ Parses a line of output from the printer via printcore """
     l = l.rstrip()
     #print l
+    if self.waiting_to_reach_temp and ("ok" in l):
+      self.waiting_to_reach_temp = False
     if "T:" in l:
       self._receive_sensor_update(l)
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
@@ -563,7 +574,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     # Monitor the sent commands for new extruder target temperatures
     if ("M109" in l) or ("M104" in l):
       temp = float(re.search('S([0-9]+)', l).group(1))
-      self._set_target_temp("e0", temp)      
+      self._set_target_temp("e0", temp)
+      self.waiting_to_reach_temp = True
 
   def _set_target_temp(self, key, temp):
     self.target_values[key] = temp
