@@ -383,7 +383,7 @@ class GCode(object):
 
                     currenttravel = math.hypot(x - lastx, y - lasty)
                     if f == lastf: # Feedrate hasn't changed, no acceleration/decceleration planned
-                        moveduration = currenttravel / f
+                        moveduration = currenttravel / f if f != 0 else 0.
                     else:
                         # FIXME: review this better
                         # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
