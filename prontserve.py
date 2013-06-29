@@ -39,6 +39,8 @@ sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 log = logging.getLogger("root")
 __UPLOADS__ = "./uploads"
 
+CONSTRUCT_PROTOCOL_VERSION = [0,2,0]
+
 # Authentication
 # -------------------------------------------------
 
@@ -173,16 +175,61 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     self.send({event_name: data})
 
   def _execute(self, transforms, *args, **kwargs):
-    if socket_auth(self):
-      super(ConstructSocketHandler, self)._execute(transforms, *args, **kwargs)
-    else:
-      self.stream.close();
+    self.authorized = socket_auth(self)
+    super(ConstructSocketHandler, self)._execute(transforms, *args, **kwargs)
 
   def select_subprotocol(self, subprotocols):
+    # Chooses a compatible construct protocol from the list sent by the 
+    # client.
+    # The Construct Protocol uses semantic version v2.0.0 so any minor version 
+    # w/ a specific major version will be compatible with all minor versions 
+    # before it within that same major version.
+    # The only exception to this rule is major version 0.
+    # Version 0 protocols are unstable and can break compatibility more often.
+    # We are only going to cause backwards incompatibility in 0.x minor version
+    # See http://semver.org/
+    server_v = CONSTRUCT_PROTOCOL_VERSION
+    compatible_v = [-1, -1]
+    for p in list(subprotocols):
+      regex = '^construct\.text\.([0-9]+)\.?([0-9]+)'
+      client_v = [int(s) for s in list(re.search(regex, p).groups())]
+      pprint(client_v)
+      if client_v[0] == server_v[0] and client_v[1] <= server_v[1]:
+        if client_v[1] > compatible_v[1]: compatible_v = client_v
+
     print subprotocols
-    return "construct.text.0.0.1"
+    print compatible_v
+
+    # On incompatibility: Return a BS version and sending an error once the 
+    # connection opens.
+    self.client_versions = subprotocols
+    self.compatible = compatible_v[1] > -1
+    pprint(self.compatible)
+    print self._protocol_str(compatible_v)
+    if not self.compatible: return subprotocols[0]
+    return self._protocol_str(compatible_v)
+
+  def _protocol_str(self, v):
+    return "construct.text.%i.%i"%(v[0], v[1])
 
   def open(self):
+    if not self.authorized:
+      self._error(
+        message= "Incorrect password or username",
+        type= 'unauthorized'
+      )
+    if not self.compatible:
+      v = self._protocol_str(CONSTRUCT_PROTOCOL_VERSION)
+      msg = """
+      Incompatible Construct Protocol version.
+
+      Server version: %s
+      Your version(s): %s
+      """%(v, str(self.client_versions))
+      self._error(message= msg, type= 'incompatible_protocol_version')
+
+    if not (self.authorized and self.compatible): return self.stream.close()
+
     self.session_uuid = str(uuid.uuid4())
     self.clients.append(self)
     prontserve.listeners.add(self)
@@ -195,8 +242,15 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     for k, v in prontserve.target_values.iteritems():
       self.on_uncaught_event("target_temp_changed", {k: v})
     self.on_uncaught_event("job_progress_changed", prontserve.previous_job_progress)
+    # Alerting all websockets of the new client
+    self._on_connections_changed()
+
     self.send(initialized= {'session_uuid': self.session_uuid} )
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
+
+  def _on_connections_changed(self):
+    for c in self.clients:
+      c.send(connections_changed= len(prontserve.listeners))
 
   def send(self, dict_args = {}, **kwargs):
     args = dict(dict_args.items() + kwargs.items())
@@ -204,6 +258,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     self.write_message(args)
 
   def on_message(self, msg):
+    if not self.authorized: return
     cmds = self._cmds()
 
     print "message received: %s"%(msg)
@@ -229,6 +284,9 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     if cmd in cmds.keys():
       try:
         self._throwArgErrors(cmd, args, kwargs)
+      except Exception as ex:
+        self._error(message=str(ex), type= 'bad_cmd')
+      try:
         # Set is already used by pronsole so we use construct_set
         if cmd == "set": cmd = "construct_set"
         # Run the command
@@ -236,9 +294,12 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
         self.write_message({"ack": response})
       except Exception as ex:
         print traceback.format_exc()
-        self.write_message({"error": str(ex)})
+        self._error(message= str(ex), type= 'machine_error')
     else:
-      self.write_message({"error": "%s command does not exist."%cmd})
+      self._error(message= "%s command does not exist."%cmd, type= 'bad_cmd')
+
+  def _error(self, **kwargs):
+    self.write_message({"error": kwargs})
 
   def _cmds(self):
     return {
@@ -296,8 +357,10 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     if arg_errors: raise Exception(meta['args_error'])
 
   def on_close(self):
-    self.clients.remove(self)
-    prontserve.listeners.remove(self)
+    if self in self.clients:
+      self.clients.remove(self)
+      prontserve.listeners.remove(self)
+    self._on_connections_changed()
     print "WebSocket closed. %i sockets currently open." % len(prontserve.listeners)
 
 dir = os.path.dirname(__file__)
