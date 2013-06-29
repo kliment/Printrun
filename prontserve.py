@@ -242,8 +242,15 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     for k, v in prontserve.target_values.iteritems():
       self.on_uncaught_event("target_temp_changed", {k: v})
     self.on_uncaught_event("job_progress_changed", prontserve.previous_job_progress)
+    # Alerting all websockets of the new client
+    self._on_connections_changed()
+
     self.send(initialized= {'session_uuid': self.session_uuid} )
     print "WebSocket opened. %i sockets currently open." % len(prontserve.listeners)
+
+  def _on_connections_changed(self):
+    for c in self.clients:
+      c.send(connections_changed= len(prontserve.listeners))
 
   def send(self, dict_args = {}, **kwargs):
     args = dict(dict_args.items() + kwargs.items())
@@ -353,6 +360,7 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
     if self in self.clients:
       self.clients.remove(self)
       prontserve.listeners.remove(self)
+    self._on_connections_changed()
     print "WebSocket closed. %i sockets currently open." % len(prontserve.listeners)
 
 dir = os.path.dirname(__file__)
