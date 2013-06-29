@@ -382,17 +382,20 @@ class GCode(object):
                     # then calculate the time taken to complete the remaining distance
 
                     currenttravel = math.hypot(x - lastx, y - lasty)
-                    # FIXME: review this better
-                    # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
-                    # shouldn't we instead look at three consecutive moves ?
-                    distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
-                    if distance <= currenttravel and lastf + f != 0 and f != 0:
-                        # Unsure about this formula -- iXce reviewing this code
-                        moveduration = 2 * distance / (lastf + f)
-                        currenttravel -= distance
-                        moveduration += currenttravel/f
+                    if f == lastf: # Feedrate hasn't changed, no acceleration/decceleration planned
+                        moveduration = currenttravel / f
                     else:
-                        moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
+                        # FIXME: review this better
+                        # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
+                        # shouldn't we instead look at three consecutive moves ?
+                        distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
+                        if distance <= currenttravel and lastf + f != 0 and f != 0:
+                            moveduration = 2 * distance / (lastf + f) # This is distance / mean(lastf, f)
+                            moveduration += (currenttravel - distance) / f
+                        else:
+                            moveduration = 2 * currenttravel / (lastf + f) # This is currenttravel / mean(lastf, f)
+                            # FIXME: probably a little bit optimistic, but probably a much better estimate than the previous one:
+                            # moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
 
                 totalduration += moveduration
 
