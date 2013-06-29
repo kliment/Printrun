@@ -341,9 +341,9 @@ class GcodeViewPanel(wxGLPanel):
             self.handle_rotation(event)
         elif event.Dragging() and event.RightIsDown():
             self.handle_translation(event)
-        elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
+        elif event.LeftUp():
             self.initpos = None
-        elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
+        elif event.RightUp():
             self.initpos = None
         else:
             event.Skip()
