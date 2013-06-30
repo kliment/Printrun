@@ -43,6 +43,7 @@ class wxGLPanel(wx.Panel):
         super(wxGLPanel, self).__init__(parent, id, pos, size, style)
 
         self.GLinitialized = False
+        self.mview_initialized = False
         attribList = (glcanvas.WX_GL_RGBA,  # RGBA
                       glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
@@ -126,7 +127,9 @@ class wxGLPanel(wx.Panel):
         else:
             gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
 
-        self.reset_mview(0.9)
+        if not self.mview_initialized:
+            self.reset_mview(0.9)
+            self.mview_initialized = True
 
         # Wrap text to the width of the window
         if self.GLinitialized:
