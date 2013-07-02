@@ -47,10 +47,10 @@ class GLPanel(wx.Panel):
         # Create the canvas
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
+        self.context = glcanvas.GLContext(self.canvas)
         self.sizer.Add(self.canvas, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
-        #self.sizer.Fit(self)
-        self.Layout()
+        self.sizer.Fit(self)
 
         # bind events
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
@@ -77,20 +77,18 @@ class GLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        if self.canvas.GetContext():
+        size = self.GetClientSize()
+        self.width, self.height = size.width, size.height
+        if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
-            self.Show()
-            self.canvas.SetCurrent()
-            size = self.GetGLExtents()
-            self.winsize = (size.width, size.height)
-            self.width, self.height = size.width, size.height
+            self.canvas.SetCurrent(self.context)
             self.OnReshape(size.width, size.height)
             self.canvas.Refresh(False)
         event.Skip()
 
     def processPaintEvent(self, event):
         '''Process the drawing event.'''
-        self.canvas.SetCurrent()
+        self.canvas.SetCurrent(self.context)
 
         # This is a 'perfect' time to initialize OpenGL ... only if we need to
         if not self.GLinitialized:
@@ -180,7 +178,7 @@ class GLPanel(wx.Panel):
     def OnDraw(self, *args, **kwargs):
         """Draw the window."""
         #clear the context
-        self.canvas.SetCurrent()
+        self.canvas.SetCurrent(self.context)
         self.pygletcontext.set_current()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #draw objects
