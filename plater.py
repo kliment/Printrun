@@ -372,7 +372,7 @@ class stlwin(wx.Frame):
 
     def export(self, event):
         dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
-        dlg.SetWildcard(_("STL files (;*.stl;*.STL;)"))
+        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL"))
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
             self.writefiles(name)
@@ -397,7 +397,7 @@ class stlwin(wx.Frame):
 
     def right(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("STL files (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"))
+        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"))
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
             if (name.lower().endswith(".stl")):
