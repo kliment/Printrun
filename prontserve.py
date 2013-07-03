@@ -600,7 +600,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       return 100*float(self.p.queueindex)/len(self.p.mainqueue)
     if(self.sdprinting):
       return self.percentdone
-    return 0
+    return "0"
 
   def run_sensor_loop(self):
     # A number of conditions that must be met for us to send a temperature 
