@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 
 # This file is part of the Printrun suite.
@@ -27,8 +26,6 @@ pyglet.options['debug_gl'] = True
 
 from pyglet.gl import *
 from pyglet import gl
-
-from . import gcoder
 
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
