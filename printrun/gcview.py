@@ -52,8 +52,7 @@ class wxGLPanel(wx.Panel):
         self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
         self.context = glcanvas.GLContext(self.canvas)
         self.sizer.Add(self.canvas, 1, wx.EXPAND)
-        self.SetSizer(self.sizer)
-        self.sizer.Fit(self)
+        self.SetSizerAndFit(self.sizer)
 
         # bind events
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
@@ -74,7 +73,6 @@ class wxGLPanel(wx.Panel):
             self.OnReshape(size.width, size.height)
             self.canvas.Refresh(False)
         event.Skip()
-        #wx.CallAfter(self.Refresh)
 
     def processPaintEvent(self, event):
         '''Process the drawing event.'''
@@ -164,19 +162,18 @@ class wxGLPanel(wx.Panel):
         '''called in the middle of ondraw after the buffer has been cleared'''
         pass
 
+def cross(v1, v2):
+    return [v1[1]*v2[2]-v1[2]*v2[1], v1[2]*v2[0]-v1[0]*v2[2], v1[0]*v2[1]-v1[1]*v2[0]]
+
 def trackball(p1x, p1y, p2x, p2y, r):
     TRACKBALLSIZE = r
-#float a[3]; /* Axis of rotation */
-#float phi;  /* how much to rotate about axis */
-#float p1[3], p2[3], d[3];
-#float t;
 
-    if (p1x == p2x and p1y == p2y):
+    if p1x == p2x and p1y == p2y:
         return [0.0, 0.0, 0.0, 1.0]
 
     p1 = [p1x, p1y, project_to_sphere(TRACKBALLSIZE, p1x, p1y)]
     p2 = [p2x, p2y, project_to_sphere(TRACKBALLSIZE, p2x, p2y)]
-    a = stltool.cross(p2, p1)
+    a = cross(p2, p1)
 
     d = map(lambda x, y: x - y, p1, p2)
     t = math.sqrt(sum(map(lambda x: x * x, d))) / (2.0 * TRACKBALLSIZE)
@@ -189,19 +186,12 @@ def trackball(p1x, p1y, p2x, p2y, r):
 
     return axis_to_quat(a, phi)
 
-
-def vec(*args):
-    return (GLfloat * len(args))(*args)
-
-
 def axis_to_quat(a, phi):
-    #print a, phi
     lena = math.sqrt(sum(map(lambda x: x * x, a)))
     q = map(lambda x: x * (1 / lena), a)
     q = map(lambda x: x * math.sin(phi / 2.0), q)
     q.append(math.cos(phi / 2.0))
     return q
-
 
 def build_rotmatrix(q):
     m = (GLdouble * 16)()
