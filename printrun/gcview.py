@@ -45,11 +45,10 @@ class GcodeViewPanel(wxGLPanel):
         self.parent = realparent if realparent else parent
         self.initpos = None
         if build_dimensions:
-            self.dist = max(build_dimensions[0], build_dimensions[1])
             self.build_dimensions = build_dimensions
         else:
-            self.dist = 200
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
+        self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
