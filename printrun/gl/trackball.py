@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from pyglet.gl import *
 
 def cross(v1, v2):
