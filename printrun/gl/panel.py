@@ -157,3 +157,24 @@ class wxGLPanel(wx.Panel):
     def draw_objects(self):
         '''called in the middle of ondraw after the buffer has been cleared'''
         pass
+
+    #==========================================================================
+    # Utils
+    #==========================================================================
+    def mouse_to_3d(self, x, y):
+        x = float(x)
+        y = self.height - float(y)
+        # The following could work if we were not initially scaling to zoom on the bed
+        #if self.orthographic:
+        #    return (x - self.width / 2, y - self.height / 2, 0)
+        pmat = (GLdouble * 16)()
+        mvmat = (GLdouble * 16)()
+        viewport = (GLint * 4)()
+        px = (GLdouble)()
+        py = (GLdouble)()
+        pz = (GLdouble)()
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        glGetDoublev(GL_PROJECTION_MATRIX, pmat)
+        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
+        return (px.value, py.value, pz.value)
