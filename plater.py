@@ -242,8 +242,9 @@ class showstl(wx.Window):
 
 
 class stlwin(wx.Frame):
-    def __init__(self, size = (800, 580), callback = None, parent = None):
+    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None):
         wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
+        self.filenames = filenames
         if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
             self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
         else:
@@ -280,7 +281,7 @@ class stlwin(wx.Frame):
         self.mainsizer.Add(self.panel)
         #self.mainsizer.AddSpacer(10)
         if glview:
-            self.s = stlview.TestGlPanel(self, (580, 580))
+            self.s = stlview.StlViewPanel(self, (580, 580))
         else:
             self.s = showstl(self, (580, 580), (0, 0))
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
@@ -398,13 +399,16 @@ class stlwin(wx.Frame):
     def right(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"))
-        if(dlg.ShowModal() == wx.ID_OK):
+        if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
-            if (name.lower().endswith(".stl")):
-                self.load_stl(event, name)
-            elif (name.lower().endswith(".scad")):
-                self.load_scad(event, name)
+            self.load_file(event, name)
         dlg.Destroy()
+
+    def load_file(self, event, filename):
+        if filename.lower().endswith(".stl"):
+            self.load_stl(event, filename)
+        elif filename.lower().endswith(".scad"):
+            self.load_scad(event, filename)
 
     def load_scad(self, event, name):
         lf = open(name)
@@ -491,6 +495,6 @@ class stlwin(wx.Frame):
 
 if __name__ == '__main__':
     app = wx.App(False)
-    main = stlwin()
+    main = stlwin(sys.argv[1:])
     main.Show()
     app.MainLoop()
