@@ -102,8 +102,14 @@ class stl:
         self.facetloc = 0
         if filename is None:
             return
-        self.f = list(open(filename))
-        if not self.f[0].startswith("solid"):
+        with open(filename) as f:
+            data = f.read()
+        if "facet normal" in data[1:300] and "outer loop" in data[1:300]:
+            lines = data.split("\n")
+            for line in lines:
+                if not self.parseline(line):
+                    return
+        else:
             print "Not an ascii stl solid - attempting to parse as binary"
             f = open(filename, "rb")
             buf = f.read(84)
@@ -130,9 +136,6 @@ class stl:
                 self.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])), facet)]
             f.close()
             return
-        for i in self.f:
-            if not self.parseline(i):
-                return
 
     def translate(self, v = [0, 0, 0]):
         matrix = [
