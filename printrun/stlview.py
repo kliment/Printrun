@@ -201,7 +201,7 @@ class StlViewPanel(wxGLPanel):
             if self.initpos is not None:
                 self.initpos = None
 
-        elif event.Dragging() and event.RightIsDown() and event.ShiftDown():
+        elif event.Dragging() and event.RightIsDown():
             if self.initpos is None:
                 self.initpos = event.GetPositionTuple()
             else:
