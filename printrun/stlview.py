@@ -79,7 +79,7 @@ class StlViewPanel(wxGLPanel):
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.forceresize)
-        self.mousepos = [0, 0]
+        self.mousepos = (0, 0)
 
     def OnReshape(self, width, height):
         self.mview_initialized = False
@@ -170,6 +170,7 @@ class StlViewPanel(wxGLPanel):
         RMB: nothing
             with shift move viewport
         """
+        self.mousepos = event.GetPositionTuple()
         if event.Dragging() and event.LeftIsDown():
             if self.initpos == None:
                 self.initpos = event.GetPositionTuple()
@@ -216,9 +217,6 @@ class StlViewPanel(wxGLPanel):
                 self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
 
                 self.initpos = p2
-        else:
-            #mouse is moving without a button press
-            self.mousepos = event.GetPositionTuple()
 
     def rotate_shape(self, angle):
         """rotates acive shape
