@@ -75,7 +75,7 @@ class StlViewPanel(wxGLPanel):
             self.build_dimensions = build_dimensions
         else:
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
-        self.platform = actors.Platform(self.build_dimensions)
+        self.platform = actors.Platform(self.build_dimensions, light = True)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.forceresize)
