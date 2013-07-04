@@ -231,27 +231,21 @@ class StlViewPanel(wxGLPanel):
         rotate object
             with shift zoom viewport
         """
-        z = event.GetWheelRotation()
-        angle = 10
+        delta = event.GetWheelRotation()
         if not event.ShiftDown():
-            i = self.parent.l.GetSelection()
-
-            if i < 0:
-                try:
-                    self.parent.setlayerindex(z)
-                except:
-                    pass
-                return
-
-            if z > 0:
+            angle = 10
+            if delta > 0:
                 self.rotate_shape(angle / 2)
             else:
                 self.rotate_shape(-angle / 2)
-            return
-        if z > 0:
-            self.transv[2] += angle
         else:
-            self.transv[2] -= angle
+            factor = 1.05
+            x, y = event.GetPositionTuple()
+            x, y, _ = self.mouse_to_3d(x, y)
+            if delta > 0:
+                self.zoom(factor, (x, y))
+            else:
+                self.zoom(1/factor, (x, y))
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""

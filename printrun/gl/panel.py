@@ -178,3 +178,14 @@ class wxGLPanel(wx.Panel):
         glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
         return (px.value, py.value, pz.value)
+
+    def zoom(self, factor, to = None):
+        glMatrixMode(GL_MODELVIEW)
+        if to:
+            delta_x = to[0]
+            delta_y = to[1]
+            glTranslatef(delta_x, delta_y, 0)
+        glScalef(factor, factor, 1)
+        if to:
+            glTranslatef(-delta_x, -delta_y, 0)
+        wx.CallAfter(self.Refresh)
