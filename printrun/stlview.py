@@ -342,8 +342,8 @@ class StlViewPanel(wxGLPanel):
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         # Draw mouse
         glPushMatrix()
-        x, y, _ = self.mouse_to_3d(*self.mousepos)
-        glTranslatef(x, y, 5)
+        x, y, z = self.mouse_to_3d(self.mousepos[0], self.mousepos[1], 0.9)
+        glTranslatef(x, y, z)
         glBegin(GL_TRIANGLES)
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(1, 0, 0, 1))
         glNormal3f(0, 0, 1)

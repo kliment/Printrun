@@ -161,7 +161,7 @@ class wxGLPanel(wx.Panel):
     #==========================================================================
     # Utils
     #==========================================================================
-    def mouse_to_3d(self, x, y):
+    def mouse_to_3d(self, x, y, z = 1.0):
         x = float(x)
         y = self.height - float(y)
         # The following could work if we were not initially scaling to zoom on the bed
@@ -176,7 +176,7 @@ class wxGLPanel(wx.Panel):
         glGetIntegerv(GL_VIEWPORT, viewport);
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-        gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
+        gluUnProject(x, y, z, mvmat, pmat, viewport, px, py, pz)
         return (px.value, py.value, pz.value)
 
     def zoom(self, factor, to = None):
