@@ -161,17 +161,6 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.model.num_layers_to_draw = new_layer
         wx.CallAfter(self.Refresh)
 
-    def zoom(self, factor, to = None):
-        glMatrixMode(GL_MODELVIEW)
-        if to:
-            delta_x = to[0]
-            delta_y = to[1]
-            glTranslatef(delta_x, delta_y, 0)
-        glScalef(factor, factor, 1)
-        if to:
-            glTranslatef(-delta_x, -delta_y, 0)
-        wx.CallAfter(self.Refresh)
-
     def wheel(self, event):
         """react to mouse wheel actions:
             without shift: set max layer
