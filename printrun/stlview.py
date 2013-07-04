@@ -380,18 +380,7 @@ class StlViewPanel(wxGLPanel):
             glTranslatef(*(i.offsets))
             glRotatef(i.rot, 0.0, 0.0, 1.0)
             glScalef(*i.scale)
-
-            try:
-                if i.curlayer in i.gc.layers:
-                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.13, 0.37, 0.25, 1))
-                    [i.gc.layers[j].draw() for j in i.gc.layers.keys() if j < i.curlayer]
-                    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.6, 0.9, 1))
-                    b = i.gc.layers[i.curlayer]
-                    b.draw()
-                else:
-                    i.batch.draw()
-            except:
-                i.batch.draw()
+            i.batch.draw()
             glPopMatrix()
         glPopMatrix()
         glPopMatrix()
