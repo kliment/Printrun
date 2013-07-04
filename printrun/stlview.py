@@ -176,13 +176,12 @@ class StlViewPanel(wxGLPanel):
                 self.initpos = event.GetPositionTuple()
             else:
                 if not event.ShiftDown():
-                    currentpos = event.GetPositionTuple()
-                    delta = (
-                            (currentpos[0] - self.initpos[0]),
-                            -(currentpos[1] - self.initpos[1])
-                        )
-                    self.move_shape(delta)
-                    self.initpos = None
+                    p1 = self.initpos
+                    p2 = event.GetPositionTuple()
+                    x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
+                    x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
+                    self.move_shape((x2 - x1, y2 - y1))
+                    self.initpos = p2
                     return
                 p1 = self.initpos
                 p2 = event.GetPositionTuple()
@@ -208,14 +207,12 @@ class StlViewPanel(wxGLPanel):
             else:
                 p1 = self.initpos
                 p2 = event.GetPositionTuple()
-                sz = self.GetClientSize()
-                p1 = list(p1)
-                p2 = list(p2)
-                p1[1] *= -1
-                p2[1] *= -1
-
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
-
+                if self.orthographic:
+                    x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
+                    x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
+                    glTranslatef(x2 - x1, y2 - y1, 0)
+                else:
+                    glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
                 self.initpos = p2
 
     def rotate_shape(self, angle):
@@ -255,13 +252,6 @@ class StlViewPanel(wxGLPanel):
             self.transv[2] += angle
         else:
             self.transv[2] -= angle
-
-        glLoadIdentity()
-        glTranslatef(*self.transv)
-        if(self.rot):
-            glMultMatrixd(build_rotmatrix(self.basequat))
-        glGetDoublev(GL_MODELVIEW_MATRIX, self.mvmat)
-        self.rot = 1
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
