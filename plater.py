@@ -173,7 +173,7 @@ class showstl(wx.Window):
         event.Skip()
 
     def rotateafter(self):
-        if(self.i != self.previ):
+        if self.i != self.previ:
             i = self.parent.l.GetSelection()
             if i != wx.NOT_FOUND:
                 #o = self.models[self.l.GetItemText(i)].offsets
@@ -222,11 +222,8 @@ class showstl(wx.Window):
         dcs = wx.MemoryDC()
         for m in self.parent.models.values():
             b = m.bitmap
-                #print b
             im = b.ConvertToImage()
-                #print im
             imgc = wx.Point(im.GetWidth() / 2, im.GetHeight() / 2)
-                #print math.radians(5*(self.i-self.previ))
             im = im.Rotate(math.radians(m.rot), imgc, 0)
             bm = wx.BitmapFromImage(im)
             dcs.SelectObject(bm)
@@ -237,9 +234,6 @@ class showstl(wx.Window):
                 #if(time.time()-t)>5:
                 #    break
         del dc
-        #print time.time()-t
-        #s.export()
-
 
 class stlwin(wx.Frame):
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None):
