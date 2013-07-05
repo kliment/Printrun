@@ -236,7 +236,7 @@ class showstl(wx.Window):
         del dc
 
 class stlwin(wx.Frame):
-    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None):
+    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
         self.filenames = filenames
         if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
@@ -275,7 +275,7 @@ class stlwin(wx.Frame):
         self.mainsizer.Add(self.panel)
         #self.mainsizer.AddSpacer(10)
         if glview:
-            self.s = stlview.StlViewPanel(self, (580, 580))
+            self.s = stlview.StlViewPanel(self, (580, 580), build_dimensions = build_dimensions)
         else:
             self.s = showstl(self, (580, 580), (0, 0))
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
