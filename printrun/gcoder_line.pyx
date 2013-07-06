@@ -15,10 +15,7 @@
 
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint32_t
-
-cdef extern from "string.h":
-       char *strncpy(char *dest, char *src, size_t n)
-       size_t strlen(const char *s)
+from libc.string cimport strlen, strncpy
 
 cdef char* copy_string(object value):
     cdef char* orig = value
