@@ -149,7 +149,7 @@ setup (
         url              = "http://github.com/kliment/Printrun/",
         license          = "GPLv3",
         data_files       = data_files,
-        packages         = ["printrun", "printrun.cairosvg", "printrun.libtatlin", "printrun.server", "printrun.gl"],
+        packages         = ["printrun", "printrun.cairosvg", "printrun.server", "printrun.gl", "printrun.gl.libtatlin"],
         scripts          = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py", "prontserve.py"],
         cmdclass         = {"uninstall" : uninstall,
                             "install" : install,
