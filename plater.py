@@ -274,8 +274,12 @@ class stlwin(wx.Frame):
         #self.SetBackgroundColour((10, 10, 10))
         self.mainsizer.Add(self.panel)
         #self.mainsizer.AddSpacer(10)
+        if build_dimensions:
+            self.build_dimensions = build_dimensions
+        else:
+            self.build_dimensions = [200, 200, 100, 0, 0, 0]
         if glview:
-            self.s = stlview.StlViewPanel(self, (580, 580), build_dimensions = build_dimensions)
+            self.s = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
         else:
             self.s = showstl(self, (580, 580), (0, 0))
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
@@ -288,7 +292,7 @@ class stlwin(wx.Frame):
     def autoplate(self, event):
         print _("Autoplating")
         separation = 2
-        bedsize = [200, 200, 100]
+        bedsize = self.build_dimensions[0:3]
         cursor = [0, 0, 0]
         newrow = 0
         max = [0, 0]
