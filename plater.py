@@ -28,6 +28,7 @@ import random
 import threading
 import math
 import sys
+import traceback
 
 from printrun import stltool
 from printrun.printrun_utils import pixmapfile
@@ -38,7 +39,8 @@ if "-nogl" not in sys.argv:
         from printrun import stlview
         glview = True
     except:
-        pass
+        print "Could not load 3D viewer for plater:"
+        traceback.print_exc()
 
 
 def evalme(s):
