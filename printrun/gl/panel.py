@@ -119,6 +119,7 @@ class wxGLPanel(wx.Panel):
             glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 3 * self.dist)
         else:
             gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
+        glMatrixMode(GL_MODELVIEW)
 
         if not self.mview_initialized:
             self.reset_mview(0.9)
