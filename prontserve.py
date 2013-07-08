@@ -479,6 +479,21 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     raise Exception("Continuous movement not supported")
 
   def do_estop(self):
+    self.reset()
+
+    print "Emergency Stop!"
+    self.fire("estop")
+    # Updating the job progress
+    print self.print_progress()
+    self.update_job_progress(self.print_progress())
+    for k, v in self.target_values.iteritems():
+      self._set_target_temp(k, 0)
+    self.do_set_motors("off")
+    self.do_set_fan("off")
+    progress = {'eta': 0, 'percent': 100}
+    self.fire("target_temp_progress_changed", {'e0': progress})
+
+  def reset(self):
     self.printing_jobs = False
     self.current_job = None
     self.waiting_to_reach_temp = False
@@ -492,8 +507,9 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     # restart the firmware
     pronsole.pronsole.do_reset(self, "")
 
-    print "Emergency Stop!"
-    self.fire("estop")
+    self.p.printing = False
+
+
 
   def do_construct_set(self, subCmd, *args, **kwargs):
     method = "do_set_%s"%subCmd
@@ -591,7 +607,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     gen.Task(self.ioloop.add_timeout(next_timeout, self.run_print_queue_loop))
 
   def update_job_progress(self, progress):
-    if progress != self.previous_job_progress and self.current_job != None:
+    if progress != self.previous_job_progress:
       self.previous_job_progress = progress
       self.fire("job_progress_changed", progress)
 
@@ -600,7 +616,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       return 100*float(self.p.queueindex)/len(self.p.mainqueue)
     if(self.sdprinting):
       return self.percentdone
-    return "0"
+    return 0
 
   def run_sensor_loop(self):
     # A number of conditions that must be met for us to send a temperature 
@@ -821,7 +837,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     time.sleep(2)
-    prontserve.do_estop()
+    prontserve.reset()
     prontserve.run_sensor_loop()
     prontserve.run_print_queue_loop()
 
