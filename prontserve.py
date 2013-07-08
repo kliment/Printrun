@@ -580,29 +580,33 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     # A better solution would be one in which a print_finised event could be 
     # listend for asynchronously without polling.
     p = self.p
-    if self.printing_jobs and p.printing == False and p.online:
-      if self.current_job != None:
-        self.update_job_progress(100)
-        self.fire("job_finished", self.jobs.sanitize(self.current_job))
+    try:
+      if self.printing_jobs and p.printing == False and p.online:
+        if self.current_job != None:
+          self.update_job_progress(100)
+          self.fire("job_finished", self.jobs.sanitize(self.current_job))
 
-      if self.settings.pause_between_prints and self.current_job != None:
-        print "Print job complete. Pausing between jobs."
-        self.current_job = None
-        self.printing_jobs = False
-      elif len(self.jobs.list) > 0:
-        print "Starting the next print job"
-        self.current_job = self.jobs.list.pop(0)
-        gc = gcoder.GCode(self.current_job['body'].split("\n"))
-        self.p.startprint(gc)
-        self.p.paused = False
-        self.fire("job_started", self.jobs.sanitize(self.current_job))
-      else:
-        print "Finished all print jobs"
-        self.current_job = None
-        self.printing_jobs = False
+        if self.settings.pause_between_prints and self.current_job != None:
+          print "Print job complete. Pausing between jobs."
+          self.current_job = None
+          self.printing_jobs = False
+        elif len(self.jobs.list) > 0:
+          print "Starting the next print job"
+          self.current_job = self.jobs.list.pop(0)
+          gc = gcoder.GCode(self.current_job['body'].split("\n"))
+          self.p.startprint(gc)
+          self.p.paused = False
+          self.fire("job_started", self.jobs.sanitize(self.current_job))
+        else:
+          print "Finished all print jobs"
+          self.current_job = None
+          self.printing_jobs = False
 
-    # Updating the job progress
-    self.update_job_progress(self.print_progress())
+      # Updating the job progress
+      self.update_job_progress(self.print_progress())
+
+    except Exception as ex:
+      print traceback.format_exc()
 
     #print "print loop"
     next_timeout = time.time() + 0.3
