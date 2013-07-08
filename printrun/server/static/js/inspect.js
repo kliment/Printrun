@@ -22,7 +22,7 @@
     var hostname = window.location.hostname;
     var url = "ws://"+hostname+":8888/socket?user=admin&password=admin";
     console.log(url);
-    var ws = new WebSocket(url, "construct.text.0.0.1");
+    var ws = new WebSocket(url, "construct.text.0.2");
     $(function () {
       $consoleWrapper = $(".console");
       $console = $(".console pre");
