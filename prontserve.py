@@ -445,8 +445,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     sdRef.close()
 
   def do_print(self):
-    if not self.p.online: raise Exception("not online")
-    if self.printing_jobs: raise Exception("already printing")
+    if not self.p.online: raise Exception("Not online")
+    if self.printing_jobs: raise Exception("Already printing")
+    no_jobs_msg = "Nothing to print. Try adding a print job with add_job."
+    if len(self.jobs.list) == 0: raise Exception(no_jobs_msg)
     self.printing_jobs = True
 
   def do_home(self, *args, **kwargs):
