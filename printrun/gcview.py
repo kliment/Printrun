@@ -28,221 +28,9 @@ from pyglet.gl import *
 from pyglet import gl
 
 from . import gcoder
-from . import stltool
-from .libtatlin import actors
-
-class wxGLPanel(wx.Panel):
-    '''A simple class for using OpenGL with wxPython.'''
-
-    orthographic = True
-
-    def __init__(self, parent, id, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize, style = 0):
-        # Forcing a no full repaint to stop flickering
-        style = style | wx.NO_FULL_REPAINT_ON_RESIZE
-        super(wxGLPanel, self).__init__(parent, id, pos, size, style)
-
-        self.GLinitialized = False
-        self.mview_initialized = False
-        attribList = (glcanvas.WX_GL_RGBA,  # RGBA
-                      glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
-                      glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
-
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
-        self.context = glcanvas.GLContext(self.canvas)
-        self.sizer.Add(self.canvas, 1, wx.EXPAND)
-        self.SetSizer(self.sizer)
-        self.sizer.Fit(self)
-
-        # bind events
-        self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
-        self.canvas.Bind(wx.EVT_SIZE, self.processSizeEvent)
-        self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
-
-    def processEraseBackgroundEvent(self, event):
-        '''Process the erase background event.'''
-        pass  # Do nothing, to avoid flashing on MSWin
-
-    def processSizeEvent(self, event):
-        '''Process the resize event.'''
-        size = self.GetClientSize()
-        self.winsize = (size.width, size.height)
-        self.width, self.height = size.width, size.height
-        if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
-            # Make sure the frame is shown before calling SetCurrent.
-            self.canvas.SetCurrent(self.context)
-            self.OnReshape(size.width, size.height)
-            self.canvas.Refresh(False)
-        event.Skip()
-        #wx.CallAfter(self.Refresh)
-
-    def processPaintEvent(self, event):
-        '''Process the drawing event.'''
-        self.canvas.SetCurrent(self.context)
- 
-        if not self.GLinitialized:
-            self.OnInitGL()
-            self.GLinitialized = True
-
-        self.OnDraw()
-        event.Skip()
-
-    def Destroy(self):
-        #clean up the pyglet OpenGL context
-        self.pygletcontext.destroy()
-        #call the super method
-        super(wx.Panel, self).Destroy()
-
-    #==========================================================================
-    # GLFrame OpenGL Event Handlers
-    #==========================================================================
-    def OnInitGL(self):
-        '''Initialize OpenGL for use in the window.'''
-        #create a pyglet context for this panel
-        self.pygletcontext = gl.Context(gl.current_context)
-        self.pygletcontext.canvas = self
-        self.pygletcontext.set_current()
-        #normal gl init
-        glClearColor(0.98, 0.98, 0.78, 1)
-        glClearDepth(1.0)                # set depth value to 1
-        glDepthFunc(GL_LEQUAL)
-        glEnable(GL_COLOR_MATERIAL)
-        glEnable(GL_DEPTH_TEST)
-        glEnable(GL_CULL_FACE)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        self.OnReshape(*self.GetClientSize())
-
-    def OnReshape(self, width, height):
-        '''Reshape the OpenGL viewport based on the dimensions of the window.'''
-        if not self.GLinitialized:
-            self.GLinitialized = True
-            self.OnInitGL()
-        glViewport(0, 0, width, height)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        if self.orthographic:
-            glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 3 * self.dist)
-        else:
-            gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
-
-        if not self.mview_initialized:
-            self.reset_mview(0.9)
-            self.mview_initialized = True
-
-        # Wrap text to the width of the window
-        if self.GLinitialized:
-            self.pygletcontext.set_current()
-            self.update_object_resize()
-
-    def reset_mview(self, factor):
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        if self.orthographic:
-            ratio = factor * float(min(self.width, self.height)) / self.dist
-            glScalef(ratio, ratio, 1)
-
-    def OnDraw(self, *args, **kwargs):
-        """Draw the window."""
-        self.pygletcontext.set_current()
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        self.draw_objects()
-        self.canvas.SwapBuffers()
-
-    #==========================================================================
-    # To be implemented by a sub class
-    #==========================================================================
-    def create_objects(self):
-        '''create opengl objects when opengl is initialized'''
-        pass
-
-    def update_object_resize(self):
-        '''called when the window recieves only if opengl is initialized'''
-        pass
-
-    def draw_objects(self):
-        '''called in the middle of ondraw after the buffer has been cleared'''
-        pass
-
-def trackball(p1x, p1y, p2x, p2y, r):
-    TRACKBALLSIZE = r
-#float a[3]; /* Axis of rotation */
-#float phi;  /* how much to rotate about axis */
-#float p1[3], p2[3], d[3];
-#float t;
-
-    if (p1x == p2x and p1y == p2y):
-        return [0.0, 0.0, 0.0, 1.0]
-
-    p1 = [p1x, p1y, project_to_sphere(TRACKBALLSIZE, p1x, p1y)]
-    p2 = [p2x, p2y, project_to_sphere(TRACKBALLSIZE, p2x, p2y)]
-    a = stltool.cross(p2, p1)
-
-    d = map(lambda x, y: x - y, p1, p2)
-    t = math.sqrt(sum(map(lambda x: x * x, d))) / (2.0 * TRACKBALLSIZE)
-
-    if (t > 1.0):
-        t = 1.0
-    if (t < -1.0):
-        t = -1.0
-    phi = 2.0 * math.asin(t)
-
-    return axis_to_quat(a, phi)
-
-
-def vec(*args):
-    return (GLfloat * len(args))(*args)
-
-
-def axis_to_quat(a, phi):
-    #print a, phi
-    lena = math.sqrt(sum(map(lambda x: x * x, a)))
-    q = map(lambda x: x * (1 / lena), a)
-    q = map(lambda x: x * math.sin(phi / 2.0), q)
-    q.append(math.cos(phi / 2.0))
-    return q
-
-
-def build_rotmatrix(q):
-    m = (GLdouble * 16)()
-    m[0] = 1.0 - 2.0 * (q[1] * q[1] + q[2] * q[2])
-    m[1] = 2.0 * (q[0] * q[1] - q[2] * q[3])
-    m[2] = 2.0 * (q[2] * q[0] + q[1] * q[3])
-    m[3] = 0.0
-
-    m[4] = 2.0 * (q[0] * q[1] + q[2] * q[3])
-    m[5] = 1.0 - 2.0 * (q[2] * q[2] + q[0] * q[0])
-    m[6] = 2.0 * (q[1] * q[2] - q[0] * q[3])
-    m[7] = 0.0
-
-    m[8] = 2.0 * (q[2] * q[0] - q[1] * q[3])
-    m[9] = 2.0 * (q[1] * q[2] + q[0] * q[3])
-    m[10] = 1.0 - 2.0 * (q[1] * q[1] + q[0] * q[0])
-    m[11] = 0.0
-
-    m[12] = 0.0
-    m[13] = 0.0
-    m[14] = 0.0
-    m[15] = 1.0
-    return m
-
-
-def project_to_sphere(r, x, y):
-    d = math.sqrt(x * x + y * y)
-    if (d < r * 0.70710678118654752440):
-        return math.sqrt(r * r - d * d)
-    else:
-        t = r / 1.41421356237309504880
-        return t * t / d
-
-
-def mulquat(q1, rq):
-    return [q1[3] * rq[0] + q1[0] * rq[3] + q1[1] * rq[2] - q1[2] * rq[1],
-                    q1[3] * rq[1] + q1[1] * rq[3] + q1[2] * rq[0] - q1[0] * rq[2],
-                    q1[3] * rq[2] + q1[2] * rq[3] + q1[0] * rq[1] - q1[1] * rq[0],
-                    q1[3] * rq[3] - q1[0] * rq[0] - q1[1] * rq[1] - q1[2] * rq[2]]
-
+from .gl.panel import wxGLPanel
+from .gl.trackball import trackball, mulquat, build_rotmatrix
+from .gl.libtatlin import actors
 
 class GcodeViewPanel(wxGLPanel):
 
@@ -257,11 +45,10 @@ class GcodeViewPanel(wxGLPanel):
         self.parent = realparent if realparent else parent
         self.initpos = None
         if build_dimensions:
-            self.dist = max(build_dimensions[0], build_dimensions[1])
             self.build_dimensions = build_dimensions
         else:
-            self.dist = 200
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
+        self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
@@ -374,17 +161,6 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.model.num_layers_to_draw = new_layer
         wx.CallAfter(self.Refresh)
 
-    def zoom(self, factor, to = None):
-        glMatrixMode(GL_MODELVIEW)
-        if to:
-            delta_x = to[0]
-            delta_y = to[1]
-            glTranslatef(delta_x, delta_y, 0)
-        glScalef(factor, factor, 1)
-        if to:
-            glTranslatef(-delta_x, -delta_y, 0)
-        wx.CallAfter(self.Refresh)
-
     def wheel(self, event):
         """react to mouse wheel actions:
             without shift: set max layer
@@ -406,24 +182,6 @@ class GcodeViewPanel(wxGLPanel):
             self.zoom(factor, (x, y))
         else:
             self.zoom(1/factor, (x, y))
-
-    def mouse_to_3d(self, x, y):
-        x = float(x)
-        y = self.height - float(y)
-        # The following could work if we were not initially scaling to zoom on the bed
-        #if self.orthographic:
-        #    return (x - self.width / 2, y - self.height / 2, 0)
-        pmat = (GLdouble * 16)()
-        mvmat = (GLdouble * 16)()
-        viewport = (GLint * 4)()
-        px = (GLdouble)()
-        py = (GLdouble)()
-        pz = (GLdouble)()
-        glGetIntegerv(GL_VIEWPORT, viewport);
-        glGetDoublev(GL_PROJECTION_MATRIX, pmat)
-        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-        gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
-        return (px.value, py.value, pz.value)
 
     def fit(self):
         if not self.parent.model or not self.parent.model.loaded:

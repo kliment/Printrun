@@ -270,10 +270,14 @@ class GCode(object):
                         cur_z = line.z
 
             if cur_z != prev_z:
+                if prev_z is not None:
+                    base_z = (prev_z - (prev_z % 0.1)) if abs(cur_z - prev_z) < 0.01 else prev_z
+                else:
+                    base_z = None
                 all_layers.append(Layer(cur_lines))
-                old_lines = layers.get(prev_z, [])
+                old_lines = layers.get(base_z, [])
                 old_lines += cur_lines
-                layers[prev_z] = old_lines
+                layers[base_z] = old_lines
                 cur_lines = []
                 layer_id += 1
                 layer_line = 0

@@ -28,6 +28,7 @@ import random
 import threading
 import math
 import sys
+import traceback
 
 from printrun import stltool
 from printrun.printrun_utils import pixmapfile
@@ -38,7 +39,8 @@ if "-nogl" not in sys.argv:
         from printrun import stlview
         glview = True
     except:
-        pass
+        print "Could not load 3D viewer for plater:"
+        traceback.print_exc()
 
 
 def evalme(s):
@@ -173,7 +175,7 @@ class showstl(wx.Window):
         event.Skip()
 
     def rotateafter(self):
-        if(self.i != self.previ):
+        if self.i != self.previ:
             i = self.parent.l.GetSelection()
             if i != wx.NOT_FOUND:
                 #o = self.models[self.l.GetItemText(i)].offsets
@@ -222,11 +224,8 @@ class showstl(wx.Window):
         dcs = wx.MemoryDC()
         for m in self.parent.models.values():
             b = m.bitmap
-                #print b
             im = b.ConvertToImage()
-                #print im
             imgc = wx.Point(im.GetWidth() / 2, im.GetHeight() / 2)
-                #print math.radians(5*(self.i-self.previ))
             im = im.Rotate(math.radians(m.rot), imgc, 0)
             bm = wx.BitmapFromImage(im)
             dcs.SelectObject(bm)
@@ -237,13 +236,11 @@ class showstl(wx.Window):
                 #if(time.time()-t)>5:
                 #    break
         del dc
-        #print time.time()-t
-        #s.export()
-
 
 class stlwin(wx.Frame):
-    def __init__(self, size = (800, 580), callback = None, parent = None):
+    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
+        self.filenames = filenames
         if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
             self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
         else:
@@ -279,8 +276,12 @@ class stlwin(wx.Frame):
         #self.SetBackgroundColour((10, 10, 10))
         self.mainsizer.Add(self.panel)
         #self.mainsizer.AddSpacer(10)
+        if build_dimensions:
+            self.build_dimensions = build_dimensions
+        else:
+            self.build_dimensions = [200, 200, 100, 0, 0, 0]
         if glview:
-            self.s = stlview.TestGlPanel(self, (580, 580))
+            self.s = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
         else:
             self.s = showstl(self, (580, 580), (0, 0))
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
@@ -293,7 +294,7 @@ class stlwin(wx.Frame):
     def autoplate(self, event):
         print _("Autoplating")
         separation = 2
-        bedsize = [200, 200, 100]
+        bedsize = self.build_dimensions[0:3]
         cursor = [0, 0, 0]
         newrow = 0
         max = [0, 0]
@@ -372,7 +373,7 @@ class stlwin(wx.Frame):
 
     def export(self, event):
         dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
-        dlg.SetWildcard(_("STL files (;*.stl;*.STL;)"))
+        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL"))
         if(dlg.ShowModal() == wx.ID_OK):
             name = dlg.GetPath()
             self.writefiles(name)
@@ -397,14 +398,17 @@ class stlwin(wx.Frame):
 
     def right(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("STL files (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"))
-        if(dlg.ShowModal() == wx.ID_OK):
+        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"))
+        if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
-            if (name.lower().endswith(".stl")):
-                self.load_stl(event, name)
-            elif (name.lower().endswith(".scad")):
-                self.load_scad(event, name)
+            self.load_file(event, name)
         dlg.Destroy()
+
+    def load_file(self, event, filename):
+        if filename.lower().endswith(".stl"):
+            self.load_stl(event, filename)
+        elif filename.lower().endswith(".scad"):
+            self.load_scad(event, filename)
 
     def load_scad(self, event, name):
         lf = open(name)
@@ -491,6 +495,6 @@ class stlwin(wx.Frame):
 
 if __name__ == '__main__':
     app = wx.App(False)
-    main = stlwin()
+    main = stlwin(sys.argv[1:])
     main.Show()
     app.MainLoop()

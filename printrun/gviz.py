@@ -415,7 +415,8 @@ class Gviz(wx.Panel):
         if not gcode:
             return
         gline = gcoder.Line(gcode)
-        gline.parse_coordinates(False)
+        split_raw = gcoder.split(gline)
+        gcoder.parse_coordinates(gline, split_raw, imperial = False)
 
         def _y(y):
             return self.build_dimensions[1] - (y - self.build_dimensions[4])

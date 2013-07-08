@@ -111,7 +111,7 @@ if len (sys.argv) > 2:
 if not prefix and "PREFIX" in os.environ:
     prefix = os.environ["PREFIX"]
 if not prefix or not len (prefix):
-    prefix = "/usr/local"
+    prefix = sys.prefix
 
 if sys.argv[1] in ("install", "uninstall") and len (prefix):
     sys.argv += ["--prefix", prefix]
@@ -149,7 +149,7 @@ setup (
         url              = "http://github.com/kliment/Printrun/",
         license          = "GPLv3",
         data_files       = data_files,
-        packages         = ["printrun", "printrun.cairosvg"],
+        packages         = ["printrun", "printrun.cairosvg", "printrun.server", "printrun.gl", "printrun.gl.libtatlin"],
         scripts          = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py", "prontserve.py"],
         cmdclass         = {"uninstall" : uninstall,
                             "install" : install,

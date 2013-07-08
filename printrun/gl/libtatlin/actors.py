@@ -71,7 +71,8 @@ class Platform(object):
     """
     graduations_major = 10
 
-    def __init__(self, build_dimensions):
+    def __init__(self, build_dimensions, light = False):
+        self.light = light
         self.width = build_dimensions[0]
         self.depth = build_dimensions[1]
         self.height = build_dimensions[2]
@@ -102,19 +103,21 @@ class Platform(object):
             elif i % (self.graduations_major / 2) == 0:
                 glColor4f(*self.color_grads_interm)
             else:
+                if self.light: return False
                 glColor4f(*self.color_grads_minor)
+            return True
 
         # draw the grid
         glBegin(GL_LINES)
         for i in range(0, int(math.ceil(self.width + 1))):
-            color(i)
-            glVertex3f(float(i), 0.0,        0.0)
-            glVertex3f(float(i), self.depth, 0.0)
+            if color(i):
+                glVertex3f(float(i), 0.0,        0.0)
+                glVertex3f(float(i), self.depth, 0.0)
 
         for i in range(0, int(math.ceil(self.depth + 1))):
-            color(i)
-            glVertex3f(0,          float(i), 0.0)
-            glVertex3f(self.width, float(i), 0.0)
+            if color(i):
+                glVertex3f(0,          float(i), 0.0)
+                glVertex3f(self.width, float(i), 0.0)
         glEnd()
 
         # draw fill

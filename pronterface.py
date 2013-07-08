@@ -705,11 +705,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def plate(self, e):
         import plater
-        print "plate function activated"
-        plater.stlwin(size = (800, 580), callback = self.platecb, parent = self).Show()
+        print _("Plate function activated")
+        plater.stlwin(size = (800, 580), callback = self.platecb, parent = self, build_dimensions = self.build_dimensions_list).Show()
 
     def platecb(self, name):
-        print "plated: "+name
+        print _("Plated %s") % name
         self.loadfile(None, name)
 
     def sdmenu(self, e):

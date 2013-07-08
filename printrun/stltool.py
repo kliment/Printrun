@@ -88,7 +88,7 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = 1):
 
 
 
-class stl:
+class stl(object):
     def __init__(self, filename = None):
         self.facet = [[0, 0, 0],[[0, 0, 0],[0, 0, 0],[0, 0, 0]]]
         self.facets = []
@@ -102,37 +102,39 @@ class stl:
         self.facetloc = 0
         if filename is None:
             return
-        self.f = list(open(filename))
-        if not self.f[0].startswith("solid"):
+        with open(filename) as f:
+            data = f.read()
+        if "facet normal" in data[1:300] and "outer loop" in data[1:300]:
+            lines = data.split("\n")
+            for line in lines:
+                if not self.parseline(line):
+                    return
+        else:
             print "Not an ascii stl solid - attempting to parse as binary"
             f = open(filename, "rb")
             buf = f.read(84)
-            while(len(buf)<84):
-                newdata = f.read(84-len(buf))
+            while len(buf) < 84:
+                newdata = f.read(84 - len(buf))
                 if not len(newdata):
                     break
-                buf+=newdata
+                buf += newdata
             facetcount = struct.unpack_from("<I", buf, 80)
             facetformat = struct.Struct("<ffffffffffffH")
             for i in xrange(facetcount[0]):
                 buf = f.read(50)
-                while(len(buf)<50):
-                    newdata = f.read(50-len(buf))
+                while len(buf) < 50:
+                    newdata = f.read(50 - len(buf))
                     if not len(newdata):
                         break
-                    buf+=newdata
+                    buf += newdata
                 fd = list(facetformat.unpack(buf))
                 self.name = "binary soloid"
-                self.facet = [fd[:3],[fd[3:6], fd[6:9], fd[9:12]]]
-                self.facets+=[self.facet]
-                facet = self.facet
-                self.facetsminz+=[(min(map(lambda x:x[2], facet[1])), facet)]
-                self.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])), facet)]
+                facet = [fd[:3],[fd[3:6], fd[6:9], fd[9:12]]]
+                self.facets.append(facet)
+                self.facetsminz.append((min(map(lambda x:x[2], facet[1])), facet))
+                self.facetsmaxz.append((max(map(lambda x:x[2], facet[1])), facet))
             f.close()
             return
-        for i in self.f:
-            if not self.parseline(i):
-                return
 
     def translate(self, v = [0, 0, 0]):
         matrix = [
