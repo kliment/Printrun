@@ -90,6 +90,9 @@ class StlViewPanel(wxGLPanel):
     #==========================================================================
     def OnInitGL(self):
         '''Initialize OpenGL for use in the window.'''
+        if self.GLinitialized:
+            return
+        self.GLinitialized = True
         #create a pyglet context for this panel
         self.pygletcontext = Context(current_context)
         self.pygletcontext.canvas = self

@@ -74,10 +74,7 @@ class wxGLPanel(wx.Panel):
         '''Process the drawing event.'''
         self.canvas.SetCurrent(self.context)
  
-        if not self.GLinitialized:
-            self.OnInitGL()
-            self.GLinitialized = True
-
+        self.OnInitGL()
         self.OnDraw()
         event.Skip()
 
@@ -92,6 +89,9 @@ class wxGLPanel(wx.Panel):
     #==========================================================================
     def OnInitGL(self, call_reshape = True):
         '''Initialize OpenGL for use in the window.'''
+        if self.GLinitialized:
+            return
+        self.GLinitialized = True
         #create a pyglet context for this panel
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
@@ -110,9 +110,7 @@ class wxGLPanel(wx.Panel):
 
     def OnReshape(self, width, height):
         '''Reshape the OpenGL viewport based on the dimensions of the window.'''
-        if not self.GLinitialized:
-            self.GLinitialized = True
-            self.OnInitGL(call_reshape = False)
+        self.OnInitGL(call_reshape = False)
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
