@@ -289,6 +289,7 @@ class GcodeModel(Model):
         self.max_layers         = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers
         self.printed_until      = -1
+        self.only_current       = False
         self.initialized        = False
         self.loaded             = True
 
@@ -365,17 +366,19 @@ class GcodeModel(Model):
 
         # Draw printed stuff until end or end_prev_layer
         cur_end = min(self.printed_until, end)
-        if 0 <= end_prev_layer <= cur_end:
-            glDrawArrays(GL_LINES, start, end_prev_layer)
-        elif cur_end >= 0:
-            glDrawArrays(GL_LINES, start, cur_end)
+        if not self.only_current:
+            if 0 <= end_prev_layer <= cur_end:
+                glDrawArrays(GL_LINES, start, end_prev_layer)
+            elif cur_end >= 0:
+                glDrawArrays(GL_LINES, start, cur_end)
 
         glEnableClientState(GL_COLOR_ARRAY)
 
         # Draw nonprinted stuff until end_prev_layer
         start = max(cur_end, 0)
         if end_prev_layer >= start:
-            glDrawArrays(GL_LINES, start, end_prev_layer - start)
+            if not self.only_current:
+                glDrawArrays(GL_LINES, start, end_prev_layer - start)
             cur_end = end_prev_layer
 
         # Draw current layer
@@ -405,7 +408,7 @@ class GcodeModel(Model):
         # Draw non printed stuff until end (if not ending at a given layer)
         start = max(self.printed_until, 0)
         end = end - start
-        if end_prev_layer < 0 and end > 0:
+        if end_prev_layer < 0 and end > 0 and not self.only_current:
             glDrawArrays(GL_LINES, start, end)
 
         self.vertex_buffer.unbind()
