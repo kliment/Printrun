@@ -593,7 +593,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
         elif len(self.jobs.list) > 0:
           print "Starting the next print job"
           self.current_job = self.jobs.list.pop(0)
-          gc = gcoder.GCode(self.current_job['body'].split("\n"))
+          lines = self.current_job['body'].split("\n")
+          gc = gcoder.GCode(lines, preprocess=False)
           self.p.startprint(gc)
           self.p.paused = False
           self.fire("job_started", self.jobs.sanitize(self.current_job))
