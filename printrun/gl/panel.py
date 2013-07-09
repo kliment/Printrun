@@ -44,6 +44,9 @@ class wxGLPanel(wx.Panel):
                       glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
 
+        self.width = None
+        self.height = None
+
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
         self.context = glcanvas.GLContext(self.canvas)
@@ -61,12 +64,10 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        size = self.GetClientSize()
-        self.width, self.height = size.width, size.height
         if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
-            self.OnReshape(size.width, size.height)
+            self.OnReshape()
             self.canvas.Refresh(False)
         event.Skip()
 
@@ -106,10 +107,15 @@ class wxGLPanel(wx.Panel):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         if call_reshape:
-            self.OnReshape(*self.GetClientSize())
+            self.OnReshape()
 
-    def OnReshape(self, width, height):
+    def OnReshape(self):
         '''Reshape the OpenGL viewport based on the dimensions of the window.'''
+        size = self.GetClientSize()
+        oldwidth, oldheight = self.width, self.height
+        width, height = size.width, size.height
+        self.width = max(float(width), 1.0)
+        self.height = max(float(height), 1.0)
         self.OnInitGL(call_reshape = False)
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
@@ -123,6 +129,9 @@ class wxGLPanel(wx.Panel):
         if not self.mview_initialized:
             self.reset_mview(0.9)
             self.mview_initialized = True
+        elif oldwidth is not None and oldheight is not None:
+            factor = min(self.width / oldwidth, self.height / oldheight)
+            self.zoom(factor)
 
         # Wrap text to the width of the window
         if self.GLinitialized:
