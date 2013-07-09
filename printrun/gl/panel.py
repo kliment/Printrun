@@ -131,7 +131,8 @@ class wxGLPanel(wx.Panel):
             self.mview_initialized = True
         elif oldwidth is not None and oldheight is not None:
             factor = min(self.width / oldwidth, self.height / oldheight)
-            self.zoom(factor)
+            x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
+            self.zoom(factor, (x, y))
 
         # Wrap text to the width of the window
         if self.GLinitialized:
