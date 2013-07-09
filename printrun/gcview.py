@@ -67,7 +67,10 @@ class GcodeViewPanel(wxGLPanel):
         self.create_objects()
         
         glPushMatrix()
-        glTranslatef(0, 0, -self.dist) # Move back
+        if self.orthographic:
+            glTranslatef(0, 0, -3 * self.dist) # Move back
+        else:
+            glTranslatef(0, 0, -self.dist) # Move back
         glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
         glTranslatef(- self.build_dimensions[3] - self.parent.platform.width/2,
                      - self.build_dimensions[4] - self.parent.platform.depth/2, 0) # Move origin to bottom left of platform
