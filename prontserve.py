@@ -439,8 +439,6 @@ class FastGCode(object):
     return self.lines.__iter__()
 
   def idxs(self, index):
-    print len(self.lines)
-    print index
     return (0, index)
 
 
