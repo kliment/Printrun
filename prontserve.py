@@ -402,6 +402,48 @@ class EventEmitter(object):
         continue
 
 
+# Fast GCode. Because the GCode class is slow.
+# -------------------------------------------------
+
+class PyLine(object):
+
+    __slots__ = ('x','y','z','e','f','i','j',
+                 'raw', 'command', 'is_move',
+                 'relative','relative_e',
+                 'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
+                 'gcview_end_vertex')
+
+    def __init__(self, l):
+        self.raw = l
+
+    def __getattr__(self, name):
+        return None
+
+try:
+  from printrun import gcoder_line
+  Line = gcoder_line.GLine
+except ImportError:
+  Line = PyLine
+
+class FastGCode(object):
+  def __init__(self,data):
+    self.lines = [Line(l2) for l2 in
+                    (l.strip() for l in data)
+                  if l2]
+    self.all_layers = [self.lines]
+
+  def __len__(self):
+    return len(self.lines)
+
+  def __iter__(self):
+    return self.lines.__iter__()
+
+  def idxs(self, index):
+    print len(self.lines)
+    print index
+    return (0, index)
+
+
 # Prontserve: Server-specific functionality
 # -------------------------------------------------
 
@@ -594,7 +636,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
           print "Starting the next print job"
           self.current_job = self.jobs.list.pop(0)
           lines = self.current_job['body'].split("\n")
-          gc = gcoder.GCode(lines, preprocess=False)
+          gc = FastGCode(lines)
           self.p.startprint(gc)
           self.p.paused = False
           self.fire("job_started", self.jobs.sanitize(self.current_job))
