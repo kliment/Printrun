@@ -90,7 +90,7 @@ class wxGLPanel(wx.Panel):
     #==========================================================================
     # GLFrame OpenGL Event Handlers
     #==========================================================================
-    def OnInitGL(self):
+    def OnInitGL(self, call_reshape = True):
         '''Initialize OpenGL for use in the window.'''
         #create a pyglet context for this panel
         self.pygletcontext = gl.Context(gl.current_context)
@@ -105,13 +105,14 @@ class wxGLPanel(wx.Panel):
         glEnable(GL_CULL_FACE)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        self.OnReshape(*self.GetClientSize())
+        if call_reshape:
+            self.OnReshape(*self.GetClientSize())
 
     def OnReshape(self, width, height):
         '''Reshape the OpenGL viewport based on the dimensions of the window.'''
         if not self.GLinitialized:
             self.GLinitialized = True
-            self.OnInitGL()
+            self.OnInitGL(call_reshape = False)
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
