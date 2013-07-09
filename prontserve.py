@@ -402,6 +402,46 @@ class EventEmitter(object):
         continue
 
 
+# Fast GCode. Because the GCode class is slow.
+# -------------------------------------------------
+
+class PyLine(object):
+
+    __slots__ = ('x','y','z','e','f','i','j',
+                 'raw', 'command', 'is_move',
+                 'relative','relative_e',
+                 'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
+                 'gcview_end_vertex')
+
+    def __init__(self, l):
+        self.raw = l
+
+    def __getattr__(self, name):
+        return None
+
+try:
+  from printrun import gcoder_line
+  Line = gcoder_line.GLine
+except ImportError:
+  Line = PyLine
+
+class FastGCode(object):
+  def __init__(self,data):
+    self.lines = [Line(l2) for l2 in
+                    (l.strip() for l in data)
+                  if l2]
+    self.all_layers = [self.lines]
+
+  def __len__(self):
+    return len(self.lines)
+
+  def __iter__(self):
+    return self.lines.__iter__()
+
+  def idxs(self, index):
+    return (0, index)
+
+
 # Prontserve: Server-specific functionality
 # -------------------------------------------------
 
@@ -445,8 +485,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     sdRef.close()
 
   def do_print(self):
-    if not self.p.online: raise Exception("not online")
-    if self.printing_jobs: raise Exception("already printing")
+    if not self.p.online: raise Exception("Not online")
+    if self.printing_jobs: raise Exception("Already printing")
+    no_jobs_msg = "Nothing to print. Try adding a print job with add_job."
+    if len(self.jobs.list) == 0: raise Exception(no_jobs_msg)
     self.printing_jobs = True
 
   def do_home(self, *args, **kwargs):
@@ -479,6 +521,21 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     raise Exception("Continuous movement not supported")
 
   def do_estop(self):
+    self.reset()
+
+    print "Emergency Stop!"
+    self.fire("estop")
+    # Updating the job progress
+    print self.print_progress()
+    self.update_job_progress(self.print_progress())
+    for k, v in self.target_values.iteritems():
+      self._set_target_temp(k, 0)
+    self.do_set_motors("off")
+    self.do_set_fan("off")
+    progress = {'eta': 0, 'percent': 100}
+    self.fire("target_temp_progress_changed", {'e0': progress})
+
+  def reset(self):
     self.printing_jobs = False
     self.current_job = None
     self.waiting_to_reach_temp = False
@@ -492,8 +549,9 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     # restart the firmware
     pronsole.pronsole.do_reset(self, "")
 
-    print "Emergency Stop!"
-    self.fire("estop")
+    self.p.printing = False
+
+
 
   def do_construct_set(self, subCmd, *args, **kwargs):
     method = "do_set_%s"%subCmd
@@ -562,36 +620,41 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     # A better solution would be one in which a print_finised event could be 
     # listend for asynchronously without polling.
     p = self.p
-    if self.printing_jobs and p.printing == False and p.online:
-      if self.current_job != None:
-        self.update_job_progress(100)
-        self.fire("job_finished", self.jobs.sanitize(self.current_job))
+    try:
+      if self.printing_jobs and p.printing == False and p.online:
+        if self.current_job != None:
+          self.update_job_progress(100)
+          self.fire("job_finished", self.jobs.sanitize(self.current_job))
 
-      if self.settings.pause_between_prints and self.current_job != None:
-        print "Print job complete. Pausing between jobs."
-        self.current_job = None
-        self.printing_jobs = False
-      elif len(self.jobs.list) > 0:
-        print "Starting the next print job"
-        self.current_job = self.jobs.list.pop(0)
-        gc = gcoder.GCode(self.current_job['body'].split("\n"))
-        self.p.startprint(gc)
-        self.p.paused = False
-        self.fire("job_started", self.jobs.sanitize(self.current_job))
-      else:
-        print "Finished all print jobs"
-        self.current_job = None
-        self.printing_jobs = False
+        if self.settings.pause_between_prints and self.current_job != None:
+          print "Print job complete. Pausing between jobs."
+          self.current_job = None
+          self.printing_jobs = False
+        elif len(self.jobs.list) > 0:
+          print "Starting the next print job"
+          self.current_job = self.jobs.list.pop(0)
+          lines = self.current_job['body'].split("\n")
+          gc = FastGCode(lines)
+          self.p.startprint(gc)
+          self.p.paused = False
+          self.fire("job_started", self.jobs.sanitize(self.current_job))
+        else:
+          print "Finished all print jobs"
+          self.current_job = None
+          self.printing_jobs = False
 
-    # Updating the job progress
-    self.update_job_progress(self.print_progress())
+      # Updating the job progress
+      self.update_job_progress(self.print_progress())
+
+    except Exception as ex:
+      print traceback.format_exc()
 
     #print "print loop"
     next_timeout = time.time() + 0.3
     gen.Task(self.ioloop.add_timeout(next_timeout, self.run_print_queue_loop))
 
   def update_job_progress(self, progress):
-    if progress != self.previous_job_progress and self.current_job != None:
+    if progress != self.previous_job_progress:
       self.previous_job_progress = progress
       self.fire("job_progress_changed", progress)
 
@@ -600,7 +663,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       return 100*float(self.p.queueindex)/len(self.p.mainqueue)
     if(self.sdprinting):
       return self.percentdone
-    return "0"
+    return 0
 
   def run_sensor_loop(self):
     # A number of conditions that must be met for us to send a temperature 
@@ -821,7 +884,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     time.sleep(2)
-    prontserve.do_estop()
+    prontserve.reset()
     prontserve.run_sensor_loop()
     prontserve.run_print_queue_loop()
 
