@@ -94,7 +94,7 @@ class StlViewPanel(wxGLPanel):
             return
         self.GLinitialized = True
         #create a pyglet context for this panel
-        self.pygletcontext = Context(current_context)
+        self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
         #normal gl init
