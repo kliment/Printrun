@@ -82,10 +82,10 @@ class wxGLPanel(wx.Panel):
         event.Skip()
 
     def Destroy(self):
-        #clean up the pyglet OpenGL context
+        # clean up the pyglet OpenGL context
         self.pygletcontext.destroy()
-        #call the super method
-        super(wx.Panel, self).Destroy()
+        # call the super method
+        super(wxGLPanel, self).Destroy()
 
     #==========================================================================
     # GLFrame OpenGL Event Handlers
