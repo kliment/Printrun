@@ -242,9 +242,9 @@ class GcodeModel(Model):
 
     color_travel = (0.6, 0.6, 0.6, 0.6)
     color_tool0 = (1.0, 0.0, 0.0, 0.6)
-    color_tool1 = (0.0, 0.0, 1.0, 0.6)
+    color_tool1 = (0.31, 0.05, 0.9, 0.6)
     color_printed = (0.2, 0.75, 0, 0.6)
-    color_current = (0.6, 0.3, 0, 0.8)
+    color_current = (0, 0.9, 1.0, 0.8)
     color_current_printed = (0.1, 0.4, 0, 0.8)
 
     use_vbos = True
