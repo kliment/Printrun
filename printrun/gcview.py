@@ -174,10 +174,10 @@ class GcodeViewPanel(wxGLPanel):
         if event.ShiftDown():
             if not self.parent.model:
                 return
-            if delta > 0:
-                self.layerup()
-            else:
-                self.layerdown()
+            count = 1 if not event.ControlDown() else 10
+            for i in range(count):
+                if delta > 0: self.layerup()
+                else: self.layerdown()
             return
         x, y = event.GetPositionTuple()
         x, y, _ = self.mouse_to_3d(x, y)
