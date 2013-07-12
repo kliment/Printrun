@@ -24,8 +24,10 @@ from distutils.command.install_data import install_data as _install_data
 try:
     from Cython.Build import cythonize
     extensions = cythonize("printrun/gcoder_line.pyx")
+    from Cython.Distutils import build_ext
 except ImportError:
     extensions = None
+    build_ext = None
 
 INSTALLED_FILES = "installed_files"
 
@@ -142,6 +144,12 @@ for extra_data_dir in extra_data_dirs:
         destpath = os.path.join("share", "pronterface", basedir)
         data_files.append ((destpath, files))
 
+cmdclass         = {"uninstall" : uninstall,
+                    "install" : install,
+                    "install_data" : install_data}
+if build_ext:
+    cmdclass['build_ext'] = build_ext
+
 setup (
         name             = "Printrun",
         description      = "Host software for 3D printers",
@@ -151,8 +159,6 @@ setup (
         data_files       = data_files,
         packages         = ["printrun", "printrun.cairosvg", "printrun.server", "printrun.gl", "printrun.gl.libtatlin"],
         scripts          = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py", "prontserve.py"],
-        cmdclass         = {"uninstall" : uninstall,
-                            "install" : install,
-                            "install_data" : install_data},
+        cmdclass         = cmdclass,
         ext_modules      = extensions,
      )
