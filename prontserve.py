@@ -847,7 +847,7 @@ if __name__ == "__main__":
   )
 
   args = parser.parse_args()
-  dry_run = True#args.dry_run
+  dry_run = args.dry_run
 
   def warn_if_dry_run():
     if dry_run:
