@@ -95,6 +95,7 @@ class printcore():
         self.z_feedrate = None
         self.pronterface = None
         
+    @locked
     def disconnect(self):
         """Disconnects from printer and pauses the print
         """
@@ -111,6 +112,8 @@ class printcore():
                 self.printer.close()
             except socket.error:
                 pass
+						except OSError:
+								pass
         self.printer = None
         self.online = False
         self.printing = False
