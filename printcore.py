@@ -94,7 +94,7 @@ class printcore():
         self.xy_feedrate = None
         self.z_feedrate = None
         self.pronterface = None
-        
+
     @locked
     def disconnect(self):
         """Disconnects from printer and pauses the print
@@ -333,7 +333,7 @@ class printcore():
         self.print_thread.start()
         return True
 
-    # run a simple script if it exists, no multithreading    
+    # run a simple script if it exists, no multithreading
     def runSmallScript(self, filename):
         if filename == None: return
         f = None
@@ -348,22 +348,22 @@ class printcore():
             l = l[:l.find(";")] #remove comment
             self.send_now(l)
           f.close()
-        
+
     def pause(self):
         """Pauses the print, saving the current position.
         """
         if not self.printing: return False
         self.paused = True
         self.printing = False
-        
+
         # try joining the print thread: enclose it in try/except because we might be calling it from the thread itself
         try:
           self.print_thread.join()
         except:
           pass
-        
+
         self.print_thread = None
-        
+
         # saves the status
         self.pauseX = self.analyzer.x-self.analyzer.xOffset;
         self.pauseY = self.analyzer.y-self.analyzer.yOffset;
@@ -379,7 +379,7 @@ class printcore():
         if self.paused:
           #restores the status
           self.send_now("G90") # go to absolute coordinates
-        
+
           xyFeedString = ""
           zFeedString = ""
           if self.xy_feedrate != None: xyFeedString = " F" + str(self.xy_feedrate)
@@ -388,11 +388,11 @@ class printcore():
           self.send_now("G1 X" + str(self.pauseX) + " Y" + str(self.pauseY) + xyFeedString)
           self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
           self.send_now("G92 E" + str(self.pauseE))
-        
+
           if self.pauseRelative: self.send_now("G91") # go back to relative if needed
           #reset old feed rate
           self.send_now("G1 F" + str(self.pauseF))
-        
+
         self.paused = False
         self.printing = True
         self.print_thread = Thread(target = self._print, kwargs = {"resuming": True})
@@ -453,7 +453,7 @@ class printcore():
             self.pronterface.pause(None)
           else:
             self.pause()
-            
+
     def _sendnext(self):
         if not self.printer:
             return
@@ -497,7 +497,7 @@ class printcore():
                 self.queueindex += 1
                 self.clear = True
                 return
-      
+
             tline = tline.split(";")[0]
             if len(tline) > 0:
                 self._send(tline, self.lineno, True)
