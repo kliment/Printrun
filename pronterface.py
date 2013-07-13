@@ -1307,10 +1307,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.p.send_now("M27")
                 self.p.send_now("M105")
             cur_time = time.time()
+            wait_time = 0
             while time.time() < cur_time + self.monitor_interval:
                 if not self.statuscheck:
                     break
                 time.sleep(0.25)
+                wait_time += 0.25
+                if wait_time > self.monitor_interval:
+                    break
             try:
                 while not self.sentlines.empty():
                     gc = self.sentlines.get_nowait()
