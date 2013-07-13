@@ -325,7 +325,8 @@ class printcore():
         if not gcode.lines:
             return True
         self.clear = False
-        self.print_thread = Thread(target = self._print)
+        resuming = (startindex != 0)
+        self.print_thread = Thread(target = self._print, kwargs = {"resuming": resuming})
         self.print_thread.start()
         return True
 
