@@ -27,6 +27,7 @@ import pyglet
 pyglet.options['debug_gl'] = True
 
 from pyglet.gl import *
+from pyglet import gl
 
 from .gl.panel import wxGLPanel
 from .gl.trackball import trackball, mulquat, build_rotmatrix
