@@ -112,8 +112,8 @@ class printcore():
                 self.printer.close()
             except socket.error:
                 pass
-						except OSError:
-								pass
+            except OSError:
+                pass
         self.printer = None
         self.online = False
         self.printing = False
