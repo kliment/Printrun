@@ -1127,9 +1127,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.xyb.repeatLast()
 
     def parseusercmd(self, line):
-        if line.startswith("M114"):
+        if line.upper().startswith("M114"):
             self.userm114 += 1
-        elif line.startswith("M105"):
+        elif line.upper().startswith("M105"):
             self.userm105 += 1
 
     def procbutton(self, e):
