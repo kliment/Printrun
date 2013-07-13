@@ -67,7 +67,10 @@ class GcodeViewPanel(wxGLPanel):
         self.create_objects()
         
         glPushMatrix()
-        glTranslatef(0, 0, -self.dist) # Move back
+        if self.orthographic:
+            glTranslatef(0, 0, -3 * self.dist) # Move back
+        else:
+            glTranslatef(0, 0, -self.dist) # Move back
         glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
         glTranslatef(- self.build_dimensions[3] - self.parent.platform.width/2,
                      - self.build_dimensions[4] - self.parent.platform.depth/2, 0) # Move origin to bottom left of platform
@@ -171,10 +174,10 @@ class GcodeViewPanel(wxGLPanel):
         if event.ShiftDown():
             if not self.parent.model:
                 return
-            if delta > 0:
-                self.layerup()
-            else:
-                self.layerdown()
+            count = 1 if not event.ControlDown() else 10
+            for i in range(count):
+                if delta > 0: self.layerup()
+                else: self.layerdown()
             return
         x, y = event.GetPositionTuple()
         x, y, _ = self.mouse_to_3d(x, y)
@@ -207,6 +210,7 @@ class GcodeViewPanel(wxGLPanel):
         kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
         kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
         kfit = [70]       # Fit to print keys
+        kshowcurrent = [67]       # Show only current layer keys
         kreset = [82]       # Reset keys
         key = event.GetKeyCode()
         if key in kup:
@@ -220,6 +224,10 @@ class GcodeViewPanel(wxGLPanel):
             self.zoom(1 / step, (x, y))
         if key in kfit:
             self.fit()
+        if key in kshowcurrent:
+            if not self.parent.model or not self.parent.model.loaded:
+                return
+            self.parent.model.only_current = not self.parent.model.only_current
         if key in kreset:
             self.reset_mview(0.9)
             self.basequat = [0, 0, 0, 1]

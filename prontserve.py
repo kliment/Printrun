@@ -402,28 +402,18 @@ class EventEmitter(object):
         continue
 
 
-# Fast GCode. Because the GCode class is slow.
+# Faster GCoder implementation without any parsing
 # -------------------------------------------------
 
-class PyLine(object):
+class Line(object):
 
-    __slots__ = ('x','y','z','e','f','i','j',
-                 'raw', 'command', 'is_move',
-                 'relative','relative_e',
-                 'current_x', 'current_y', 'current_z', 'extruding', 'current_tool',
-                 'gcview_end_vertex')
+    __slots__ = ('raw', 'command', 'is_move')
 
     def __init__(self, l):
         self.raw = l
 
     def __getattr__(self, name):
         return None
-
-try:
-  from printrun import gcoder_line
-  Line = gcoder_line.GLine
-except ImportError:
-  Line = PyLine
 
 class FastGCode(object):
   def __init__(self,data):

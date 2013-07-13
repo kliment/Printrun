@@ -81,17 +81,20 @@ class StlViewPanel(wxGLPanel):
         wx.CallAfter(self.forceresize)
         self.mousepos = (0, 0)
 
-    def OnReshape(self, width, height):
+    def OnReshape(self):
         self.mview_initialized = False
-        super(StlViewPanel, self).OnReshape(width, height)
+        super(StlViewPanel, self).OnReshape()
 
     #==========================================================================
     # GLFrame OpenGL Event Handlers
     #==========================================================================
-    def OnInitGL(self):
+    def OnInitGL(self, call_reshape = True):
         '''Initialize OpenGL for use in the window.'''
+        if self.GLinitialized:
+            return
+        self.GLinitialized = True
         #create a pyglet context for this panel
-        self.pygletcontext = Context(current_context)
+        self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
         #normal gl init
@@ -124,6 +127,8 @@ class StlViewPanel(wxGLPanel):
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(1, 1, 1, 1))
         glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0.1, 0, 0.9))
+        if call_reshape:
+            self.OnReshape()
         if self.parent.filenames:
             for filename in self.parent.filenames:
                 self.parent.load_file(None, filename)

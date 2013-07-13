@@ -44,6 +44,9 @@ class wxGLPanel(wx.Panel):
                       glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
 
+        self.width = None
+        self.height = None
+
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
         self.context = glcanvas.GLContext(self.canvas)
@@ -61,12 +64,10 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        size = self.GetClientSize()
-        self.width, self.height = size.width, size.height
         if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
-            self.OnReshape(size.width, size.height)
+            self.OnReshape()
             self.canvas.Refresh(False)
         event.Skip()
 
@@ -74,24 +75,24 @@ class wxGLPanel(wx.Panel):
         '''Process the drawing event.'''
         self.canvas.SetCurrent(self.context)
  
-        if not self.GLinitialized:
-            self.OnInitGL()
-            self.GLinitialized = True
-
+        self.OnInitGL()
         self.OnDraw()
         event.Skip()
 
     def Destroy(self):
-        #clean up the pyglet OpenGL context
+        # clean up the pyglet OpenGL context
         self.pygletcontext.destroy()
-        #call the super method
-        super(wx.Panel, self).Destroy()
+        # call the super method
+        super(wxGLPanel, self).Destroy()
 
     #==========================================================================
     # GLFrame OpenGL Event Handlers
     #==========================================================================
-    def OnInitGL(self):
+    def OnInitGL(self, call_reshape = True):
         '''Initialize OpenGL for use in the window.'''
+        if self.GLinitialized:
+            return
+        self.GLinitialized = True
         #create a pyglet context for this panel
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
@@ -105,24 +106,33 @@ class wxGLPanel(wx.Panel):
         glEnable(GL_CULL_FACE)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        self.OnReshape(*self.GetClientSize())
+        if call_reshape:
+            self.OnReshape()
 
-    def OnReshape(self, width, height):
+    def OnReshape(self):
         '''Reshape the OpenGL viewport based on the dimensions of the window.'''
-        if not self.GLinitialized:
-            self.GLinitialized = True
-            self.OnInitGL()
+        size = self.GetClientSize()
+        oldwidth, oldheight = self.width, self.height
+        width, height = size.width, size.height
+        self.width = max(float(width), 1.0)
+        self.height = max(float(height), 1.0)
+        self.OnInitGL(call_reshape = False)
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         if self.orthographic:
-            glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 3 * self.dist)
+            glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 5 * self.dist)
         else:
             gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
+        glMatrixMode(GL_MODELVIEW)
 
         if not self.mview_initialized:
             self.reset_mview(0.9)
             self.mview_initialized = True
+        elif oldwidth is not None and oldheight is not None:
+            factor = min(self.width / oldwidth, self.height / oldheight)
+            x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
+            self.zoom(factor, (x, y))
 
         # Wrap text to the width of the window
         if self.GLinitialized:
