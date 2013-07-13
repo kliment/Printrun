@@ -1308,15 +1308,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.p.send_now("M105")
             cur_time = time.time()
             wait_time = 0
-            while time.time() < cur_time + self.monitor_interval:
+            while time.time() < cur_time + self.monitor_interval - 0.25:
                 if not self.statuscheck:
                     break
                 time.sleep(0.25)
                 # Safeguard: if system time changes and goes back in the past,
                 # we could get stuck almost forever
                 wait_time += 0.25
-                if wait_time > self.monitor_interval:
+                if wait_time > self.monitor_interval - 0.25:
                     break
+            # Always sleep at least a bit, if something goes wrong with the
+            # system time we'll avoid freezing the whole app this way
+            time.sleep(0.25)
             try:
                 while not self.sentlines.empty():
                     gc = self.sentlines.get_nowait()
