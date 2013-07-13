@@ -1312,6 +1312,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if not self.statuscheck:
                     break
                 time.sleep(0.25)
+                # Safeguard: if system time changes and goes back in the past,
+                # we could get stuck almost forever
                 wait_time += 0.25
                 if wait_time > self.monitor_interval:
                     break
