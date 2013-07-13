@@ -100,7 +100,7 @@ class JobsHandler(tornado.web.RequestHandler):
   def post(self):
     self.read_bytes = 0
     self.total_bytes = self.request.content_length
-    self.body = ''
+    self.chunks = []
     print self.request
     session_uuid = self.get_argument("session_uuid", None)
     print "me"
@@ -115,7 +115,7 @@ class JobsHandler(tornado.web.RequestHandler):
 
   def read_chunks(self, chunk=''):
     self.read_bytes += len(chunk)
-    self.body += chunk
+    self.chunks.append(chunk)
     if chunk: self.process_chunk()
 
     chunk_length = min(100000, self.request.content_length - self.read_bytes)
@@ -123,7 +123,7 @@ class JobsHandler(tornado.web.RequestHandler):
       self.request.connection.stream.read_bytes(
               chunk_length, self.read_chunks)
     else:
-      self.request._on_request_body(self.body, self.uploaded)
+      self.request._on_request_body(''.join(self.chunks), self.uploaded)
 
   def process_chunk(self):
     print self.get_argument("session_uuid", None)
@@ -857,7 +857,7 @@ if __name__ == "__main__":
   )
 
   args = parser.parse_args()
-  dry_run = args.dry_run
+  dry_run = True#args.dry_run
 
   def warn_if_dry_run():
     if dry_run:
