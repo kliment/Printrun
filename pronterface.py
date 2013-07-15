@@ -589,6 +589,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
         self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
         self.menustrip.Append(m, _("&Tools"))
+        
+        m = wx.Menu()
+        self.recoverbtn = m.Append(-1, _("Recover"), _(" Recover previous print after a disconnect (homes X, Y, restores Z and E status)"))
+        self.recoverbtn.Disable = lambda *a: self.recoverbtn.Enable(False)
+        self.Bind(wx.EVT_MENU, self.recover, self.recoverbtn)
+        self.menustrip.Append(m, _("&Advanced"))
 
         # Settings menu
         m = wx.Menu()

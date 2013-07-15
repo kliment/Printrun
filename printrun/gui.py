@@ -378,7 +378,6 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     root.printbtn = make_sized_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
     root.printbtn.Disable()
     root.pausebtn = make_sized_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
-    root.recoverbtn = make_sized_button(parentpanel, _("Recover"), root.recover, _("Recover previous Print"), self)
     root.offbtn = make_sized_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
     root.printerControls.append(root.offbtn)
     return self
