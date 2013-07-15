@@ -1421,6 +1421,9 @@ class pronsole(cmd.Cmd):
         self.log(_("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"))
 
     def do_off(self, l):
+        self.off()
+
+    def off(self):
         if self.p.online:
             if self.p.printing: self.pause(None)
             self.onecmd("M84; motors off") 

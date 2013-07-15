@@ -380,6 +380,8 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     root.printbtn.Disable()
     root.pausebtn = make_sized_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
     root.recoverbtn = make_sized_button(parentpanel, _("Recover"), root.recover, _("Recover previous Print"), self)
+    root.offbtn = make_sized_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
+    root.printerControls.append(root.offbtn)
     return self
 
 class MainWindow(wx.Frame):
