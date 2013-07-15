@@ -911,6 +911,9 @@ class pronsole(cmd.Cmd):
     def help_pause(self):
         self.log(_("Pauses a running print"))
 
+    def pause(self, event):
+        return self.do_pause(None)
+
     def do_resume(self, l):
         if not self.paused:
             self.logError(_("Not paused, unable to resume. Start a print first."))
@@ -1416,6 +1419,19 @@ class pronsole(cmd.Cmd):
         self.log(_("home z - homes z axis only (Using G28)"))
         self.log(_("home e - set extruder position to zero (Using G92)"))
         self.log(_("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"))
+
+    def do_off(self, l):
+        if self.p.online:
+            if self.p.printing: self.pause(None)
+            self.onecmd("M84; motors off") 
+            self.onecmd("M104 S0; extruder off") 
+            self.onecmd("M140 S0; heatbed off") 
+            self.onecmd("M81; power supply off")
+        else:
+            self.logError(_("Printer is not online. Unable to turn it off."))
+
+    def help_off(self):
+        self.log(_("Turns off everything on the printer"))
 
     def add_cmdline_arguments(self, parser):
         parser.add_argument('-c','--conf','--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
