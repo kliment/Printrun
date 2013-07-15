@@ -373,7 +373,6 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
 
     root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"), self)
     root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
-    root.platebtn = make_autosize_button(parentpanel, _("Compose"), root.plate, _("Simple Plater System"), self)
     root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
     root.printerControls.append(root.sdbtn)
     root.printbtn = make_sized_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
