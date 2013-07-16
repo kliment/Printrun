@@ -20,7 +20,7 @@ from select import error as SelectError
 from threading import Thread, Lock
 from Queue import Queue, Empty as QueueEmpty
 import time, getopt, sys
-import platform, os, traceback
+import platform, os, traceback, errno
 import socket
 import re
 from functools import wraps
@@ -211,6 +211,8 @@ class printcore():
             print "Can't read from printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
             return None
         except OSError as e:
+            if e.errno == errno.EAGAIN: # Not a real error, no data was available
+                return ""
             print "Can't read from printer (disconnected?) (OS Error {0}): {1}".format(e.errno, e.strerror)
             return None
 
