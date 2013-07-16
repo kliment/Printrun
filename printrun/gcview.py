@@ -189,6 +189,7 @@ class GcodeViewPanel(wxGLPanel):
     def fit(self):
         if not self.parent.model or not self.parent.model.loaded:
             return
+        self.canvas.SetCurrent(self.context)
         dims = self.parent.model.dims
         self.reset_mview(1.0)
         center_x = (dims[0][0] + dims[0][1]) / 2
@@ -199,6 +200,7 @@ class GcodeViewPanel(wxGLPanel):
             ratio = float(self.dist) / max(dims[0][2], dims[1][2])
             glScalef(ratio, ratio, 1)
         glTranslatef(center_x, center_y, 0)
+        wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
@@ -219,9 +221,9 @@ class GcodeViewPanel(wxGLPanel):
             self.layerdown()
         x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
         if key in kzi:
-            self.zoom(step, (x, y))
+            self.zoom_to_center(step)
         if key in kzo:
-            self.zoom(1 / step, (x, y))
+            self.zoom_to_center(1 / step)
         if key in kfit:
             self.fit()
         if key in kshowcurrent:
@@ -229,9 +231,13 @@ class GcodeViewPanel(wxGLPanel):
                 return
             self.parent.model.only_current = not self.parent.model.only_current
         if key in kreset:
-            self.reset_mview(0.9)
-            self.basequat = [0, 0, 0, 1]
+            self.resetview()
         event.Skip()
+
+    def resetview(self):
+        self.canvas.SetCurrent(self.context)
+        self.reset_mview(0.9)
+        self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.Refresh)
 
 class GCObject(object):

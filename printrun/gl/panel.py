@@ -199,3 +199,8 @@ class wxGLPanel(wx.Panel):
         if to:
             glTranslatef(-delta_x, -delta_y, 0)
         wx.CallAfter(self.Refresh)
+
+    def zoom_to_center(self, factor):
+        self.canvas.SetCurrent(self.context)
+        x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
+        self.zoom(factor, (x, y))
