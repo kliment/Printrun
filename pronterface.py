@@ -207,16 +207,33 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing most settings here will require restart to get effect"), group = "UI"))
         
+        self.settings._add(HiddenSetting("project_offset_x", 0.0))
+        self.settings._add(HiddenSetting("project_offset_y", 0.0))
+        self.settings._add(HiddenSetting("project_interval", 2.0))
+        self.settings._add(HiddenSetting("project_pause", 2.5))
+        self.settings._add(HiddenSetting("project_scale", 1.0))
+        self.settings._add(HiddenSetting("project_x", 1024.0))
+        self.settings._add(HiddenSetting("project_y", 768.0))
+        self.settings._add(HiddenSetting("project_projected_x", 150.0))
+        self.settings._add(HiddenSetting("project_direction", "Top Down"))
+        self.settings._add(HiddenSetting("project_overshoot", 3.0))
+        self.settings._add(HiddenSetting("project_z_axis_rate", 200))
+        self.settings._add(HiddenSetting("project_layer", 0.1))
+        self.settings._add(HiddenSetting("project_prelift_gcode", ""))
+        self.settings._add(HiddenSetting("project_postlift_gcode", ""))
+        
+                        
         self.pauseScript = "pause.gcode"
         self.endScript = "end.gcode"
        
         self.filename = filename
         os.putenv("UBUNTU_MENUPROXY", "0")
         MainWindow.__init__(self, None, title = _("Pronterface"), size = size);
-        if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
-            self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
-        else:
-            self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        #if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
+        #    self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
+        #else:
+        self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        
         self.panel = wx.Panel(self,-1, size = size)
 
         self.statuscheck = False
@@ -606,12 +623,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             _("Print all G-code sent to and received from the printer."))
         m.Check(mItem.GetId(), self.p.loud)
         self.Bind(wx.EVT_MENU, self.setloud, mItem)
-
-        #try:
-        #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
-        #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
-        #except:
-        #    pass
 
         self.menustrip.Append(m, _("&Settings"))
         self.update_macros_menu()
