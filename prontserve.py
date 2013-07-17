@@ -452,6 +452,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.settings.sensor_poll_rate = 1 # seconds
     self.sensors = {'extruder': -1, 'bed': -1}
     self.target_values = {'e0': 0, 'b': 0}
+    self.fan_speed = 255
+    self.fan_enabled = False
     self.load_default_rc()
     self.jobs = PrintJobQueue()
     self.job_id_incr = 0
@@ -562,13 +564,30 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       setter(self, kwargs[k])
       pprint({prefix: kwargs[k]})
 
-  def do_set_fan(self, *args):
-    value = {"on": True, "off": False}[args[0].lower()]
-    if value:
-      self.p.send_now("M106 S255")
+  def do_set_fan(self, *args, **kwargs):
+    states = {"on": True, "off": False}
+    if len(args) == 1 and len(kwargs) == 0 and (args[0] in states):
+      self.fan_enabled = states[args[0].lower()]
+      self.fire("fan_enabled_changed", self.fan_enabled)
+    elif "speed" in kwargs:
+      try:
+        self.fan_speed = float(kwargs["speed"])
+      except:
+        raise Exception("Fan speed must be a number")
+      self.fire("fan_speed_changed", self.fan_speed)
     else:
-      self.p.send_now("M106 S0")
-    self.fire("fan_speed_changed", 255)
+      raise Exception("""
+      Bad set fan parameters. Please either use `set fan speed: [NUMBER]` 
+      or `set fan [ON|OFF]`.
+      """)
+
+    if self.fan_enabled == False:
+      speed = 0
+    else:
+      speed = int(self.fan_speed)
+    print "M106 S%i"%speed
+    self.p.send_now("M106 S%i"%speed)
+
 
   def do_set_motors(self, *args):
     value = {"on": True, "off": False}[args[0].lower()]
