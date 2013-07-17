@@ -1423,7 +1423,7 @@ class pronsole(cmd.Cmd):
     def do_off(self, l):
         self.off()
 
-    def off(self):
+    def off(self, ignore = None):
         if self.p.online:
             if self.p.printing: self.pause(None)
             self.onecmd("M84; motors off")
