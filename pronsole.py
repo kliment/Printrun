@@ -40,21 +40,21 @@ READLINE = True
 try:
     import readline
     try:
-        readline.rl.mode.show_all_if_ambiguous = "on" #config pyreadline on windows
+        readline.rl.mode.show_all_if_ambiguous = "on"  # config pyreadline on windows
     except:
         pass
 except:
-    READLINE = False #neither readline module is available
+    READLINE = False  # neither readline module is available
 
 def dosify(name):
-    return os.path.split(name)[1].split(".")[0][:8]+".g"
+    return os.path.split(name)[1].split(".")[0][:8] + ".g"
 
 def setting_add_tooltip(func):
     @wraps(func)
     def decorator(self, *args, **kwargs):
         widget = func(self, *args, **kwargs)
         helptxt = self.help or ""
-        sep,deftxt = "",""
+        sep, deftxt = "", ""
         if len(helptxt):
             sep = "\n"
             if helptxt.find("\n") >= 0:
@@ -95,7 +95,7 @@ class Setting(object):
     def set_default(self, e):
         import wx
         if e.CmdDown() and e.ButtonDClick() and self.default is not "":
-            confirmation = wx.MessageDialog(None,_("Are you sure you want to reset the setting to the default value: {0!r} ?").format(self.default),_("Confirm set default"),wx.ICON_EXCLAMATION|wx.YES_NO|wx.NO_DEFAULT)
+            confirmation = wx.MessageDialog(None, _("Are you sure you want to reset the setting to the default value: {0!r} ?").format(self.default), _("Confirm set default"), wx.ICON_EXCLAMATION | wx.YES_NO | wx.NO_DEFAULT)
             if confirmation.ShowModal() == wx.ID_YES:
                 self._set_value(self.default)
         else:
@@ -216,10 +216,10 @@ class StaticTextSetting(wxSetting):
         return self.widget
 
 class Settings(object):
-    #def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
-    #def _temperature_validate(self, v):
+    # def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
+    # def _temperature_validate(self, v):
     #    if v < 0: raise ValueError("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
-    #def _bedtemperature_alias(self): return {"pla":60, "abs":110, "off":0}
+    # def _bedtemperature_alias(self): return {"pla":60, "abs":110, "off":0}
     def _baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
     def __init__(self):
         # defaults here.
@@ -278,31 +278,31 @@ class Settings(object):
 
     def _set(self, key, value):
         try:
-            value = getattr(self, "_%s_alias"%key)()[value]
+            value = getattr(self, "_%s_alias" % key)()[value]
         except KeyError:
             pass
         except AttributeError:
             pass
         try:
-            getattr(self, "_%s_validate"%key)(value)
+            getattr(self, "_%s_validate" % key)(value)
         except AttributeError:
             pass
         t = type(getattr(self, key))
         if t == bool and value == "False": setattr(self, key, False)
         else: setattr(self, key, value)
         try:
-            getattr(self, "_%s_cb"%key)(key, value)
+            getattr(self, "_%s_cb" % key)(key, value)
         except AttributeError:
             pass
         return value
 
     def _tabcomplete(self, key):
         try:
-            return getattr(self, "_%s_list"%key)()
+            return getattr(self, "_%s_list" % key)()
         except AttributeError:
             pass
         try:
-            return getattr(self, "_%s_alias"%key)().keys()
+            return getattr(self, "_%s_alias" % key)().keys()
         except AttributeError:
             pass
         return []
@@ -313,21 +313,21 @@ class Settings(object):
 class Status:
 
     def __init__(self):
-        self.extruder_temp        = 0
+        self.extruder_temp = 0
         self.extruder_temp_target = 0
-        self.bed_temp             = 0
-        self.bed_temp_target      = 0
-        self.print_job            = None
-        self.print_job_progress   = 1.0
+        self.bed_temp = 0
+        self.bed_temp_target = 0
+        self.print_job = None
+        self.print_job_progress = 1.0
 
     def update_tempreading(self, tempstr):
             r = tempstr.split()
             # eg. r = ["ok", "T:20.5", "/0.0", "B:0.0", "/0.0", "@:0"]
             if len(r) == 6:
-                self.extruder_temp        = float(r[1][2:])
+                self.extruder_temp = float(r[1][2:])
                 self.extruder_temp_target = float(r[2][1:])
-                self.bed_temp             = float(r[3][2:])
-                self.bed_temp_target      = float(r[4][1:])
+                self.bed_temp = float(r[3][2:])
+                self.bed_temp_target = float(r[4][1:])
 
     @property
     def bed_enabled(self):
@@ -371,7 +371,7 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.monitoring = 0
         self.silent = False
-        self.commandprefixes='MGT$'
+        self.commandprefixes = 'MGT$'
 
         self.promptstrs = {"offline" : "%(bold)suninitialized>%(normal)s ",
                           "fallback" : "%(bold)sPC>%(normal)s ",
@@ -406,24 +406,24 @@ class pronsole(cmd.Cmd):
             return promptstr
         else:
             specials = {}
-            specials["extruder_temp"]        = str(int(self.status.extruder_temp))
+            specials["extruder_temp"] = str(int(self.status.extruder_temp))
             specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
             if self.status.extruder_temp_target == 0:
                 specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp))
             else:
                 specials["extruder_temp_fancy"] = "%s/%s" % (str(int(self.status.extruder_temp)), str(int(self.status.extruder_temp_target)))
             if self.p.printing:
-                progress = int(1000*float(self.p.queueindex)/len(self.p.mainqueue)) / 10
+                progress = int(1000 * float(self.p.queueindex) / len(self.p.mainqueue)) / 10
             elif self.sdprinting:
                 progress = self.percentdone
             else:
                 progress = 0.0
             specials["progress"] = str(progress)
             if self.p.printing or self.sdprinting:
-                specials["progress_fancy"] = str(progress) +"%"
+                specials["progress_fancy"] = str(progress) + "%"
             else:
                 specials["progress_fancy"] = "?%"
-            specials["bold"]   = "\033[01m"
+            specials["bold"] = "\033[01m"
             specials["normal"] = "\033[00m"
             return promptstr % specials
 
@@ -455,8 +455,8 @@ class pronsole(cmd.Cmd):
                 key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
                 i = 0
                 while(1):
-                    baselist+=[_winreg.EnumValue(key, i)[1]]
-                    i+=1
+                    baselist += [_winreg.EnumValue(key, i)[1]]
+                    i += 1
             except:
                 pass
 
@@ -485,9 +485,9 @@ class pronsole(cmd.Cmd):
         self.log("Gcodes are passed through to the printer as they are")
 
     def complete_macro(self, text, line, begidx, endidx):
-        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.macros.keys() if i.startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1]==" ")):
+        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
             return [i for i in ["/D", "/S"] + self.completenames(text) if i.startswith(text)]
         else:
             return []
@@ -495,7 +495,7 @@ class pronsole(cmd.Cmd):
     def hook_macro(self, l):
         l = l.rstrip()
         ls = l.lstrip()
-        ws = l[:len(l)-len(ls)] # just leading whitespace
+        ws = l[:len(l) - len(ls)]  # just leading whitespace
         if len(ws) == 0:
             self.end_macro()
             # pass the unprocessed line to regular command processor to not require empty line in .pronsolerc
@@ -503,19 +503,19 @@ class pronsole(cmd.Cmd):
         self.cur_macro_def += l + "\n"
 
     def end_macro(self):
-        if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
+        if self.__dict__.has_key("onecmd"): del self.onecmd  # remove override
         self.in_macro = False
         self.prompt = self.promptf()
-        if self.cur_macro_def!="":
+        if self.cur_macro_def != "":
             self.macros[self.cur_macro_name] = self.cur_macro_def
             macro = self.compile_macro(self.cur_macro_name, self.cur_macro_def)
-            setattr(self.__class__, "do_"+self.cur_macro_name, lambda self, largs, macro = macro:macro(self,*largs.split()))
-            setattr(self.__class__, "help_"+self.cur_macro_name, lambda self, macro_name = self.cur_macro_name: self.subhelp_macro(macro_name))
+            setattr(self.__class__, "do_" + self.cur_macro_name, lambda self, largs, macro = macro:macro(self, *largs.split()))
+            setattr(self.__class__, "help_" + self.cur_macro_name, lambda self, macro_name = self.cur_macro_name: self.subhelp_macro(macro_name))
             if not self.processing_rc:
-                self.log("Macro '"+self.cur_macro_name+"' defined")
+                self.log("Macro '" + self.cur_macro_name + "' defined")
                 # save it
                 if not self.processing_args:
-                    macro_key = "macro "+self.cur_macro_name
+                    macro_key = "macro " + self.cur_macro_name
                     macro_def = macro_key
                     if "\n" in self.cur_macro_def:
                         macro_def += "\n"
@@ -533,13 +533,13 @@ class pronsole(cmd.Cmd):
     def compile_macro_line(self, line):
         line = line.rstrip()
         ls = line.lstrip()
-        ws = line[:len(line)-len(ls)] # just leading whitespace
-        if ls == "" or ls.startswith('#'): return "" # no code
+        ws = line[:len(line) - len(ls)]  # just leading whitespace
+        if ls == "" or ls.startswith('#'): return ""  # no code
         if ls.startswith('!'):
-            return ws + ls[1:] + "\n" # python mode
+            return ws + ls[1:] + "\n"  # python mode
         else:
-            ret = ws + 'self.parseusercmd("'+ls+'".format(*arg))\n' # parametric command mode
-            return ret + ws + 'self.onecmd("'+ls+'".format(*arg))\n'
+            ret = ws + 'self.parseusercmd("' + ls + '".format(*arg))\n'  # parametric command mode
+            return ret + ws + 'self.onecmd("' + ls + '".format(*arg))\n'
 
     def compile_macro(self, macro_name, macro_def):
         if macro_def.strip() == "":
@@ -547,40 +547,40 @@ class pronsole(cmd.Cmd):
             return
         pycode = "def macro(self,*arg):\n"
         if "\n" not in macro_def.strip():
-            pycode += self.compile_macro_line("  "+macro_def.strip())
+            pycode += self.compile_macro_line("  " + macro_def.strip())
         else:
             lines = macro_def.split("\n")
             for l in lines:
                 pycode += self.compile_macro_line(l)
         exec pycode
-        #return macro
+        # return macro
 
     def start_macro(self, macro_name, prev_definition = "", suppress_instructions = False):
         if not self.processing_rc and not suppress_instructions:
             self.logError("Enter macro using indented lines, end with empty line")
         self.cur_macro_name = macro_name
         self.cur_macro_def = ""
-        self.onecmd = self.hook_macro # override onecmd temporarily
+        self.onecmd = self.hook_macro  # override onecmd temporarily
         self.in_macro = False
         self.prompt = self.promptf()
 
     def delete_macro(self, macro_name):
         if macro_name in self.macros.keys():
-            delattr(self.__class__, "do_"+macro_name)
+            delattr(self.__class__, "do_" + macro_name)
             del self.macros[macro_name]
-            self.log("Macro '"+macro_name+"' removed")
+            self.log("Macro '" + macro_name + "' removed")
             if not self.processing_rc and not self.processing_args:
-                self.save_in_rc("macro "+macro_name, "")
+                self.save_in_rc("macro " + macro_name, "")
         else:
-            self.logError("Macro '"+macro_name+"' is not defined")
+            self.logError("Macro '" + macro_name + "' is not defined")
     def do_macro(self, args):
-        if args.strip()=="":
+        if args.strip() == "":
             self.print_topics("User-defined macros", self.macros.keys(), 15, 80)
             return
         arglist = args.split(None, 1)
         macro_name = arglist[0]
-        if macro_name not in self.macros and hasattr(self.__class__, "do_"+macro_name):
-            self.logError("Name '"+macro_name+"' is being used by built-in command")
+        if macro_name not in self.macros and hasattr(self.__class__, "do_" + macro_name):
+            self.logError("Name '" + macro_name + "' is being used by built-in command")
             return
         if len(arglist) == 2:
             macro_def = arglist[1]
@@ -612,19 +612,19 @@ class pronsole(cmd.Cmd):
         if macro_name in self.macros.keys():
             macro_def = self.macros[macro_name]
             if "\n" in macro_def:
-                self.log("Macro '"+macro_name+"' defined as:")
-                self.log(self.macros[macro_name]+"----------------")
+                self.log("Macro '" + macro_name + "' defined as:")
+                self.log(self.macros[macro_name] + "----------------")
             else:
-                self.log("Macro '"+macro_name+"' defined as: '"+macro_def+"'")
+                self.log("Macro '" + macro_name + "' defined as: '" + macro_def + "'")
         else:
-            self.logError("Macro '"+macro_name+"' is not defined")
+            self.logError("Macro '" + macro_name + "' is not defined")
 
     def set(self, var, str):
         try:
             t = type(getattr(self.settings, var))
             value = self.settings._set(var, str)
             if not self.processing_rc and not self.processing_args:
-                self.save_in_rc("set "+var, "set %s %s" % (var, value))
+                self.save_in_rc("set " + var, "set %s %s" % (var, value))
         except AttributeError:
             self.logError("Unknown variable '%s'" % var)
         except ValueError, ve:
@@ -651,9 +651,9 @@ class pronsole(cmd.Cmd):
         self.log("'set' without arguments displays all variables")
 
     def complete_set(self, text, line, begidx, endidx):
-        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in dir(self.settings) if not i.startswith("_") and i.startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1]==" ")):
+        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
             return [i for i in self.settings._tabcomplete(line.split()[1]) if i.startswith(text)]
         else:
             return []
@@ -678,8 +678,8 @@ class pronsole(cmd.Cmd):
             self.processing_rc = False
 
     def load_default_rc(self, rc_filename = ".pronsolerc"):
-        if rc_filename == ".pronsolerc" and hasattr(sys,"frozen") and sys.frozen in ["windows_exe", "console_exe"]:
-            rc_filename="printrunconf.ini"
+        if rc_filename == ".pronsolerc" and hasattr(sys, "frozen") and sys.frozen in ["windows_exe", "console_exe"]:
+            rc_filename = "printrunconf.ini"
         try:
             try:
                 self.load_rc(os.path.join(os.path.expanduser("~"), rc_filename))
@@ -708,18 +708,18 @@ class pronsole(cmd.Cmd):
             written = False
             if os.path.exists(self.rc_filename):
                 import shutil
-                shutil.copy(self.rc_filename, self.rc_filename+"~bak")
-                rci = codecs.open(self.rc_filename+"~bak", "r", "utf-8")
+                shutil.copy(self.rc_filename, self.rc_filename + "~bak")
+                rci = codecs.open(self.rc_filename + "~bak", "r", "utf-8")
             rco = codecs.open(self.rc_filename, "w", "utf-8")
             if rci is not None:
                 overwriting = False
                 for rc_cmd in rci:
                     l = rc_cmd.rstrip()
                     ls = l.lstrip()
-                    ws = l[:len(l)-len(ls)] # just leading whitespace
+                    ws = l[:len(l) - len(ls)]  # just leading whitespace
                     if overwriting and len(ws) == 0:
                         overwriting = False
-                    if not written and key != "" and  rc_cmd.startswith(key) and (rc_cmd+"\n")[len(key)].isspace():
+                    if not written and key != "" and  rc_cmd.startswith(key) and (rc_cmd + "\n")[len(key)].isspace():
                         overwriting = True
                         written = True
                         rco.write(definition)
@@ -731,12 +731,12 @@ class pronsole(cmd.Cmd):
             if rci is not None:
                 rci.close()
             rco.close()
-            #if definition != "":
+            # if definition != "":
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
-            #else:
+            # else:
             #    self.log("Removed '"+key+"' from '"+self.rc_filename+"'")
         except Exception, e:
-            self.logError("Saving failed for ", key+":", str(e))
+            self.logError("Saving failed for ", key + ":", str(e))
         finally:
             del rci, rco
 
@@ -749,16 +749,16 @@ class pronsole(cmd.Cmd):
         a = l.split()
         p = self.scanserial()
         port = self.settings.port
-        if (port == "" or port not in p) and len(p)>0:
+        if (port == "" or port not in p) and len(p) > 0:
             port = p[0]
         baud = self.settings.baudrate or 115200
-        if(len(a)>0):
+        if(len(a) > 0):
             port = a[0]
-        if(len(a)>1):
+        if(len(a) > 1):
             try:
                 baud = int(a[1])
             except:
-                self.log("Bad baud value '"+a[1]+"' ignored")
+                self.log("Bad baud value '" + a[1] + "' ignored")
         if len(p) == 0 and not port:
             self.log("No serial ports detected - please specify a port")
             return
@@ -783,9 +783,9 @@ class pronsole(cmd.Cmd):
             self.log("No serial ports were automatically found.")
 
     def complete_connect(self, text, line, begidx, endidx):
-        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.scanserial() if i.startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1]==" ")):
+        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
             return [i for i in ["2400", "9600", "19200", "38400", "57600", "115200"] if i.startswith(text)]
         else:
             return []
@@ -813,13 +813,13 @@ class pronsole(cmd.Cmd):
 
     def complete_load(self, text, line, begidx, endidx):
         s = line.split()
-        if len(s)>2:
+        if len(s) > 2:
             return []
-        if (len(s) == 1 and line[-1]==" ") or (len(s) == 2 and line[-1]!=" "):
-            if len(s)>1:
-                return [i[len(s[1])-len(text):] for i in glob.glob(s[1]+"*/")+glob.glob(s[1]+"*.g*")]
+        if (len(s) == 1 and line[-1] == " ") or (len(s) == 2 and line[-1] != " "):
+            if len(s) > 1:
+                return [i[len(s[1]) - len(text):] for i in glob.glob(s[1] + "*/") + glob.glob(s[1] + "*.g*")]
             else:
-                return glob.glob("*/")+glob.glob("*.g*")
+                return glob.glob("*/") + glob.glob("*.g*")
 
     def help_load(self):
         self.log("Loads a gcode file (with tab-completion)")
@@ -847,9 +847,9 @@ class pronsole(cmd.Cmd):
             time.sleep(1)
             while self.p.printing:
                 time.sleep(1)
-                sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100*float(self.p.queueindex)/len(self.p.mainqueue),))
+                sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100 * float(self.p.queueindex) / len(self.p.mainqueue),))
                 sys.stdout.flush()
-            self.p.send_now("M29 "+targetname)
+            self.p.send_now("M29 " + targetname)
             self.sleep(0.2)
             self.p.clear = 1
             self._do_ls(False)
@@ -859,7 +859,7 @@ class pronsole(cmd.Cmd):
         except:
             self.logError(_("...interrupted!"))
             self.p.pause()
-            self.p.send_now("M29 "+targetname)
+            self.p.send_now("M29 " + targetname)
             time.sleep(0.2)
             self.p.clear = 1
             self.p.startprint(None)
@@ -867,13 +867,13 @@ class pronsole(cmd.Cmd):
 
     def complete_upload(self, text, line, begidx, endidx):
         s = line.split()
-        if len(s)>2:
+        if len(s) > 2:
             return []
-        if (len(s) == 1 and line[-1]==" ") or (len(s) == 2 and line[-1]!=" "):
-            if len(s)>1:
-                return [i[len(s[1])-len(text):] for i in glob.glob(s[1]+"*/")+glob.glob(s[1]+"*.g*")]
+        if (len(s) == 1 and line[-1] == " ") or (len(s) == 2 and line[-1] != " "):
+            if len(s) > 1:
+                return [i[len(s[1]) - len(text):] for i in glob.glob(s[1] + "*/") + glob.glob(s[1] + "*.g*")]
             else:
-                return glob.glob("*/")+glob.glob("*.g*")
+                return glob.glob("*/") + glob.glob("*.g*")
 
     def help_upload(self):
         self.log("Uploads a gcode file to the sd card")
@@ -967,7 +967,7 @@ class pronsole(cmd.Cmd):
             self.log(_("Starting print"))
             self.p.send_now("M24")
             self.sdprinting = 1
-            #self.recvlisteners.remove(self.waitforsdresponse)
+            # self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "Done printing file" in l:
             self.log(l)
@@ -975,11 +975,11 @@ class pronsole(cmd.Cmd):
             self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "SD printing byte" in l:
-            #M27 handler
+            # M27 handler
             try:
                 resp = l.split()
                 vals = resp[-1].split("/")
-                self.percentdone = 100.0*int(vals[0])/int(vals[1])
+                self.percentdone = 100.0 * int(vals[0]) / int(vals[1])
             except:
                 pass
 
@@ -1014,7 +1014,7 @@ class pronsole(cmd.Cmd):
             self._do_ls(False)
             while self.listfiles in self.recvlisteners:
                 time.sleep(0.1)
-        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.sdfiles if i.startswith(text)]
 
     def recvcb(self, l):
@@ -1039,7 +1039,7 @@ class pronsole(cmd.Cmd):
         if l[0] in self.commandprefixes.upper():
             if self.p and self.p.online:
                 if not self.p.loud:
-                    self.log("SENDING:"+l)
+                    self.log("SENDING:" + l)
                 self.p.send_now(l)
             else:
                 self.logError(_("Printer is not online."))
@@ -1047,7 +1047,7 @@ class pronsole(cmd.Cmd):
         elif l[0] in self.commandprefixes.lower():
             if self.p and self.p.online:
                 if not self.p.loud:
-                    self.log("SENDING:"+l.upper())
+                    self.log("SENDING:" + l.upper())
                 self.p.send_now(l.upper())
             else:
                 self.logError(_("Printer is not online."))
@@ -1055,7 +1055,7 @@ class pronsole(cmd.Cmd):
         elif l[0] == "@":
             if self.p and self.p.online:
                 if not self.p.loud:
-                    self.log("SENDING:"+l[1:])
+                    self.log("SENDING:" + l[1:])
                 self.p.send_now(l[1:])
             else:
                 self.logError("printer is not online.")
@@ -1083,7 +1083,7 @@ class pronsole(cmd.Cmd):
         self.log(_("Read the extruder and bed temperature."))
 
     def do_settemp(self, l):
-        l = l.lower().replace(", ",".")
+        l = l.lower().replace(", ", ".")
         for i in self.temps.keys():
             l = l.replace(i, self.temps[i])
         try:
@@ -1092,13 +1092,13 @@ class pronsole(cmd.Cmd):
             self.logError(_("You must enter a temperature."))
             return
 
-        if f>=0:
+        if f >= 0:
             if f > 250:
                print _("%s is a high temperature to set your extruder to. Are you sure you want to do that?") % f
                if not self.confirm():
                   return
             if self.p.online:
-                self.p.send_now("M104 S"+l)
+                self.p.send_now("M104 S" + l)
                 self.log(_("Setting hotend temperature to %s degrees Celsius.") % f)
             else:
                 self.logError(_("Printer is not online."))
@@ -1108,21 +1108,21 @@ class pronsole(cmd.Cmd):
     def help_settemp(self):
         self.log(_("Sets the hotend temperature to the value entered."))
         self.log(_("Enter either a temperature in celsius or one of the following keywords"))
-        self.log(", ".join([i+"("+self.temps[i]+")" for i in self.temps.keys()]))
+        self.log(", ".join([i + "(" + self.temps[i] + ")" for i in self.temps.keys()]))
 
     def complete_settemp(self, text, line, begidx, endidx):
-        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.temps.keys() if i.startswith(text)]
 
     def do_bedtemp(self, l):
         try:
-            l = l.lower().replace(", ",".")
+            l = l.lower().replace(", ", ".")
             for i in self.bedtemps.keys():
                 l = l.replace(i, self.bedtemps[i])
             f = float(l)
-            if f>=0:
+            if f >= 0:
                 if self.p.online:
-                    self.p.send_now("M140 S"+l)
+                    self.p.send_now("M140 S" + l)
                     self.logError(_("Setting bed temperature to %s degrees Celsius.") % f)
                 else:
                     self.logError(_("Printer is not online."))
@@ -1134,14 +1134,14 @@ class pronsole(cmd.Cmd):
     def help_bedtemp(self):
         self.log(_("Sets the bed temperature to the value entered."))
         self.log(_("Enter either a temperature in celsius or one of the following keywords"))
-        self.log(", ".join([i+"("+self.bedtemps[i]+")" for i in self.bedtemps.keys()]))
+        self.log(", ".join([i + "(" + self.bedtemps[i] + ")" for i in self.bedtemps.keys()]))
 
     def complete_bedtemp(self, text, line, begidx, endidx):
-        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.bedtemps.keys() if i.startswith(text)]
 
     def do_move(self, l):
-        if(len(l.split())<2):
+        if(len(l.split()) < 2):
             self.logError(_("No move specified."))
             return
         if self.p.printing:
@@ -1151,16 +1151,16 @@ class pronsole(cmd.Cmd):
             self.logError(_("Printer is not online. Unable to move."))
             return
         l = l.split()
-        if(l[0].lower()=="x"):
+        if(l[0].lower() == "x"):
             feed = self.settings.xy_feedrate
             axis = "X"
-        elif(l[0].lower()=="y"):
+        elif(l[0].lower() == "y"):
             feed = self.settings.xy_feedrate
             axis = "Y"
-        elif(l[0].lower()=="z"):
+        elif(l[0].lower() == "z"):
             feed = self.settings.z_feedrate
             axis = "Z"
-        elif(l[0].lower()=="e"):
+        elif(l[0].lower() == "e"):
             feed = self.settings.e_feedrate
             axis = "E"
         else:
@@ -1177,33 +1177,33 @@ class pronsole(cmd.Cmd):
         except:
             pass
         self.p.send_now("G91")
-        self.p.send_now("G1 "+axis+str(l[1])+" F"+str(feed))
+        self.p.send_now("G1 " + axis + str(l[1]) + " F" + str(feed))
         self.p.send_now("G90")
 
     def help_move(self):
         self.log(_("Move an axis. Specify the name of the axis and the amount. "))
         self.log(_("move X 10 will move the X axis forward by 10mm at %s mm/min (default XY speed)") % self.settings.xy_feedrate)
         self.log(_("move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"))
-        self.log(_("move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)") %  self.settings.z_feedrate)
+        self.log(_("move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)") % self.settings.z_feedrate)
         self.log(_("Common amounts are in the tabcomplete list."))
 
     def complete_move(self, text, line, begidx, endidx):
-        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in ["X ", "Y ", "Z ", "E "] if i.lower().startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1]==" ")):
+        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
             base = line.split()[-1]
             rlen = 0
             if base.startswith("-"):
                 rlen = 1
-            if line[-1]==" ":
+            if line[-1] == " ":
                 base = ""
             return [i[rlen:] for i in ["-100", "-10", "-1", "-0.1", "100", "10", "1", "0.1", "-50", "-5", "-0.5", "50", "5", "0.5", "-200", "-20", "-2", "-0.2", "200", "20", "2", "0.2"] if i.startswith(base)]
         else:
             return []
 
     def do_extrude(self, l, override = None, overridefeed = 300):
-        length = 5#default extrusion length
-        feed = self.settings.e_feedrate#default speed
+        length = 5  # default extrusion length
+        feed = self.settings.e_feedrate  # default speed
         if not self.p.online:
             self.logError("Printer is not online. Unable to extrude.")
             return
@@ -1216,7 +1216,7 @@ class pronsole(cmd.Cmd):
                 length = float(ls[0])
             except:
                 self.logError(_("Invalid length given."))
-        if len(ls)>1:
+        if len(ls) > 1:
             try:
                 feed = int(ls[1])
             except:
@@ -1227,11 +1227,11 @@ class pronsole(cmd.Cmd):
         if length > 0:
             self.log(_("Extruding %fmm of filament.") % (length,))
         elif length < 0:
-            self.log(_("Reversing %fmm of filament.") % (-1*length,))
+            self.log(_("Reversing %fmm of filament.") % (-1 * length,))
         else:
             self.log(_("Length is 0, not doing anything."))
         self.p.send_now("G91")
-        self.p.send_now("G1 E"+str(length)+" F"+str(feed))
+        self.p.send_now("G1 E" + str(length) + " F" + str(feed))
         self.p.send_now("G90")
 
     def help_extrude(self):
@@ -1242,8 +1242,8 @@ class pronsole(cmd.Cmd):
         self.log(_("extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"))
 
     def do_reverse(self, l):
-        length = 5#default extrusion length
-        feed = self.settings.e_feedrate#default speed
+        length = 5  # default extrusion length
+        feed = self.settings.e_feedrate  # default speed
         if not self.p.online:
             self.logError(_("Printer is not online. Unable to reverse."))
             return
@@ -1256,12 +1256,12 @@ class pronsole(cmd.Cmd):
                 length = float(ls[0])
             except:
                 self.logError(_("Invalid length given."))
-        if len(ls)>1:
+        if len(ls) > 1:
             try:
                 feed = int(ls[1])
             except:
                 self.logError(_("Invalid speed given."))
-        self.do_extrude("", length*-1.0, feed)
+        self.do_extrude("", length * -1.0, feed)
 
     def help_reverse(self):
         self.log(_("Reverses the extruder, 5mm by default, or the number of mm given as a parameter"))
@@ -1314,14 +1314,14 @@ class pronsole(cmd.Cmd):
                 if(self.sdprinting):
                     self.p.send_now("M27")
                 time.sleep(interval)
-                #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
+                # print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
                 if self.p.printing:
-                    preface  = _("Print progress: ")
-                    progress = 100*float(self.p.queueindex)/len(self.p.mainqueue)
+                    preface = _("Print progress: ")
+                    progress = 100 * float(self.p.queueindex) / len(self.p.mainqueue)
                 elif self.sdprinting:
-                    preface  = _("Print progress: ")
+                    preface = _("Print progress: ")
                     progress = self.percentdone
-                progress = int(progress*10)/10.0 #limit precision
+                progress = int(progress * 10) / 10.0  # limit precision
                 prev_msg = preface + str(progress) + "%"
                 if self.silent == False:
                     sys.stdout.write("\r" + prev_msg.ljust(prev_msg_len))
@@ -1345,7 +1345,7 @@ class pronsole(cmd.Cmd):
             self.logError(_("No file name given."))
             return
         settings = 0
-        if(l[0]=="set"):
+        if(l[0] == "set"):
             settings = 1
         else:
             self.log(_("Skeining file: %s") % l[0])
@@ -1369,13 +1369,13 @@ class pronsole(cmd.Cmd):
 
     def complete_skein(self, text, line, begidx, endidx):
         s = line.split()
-        if len(s)>2:
+        if len(s) > 2:
             return []
-        if (len(s) == 1 and line[-1]==" ") or (len(s) == 2 and line[-1]!=" "):
-            if len(s)>1:
-                return [i[len(s[1])-len(text):] for i in glob.glob(s[1]+"*/")+glob.glob(s[1]+"*.stl")]
+        if (len(s) == 1 and line[-1] == " ") or (len(s) == 2 and line[-1] != " "):
+            if len(s) > 1:
+                return [i[len(s[1]) - len(text):] for i in glob.glob(s[1] + "*/") + glob.glob(s[1] + "*.stl")]
             else:
-                return glob.glob("*/")+glob.glob("*.stl")
+                return glob.glob("*/") + glob.glob("*.stl")
 
     def help_skein(self):
         self.log(_("Creates a gcode file from an stl model using the slicer (with tab-completion)"))
@@ -1411,9 +1411,9 @@ class pronsole(cmd.Cmd):
         self.log(_("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"))
 
     def add_cmdline_arguments(self, parser):
-        parser.add_argument('-c','--conf','--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
-        parser.add_argument('-e','--execute', help = _("executes command after configuration/.pronsolerc is loaded ; macros/settings from these commands are not autosaved"), action = "append", default = [])
-        parser.add_argument('filename', nargs='?', help = _("file to load"))
+        parser.add_argument('-c', '--conf', '--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
+        parser.add_argument('-e', '--execute', help = _("executes command after configuration/.pronsolerc is loaded ; macros/settings from these commands are not autosaved"), action = "append", default = [])
+        parser.add_argument('filename', nargs = '?', help = _("file to load"))
 
     def process_cmdline_arguments(self, args):
         for config in args.conf:
@@ -1439,7 +1439,7 @@ class pronsole(cmd.Cmd):
     # It's default behavior with reagrds to Ctr-C
     # and Ctr-D doesn't make much sense...
 
-    def cmdloop(self, intro=None):
+    def cmdloop(self, intro = None):
         """Repeatedly issue a prompt, accept input, parse an initial prefix
         off the received input, and dispatch to action methods, passing them
         the remainder of the line as argument.
@@ -1452,14 +1452,14 @@ class pronsole(cmd.Cmd):
                 import readline
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
-                readline.parse_and_bind(self.completekey+": complete")
+                readline.parse_and_bind(self.completekey + ": complete")
             except ImportError:
                 pass
         try:
             if intro is not None:
                 self.intro = intro
             if self.intro:
-                self.stdout.write(str(self.intro)+"\n")
+                self.stdout.write(str(self.intro) + "\n")
             stop = None
             while not stop:
                 if self.cmdqueue:

@@ -146,6 +146,7 @@ class DisplayFrame(wx.Frame):
             if (self.prelift_gcode):
                 for line in self.prelift_gcode.split('\n'):
                     if line:
+                        print "Sending prelift: >>"+ line + "<<"
                         self.printer.send_now(line)
 
             if (self.direction == "Top Down"):
@@ -158,7 +159,9 @@ class DisplayFrame(wx.Frame):
             if (self.postlift_gcode):
                 for line in self.postlift_gcode.split('\n'):
                     if line:
+                        print "Sending postlift: >>"+ line + "<<"
                         self.printer.send_now(line)
+                        time.sleep(0.5) # slight fudge otherwise present happens a bit too quickly after the last movement 
 
             self.printer.send_now("G90")
         else:
