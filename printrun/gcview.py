@@ -32,6 +32,9 @@ from .gl.panel import wxGLPanel
 from .gl.trackball import trackball, mulquat, build_rotmatrix
 from .gl.libtatlin import actors
 
+from printrun_utils import imagefile, install_locale
+install_locale('pronterface')
+
 class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent, id = wx.ID_ANY, build_dimensions = None, realparent = None):
@@ -189,6 +192,7 @@ class GcodeViewPanel(wxGLPanel):
     def fit(self):
         if not self.parent.model or not self.parent.model.loaded:
             return
+        self.canvas.SetCurrent(self.context)
         dims = self.parent.model.dims
         self.reset_mview(1.0)
         center_x = (dims[0][0] + dims[0][1]) / 2
@@ -199,6 +203,7 @@ class GcodeViewPanel(wxGLPanel):
             ratio = float(self.dist) / max(dims[0][2], dims[1][2])
             glScalef(ratio, ratio, 1)
         glTranslatef(center_x, center_y, 0)
+        wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
@@ -219,9 +224,9 @@ class GcodeViewPanel(wxGLPanel):
             self.layerdown()
         x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
         if key in kzi:
-            self.zoom(step, (x, y))
+            self.zoom_to_center(step)
         if key in kzo:
-            self.zoom(1 / step, (x, y))
+            self.zoom_to_center(1 / step)
         if key in kfit:
             self.fit()
         if key in kshowcurrent:
@@ -229,9 +234,13 @@ class GcodeViewPanel(wxGLPanel):
                 return
             self.parent.model.only_current = not self.parent.model.only_current
         if key in kreset:
-            self.reset_mview(0.9)
-            self.basequat = [0, 0, 0, 1]
+            self.resetview()
         event.Skip()
+
+    def resetview(self):
+        self.canvas.SetCurrent(self.context)
+        self.reset_mview(0.9)
+        self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.Refresh)
 
 class GCObject(object):
@@ -300,7 +309,30 @@ class GcodeViewFrame(wx.Frame):
         else:
             self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
-        self.glpanel = GcodeViewPanel(self, build_dimensions = build_dimensions)
+        panel = wx.Panel(self, -1)
+        self.glpanel = GcodeViewPanel(panel, build_dimensions = build_dimensions,
+                                      realparent = self)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
+        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
+        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
+        toolbar.AddSeparator()
+        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
+        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
+        toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view [R]"), longHelp = '')
+        toolbar.AddLabelTool(6, " " + _("Fit to plate"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Fit to plate [F]"), longHelp = '')
+        toolbar.Realize()
+        self.toolbar = toolbar
+        vbox.Add(toolbar, 0, border = 5)
+        vbox.Add(self.glpanel, 1, wx.EXPAND)
+        panel.SetSizer(vbox)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1/1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerup(), id = 3)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerdown(), id = 4)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 5)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 6)
+
 
     def set_current_gline(self, gline):
         if gline.is_move and self.model and self.model.loaded:

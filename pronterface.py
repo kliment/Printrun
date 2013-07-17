@@ -579,12 +579,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         # File menu
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Opens file")))
-        self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
         self.Bind(wx.EVT_MENU, self.clearOutput, m.Append(-1, _("Clear console"), _(" Clear output console")))
-        self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
-        self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
+        
+        m = wx.Menu()
+        self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
+        self.Bind(wx.EVT_MENU, self.plate, m.Append(-1, _("Plater"), _(" Compose 3D models into a single plate")))
+        self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
+        self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
+        self.menustrip.Append(m, _("&Tools"))
+        
+        m = wx.Menu()
+        self.recoverbtn = m.Append(-1, _("Recover"), _(" Recover previous print after a disconnect (homes X, Y, restores Z and E status)"))
+        self.recoverbtn.Disable = lambda *a: self.recoverbtn.Enable(False)
+        self.Bind(wx.EVT_MENU, self.recover, self.recoverbtn)
+        self.menustrip.Append(m, _("&Advanced"))
 
         # Settings menu
         m = wx.Menu()
@@ -1127,9 +1137,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.xyb.repeatLast()
 
     def parseusercmd(self, line):
-        if line.startswith("M114"):
+        if line.upper().startswith("M114"):
             self.userm114 += 1
-        elif line.startswith("M105"):
+        elif line.upper().startswith("M105"):
             self.userm105 += 1
 
     def procbutton(self, e):
@@ -1307,10 +1317,19 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.p.send_now("M27")
                 self.p.send_now("M105")
             cur_time = time.time()
-            while time.time() < cur_time + self.monitor_interval:
+            wait_time = 0
+            while time.time() < cur_time + self.monitor_interval - 0.25:
                 if not self.statuscheck:
                     break
                 time.sleep(0.25)
+                # Safeguard: if system time changes and goes back in the past,
+                # we could get stuck almost forever
+                wait_time += 0.25
+                if wait_time > self.monitor_interval - 0.25:
+                    break
+            # Always sleep at least a bit, if something goes wrong with the
+            # system time we'll avoid freezing the whole app this way
+            time.sleep(0.25)
             try:
                 while not self.sentlines.empty():
                     gc = self.sentlines.get_nowait()

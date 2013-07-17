@@ -44,6 +44,15 @@ def make_sized_button(*args):
 def make_autosize_button(*args):
     return make_button(*args, size = (-1, buttonSize[1]), style = wx.BU_EXACTFIT)
 
+def make_custom_button(root, parentpanel, i):
+    btn = make_button(parentpanel, i.label, root.procbutton, i.tooltip)
+    btn.SetBackgroundColour(i.background)
+    btn.SetForegroundColour("black")
+    btn.properties = i
+    root.btndict[i.command] = btn
+    root.printerControls.append(btn)
+    return btn
+
 class XYZControlsSizer(wx.GridBagSizer):
 
     def __init__(self, root, parentpanel = None):
@@ -67,12 +76,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         self.Add(root.monitorbox, pos = (base_line + 1, 5))
     root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
 
-    self.Add(wx.StaticText(parentpanel,-1, _("Heat:")), pos = (base_line + 0, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+    self.Add(wx.StaticText(parentpanel,-1, _("Heat:")), pos = (base_line + 0, 0), span = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
     htemp_choices = [root.temps[i]+" ("+i+")" for i in sorted(root.temps.keys(), key = lambda x:root.temps[x])]
 
-    root.settoff = make_button(parentpanel, _("Off"), lambda e: root.do_settemp("off"), _("Switch Hotend Off"), size = (36,-1), style = wx.BU_EXACTFIT)
+    root.settoff = make_button(parentpanel, _("Off"), lambda e: root.do_settemp("off"), _("Switch Hotend Off"), size = (38,-1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.settoff)
-    self.Add(root.settoff, pos = (base_line + 0, 1), span = (1, 1))
+    self.Add(root.settoff, pos = (base_line + 0, 2), span = (1, 1))
 
     if root.settings.last_temperature not in map(float, root.temps.values()):
         htemp_choices = [str(root.settings.last_temperature)] + htemp_choices
@@ -81,17 +90,17 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     root.htemp.SetToolTip(wx.ToolTip("Select Temperature for Hotend"))
     root.htemp.Bind(wx.EVT_COMBOBOX, root.htemp_change)
 
-    self.Add(root.htemp, pos = (base_line + 0, 2), span = (1, 2))
+    self.Add(root.htemp, pos = (base_line + 0, 3), span = (1, 1))
     root.settbtn = make_button(parentpanel, _("Set"), root.do_settemp, _("Switch Hotend On"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.settbtn)
     self.Add(root.settbtn, pos = (base_line + 0, 4), span = (1, 1))
 
-    self.Add(wx.StaticText(parentpanel,-1, _("Bed:")), pos = (base_line + 1, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+    self.Add(wx.StaticText(parentpanel,-1, _("Bed:")), pos = (base_line + 1, 0), span = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
     btemp_choices = [root.bedtemps[i]+" ("+i+")" for i in sorted(root.bedtemps.keys(), key = lambda x:root.temps[x])]
 
-    root.setboff = make_button(parentpanel, _("Off"), lambda e:root.do_bedtemp("off"), _("Switch Heated Bed Off"), size = (36,-1), style = wx.BU_EXACTFIT)
+    root.setboff = make_button(parentpanel, _("Off"), lambda e:root.do_bedtemp("off"), _("Switch Heated Bed Off"), size = (38,-1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.setboff)
-    self.Add(root.setboff, pos = (base_line + 1, 1), span = (1, 1))
+    self.Add(root.setboff, pos = (base_line + 1, 2), span = (1, 1))
 
     if root.settings.last_bed_temperature not in map(float, root.bedtemps.values()):
         btemp_choices = [str(root.settings.last_bed_temperature)] + btemp_choices
@@ -99,7 +108,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
             choices = btemp_choices, style = wx.CB_DROPDOWN, size = (80,-1))
     root.btemp.SetToolTip(wx.ToolTip("Select Temperature for Heated Bed"))
     root.btemp.Bind(wx.EVT_COMBOBOX, root.btemp_change)
-    self.Add(root.btemp, pos = (base_line + 1, 2), span = (1, 2))
+    self.Add(root.btemp, pos = (base_line + 1, 3), span = (1, 1))
 
     root.setbbtn = make_button(parentpanel, _("Set"), root.do_bedtemp, ("Switch Heated Bed On"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.setbbtn)
@@ -125,21 +134,31 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         root.htemp.SetValue(root.htemp.Value + ' (user)')
 
     root.tempdisp = wx.StaticText(parentpanel,-1, "")
+   
+    if not extra_buttons:
+        ebuttonspanel = root.newPanel(parentpanel)
+        ebuttonssizer = wx.BoxSizer(wx.HORIZONTAL)
+        ebuttonspanel.SetSizer(ebuttonssizer)
+        self.Add(ebuttonspanel, pos = (base_line + 2, 0), span = (1, 5), flag = wx.EXPAND)
 
-    root.edist = wx.SpinCtrl(parentpanel,-1, "5", min = 0, max = 1000, size = (70,-1))
+    esettingspanel = root.newPanel(parentpanel)
+    esettingssizer = wx.BoxSizer(wx.HORIZONTAL)
+    root.edist = wx.SpinCtrl(esettingspanel,-1, "5", min = 0, max = 1000, size = (70,-1))
     root.edist.SetBackgroundColour((225, 200, 200))
     root.edist.SetForegroundColour("black")
-    self.Add(root.edist, pos = (base_line + 3, 0), span = (1, 1), flag = wx.EXPAND | wx.RIGHT, border = 5)
-    self.Add(wx.StaticText(parentpanel, -1, _("mm")), pos = (base_line + 3, 1), span = (1, 1))
+    esettingssizer.Add(root.edist, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
+    esettingssizer.Add(wx.StaticText(esettingspanel, -1, _("mm @")), flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
     root.edist.SetToolTip(wx.ToolTip("Amount to Extrude or Retract (mm)"))
-    root.efeedc = wx.SpinCtrl(parentpanel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (70,-1))
+    root.efeedc = wx.SpinCtrl(esettingspanel,-1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (70,-1))
     root.efeedc.SetToolTip(wx.ToolTip("Extrude / Retract speed (mm/min)"))
     root.efeedc.SetBackgroundColour((225, 200, 200))
     root.efeedc.SetForegroundColour("black")
     root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
     root.efeedc.Bind(wx.EVT_TEXT, root.setfeeds)
-    self.Add(root.efeedc, pos = (base_line + 3, 2), span = (1, 2), flag = wx.EXPAND | wx.RIGHT, border = 5)
-    self.Add(wx.StaticText(parentpanel, -1, _("mm/\nmin")), pos = (base_line + 3, 4), span = (2, 1))
+    esettingssizer.Add(root.efeedc, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
+    esettingssizer.Add(wx.StaticText(esettingspanel, -1, _("mm/\nmin")), flag = wx.ALIGN_CENTER)
+    esettingspanel.SetSizer(esettingssizer)
+    self.Add(esettingspanel, pos = (base_line + 3, 0), span = (1, 5))
 
     gauges_base_line = base_line + 8 if standalone_mode else base_line + 5
     if root.display_gauges:
@@ -187,6 +206,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         for i in extra_buttons:
             btn = extra_buttons[i]
             self.Add(btn, pos = pos_mapping[i.pos], span = span_mapping[i.pos], flag = wx.EXPAND)
+    else:
+        for i in root.cpbuttons:
+            if not i.pos or i.pos[0] != 4:
+                continue
+            btn = make_custom_button(root, ebuttonspanel, i)
+            ebuttonssizer.Add(btn, 1, flag = wx.EXPAND)
 
 class LeftPane(wx.GridBagSizer):
 
@@ -199,13 +224,11 @@ class LeftPane(wx.GridBagSizer):
         self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
        
         self.extra_buttons = {}
+        ebuttons = []
         for i in root.cpbuttons:
-            btn = make_button(parentpanel, i.label, root.procbutton, i.tooltip)
-            btn.SetBackgroundColour(i.background)
-            btn.SetForegroundColour("black")
-            btn.properties = i
-            root.btndict[i.command] = btn
-            root.printerControls.append(btn)
+            if not standalone_mode and i.pos and i.pos[0] == 4:
+                continue
+            btn = make_custom_button(root, parentpanel, i)
             if i.pos == None:
                 if i.span == 0:
                     llts.Add(btn)
@@ -350,13 +373,13 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
 
     root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"), self)
     root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
-    root.platebtn = make_autosize_button(parentpanel, _("Compose"), root.plate, _("Simple Plater System"), self)
     root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
     root.printerControls.append(root.sdbtn)
     root.printbtn = make_sized_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
     root.printbtn.Disable()
     root.pausebtn = make_sized_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
-    root.recoverbtn = make_sized_button(parentpanel, _("Recover"), root.recover, _("Recover previous Print"), self)
+    root.offbtn = make_sized_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
+    root.printerControls.append(root.offbtn)
     return self
 
 class MainWindow(wx.Frame):
