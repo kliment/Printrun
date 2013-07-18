@@ -703,7 +703,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     #print l
     if self.waiting_to_reach_temp and ("ok" in l):
       self.waiting_to_reach_temp = False
-    if "T:" in l:
+    if ("T:" in l):
       self._receive_sensor_update(l)
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
       self._receive_printer_error(l)
@@ -713,6 +713,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     if ("M109" in l) or ("M104" in l):
       temp = float(re.search('S([0-9]+)', l).group(1))
       self._set_target_temp("e0", temp)
+    if ("M140" in l) or ("M190" in l):
+      temp = float(re.search('S([0-9]+)', l).group(1))
+      self._set_target_temp("b", temp)
+    if ("M109" in l) or ("M190" in l) or ("M116" in l):
       self.waiting_to_reach_temp = True
 
   def _set_target_temp(self, key, temp):
