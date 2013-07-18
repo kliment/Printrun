@@ -32,6 +32,8 @@ from .gl.panel import wxGLPanel
 from .gl.trackball import trackball, mulquat, build_rotmatrix
 from .gl.libtatlin import actors
 
+from .gviz import GvizBaseFrame
+
 from printrun_utils import imagefile, install_locale
 install_locale('pronterface')
 
@@ -295,13 +297,16 @@ class GcodeViewMainWrapper(object):
         self.objects[-1].model = None
         wx.CallAfter(self.Refresh)
 
-class GcodeViewFrame(wx.Frame):
+class GcodeViewFrame(GvizBaseFrame):
     '''A simple class for using OpenGL with wxPython.'''
 
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
                  style = wx.DEFAULT_FRAME_STYLE):
         super(GcodeViewFrame, self).__init__(parent, ID, title, pos, size, style)
+
+        panel, vbox = self.create_base_ui()
+
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
@@ -312,32 +317,11 @@ class GcodeViewFrame(wx.Frame):
             self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
-        hpanel = wx.Panel(self, -1)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-
-        panel = wx.Panel(hpanel, -1)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
-        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
-        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
-        toolbar.AddSeparator()
-        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
-        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
-        toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view [R]"), longHelp = '')
-        toolbar.AddLabelTool(6, " " + _("Fit to plate"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Fit to plate [F]"), longHelp = '')
-        toolbar.Realize()
-        self.toolbar = toolbar
+        self.toolbar.AddLabelTool(6, " " + _("Fit to plate"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Fit to plate [F]"), longHelp = '')
+        self.toolbar.Realize()
         self.glpanel = GcodeViewPanel(panel, build_dimensions = build_dimensions,
                                       realparent = self)
-        vbox.Add(toolbar, 0, border = 5)
         vbox.Add(self.glpanel, 1, flag = wx.EXPAND)
-        panel.SetSizer(vbox)
-
-        hbox.Add(panel, 1, flag = wx.EXPAND)
-        self.layerslider = wx.Slider(hpanel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
-        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
-        hbox.Add(self.layerslider, 0, border = 5, flag = wx.LEFT | wx.EXPAND)
-        hpanel.SetSizer(hbox)
 
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1/1.2), id = 2)
@@ -345,9 +329,6 @@ class GcodeViewFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 5)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 6)
-
-    def setlayercb(self, layer):
-        self.layerslider.SetValue(layer)
 
     def process_slider(self, event):
         new_layer = self.layerslider.GetValue()
@@ -371,6 +352,7 @@ class GcodeViewFrame(wx.Frame):
                 self.model.load_data(gcode)
         self.objects[-1].model = self.model
         self.layerslider.SetRange(1, self.model.max_layers + 1)
+        self.layerslider.SetValue(self.model.max_layers + 1)
         wx.CallAfter(self.Refresh)
 
     def clear(self):
