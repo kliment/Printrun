@@ -446,6 +446,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     EventEmitter.__init__(self)
     self.reset_timeout = 0
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
+    self.p.loud = kwargs['loud']
     self.dry_run = kwargs['dry_run'] == True
     self.stdout = sys.stdout
     self.ioloop = tornado.ioloop.IOLoop.instance()
@@ -465,11 +466,38 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.max_w_val = 0
     self.waiting_to_reach_temp = False
     self.p.sendcb = self.sendcb
-    self.init_mdns()
     self.jobs.listeners.add(self)
     self.initializing = False
 
-  def init_mdns(self):
+    if self.dry_run == False:
+      self.do_connect("")
+      if self.p.printer == None: sys.exit(1)
+      print "Connecting to printer..."
+      for x in range(0,50-1):
+        if self.p.online == True: break
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.1)
+      print ""
+      if self.p.online == False:
+        print "Unable to connect to printer: Connection timed-out."
+        sys.exit(1)
+
+    time.sleep(2)
+    self.reset()
+
+    tornado.ioloop.PeriodicCallback(
+      self.run_print_queue_loop, 300, self.ioloop
+    ).start()
+    tornado.ioloop.PeriodicCallback(
+      self.run_sensor_loop, self.settings.sensor_poll_rate*1000, self.ioloop
+    ).start()
+
+    # Initialize DNS-SD once the server is ready to go online
+    self.init_dns_sd()
+
+
+  def init_dns_sd(self):
     sdRef = pybonjour.DNSServiceRegister(name = None,
                                          regtype = '_construct._tcp',
                                          port = 8888,
@@ -661,10 +689,6 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     except Exception as ex:
       print traceback.format_exc()
 
-    #print "print loop"
-    next_timeout = time.time() + 0.3
-    gen.Task(self.ioloop.add_timeout(next_timeout, self.run_print_queue_loop))
-
   def update_job_progress(self, progress):
     if progress != self.previous_job_progress:
       self.previous_job_progress = progress
@@ -685,14 +709,14 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     ready = ready and (time.time() - self.reset_timeout) > 0
     ready = ready and (not self.waiting_to_reach_temp)
 
-    if ready:
-      self._sensor_update_received = False
-      if self.dry_run:
-        self._receive_sensor_update("ok T:%i"%random.randint(20, 50))
-      else:
-        self.request_sensor_update()
-    next_timeout = time.time() + self.settings.sensor_poll_rate
-    gen.Task(self.ioloop.add_timeout(next_timeout, self.run_sensor_loop))
+    if not ready: return
+    self._sensor_update_received = False
+    if self.dry_run:
+      self._receive_sensor_update(
+        "ok T:%i B:%i"%(random.randint(30, 60), random.randint(30, 60))
+      )
+    else:
+      self.request_sensor_update()
 
   def request_sensor_update(self):
     if self.p.online: self.p.send_now("M105")
@@ -704,25 +728,24 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     if self.waiting_to_reach_temp and ("ok" in l):
       self.waiting_to_reach_temp = False
     if ("T:" in l):
-      self._receive_sensor_update(l)
+      self.ioloop.add_callback(self._receive_sensor_update, l)
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
-      self._receive_printer_error(l)
+      self.ioloop.add_callback(self._receive_printer_error, l)
 
   def sendcb(self, l):
     # Monitor the sent commands for new extruder target temperatures
-    if ("M109" in l) or ("M104" in l):
+    if ("M109" in l) or ("M104" in l) or ("M140" in l) or ("M190" in l):
       temp = float(re.search('S([0-9]+)', l).group(1))
-      self._set_target_temp("e0", temp)
-    if ("M140" in l) or ("M190" in l):
-      temp = float(re.search('S([0-9]+)', l).group(1))
-      self._set_target_temp("b", temp)
+      if ("M109" in l) or ("M104" in l):
+        self.ioloop.add_callback(self._set_target_temp, "e0", temp)
+      else:
+        self.ioloop.add_callback(self._set_target_temp, "b", temp)
     if ("M109" in l) or ("M190" in l) or ("M116" in l):
       self.waiting_to_reach_temp = True
 
   def _set_target_temp(self, key, temp):
     self.target_values[key] = temp
     self.fire("target_temp_changed", {key: temp})
-
 
   def _receive_sensor_update(self, l):
     try:
@@ -750,9 +773,6 @@ class Prontserve(pronsole.pronsole, EventEmitter):
         self.fire("target_temp_progress_changed", {'e0': progress})
     except Exception as ex:
       print traceback.format_exc()
-
-
-
 
   def __update_sensor(self, key, value):
     if (key in self.settings.sensor_names) == False:
@@ -881,28 +901,8 @@ if __name__ == "__main__":
         sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
     print ""
 
-  prontserve = Prontserve(dry_run=dry_run)
-  prontserve.p.loud = args.loud
-
   try:
-    if dry_run==False:
-      prontserve.do_connect("")
-      if prontserve.p.printer == None: sys.exit(1)
-      print "Connecting to printer..."
-      for x in range(0,50-1):
-        if prontserve.p.online == True: break
-        sys.stdout.write(".")
-        sys.stdout.flush()
-        time.sleep(0.1)
-      print ""
-      if prontserve.p.online == False:
-        print "Unable to connect to printer: Connection timed-out."
-        sys.exit(1)
-
-    time.sleep(2)
-    prontserve.reset()
-    prontserve.run_sensor_loop()
-    prontserve.run_print_queue_loop()
+    prontserve = Prontserve(dry_run=dry_run, loud=args.loud)
 
     application.listen(8888)
     print "\n"+"-"*80
