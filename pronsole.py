@@ -1426,11 +1426,16 @@ class pronsole(cmd.Cmd):
     def off(self, ignore = None):
         if self.p.online:
             if self.p.printing: self.pause(None)
-            self.onecmd("M84; motors off")
-            self.onecmd("M104 S0; extruder off")
-            self.onecmd("M140 S0; heatbed off")
-            self.onecmd("M107; fan off")
-            self.onecmd("M81; power supply off")
+            self.log(_("; Motors off"))
+            self.onecmd("M84")
+            self.log(_("; Extruder off"))
+            self.onecmd("M104 S0")
+            self.log(_("; Heatbed off"))
+            self.onecmd("M140 S0")
+            self.log(_("; Fan off"))
+            self.onecmd("M107")
+            self.log(_("; Power supply off"))
+            self.onecmd("M81")
         else:
             self.logError(_("Printer is not online. Unable to turn it off."))
 
