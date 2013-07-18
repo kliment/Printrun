@@ -57,6 +57,9 @@ class GcodeViewPanel(wxGLPanel):
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
+    def setlayercb(self, layer):
+        pass
+
     def create_objects(self):
         '''create opengl objects when opengl is initialized'''
         for obj in self.parent.objects:

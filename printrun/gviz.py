@@ -382,8 +382,9 @@ class Gviz(wx.Panel):
         self.clear()
         self.add_parsed_gcodes(gcode.lines)
         max_layers = len(self.layers)
-        self.parent.layerslider.SetRange(0, max_layers - 1)
-        self.parent.layerslider.SetValue(0)
+        if hasattr(self.parent, "layerslider"):
+            self.parent.layerslider.SetRange(0, max_layers - 1)
+            self.parent.layerslider.SetValue(0)
 
     # FIXME : there's code duplication going on there, we should factor it (but
     # the reason addgcode is not factored as a add_parsed_gcodes([gline]) is
