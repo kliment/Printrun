@@ -157,6 +157,7 @@ class GcodeViewPanel(wxGLPanel):
         # max_layers + 1 means visualizing all layers with the same color
         new_layer = min(max_layers + 1, current_layer + 1)
         self.parent.model.num_layers_to_draw = new_layer
+        self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
     def layerdown(self):
@@ -165,6 +166,7 @@ class GcodeViewPanel(wxGLPanel):
         current_layer = self.parent.model.num_layers_to_draw
         new_layer = max(1, current_layer - 1)
         self.parent.model.num_layers_to_draw = new_layer
+        self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
     def wheel(self, event):
@@ -309,9 +311,11 @@ class GcodeViewFrame(wx.Frame):
         else:
             self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
-        panel = wx.Panel(self, -1)
-        self.glpanel = GcodeViewPanel(panel, build_dimensions = build_dimensions,
-                                      realparent = self)
+
+        hpanel = wx.Panel(self, -1)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        panel = wx.Panel(hpanel, -1)
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
         toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
@@ -323,9 +327,18 @@ class GcodeViewFrame(wx.Frame):
         toolbar.AddLabelTool(6, " " + _("Fit to plate"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Fit to plate [F]"), longHelp = '')
         toolbar.Realize()
         self.toolbar = toolbar
+        self.glpanel = GcodeViewPanel(panel, build_dimensions = build_dimensions,
+                                      realparent = self)
         vbox.Add(toolbar, 0, border = 5)
-        vbox.Add(self.glpanel, 1, wx.EXPAND)
+        vbox.Add(self.glpanel, 1, flag = wx.EXPAND)
         panel.SetSizer(vbox)
+
+        hbox.Add(panel, 1, flag = wx.EXPAND)
+        self.layerslider = wx.Slider(hpanel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
+        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
+        hbox.Add(self.layerslider, 0, border = 5, flag = wx.LEFT | wx.EXPAND)
+        hpanel.SetSizer(hbox)
+
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1/1.2), id = 2)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerup(), id = 3)
@@ -333,6 +346,15 @@ class GcodeViewFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 5)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 6)
 
+    def setlayercb(self, layer):
+        self.layerslider.SetValue(layer)
+
+    def process_slider(self, event):
+        new_layer = self.layerslider.GetValue()
+        new_layer = min(self.model.max_layers + 1, new_layer)
+        new_layer = max(1, new_layer)
+        self.model.num_layers_to_draw = new_layer
+        wx.CallAfter(self.Refresh)
 
     def set_current_gline(self, gline):
         if gline.is_move and self.model and self.model.loaded:
@@ -348,6 +370,7 @@ class GcodeViewFrame(wx.Frame):
             if gcode:
                 self.model.load_data(gcode)
         self.objects[-1].model = self.model
+        self.layerslider.SetRange(1, self.model.max_layers + 1)
         wx.CallAfter(self.Refresh)
 
     def clear(self):
