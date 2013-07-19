@@ -200,6 +200,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"))
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
+        self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -341,6 +342,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         else:
             print _("Print started at: %s") % format_time(self.starttime)
             self.compute_eta = RemainingTimeEstimator(self.fgcode)
+        if self.settings.lockbox and self.settings.lockonstart:
+            self.locker.SetValue(True)
+            self.lock()
 
     def endcb(self):
         if self.p.queueindex == 0:
@@ -1745,7 +1749,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.paused = 0
         dlg.Destroy()
 
-    def lock(self, event):
+    def lock(self, event = None):
         if self.locker.GetValue():
             print _("Locking interface.")
             for panel in self.panels:
