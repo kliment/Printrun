@@ -345,9 +345,18 @@ class LogPane(wx.BoxSizer):
 
 
 def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
+    if not parentpanel: parentpanel = root.panel
+    if root.settings.lockbox:
+        root.locker = wx.CheckBox(parentpanel, label = _("Lock") + "  ")
+        root.locker.Bind(wx.EVT_CHECKBOX, root.lock)
+        root.locker.SetToolTip(wx.ToolTip(_("Lock graphical interface")))
+        glob = wx.BoxSizer(wx.HORIZONTAL)
+        origpanel = parentpanel
+        parentpanel = root.newPanel(parentpanel)
+        glob.Add(parentpanel, 1, flag = wx.EXPAND)
+        glob.Add(root.locker, 0) 
     ToolbarSizer = wx.WrapSizer if use_wrapsizer and wx.VERSION > (2, 9) else wx.BoxSizer
     self = ToolbarSizer(wx.HORIZONTAL)
-    if not parentpanel: parentpanel = root.panel
     root.rescanbtn = make_sized_button(parentpanel, _("Port"), root.rescanports, _("Communication Settings\nClick to rescan ports"))
     self.Add(root.rescanbtn, 0, wx.TOP|wx.LEFT, 0)
 
@@ -380,7 +389,11 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     root.pausebtn = make_sized_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
     root.offbtn = make_sized_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
     root.printerControls.append(root.offbtn)
-    return self
+    if root.settings.lockbox:
+        parentpanel.SetSizer(self)
+        return glob
+    else:
+        return self
 
 class MainWindow(wx.Frame):
     
@@ -389,10 +402,13 @@ class MainWindow(wx.Frame):
         # this list will contain all controls that should be only enabled
         # when we're connected to a printer
         self.printerControls = []
+        self.panel = wx.Panel(self, -1, size = kwargs["size"])
+        self.panels = []
 
-    def newPanel(self, parent):
+    def newPanel(self, parent, add_to_list = True):
         panel = wx.Panel(parent)
         panel.SetBackgroundColour(self.settings.bgcolor)
+        if add_to_list: self.panels.append(panel)
         return panel
 
     def createTabbedGui(self):
@@ -469,7 +485,7 @@ class MainWindow(wx.Frame):
     def createGui(self, compact = False):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
-        upperpanel = self.newPanel(self.panel)
+        upperpanel = self.newPanel(self.panel, False)
         self.uppersizer = MainToolbar(self, upperpanel)
         lowerpanel = self.newPanel(self.panel)
         upperpanel.SetSizer(self.uppersizer)

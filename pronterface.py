@@ -199,6 +199,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
         self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"))
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
+        self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -217,7 +218,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
         else:
             self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
-        self.panel = wx.Panel(self,-1, size = size)
 
         self.statuscheck = False
         self.status_thread = None
@@ -1744,6 +1744,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 self.paused = 0
         dlg.Destroy()
+
+    def lock(self, event):
+        if self.locker.GetValue():
+            print _("Locking interface.")
+            for panel in self.panels:
+                panel.Disable()
+        else:
+            print _("Unlocking interface.")
+            for panel in self.panels:
+                panel.Enable()
 
 class PronterApp(wx.App):
 
