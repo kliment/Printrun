@@ -366,19 +366,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def online(self):
         print _("Printer is now online.")
+        wx.CallAfter(self.online_gui)
+
+    def online_gui(self):
         self.connectbtn.SetLabel(_("Disconnect"))
         self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
 
         for i in self.printerControls:
-            wx.CallAfter(i.Enable)
+            i.Enable()
 
         # Enable XYButtons and ZButtons
-        wx.CallAfter(self.xyb.enable)
-        wx.CallAfter(self.zb.enable)
+        self.xyb.enable()
+        self.zb.enable()
 
         if self.filename:
-            wx.CallAfter(self.printbtn.Enable)
+            self.printbtn.Enable()
 
     def layer_change_cb(self, newlayer):
         if self.compute_eta:
