@@ -343,8 +343,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             print _("Print started at: %s") % format_time(self.starttime)
             self.compute_eta = RemainingTimeEstimator(self.fgcode)
         if self.settings.lockbox and self.settings.lockonstart:
-            self.locker.SetValue(True)
-            self.lock()
+            wx.CallAfter(self.lock, force = True)
 
     def endcb(self):
         if self.p.queueindex == 0:
@@ -1749,7 +1748,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.paused = 0
         dlg.Destroy()
 
-    def lock(self, event = None):
+    def lock(self, event = None, force = None):
+        if force != None:
+            self.locker.SetValue(force)
         if self.locker.GetValue():
             print _("Locking interface.")
             for panel in self.panels:
