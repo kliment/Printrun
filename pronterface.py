@@ -183,6 +183,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def _set_fgcode(self, value):
         self._fgcode = value
         self.excluder = None
+        self.excluder_e = None
+        self.excluder_z_abs = None
+        self.excluder_z_rel = None
     fgcode = property(_get_fgcode, _set_fgcode)
 
     def __init__(self, filename = None, size = winsize):
@@ -414,8 +417,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def is_excluded_move(self, gline):
         if not gline.is_move or not self.excluder or not self.excluder.rectangles:
             return False
-        if gline.x == None and gline.y == None:
-            return False
         for (x0, y0, x1, y1) in self.excluder.rectangles:
             if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
                 return True
@@ -425,14 +426,39 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if not self.is_excluded_move(gline):
             return gline
         else:
-            # Check if next move will be excluded too and if it will emit an absolute E set
-            if next_gline != None and self.is_excluded_move(next_gline) and next_gline.e != None and not next_gline.relative_e:
-                return None # nothing to do: next move will set absolute E if needed
-            else: # else, check if this is an extrusion move with non relative E and replace it
-                if gline.e != None and not gline.relative_e:
-                    return gcoder.Line("G92 E%.5f" % gline.e)
-                else: # or just do nothing
-                    return None
+            if gline.z != None:
+                if gline.relative:
+                    if self.excluder_z_abs != None:
+                        self.excluder_z_abs += gline.z
+                    elif self.excluder_z_rel != None:
+                        self.excluder_z_rel += gline.z
+                    else:
+                        self.excluder_z_rel = gline.z
+                else:
+                    self.excluder_z_rel = None
+                    self.excluder_z_abs = gline.z
+            if gline.e != None and not gline.relative_e:
+                self.excluder_e = gline.e
+            # If next move won't be excluded, push the changes we have to do
+            if next_gline != None and not self.is_excluded_move(next_gline):
+                if self.excluder_e != None:
+                    self.p.send_now("G92 E%.5f" % self.excluder_e)
+                    self.excluder_e = None
+                if self.excluder_z_abs != None:
+                    if gline.relative:
+                        self.p.send_now("G90")
+                    self.p.send_now("G1 Z.5f" % self.excluder_z_abs)
+                    self.excluder_z_abs = None
+                    if gline.relative:
+                        self.p.send_now("G91")
+                if self.excluder_z_rel != None:
+                    if not gline.relative:
+                        self.p.send_now("G91")
+                    self.p.send_now("G1 Z.5f" % self.excluder_z_rel)
+                    self.excluder_z_rel = None
+                    if not gline.relative:
+                        self.p.send_now("G90")
+                return None
 
     def printsentcb(self, gline):
         if gline.is_move and hasattr(self.gwindow, "set_current_gline"):
