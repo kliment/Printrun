@@ -892,8 +892,15 @@ if __name__ == "__main__":
     help='Enables verbose printer output'
   )
 
+  parser.add_argument('--heaptrace', default=False, action='store_true',
+    help='Enables a heap trace on exit (for developer use)'
+  )
+
   args = parser.parse_args()
   dry_run = args.dry_run
+
+  if args.heaptrace:
+    from guppy import hpy
 
   def warn_if_dry_run():
     if dry_run:
@@ -918,4 +925,5 @@ if __name__ == "__main__":
 
     prontserve.ioloop.start()
   except:
-    prontserve.p.disconnect()
+    if args.heaptrace: print hpy().heap()
+    if 'prontserve' in vars(): prontserve.p.disconnect()
