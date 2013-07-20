@@ -469,6 +469,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.jobs.listeners.add(self)
     self.initializing = False
 
+  def start(self):
     if self.dry_run == False:
       self.do_connect("")
       if self.p.printer == None: sys.exit(1)
@@ -908,9 +909,10 @@ if __name__ == "__main__":
         sys.stdout.write("\x1B[0;33m  Dry Run  \x1B[0m")
     print ""
 
-  try:
-    prontserve = Prontserve(dry_run=dry_run, loud=args.loud)
+  prontserve = Prontserve(dry_run=dry_run, loud=args.loud)
 
+  try:
+    prontserve.start()
     application.listen(8888)
     print "\n"+"-"*80
     welcome = textwrap.dedent(u"""
@@ -926,4 +928,5 @@ if __name__ == "__main__":
     prontserve.ioloop.start()
   except:
     if args.heaptrace: print hpy().heap()
-    if 'prontserve' in vars(): prontserve.p.disconnect()
+    prontserve.p.disconnect()
+    exit()
