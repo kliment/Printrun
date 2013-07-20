@@ -79,7 +79,11 @@ def parse_coordinates(line, split_raw, imperial = False, force = False):
 
 class Layer(list):
 
-    __slots__ = ("duration")
+    __slots__ = ("duration", "z")
+
+    def __init__(self, lines, z = None):
+        super(Layer, self).__init__(lines)
+        self.z = z
 
     def _preprocess(self, current_x, current_y, current_z):
         xmin = float("inf")
@@ -154,6 +158,8 @@ class GCode(object):
     width = None
     depth = None
     height = None
+
+    est_layer_height = None
 
     def __init__(self,data):
         self.lines = [Line(l2) for l2 in
@@ -256,8 +262,10 @@ class GCode(object):
         layer_id = 0
         layer_line = 0
 
+        last_layer_z = None
         prev_z = None
-        cur_z = 0
+        prev_base_z = (None, None)
+        cur_z = None
         cur_lines = []
         for line in self.lines:
             if line.command == "G92" and line.z != None:
@@ -269,18 +277,34 @@ class GCode(object):
                     else:
                         cur_z = line.z
 
+            # FIXME: the logic behind this code seems to work, but it might be broken
             if cur_z != prev_z:
-                if prev_z is not None:
-                    base_z = (prev_z - (prev_z % 0.1)) if abs(cur_z - prev_z) < 0.01 else prev_z
+                if prev_z is not None and last_layer_z is not None:
+                    offset = self.est_layer_height if self.est_layer_height else 0.01
+                    if abs(prev_z - last_layer_z) < offset:
+                        if self.est_layer_height is None:
+                            zs = sorted([l.z for l in all_layers if l.z != None])
+                            heights = [round(zs[i+1] - zs[i], 3) for i in range(len(zs) - 1)]
+                            if len(heights) >= 2: self.est_layer_height = heights[1]
+                            elif heights: self.est_layer_height = heights[0]
+                            else: self.est_layer_height = 0.1
+                        base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
+                    else:
+                        base_z = round(prev_z, 2)
                 else:
-                    base_z = None
-                all_layers.append(Layer(cur_lines))
-                old_lines = layers.get(base_z, [])
-                old_lines += cur_lines
-                layers[base_z] = old_lines
-                cur_lines = []
-                layer_id += 1
-                layer_line = 0
+                    base_z = prev_z
+
+                if base_z != prev_base_z:
+                    all_layers.append(Layer(cur_lines, base_z))
+                    old_lines = layers.get(base_z, [])
+                    old_lines += cur_lines
+                    layers[base_z] = old_lines
+                    cur_lines = []
+                    layer_id += 1
+                    layer_line = 0
+                    last_layer_z = base_z
+        
+                prev_base_z = base_z
 
             cur_lines.append(line)
             layer_idxs.append(layer_id)
@@ -289,22 +313,22 @@ class GCode(object):
             prev_z = cur_z
 
         if cur_lines:
-            all_layers.append(Layer(cur_lines))
+            all_layers.append(Layer(cur_lines, prev_z))
             old_lines = layers.get(prev_z, [])
             old_lines += cur_lines
             layers[prev_z] = old_lines
 
-        for idx in layers.keys():
-            cur_lines = layers[idx]
+        for zindex in layers.keys():
+            cur_lines = layers[zindex]
             has_movement = False
-            for l in layers[idx]:
+            for l in layers[zindex]:
                 if l.is_move and l.e != None:
                     has_movement = True
                     break
             if has_movement:
-                layers[idx] = Layer(cur_lines)
+                layers[zindex] = Layer(cur_lines, zindex)
             else:
-                del layers[idx]
+                del layers[zindex]
 
         self.append_layer_id = len(all_layers)
         self.append_layer = Layer([])
