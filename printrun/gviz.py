@@ -380,7 +380,7 @@ class Gviz(wx.Panel):
 
     def addfile(self, gcode):
         self.clear()
-        self.add_parsed_gcodes(gcode.lines)
+        self.add_parsed_gcodes(gcode)
         max_layers = len(self.layers)
         if hasattr(self.parent, "layerslider"):
             self.parent.layerslider.SetRange(0, max_layers - 1)
@@ -390,60 +390,61 @@ class Gviz(wx.Panel):
     # the reason addgcode is not factored as a add_parsed_gcodes([gline]) is
     # because when loading a file there's no hilight, so it simply lets us not
     # do the if hilight: all the time for nothing when loading a lot of lines
-    def add_parsed_gcodes(self, lines):
+    def add_parsed_gcodes(self, gcode):
         def _y(y):
             return self.build_dimensions[1] - (y - self.build_dimensions[4])
         def _x(x):
             return x - self.build_dimensions[3]
 
-        for gline in lines:
-            if gline.command not in ["G0", "G1", "G2", "G3"]:
+        for layer_idx, layer in enumerate(gcode.all_layers):
+            has_move = False
+            for gline in layer:
+                if gline.is_move:
+                    has_move = True
+                    break
+            if not has_move:
                 continue
-            
-            target = self.lastpos[:]
-            target[5] = 0.0
-            target[6] = 0.0
-            if gline.relative:
-                if gline.x != None: target[0] += gline.x
-                if gline.y != None: target[1] += gline.y
-                if gline.z != None: target[2] += gline.z
-            else:
-                if gline.x != None: target[0] = gline.x
-                if gline.y != None: target[1] = gline.y
-                if gline.z != None: target[2] = gline.z
-            if gline.e != None:
-                if gline.relative_e:
-                    target[3] += gline.e
-                else:
-                    target[3] = gline.e
-            if gline.f != None: target[4] = gline.f
-            if gline.i != None: target[5] = gline.i
-            if gline.j != None: target[6] = gline.j
-            z = target[2]
-            if z not in self.layers:
-                self.lines[z] = []
-                self.pens[z] = []
-                self.arcs[z] = []
-                self.arcpens[z] = []
-                self.layers.append(z)
-            
-            start_pos = self.lastpos[:]
+            self.lines[layer.z] = []
+            self.pens[layer.z] = []
+            self.arcs[layer.z] = []
+            self.arcpens[layer.z] = []
+            self.layers.append(layer.z)
+            for gline in layer:
+                if not gline.is_move:
+                    continue
+                
+                target = self.lastpos[:]
+                target[0] = gline.current_x
+                target[1] = gline.current_y
+                target[2] = gline.current_z
+                target[5] = 0.0
+                target[6] = 0.0
+                if gline.e != None:
+                    if gline.relative_e:
+                        target[3] += gline.e
+                    else:
+                        target[3] = gline.e
+                if gline.f != None: target[4] = gline.f
+                if gline.i != None: target[5] = gline.i
+                if gline.j != None: target[6] = gline.j
+                
+                start_pos = self.lastpos[:]
 
-            if gline.command in ["G0", "G1"]:
-                self.lines[z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
-                self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
-            elif gline.command in ["G2", "G3"]:
-                # startpos, endpos, arc center
-                arc = [_x(start_pos[0]), _y(start_pos[1]),
-                       _x(target[0]), _y(target[1]),
-                       _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
-                if gline.command == "G2":  # clockwise, reverse endpoints
-                    arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
+                if gline.command in ["G0", "G1"]:
+                    self.lines[layer.z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
+                    self.pens[layer.z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
+                elif gline.command in ["G2", "G3"]:
+                    # startpos, endpos, arc center
+                    arc = [_x(start_pos[0]), _y(start_pos[1]),
+                           _x(target[0]), _y(target[1]),
+                           _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
+                    if gline.command == "G2":  # clockwise, reverse endpoints
+                        arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
-                self.arcs[z].append(arc)
-                self.arcpens[z].append(self.arcpen)
+                    self.arcs[layer.z].append(arc)
+                    self.arcpens[layer.z].append(self.arcpen)
 
-            self.lastpos = target
+                self.lastpos = target
         self.dirty = 1
         self.Refresh()
 
