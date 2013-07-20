@@ -1,4 +1,3 @@
 pybonjour
 git+https://github.com/D1plo1d/tornado.git
 git+https://github.com/D1plo1d/py-mdns.git
-guppy
