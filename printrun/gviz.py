@@ -324,11 +324,12 @@ class Gviz(wx.Panel):
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
 
         if not self.showall:
+            # Draw layer gauge
             dc.SetBrush(wx.Brush((43, 144, 255)))
-            dc.DrawRectangle(self.size[0]-15, 0, 15, self.size[1])
+            dc.DrawRectangle(width-15, 0, 15, height)
             dc.SetBrush(wx.Brush((0, 255, 0)))
             if len(self.layers):
-                dc.DrawRectangle(self.size[0]-14, (1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1], 13, self.size[1]-1)
+                dc.DrawRectangle(width-14, (1.0-(1.0*(self.layerindex+1))/len(self.layers))*height, 13, height-1)
 
         if self.showall:
             l = []
