@@ -397,7 +397,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 layer = gline.z
                 if layer != self.curlayer:
                     self.curlayer = layer
-                    self.gviz.clearhilights()
+                    wx.CallAfter(self.gviz.clearhilights)
                     wx.CallAfter(self.gviz.setlayer, layer)
         elif gline.command in ["M104", "M109"]:
             gcoder.parse_coordinates(gline, split_raw, imperial = False, force = True)
