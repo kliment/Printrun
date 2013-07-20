@@ -183,6 +183,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def _set_fgcode(self, value):
         self._fgcode = value
         self.excluder = None
+        self.excluder_e = None
+        self.excluder_z_abs = None
+        self.excluder_z_rel = None
     fgcode = property(_get_fgcode, _set_fgcode)
 
     def __init__(self, filename = None, size = winsize):
@@ -199,6 +202,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
         self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"))
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
+        self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
+        self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -217,7 +222,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
         else:
             self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
-        self.panel = wx.Panel(self,-1, size = size)
 
         self.statuscheck = False
         self.status_thread = None
@@ -341,6 +345,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         else:
             print _("Print started at: %s") % format_time(self.starttime)
             self.compute_eta = RemainingTimeEstimator(self.fgcode)
+        if self.settings.lockbox and self.settings.lockonstart:
+            wx.CallAfter(self.lock, force = True)
 
     def endcb(self):
         if self.p.queueindex == 0:
@@ -360,19 +366,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def online(self):
         print _("Printer is now online.")
+        wx.CallAfter(self.online_gui)
+
+    def online_gui(self):
         self.connectbtn.SetLabel(_("Disconnect"))
         self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
 
         for i in self.printerControls:
-            wx.CallAfter(i.Enable)
+            i.Enable()
 
         # Enable XYButtons and ZButtons
-        wx.CallAfter(self.xyb.enable)
-        wx.CallAfter(self.zb.enable)
+        self.xyb.enable()
+        self.zb.enable()
 
         if self.filename:
-            wx.CallAfter(self.printbtn.Enable)
+            self.printbtn.Enable()
 
     def layer_change_cb(self, newlayer):
         if self.compute_eta:
@@ -411,8 +420,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def is_excluded_move(self, gline):
         if not gline.is_move or not self.excluder or not self.excluder.rectangles:
             return False
-        if gline.x == None and gline.y == None:
-            return False
         for (x0, y0, x1, y1) in self.excluder.rectangles:
             if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
                 return True
@@ -422,14 +429,39 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if not self.is_excluded_move(gline):
             return gline
         else:
-            # Check if next move will be excluded too and if it will emit an absolute E set
-            if next_gline != None and self.is_excluded_move(next_gline) and next_gline.e != None and not next_gline.relative_e:
-                return None # nothing to do: next move will set absolute E if needed
-            else: # else, check if this is an extrusion move with non relative E and replace it
-                if gline.e != None and not gline.relative_e:
-                    return gcoder.Line("G92 E%.5f" % gline.e)
-                else: # or just do nothing
-                    return None
+            if gline.z != None:
+                if gline.relative:
+                    if self.excluder_z_abs != None:
+                        self.excluder_z_abs += gline.z
+                    elif self.excluder_z_rel != None:
+                        self.excluder_z_rel += gline.z
+                    else:
+                        self.excluder_z_rel = gline.z
+                else:
+                    self.excluder_z_rel = None
+                    self.excluder_z_abs = gline.z
+            if gline.e != None and not gline.relative_e:
+                self.excluder_e = gline.e
+            # If next move won't be excluded, push the changes we have to do
+            if next_gline != None and not self.is_excluded_move(next_gline):
+                if self.excluder_e != None:
+                    self.p.send_now("G92 E%.5f" % self.excluder_e)
+                    self.excluder_e = None
+                if self.excluder_z_abs != None:
+                    if gline.relative:
+                        self.p.send_now("G90")
+                    self.p.send_now("G1 Z.5f" % self.excluder_z_abs)
+                    self.excluder_z_abs = None
+                    if gline.relative:
+                        self.p.send_now("G91")
+                if self.excluder_z_rel != None:
+                    if not gline.relative:
+                        self.p.send_now("G91")
+                    self.p.send_now("G1 Z.5f" % self.excluder_z_rel)
+                    self.excluder_z_rel = None
+                    if not gline.relative:
+                        self.p.send_now("G90")
+                return None
 
     def printsentcb(self, gline):
         if gline.is_move and hasattr(self.gwindow, "set_current_gline"):
@@ -1744,6 +1776,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 self.paused = 0
         dlg.Destroy()
+
+    def lock(self, event = None, force = None):
+        if force != None:
+            self.locker.SetValue(force)
+        if self.locker.GetValue():
+            print _("Locking interface.")
+            for panel in self.panels:
+                panel.Disable()
+        else:
+            print _("Unlocking interface.")
+            for panel in self.panels:
+                panel.Enable()
 
 class PronterApp(wx.App):
 

@@ -32,6 +32,8 @@ from .gl.panel import wxGLPanel
 from .gl.trackball import trackball, mulquat, build_rotmatrix
 from .gl.libtatlin import actors
 
+from .gviz import GvizBaseFrame
+
 from printrun_utils import imagefile, install_locale
 install_locale('pronterface')
 
@@ -54,6 +56,9 @@ class GcodeViewPanel(wxGLPanel):
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
+
+    def setlayercb(self, layer):
+        pass
 
     def create_objects(self):
         '''create opengl objects when opengl is initialized'''
@@ -157,6 +162,7 @@ class GcodeViewPanel(wxGLPanel):
         # max_layers + 1 means visualizing all layers with the same color
         new_layer = min(max_layers + 1, current_layer + 1)
         self.parent.model.num_layers_to_draw = new_layer
+        self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
     def layerdown(self):
@@ -165,6 +171,7 @@ class GcodeViewPanel(wxGLPanel):
         current_layer = self.parent.model.num_layers_to_draw
         new_layer = max(1, current_layer - 1)
         self.parent.model.num_layers_to_draw = new_layer
+        self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
     def wheel(self, event):
@@ -293,13 +300,16 @@ class GcodeViewMainWrapper(object):
         self.objects[-1].model = None
         wx.CallAfter(self.Refresh)
 
-class GcodeViewFrame(wx.Frame):
+class GcodeViewFrame(GvizBaseFrame):
     '''A simple class for using OpenGL with wxPython.'''
 
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
                  style = wx.DEFAULT_FRAME_STYLE):
         super(GcodeViewFrame, self).__init__(parent, ID, title, pos, size, style)
+
+        panel, vbox = self.create_base_ui()
+
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
@@ -309,23 +319,13 @@ class GcodeViewFrame(wx.Frame):
         else:
             self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
-        panel = wx.Panel(self, -1)
+
+        self.toolbar.AddLabelTool(6, " " + _("Fit to plate"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Fit to plate [F]"), longHelp = '')
+        self.toolbar.Realize()
         self.glpanel = GcodeViewPanel(panel, build_dimensions = build_dimensions,
                                       realparent = self)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
-        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
-        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
-        toolbar.AddSeparator()
-        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
-        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
-        toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view [R]"), longHelp = '')
-        toolbar.AddLabelTool(6, " " + _("Fit to plate"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Fit to plate [F]"), longHelp = '')
-        toolbar.Realize()
-        self.toolbar = toolbar
-        vbox.Add(toolbar, 0, border = 5)
-        vbox.Add(self.glpanel, 1, wx.EXPAND)
-        panel.SetSizer(vbox)
+        vbox.Add(self.glpanel, 1, flag = wx.EXPAND)
+
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1/1.2), id = 2)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerup(), id = 3)
@@ -333,6 +333,12 @@ class GcodeViewFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 5)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 6)
 
+    def process_slider(self, event):
+        new_layer = self.layerslider.GetValue()
+        new_layer = min(self.model.max_layers + 1, new_layer)
+        new_layer = max(1, new_layer)
+        self.model.num_layers_to_draw = new_layer
+        wx.CallAfter(self.Refresh)
 
     def set_current_gline(self, gline):
         if gline.is_move and self.model and self.model.loaded:
@@ -348,6 +354,8 @@ class GcodeViewFrame(wx.Frame):
             if gcode:
                 self.model.load_data(gcode)
         self.objects[-1].model = self.model
+        self.layerslider.SetRange(1, self.model.max_layers + 1)
+        self.layerslider.SetValue(self.model.max_layers + 1)
         wx.CallAfter(self.Refresh)
 
     def clear(self):

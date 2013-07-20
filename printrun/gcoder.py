@@ -386,6 +386,8 @@ class GCode(object):
                     # then calculate the time taken to complete the remaining distance
 
                     currenttravel = math.hypot(x - lastx, y - lasty)
+                    if currenttravel == 0 and line.e != None:
+                        currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
                     if f == lastf: # Feedrate hasn't changed, no acceleration/decceleration planned
                         moveduration = currenttravel / f if f != 0 else 0.
                     else:

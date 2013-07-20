@@ -21,33 +21,60 @@ from printrun import gcoder
 from printrun_utils import imagefile, install_locale
 install_locale('pronterface')
 
-ID_ABOUT = 101
-ID_EXIT = 110
-class GvizWindow(wx.Frame):
-    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
-        wx.Frame.__init__(self, None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
+class GvizBaseFrame(wx.Frame):
 
-        self.CreateStatusBar(1);
+    def create_base_ui(self):
+        self.CreateStatusBar(1)
         self.SetStatusText(_("Layer number and Z position show here when you scroll"))
 
-        panel = wx.Panel(self, -1)
-        self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
+        hpanel = wx.Panel(self, -1)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        panel = wx.Panel(hpanel, -1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
-        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
-        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
-        toolbar.AddSeparator()
-        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
-        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
-        toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"), longHelp = '')
-        toolbar.AddSeparator()
-        #toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Insert Code at start of this layer"), '')
-        toolbar.Realize()
-        self.toolbar = toolbar
-        vbox.Add(toolbar, 0, border = 5)
-        vbox.Add(self.p, 1, wx.EXPAND)
+        self.toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
+        self.toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
+        self.toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
+        self.toolbar.AddSeparator()
+        self.toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
+        self.toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
+        self.toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"), longHelp = '')
+        
+        vbox.Add(self.toolbar, 0, border = 5)
+        
         panel.SetSizer(vbox)
+
+        hbox.Add(panel, 1, flag = wx.EXPAND)
+        self.layerslider = wx.Slider(hpanel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
+        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
+        hbox.Add(self.layerslider, 0, border = 5, flag = wx.LEFT | wx.EXPAND)
+        hpanel.SetSizer(hbox)
+
+        return panel, vbox
+
+    def setlayercb(self, layer):
+        self.layerslider.SetValue(layer)
+
+    def process_slider(self, event):
+        raise NotImplementedError
+
+ID_ABOUT = 101
+ID_EXIT = 110
+class GvizWindow(GvizBaseFrame):
+    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
+        super(GvizWindow, self).__init__(None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
+        
+        panel, vbox = self.create_base_ui()
+
+        self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
+
+        self.toolbar.AddSeparator()
+        #self.toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Insert Code at start of this layer"), '')
+        self.toolbar.Realize()
+        vbox.Add(self.p, 1, wx.EXPAND)
+        
         self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
         self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1/1.2), id = 2)
@@ -70,6 +97,12 @@ class GvizWindow(wx.Frame):
 
     def set_current_gline(self, gline):
         return
+
+    def process_slider(self, event):
+        self.p.layerindex = self.layerslider.GetValue()
+        self.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.p.layerindex + 1, self.p.layers[self.p.layerindex]), 0)
+        self.p.dirty = 1
+        wx.CallAfter(self.p.Refresh)
 
     def resetview(self, event):
         self.p.translate = [0.0, 0.0]
@@ -203,6 +236,7 @@ class Gviz(wx.Panel):
             self.layerindex += 1
             self.parent.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
+            self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
 
     def layerdown(self):
@@ -210,6 +244,7 @@ class Gviz(wx.Panel):
             self.layerindex -= 1
             self.parent.SetStatusText(_("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, self.layers[self.layerindex]), 0)
             self.dirty = 1
+            self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
 
     def setlayer(self, layer):
@@ -346,6 +381,10 @@ class Gviz(wx.Panel):
     def addfile(self, gcode):
         self.clear()
         self.add_parsed_gcodes(gcode.lines)
+        max_layers = len(self.layers)
+        if hasattr(self.parent, "layerslider"):
+            self.parent.layerslider.SetRange(0, max_layers - 1)
+            self.parent.layerslider.SetValue(0)
 
     # FIXME : there's code duplication going on there, we should factor it (but
     # the reason addgcode is not factored as a add_parsed_gcodes([gline]) is
