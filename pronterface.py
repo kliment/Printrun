@@ -1380,7 +1380,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.userm114 -= 1
             else:
                 isreport = True
-        if "ok T:" in l:
+        if "ok T:" in l or ("T:" in l and "E:" in l):
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             self.update_tempdisplay()
