@@ -450,14 +450,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if self.excluder_z_abs != None:
                     if gline.relative:
                         self.p.send_now("G90")
-                    self.p.send_now("G1 Z.5f" % self.excluder_z_abs)
+                    self.p.send_now("G1 Z%.5f" % self.excluder_z_abs)
                     self.excluder_z_abs = None
                     if gline.relative:
                         self.p.send_now("G91")
                 if self.excluder_z_rel != None:
                     if not gline.relative:
                         self.p.send_now("G91")
-                    self.p.send_now("G1 Z.5f" % self.excluder_z_rel)
+                    self.p.send_now("G1 Z%.5f" % self.excluder_z_rel)
                     self.excluder_z_rel = None
                     if not gline.relative:
                         self.p.send_now("G90")
