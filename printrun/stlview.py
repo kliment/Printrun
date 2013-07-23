@@ -15,11 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import math
-import stltool
 import wx
-from wx import glcanvas
 import time
 import threading
 
@@ -140,7 +136,7 @@ class StlViewPanel(wxGLPanel):
         v = map(lambda m, w, b: b * m / w, p, sz, self.build_dimensions[0:2])
         v[1] = self.build_dimensions[1] - v[1]
         v += [300]
-        print "Double-click at "+str(v)+" in "
+        print "Double-click at " + str(v) + " in "
         print self
 
     def forceresize(self):
@@ -160,11 +156,10 @@ class StlViewPanel(wxGLPanel):
         name = self.parent.l.GetString(name)
 
         model = self.parent.models[name]
-        model.offsets = [
-                model.offsets[0] + delta[0],
-                model.offsets[1] + delta[1],
-                model.offsets[2]
-            ]
+        model.offsets = [model.offsets[0] + delta[0],
+                         model.offsets[1] + delta[1],
+                         model.offsets[2]
+                         ]
         self.Refresh()
         return True
 
@@ -178,7 +173,7 @@ class StlViewPanel(wxGLPanel):
         """
         self.mousepos = event.GetPositionTuple()
         if event.Dragging() and event.LeftIsDown():
-            if self.initpos == None:
+            if self.initpos is None:
                 self.initpos = event.GetPositionTuple()
             else:
                 if not event.ShiftDown():
@@ -251,7 +246,7 @@ class StlViewPanel(wxGLPanel):
             if delta > 0:
                 self.zoom(factor, (x, y))
             else:
-                self.zoom(1/factor, (x, y))
+                self.zoom(1 / factor, (x, y))
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
@@ -283,8 +278,7 @@ class StlViewPanel(wxGLPanel):
         event.Skip()
 
     def update(self):
-        while(1):
-            dt = 0.05
+        while True:
             time.sleep(0.05)
             try:
                 wx.CallAfter(self.Refresh)
@@ -321,7 +315,7 @@ class StlViewPanel(wxGLPanel):
 
     def drawmodel(self, m, n):
         batch = pyglet.graphics.Batch()
-        stl = stlview(m.facets, batch = batch)
+        stlview(m.facets, batch = batch)
         m.batch = batch
         m.animoffset = 300
         #print m
@@ -338,10 +332,10 @@ class StlViewPanel(wxGLPanel):
 
         glPushMatrix()
         glTranslatef(0, 0, -self.dist)
-        glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
+        glMultMatrixd(build_rotmatrix(self.basequat))  # Rotate according to trackball
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.2, 0.2, 0.2, 1))
-        glTranslatef(- self.build_dimensions[3] - self.platform.width/2,
-                     - self.build_dimensions[4] - self.platform.depth/2, 0) # Move origin to bottom left of platform
+        glTranslatef(- self.build_dimensions[3] - self.platform.width / 2,
+                     - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
         # Draw platform
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         self.platform.draw()
@@ -378,7 +372,7 @@ class StlViewPanel(wxGLPanel):
 def main():
     app = wx.App(redirect = False)
     frame = wx.Frame(None, -1, "GL Window", size = (400, 400))
-    panel = StlViewPanel(frame)
+    StlViewPanel(frame)
     frame.Show(True)
     app.MainLoop()
     app.Destroy()

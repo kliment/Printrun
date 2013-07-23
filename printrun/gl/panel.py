@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import math
-
 import wx
 from wx import glcanvas
 
@@ -64,7 +61,7 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        if (wx.VERSION > (2,9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
+        if (wx.VERSION > (2, 9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
             self.OnReshape()
@@ -74,7 +71,7 @@ class wxGLPanel(wx.Panel):
     def processPaintEvent(self, event):
         '''Process the drawing event.'''
         self.canvas.SetCurrent(self.context)
- 
+
         self.OnInitGL()
         self.OnDraw()
         event.Skip()
@@ -110,7 +107,7 @@ class wxGLPanel(wx.Panel):
             self.OnReshape()
 
     def OnReshape(self):
-        '''Reshape the OpenGL viewport based on the dimensions of the window.'''
+        """Reshape the OpenGL viewport based on the size of the window"""
         size = self.GetClientSize()
         oldwidth, oldheight = self.width, self.height
         width, height = size.width, size.height
@@ -174,7 +171,8 @@ class wxGLPanel(wx.Panel):
     def mouse_to_3d(self, x, y, z = 1.0):
         x = float(x)
         y = self.height - float(y)
-        # The following could work if we were not initially scaling to zoom on the bed
+        # The following could work if we were not initially scaling to zoom on
+        # the bed
         #if self.orthographic:
         #    return (x - self.width / 2, y - self.height / 2, 0)
         pmat = (GLdouble * 16)()
@@ -183,7 +181,7 @@ class wxGLPanel(wx.Panel):
         px = (GLdouble)()
         py = (GLdouble)()
         pz = (GLdouble)()
-        glGetIntegerv(GL_VIEWPORT, viewport);
+        glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         gluUnProject(x, y, z, mvmat, pmat, viewport, px, py, pz)

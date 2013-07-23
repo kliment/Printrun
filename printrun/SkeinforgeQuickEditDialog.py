@@ -38,16 +38,15 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
             NOTE:  Skeinforge is tightly integrated with Tkinter and there appears to be a dependency which stops radio-button values from being saved.
                    Perhaps this can be solved, but at the moment this dialog cannot modify radio button values.  One will have to use the main Skeinforge application.
         """
-        self.moduleSettingsMap = {
-                                'dimension':['Filament Diameter (mm):','Retraction Distance (millimeters):', 'Retraction Distance (millimeters):','Extruder Retraction Speed (mm/s):'],
-                                'carve':['Layer Height = Extrusion Thickness (mm):', 'Extrusion Width (mm):'],
-                                'chamber':['Heated PrintBed Temperature (Celcius):', 'Turn print Bed Heater Off at Shut Down', 'Turn Extruder Heater Off at Shut Down'],
-                                'cool':['Activate Cool.. but use with a fan!', 'Use Cool if layer takes shorter than(seconds):'],
-                                'fill':['Activate Fill:', 'Infill Solidity (ratio):', 'Fully filled Layers (each top and bottom):', 'Extra Shells on Sparse Layer (layers):', 'Extra Shells on Alternating Solid Layer (layers):'],
-                                'multiply':['Number of Columns (integer):', 'Number of Rows (integer):'],
-                                'raft':['First Layer Main Feedrate (mm/s):','First Layer Perimeter Feedrate (mm/s):','First Layer Flow Rate Infill(scaler):','First Layer Flow Rate Perimeter(scaler):',],
-                                'speed':['Main Feed Rate (mm/s):','Main Flow Rate  (scaler):','Perimeter Feed Rate (mm/s):','Perimeter Flow Rate (scaler):','Travel Feed Rate (mm/s):']
-                               }
+        self.moduleSettingsMap = {'dimension': ['Filament Diameter (mm):', 'Retraction Distance (millimeters):', 'Retraction Distance (millimeters):', 'Extruder Retraction Speed (mm/s):'],
+                                  'carve': ['Layer Height = Extrusion Thickness (mm):', 'Extrusion Width (mm):'],
+                                  'chamber': ['Heated PrintBed Temperature (Celcius):', 'Turn print Bed Heater Off at Shut Down', 'Turn Extruder Heater Off at Shut Down'],
+                                  'cool': ['Activate Cool.. but use with a fan!', 'Use Cool if layer takes shorter than(seconds):'],
+                                  'fill': ['Activate Fill:', 'Infill Solidity (ratio):', 'Fully filled Layers (each top and bottom):', 'Extra Shells on Sparse Layer (layers):', 'Extra Shells on Alternating Solid Layer (layers):'],
+                                  'multiply': ['Number of Columns (integer):', 'Number of Rows (integer):'],
+                                  'raft': ['First Layer Main Feedrate (mm/s):', 'First Layer Perimeter Feedrate (mm/s):', 'First Layer Flow Rate Infill(scaler):', 'First Layer Flow Rate Perimeter(scaler):'],
+                                  'speed': ['Main Feed Rate (mm/s):', 'Main Flow Rate  (scaler):', 'Perimeter Feed Rate (mm/s):', 'Perimeter Flow Rate (scaler):', 'Travel Feed Rate (mm/s):']
+                                  }
 
         self.scrollbarPanel = wx.ScrolledWindow(self, -1, style = wx.TAB_TRAVERSAL)
         self.settingsSizer = self.getProfileSettings()
@@ -140,7 +139,7 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
                 isDirty = False
                 for setting in settings.getReadRepository(repo).preferences:
                     if setting.name == settingName:
-                        if setting.value == None or str(x.GetValue()) != str(setting.value):
+                        if setting.value is None or str(x.GetValue()) != str(setting.value):
                             print('Saving ... ' + settingName + ' = ' + str(x.GetValue()))
                             setting.value = x.GetValue()
                             isDirty = True

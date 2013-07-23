@@ -17,14 +17,13 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-import os, Queue, re
+import os
 
 from printrun.printrun_utils import install_locale
 install_locale('plater')
 
 import wx
 import time
-import random
 import threading
 import math
 import sys
@@ -102,11 +101,10 @@ class showstl(wx.Window):
             return False
         name = self.parent.l.GetString(name)
         model = self.parent.models[name]
-        model.offsets = [
-                model.offsets[0] + delta[0],
-                model.offsets[1] + delta[1],
-                model.offsets[2]
-            ]
+        model.offsets = [model.offsets[0] + delta[0],
+                         model.offsets[1] + delta[1],
+                         model.offsets[2]
+                         ]
         self.Refresh()
         return True
 
@@ -114,10 +112,9 @@ class showstl(wx.Window):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
                 currentpos = event.GetPositionTuple()
-                delta = (
-                        0.5 * (currentpos[0] - self.initpos[0]),
-                        - 0.5 * (currentpos[1] - self.initpos[1])
-                    )
+                delta = (0.5 * (currentpos[0] - self.initpos[0]),
+                         -0.5 * (currentpos[1] - self.initpos[1])
+                         )
                 self.move_shape(delta)
                 self.Refresh()
                 self.initpos = None
@@ -205,10 +202,8 @@ class showstl(wx.Window):
         self.paint(dc = dc)
 
     def paint(self, coord1 = "x", coord2 = "y", dc = None):
-        coords = {"x": 0, "y": 1, "z": 2}
         if dc is None:
             dc = wx.ClientDC(self)
-        offset = [0, 0]
         scale = 2
         dc.SetPen(wx.Pen(wx.Colour(100, 100, 100)))
         for i in xrange(20):
@@ -220,7 +215,6 @@ class showstl(wx.Window):
             dc.DrawLine(i * scale * 50, 0, i * scale * 50, 400)
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
-        t = time.time()
         dcs = wx.MemoryDC()
         for m in self.parent.models.values():
             b = m.bitmap
@@ -241,7 +235,7 @@ class stlwin(wx.Frame):
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
         self.filenames = filenames
-        if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
+        if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
             self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
         else:
             self.SetIcon(wx.Icon(pixmapfile("plater.ico"), wx.BITMAP_TYPE_ICO))
@@ -330,8 +324,9 @@ class stlwin(wx.Frame):
         self.Refresh()
 
     def clear(self, event):
-        result = wx.MessageBox(_('Are you sure you want to clear the grid? All unsaved changes will be lost.'), _('Clear the grid?'),
-            wx.YES_NO | wx.ICON_QUESTION)
+        result = wx.MessageBox(_('Are you sure you want to clear the grid? All unsaved changes will be lost.'),
+                               _('Clear the grid?'),
+                               wx.YES_NO | wx.ICON_QUESTION)
         if (result == 2):
             self.models = {}
             self.l.Clear()
@@ -442,7 +437,6 @@ class stlwin(wx.Frame):
             return
         path = os.path.split(name)[0]
         self.basedir = path
-        t = time.time()
         #print name
         if name.lower().endswith(".stl"):
             #Filter out the path, just show the STL filename.

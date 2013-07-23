@@ -13,9 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import wx, os, math
-from bufferedcanvas import *
-from printrun_utils import *
+import wx
+import math
+from bufferedcanvas import BufferedCanvas
+from printrun_utils import imagefile
 
 def sign(n):
     if n < 0: return -1
@@ -23,7 +24,7 @@ def sign(n):
     else: return 0
 
 class ZButtons(BufferedCanvas):
-    button_ydistances = [7, 30, 55, 83] # ,112
+    button_ydistances = [7, 30, 55, 83]  # ,112
     center = (30, 118)
     label_overlay_positions = {
         0: (1, 18, 11),
@@ -36,7 +37,7 @@ class ZButtons(BufferedCanvas):
         self.bg_bmp = wx.Image(imagefile("control_z.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.range = None
         self.direction = None
-        self.orderOfMagnitudeIdx = 0 # 0 means '1', 1 means '10', 2 means '100', etc.
+        self.orderOfMagnitudeIdx = 0  # 0 means '1', 1 means '10', 2 means '100', etc.
         self.moveCallback = moveCallback
         self.enabled = False
         # Remember the last clicked value, so we can repeat when spacebar pressed
@@ -83,11 +84,11 @@ class ZButtons(BufferedCanvas):
 
         fudge = 11
         x = 0 + fudge
-        w = 59 - fudge*2
+        w = 59 - fudge * 2
         if rng >= 0:
             k = 1 if dir > 0 else 0
-            y = ZButtons.center[1] - (dir * ZButtons.button_ydistances[rng+k])
-            h = ZButtons.button_ydistances[rng+1] - ZButtons.button_ydistances[rng]
+            y = ZButtons.center[1] - (dir * ZButtons.button_ydistances[rng + k])
+            h = ZButtons.button_ydistances[rng + 1] - ZButtons.button_ydistances[rng]
             gc.DrawRoundedRectangle(x, y, w, h, 4)
             # gc.DrawRectangle(x, y, w, h)
         # self.drawPartialPie(dc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
@@ -107,16 +108,16 @@ class ZButtons(BufferedCanvas):
         if self.enabled:
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
-            gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128+64)))
+            gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128 + 64)))
             for idx, kpos in ZButtons.label_overlay_positions.items():
                 if kpos and idx != self.range:
                     r = kpos[2]
-                    gc.DrawEllipse(ZButtons.center[0]-kpos[0]-r, ZButtons.center[1]-kpos[1]-r, r*2, r*2)
+                    gc.DrawEllipse(ZButtons.center[0] - kpos[0] - r, ZButtons.center[1] - kpos[1] - r, r * 2, r * 2)
 
             # Top 'layer' is the mouse-over highlights
             gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
             gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
-            if self.range != None and self.direction != None:
+            if self.range is not None and self.direction is not None:
                 self.highlight(gc, self.range, self.direction)
         else:
             gc.SetPen(wx.Pen(self.bgcolor, 0))

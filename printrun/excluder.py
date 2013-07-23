@@ -24,7 +24,10 @@ class ExcluderWindow(gviz.GvizWindow):
     def __init__(self, excluder, *args, **kwargs):
         super(ExcluderWindow, self).__init__(*args, **kwargs)
         self.SetTitle(_("Part excluder: draw rectangles where print instructions should be ignored"))
-        self.toolbar.AddLabelTool(128, " " + _("Reset selection"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset selection"), longHelp = "")
+        self.toolbar.AddLabelTool(128, " " + _("Reset selection"),
+                                  wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                                  shortHelp = _("Reset selection"),
+                                  longHelp = "")
         self.Bind(wx.EVT_TOOL, self.reset_selection, id = 128)
         self.parent = excluder
         self.p.paint_overlay = self.paint_selection
@@ -39,7 +42,8 @@ class ExcluderWindow(gviz.GvizWindow):
                 self.p.build_dimensions[1] - (y - self.p.build_dimensions[4]))
 
     def mouse(self, event):
-        if event.ButtonUp(wx.MOUSE_BTN_LEFT) or event.ButtonUp(wx.MOUSE_BTN_RIGHT):
+        if event.ButtonUp(wx.MOUSE_BTN_LEFT) \
+           or event.ButtonUp(wx.MOUSE_BTN_RIGHT):
             self.initpos = None
         elif event.Dragging() and event.RightIsDown():
             e = event.GetPositionTuple()
@@ -74,11 +78,11 @@ class ExcluderWindow(gviz.GvizWindow):
 
     def _line_scaler(self, orig):
         x0, y0 = self.gcode_to_real(orig[0], orig[1])
-        x0 = self.p.scale[0]*x0 + self.p.translate[0]
-        y0 = self.p.scale[1]*y0 + self.p.translate[1]
+        x0 = self.p.scale[0] * x0 + self.p.translate[0]
+        y0 = self.p.scale[1] * y0 + self.p.translate[1]
         x1, y1 = self.gcode_to_real(orig[2], orig[3])
-        x1 = self.p.scale[0]*x1 + self.p.translate[0]
-        y1 = self.p.scale[1]*y1 + self.p.translate[1]
+        x1 = self.p.scale[0] * x1 + self.p.translate[0]
+        y1 = self.p.scale[1] * y1 + self.p.translate[1]
         width = max(x0, x1) - min(x0, x1) + 1
         height = max(y0, y1) - min(y0, y1) + 1
         return (min(x0, x1), min(y0, y1), width, height,)
@@ -86,7 +90,8 @@ class ExcluderWindow(gviz.GvizWindow):
     def paint_selection(self, dc):
         dc = wx.GCDC(dc)
         dc.SetPen(wx.TRANSPARENT_PEN)
-        dc.DrawRectangleList([self._line_scaler(rect) for rect in self.parent.rectangles],
+        dc.DrawRectangleList([self._line_scaler(rect)
+                              for rect in self.parent.rectangles],
                              None, wx.Brush((200, 200, 200, 150)))
 
     def reset_selection(self, event):
@@ -117,6 +122,7 @@ class Excluder(object):
 
 if __name__ == '__main__':
     import sys
+    import gcoder
     gcode = gcoder.GCode(open(sys.argv[1]))
     app = wx.App(False)
     ex = Excluder()

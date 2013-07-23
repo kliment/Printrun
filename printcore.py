@@ -19,14 +19,21 @@ from serial import Serial, SerialException
 from select import error as SelectError
 from threading import Thread, Lock
 from Queue import Queue, Empty as QueueEmpty
-import time, getopt, sys
-import platform, os, traceback, errno
+import time
+import getopt
+import sys
+import platform
+import os
+import traceback
+import errno
 import socket
 import re
 from functools import wraps
 from collections import deque
 from printrun.GCodeAnalyzer import GCodeAnalyzer
 from printrun import gcoder
+from printrun.printrun_utils import install_locale
+install_locale('pronterface')
 
 def locked(f):
     @wraps(f)
@@ -52,15 +59,18 @@ def disable_hup(port):
 
 class printcore():
     def __init__(self, port = None, baud = None):
-        """Initializes a printcore instance. Pass the port and baud rate to connect immediately
-        """
+        """Initializes a printcore instance. Pass the port and baud rate to
+           connect immediately"""
         self.baud = None
         self.port = None
         self.analyzer = GCodeAnalyzer()
-        self.printer = None #Serial instance connected to the printer, None when disconnected
-        self.clear = 0 #clear to send, enabled after responses
-        self.online = False #The printer has responded to the initial command and is active
-        self.printing = False #is a print currently running, true if printing, false if paused
+        self.printer = None  # Serial instance connected to the printer,
+                             # should be None when disconnected
+        self.clear = 0  # clear to send, enabled after responses
+        self.online = False  # The printer has responded to the initial command
+                             # and is active
+        self.printing = False  # is a print currently running, true if printing
+                               # , false if paused
         self.mainqueue = None
         self.priqueue = Queue(0)
         self.queueindex = 0
@@ -71,19 +81,19 @@ class printcore():
         self.log = deque(maxlen = 10000)
         self.sent = []
         self.writefailures = 0
-        self.tempcb = None #impl (wholeline)
-        self.recvcb = None #impl (wholeline)
-        self.sendcb = None #impl (wholeline)
-        self.preprintsendcb = None #impl (wholeline)
-        self.printsendcb = None #impl (wholeline)
-        self.layerchangecb = None #impl (wholeline)
-        self.errorcb = None #impl (wholeline)
-        self.startcb = None #impl ()
-        self.endcb = None #impl ()
-        self.onlinecb = None #impl ()
-        self.loud = False #emit sent and received lines to terminal
-        self.greetings = ['start','Grbl ']
-        self.wait = 0 # default wait period for send(), send_now()
+        self.tempcb = None  # impl (wholeline)
+        self.recvcb = None  # impl (wholeline)
+        self.sendcb = None  # impl (wholeline)
+        self.preprintsendcb = None  # impl (wholeline)
+        self.printsendcb = None  # impl (wholeline)
+        self.layerchangecb = None  # impl (wholeline)
+        self.errorcb = None  # impl (wholeline)
+        self.startcb = None  # impl ()
+        self.endcb = None  # impl ()
+        self.onlinecb = None  # impl ()
+        self.loud = False  # emit sent and received lines to terminal
+        self.greetings = ['start', 'Grbl ']
+        self.wait = 0  # default wait period for send(), send_now()
         self.read_thread = None
         self.stop_read_thread = False
         self.send_thread = None
@@ -144,7 +154,8 @@ class printcore():
                         pass
             self.writefailures = 0
             if not is_serial:
-                self.printer_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.printer_tcp = socket.socket(socket.AF_INET,
+                                                 socket.SOCK_STREAM)
                 self.timeout = 0.25
                 self.printer_tcp.settimeout(1.0)
                 try:
@@ -162,7 +173,9 @@ class printcore():
                 disable_hup(self.port)
                 self.printer_tcp = None
                 try:
-                    self.printer = Serial(port = self.port, baudrate = self.baud, timeout = 0.25)
+                    self.printer = Serial(port = self.port,
+                                          baudrate = self.baud,
+                                          timeout = 0.25)
                 except SerialException as e:
                     print _("Could not connect to %s at baudrate %s:") % (self.port, self.baud)
                     self.printer = None
@@ -199,27 +212,29 @@ class printcore():
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                print "Can't read from printer (disconnected?) (SelectError {0}): {1}".format(e.errno, e.strerror)
+                print _("Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, e.strerror)
                 return None
             else:
-                print "SelectError ({0}): {1}".format(e.errno, e.strerror)
+                print _("SelectError ({0}): {1}").format(e.errno, e.strerror)
                 raise
         except SerialException as e:
-            print "Can't read from printer (disconnected?) (SerialException): {0}".format(e)
+            print _("Can't read from printer (disconnected?) (SerialException): {0}").format(e)
             return None
         except socket.error as e:
-            print "Can't read from printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
+            print _("Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, e.strerror)
             return None
         except OSError as e:
-            if e.errno == errno.EAGAIN: # Not a real error, no data was available
+            if e.errno == errno.EAGAIN:  # Not a real error, no data was available
                 return ""
-            print "Can't read from printer (disconnected?) (OS Error {0}): {1}".format(e.errno, e.strerror)
+            print _("Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror)
             return None
 
     def _listen_can_continue(self):
         if self.printer_tcp:
             return not self.stop_read_thread and self.printer
-        return not self.stop_read_thread and self.printer and self.printer.isOpen()
+        return (not self.stop_read_thread
+                and self.printer
+                and self.printer.isOpen())
 
     def _listen_until_online(self):
         while not self.online and self._listen_can_continue():
@@ -227,7 +242,7 @@ class printcore():
             empty_lines = 0
             while self._listen_can_continue():
                 line = self._readline()
-                if line == None: break # connection problem
+                if line is None: break  # connection problem
                 # workaround cases where M105 was sent before printer Serial
                 # was online an empty line means read timeout was reached,
                 # meaning no data was received thus we count those empty lines,
@@ -241,7 +256,8 @@ class printcore():
                     empty_lines += 1
                     if empty_lines == 15: break
                 else: empty_lines = 0
-                if line.startswith(tuple(self.greetings)) or line.startswith('ok') or "T:" in line:
+                if line.startswith(tuple(self.greetings)) \
+                   or line.startswith('ok') or "T:" in line:
                     if self.onlinecb:
                         try: self.onlinecb()
                         except: pass
@@ -256,7 +272,7 @@ class printcore():
             self._listen_until_online()
         while self._listen_can_continue():
             line = self._readline()
-            if line == None:
+            if line is None:
                 break
             if line.startswith('DEBUG_'):
                 continue
@@ -274,7 +290,8 @@ class printcore():
             # Teststrings for resend parsing       # Firmware     exp. result
             # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
-                line = line.replace("N:"," ").replace("N"," ").replace(":"," ")
+                for haystack in ["N:", "N", ":"]:
+                    line = line.replace(haystack, " ")
                 linewords = line.split()
                 while len(linewords) != 0:
                     try:
@@ -311,13 +328,14 @@ class printcore():
                 time.sleep(0.001)
 
     def _checksum(self, command):
-        return reduce(lambda x, y:x^y, map(ord, command))
+        return reduce(lambda x, y: x ^ y, map(ord, command))
 
     def startprint(self, gcode, startindex = 0):
         """Start a print, gcode is an array of gcode commands.
         returns True on success, False if already printing.
-        The print queue will be replaced with the contents of the data array, the next line will be set to 0 and the firmware notified.
-        Printing will then start in a parallel thread.
+        The print queue will be replaced with the contents of the data array,
+        the next line will be set to 0 and the firmware notified. Printing
+        will then start in a parallel thread.
         """
         if self.printing or not self.online or not self.printer:
             return False
@@ -331,25 +349,23 @@ class printcore():
             return True
         self.clear = False
         resuming = (startindex != 0)
-        self.print_thread = Thread(target = self._print, kwargs = {"resuming": resuming})
+        self.print_thread = Thread(target = self._print,
+                                   kwargs = {"resuming": resuming})
         self.print_thread.start()
         return True
 
     # run a simple script if it exists, no multithreading
     def runSmallScript(self, filename):
-        if filename == None: return
+        if filename is None: return
         f = None
         try:
-          f = open(filename)
+            with open(filename) as f:
+                for i in f:
+                    l = i.replace("\n", "")
+                    l = l[:l.find(";")]  # remove comments
+                    self.send_now(l)
         except:
-          pass
-
-        if f != None:
-          for i in f:
-            l = i.replace("\n", "")
-            l = l[:l.find(";")] #remove comment
-            self.send_now(l)
-          f.close()
+            pass
 
     def pause(self):
         """Pauses the print, saving the current position.
@@ -358,51 +374,57 @@ class printcore():
         self.paused = True
         self.printing = False
 
-        # try joining the print thread: enclose it in try/except because we might be calling it from the thread itself
+        # try joining the print thread: enclose it in try/except because we
+        # might be calling it from the thread itself
         try:
-          self.print_thread.join()
+            self.print_thread.join()
         except:
-          pass
+            pass
 
         self.print_thread = None
 
         # saves the status
-        self.pauseX = self.analyzer.x-self.analyzer.xOffset;
-        self.pauseY = self.analyzer.y-self.analyzer.yOffset;
-        self.pauseZ = self.analyzer.z-self.analyzer.zOffset;
-        self.pauseE = self.analyzer.e-self.analyzer.eOffset;
-        self.pauseF = self.analyzer.f;
-        self.pauseRelative = self.analyzer.relative;
+        self.pauseX = self.analyzer.x - self.analyzer.xOffset
+        self.pauseY = self.analyzer.y - self.analyzer.yOffset
+        self.pauseZ = self.analyzer.z - self.analyzer.zOffset
+        self.pauseE = self.analyzer.e - self.analyzer.eOffset
+        self.pauseF = self.analyzer.f
+        self.pauseRelative = self.analyzer.relative
 
     def resume(self):
         """Resumes a paused print.
         """
         if not self.paused: return False
         if self.paused:
-          #restores the status
-          self.send_now("G90") # go to absolute coordinates
+            # restores the status
+            self.send_now("G90")  # go to absolute coordinates
 
-          xyFeedString = ""
-          zFeedString = ""
-          if self.xy_feedrate != None: xyFeedString = " F" + str(self.xy_feedrate)
-          if self.z_feedrate != None: zFeedString = " F" + str(self.z_feedrate)
+            xyFeedString = ""
+            zFeedString = ""
+            if self.xy_feedrate is not None:
+                xyFeedString = " F" + str(self.xy_feedrate)
+            if self.z_feedrate is not None:
+                zFeedString = " F" + str(self.z_feedrate)
 
-          self.send_now("G1 X" + str(self.pauseX) + " Y" + str(self.pauseY) + xyFeedString)
-          self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
-          self.send_now("G92 E" + str(self.pauseE))
+            self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY,
+                                            xyFeedString))
+            self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
+            self.send_now("G92 E" + str(self.pauseE))
 
-          if self.pauseRelative: self.send_now("G91") # go back to relative if needed
-          #reset old feed rate
-          self.send_now("G1 F" + str(self.pauseF))
+            # go back to relative if needed
+            if self.pauseRelative: self.send_now("G91")
+            # reset old feed rate
+            self.send_now("G1 F" + str(self.pauseF))
 
         self.paused = False
         self.printing = True
-        self.print_thread = Thread(target = self._print, kwargs = {"resuming": True})
+        self.print_thread = Thread(target = self._print,
+                                   kwargs = {"resuming": True})
         self.print_thread.start()
 
     def send(self, command, wait = 0):
-        """Adds a command to the checksummed main command queue if printing, or sends the command immediately if not printing
-        """
+        """Adds a command to the checksummed main command queue if printing, or
+        sends the command immediately if not printing"""
 
         if self.online:
             if self.printing:
@@ -413,8 +435,8 @@ class printcore():
             print "Not connected to printer."
 
     def send_now(self, command, wait = 0):
-        """Sends a command to the printer ahead of the command queue, without a checksum
-        """
+        """Sends a command to the printer ahead of the command queue, without a
+        checksum"""
         if self.online:
             self.priqueue.put_nowait(command)
         else:
@@ -451,10 +473,10 @@ class printcore():
     def processHostCommand(self, command):
         command = command.lstrip()
         if command.startswith(";@pause"):
-          if self.pronterface != None:
-            self.pronterface.pause(None)
-          else:
-            self.pause()
+            if self.pronterface is not None:
+                self.pronterface.pause(None)
+            else:
+                self.pause()
 
     def _sendnext(self):
         if not self.printer:
@@ -489,12 +511,12 @@ class printcore():
                 else:
                     next_gline = None
                 gline = self.preprintsendcb(gline, next_gline)
-            if gline == None:
+            if gline is None:
                 self.queueindex += 1
                 self.clear = True
                 return
             tline = gline.raw
-            if tline.lstrip().startswith(";@"): # check for host command
+            if tline.lstrip().startswith(";@"):  # check for host command
                 self.processHostCommand(tline)
                 self.queueindex += 1
                 self.clear = True
@@ -526,7 +548,8 @@ class printcore():
                 self.sentlines[lineno] = command
         if self.printer:
             self.sent.append(command)
-            self.analyzer.Analyze(command) # run the command through the analyzer
+            # run the command through the analyzer
+            self.analyzer.Analyze(command)
             if self.loud:
                 print "SENT:", command
             if self.sendcb:
@@ -537,13 +560,13 @@ class printcore():
                 if self.printer_tcp: self.printer.flush()
                 self.writefailures = 0
             except socket.error as e:
-                print "Can't write to printer (disconnected?) (Socket error {0}): {1}".format(e.errno, e.strerror)
+                print _("Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, e.strerror)
                 self.writefailures += 1
             except SerialException as e:
-                print "Can't write to printer (disconnected?) (SerialException): {0}".format(e)
+                print _("Can't write to printer (disconnected?) (SerialException): {0}").format(e)
                 self.writefailures += 1
             except RuntimeError as e:
-                print "Socket connection broken, disconnected. ({0}): {1}".format(e.errno, e.strerror)
+                print _("Socket connection broken, disconnected. ({0}): {1}").format(e.errno, e.strerror)
                 self.writefailures += 1
 
 if __name__ == '__main__':
@@ -559,16 +582,17 @@ if __name__ == '__main__':
     for o, a in opts:
         if o in ('-h', '--help'):
             # FIXME: Fix help
-            print "Opts are: --help , -b --baud = baudrate, -v --verbose, -s --statusreport"
+            print "Opts are: --help, -b --baud = baudrate, -v --verbose, \
+-s --statusreport"
             sys.exit(1)
         if o in ('-b', '--baud'):
             baud = int(a)
-        if o in ('-v','--verbose'):
+        if o in ('-v', '--verbose'):
             loud = True
-        elif o in ('-s','--statusreport'):
+        elif o in ('-s', '--statusreport'):
             statusreport = True
 
-    if len (args) > 1:
+    if len(args) > 1:
         port = args[-2]
         filename = args[-1]
         print "Printing: %s on %s with baudrate %d" % (filename, port, baud)
@@ -590,7 +614,9 @@ if __name__ == '__main__':
         while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("Progress: %02.1f%%\r" % (100 * float(p.queueindex) / len(p.mainqueue),) )
+                sys.stdout.write("Progress: %02.1f%%\r"
+                                 % (100 * float(p.queueindex)
+                                    / len(p.mainqueue),))
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)
