@@ -18,6 +18,7 @@
 from printrun.printrun_utils import install_locale, iconfile
 install_locale('plater')
 
+import os
 import wx
 
 class Plater(wx.Frame):
@@ -80,7 +81,7 @@ class Plater(wx.Frame):
         self.s = viewer
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
 
-    def autoplate(self, event):
+    def autoplate(self, event = None):
         print _("Autoplating")
         separation = 2
         bedsize = self.build_dimensions[0:3]
@@ -122,7 +123,7 @@ class Plater(wx.Frame):
         result = wx.MessageBox(_('Are you sure you want to clear the grid? All unsaved changes will be lost.'),
                                _('Clear the grid?'),
                                wx.YES_NO | wx.ICON_QUESTION)
-        if (result == 2):
+        if result == 2:
             self.models = {}
             self.l.Clear()
             self.Refresh()
@@ -139,7 +140,6 @@ class Plater(wx.Frame):
         if i != -1:
             m = self.models[self.l.GetString(i)]
             m.offsets[2] = -1.0 * min(m.facetsminz)[0]
-            #print m.offsets[2]
             self.Refresh()
 
     def delete(self, event):
@@ -150,5 +150,40 @@ class Plater(wx.Frame):
             self.l.Select(self.l.GetCount() - 1)
             self.Refresh()
 
+    def add_model(self, name, model):
+        newname = os.path.split(name.lower())[1]
+        c = 1
+        while newname in self.models:
+            newname = os.path.split(name.lower())[1]
+            newname = newname + "(%d)" % c
+            c += 1
+        self.models[newname] = model
+
+        self.l.Append(newname)
+        i = self.l.GetSelection()
+        if i == wx.NOT_FOUND:
+            self.l.Select(0)
+
+        self.l.Select(self.l.GetCount() - 1)
+
     def load(self, event):
+        dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        dlg.SetWildcard(self.load_wildcard)
+        if dlg.ShowModal() == wx.ID_OK:
+            name = dlg.GetPath()
+            self.load_file(name)
+        dlg.Destroy()
+
+    def load_file(self, filename):
+        raise NotImplementedError
+
+    def export(self, event):
+        dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
+        dlg.SetWildcard(self.save_wildcard)
+        if(dlg.ShowModal() == wx.ID_OK):
+            name = dlg.GetPath()
+            self.export_to(name)
+        dlg.Destroy()
+
+    def export_to(self, name):
         raise NotImplementedError

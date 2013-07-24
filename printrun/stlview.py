@@ -126,9 +126,11 @@ class StlViewPanel(wxGLPanel):
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0.1, 0, 0.9))
         if call_reshape:
             self.OnReshape()
-        if self.parent.filenames:
+        if hasattr(self.parent, "filenames") and self.parent.filenames:
             for filename in self.parent.filenames:
-                self.parent.load_file(None, filename)
+                self.parent.load_file(filename)
+            self.parent.autoplate()
+            self.parent.filenames = None
 
     def double(self, event):
         p = event.GetPositionTuple()

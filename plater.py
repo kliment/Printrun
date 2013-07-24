@@ -232,6 +232,10 @@ class showstl(wx.Window):
         del dc
 
 class StlPlater(Plater):
+
+    load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
+    save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
+
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         if glview:
@@ -246,51 +250,18 @@ class StlPlater(Plater):
         except:
             pass
         name = "tempstl/" + str(int(time.time()) % 10000) + ".stl"
-        self.writefiles(name)
+        self.export_to(name)
         if cb is not None:
             cb(name)
         self.Destroy()
 
-    def export(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
-        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL"))
-        if(dlg.ShowModal() == wx.ID_OK):
-            name = dlg.GetPath()
-            self.writefiles(name)
-        dlg.Destroy()
-
-    def writefiles(self, name):
-        sf = open(name.replace(".", "_") + ".scad", "w")
-        facets = []
-        for i in self.models.values():
-
-            r = i.rot
-            o = i.offsets
-            sf.write('translate([%s, %s, %s]) rotate([0, 0, %s]) import_stl("%s");\n' % (str(o[0]), str(o[1]), str(o[2]), r, os.path.split(i.filename)[1]))
-            if r != 0:
-                i = i.rotate([0, 0, r])
-            if o != [0, 0, 0]:
-                i = i.translate([o[0], o[1], o[2]])
-            facets += i.facets
-        sf.close()
-        stltool.emitstl(name, facets, "plater_export")
-        print _("wrote %s") % name
-
-    def load(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"))
-        if dlg.ShowModal() == wx.ID_OK:
-            name = dlg.GetPath()
-            self.load_file(event, name)
-        dlg.Destroy()
-
-    def load_file(self, event, filename):
+    def load_file(self, filename):
         if filename.lower().endswith(".stl"):
-            self.load_stl(event, filename)
+            self.load_stl(filename)
         elif filename.lower().endswith(".scad"):
-            self.load_scad(event, filename)
+            self.load_scad(filename)
 
-    def load_scad(self, event, name):
+    def load_scad(self, name):
         lf = open(name)
         s = [i.replace("\n", "").replace("\r", "").replace(";", "") for i in lf if "stl" in i]
         lf.close()
@@ -317,7 +288,7 @@ class StlPlater(Plater):
             stl_full_path = os.path.join(stl_path[0], str(stl_file))
             self.load_stl_into_model(stl_full_path, stl_file, translate_list, rotate_list[2])
 
-    def load_stl(self, event, name):
+    def load_stl(self, name):
         if not(os.path.exists(name)):
             return
         path = os.path.split(name)[0]
@@ -327,22 +298,21 @@ class StlPlater(Plater):
             #Filter out the path, just show the STL filename.
             self.load_stl_into_model(name, name)
         self.Refresh()
-        #print time.time()-t
 
     def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
-        newname = os.path.split(name.lower())[1]
-        c = 1
-        while newname in self.models:
-            newname = os.path.split(name.lower())[1]
-            newname = newname + "(%d)" % c
-            c += 1
-        self.models[newname] = stltool.stl(path)
-        self.models[newname].offsets = offset
-        self.models[newname].rot = rotation
-        self.models[newname].scale = scale
-        self.models[newname].filename = name
+        model = stltool.stl(path)
+        model.offsets = offset
+        model.rot = rotation
+        model.scale = scale
+        model.filename = name
         minx, miny, minz, maxx, maxy, maxz = (10000, 10000, 10000, 0, 0, 0)
-        for i in self.models[newname].facets:
+        minx = float("inf")
+        miny = float("inf")
+        minz = float("inf")
+        maxx = float("-inf")
+        maxy = float("-inf")
+        maxz = float("-inf")
+        for i in model.facets:
             for j in i[1]:
                 if j[0] < minx:
                     minx = j[0]
@@ -356,20 +326,30 @@ class StlPlater(Plater):
                     maxy = j[1]
                 if j[2] > maxz:
                     maxz = j[2]
-        self.models[newname].dims = [minx, maxx, miny, maxy, minz, maxz]
+        model.dims = [minx, maxx, miny, maxy, minz, maxz]
+        self.add_model(name, model)
         #if minx < 0:
-        #    self.models[newname].offsets[0] = -minx
+        #    model.offsets[0] = -minx
         #if miny < 0:
-        #    self.models[newname].offsets[1] = -miny
-        self.s.drawmodel(self.models[newname], 2)
+        #    model.offsets[1] = -miny
+        self.s.drawmodel(model, 2)
 
-        #print time.time() - t
-        self.l.Append(newname)
-        i = self.l.GetSelection()
-        if i == wx.NOT_FOUND:
-            self.l.Select(0)
+    def export_to(self, name):
+        sf = open(name.replace(".", "_") + ".scad", "w")
+        facets = []
+        for i in self.models.values():
 
-        self.l.Select(self.l.GetCount() - 1)
+            r = i.rot
+            o = i.offsets
+            sf.write('translate([%s, %s, %s]) rotate([0, 0, %s]) import_stl("%s");\n' % (str(o[0]), str(o[1]), str(o[2]), r, os.path.split(i.filename)[1]))
+            if r != 0:
+                i = i.rotate([0, 0, r])
+            if o != [0, 0, 0]:
+                i = i.translate([o[0], o[1], o[2]])
+            facets += i.facets
+        sf.close()
+        stltool.emitstl(name, facets, "plater_export")
+        print _("wrote %s") % name
 
 
 if __name__ == '__main__':
