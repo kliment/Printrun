@@ -55,6 +55,14 @@ class GcodeViewPanel(wxGLPanel):
     def setlayercb(self, layer):
         pass
 
+    def OnInitGL(self, *args, **kwargs):
+        super(GcodeViewPanel, self).OnInitGL(*args, **kwargs)
+        if hasattr(self.parent, "filenames") and self.parent.filenames:
+            for filename in self.parent.filenames:
+                self.parent.load_file(filename)
+            self.parent.autoplate()
+            self.parent.filenames = None
+
     def create_objects(self):
         '''create opengl objects when opengl is initialized'''
         for obj in self.parent.objects:
