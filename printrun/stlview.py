@@ -144,7 +144,6 @@ class StlViewPanel(wxGLPanel):
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
-        threading.Thread(target = self.update).start()
         self.initialized = 0
 
     def move_shape(self, delta):
@@ -249,6 +248,7 @@ class StlViewPanel(wxGLPanel):
                 self.zoom(factor, (x, y))
             else:
                 self.zoom(1 / factor, (x, y))
+        wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
@@ -278,14 +278,7 @@ class StlViewPanel(wxGLPanel):
         if keycode == 93:
             self.rotate_shape(angle)
         event.Skip()
-
-    def update(self):
-        while True:
-            time.sleep(0.05)
-            try:
-                wx.CallAfter(self.Refresh)
-            except:
-                return
+        wx.CallAfter(self.Refresh)
 
     def anim(self, obj):
         g = 50 * 9.8
