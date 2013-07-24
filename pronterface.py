@@ -45,7 +45,7 @@ layerindex = 0
 if os.name == "nt":
     winsize = (800, 530)
 
-from printrun.printrun_utils import pixmapfile, configfile
+from printrun.printrun_utils import iconfile, configfile
 from printrun.gui import MainWindow
 from printrun.excluder import Excluder
 import pronsole
@@ -218,10 +218,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filename = filename
         os.putenv("UBUNTU_MENUPROXY", "0")
         MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
-        if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
-            self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
-        else:
-            self.SetIcon(wx.Icon(pixmapfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
 
         self.statuscheck = False
         self.status_thread = None

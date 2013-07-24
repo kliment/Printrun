@@ -29,6 +29,12 @@ def install_locale(domain):
     else:
         gettext.install(domain, './locale', unicode = 1)
 
+def iconfile(filename):
+    if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
+        return sys.executable
+    else:
+        return pixmapfile("plater.ico")
+
 def imagefile(filename):
     for prefix in ['/usr/local/share/pronterface/images',
                    '/usr/share/pronterface/images']:
