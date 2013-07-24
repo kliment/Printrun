@@ -19,7 +19,7 @@ import os
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-from printrun.printrun_utils import install_locale, iconfile
+from printrun.printrun_utils import install_locale
 install_locale('plater')
 
 import wx
@@ -30,6 +30,7 @@ import sys
 import traceback
 
 from printrun import stltool
+from printrun.objectplater import Plater
 
 glview = False
 if "-nogl" not in sys.argv:
@@ -230,126 +231,14 @@ class showstl(wx.Window):
                 #    break
         del dc
 
-class stlwin(wx.Frame):
+class StlPlater(Plater):
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
-        wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
-        self.filenames = filenames
-        self.SetIcon(wx.Icon(iconfile("plater.ico"), wx.BITMAP_TYPE_ICO))
-        self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel = wx.Panel(self, -1, size = (150, 600), pos = (0, 0))
-        #self.panel.SetBackgroundColour((10, 10, 10))
-        self.l = wx.ListBox(self.panel, size = (300, 180), pos = (0, 30))
-        self.cl = wx.Button(self.panel, label = _("Clear"), pos = (0, 205))
-        self.lb = wx.Button(self.panel, label = _("Load"), pos = (0, 0))
-        if(callback is None):
-            self.eb = wx.Button(self.panel, label = _("Export"), pos = (100, 0))
-            self.eb.Bind(wx.EVT_BUTTON, self.export)
-        else:
-            self.eb = wx.Button(self.panel, label = _("Export"), pos = (200, 205))
-            self.eb.Bind(wx.EVT_BUTTON, self.export)
-            self.edb = wx.Button(self.panel, label = _("Done"), pos = (100, 0))
-            self.edb.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
-            self.eb = wx.Button(self.panel, label = _("Cancel"), pos = (200, 0))
-            self.eb.Bind(wx.EVT_BUTTON, lambda e: self.Destroy())
-        self.sb = wx.Button(self.panel, label = _("Snap to Z = 0"), pos = (00, 255))
-        self.cb = wx.Button(self.panel, label = _("Put at 100, 100"), pos = (0, 280))
-        self.db = wx.Button(self.panel, label = _("Delete"), pos = (0, 305))
-        self.ab = wx.Button(self.panel, label = _("Auto"), pos = (0, 330))
-        self.cl.Bind(wx.EVT_BUTTON, self.clear)
-        self.lb.Bind(wx.EVT_BUTTON, self.right)
-        self.sb.Bind(wx.EVT_BUTTON, self.snap)
-        self.cb.Bind(wx.EVT_BUTTON, self.center)
-        self.db.Bind(wx.EVT_BUTTON, self.delete)
-        self.ab.Bind(wx.EVT_BUTTON, self.autoplate)
-        self.basedir = "."
-        self.models = {}
-        #self.SetBackgroundColour((10, 10, 10))
-        self.mainsizer.Add(self.panel)
-        #self.mainsizer.AddSpacer(10)
-        if build_dimensions:
-            self.build_dimensions = build_dimensions
-        else:
-            self.build_dimensions = [200, 200, 100, 0, 0, 0]
+        super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         if glview:
-            self.s = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
+            viewer = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
         else:
-            self.s = showstl(self, (580, 580), (0, 0))
-        self.mainsizer.Add(self.s, 1, wx.EXPAND)
-        self.SetSizer(self.mainsizer)
-        #self.mainsizer.Fit(self)
-        self.Layout()
-
-        #self.SetClientSize(size)
-
-    def autoplate(self, event):
-        print _("Autoplating")
-        separation = 2
-        bedsize = self.build_dimensions[0:3]
-        cursor = [0, 0, 0]
-        newrow = 0
-        max = [0, 0]
-        for i in self.models:
-            self.models[i].offsets[2] = -1.0 * self.models[i].dims[4]
-            x = abs(self.models[i].dims[0] - self.models[i].dims[1])
-            y = abs(self.models[i].dims[2] - self.models[i].dims[3])
-            centre = [x / 2, y / 2]
-            centreoffset = [self.models[i].dims[0] + centre[0], self.models[i].dims[2] + centre[1]]
-            if (cursor[0] + x + separation) >= bedsize[0]:
-                cursor[0] = 0
-                cursor[1] += newrow + separation
-                newrow = 0
-            if (newrow == 0) or (newrow < y):
-                newrow = y
-            #To the person who works out why the offsets are applied differently here:
-            # Good job, it confused the hell out of me.
-            self.models[i].offsets[0] = cursor[0] + centre[0] - centreoffset[0]
-            self.models[i].offsets[1] = cursor[1] + centre[1] - centreoffset[1]
-            if (max[0] == 0) or (max[0] < (cursor[0] + x)):
-                max[0] = cursor[0] + x
-            if (max[1] == 0) or (max[1] < (cursor[1] + x)):
-                max[1] = cursor[1] + x
-            cursor[0] += x + separation
-            if (cursor[1] + y) >= bedsize[1]:
-                print _("Bed full, sorry sir :(")
-                self.Refresh()
-                return
-        centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
-        for i in self.models:
-            self.models[i].offsets[0] += centreoffset[0]
-            self.models[i].offsets[1] += centreoffset[1]
-        self.Refresh()
-
-    def clear(self, event):
-        result = wx.MessageBox(_('Are you sure you want to clear the grid? All unsaved changes will be lost.'),
-                               _('Clear the grid?'),
-                               wx.YES_NO | wx.ICON_QUESTION)
-        if (result == 2):
-            self.models = {}
-            self.l.Clear()
-            self.Refresh()
-
-    def center(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            m = self.models[self.l.GetString(i)]
-            m.offsets = [100, 100, m.offsets[2]]
-            self.Refresh()
-
-    def snap(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            m = self.models[self.l.GetString(i)]
-            m.offsets[2] = -1.0 * min(m.facetsminz)[0]
-            #print m.offsets[2]
-            self.Refresh()
-
-    def delete(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            del self.models[self.l.GetString(i)]
-            self.l.Delete(i)
-            self.l.Select(self.l.GetCount() - 1)
-            self.Refresh()
+            viewer = showstl(self, (580, 580), (0, 0))
+        self.set_viewer(viewer)
 
     def done(self, event, cb):
         try:
@@ -387,7 +276,7 @@ class stlwin(wx.Frame):
         stltool.emitstl(name, facets, "plater_export")
         print _("wrote %s") % name
 
-    def right(self, event):
+    def load(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"))
         if dlg.ShowModal() == wx.ID_OK:
@@ -485,6 +374,6 @@ class stlwin(wx.Frame):
 
 if __name__ == '__main__':
     app = wx.App(False)
-    main = stlwin(sys.argv[1:])
+    main = StlPlater(sys.argv[1:])
     main.Show()
     app.MainLoop()

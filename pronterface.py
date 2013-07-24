@@ -745,7 +745,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def plate(self, e):
         import plater
         print _("Plate function activated")
-        plater.stlwin(size = (800, 580), callback = self.platecb, parent = self, build_dimensions = self.build_dimensions_list).Show()
+        plater.StlPlater(size = (800, 580), callback = self.platecb, parent = self, build_dimensions = self.build_dimensions_list).Show()
 
     def platecb(self, name):
         print _("Plated %s") % name
