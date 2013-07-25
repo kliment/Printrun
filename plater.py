@@ -308,18 +308,25 @@ class StlPlater(Plater):
     def export_to(self, name):
         sf = open(name.replace(".", "_") + ".scad", "w")
         facets = []
-        for i in self.models.values():
-            r = i.rot
+        for model in self.models.values():
+            r = model.rot
             rot = [0, 0, r] if r else None
-            o = i.offsets
-            co = i.centeroffset
-            trans = [o[0] + co[0], o[1] + co[1], o[2] + co[2]] if any(o) or any(co) else [0, 0, 0]
-            sf.write('translate([%s, %s, %s]) rotate([0, 0, %s]) import_stl("%s");\n' % (trans[0], trans[1], trans[2], r, os.path.split(i.filename)[1]))
+            o = model.offsets
+            co = model.centeroffset
+            sf.write("translate([%s, %s, %s])"
+                     "rotate([0, 0, %s])"
+                     "translate([%s, %s, %s])"
+                     "import(\"%s\");\n" % (co[0], co[1], co[2],
+                                            r,
+                                            o[0], o[1], o[2],
+                                            model.filename))
+            if any(co):
+                model = model.translate(co)
             if rot:
-                i = i.rotate(rot)
-            if trans:
-                i = i.translate(trans)
-            facets += i.facets
+                model = model.rotate(rot)
+            if any(o):
+                model = model.translate(o)
+            facets += model.facets
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
         print _("Wrote plate to %s") % name

@@ -17,7 +17,6 @@
 
 import wx
 import time
-import threading
 
 import pyglet
 pyglet.options['debug_gl'] = True
@@ -358,8 +357,8 @@ class StlViewPanel(wxGLPanel):
             model = self.parent.models[i]
             glPushMatrix()
             glTranslatef(*(model.offsets))
-            glTranslatef(*(model.centeroffset))
             glRotatef(model.rot, 0.0, 0.0, 1.0)
+            glTranslatef(*(model.centeroffset))
             glScalef(*model.scale)
             model.batch.draw()
             glPopMatrix()
