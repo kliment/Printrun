@@ -301,11 +301,10 @@ class StlPlater(Plater):
 
     def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
         model = stltool.stl(path)
-        model.offsets = offset
+        model.offsets = list(offset)
         model.rot = rotation
-        model.scale = scale
+        model.scale = list(scale)
         model.filename = name
-        minx, miny, minz, maxx, maxy, maxz = (10000, 10000, 10000, 0, 0, 0)
         minx = float("inf")
         miny = float("inf")
         minz = float("inf")
