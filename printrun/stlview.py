@@ -155,19 +155,7 @@ class StlViewPanel(wxGLPanel):
         """
         self.mousepos = event.GetPositionTuple()
         if event.Dragging() and event.LeftIsDown():
-            if self.initpos is None:
-                self.initpos = event.GetPositionTuple()
-            else:
-                if not event.ShiftDown():
-                    p1 = self.initpos
-                    p2 = event.GetPositionTuple()
-                    x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                    x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                    self.parent.move_shape((x2 - x1, y2 - y1))
-                    self.initpos = p2
-                    self.Refresh()
-                else:
-                    self.handle_rotation(event)
+            self.handle_rotation(event)
         elif event.Dragging() and event.RightIsDown():
             self.handle_translation(event)
         elif event.ButtonUp(wx.MOUSE_BTN_LEFT):

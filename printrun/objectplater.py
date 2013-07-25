@@ -19,6 +19,7 @@ from printrun.printrun_utils import install_locale, iconfile
 install_locale('plater')
 
 import os
+import types
 import wx
 
 class Plater(wx.Frame):
@@ -78,6 +79,25 @@ class Plater(wx.Frame):
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
 
     def set_viewer(self, viewer):
+        # Patch handle_rotation on the fly
+        if hasattr(viewer, "handle_rotation"):
+            orig_handler = viewer.handle_rotation
+
+            def handle_rotation(self, event, orig_handler = orig_handler):
+                if self.initpos is None:
+                    self.initpos = event.GetPositionTuple()
+                else:
+                    if not event.ShiftDown():
+                        p1 = self.initpos
+                        p2 = event.GetPositionTuple()
+                        x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
+                        x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
+                        self.parent.move_shape((x2 - x1, y2 - y1))
+                        self.initpos = p2
+                    else:
+                        orig_handler(self, event)
+
+            viewer.handle_rotation = types.MethodType(handle_rotation, viewer)
         self.s = viewer
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
 
