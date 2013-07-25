@@ -354,12 +354,14 @@ class StlViewPanel(wxGLPanel):
         glPushMatrix()
 
         # Draw objects
-        for i in self.parent.models.values():
+        for i in self.parent.models:
+            model = self.parent.models[i]
             glPushMatrix()
-            glTranslatef(*(i.offsets))
-            glRotatef(i.rot, 0.0, 0.0, 1.0)
-            glScalef(*i.scale)
-            i.batch.draw()
+            glTranslatef(*(model.offsets))
+            glTranslatef(*(model.centeroffset))
+            glRotatef(model.rot, 0.0, 0.0, 1.0)
+            glScalef(*model.scale)
+            model.batch.draw()
             glPopMatrix()
         glPopMatrix()
         glPopMatrix()

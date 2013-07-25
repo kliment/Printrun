@@ -327,10 +327,9 @@ class StlPlater(Plater):
                     maxz = j[2]
         model.dims = [minx, maxx, miny, maxy, minz, maxz]
         self.add_model(name, model)
-        #if minx < 0:
-        #    model.offsets[0] = -minx
-        #if miny < 0:
-        #    model.offsets[1] = -miny
+        model.centeroffset = [(maxx - minx) / 2,
+                              (maxy - miny) / 2,
+                              0]
         self.s.drawmodel(model, 2)
 
     def export_to(self, name):
