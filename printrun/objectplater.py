@@ -118,6 +118,17 @@ class Plater(wx.Frame):
                          ]
         return True
 
+    def rotate_shape(self, angle):
+        """rotates acive shape
+        positive angle is clockwise
+        """
+        name = self.l.GetSelection()
+        if name == wx.NOT_FOUND:
+            return False
+        name = self.l.GetString(name)
+        model = self.models[name]
+        model.rot += angle
+
     def autoplate(self, event = None):
         print _("Autoplating")
         separation = 2

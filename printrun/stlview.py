@@ -164,17 +164,11 @@ class StlViewPanel(wxGLPanel):
         elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
             if self.initpos is not None:
                 self.initpos = None
-
-    def rotate_shape(self, angle):
-        """rotates acive shape
-        positive angle is clockwise
-        """
-        name = self.parent.l.GetSelection()
-        if name == wx.NOT_FOUND:
-            return False
-        name = self.parent.l.GetString(name)
-        model = self.parent.models[name]
-        model.rot += angle
+        else:
+            event.Skip()
+            return
+        event.Skip()
+        wx.CallAfter(self.Refresh)
 
     def wheel(self, event):
         """react to mouse wheel actions:
@@ -185,9 +179,9 @@ class StlViewPanel(wxGLPanel):
         if not event.ShiftDown():
             angle = 10
             if delta > 0:
-                self.rotate_shape(angle / 2)
+                self.parent.rotate_shape(angle / 2)
             else:
-                self.rotate_shape(-angle / 2)
+                self.parent.rotate_shape(-angle / 2)
         else:
             factor = 1.05
             x, y = event.GetPositionTuple()
@@ -221,10 +215,10 @@ class StlViewPanel(wxGLPanel):
             self.parent.move_shape((0, -step))
         #[
         if keycode == 91:
-            self.rotate_shape(-angle)
+            self.parent.rotate_shape(-angle)
         #]
         if keycode == 93:
-            self.rotate_shape(angle)
+            self.parent.rotate_shape(angle)
         event.Skip()
         wx.CallAfter(self.Refresh)
 
