@@ -49,6 +49,7 @@ class GcodePlater(Plater):
         model = actors.GcodeModel()
         model.load_data(gcode)
         obj = gcview.GCObject(model)
+        obj.gcode = gcode
         obj.dims = [gcode.xmin, gcode.xmax,
                     gcode.ymin, gcode.ymax,
                     gcode.zmin, gcode.zmax]
