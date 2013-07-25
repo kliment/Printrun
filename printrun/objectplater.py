@@ -150,39 +150,58 @@ class Plater(wx.Frame):
     def autoplate(self, event = None):
         print _("Autoplating")
         separation = 2
-        bedsize = self.build_dimensions[0:3]
-        cursor = [0, 0, 0]
-        newrow = 0
-        max = [0, 0]
-        for i in self.models:
-            self.models[i].offsets[2] = -1.0 * self.models[i].dims[4]
-            x = abs(self.models[i].dims[0] - self.models[i].dims[1])
-            y = abs(self.models[i].dims[2] - self.models[i].dims[3])
-            centre = [x / 2, y / 2]
-            centreoffset = [self.models[i].dims[0] + centre[0], self.models[i].dims[2] + centre[1]]
-            if (cursor[0] + x + separation) >= bedsize[0]:
-                cursor[0] = 0
-                cursor[1] += newrow + separation
-                newrow = 0
-            if (newrow == 0) or (newrow < y):
-                newrow = y
-            #To the person who works out why the offsets are applied differently here:
-            # Good job, it confused the hell out of me.
-            self.models[i].offsets[0] = cursor[0] + centre[0] - centreoffset[0]
-            self.models[i].offsets[1] = cursor[1] + centre[1] - centreoffset[1]
-            if (max[0] == 0) or (max[0] < (cursor[0] + x)):
-                max[0] = cursor[0] + x
-            if (max[1] == 0) or (max[1] < (cursor[1] + x)):
-                max[1] = cursor[1] + x
-            cursor[0] += x + separation
-            if (cursor[1] + y) >= bedsize[1]:
-                print _("Bed full, sorry sir :(")
-                self.Refresh()
-                return
-        centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
-        for i in self.models:
-            self.models[i].offsets[0] += centreoffset[0]
-            self.models[i].offsets[1] += centreoffset[1]
+        try:
+            from printrun import packer
+            p = packer.Packer()
+            for i in self.models:
+                width = abs(self.models[i].dims[0] - self.models[i].dims[1])
+                height = abs(self.models[i].dims[2] - self.models[i].dims[3])
+                p.add_rect(width, height, data = i)
+            # FIXME: probably wrong, not taking offsets into account
+            centerx = self.build_dimensions[0] / 2
+            centery = self.build_dimensions[1] / 2
+            rects = p.pack(padding = separation,
+                           center = packer.Vector2(centerx, centery))
+            for rect in rects:
+                i = rect.data
+                self.models[i].offsets[0] = rect.position.x
+                self.models[i].offsets[1] = rect.position.y
+        except ImportError:
+            bedsize = self.build_dimensions[0:3]
+            cursor = [0, 0, 0]
+            newrow = 0
+            max = [0, 0]
+            for i in self.models:
+                self.models[i].offsets[2] = -1.0 * self.models[i].dims[4]
+                x = abs(self.models[i].dims[0] - self.models[i].dims[1])
+                y = abs(self.models[i].dims[2] - self.models[i].dims[3])
+                centre = [x / 2, y / 2]
+                centreoffset = [self.models[i].dims[0] + centre[0],
+                                self.models[i].dims[2] + centre[1]]
+                if (cursor[0] + x + separation) >= bedsize[0]:
+                    cursor[0] = 0
+                    cursor[1] += newrow + separation
+                    newrow = 0
+                if (newrow == 0) or (newrow < y):
+                    newrow = y
+                # To the person who works out why the offsets are applied
+                # differently here:
+                #    Good job, it confused the hell out of me.
+                self.models[i].offsets[0] = cursor[0] + centre[0] - centreoffset[0]
+                self.models[i].offsets[1] = cursor[1] + centre[1] - centreoffset[1]
+                if (max[0] == 0) or (max[0] < (cursor[0] + x)):
+                    max[0] = cursor[0] + x
+                if (max[1] == 0) or (max[1] < (cursor[1] + x)):
+                    max[1] = cursor[1] + x
+                cursor[0] += x + separation
+                if (cursor[1] + y) >= bedsize[1]:
+                    print _("Bed full, sorry sir :(")
+                    self.Refresh()
+                    return
+            centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
+            for i in self.models:
+                self.models[i].offsets[0] += centreoffset[0]
+                self.models[i].offsets[1] += centreoffset[1]
         self.Refresh()
 
     def clear(self, event):
