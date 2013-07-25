@@ -103,6 +103,19 @@ class Plater(wx.Frame):
                     else:
                         orig_handler(event)
             patch_method(viewer, "handle_rotation", handle_rotation)
+        # Patch handle_wheel on the fly
+        if hasattr(viewer, "handle_wheel"):
+            def handle_wheel(self, event, orig_handler):
+                if not event.ShiftDown():
+                    delta = event.GetWheelRotation()
+                    angle = 10
+                    if delta > 0:
+                        self.parent.rotate_shape(angle / 2)
+                    else:
+                        self.parent.rotate_shape(-angle / 2)
+                else:
+                    orig_handler(event)
+            patch_method(viewer, "handle_wheel", handle_wheel)
         self.s = viewer
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
 

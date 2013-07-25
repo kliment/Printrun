@@ -154,14 +154,10 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
-    def wheel(self, event):
-        """react to mouse wheel actions:
-            without shift: set max layer
-            with shift: zoom viewport
-        """
+    def handle_wheel(self, event):
         delta = event.GetWheelRotation()
         factor = 1.05
-        if event.ShiftDown():
+        if hasattr(self.parent, "model") and event.ShiftDown():
             if not self.parent.model:
                 return
             count = 1 if not event.ControlDown() else 10
@@ -175,6 +171,14 @@ class GcodeViewPanel(wxGLPanel):
             self.zoom(factor, (x, y))
         else:
             self.zoom(1 / factor, (x, y))
+
+    def wheel(self, event):
+        """react to mouse wheel actions:
+            without shift: set max layer
+            with shift: zoom viewport
+        """
+        self.handle_wheel(event)
+        wx.CallAfter(self.Refresh)
 
     def fit(self):
         if not self.parent.model or not self.parent.model.loaded:

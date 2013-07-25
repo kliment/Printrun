@@ -170,26 +170,22 @@ class StlViewPanel(wxGLPanel):
         event.Skip()
         wx.CallAfter(self.Refresh)
 
+    def handle_wheel(self, event):
+        delta = event.GetWheelRotation()
+        factor = 1.05
+        x, y = event.GetPositionTuple()
+        x, y, _ = self.mouse_to_3d(x, y)
+        if delta > 0:
+            self.zoom(factor, (x, y))
+        else:
+            self.zoom(1 / factor, (x, y))
+
     def wheel(self, event):
         """react to mouse wheel actions:
         rotate object
             with shift zoom viewport
         """
-        delta = event.GetWheelRotation()
-        if not event.ShiftDown():
-            angle = 10
-            if delta > 0:
-                self.parent.rotate_shape(angle / 2)
-            else:
-                self.parent.rotate_shape(-angle / 2)
-        else:
-            factor = 1.05
-            x, y = event.GetPositionTuple()
-            x, y, _ = self.mouse_to_3d(x, y)
-            if delta > 0:
-                self.zoom(factor, (x, y))
-            else:
-                self.zoom(1 / factor, (x, y))
+        self.handle_wheel(event)
         wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
