@@ -73,7 +73,10 @@ class GcodePlater(Plater):
             models = self.models.values()
             last_real_position = None
             for model in models:
-                #r = model.rot # no rotation support for now
+                r = model.rot  # no rotation support for now
+                if r != 0:
+                    print _("Warning: no rotation support for now, "
+                            "object won't be correctly rotated")
                 o = model.offsets
                 co = model.centeroffset
                 offset_pos = last_real_position if last_real_position is not None else [0, 0, 0]
