@@ -309,14 +309,16 @@ class StlPlater(Plater):
         sf = open(name.replace(".", "_") + ".scad", "w")
         facets = []
         for i in self.models.values():
-
             r = i.rot
+            rot = [0, 0, r] if r else None
             o = i.offsets
-            sf.write('translate([%s, %s, %s]) rotate([0, 0, %s]) import_stl("%s");\n' % (str(o[0]), str(o[1]), str(o[2]), r, os.path.split(i.filename)[1]))
-            if r != 0:
-                i = i.rotate([0, 0, r])
-            if o != [0, 0, 0]:
-                i = i.translate([o[0], o[1], o[2]])
+            co = i.centeroffset
+            trans = [o[0] + co[0], o[1] + co[1], o[2] + co[2]] if any(o) or any(co) else [0, 0, 0]
+            sf.write('translate([%s, %s, %s]) rotate([0, 0, %s]) import_stl("%s");\n' % (trans[0], trans[1], trans[2], r, os.path.split(i.filename)[1]))
+            if rot:
+                i = i.rotate(rot)
+            if trans:
+                i = i.translate(trans)
             facets += i.facets
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
