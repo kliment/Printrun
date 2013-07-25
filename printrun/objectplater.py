@@ -22,6 +22,14 @@ import os
 import types
 import wx
 
+def patch_method(obj, method, replacement):
+    orig_handler = getattr(obj, method)
+
+    def wrapped(*a, **kwargs):
+        kwargs['orig_handler'] = orig_handler
+        return replacement(*a, **kwargs)
+    setattr(obj, method, types.MethodType(wrapped, obj))
+
 class Plater(wx.Frame):
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         super(Plater, self).__init__(parent, title = _("Plate building tool"), size = size)
@@ -81,9 +89,7 @@ class Plater(wx.Frame):
     def set_viewer(self, viewer):
         # Patch handle_rotation on the fly
         if hasattr(viewer, "handle_rotation"):
-            orig_handler = viewer.handle_rotation
-
-            def handle_rotation(self, event, orig_handler = orig_handler):
+            def handle_rotation(self, event, orig_handler):
                 if self.initpos is None:
                     self.initpos = event.GetPositionTuple()
                 else:
@@ -95,9 +101,8 @@ class Plater(wx.Frame):
                         self.parent.move_shape((x2 - x1, y2 - y1))
                         self.initpos = p2
                     else:
-                        orig_handler(self, event)
-
-            viewer.handle_rotation = types.MethodType(handle_rotation, viewer)
+                        orig_handler(event)
+            patch_method(viewer, "handle_rotation", handle_rotation)
         self.s = viewer
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
 
