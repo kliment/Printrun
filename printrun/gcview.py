@@ -20,7 +20,7 @@ import wx
 
 from . import gcoder
 from .gl.panel import wxGLPanel
-from .gl.trackball import trackball, mulquat, build_rotmatrix
+from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
 
 from pyglet.gl import glPushMatrix, glPopMatrix, \
@@ -107,35 +107,6 @@ class GcodeViewPanel(wxGLPanel):
     def double(self, event):
         if self.parent.clickcb:
             self.parent.clickcb(event)
-
-    def handle_rotation(self, event):
-        if self.initpos is None:
-            self.initpos = event.GetPositionTuple()
-        else:
-            p1 = self.initpos
-            p2 = event.GetPositionTuple()
-            sz = self.GetClientSize()
-            p1x = float(p1[0]) / (sz[0] / 2) - 1
-            p1y = 1 - float(p1[1]) / (sz[1] / 2)
-            p2x = float(p2[0]) / (sz[0] / 2) - 1
-            p2y = 1 - float(p2[1]) / (sz[1] / 2)
-            quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
-            self.basequat = mulquat(self.basequat, quat)
-            self.initpos = p2
-
-    def handle_translation(self, event):
-        if self.initpos is None:
-            self.initpos = event.GetPositionTuple()
-        else:
-            p1 = self.initpos
-            p2 = event.GetPositionTuple()
-            if self.orthographic:
-                x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                glTranslatef(x2 - x1, y2 - y1, 0)
-            else:
-                glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
-            self.initpos = p2
 
     def move(self, event):
         """react to mouse actions:
