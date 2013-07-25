@@ -30,8 +30,8 @@ from printrun.gl.libtatlin import actors
 
 class GcodePlater(Plater):
 
-    load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
-    save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
+    load_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)")
+    save_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)")
 
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         super(GcodePlater, self).__init__(filenames, size, callback, parent, build_dimensions)
