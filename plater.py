@@ -322,7 +322,7 @@ class StlPlater(Plater):
             facets += i.facets
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
-        print _("wrote %s") % name
+        print _("Wrote plate to %s") % name
 
 
 if __name__ == '__main__':
