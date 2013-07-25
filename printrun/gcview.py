@@ -96,6 +96,7 @@ class GcodeViewPanel(wxGLPanel):
                 continue
             glPushMatrix()
             glTranslatef(*(obj.offsets))
+            glTranslatef(*(obj.centeroffset))
             glRotatef(obj.rot, 0.0, 0.0, 1.0)
             glScalef(*obj.scale)
 
@@ -262,6 +263,7 @@ class GCObject(object):
 
     def __init__(self, model):
         self.offsets = [0, 0, 0]
+        self.centeroffset = [0, 0, 0]
         self.rot = 0
         self.curlayer = 0.0
         self.scale = [1.0, 1.0, 1.0]
