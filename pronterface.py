@@ -26,6 +26,7 @@ import traceback
 import cStringIO as StringIO
 import subprocess
 import shlex
+import glob
 
 from printrun.printrun_utils import install_locale, RemainingTimeEstimator
 install_locale('pronterface')
@@ -188,8 +189,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.excluder_z_rel = None
     fgcode = property(_get_fgcode, _set_fgcode)
 
-    def __init__(self, filename = None, size = winsize):
+    def __init__(self, app, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
+        self.app = app
         #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed and endstops at 0, 0 and 0
         monitorsetting = BooleanSetting("monitor", False)
         monitorsetting.hidden = True
@@ -198,6 +200,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
+        self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "UI"))
         self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"))
@@ -625,6 +628,20 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.recover, self.recoverbtn)
         self.menustrip.Append(m, _("&Advanced"))
 
+        if self.settings.slic3rintegration:
+            m = wx.Menu()
+            self.menustrip.Append(m, _("&Slic3r"))
+            print_menu = wx.Menu()
+            filament_menu = wx.Menu()
+            printer_menu = wx.Menu()
+            m.AppendSubMenu(print_menu, _("Print &settings"))
+            m.AppendSubMenu(filament_menu, _("&Filament"))
+            m.AppendSubMenu(printer_menu, _("&Printer"))
+            menus = {"print": print_menu,
+                     "filament": filament_menu,
+                     "printer": printer_menu}
+            self.load_slic3r_configs(menus)
+
         # Settings menu
         m = wx.Menu()
         self.macros_menu = wx.Menu()
@@ -648,6 +665,57 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.menustrip.Append(m, _("&Settings"))
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
+
+    def load_slic3r_configs(self, menus):
+        # Hack to get correct path for Slic3r config
+        orig_appname = self.app.GetAppName()
+        self.app.SetAppName("Slic3r")
+        configpath = wx.StandardPaths.Get().GetUserDataDir()
+        self.app.SetAppName(orig_appname)
+        configfile = os.path.join(configpath, "slic3r.ini")
+        config = self.read_slic3r_config(configfile)
+        for cat in menus:
+            menu = menus[cat]
+            pattern = os.path.join(configpath, cat, "*.ini")
+            files = sorted(glob.glob(pattern))
+            try: preset = config.get("presets", cat)
+            except: preset = None
+            for f in files:
+                name = os.path.splitext(os.path.basename(f))[0]
+                item = menu.Append(-1, name, f, wx.ITEM_RADIO)
+                item.Check(os.path.basename(f) == preset)
+                self.Bind(wx.EVT_MENU,
+                          lambda event, cat = cat, f = f:
+                          self.set_slic3r_config(configfile, cat, f), item)
+
+    def read_slic3r_config(self, configfile, parser = None):
+        import ConfigParser
+        parser = ConfigParser.RawConfigParser()
+
+        class add_header(object):
+            def __init__(self, f):
+                self.f = f
+                self.header = '[dummy]'
+
+            def readline(self):
+                if self.header:
+                    try: return self.header
+                    finally: self.header = None
+                else:
+                    return self.f.readline()
+        parser.readfp(add_header(open(configfile)), configfile)
+        return parser
+
+    def set_slic3r_config(self, configfile, cat, file):
+        config = self.read_slic3r_config(configfile)
+        config.set("presets", cat, os.path.basename(file))
+        f = StringIO.StringIO()
+        config.write(f)
+        data = f.getvalue()
+        f.close()
+        data = data.replace("[dummy]\n", "")
+        with open(configfile, "w") as f:
+            f.write(data)
 
     def doneediting(self, gcode):
         open(self.filename, "w").write("\n".join(gcode))
@@ -1790,7 +1858,8 @@ class PronterApp(wx.App):
 
     def __init__(self, *args, **kwargs):
         super(PronterApp, self).__init__(*args, **kwargs)
-        self.mainwindow = PronterWindow()
+        self.SetAppName("Pronterface")
+        self.mainwindow = PronterWindow(self)
         self.mainwindow.Show()
 
 if __name__ == '__main__':
