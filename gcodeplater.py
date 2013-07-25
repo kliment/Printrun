@@ -59,6 +59,15 @@ class GcodePlater(Plater):
         self.add_model(filename, obj)
         wx.CallAfter(self.Refresh)
 
+    # What's hard in there ?
+    # 1) finding the order in which the objects are printed
+    # 2) handling layers correctly
+    # 3) handling E correctly
+    # 4) handling position shifts: should we either reset absolute 0 using G92
+    # or should we rewrite all positions ?
+    # 5) handling the start & end gcode properly ?
+    # Initial implementation should just print the objects sequentially,
+    # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
         raise NotImplementedError
 
