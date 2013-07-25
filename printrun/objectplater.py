@@ -81,6 +81,23 @@ class Plater(wx.Frame):
         self.s = viewer
         self.mainsizer.Add(self.s, 1, wx.EXPAND)
 
+    def move_shape(self, delta):
+        """moves shape (selected in l, which is list ListBox of shapes)
+        by an offset specified in tuple delta.
+        Positive numbers move to (rigt, down)"""
+        name = self.l.GetSelection()
+        if name == wx.NOT_FOUND:
+            return False
+
+        name = self.l.GetString(name)
+
+        model = self.models[name]
+        model.offsets = [model.offsets[0] + delta[0],
+                         model.offsets[1] + delta[1],
+                         model.offsets[2]
+                         ]
+        return True
+
     def autoplate(self, event = None):
         print _("Autoplating")
         separation = 2

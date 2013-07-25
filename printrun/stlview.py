@@ -145,24 +145,6 @@ class StlViewPanel(wxGLPanel):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
         self.initialized = 0
 
-    def move_shape(self, delta):
-        """moves shape (selected in l, which is list ListBox of shapes)
-        by an offset specified in tuple delta.
-        Positive numbers move to (rigt, down)"""
-        name = self.parent.l.GetSelection()
-        if name == wx.NOT_FOUND:
-            return False
-
-        name = self.parent.l.GetString(name)
-
-        model = self.parent.models[name]
-        model.offsets = [model.offsets[0] + delta[0],
-                         model.offsets[1] + delta[1],
-                         model.offsets[2]
-                         ]
-        self.Refresh()
-        return True
-
     def move(self, event):
         """react to mouse actions:
         no mouse: show red mousedrop
@@ -181,40 +163,19 @@ class StlViewPanel(wxGLPanel):
                     p2 = event.GetPositionTuple()
                     x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
                     x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                    self.move_shape((x2 - x1, y2 - y1))
+                    self.parent.move_shape((x2 - x1, y2 - y1))
                     self.initpos = p2
-                    return
-                p1 = self.initpos
-                p2 = event.GetPositionTuple()
-                sz = self.GetClientSize()
-                p1x = (float(p1[0]) - sz[0] / 2) / (sz[0] / 2)
-                p1y = -(float(p1[1]) - sz[1] / 2) / (sz[1] / 2)
-                p2x = (float(p2[0]) - sz[0] / 2) / (sz[0] / 2)
-                p2y = -(float(p2[1]) - sz[1] / 2) / (sz[1] / 2)
-                quat = trackball(p1x, p1y, p2x, p2y, 0.8)
-                self.basequat = mulquat(self.basequat, quat)
-                self.initpos = p2
-
+                    self.Refresh()
+                else:
+                    self.handle_rotation(event)
+        elif event.Dragging() and event.RightIsDown():
+            self.handle_translation(event)
         elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if self.initpos is not None:
                 self.initpos = None
         elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
             if self.initpos is not None:
                 self.initpos = None
-
-        elif event.Dragging() and event.RightIsDown():
-            if self.initpos is None:
-                self.initpos = event.GetPositionTuple()
-            else:
-                p1 = self.initpos
-                p2 = event.GetPositionTuple()
-                if self.orthographic:
-                    x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                    x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                    glTranslatef(x2 - x1, y2 - y1, 0)
-                else:
-                    glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
-                self.initpos = p2
 
     def rotate_shape(self, angle):
         """rotates acive shape
@@ -260,16 +221,16 @@ class StlViewPanel(wxGLPanel):
             angle = 1
         #h
         if keycode == 72:
-            self.move_shape((-step, 0))
+            self.parent.move_shape((-step, 0))
         #l
         if keycode == 76:
-            self.move_shape((step, 0))
+            self.parent.move_shape((step, 0))
         #j
         if keycode == 75:
-            self.move_shape((0, step))
+            self.parent.move_shape((0, step))
         #k
         if keycode == 74:
-            self.move_shape((0, -step))
+            self.parent.move_shape((0, -step))
         #[
         if keycode == 91:
             self.rotate_shape(-angle)
