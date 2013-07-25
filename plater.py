@@ -300,8 +300,8 @@ class StlPlater(Plater):
                     maxz = j[2]
         model.dims = [minx, maxx, miny, maxy, minz, maxz]
         self.add_model(name, model)
-        model.centeroffset = [(maxx - minx) / 2,
-                              (maxy - miny) / 2,
+        model.centeroffset = [-(model.dims[1] + model.dims[0]) / 2,
+                              -(model.dims[3] + model.dims[2]) / 2,
                               0]
         self.s.drawmodel(model, 2)
 

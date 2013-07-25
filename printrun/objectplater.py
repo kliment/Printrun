@@ -164,8 +164,9 @@ class Plater(wx.Frame):
                            center = packer.Vector2(centerx, centery))
             for rect in rects:
                 i = rect.data
-                self.models[i].offsets[0] = rect.position.x
-                self.models[i].offsets[1] = rect.position.y
+                position = rect.center()
+                self.models[i].offsets[0] = position.x
+                self.models[i].offsets[1] = position.y
         except ImportError:
             bedsize = self.build_dimensions[0:3]
             cursor = [0, 0, 0]
