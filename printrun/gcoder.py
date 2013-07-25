@@ -86,7 +86,8 @@ class Layer(list):
         super(Layer, self).__init__(lines)
         self.z = z
 
-    def _preprocess(self, current_x, current_y, current_z):
+    def _preprocess(self, current_x, current_y, current_z,
+                    offset_x, offset_y, offset_z):
         xmin = float("inf")
         ymin = float("inf")
         zmin = 0
@@ -95,7 +96,7 @@ class Layer(list):
         zmax = float("-inf")
 
         for line in self:
-            if not line.is_move and line.command != "G92":
+            if not line.is_move and line.command != "G92" and line.command != "G28":
                 continue
             if line.is_move:
                 x = line.x
@@ -106,6 +107,10 @@ class Layer(list):
                     x = current_x + (x or 0)
                     y = current_y + (y or 0)
                     z = current_z + (z or 0)
+                else:
+                    if line.x: x = line.x + offset_x
+                    if line.y: y = line.y + offset_y
+                    if line.z: z = line.z + offset_z
 
                 current_x = x or current_x
                 current_y = y or current_y
@@ -122,15 +127,24 @@ class Layer(list):
                         zmin = min(zmin, current_z)
                         zmax = max(zmax, current_z)
 
-            else:
-                current_x = line.x or current_x
-                current_y = line.y or current_y
-                current_z = line.z or current_z
+            elif line.command == "G28":
+                if not any([line.x, line.y, line.z]):
+                    current_x = current_y = current_z = 0
+                else:
+                    if line.x: current_x = 0
+                    if line.y: current_y = 0
+                    if line.z: current_z = 0
+
+            elif line.command == "G92":
+                if line.x: offset_x += current_x - line.x
+                if line.y: offset_y += current_y - line.y
+                if line.z: offset_z += current_z - line.z
 
             line.current_x = current_x
             line.current_y = current_y
             line.current_z = current_z
         return ((current_x, current_y, current_z),
+                (offset_x, offset_y, offset_z),
                 (xmin, xmax), (ymin, ymax), (zmin, zmax))
 
 class GCode(object):
@@ -356,10 +370,16 @@ class GCode(object):
         current_x = 0
         current_y = 0
         current_z = 0
+        offset_x = 0
+        offset_y = 0
+        offset_z = 0
 
         for l in self.all_layers:
-            (current_x, current_y, current_z), (xm, xM), (ym, yM), (zm, zM) = \
-                l._preprocess(current_x, current_y, current_z)
+            meta = l._preprocess(current_x, current_y, current_z,
+                                 offset_x, offset_y, offset_z)
+            current_x, current_y, current_z = meta[0]
+            offset_x, offset_y, offset_z = meta[1]
+            (xm, xM), (ym, yM), (zm, zM) = meta[2:]
             xmin = min(xm, xmin)
             xmax = max(xM, xmax)
             ymin = min(ym, ymin)
