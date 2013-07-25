@@ -316,9 +316,9 @@ class StlPlater(Plater):
             sf.write("translate([%s, %s, %s])"
                      "rotate([0, 0, %s])"
                      "translate([%s, %s, %s])"
-                     "import(\"%s\");\n" % (co[0], co[1], co[2],
+                     "import(\"%s\");\n" % (o[0], o[1], o[2],
                                             r,
-                                            o[0], o[1], o[2],
+                                            co[0], co[1], co[2],
                                             model.filename))
             if any(co):
                 model = model.translate(co)
