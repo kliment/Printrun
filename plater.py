@@ -46,22 +46,9 @@ def evalme(s):
     return eval(s[s.find("(") + 1:s.find(")")])
 
 
-class stlwrap:
-    def __init__(self, obj, name = None):
-        self.obj = obj
-        self.name = name
-        if name is None:
-            self.name = obj.name
-
-    def __repr__(self):
-        return self.name
-
-
 class showstl(wx.Window):
     def __init__(self, parent, size, pos):
         wx.Window.__init__(self, parent, size = size, pos = pos)
-        #self.SetBackgroundColour((0, 0, 0))
-        #wx.FutureCall(200, self.paint)
         self.i = 0
         self.parent = parent
         self.previ = 0
@@ -69,7 +56,6 @@ class showstl(wx.Window):
         self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.Bind(wx.EVT_PAINT, self.repaint)
         self.Bind(wx.EVT_KEY_DOWN, self.keypress)
-        #self.s = stltool.stl("sphere.stl").scale([2, 1, 1])
         self.triggered = 0
         self.initpos = None
         self.prevsel = -1
@@ -80,15 +66,10 @@ class showstl(wx.Window):
         dc.SelectObject(m.bitmap)
         dc.SetBackground(wx.Brush((0, 0, 0, 0)))
         dc.SetBrush(wx.Brush((0, 0, 0, 255)))
-        #dc.DrawRectangle(-1, -1, 10000, 10000)
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
-        #m.offsets = [10, 10, 0]
-        #print m.offsets, m.dims
-        for i in m.facets:  # random.sample(m.facets, min(100000, len(m.facets))):
+        for i in m.facets:
             dc.DrawPolygon([wx.Point(400 + scale * p[0], (400 - scale * p[1])) for p in i[1]])
-            #if(time.time()-t)>5:
-            #    break
         dc.SelectObject(wx.NullBitmap)
         m.bitmap.SetMask(wx.Mask(m.bitmap, wx.Colour(0, 0, 0, 255)))
 
@@ -127,8 +108,6 @@ class showstl(wx.Window):
             dc = wx.ClientDC(self)
             p = event.GetPositionTuple()
             dc.DrawLine(self.initpos[0], self.initpos[1], p[0], p[1])
-            #print math.sqrt((p[0]-self.initpos[0])**2+(p[1]-self.initpos[1])**2)
-
             del dc
         else:
             event.Skip()
@@ -175,9 +154,7 @@ class showstl(wx.Window):
         if self.i != self.previ:
             i = self.parent.l.GetSelection()
             if i != wx.NOT_FOUND:
-                #o = self.models[self.l.GetItemText(i)].offsets
                 self.parent.models[self.parent.l.GetString(i)].rot -= 5 * (self.i - self.previ)
-                #self.models[self.l.GetItemText(i)].offsets = o
             self.previ = self.i
             self.Refresh()
 
@@ -225,10 +202,6 @@ class showstl(wx.Window):
             dcs.SelectObject(bm)
             bsz = bm.GetSize()
             dc.Blit(scale * m.offsets[0] - bsz[0] / 2, 400 - (scale * m.offsets[1] + bsz[1] / 2), bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
-            #for i in m.facets:#random.sample(m.facets, min(100000, len(m.facets))):
-            #    dc.DrawPolygon([wx.Point(offset[0]+scale*m.offsets[0]+scale*p[0], 400-(offset[1]+scale*m.offsets[1]+scale*p[1])) for p in i[1]])
-                #if(time.time()-t)>5:
-                #    break
         del dc
 
 class StlPlater(Plater):
@@ -289,11 +262,11 @@ class StlPlater(Plater):
             self.load_stl_into_model(stl_full_path, stl_file, translate_list, rotate_list[2])
 
     def load_stl(self, name):
-        if not(os.path.exists(name)):
+        if not os.path.exists(name):
+            print _("Couldn't load non-existing file %s") % name
             return
         path = os.path.split(name)[0]
         self.basedir = path
-        #print name
         if name.lower().endswith(".stl"):
             #Filter out the path, just show the STL filename.
             self.load_stl_into_model(name, name)
