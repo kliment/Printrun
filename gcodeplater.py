@@ -69,7 +69,31 @@ class GcodePlater(Plater):
     # Initial implementation should just print the objects sequentially,
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
-        raise NotImplementedError
+        with open(name, "w") as f:
+            models = self.models.values()
+            last_real_position = None
+            for model in models:
+                #r = model.rot # no rotation support for now
+                o = model.offsets
+                co = model.centeroffset
+                offset_pos = last_real_position if last_real_position is not None else [0, 0, 0]
+                trans = (offset_pos[0] - (o[0] + co[0]),
+                         offset_pos[1] - (o[1] + co[1]),
+                         offset_pos[2] - (o[2] + co[2]))
+                f.write("G90\n")
+                f.write("G92 X%.5f Y%.5f Z%.5f E0\n" % trans)
+                for l in model.gcode:
+                    if l.command != "G28" and (l.command != "92" or not any([l.x, l.y, l.z])):
+                        f.write(l.raw + "\n")
+                # Find the current real position
+                for i in xrange(len(model.gcode) - 1, -1, -1):
+                    if model.gcode.lines[i].is_move:
+                        gline = model.gcode.lines[i]
+                        last_real_position = [trans[0] + gline.current_x,
+                                              trans[1] + gline.current_y,
+                                              trans[2] + gline.current_z]
+                        break
+        print _("Exported merged G-Codes to %s") % name
 
 if __name__ == '__main__':
     app = wx.App(False)
