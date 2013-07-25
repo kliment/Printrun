@@ -28,6 +28,22 @@ from printrun import gcoder
 from printrun.objectplater import Plater
 from printrun.gl.libtatlin import actors
 
+class GcodeViewPanel(gcview.GcodeViewPanel):
+
+    def handle_rotation(self, event):
+        if self.initpos is None:
+            self.initpos = event.GetPositionTuple()
+        else:
+            if not event.ShiftDown():
+                p1 = self.initpos
+                p2 = event.GetPositionTuple()
+                x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
+                x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
+                self.parent.move_shape((x2 - x1, y2 - y1))
+                self.initpos = p2
+            else:
+                super(GcodeViewPanel, self).handle_rotation(event)
+
 class GcodePlater(Plater):
 
     load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
@@ -35,7 +51,7 @@ class GcodePlater(Plater):
 
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         super(GcodePlater, self).__init__(filenames, size, callback, parent, build_dimensions)
-        viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions)
+        viewer = GcodeViewPanel(self, build_dimensions = self.build_dimensions)
         self.set_viewer(viewer)
         self.platform = actors.Platform(self.build_dimensions)
         self.platform_object = gcview.GCObject(self.platform)
