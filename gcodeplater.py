@@ -94,9 +94,9 @@ class GcodePlater(Plater):
                 for i in xrange(len(model.gcode) - 1, -1, -1):
                     if model.gcode.lines[i].is_move:
                         gline = model.gcode.lines[i]
-                        last_real_position = [trans[0] + gline.current_x,
-                                              trans[1] + gline.current_y,
-                                              trans[2] + gline.current_z]
+                        last_real_position = [- trans[0] + gline.current_x,
+                                              - trans[1] + gline.current_y,
+                                              - trans[2] + gline.current_z]
                         break
         print _("Exported merged G-Codes to %s") % name
 
