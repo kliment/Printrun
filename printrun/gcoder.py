@@ -136,9 +136,9 @@ class Layer(list):
                     if line.z: current_z = 0
 
             elif line.command == "G92":
-                if line.x: offset_x += current_x - line.x
-                if line.y: offset_y += current_y - line.y
-                if line.z: offset_z += current_z - line.z
+                if line.x: offset_x = current_x - line.x
+                if line.y: offset_y = current_y - line.y
+                if line.z: offset_z = current_z - line.z
 
             line.current_x = current_x
             line.current_y = current_y
