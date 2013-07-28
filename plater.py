@@ -15,23 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-import os, Queue, re
-
 from printrun.printrun_utils import install_locale
 install_locale('plater')
 
 import wx
 import time
-import random
 import threading
 import math
 import sys
 import traceback
 
 from printrun import stltool
-from printrun.printrun_utils import pixmapfile
+from printrun.objectplater import Plater
 
 glview = False
 if "-nogl" not in sys.argv:
@@ -47,22 +46,9 @@ def evalme(s):
     return eval(s[s.find("(") + 1:s.find(")")])
 
 
-class stlwrap:
-    def __init__(self, obj, name = None):
-        self.obj = obj
-        self.name = name
-        if name is None:
-            self.name = obj.name
-
-    def __repr__(self):
-        return self.name
-
-
 class showstl(wx.Window):
     def __init__(self, parent, size, pos):
         wx.Window.__init__(self, parent, size = size, pos = pos)
-        #self.SetBackgroundColour((0, 0, 0))
-        #wx.FutureCall(200, self.paint)
         self.i = 0
         self.parent = parent
         self.previ = 0
@@ -70,7 +56,6 @@ class showstl(wx.Window):
         self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.Bind(wx.EVT_PAINT, self.repaint)
         self.Bind(wx.EVT_KEY_DOWN, self.keypress)
-        #self.s = stltool.stl("sphere.stl").scale([2, 1, 1])
         self.triggered = 0
         self.initpos = None
         self.prevsel = -1
@@ -81,15 +66,10 @@ class showstl(wx.Window):
         dc.SelectObject(m.bitmap)
         dc.SetBackground(wx.Brush((0, 0, 0, 0)))
         dc.SetBrush(wx.Brush((0, 0, 0, 255)))
-        #dc.DrawRectangle(-1, -1, 10000, 10000)
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
-        #m.offsets = [10, 10, 0]
-        #print m.offsets, m.dims
-        for i in m.facets:  # random.sample(m.facets, min(100000, len(m.facets))):
+        for i in m.facets:
             dc.DrawPolygon([wx.Point(400 + scale * p[0], (400 - scale * p[1])) for p in i[1]])
-            #if(time.time()-t)>5:
-            #    break
         dc.SelectObject(wx.NullBitmap)
         m.bitmap.SetMask(wx.Mask(m.bitmap, wx.Colour(0, 0, 0, 255)))
 
@@ -102,11 +82,10 @@ class showstl(wx.Window):
             return False
         name = self.parent.l.GetString(name)
         model = self.parent.models[name]
-        model.offsets = [
-                model.offsets[0] + delta[0],
-                model.offsets[1] + delta[1],
-                model.offsets[2]
-            ]
+        model.offsets = [model.offsets[0] + delta[0],
+                         model.offsets[1] + delta[1],
+                         model.offsets[2]
+                         ]
         self.Refresh()
         return True
 
@@ -114,10 +93,9 @@ class showstl(wx.Window):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if(self.initpos is not None):
                 currentpos = event.GetPositionTuple()
-                delta = (
-                        0.5 * (currentpos[0] - self.initpos[0]),
-                        - 0.5 * (currentpos[1] - self.initpos[1])
-                    )
+                delta = (0.5 * (currentpos[0] - self.initpos[0]),
+                         -0.5 * (currentpos[1] - self.initpos[1])
+                         )
                 self.move_shape(delta)
                 self.Refresh()
                 self.initpos = None
@@ -130,8 +108,6 @@ class showstl(wx.Window):
             dc = wx.ClientDC(self)
             p = event.GetPositionTuple()
             dc.DrawLine(self.initpos[0], self.initpos[1], p[0], p[1])
-            #print math.sqrt((p[0]-self.initpos[0])**2+(p[1]-self.initpos[1])**2)
-
             del dc
         else:
             event.Skip()
@@ -178,9 +154,7 @@ class showstl(wx.Window):
         if self.i != self.previ:
             i = self.parent.l.GetSelection()
             if i != wx.NOT_FOUND:
-                #o = self.models[self.l.GetItemText(i)].offsets
                 self.parent.models[self.parent.l.GetString(i)].rot -= 5 * (self.i - self.previ)
-                #self.models[self.l.GetItemText(i)].offsets = o
             self.previ = self.i
             self.Refresh()
 
@@ -205,10 +179,8 @@ class showstl(wx.Window):
         self.paint(dc = dc)
 
     def paint(self, coord1 = "x", coord2 = "y", dc = None):
-        coords = {"x": 0, "y": 1, "z": 2}
         if dc is None:
             dc = wx.ClientDC(self)
-        offset = [0, 0]
         scale = 2
         dc.SetPen(wx.Pen(wx.Colour(100, 100, 100)))
         for i in xrange(20):
@@ -220,7 +192,6 @@ class showstl(wx.Window):
             dc.DrawLine(i * scale * 50, 0, i * scale * 50, 400)
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
-        t = time.time()
         dcs = wx.MemoryDC()
         for m in self.parent.models.values():
             b = m.bitmap
@@ -231,134 +202,20 @@ class showstl(wx.Window):
             dcs.SelectObject(bm)
             bsz = bm.GetSize()
             dc.Blit(scale * m.offsets[0] - bsz[0] / 2, 400 - (scale * m.offsets[1] + bsz[1] / 2), bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
-            #for i in m.facets:#random.sample(m.facets, min(100000, len(m.facets))):
-            #    dc.DrawPolygon([wx.Point(offset[0]+scale*m.offsets[0]+scale*p[0], 400-(offset[1]+scale*m.offsets[1]+scale*p[1])) for p in i[1]])
-                #if(time.time()-t)>5:
-                #    break
         del dc
 
-class stlwin(wx.Frame):
+class StlPlater(Plater):
+
+    load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
+    save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
+
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
-        wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
-        self.filenames = filenames
-        if hasattr(sys,"frozen") and sys.frozen=="windows_exe":
-            self.SetIcon(wx.Icon(sys.executable, wx.BITMAP_TYPE_ICO))
-        else:
-            self.SetIcon(wx.Icon(pixmapfile("plater.ico"), wx.BITMAP_TYPE_ICO))
-        self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel = wx.Panel(self, -1, size = (150, 600), pos = (0, 0))
-        #self.panel.SetBackgroundColour((10, 10, 10))
-        self.l = wx.ListBox(self.panel, size = (300, 180), pos = (0, 30))
-        self.cl = wx.Button(self.panel, label = _("Clear"), pos = (0, 205))
-        self.lb = wx.Button(self.panel, label = _("Load"), pos = (0, 0))
-        if(callback is None):
-            self.eb = wx.Button(self.panel, label = _("Export"), pos = (100, 0))
-            self.eb.Bind(wx.EVT_BUTTON, self.export)
-        else:
-            self.eb = wx.Button(self.panel, label = _("Export"), pos = (200, 205))
-            self.eb.Bind(wx.EVT_BUTTON, self.export)
-            self.edb = wx.Button(self.panel, label = _("Done"), pos = (100, 0))
-            self.edb.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
-            self.eb = wx.Button(self.panel, label = _("Cancel"), pos = (200, 0))
-            self.eb.Bind(wx.EVT_BUTTON, lambda e: self.Destroy())
-        self.sb = wx.Button(self.panel, label = _("Snap to Z = 0"), pos = (00, 255))
-        self.cb = wx.Button(self.panel, label = _("Put at 100, 100"), pos = (0, 280))
-        self.db = wx.Button(self.panel, label = _("Delete"), pos = (0, 305))
-        self.ab = wx.Button(self.panel, label = _("Auto"), pos = (0, 330))
-        self.cl.Bind(wx.EVT_BUTTON, self.clear)
-        self.lb.Bind(wx.EVT_BUTTON, self.right)
-        self.sb.Bind(wx.EVT_BUTTON, self.snap)
-        self.cb.Bind(wx.EVT_BUTTON, self.center)
-        self.db.Bind(wx.EVT_BUTTON, self.delete)
-        self.ab.Bind(wx.EVT_BUTTON, self.autoplate)
-        self.basedir = "."
-        self.models = {}
-        #self.SetBackgroundColour((10, 10, 10))
-        self.mainsizer.Add(self.panel)
-        #self.mainsizer.AddSpacer(10)
-        if build_dimensions:
-            self.build_dimensions = build_dimensions
-        else:
-            self.build_dimensions = [200, 200, 100, 0, 0, 0]
+        super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         if glview:
-            self.s = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
+            viewer = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
         else:
-            self.s = showstl(self, (580, 580), (0, 0))
-        self.mainsizer.Add(self.s, 1, wx.EXPAND)
-        self.SetSizer(self.mainsizer)
-        #self.mainsizer.Fit(self)
-        self.Layout()
-
-        #self.SetClientSize(size)
-
-    def autoplate(self, event):
-        print _("Autoplating")
-        separation = 2
-        bedsize = self.build_dimensions[0:3]
-        cursor = [0, 0, 0]
-        newrow = 0
-        max = [0, 0]
-        for i in self.models:
-            self.models[i].offsets[2] = -1.0 * self.models[i].dims[4]
-            x = abs(self.models[i].dims[0] - self.models[i].dims[1])
-            y = abs(self.models[i].dims[2] - self.models[i].dims[3])
-            centre = [x / 2, y / 2]
-            centreoffset = [self.models[i].dims[0] + centre[0], self.models[i].dims[2] + centre[1]]
-            if (cursor[0] + x + separation) >= bedsize[0]:
-                cursor[0] = 0
-                cursor[1] += newrow + separation
-                newrow = 0
-            if (newrow == 0) or (newrow < y):
-                newrow = y
-            #To the person who works out why the offsets are applied differently here:
-            # Good job, it confused the hell out of me.
-            self.models[i].offsets[0] = cursor[0] + centre[0] - centreoffset[0]
-            self.models[i].offsets[1] = cursor[1] + centre[1] - centreoffset[1]
-            if (max[0] == 0) or (max[0] < (cursor[0] + x)):
-                max[0] = cursor[0] + x
-            if (max[1] == 0) or (max[1] < (cursor[1] + x)):
-                max[1] = cursor[1] + x
-            cursor[0] += x + separation
-            if (cursor[1] + y) >= bedsize[1]:
-                print _("Bed full, sorry sir :(")
-                self.Refresh()
-                return
-        centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
-        for i in self.models:
-            self.models[i].offsets[0] += centreoffset[0]
-            self.models[i].offsets[1] += centreoffset[1]
-        self.Refresh()
-
-    def clear(self, event):
-        result = wx.MessageBox(_('Are you sure you want to clear the grid? All unsaved changes will be lost.'), _('Clear the grid?'),
-            wx.YES_NO | wx.ICON_QUESTION)
-        if (result == 2):
-            self.models = {}
-            self.l.Clear()
-            self.Refresh()
-
-    def center(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            m = self.models[self.l.GetString(i)]
-            m.offsets = [100, 100, m.offsets[2]]
-            self.Refresh()
-
-    def snap(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            m = self.models[self.l.GetString(i)]
-            m.offsets[2] = -1.0 * min(m.facetsminz)[0]
-            #print m.offsets[2]
-            self.Refresh()
-
-    def delete(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            del self.models[self.l.GetString(i)]
-            self.l.Delete(i)
-            self.l.Select(self.l.GetCount() - 1)
-            self.Refresh()
+            viewer = showstl(self, (580, 580), (0, 0))
+        self.set_viewer(viewer)
 
     def done(self, event, cb):
         try:
@@ -366,51 +223,18 @@ class stlwin(wx.Frame):
         except:
             pass
         name = "tempstl/" + str(int(time.time()) % 10000) + ".stl"
-        self.writefiles(name)
+        self.export_to(name)
         if cb is not None:
             cb(name)
         self.Destroy()
 
-    def export(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
-        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL"))
-        if(dlg.ShowModal() == wx.ID_OK):
-            name = dlg.GetPath()
-            self.writefiles(name)
-        dlg.Destroy()
-
-    def writefiles(self, name):
-        sf = open(name.replace(".", "_") + ".scad", "w")
-        facets = []
-        for i in self.models.values():
-
-            r = i.rot
-            o = i.offsets
-            sf.write('translate([%s, %s, %s]) rotate([0, 0, %s]) import_stl("%s");\n' % (str(o[0]), str(o[1]), str(o[2]), r, os.path.split(i.filename)[1]))
-            if r != 0:
-                i = i.rotate([0, 0, r])
-            if o != [0, 0, 0]:
-                i = i.translate([o[0], o[1], o[2]])
-            facets += i.facets
-        sf.close()
-        stltool.emitstl(name, facets, "plater_export")
-        print _("wrote %s") % name
-
-    def right(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(_("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"))
-        if dlg.ShowModal() == wx.ID_OK:
-            name = dlg.GetPath()
-            self.load_file(event, name)
-        dlg.Destroy()
-
-    def load_file(self, event, filename):
+    def load_file(self, filename):
         if filename.lower().endswith(".stl"):
-            self.load_stl(event, filename)
+            self.load_stl(filename)
         elif filename.lower().endswith(".scad"):
-            self.load_scad(event, filename)
+            self.load_scad(filename)
 
-    def load_scad(self, event, name):
+    def load_scad(self, name):
         lf = open(name)
         s = [i.replace("\n", "").replace("\r", "").replace(";", "") for i in lf if "stl" in i]
         lf.close()
@@ -437,33 +261,30 @@ class stlwin(wx.Frame):
             stl_full_path = os.path.join(stl_path[0], str(stl_file))
             self.load_stl_into_model(stl_full_path, stl_file, translate_list, rotate_list[2])
 
-    def load_stl(self, event, name):
-        if not(os.path.exists(name)):
+    def load_stl(self, name):
+        if not os.path.exists(name):
+            print _("Couldn't load non-existing file %s") % name
             return
         path = os.path.split(name)[0]
         self.basedir = path
-        t = time.time()
-        #print name
         if name.lower().endswith(".stl"):
             #Filter out the path, just show the STL filename.
             self.load_stl_into_model(name, name)
         self.Refresh()
-        #print time.time()-t
 
     def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
-        newname = os.path.split(name.lower())[1]
-        c = 1
-        while newname in self.models:
-            newname = os.path.split(name.lower())[1]
-            newname = newname + "(%d)" % c
-            c += 1
-        self.models[newname] = stltool.stl(path)
-        self.models[newname].offsets = offset
-        self.models[newname].rot = rotation
-        self.models[newname].scale = scale
-        self.models[newname].filename = name
-        minx, miny, minz, maxx, maxy, maxz = (10000, 10000, 10000, 0, 0, 0)
-        for i in self.models[newname].facets:
+        model = stltool.stl(path)
+        model.offsets = list(offset)
+        model.rot = rotation
+        model.scale = list(scale)
+        model.filename = name
+        minx = float("inf")
+        miny = float("inf")
+        minz = float("inf")
+        maxx = float("-inf")
+        maxy = float("-inf")
+        maxz = float("-inf")
+        for i in model.facets:
             for j in i[1]:
                 if j[0] < minx:
                     minx = j[0]
@@ -477,24 +298,42 @@ class stlwin(wx.Frame):
                     maxy = j[1]
                 if j[2] > maxz:
                     maxz = j[2]
-        self.models[newname].dims = [minx, maxx, miny, maxy, minz, maxz]
-        #if minx < 0:
-        #    self.models[newname].offsets[0] = -minx
-        #if miny < 0:
-        #    self.models[newname].offsets[1] = -miny
-        self.s.drawmodel(self.models[newname], 2)
+        model.dims = [minx, maxx, miny, maxy, minz, maxz]
+        self.add_model(name, model)
+        model.centeroffset = [-(model.dims[1] + model.dims[0]) / 2,
+                              -(model.dims[3] + model.dims[2]) / 2,
+                              0]
+        self.s.drawmodel(model, 2)
 
-        #print time.time() - t
-        self.l.Append(newname)
-        i = self.l.GetSelection()
-        if i == wx.NOT_FOUND:
-            self.l.Select(0)
-
-        self.l.Select(self.l.GetCount() - 1)
+    def export_to(self, name):
+        sf = open(name.replace(".", "_") + ".scad", "w")
+        facets = []
+        for model in self.models.values():
+            r = model.rot
+            rot = [0, 0, r] if r else None
+            o = model.offsets
+            co = model.centeroffset
+            sf.write("translate([%s, %s, %s])"
+                     "rotate([0, 0, %s])"
+                     "translate([%s, %s, %s])"
+                     "import(\"%s\");\n" % (o[0], o[1], o[2],
+                                            r,
+                                            co[0], co[1], co[2],
+                                            model.filename))
+            if any(co):
+                model = model.translate(co)
+            if rot:
+                model = model.rotate(rot)
+            if any(o):
+                model = model.translate(o)
+            facets += model.facets
+        sf.close()
+        stltool.emitstl(name, facets, "plater_export")
+        print _("Wrote plate to %s") % name
 
 
 if __name__ == '__main__':
     app = wx.App(False)
-    main = stlwin(sys.argv[1:])
+    main = StlPlater(sys.argv[1:])
     main.Show()
     app.MainLoop()

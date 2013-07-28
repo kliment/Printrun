@@ -15,22 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import math
 
 import wx
-from wx import glcanvas
-
-import pyglet
-pyglet.options['debug_gl'] = True
-
-from pyglet.gl import *
-from pyglet import gl
 
 from . import gcoder
 from .gl.panel import wxGLPanel
-from .gl.trackball import trackball, mulquat, build_rotmatrix
+from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
+
+from pyglet.gl import glPushMatrix, glPopMatrix, \
+    glTranslatef, glRotatef, glScalef, glMultMatrixd
 
 from .gviz import GvizBaseFrame
 
@@ -39,9 +33,10 @@ install_locale('pronterface')
 
 class GcodeViewPanel(wxGLPanel):
 
-    def __init__(self, parent, id = wx.ID_ANY, build_dimensions = None, realparent = None):
-        super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition, wx.DefaultSize, 0)
-        self.batches = []
+    def __init__(self, parent, id = wx.ID_ANY,
+                 build_dimensions = None, realparent = None):
+        super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition,
+                                             wx.DefaultSize, 0)
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
         self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
@@ -60,6 +55,14 @@ class GcodeViewPanel(wxGLPanel):
     def setlayercb(self, layer):
         pass
 
+    def OnInitGL(self, *args, **kwargs):
+        super(GcodeViewPanel, self).OnInitGL(*args, **kwargs)
+        if hasattr(self.parent, "filenames") and self.parent.filenames:
+            for filename in self.parent.filenames:
+                self.parent.load_file(filename)
+            self.parent.autoplate()
+            self.parent.filenames = None
+
     def create_objects(self):
         '''create opengl objects when opengl is initialized'''
         for obj in self.parent.objects:
@@ -73,21 +76,27 @@ class GcodeViewPanel(wxGLPanel):
     def draw_objects(self):
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()
-        
+
         glPushMatrix()
         if self.orthographic:
-            glTranslatef(0, 0, -3 * self.dist) # Move back
+            glTranslatef(0, 0, -3 * self.dist)  # Move back
         else:
-            glTranslatef(0, 0, -self.dist) # Move back
-        glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
-        glTranslatef(- self.build_dimensions[3] - self.parent.platform.width/2,
-                     - self.build_dimensions[4] - self.parent.platform.depth/2, 0) # Move origin to bottom left of platform
+            glTranslatef(0, 0, -self.dist)  # Move back
+        # Rotate according to trackball
+        glMultMatrixd(build_rotmatrix(self.basequat))
+        # Move origin to bottom left of platform
+        platformx0 = -self.build_dimensions[3] - self.parent.platform.width / 2
+        platformy0 = -self.build_dimensions[4] - self.parent.platform.depth / 2
+        glTranslatef(platformx0, platformy0, 0)
 
         for obj in self.parent.objects:
-            if not obj.model or not obj.model.loaded or not obj.model.initialized:
+            if not obj.model \
+               or not obj.model.loaded \
+               or not obj.model.initialized:
                 continue
             glPushMatrix()
             glTranslatef(*(obj.offsets))
+            glTranslatef(*(obj.centeroffset))
             glRotatef(obj.rot, 0.0, 0.0, 1.0)
             glScalef(*obj.scale)
 
@@ -98,35 +107,6 @@ class GcodeViewPanel(wxGLPanel):
     def double(self, event):
         if self.parent.clickcb:
             self.parent.clickcb(event)
-
-    def handle_rotation(self, event):
-        if self.initpos == None:
-            self.initpos = event.GetPositionTuple()
-        else:
-            p1 = self.initpos
-            p2 = event.GetPositionTuple()
-            sz = self.GetClientSize()
-            p1x = float(p1[0]) / (sz[0] / 2) - 1
-            p1y = 1 - float(p1[1]) / (sz[1] / 2)
-            p2x = float(p2[0]) / (sz[0] / 2) - 1
-            p2y = 1 - float(p2[1]) / (sz[1] / 2)
-            quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
-            self.basequat = mulquat(self.basequat, quat)
-            self.initpos = p2
-
-    def handle_translation(self, event):
-        if self.initpos is None:
-            self.initpos = event.GetPositionTuple()
-        else:
-            p1 = self.initpos
-            p2 = event.GetPositionTuple()
-            if self.orthographic:
-                x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                glTranslatef(x2 - x1, y2 - y1, 0)
-            else:
-                glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
-            self.initpos = p2
 
     def move(self, event):
         """react to mouse actions:
@@ -174,14 +154,10 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
-    def wheel(self, event):
-        """react to mouse wheel actions:
-            without shift: set max layer
-            with shift: zoom viewport
-        """
+    def handle_wheel(self, event):
         delta = event.GetWheelRotation()
         factor = 1.05
-        if event.ShiftDown():
+        if hasattr(self.parent, "model") and event.ShiftDown():
             if not self.parent.model:
                 return
             count = 1 if not event.ControlDown() else 10
@@ -194,7 +170,15 @@ class GcodeViewPanel(wxGLPanel):
         if delta > 0:
             self.zoom(factor, (x, y))
         else:
-            self.zoom(1/factor, (x, y))
+            self.zoom(1 / factor, (x, y))
+
+    def wheel(self, event):
+        """react to mouse wheel actions:
+            without shift: set max layer
+            with shift: zoom viewport
+        """
+        self.handle_wheel(event)
+        wx.CallAfter(self.Refresh)
 
     def fit(self):
         if not self.parent.model or not self.parent.model.loaded:
@@ -254,21 +238,22 @@ class GCObject(object):
 
     def __init__(self, model):
         self.offsets = [0, 0, 0]
+        self.centeroffset = [0, 0, 0]
         self.rot = 0
         self.curlayer = 0.0
         self.scale = [1.0, 1.0, 1.0]
-        self.batch = pyglet.graphics.Batch()
         self.model = model
 
 class GcodeViewMainWrapper(object):
-    
+
     def __init__(self, parent, build_dimensions):
-        self.glpanel = GcodeViewPanel(parent, realparent = self, build_dimensions = build_dimensions)
+        self.glpanel = GcodeViewPanel(parent, realparent = self,
+                                      build_dimensions = build_dimensions)
         self.glpanel.SetMinSize((150, 150))
         self.clickcb = None
         self.widget = self.glpanel
         self.refresh_timer = wx.CallLater(100, self.Refresh)
-        self.p = self # Hack for backwards compatibility with gviz API
+        self.p = self  # Hack for backwards compatibility with gviz API
         self.platform = actors.Platform(build_dimensions)
         self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
@@ -306,12 +291,13 @@ class GcodeViewFrame(GvizBaseFrame):
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
                  style = wx.DEFAULT_FRAME_STYLE):
-        super(GcodeViewFrame, self).__init__(parent, ID, title, pos, size, style)
+        super(GcodeViewFrame, self).__init__(parent, ID, title,
+                                             pos, size, style)
 
         panel, vbox = self.create_base_ui()
 
         self.refresh_timer = wx.CallLater(100, self.Refresh)
-        self.p = self # Hack for backwards compatibility with gviz API
+        self.p = self  # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
         self.platform = actors.Platform(build_dimensions)
         if objects:
@@ -320,14 +306,18 @@ class GcodeViewFrame(GvizBaseFrame):
             self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
-        self.toolbar.AddLabelTool(6, " " + _("Fit to plate"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Fit to plate [F]"), longHelp = '')
+        fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        self.toolbar.AddLabelTool(6, " " + _("Fit to plate"), fit_image,
+                                  shortHelp = _("Fit to plate [F]"),
+                                  longHelp = '')
         self.toolbar.Realize()
-        self.glpanel = GcodeViewPanel(panel, build_dimensions = build_dimensions,
+        self.glpanel = GcodeViewPanel(panel,
+                                      build_dimensions = build_dimensions,
                                       realparent = self)
         vbox.Add(self.glpanel, 1, flag = wx.EXPAND)
 
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
-        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1/1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1 / 1.2), id = 2)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 5)
@@ -367,7 +357,9 @@ if __name__ == "__main__":
     import sys
     app = wx.App(redirect = False)
     build_dimensions = [200, 200, 100, 0, 0, 0]
-    frame = GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (400, 400), build_dimensions = build_dimensions)
+    title = 'Gcode view, shift to move view, mousewheel to set layer'
+    frame = GcodeViewFrame(None, wx.ID_ANY, title, size = (400, 400),
+                           build_dimensions = build_dimensions)
     gcode = gcoder.GCode(open(sys.argv[1]))
     frame.addfile(gcode)
 
@@ -377,14 +369,15 @@ if __name__ == "__main__":
             first_move = gcode.lines[i]
             break
     last_move = None
-    for i in range(len(gcode.lines)-1,-1,-1):
+    for i in range(len(gcode.lines) - 1, -1, -1):
         if gcode.lines[i].is_move:
             last_move = gcode.lines[i]
             break
     nsteps = 20
     steptime = 500
-    lines = [first_move] + [gcode.lines[int(float(i)*(len(gcode.lines)-1)/nsteps)] for i in range(1, nsteps)] + [last_move]
+    lines = [first_move] + [gcode.lines[int(float(i) * (len(gcode.lines) - 1) / nsteps)] for i in range(1, nsteps)] + [last_move]
     current_line = 0
+
     def setLine():
         global current_line
         frame.set_current_gline(lines[current_line])

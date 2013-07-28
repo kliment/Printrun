@@ -21,8 +21,13 @@ import numpy
 import math
 import logging
 
-from pyglet.gl import *
-from pyglet import gl
+from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
+    glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
+    GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, glRectf, \
+    glBegin, glEnd, GL_LINES, glEnable, glDisable, glGetFloatv, \
+    GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, \
+    glVertexPointer, glColorPointer, glDrawArrays, \
+    glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from printrun.printrun_utils import install_locale
@@ -80,13 +85,13 @@ class Platform(object):
         self.yoffset = build_dimensions[4]
         self.zoffset = build_dimensions[5]
 
-        self.color_grads_minor  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
+        self.color_grads_minor = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
         self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
-        self.color_grads_major  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
-        self.color_fill         = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
+        self.color_grads_major = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
+        self.color_fill = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
 
         self.initialized = False
-        self.loaded      = True
+        self.loaded = True
 
     def init(self):
         self.display_list = compile_display_list(self.draw)
@@ -111,12 +116,12 @@ class Platform(object):
         glBegin(GL_LINES)
         for i in range(0, int(math.ceil(self.width + 1))):
             if color(i):
-                glVertex3f(float(i), 0.0,        0.0)
+                glVertex3f(float(i), 0.0, 0.0)
                 glVertex3f(float(i), self.depth, 0.0)
 
         for i in range(0, int(math.ceil(self.depth + 1))):
             if color(i):
-                glVertex3f(0,          float(i), 0.0)
+                glVertex3f(0, float(i), 0.0)
                 glVertex3f(self.width, float(i), 0.0)
         glEnd()
 
@@ -136,7 +141,7 @@ class PrintHead(object):
         self.height = 5
 
         self.initialized = False
-        self.loaded      = True
+        self.loaded = True
 
     def init(self):
         self.display_list = compile_display_list(self.draw)
@@ -232,7 +237,7 @@ class Model(object):
 def movement_angle(src, dst, precision=0):
     x = dst[0] - src[0]
     y = dst[1] - src[1]
-    angle = math.degrees(math.atan2(y, -x)) # negate x for clockwise rotation angle
+    angle = math.degrees(math.atan2(y, -x))  # negate x for clockwise rotation angle
     return round(angle, precision)
 
 class GcodeModel(Model):
@@ -253,15 +258,14 @@ class GcodeModel(Model):
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
-        self.dims = ((model_data.xmin,model_data.xmax,model_data.width),
-                     (model_data.ymin,model_data.ymax,model_data.depth),
-                     (model_data.zmin,model_data.zmax,model_data.height))
+        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
+                     (model_data.ymin, model_data.ymax, model_data.depth),
+                     (model_data.zmin, model_data.zmax, model_data.height))
 
-        vertex_list      = []
-        color_list       = []
+        vertex_list = []
+        color_list = []
         self.layer_stops = [0]
-        arrow_list       = []
-        num_layers       = len(model_data.all_layers)
+        num_layers = len(model_data.all_layers)
 
         prev_pos = (0, 0, 0)
         for layer_idx, layer in enumerate(model_data.all_layers):
@@ -284,14 +288,14 @@ class GcodeModel(Model):
                 callback(layer_idx + 1, num_layers)
 
         self.vertices = numpy.array(vertex_list, dtype = GLfloat)
-        self.colors   = numpy.array(color_list, dtype = GLfloat).repeat(2, 0)
+        self.colors = numpy.array(color_list, dtype = GLfloat).repeat(2, 0)
 
-        self.max_layers         = len(self.layer_stops) - 1
+        self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers
-        self.printed_until      = -1
-        self.only_current       = False
-        self.initialized        = False
-        self.loaded             = True
+        self.printed_until = -1
+        self.only_current = False
+        self.initialized = False
+        self.loaded = True
 
         t_end = time.time()
 
@@ -323,8 +327,8 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.vertex_buffer       = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos) # each pair of vertices shares the color
+        self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
+        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
         self.initialized = True
 
     def display(self, mode_2d=False):
@@ -359,7 +363,7 @@ class GcodeModel(Model):
         else:
             end_prev_layer = -1
         end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
-        
+
         glDisableClientState(GL_COLOR_ARRAY)
 
         glColor4f(*self.color_printed)
@@ -384,14 +388,14 @@ class GcodeModel(Model):
         # Draw current layer
         if end_prev_layer >= 0:
             glDisableClientState(GL_COLOR_ARRAY)
-            
+
             # Backup & increase line width
             orig_linewidth = (GLfloat)()
             glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
             glLineWidth(2.0)
-        
+
             glColor4f(*self.color_current_printed)
-        
+
             if cur_end > end_prev_layer:
                 glDrawArrays(GL_LINES, end_prev_layer, cur_end - end_prev_layer)
 
@@ -413,4 +417,3 @@ class GcodeModel(Model):
 
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
-

@@ -15,13 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import math
-import stltool
 import wx
-from wx import glcanvas
 import time
-import threading
 
 import pyglet
 pyglet.options['debug_gl'] = True
@@ -130,9 +125,11 @@ class StlViewPanel(wxGLPanel):
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0.1, 0, 0.9))
         if call_reshape:
             self.OnReshape()
-        if self.parent.filenames:
+        if hasattr(self.parent, "filenames") and self.parent.filenames:
             for filename in self.parent.filenames:
-                self.parent.load_file(None, filename)
+                self.parent.load_file(filename)
+            self.parent.autoplate()
+            self.parent.filenames = None
 
     def double(self, event):
         p = event.GetPositionTuple()
@@ -140,33 +137,13 @@ class StlViewPanel(wxGLPanel):
         v = map(lambda m, w, b: b * m / w, p, sz, self.build_dimensions[0:2])
         v[1] = self.build_dimensions[1] - v[1]
         v += [300]
-        print "Double-click at "+str(v)+" in "
+        print "Double-click at " + str(v) + " in "
         print self
 
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
-        threading.Thread(target = self.update).start()
         self.initialized = 0
-
-    def move_shape(self, delta):
-        """moves shape (selected in l, which is list ListBox of shapes)
-        by an offset specified in tuple delta.
-        Positive numbers move to (rigt, down)"""
-        name = self.parent.l.GetSelection()
-        if name == wx.NOT_FOUND:
-            return False
-
-        name = self.parent.l.GetString(name)
-
-        model = self.parent.models[name]
-        model.offsets = [
-                model.offsets[0] + delta[0],
-                model.offsets[1] + delta[1],
-                model.offsets[2]
-            ]
-        self.Refresh()
-        return True
 
     def move(self, event):
         """react to mouse actions:
@@ -178,80 +155,38 @@ class StlViewPanel(wxGLPanel):
         """
         self.mousepos = event.GetPositionTuple()
         if event.Dragging() and event.LeftIsDown():
-            if self.initpos == None:
-                self.initpos = event.GetPositionTuple()
-            else:
-                if not event.ShiftDown():
-                    p1 = self.initpos
-                    p2 = event.GetPositionTuple()
-                    x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                    x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                    self.move_shape((x2 - x1, y2 - y1))
-                    self.initpos = p2
-                    return
-                p1 = self.initpos
-                p2 = event.GetPositionTuple()
-                sz = self.GetClientSize()
-                p1x = (float(p1[0]) - sz[0] / 2) / (sz[0] / 2)
-                p1y = -(float(p1[1]) - sz[1] / 2) / (sz[1] / 2)
-                p2x = (float(p2[0]) - sz[0] / 2) / (sz[0] / 2)
-                p2y = -(float(p2[1]) - sz[1] / 2) / (sz[1] / 2)
-                quat = trackball(p1x, p1y, p2x, p2y, 0.8)
-                self.basequat = mulquat(self.basequat, quat)
-                self.initpos = p2
-
+            self.handle_rotation(event)
+        elif event.Dragging() and event.RightIsDown():
+            self.handle_translation(event)
         elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if self.initpos is not None:
                 self.initpos = None
         elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
             if self.initpos is not None:
                 self.initpos = None
+        else:
+            event.Skip()
+            return
+        event.Skip()
+        wx.CallAfter(self.Refresh)
 
-        elif event.Dragging() and event.RightIsDown():
-            if self.initpos is None:
-                self.initpos = event.GetPositionTuple()
-            else:
-                p1 = self.initpos
-                p2 = event.GetPositionTuple()
-                if self.orthographic:
-                    x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                    x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                    glTranslatef(x2 - x1, y2 - y1, 0)
-                else:
-                    glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
-                self.initpos = p2
-
-    def rotate_shape(self, angle):
-        """rotates acive shape
-        positive angle is clockwise
-        """
-        name = self.parent.l.GetSelection()
-        if name == wx.NOT_FOUND:
-            return False
-        name = self.parent.l.GetString(name)
-        model = self.parent.models[name]
-        model.rot += angle
+    def handle_wheel(self, event):
+        delta = event.GetWheelRotation()
+        factor = 1.05
+        x, y = event.GetPositionTuple()
+        x, y, _ = self.mouse_to_3d(x, y)
+        if delta > 0:
+            self.zoom(factor, (x, y))
+        else:
+            self.zoom(1 / factor, (x, y))
 
     def wheel(self, event):
         """react to mouse wheel actions:
         rotate object
             with shift zoom viewport
         """
-        delta = event.GetWheelRotation()
-        if not event.ShiftDown():
-            angle = 10
-            if delta > 0:
-                self.rotate_shape(angle / 2)
-            else:
-                self.rotate_shape(-angle / 2)
-        else:
-            factor = 1.05
-            x, y = event.GetPositionTuple()
-            x, y, _ = self.mouse_to_3d(x, y)
-            if delta > 0:
-                self.zoom(factor, (x, y))
-            else:
-                self.zoom(1/factor, (x, y))
+        self.handle_wheel(event)
+        wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
@@ -264,32 +199,24 @@ class StlViewPanel(wxGLPanel):
             angle = 1
         #h
         if keycode == 72:
-            self.move_shape((-step, 0))
+            self.parent.move_shape((-step, 0))
         #l
         if keycode == 76:
-            self.move_shape((step, 0))
+            self.parent.move_shape((step, 0))
         #j
         if keycode == 75:
-            self.move_shape((0, step))
+            self.parent.move_shape((0, step))
         #k
         if keycode == 74:
-            self.move_shape((0, -step))
+            self.parent.move_shape((0, -step))
         #[
         if keycode == 91:
-            self.rotate_shape(-angle)
+            self.parent.rotate_shape(-angle)
         #]
         if keycode == 93:
-            self.rotate_shape(angle)
+            self.parent.rotate_shape(angle)
         event.Skip()
-
-    def update(self):
-        while(1):
-            dt = 0.05
-            time.sleep(0.05)
-            try:
-                wx.CallAfter(self.Refresh)
-            except:
-                return
+        wx.CallAfter(self.Refresh)
 
     def anim(self, obj):
         g = 50 * 9.8
@@ -321,7 +248,7 @@ class StlViewPanel(wxGLPanel):
 
     def drawmodel(self, m, n):
         batch = pyglet.graphics.Batch()
-        stl = stlview(m.facets, batch = batch)
+        stlview(m.facets, batch = batch)
         m.batch = batch
         m.animoffset = 300
         #print m
@@ -338,10 +265,10 @@ class StlViewPanel(wxGLPanel):
 
         glPushMatrix()
         glTranslatef(0, 0, -self.dist)
-        glMultMatrixd(build_rotmatrix(self.basequat)) # Rotate according to trackball
+        glMultMatrixd(build_rotmatrix(self.basequat))  # Rotate according to trackball
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.2, 0.2, 0.2, 1))
-        glTranslatef(- self.build_dimensions[3] - self.platform.width/2,
-                     - self.build_dimensions[4] - self.platform.depth/2, 0) # Move origin to bottom left of platform
+        glTranslatef(- self.build_dimensions[3] - self.platform.width / 2,
+                     - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
         # Draw platform
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         self.platform.draw()
@@ -365,12 +292,14 @@ class StlViewPanel(wxGLPanel):
         glPushMatrix()
 
         # Draw objects
-        for i in self.parent.models.values():
+        for i in self.parent.models:
+            model = self.parent.models[i]
             glPushMatrix()
-            glTranslatef(*(i.offsets))
-            glRotatef(i.rot, 0.0, 0.0, 1.0)
-            glScalef(*i.scale)
-            i.batch.draw()
+            glTranslatef(*(model.offsets))
+            glRotatef(model.rot, 0.0, 0.0, 1.0)
+            glTranslatef(*(model.centeroffset))
+            glScalef(*model.scale)
+            model.batch.draw()
             glPopMatrix()
         glPopMatrix()
         glPopMatrix()
@@ -378,7 +307,7 @@ class StlViewPanel(wxGLPanel):
 def main():
     app = wx.App(redirect = False)
     frame = wx.Frame(None, -1, "GL Window", size = (400, 400))
-    panel = StlViewPanel(frame)
+    StlViewPanel(frame)
     frame.Show(True)
     app.MainLoop()
     app.Destroy()
