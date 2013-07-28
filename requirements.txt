@@ -1,3 +1,5 @@
+inflection
 pybonjour
 git+https://github.com/D1plo1d/tornado.git
 git+https://github.com/D1plo1d/py-mdns.git
+git+https://github.com/construct-protocol/construct_server.py
