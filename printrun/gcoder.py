@@ -398,12 +398,14 @@ class GCode(object):
         self.height = self.zmax - self.zmin
 
     def estimate_duration(self):
-        lastx = lasty = laste = lastf = 0.0
+        lastx = lasty = lastz = laste = lastf = 0.0
+        lastdx = 0
+        lastdy = 0
         x = y = e = f = 0.0
         currenttravel = 0.0
         moveduration = 0.0
         totalduration = 0.0
-        acceleration = 1500.0  # mm/s/s  ASSUMING THE DEFAULT FROM SPRINTER !!!
+        acceleration = 2000.0  # mm/s^2
         layerbeginduration = 0.0
         #TODO:
         # get device caps from firmware: max speed, acceleration/axis
@@ -422,6 +424,7 @@ class GCode(object):
                 else:
                     x = line.x if line.x is not None else lastx
                     y = line.y if line.y is not None else lasty
+                    z = line.z if line.z is not None else lastz
                     e = line.e if line.e is not None else laste
                     # mm/s vs mm/m => divide by 60
                     f = line.f / 60.0 if line.f is not None else lastf
@@ -438,10 +441,20 @@ class GCode(object):
                     # subsquent moves are in opposite directions, as requested
                     # speed is constant but printer has to fully decellerate
                     # and reaccelerate
+                    # The following code tries to fix it by forcing a full
+                    # reacceleration if this move is in the opposite direction
+                    # of the previous one
+                    dx = x - lastx
+                    dy = y - lasty
+                    if dx * lastdx + dy * lastdy <= 0:
+                        lastf = 0
 
-                    currenttravel = math.hypot(x - lastx, y - lasty)
-                    if currenttravel == 0 and line.e is not None:
-                        currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
+                    currenttravel = math.hypot(dx, dy)
+                    if currenttravel == 0:
+                        if line.z is not None:
+                            currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
+                        elif line.e is not None:
+                            currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
                     # Feedrate hasn't changed, no acceleration/decceleration planned
                     if f == lastf:
                         moveduration = currenttravel / f if f != 0 else 0.
@@ -458,10 +471,14 @@ class GCode(object):
                             # FIXME: probably a little bit optimistic, but probably a much better estimate than the previous one:
                             # moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
 
+                    lastdx = dx
+                    lastdy = dy
+
                 totalduration += moveduration
 
                 lastx = x
                 lasty = y
+                lastz = z
                 laste = e
                 lastf = f
 

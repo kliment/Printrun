@@ -33,7 +33,7 @@ def iconfile(filename):
     if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
         return sys.executable
     else:
-        return pixmapfile("plater.ico")
+        return pixmapfile(filename)
 
 def imagefile(filename):
     for prefix in ['/usr/local/share/pronterface/images',
