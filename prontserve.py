@@ -2,17 +2,48 @@
 import glob, os, time, datetime, sys, codecs, random, textwrap, re, traceback
 import logging, argparse, tornado.ioloop, printcore, pronsole
 
-from pprint import pprint
+# Allow construct protocol developers to use a specific lib for dev purposes
+c_path = os.getenv('PY_CONSTRUCT_PATH')
+if c_path != None:
+  print "$PY_CONSTRUCT_PATH detected, loading server lib from: \n%s"%c_path
+  sys.path.insert(1, c_path)
+
 from construct_server.construct_server import ConstructServer
 from construct_server.event_emitter import EventEmitter
-
+from pprint import pprint
 from printrun import gcoder
 
-
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-
 log = logging.getLogger("root")
 
+
+# Args
+# -------------------------------------------------
+
+if __name__ == "__main__":
+
+  parser = argparse.ArgumentParser(
+    description='Runs a 3D printer server using the Construct Protocol'
+  )
+
+  parser.add_argument('--dry-run', default=False, action='store_true',
+    help='Does not connect to the 3D printer'
+  )
+
+  parser.add_argument('--loud', default=False, action='store_true',
+    help='Enables verbose printer output'
+  )
+
+  parser.add_argument('--heaptrace', default=False, action='store_true',
+    help='Enables a heap trace on exit (for developer use)'
+  )
+
+  args = parser.parse_args()
+  if args.heaptrace: from guppy import hpy
+
+
+# Routes
+# -------------------------------------------------
 
 class RootHandler(tornado.web.RequestHandler):
   def get(self):
@@ -325,23 +356,4 @@ class Prontserve(pronsole.pronsole, EventEmitter):
 # -------------------------------------------------
 
 if __name__ == "__main__":
-
-  parser = argparse.ArgumentParser(
-    description='Runs a 3D printer server using the Construct Protocol'
-  )
-
-  parser.add_argument('--dry-run', default=False, action='store_true',
-    help='Does not connect to the 3D printer'
-  )
-
-  parser.add_argument('--loud', default=False, action='store_true',
-    help='Enables verbose printer output'
-  )
-
-  parser.add_argument('--heaptrace', default=False, action='store_true',
-    help='Enables a heap trace on exit (for developer use)'
-  )
-
-  args = parser.parse_args()
-  if args.heaptrace: from guppy import hpy
   prontserve = Prontserve(dry_run=args.dry_run, loud=args.loud).start()
