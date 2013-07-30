@@ -25,7 +25,7 @@ from ctypes import sizeof
 
 from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
-    GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, \
+    GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, \
     GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, glRectf, \
     glBegin, glEnd, GL_LINES, glEnable, glDisable, glGetFloatv, \
     GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, GLuint, \
@@ -48,6 +48,9 @@ def numpy2vbo(nparray, target = GL_ARRAY_BUFFER, usage = GL_STATIC_DRAW, use_vbo
     vbo.bind()
     vbo.set_data(nparray.ctypes.data)
     return vbo
+
+def triangulate_rectangle(i1, i2, i3, i4):
+    return [i1, i4, i3, i3, i2, i1]
 
 class BoundingBox(object):
     """
@@ -243,17 +246,30 @@ def movement_angle(src, dst, precision=0):
     angle = math.degrees(math.atan2(y, -x))  # negate x for clockwise rotation angle
     return round(angle, precision)
 
+def get_next_move(gcode, layer_idx, gline_idx):
+    gline_idx += 1
+    while layer_idx < len(gcode.all_layers):
+        layer = gcode.all_layers[layer_idx]
+        while gline_idx < len(layer):
+            gline = layer[gline_idx]
+            if gline.is_move:
+                return gline
+            gline_idx += 1
+        layer_idx += 1
+        gline_idx = 0
+    return None
+
 class GcodeModel(Model):
     """
     Model for displaying Gcode data.
     """
 
     color_travel = (0.6, 0.6, 0.6, 0.6)
-    color_tool0 = (1.0, 0.0, 0.0, 0.6)
-    color_tool1 = (0.31, 0.05, 0.9, 0.6)
-    color_printed = (0.2, 0.75, 0, 0.6)
-    color_current = (0, 0.9, 1.0, 0.8)
-    color_current_printed = (0.1, 0.4, 0, 0.8)
+    color_tool0 = (1.0, 0.0, 0.0, 1.0)
+    color_tool1 = (0.31, 0.05, 0.9, 1.0)
+    color_printed = (0.2, 0.75, 0, 1.0)
+    color_current = (0, 0.9, 1.0, 1.0)
+    color_current_printed = (0.1, 0.4, 0, 1.0)
 
     use_vbos = True
     loaded = False
@@ -275,10 +291,13 @@ class GcodeModel(Model):
         self.layer_stops = [0]
         num_layers = len(model_data.all_layers)
 
+        prev_is_extruding = False
+        prev_move = None
+
         prev_pos = (0, 0, 0)
         for layer_idx, layer in enumerate(model_data.all_layers):
             has_movement = False
-            for gline in layer:
+            for gline_idx, gline in enumerate(layer):
                 if not gline.is_move:
                     continue
                 if gline.x is None and gline.y is None and gline.z is None:
@@ -288,16 +307,90 @@ class GcodeModel(Model):
                 if not gline.extruding:
                     travel_vertex_list.append(prev_pos)
                     travel_vertex_list.append(current_pos)
+                    prev_is_extruding = False
                 else:
                     gline_color = self.movement_color(gline)
 
-                    vertex_list.append(prev_pos)
-                    vertex_list.append(current_pos)
-                    index_list.append(len(vertex_list) - 2)
-                    index_list.append(len(vertex_list) - 1)
+                    next_move = get_next_move(model_data, layer_idx, gline_idx)
+                    next_is_extruding = (next_move.extruding
+                                         if next_move is not None else False)
 
-                    vertex_color = gline_color
-                    color_list.append(vertex_color)
+                    prev_2d = numpy.array(prev_pos[0:2])
+                    current_2d = numpy.array(current_pos[0:2])
+                    move = current_2d - prev_2d
+                    norm = numpy.linalg.norm(move)
+                    if norm == 0:  # Don't draw anything if this move is Z+E only
+                        continue
+                    move_normalized = move / norm
+                    move_normal = numpy.array([- move_normalized[1], move_normalized[0]])
+
+                    path_halfwidth = 0.1
+                    path_halfheight = 0.1
+
+                    new_indices = []
+                    if prev_is_extruding:
+                        # Store previous vertices indices
+                        first_prev = len(vertex_list) - 4
+                        # Average directions
+                        avg_move = move_normalized / 2 + prev_move / 2
+                        norm = numpy.linalg.norm(move)
+                        # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
+                        avg_move = avg_move / norm
+                        avg_move_normal = numpy.array([- avg_move[1], avg_move[0]])
+                        # Compute vertices
+                        p1 = prev_2d - path_halfwidth * avg_move_normal
+                        p2 = prev_2d + path_halfwidth * avg_move_normal
+                        vertex_list.append((p1[0], p1[1], prev_pos[2] + path_halfheight))
+                        vertex_list.append((p1[0], p1[1], prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2[0], p2[1], prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2[0], p2[1], prev_pos[2] + path_halfheight))
+                        first = len(vertex_list) - 4
+                        # Link to previous
+                        new_indices += triangulate_rectangle(first_prev, first,
+                                                             first + 1, first_prev + 1)
+                        new_indices += triangulate_rectangle(first_prev + 1, first + 1,
+                                                             first + 2, first_prev + 2)
+                        new_indices += triangulate_rectangle(first_prev + 2, first + 2,
+                                                             first + 3, first_prev + 3)
+                        new_indices += triangulate_rectangle(first_prev + 3, first + 3,
+                                                             first, first_prev)
+                    else:
+                        # Compute vertices normal to the current move and cap it
+                        p1 = prev_2d - path_halfwidth * move_normal
+                        p2 = prev_2d + path_halfwidth * move_normal
+                        vertex_list.append((p1[0], p1[1], prev_pos[2] + path_halfheight))
+                        vertex_list.append((p1[0], p1[1], prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2[0], p2[1], prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2[0], p2[1], prev_pos[2] + path_halfheight))
+                        first = len(vertex_list) - 4
+                        new_indices = triangulate_rectangle(first, first + 1,
+                                                            first + 2, first + 3)
+
+                    if not next_is_extruding:
+                        # Compute caps and link everything
+                        p1 = current_2d - path_halfwidth * move_normal
+                        p2 = current_2d + path_halfwidth * move_normal
+                        vertex_list.append((p1[0], p1[1], current_pos[2] + path_halfheight))
+                        vertex_list.append((p1[0], p1[1], current_pos[2] - path_halfheight))
+                        vertex_list.append((p2[0], p2[1], current_pos[2] - path_halfheight))
+                        vertex_list.append((p2[0], p2[1], current_pos[2] + path_halfheight))
+                        end_first = len(vertex_list) - 4
+                        new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
+                                                             end_first + 1, end_first)
+                        new_indices += triangulate_rectangle(first, end_first,
+                                                             end_first + 1, first + 1)
+                        new_indices += triangulate_rectangle(first + 1, end_first + 1,
+                                                             end_first + 2, first + 2)
+                        new_indices += triangulate_rectangle(first + 2, end_first + 2,
+                                                             end_first + 3, first + 3)
+                        new_indices += triangulate_rectangle(first + 3, end_first + 3,
+                                                             end_first, first)
+
+                    index_list += new_indices
+
+                    color_list += [gline_color] * len(new_indices)
+                    prev_is_extruding = True
+                    prev_move = move_normalized
 
                 prev_pos = current_pos
                 count_travel_indices.append(len(travel_vertex_list))
@@ -317,7 +410,7 @@ class GcodeModel(Model):
         self.travels = numpy.array(travel_vertex_list, dtype = GLfloat)
         self.vertices = numpy.array(vertex_list, dtype = GLfloat)
         self.indices = numpy.array(index_list, dtype = GLuint)
-        self.colors = numpy.array(color_list, dtype = GLfloat).repeat(2, 0)
+        self.colors = numpy.array(color_list, dtype = GLfloat)
 
         self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers + 1
@@ -403,7 +496,7 @@ class GcodeModel(Model):
 
         self.travel_buffer.unbind()
 
-    def _draw_elements(self, start, end, draw_type = GL_LINES):
+    def _draw_elements(self, start, end, draw_type = GL_TRIANGLES):
         glDrawRangeElements(draw_type,
                             self.count_print_vertices[start - 1],
                             self.count_print_vertices[end] - 1,
