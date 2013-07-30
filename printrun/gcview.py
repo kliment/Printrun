@@ -67,6 +67,8 @@ class GcodeViewPanel(wxGLPanel):
             for filename in self.parent.filenames:
                 self.parent.load_file(filename)
             self.parent.autoplate()
+            if hasattr(self.parent, "loadcb"):
+                self.parent.loadcb()
             self.parent.filenames = None
 
     def create_objects(self):

@@ -129,6 +129,8 @@ class StlViewPanel(wxGLPanel):
             for filename in self.parent.filenames:
                 self.parent.load_file(filename)
             self.parent.autoplate()
+            if hasattr(self.parent, "loadcb"):
+                self.parent.loadcb()
             self.parent.filenames = None
 
     def double(self, event):
