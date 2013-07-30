@@ -413,9 +413,9 @@ class GcodeModel(Model):
                     prev_move_y = delta_y
 
                 prev_pos = current_pos
-                count_travel_indices.append(len(travel_vertex_list))
+                count_travel_indices.append(len(travel_vertex_list) / 3)
                 count_print_indices.append(len(index_list))
-                count_print_vertices.append(len(vertex_list))
+                count_print_vertices.append(len(vertex_list) / 3)
                 gline.gcview_end_vertex = len(count_print_indices) - 1
 
             if has_movement:
