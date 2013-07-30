@@ -354,7 +354,7 @@ class GcodeModel(Model):
                         new_vertices.append((p1x, p1y, prev_pos[2] - path_halfheight))
                         new_vertices.append((p2x, p2y, prev_pos[2] - path_halfheight))
                         new_vertices.append((p2x, p2y, prev_pos[2] + path_halfheight))
-                        first = len(new_vertices) - 4
+                        first = len(vertex_list)
                         # Link to previous
                         new_indices += triangulate_rectangle(first_prev, first,
                                                              first + 1, first_prev + 1)
@@ -374,7 +374,7 @@ class GcodeModel(Model):
                         new_vertices.append((p1x, p1y, prev_pos[2] - path_halfheight))
                         new_vertices.append((p2x, p2y, prev_pos[2] - path_halfheight))
                         new_vertices.append((p2x, p2y, prev_pos[2] + path_halfheight))
-                        first = len(new_vertices) - 4
+                        first = len(vertex_list)
                         new_indices = triangulate_rectangle(first, first + 1,
                                                             first + 2, first + 3)
 
@@ -388,7 +388,7 @@ class GcodeModel(Model):
                         new_vertices.append((p1x, p1y, current_pos[2] - path_halfheight))
                         new_vertices.append((p2x, p2y, current_pos[2] - path_halfheight))
                         new_vertices.append((p2x, p2y, current_pos[2] + path_halfheight))
-                        end_first = len(new_vertices) - 4
+                        end_first = len(vertex_list) + len(new_vertices) - 4
                         new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
                                                              end_first + 1, end_first)
                         new_indices += triangulate_rectangle(first, end_first,
