@@ -517,9 +517,14 @@ class GcodeModelLight(Model):
 
         prev_pos = (0, 0, 0)
         for layer_idx, layer in enumerate(model_data.all_layers):
+            has_movement = False
             for gline in layer:
                 if not gline.is_move:
                     continue
+                if gline.x is not None \
+                   or gline.y is not None \
+                   or gline.z is not None:
+                    has_movement = True
                 vertex_list.append(prev_pos)
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
                 vertex_list.append(current_pos)
@@ -530,7 +535,8 @@ class GcodeModelLight(Model):
                 prev_pos = current_pos
                 gline.gcview_end_vertex = len(vertex_list)
 
-            self.layer_stops.append(len(vertex_list))
+            if has_movement:
+                self.layer_stops.append(len(vertex_list))
 
             if callback:
                 callback(layer_idx + 1, num_layers)
