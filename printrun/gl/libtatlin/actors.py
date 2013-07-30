@@ -332,7 +332,7 @@ class GcodeModel(Model):
                     new_vertices = []
                     if prev_is_extruding:
                         # Store previous vertices indices
-                        first_prev = len(vertex_list) - 4
+                        first_prev = len(vertex_list) / 3 - 4
                         # Average directions
                         avg_move_x = delta_x + prev_move_x
                         avg_move_y = delta_y + prev_move_y
@@ -350,11 +350,11 @@ class GcodeModel(Model):
                         p2x = prev_pos[0] + path_halfwidth * avg_move_normal_x
                         p1y = prev_pos[1] - path_halfwidth * avg_move_normal_y
                         p2y = prev_pos[1] + path_halfwidth * avg_move_normal_y
-                        new_vertices.append((p1x, p1y, prev_pos[2] + path_halfheight))
-                        new_vertices.append((p1x, p1y, prev_pos[2] - path_halfheight))
-                        new_vertices.append((p2x, p2y, prev_pos[2] - path_halfheight))
-                        new_vertices.append((p2x, p2y, prev_pos[2] + path_halfheight))
-                        first = len(vertex_list)
+                        new_vertices.extend((p1x, p1y, prev_pos[2] + path_halfheight))
+                        new_vertices.extend((p1x, p1y, prev_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, prev_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, prev_pos[2] + path_halfheight))
+                        first = len(vertex_list) / 3
                         # Link to previous
                         new_indices += triangulate_rectangle(first_prev, first,
                                                              first + 1, first_prev + 1)
@@ -370,11 +370,11 @@ class GcodeModel(Model):
                         p2x = prev_pos[0] + path_halfwidth * move_normal_x
                         p1y = prev_pos[1] - path_halfwidth * move_normal_y
                         p2y = prev_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.append((p1x, p1y, prev_pos[2] + path_halfheight))
-                        new_vertices.append((p1x, p1y, prev_pos[2] - path_halfheight))
-                        new_vertices.append((p2x, p2y, prev_pos[2] - path_halfheight))
-                        new_vertices.append((p2x, p2y, prev_pos[2] + path_halfheight))
-                        first = len(vertex_list)
+                        new_vertices.extend((p1x, p1y, prev_pos[2] + path_halfheight))
+                        new_vertices.extend((p1x, p1y, prev_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, prev_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, prev_pos[2] + path_halfheight))
+                        first = len(vertex_list) / 3
                         new_indices = triangulate_rectangle(first, first + 1,
                                                             first + 2, first + 3)
 
@@ -384,11 +384,11 @@ class GcodeModel(Model):
                         p2x = current_pos[0] + path_halfwidth * move_normal_x
                         p1y = current_pos[1] - path_halfwidth * move_normal_y
                         p2y = current_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.append((p1x, p1y, current_pos[2] + path_halfheight))
-                        new_vertices.append((p1x, p1y, current_pos[2] - path_halfheight))
-                        new_vertices.append((p2x, p2y, current_pos[2] - path_halfheight))
-                        new_vertices.append((p2x, p2y, current_pos[2] + path_halfheight))
-                        end_first = len(vertex_list) + len(new_vertices) - 4
+                        new_vertices.extend((p1x, p1y, current_pos[2] + path_halfheight))
+                        new_vertices.extend((p1x, p1y, current_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, current_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, current_pos[2] + path_halfheight))
+                        end_first = len(vertex_list) / 3 + len(new_vertices) / 3 - 4
                         new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
                                                              end_first + 1, end_first)
                         new_indices += triangulate_rectangle(first, end_first,
