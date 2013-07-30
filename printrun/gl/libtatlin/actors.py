@@ -281,10 +281,10 @@ class GcodeModel(Model):
                      (model_data.ymin, model_data.ymax, model_data.depth),
                      (model_data.zmin, model_data.zmax, model_data.height))
 
-        travel_vertex_list = []
         count_travel_indices = [0]
         count_print_indices = [0]
         count_print_vertices = [0]
+        travel_vertex_list = []
         vertex_list = []
         index_list = []
         color_list = []
@@ -402,11 +402,8 @@ class GcodeModel(Model):
 
                     index_list += new_indices
                     vertex_list += new_vertices
+                    color_list += list(gline_color) * len(new_vertices)
 
-                    new_colors = []
-                    for i in range(len(new_vertices)):
-                        new_colors += gline_color
-                    color_list += new_colors
                     prev_is_extruding = True
                     prev_move_x = delta_x
                     prev_move_y = delta_y
