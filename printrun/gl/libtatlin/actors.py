@@ -644,10 +644,10 @@ class GcodeModelLight(Model):
                 color_list.extend(vertex_color + vertex_color)
 
                 prev_pos = current_pos
-                gline.gcview_end_vertex = len(vertex_list)
+                gline.gcview_end_vertex = len(vertex_list) / 3
 
             if has_movement:
-                self.layer_stops.append(len(vertex_list))
+                self.layer_stops.append(len(vertex_list) / 3)
 
             if callback:
                 callback(layer_idx + 1, num_layers)
