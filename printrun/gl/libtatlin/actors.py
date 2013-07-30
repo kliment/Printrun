@@ -427,10 +427,14 @@ class GcodeModel(Model):
         self.count_travel_indices = count_travel_indices
         self.count_print_indices = count_print_indices
         self.count_print_vertices = count_print_vertices
-        self.travels = numpy.array(travel_vertex_list, dtype = GLfloat)
-        self.vertices = numpy.array(vertex_list, dtype = GLfloat)
-        self.indices = numpy.array(index_list, dtype = GLuint)
-        self.colors = numpy.array(color_list, dtype = GLfloat)
+        self.travels = numpy.fromiter(travel_vertex_list, dtype = GLfloat,
+                                      count = len(travel_vertex_list))
+        self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
+                                       count = len(vertex_list))
+        self.indices = numpy.fromiter(index_list, dtype = GLuint,
+                                      count = len(index_list))
+        self.colors = numpy.fromiter(color_list, dtype = GLfloat,
+                                     count = len(color_list))
 
         self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers + 1
@@ -652,8 +656,10 @@ class GcodeModelLight(Model):
             if callback:
                 callback(layer_idx + 1, num_layers)
 
-        self.vertices = numpy.array(vertex_list, dtype = GLfloat)
-        self.colors = numpy.array(color_list, dtype = GLfloat)
+        self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
+                                       count = len(vertex_list))
+        self.colors = numpy.fromiter(color_list, dtype = GLfloat,
+                                     count = len(color_list))
 
         self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers + 1
