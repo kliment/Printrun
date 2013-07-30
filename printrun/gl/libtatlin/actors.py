@@ -52,6 +52,11 @@ def numpy2vbo(nparray, target = GL_ARRAY_BUFFER, usage = GL_STATIC_DRAW, use_vbo
 def triangulate_rectangle(i1, i2, i3, i4):
     return [i1, i4, i3, i3, i2, i1]
 
+def triangulate_box(i1, i2, i3, i4,
+                    j1, j2, j3, j4):
+    return [i1, i2, j2, j2, j1, i1, i2, i3, j3, j3, j2, i2,
+            i3, i4, j4, j4, j3, i3, i4, i1, j1, j1, j4, i4]
+
 class BoundingBox(object):
     """
     A rectangular box (cuboid) enclosing a 3D model, defined by lower and upper corners.
@@ -332,7 +337,7 @@ class GcodeModel(Model):
                     new_vertices = []
                     if prev_is_extruding:
                         # Store previous vertices indices
-                        first_prev = len(vertex_list) / 3 - 4
+                        prev_id = len(vertex_list) / 3 - 4
                         # Average directions
                         avg_move_x = delta_x + prev_move_x
                         avg_move_y = delta_y + prev_move_y
@@ -356,14 +361,10 @@ class GcodeModel(Model):
                         new_vertices.extend((p2x, p2y, prev_pos[2] + path_halfheight))
                         first = len(vertex_list) / 3
                         # Link to previous
-                        new_indices += triangulate_rectangle(first_prev, first,
-                                                             first + 1, first_prev + 1)
-                        new_indices += triangulate_rectangle(first_prev + 1, first + 1,
-                                                             first + 2, first_prev + 2)
-                        new_indices += triangulate_rectangle(first_prev + 2, first + 2,
-                                                             first + 3, first_prev + 3)
-                        new_indices += triangulate_rectangle(first_prev + 3, first + 3,
-                                                             first, first_prev)
+                        new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                       prev_id + 2, prev_id + 3,
+                                                       first, first + 1,
+                                                       first + 2, first + 3)
                     else:
                         # Compute vertices normal to the current move and cap it
                         p1x = prev_pos[0] - path_halfwidth * move_normal_x
@@ -391,14 +392,10 @@ class GcodeModel(Model):
                         end_first = len(vertex_list) / 3 + len(new_vertices) / 3 - 4
                         new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
                                                              end_first + 1, end_first)
-                        new_indices += triangulate_rectangle(first, end_first,
-                                                             end_first + 1, first + 1)
-                        new_indices += triangulate_rectangle(first + 1, end_first + 1,
-                                                             end_first + 2, first + 2)
-                        new_indices += triangulate_rectangle(first + 2, end_first + 2,
-                                                             end_first + 3, first + 3)
-                        new_indices += triangulate_rectangle(first + 3, end_first + 3,
-                                                             end_first, first)
+                        new_indices += triangulate_box(first, first + 1,
+                                                       first + 2, first + 3,
+                                                       end_first, end_first + 1,
+                                                       end_first + 2, end_first + 3)
 
                     index_list += new_indices
                     vertex_list += new_vertices
