@@ -330,8 +330,8 @@ class GcodeModel(Model):
                     move_normal_x = - delta_y / norm
                     move_normal_y = delta_x / norm
 
-                    path_halfwidth = 0.1
-                    path_halfheight = 0.1
+                    path_halfwidth = 0.2
+                    path_halfheight = 0.12
 
                     new_indices = []
                     new_vertices = []
