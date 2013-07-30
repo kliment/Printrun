@@ -335,7 +335,7 @@ class GcodeModel(Model):
                         first_prev = len(vertex_list) - 4
                         # Average directions
                         avg_move_x = delta_x + prev_move_x
-                        avg_move_y = delta_x + prev_move_y
+                        avg_move_y = delta_y + prev_move_y
                         norm = avg_move_x * avg_move_x + avg_move_y * avg_move_y
                         # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
                         if norm == 0:
@@ -343,7 +343,7 @@ class GcodeModel(Model):
                             avg_move_normal_y = move_normal_y
                         else:
                             norm = math.sqrt(norm)
-                            avg_move_normal_x = - avg_move_x / norm
+                            avg_move_normal_x = - avg_move_y / norm
                             avg_move_normal_y = avg_move_x / norm
                         # Compute vertices
                         p1x = prev_pos[0] - path_halfwidth * avg_move_normal_x
