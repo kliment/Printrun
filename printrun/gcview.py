@@ -22,9 +22,11 @@ from . import gcoder
 from .gl.panel import wxGLPanel
 from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
+from .gl.libtatlin.actors import vec
 
 from pyglet.gl import glPushMatrix, glPopMatrix, \
     glTranslatef, glRotatef, glScalef, glMultMatrixd
+from pyglet.gl import *
 
 from .gviz import GvizBaseFrame
 
@@ -71,6 +73,10 @@ class GcodeViewPanel(wxGLPanel):
                 self.parent.loadcb()
             self.parent.filenames = None
 
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
+        glEnable(GL_LIGHT1)
+
     def create_objects(self):
         '''create opengl objects when opengl is initialized'''
         for obj in self.parent.objects:
@@ -96,6 +102,14 @@ class GcodeViewPanel(wxGLPanel):
         platformx0 = -self.build_dimensions[3] - self.parent.platform.width / 2
         platformy0 = -self.build_dimensions[4] - self.parent.platform.depth / 2
         glTranslatef(platformx0, platformy0, 0)
+
+        light_z = max(self.parent.platform.width, self.parent.platform.depth)
+        glLightfv(GL_LIGHT0, GL_POSITION, vec(0,
+                                              self.parent.platform.depth / 2,
+                                              light_z, 0))
+        glLightfv(GL_LIGHT0, GL_POSITION, vec(self.parent.platform.width,
+                                              self.parent.platform.depth / 2,
+                                              light_z, 0))
 
         for obj in self.parent.objects:
             if not obj.model \

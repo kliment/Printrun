@@ -36,6 +36,9 @@ from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
 
+def vec(*args):
+    return (GLfloat * len(args))(*args)
+
 def compile_display_list(func, *options):
     display_list = glGenLists(1)
     glNewList(display_list, GL_COMPILE)
