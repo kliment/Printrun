@@ -636,12 +636,12 @@ class GcodeModelLight(Model):
                 if gline.x is None and gline.y is None and gline.z is None:
                     continue
                 has_movement = True
-                vertex_list.append(prev_pos)
+                vertex_list.extend(prev_pos)
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
-                vertex_list.append(current_pos)
+                vertex_list.extend(current_pos)
 
                 vertex_color = self.movement_color(gline)
-                color_list.append(vertex_color)
+                color_list.extend(vertex_color + vertex_color)
 
                 prev_pos = current_pos
                 gline.gcview_end_vertex = len(vertex_list)
@@ -653,7 +653,7 @@ class GcodeModelLight(Model):
                 callback(layer_idx + 1, num_layers)
 
         self.vertices = numpy.array(vertex_list, dtype = GLfloat)
-        self.colors = numpy.array(color_list, dtype = GLfloat).repeat(2, 0)
+        self.colors = numpy.array(color_list, dtype = GLfloat)
 
         self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers + 1
