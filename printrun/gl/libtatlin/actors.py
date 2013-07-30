@@ -292,7 +292,8 @@ class GcodeModel(Model):
         num_layers = len(model_data.all_layers)
 
         prev_is_extruding = False
-        prev_move = None
+        prev_move_x = None
+        prev_move_y = None
 
         prev_pos = (0, 0, 0)
         for layer_idx, layer in enumerate(model_data.all_layers):
@@ -315,14 +316,14 @@ class GcodeModel(Model):
                     next_is_extruding = (next_move.extruding
                                          if next_move is not None else False)
 
-                    prev_2d = numpy.array(prev_pos[0:2])
-                    current_2d = numpy.array(current_pos[0:2])
-                    move = current_2d - prev_2d
-                    norm = numpy.linalg.norm(move)
+                    delta_x = current_pos[0] - prev_pos[0]
+                    delta_y = current_pos[1] - prev_pos[1]
+                    norm = delta_x * delta_x + delta_y * delta_y
                     if norm == 0:  # Don't draw anything if this move is Z+E only
                         continue
-                    move_normalized = move / norm
-                    move_normal = numpy.array([- move_normalized[1], move_normalized[0]])
+                    norm = math.sqrt(norm)
+                    move_normal_x = - delta_y / norm
+                    move_normal_y = delta_x / norm
 
                     path_halfwidth = 0.1
                     path_halfheight = 0.1
@@ -332,21 +333,26 @@ class GcodeModel(Model):
                         # Store previous vertices indices
                         first_prev = len(vertex_list) - 4
                         # Average directions
-                        avg_move = move_normalized + prev_move
-                        norm = numpy.linalg.norm(avg_move)
+                        avg_move_x = delta_x + prev_move_x
+                        avg_move_y = delta_x + prev_move_y
+                        norm = avg_move_x * avg_move_x + avg_move_y * avg_move_y
                         # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
                         if norm == 0:
-                            avg_move_normal = move_normal
+                            avg_move_normal_x = move_normal_x
+                            avg_move_normal_y = move_normal_y
                         else:
-                            avg_move = avg_move / norm
-                            avg_move_normal = numpy.array([- avg_move[1], avg_move[0]])
+                            norm = math.sqrt(norm)
+                            avg_move_normal_x = - avg_move_x / norm
+                            avg_move_normal_y = avg_move_x / norm
                         # Compute vertices
-                        p1 = prev_2d - path_halfwidth * avg_move_normal
-                        p2 = prev_2d + path_halfwidth * avg_move_normal
-                        vertex_list.append((p1[0], p1[1], prev_pos[2] + path_halfheight))
-                        vertex_list.append((p1[0], p1[1], prev_pos[2] - path_halfheight))
-                        vertex_list.append((p2[0], p2[1], prev_pos[2] - path_halfheight))
-                        vertex_list.append((p2[0], p2[1], prev_pos[2] + path_halfheight))
+                        p1x = prev_pos[0] - path_halfwidth * avg_move_normal_x
+                        p2x = prev_pos[0] + path_halfwidth * avg_move_normal_x
+                        p1y = prev_pos[1] - path_halfwidth * avg_move_normal_y
+                        p2y = prev_pos[1] + path_halfwidth * avg_move_normal_y
+                        vertex_list.append((p1x, p1y, prev_pos[2] + path_halfheight))
+                        vertex_list.append((p1x, p1y, prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2x, p2y, prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2x, p2y, prev_pos[2] + path_halfheight))
                         first = len(vertex_list) - 4
                         # Link to previous
                         new_indices += triangulate_rectangle(first_prev, first,
@@ -359,24 +365,28 @@ class GcodeModel(Model):
                                                              first, first_prev)
                     else:
                         # Compute vertices normal to the current move and cap it
-                        p1 = prev_2d - path_halfwidth * move_normal
-                        p2 = prev_2d + path_halfwidth * move_normal
-                        vertex_list.append((p1[0], p1[1], prev_pos[2] + path_halfheight))
-                        vertex_list.append((p1[0], p1[1], prev_pos[2] - path_halfheight))
-                        vertex_list.append((p2[0], p2[1], prev_pos[2] - path_halfheight))
-                        vertex_list.append((p2[0], p2[1], prev_pos[2] + path_halfheight))
+                        p1x = prev_pos[0] - path_halfwidth * move_normal_x
+                        p2x = prev_pos[0] + path_halfwidth * move_normal_x
+                        p1y = prev_pos[1] - path_halfwidth * move_normal_y
+                        p2y = prev_pos[1] + path_halfwidth * move_normal_y
+                        vertex_list.append((p1x, p1y, prev_pos[2] + path_halfheight))
+                        vertex_list.append((p1x, p1y, prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2x, p2y, prev_pos[2] - path_halfheight))
+                        vertex_list.append((p2x, p2y, prev_pos[2] + path_halfheight))
                         first = len(vertex_list) - 4
                         new_indices = triangulate_rectangle(first, first + 1,
                                                             first + 2, first + 3)
 
                     if not next_is_extruding:
                         # Compute caps and link everything
-                        p1 = current_2d - path_halfwidth * move_normal
-                        p2 = current_2d + path_halfwidth * move_normal
-                        vertex_list.append((p1[0], p1[1], current_pos[2] + path_halfheight))
-                        vertex_list.append((p1[0], p1[1], current_pos[2] - path_halfheight))
-                        vertex_list.append((p2[0], p2[1], current_pos[2] - path_halfheight))
-                        vertex_list.append((p2[0], p2[1], current_pos[2] + path_halfheight))
+                        p1x = current_pos[0] - path_halfwidth * move_normal_x
+                        p2x = current_pos[0] + path_halfwidth * move_normal_x
+                        p1y = current_pos[1] - path_halfwidth * move_normal_y
+                        p2y = current_pos[1] + path_halfwidth * move_normal_y
+                        vertex_list.append((p1x, p1y, current_pos[2] + path_halfheight))
+                        vertex_list.append((p1x, p1y, current_pos[2] - path_halfheight))
+                        vertex_list.append((p2x, p2y, current_pos[2] - path_halfheight))
+                        vertex_list.append((p2x, p2y, current_pos[2] + path_halfheight))
                         end_first = len(vertex_list) - 4
                         new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
                                                              end_first + 1, end_first)
@@ -393,7 +403,8 @@ class GcodeModel(Model):
 
                     color_list += [gline_color] * len(new_indices)
                     prev_is_extruding = True
-                    prev_move = move_normalized
+                    prev_move_x = delta_x
+                    prev_move_y = delta_y
 
                 prev_pos = current_pos
                 count_travel_indices.append(len(travel_vertex_list))
