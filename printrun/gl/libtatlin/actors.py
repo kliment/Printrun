@@ -545,7 +545,7 @@ class GcodeModelLight(Model):
         self.colors = numpy.array(color_list, dtype = GLfloat).repeat(2, 0)
 
         self.max_layers = len(self.layer_stops) - 1
-        self.num_layers_to_draw = self.max_layers
+        self.num_layers_to_draw = self.max_layers + 1
         self.printed_until = -1
         self.only_current = False
         self.initialized = False
