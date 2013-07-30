@@ -31,6 +31,12 @@ from .gviz import GvizBaseFrame
 from printrun_utils import imagefile, install_locale
 install_locale('pronterface')
 
+def create_model(light):
+    if light:
+        return actors.GcodeModelLight()
+    else:
+        return actors.GcodeModel()
+
 class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent, id = wx.ID_ANY,
@@ -247,7 +253,8 @@ class GCObject(object):
 
 class GcodeViewMainWrapper(object):
 
-    def __init__(self, parent, build_dimensions):
+    def __init__(self, parent, build_dimensions, root):
+        self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions)
         self.glpanel.SetMinSize((150, 150))
@@ -275,7 +282,8 @@ class GcodeViewMainWrapper(object):
         pass
 
     def addfile(self, gcode = None):
-        self.model = actors.GcodeModel()
+        self.model = create_model(self.root.settings.light3d
+                                  if self.root else False)
         if gcode:
             self.model.load_data(gcode)
         self.objects[-1].model = self.model
@@ -291,9 +299,10 @@ class GcodeViewFrame(GvizBaseFrame):
 
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
-                 style = wx.DEFAULT_FRAME_STYLE):
+                 style = wx.DEFAULT_FRAME_STYLE, root = None):
         super(GcodeViewFrame, self).__init__(parent, ID, title,
                                              pos, size, style)
+        self.root = root
 
         panel, vbox = self.create_base_ui()
 
@@ -341,7 +350,8 @@ class GcodeViewFrame(GvizBaseFrame):
         if self.clonefrom:
             self.model = self.clonefrom[-1].model.copy()
         else:
-            self.model = actors.GcodeModel()
+            self.model = create_model(self.root.settings.light3d
+                                      if self.root else False)
             if gcode:
                 self.model.load_data(gcode)
         self.objects[-1].model = self.model
