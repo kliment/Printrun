@@ -306,8 +306,8 @@ class GcodeModel(Model):
                 has_movement = True
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
                 if not gline.extruding:
-                    travel_vertex_list.append(prev_pos)
-                    travel_vertex_list.append(current_pos)
+                    travel_vertex_list.extend(prev_pos)
+                    travel_vertex_list.extend(current_pos)
                     prev_is_extruding = False
                 else:
                     gline_color = self.movement_color(gline)
