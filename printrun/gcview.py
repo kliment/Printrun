@@ -224,6 +224,7 @@ class GcodeViewPanel(wxGLPanel):
             if not self.parent.model or not self.parent.model.loaded:
                 return
             self.parent.model.only_current = not self.parent.model.only_current
+            wx.CallAfter(self.Refresh)
         if key in kreset:
             self.resetview()
         event.Skip()
