@@ -316,7 +316,7 @@ class GcodeModel(Model):
 
         self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers + 1
-        self.printed_until = -1
+        self.printed_until = 0
         self.only_current = False
         self.initialized = False
         self.loaded = True
@@ -397,6 +397,14 @@ class GcodeModel(Model):
 
         self.travel_buffer.unbind()
 
+    def _draw_elements(self, start, end, draw_type = GL_LINES):
+        glDrawRangeElements(draw_type,
+                            self.count_print_vertices[start - 1],
+                            self.count_print_vertices[end] - 1,
+                            self.count_print_indices[end] - self.count_print_indices[start - 1],
+                            GL_UNSIGNED_INT,
+                            sizeof(GLuint) * self.count_print_indices[start - 1])
+
     def _display_movements(self, has_vbo):
         self.vertex_buffer.bind()
         if has_vbo:
@@ -412,11 +420,12 @@ class GcodeModel(Model):
 
         self.index_buffer.bind()
 
-        start = 0
-        if self.num_layers_to_draw <= self.max_layers:
+        start = 1
+        layer_selected = self.num_layers_to_draw <= self.max_layers
+        if layer_selected:
             end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
         else:
-            end_prev_layer = -1
+            end_prev_layer = 0
         end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
 
         glDisableClientState(GL_COLOR_ARRAY)
@@ -426,37 +435,22 @@ class GcodeModel(Model):
         # Draw printed stuff until end or end_prev_layer
         cur_end = min(self.printed_until, end)
         if not self.only_current:
-            if 0 <= end_prev_layer <= cur_end:
-                glDrawRangeElements(GL_LINES,
-                                    0,
-                                    self.count_print_vertices[end_prev_layer],
-                                    self.count_print_indices[end_prev_layer],
-                                    GL_UNSIGNED_INT,
-                                    0)
-            elif cur_end >= 0:
-                glDrawRangeElements(GL_LINES,
-                                    0,
-                                    self.count_print_vertices[cur_end],
-                                    self.count_print_indices[cur_end],
-                                    GL_UNSIGNED_INT,
-                                    0)
+            if 1 <= end_prev_layer <= cur_end:
+                self._draw_elements(1, end_prev_layer)
+            elif cur_end >= 1:
+                self._draw_elements(1, cur_end)
 
         glEnableClientState(GL_COLOR_ARRAY)
 
         # Draw nonprinted stuff until end_prev_layer
-        start = max(cur_end, 0)
+        start = max(cur_end, 1)
         if end_prev_layer >= start:
             if not self.only_current:
-                glDrawRangeElements(GL_LINES,
-                                    self.count_print_vertices[start],
-                                    self.count_print_vertices[end_prev_layer],
-                                    self.count_print_indices[end_prev_layer] - self.count_print_indices[start],
-                                    GL_UNSIGNED_INT,
-                                    sizeof(GLuint) * self.count_print_indices[start])
+                self._draw_elements(start, end_prev_layer)
             cur_end = end_prev_layer
 
         # Draw current layer
-        if end_prev_layer >= 0:
+        if layer_selected:
             glDisableClientState(GL_COLOR_ARRAY)
 
             # Backup & increase line width
@@ -467,22 +461,12 @@ class GcodeModel(Model):
             glColor4f(*self.color_current_printed)
 
             if cur_end > end_prev_layer:
-                glDrawRangeElements(GL_LINES,
-                                    self.count_print_vertices[end_prev_layer + 1],
-                                    self.count_print_vertices[cur_end],
-                                    self.count_print_indices[cur_end] - self.count_print_indices[end_prev_layer] + 1,
-                                    GL_UNSIGNED_INT,
-                                    sizeof(GLuint) * self.count_print_indices[end_prev_layer + 1])
+                self._draw_elements(end_prev_layer + 1, cur_end)
 
             glColor4f(*self.color_current)
 
             if end > cur_end:
-                glDrawRangeElements(GL_LINES,
-                                    self.count_print_vertices[cur_end],
-                                    self.count_print_vertices[end],
-                                    self.count_print_indices[end] - self.count_print_indices[cur_end] + 1,
-                                    GL_UNSIGNED_INT,
-                                    sizeof(GLuint) * self.count_print_indices[cur_end])
+                self._draw_elements(cur_end + 1, end)
 
             # Restore line width
             glLineWidth(orig_linewidth)
@@ -490,14 +474,9 @@ class GcodeModel(Model):
             glEnableClientState(GL_COLOR_ARRAY)
 
         # Draw non printed stuff until end (if not ending at a given layer)
-        start = max(self.printed_until, 0)
-        if end_prev_layer < 0 and end > 0 and not self.only_current:
-            glDrawRangeElements(GL_LINES,
-                                self.count_print_vertices[start],
-                                self.count_print_vertices[end],
-                                self.count_print_indices[end] - self.count_print_indices[start] + 1,
-                                GL_UNSIGNED_INT,
-                                sizeof(GLuint) * self.count_print_indices[start])
+        start = max(self.printed_until, 1)
+        if not layer_selected and end >= start:
+            self._draw_elements(start, end)
 
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
