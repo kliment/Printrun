@@ -390,6 +390,7 @@ class GcodeModel(Model):
         else:
             glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
 
+        # TODO: show current layer travels in a different color
         end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
         end_index = self.count_travel_indices[end]
         glColor4f(*self.color_travel)
