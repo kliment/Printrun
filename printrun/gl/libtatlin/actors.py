@@ -262,7 +262,11 @@ class GcodeModel(Model):
                      (model_data.ymin, model_data.ymax, model_data.depth),
                      (model_data.zmin, model_data.zmax, model_data.height))
 
+        travel_vertex_list = []
+        max_travel_indices = []
+        max_print_indices = []
         vertex_list = []
+        index_list = []
         color_list = []
         self.layer_stops = [0]
         num_layers = len(model_data.all_layers)
@@ -272,22 +276,35 @@ class GcodeModel(Model):
             for gline in layer:
                 if not gline.is_move:
                     continue
-                vertex_list.append(prev_pos)
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
-                vertex_list.append(current_pos)
+                if not gline.extruding:
+                    travel_vertex_list.append(prev_pos)
+                    travel_vertex_list.append(current_pos)
+                else:
+                    gline_color = self.movement_color(gline)
 
-                vertex_color = self.movement_color(gline)
-                color_list.append(vertex_color)
+                    vertex_list.append(prev_pos)
+                    vertex_list.append(current_pos)
+
+                    vertex_color = gline_color
+                    color_list.append(vertex_color)
 
                 prev_pos = current_pos
-                gline.gcview_end_vertex = len(vertex_list)
+                max_travel_indices.append(len(travel_vertex_list))
+                #max_print_indices.append(len(index_list))
+                max_print_indices.append(len(vertex_list))
+                gline.gcview_end_vertex = len(max_print_indices)
 
-            self.layer_stops.append(len(vertex_list))
+            self.layer_stops.append(len(max_print_indices) - 1)
 
             if callback:
                 callback(layer_idx + 1, num_layers)
 
+        self.max_travel_indices = max_travel_indices
+        self.max_print_indices = max_print_indices
+        self.travels = numpy.array(travel_vertex_list, dtype = GLfloat)
         self.vertices = numpy.array(vertex_list, dtype = GLfloat)
+        self.indices = numpy.array(index_list, dtype = GLfloat)
         self.colors = numpy.array(color_list, dtype = GLfloat).repeat(2, 0)
 
         self.max_layers = len(self.layer_stops) - 1
@@ -300,11 +317,13 @@ class GcodeModel(Model):
         t_end = time.time()
 
         logging.log(logging.INFO, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
-        logging.log(logging.INFO, _('Vertex count: %d') % len(self.vertices))
+        logging.log(logging.INFO, _('Vertex count: %d') % (len(self.vertices) + len(self.travels)))
 
     def copy(self):
         copy = GcodeModel()
-        for var in ["vertices", "colors", "max_layers", "num_layers_to_draw", "printed_until", "layer_stops", "dims", "only_current"]:
+        for var in ["vertices", "colors", "travels", "indices",
+                    "max_layers", "num_layers_to_draw", "printed_until",
+                    "layer_stops", "dims", "only_current"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False
@@ -327,6 +346,8 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
+        self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
+        self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos)
         self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
         self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
         self.initialized = True
@@ -337,15 +358,37 @@ class GcodeModel(Model):
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
 
-        self._display_movements(mode_2d)
+        has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
+        self._display_travels(has_vbo)
+        self._display_movements(has_vbo)
 
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
         glPopMatrix()
 
-    def _display_movements(self, mode_2d=False):
+    def _display_travels(self, has_vbo):
+        self.travel_buffer.bind()
+        if has_vbo:
+            glVertexPointer(3, GL_FLOAT, 0, None)
+        else:
+            glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
+
+        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        glDisableClientState(GL_COLOR_ARRAY)
+        glColor4f(*self.color_travel)
+        if self.only_current:
+            if self.num_layers_to_draw < self.max_layers:
+                end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
+                glDrawArrays(GL_LINES, self.max_travel_indices[end_prev_layer + 1],
+                             self.max_travel_indices[end] - self.max_travel_indices[end_prev_layer + 1])
+        else:
+            glDrawArrays(GL_LINES, 0, self.max_travel_indices[end])
+        glEnableClientState(GL_COLOR_ARRAY)
+
+        self.travel_buffer.unbind()
+
+    def _display_movements(self, has_vbo):
         self.vertex_buffer.bind()
-        has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
         if has_vbo:
             glVertexPointer(3, GL_FLOAT, 0, None)
         else:
@@ -372,9 +415,11 @@ class GcodeModel(Model):
         cur_end = min(self.printed_until, end)
         if not self.only_current:
             if 0 <= end_prev_layer <= cur_end:
-                glDrawArrays(GL_LINES, start, end_prev_layer)
+                glDrawArrays(GL_LINES, self.max_print_indices[start],
+                             self.max_print_indices[end_prev_layer])
             elif cur_end >= 0:
-                glDrawArrays(GL_LINES, start, cur_end)
+                glDrawArrays(GL_LINES, self.max_print_indices[start],
+                             self.max_print_indices[cur_end])
 
         glEnableClientState(GL_COLOR_ARRAY)
 
@@ -382,7 +427,8 @@ class GcodeModel(Model):
         start = max(cur_end, 0)
         if end_prev_layer >= start:
             if not self.only_current:
-                glDrawArrays(GL_LINES, start, end_prev_layer - start)
+                glDrawArrays(GL_LINES, self.max_print_indices[start],
+                             self.max_print_indices[end_prev_layer] - self.max_print_indices[start])
             cur_end = end_prev_layer
 
         # Draw current layer
@@ -397,12 +443,14 @@ class GcodeModel(Model):
             glColor4f(*self.color_current_printed)
 
             if cur_end > end_prev_layer:
-                glDrawArrays(GL_LINES, end_prev_layer, cur_end - end_prev_layer)
+                glDrawArrays(GL_LINES, self.max_print_indices[end_prev_layer + 1],
+                             self.max_print_indices[cur_end] - self.max_print_indices[end_prev_layer])
 
             glColor4f(*self.color_current)
 
             if end > cur_end:
-                glDrawArrays(GL_LINES, cur_end, end - cur_end)
+                glDrawArrays(GL_LINES, self.max_print_indices[cur_end],
+                             self.max_print_indices[end] - self.max_print_indices[cur_end])
 
             # Restore line width
             glLineWidth(orig_linewidth)
@@ -413,7 +461,8 @@ class GcodeModel(Model):
         start = max(self.printed_until, 0)
         end = end - start
         if end_prev_layer < 0 and end > 0 and not self.only_current:
-            glDrawArrays(GL_LINES, start, end)
+            glDrawArrays(GL_LINES, self.max_print_indices[start],
+                         self.max_print_indices[end])
 
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
