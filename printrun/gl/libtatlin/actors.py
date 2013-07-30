@@ -333,7 +333,7 @@ class GcodeModel(Model):
                         first_prev = len(vertex_list) - 4
                         # Average directions
                         avg_move = move_normalized / 2 + prev_move / 2
-                        norm = numpy.linalg.norm(move)
+                        norm = numpy.linalg.norm(avg_move)
                         # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
                         avg_move = avg_move / norm
                         avg_move_normal = numpy.array([- avg_move[1], avg_move[0]])
