@@ -281,10 +281,9 @@ class GcodeModel(Model):
             for gline in layer:
                 if not gline.is_move:
                     continue
-                if gline.x is not None \
-                   or gline.y is not None \
-                   or gline.z is not None:
-                    has_movement = True
+                if gline.x is None and gline.y is None and gline.z is None:
+                    continue
+                has_movement = True
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
                 if not gline.extruding:
                     travel_vertex_list.append(prev_pos)
@@ -521,10 +520,9 @@ class GcodeModelLight(Model):
             for gline in layer:
                 if not gline.is_move:
                     continue
-                if gline.x is not None \
-                   or gline.y is not None \
-                   or gline.z is not None:
-                    has_movement = True
+                if gline.x is None and gline.y is None and gline.z is None:
+                    continue
+                has_movement = True
                 vertex_list.append(prev_pos)
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
                 vertex_list.append(current_pos)
