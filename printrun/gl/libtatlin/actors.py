@@ -335,8 +335,11 @@ class GcodeModel(Model):
                         avg_move = move_normalized / 2 + prev_move / 2
                         norm = numpy.linalg.norm(avg_move)
                         # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
-                        avg_move = avg_move / norm
-                        avg_move_normal = numpy.array([- avg_move[1], avg_move[0]])
+                        if norm == 0:
+                            avg_move_normal = move_normal
+                        else:
+                            avg_move = avg_move / norm
+                            avg_move_normal = numpy.array([- avg_move[1], avg_move[0]])
                         # Compute vertices
                         p1 = prev_2d - path_halfwidth * avg_move_normal
                         p2 = prev_2d + path_halfwidth * avg_move_normal
