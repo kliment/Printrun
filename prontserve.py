@@ -109,12 +109,17 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     dir = os.path.dirname(__file__)
     self.server = ConstructServer(
       printer= self,
-      settings= self.settings,
+      settings= dict(
+        pause_between_prints = self.settings.pause_between_prints,
+        sensor_poll_rate = self.settings.sensor_poll_rate * 1000
+      ),
       components= dict(
         temps= ["e0", "b"],
         fans= ["f0"],
         conveyors= ["c0"],
-        axes= ["x", "y", "z"]
+        axes= []
+        # In the far off future we may have axes like these for position data:
+        # axes= ["x", "y", "z"]
       ),
       server_settings= dict(
         template_path= os.path.join(dir, "printrun", "server", "templates"),
@@ -147,11 +152,12 @@ class Prontserve(pronsole.pronsole, EventEmitter):
 
   def start(self):
     try:
-      # Connect to the printer
       if self.dry_run == False:
+        # Attempt to connect to the printer
         self.do_connect("")
         if self.p.printer == None: sys.exit(1)
         print "Connecting to printer..."
+        # Wait for the attempt to succeed or timeout
         for x in range(0,50-1):
           if self.p.online == True: break
           sys.stdout.write(".")
@@ -183,12 +189,12 @@ class Prontserve(pronsole.pronsole, EventEmitter):
   def post_process_print_job(self, filename, filebody):
     return FastGCode(filebody.split("\n"))
 
-  def print_progress(self):
-    if(self.p.printing):
-      return 100*float(self.p.queueindex)/len(self.p.mainqueue)
-    if(self.sdprinting):
-      return self.percentdone
+  def current_print_line(self):
+    if(self.p.printing): return (self.p.queueindex)
     return 0
+
+  def total_print_lines(self, job_body):
+    return len(job_body)
 
   def start_print_job(self, job):
     self.p.startprint(job['body'])
@@ -229,7 +235,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
 
   # Not thread safe; must be run from the ioloop thread.
   def reset(self):
-    self.async(self.server.set_waiting_to_reach_temp, None)
+    self.async(self.server.set_blocking_temps, [])
     # pause the print job if any is printing
     if self.p.printing:
       pronsole.pronsole.do_pause(self, "")
@@ -242,28 +248,27 @@ class Prontserve(pronsole.pronsole, EventEmitter):
 
     self.p.printing = False
 
-  def on_target_temp_changed(self, target=None, value=None):
+  def on_temp_target_change(self, parent_path, component, value):
+    target = parent_path[0]
     gcode = "M104"
     if target == "b": gcode = "M140"
     if not target in ["b", "e0"]: gcode += " p%i"%(int(target[1:]))
     gcode += " S%f"%float(value)
     self.p.send_now(gcode)
 
-  def on_fan_enabled_changed(self, target=None, value=None):
-    update_fan()
+  def on_fan_enabled_change(self, parent_path, component, value):
+    update_fan(component)
 
-  def on_fan_speed_changed(self, target=None, value=None):
-    update_fan()
+  def on_fan_speed_change(self, parent_path, component, value):
+    update_fan(component)
 
-  def update_fan(self):
-    if self.fan_enabled == False:
-      speed = 0
-    else:
-      speed = int(self.server.c_get("f0", "fan_speed"))
+  def update_fan(self, component):
+    speed = int(component['speed'])
+    if component['enabled'] == False: speed = 0
     print "M106 S%i"%speed
     self.p.send_now("M106 S%i"%speed)
 
-  def on_motors_enabled_changed(self, target=None, value=None):
+  def on_motors_enabled_change(self, parent_path, component, value):
     self.p.send_now({True: "M17", False: "M18"}[value])
 
   def request_sensor_update(self):
@@ -278,7 +283,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     l = l.rstrip()
     #print l
     if self.server.waiting_to_reach_temp and ("ok" in l):
-      self.async(self.server.set_waiting_to_reach_temp, None)
+      self.async(self.server.set_blocking_temps, [])
     if ("T:" in l):
       self.async(self._receive_sensor_update, l)
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
@@ -293,10 +298,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
         if " P" in l: target = "e%i"%(int(re.search(' P([0-9]+)', l).group(1)))
       else:
         target = "b"
-      self.async(self.server.c_set, target, "target_temp", temp, internal=True)
+      self.async(self.server.c_set, [target, "target_temp"], temp, internal=True)
     if ("M109" in l) or ("M190" in l) or ("M116" in l):
       if ("M116" in l): target = "e0"
-      self.async(self.server.set_waiting_to_reach_temp, [target])
+      self.async(self.server.set_blocking_temps, [target])
 
   # Adds a callback to the ioloop to run a method later on in the server thread
   def async(self, *args, **kwargs):
@@ -311,24 +316,15 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       for key, value in d.iteritems():
         if key == "t": key = "e0"
         if not key in self.server.components: continue
-        self.server.c_set(key, "current_temp", float(value), internal=True)
+        self.server.c_set([key, "current_temp"], float(value), internal=True)
 
       # Fire a event if the extruder is giving us a countdown till it's online
       # see: TEMP_RESIDENCY_TIME (via the googles)
       # see: https://github.com/ErikZalm/Marlin/blob/Marlin_v1/Marlin/Marlin_main.cpp#L1191
-      if ("w" in d):
-        percent = 0
-        if not d["w"] == "?":
-          w_val = float(d["w"])
-          if w_val > self.max_w_val: self.max_w_val = w_val
-          percent = (100 - w_val*100/self.max_w_val)
-          progress = {'eta': w_val, 'percent': percent}
-        else:
-          progress = {'percent': percent}
-        for target in (self.server.waiting_to_reach_temp):
-          self.server.c_set(
-            target, "target_temp_progress", progress, internal=True
-          )
+      if ("w" in d) and (not d["w"] == "?"):
+        w = float(d["w"])*1000
+        for target in (self.server.blockers):
+          self.server.c_set([target, "target_temp_countdown"], w, internal=True)
     except Exception as ex:
       print traceback.format_exc()
 
@@ -336,9 +332,9 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     msg = ''.join(str(i) for i in msg)
     msg.replace("\r", "")
     print msg
-    self.server.broadcast([
-      dict(type= "log", data= dict(msg= msg, level= "debug"))
-    ])
+    # self.server.broadcast([
+    #   dict(type= "log", data= dict(msg= msg, level= "debug"))
+    # ])
 
   def logError(self, *msg):
     print u"".join(unicode(i) for i in msg)
