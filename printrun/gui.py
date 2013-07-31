@@ -44,8 +44,9 @@ def make_sized_button(*args):
 def make_autosize_button(*args):
     return make_button(*args, size = (-1, buttonSize[1]), style = wx.BU_EXACTFIT)
 
-def make_custom_button(root, parentpanel, i):
-    btn = make_button(parentpanel, i.label, root.procbutton, i.tooltip)
+def make_custom_button(root, parentpanel, i, style = 0):
+    btn = make_button(parentpanel, i.label, root.procbutton,
+                      i.tooltip, style = style)
     btn.SetBackgroundColour(i.background)
     btn.SetForegroundColour("black")
     btn.properties = i
@@ -142,7 +143,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
             ebuttonssizer.Add(wx.StaticText(ebuttonspanel, -1, _("Tool:")), flag = wx.ALIGN_CENTER)
             choices = [str(i) for i in range(1, root.settings.extruders + 1)]
             root.extrudersel = wx.ComboBox(ebuttonspanel, -1, choices = choices,
-                                           style = wx.CB_DROPDOWN, size = (50, -1))
+                                           style = wx.CB_DROPDOWN | wx.CB_READONLY,
+                                           size = (50, -1))
             root.extrudersel.SetToolTip(wx.ToolTip("Select current extruder"))
             root.extrudersel.SetValue("1")
             ebuttonssizer.Add(root.extrudersel)
@@ -218,7 +220,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         for i in root.cpbuttons:
             if not i.pos or i.pos[0] != 4:
                 continue
-            btn = make_custom_button(root, ebuttonspanel, i)
+            btn = make_custom_button(root, ebuttonspanel, i,
+                                     style = wx.BU_EXACTFIT)
             ebuttonssizer.Add(btn, 1, flag = wx.EXPAND)
 
 class LeftPane(wx.GridBagSizer):
