@@ -141,12 +141,13 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         ebuttonssizer = wx.BoxSizer(wx.HORIZONTAL)
         if root.settings.extruders > 1:
             ebuttonssizer.Add(wx.StaticText(ebuttonspanel, -1, _("Tool:")), flag = wx.ALIGN_CENTER)
-            choices = [str(i) for i in range(1, root.settings.extruders + 1)]
+            choices = [str(i) for i in range(0, root.settings.extruders)]
             root.extrudersel = wx.ComboBox(ebuttonspanel, -1, choices = choices,
                                            style = wx.CB_DROPDOWN | wx.CB_READONLY,
                                            size = (50, -1))
             root.extrudersel.SetToolTip(wx.ToolTip("Select current extruder"))
-            root.extrudersel.SetValue("1")
+            root.extrudersel.SetValue(choices[0])
+            root.extrudersel.Bind(wx.EVT_COMBOBOX, root.tool_change)
             ebuttonssizer.Add(root.extrudersel)
         ebuttonspanel.SetSizer(ebuttonssizer)
         self.Add(ebuttonspanel, pos = (base_line + 2, 0), span = (1, 5), flag = wx.EXPAND)

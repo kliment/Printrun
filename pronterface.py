@@ -842,6 +842,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.do_bedtemp("")
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
+    def tool_change(self, event):
+        new_tool = int(self.extrudersel.GetValue())
+        if self.p.online:
+            self.p.send_now("T%d" % new_tool)
+
     def showwin(self, event):
         if self.fgcode:
             self.gwindow.Show(True)
