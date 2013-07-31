@@ -148,6 +148,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
             root.extrudersel.SetToolTip(wx.ToolTip("Select current extruder"))
             root.extrudersel.SetValue(choices[0])
             root.extrudersel.Bind(wx.EVT_COMBOBOX, root.tool_change)
+            root.printerControls.append(root.extrudersel)
             ebuttonssizer.Add(root.extrudersel)
         ebuttonspanel.SetSizer(ebuttonssizer)
         self.Add(ebuttonspanel, pos = (base_line + 2, 0), span = (1, 5), flag = wx.EXPAND)
