@@ -402,7 +402,7 @@ class GcodeModel(Model):
 
                     index_list += new_indices
                     vertex_list += new_vertices
-                    color_list += list(gline_color) * len(new_vertices)
+                    color_list += list(gline_color) * (len(new_vertices) / 3)
 
                     prev_is_extruding = True
                     prev_move_x = delta_x
