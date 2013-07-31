@@ -375,6 +375,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
 
+        if hasattr(self, "extrudersel"):
+            self.do_tool(self.extrudersel.GetValue())
+
         for i in self.printerControls:
             i.Enable()
 
@@ -843,9 +846,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
     def tool_change(self, event):
-        new_tool = int(self.extrudersel.GetValue())
-        if self.p.online:
-            self.p.send_now("T%d" % new_tool)
+        self.do_tool(self.extrudersel.GetValue())
 
     def showwin(self, event):
         if self.fgcode:
