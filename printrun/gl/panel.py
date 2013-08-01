@@ -23,7 +23,7 @@ pyglet.options['debug_gl'] = True
 
 from pyglet.gl import *
 from pyglet import gl
-from .trackball import trackball, mulquat
+from .trackball import trackball, mulquat, build_rotmatrix
 
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
@@ -119,9 +119,11 @@ class wxGLPanel(wx.Panel):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         if self.orthographic:
-            glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 5 * self.dist)
+            glOrtho(-width / 2, width / 2, -height / 2, height / 2,
+                    -5 * self.dist, 5 * self.dist)
         else:
             gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
+            glTranslatef(0, 0, -self.dist)  # Move back
         glMatrixMode(GL_MODELVIEW)
 
         if not self.mview_initialized:
