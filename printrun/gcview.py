@@ -73,10 +73,6 @@ class GcodeViewPanel(wxGLPanel):
                 self.parent.loadcb()
             self.parent.filenames = None
 
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT0)
-        glEnable(GL_LIGHT1)
-
     def create_objects(self):
         '''create opengl objects when opengl is initialized'''
         for obj in self.parent.objects:
@@ -107,7 +103,7 @@ class GcodeViewPanel(wxGLPanel):
         glLightfv(GL_LIGHT0, GL_POSITION, vec(0,
                                               self.parent.platform.depth / 2,
                                               light_z, 0))
-        glLightfv(GL_LIGHT0, GL_POSITION, vec(self.parent.platform.width,
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(self.parent.platform.width,
                                               self.parent.platform.depth / 2,
                                               light_z, 0))
 
