@@ -278,7 +278,8 @@ class GcodeViewMainWrapper(object):
         return getattr(self.glpanel, name)
 
     def set_current_gline(self, gline):
-        if gline.is_move and self.model and self.model.loaded:
+        if gline.is_move and gline.gcview_end_vertex is not None \
+           and self.model and self.model.loaded:
             self.model.printed_until = gline.gcview_end_vertex
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
@@ -349,7 +350,8 @@ class GcodeViewFrame(GvizBaseFrame):
         wx.CallAfter(self.Refresh)
 
     def set_current_gline(self, gline):
-        if gline.is_move and self.model and self.model.loaded:
+        if gline.is_move and gline.gcview_end_vertex is not None \
+           and self.model and self.model.loaded:
             self.model.printed_until = gline.gcview_end_vertex
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
