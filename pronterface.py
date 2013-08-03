@@ -411,7 +411,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
-        elif gline.command == "M140":
+        elif gline.command in ["M140", "M190"]:
             gline.parse_coordinates(gline, split_raw, imperial = False, force = True)
             gline_s = gcoder.S(gline)
             if gline_s is not None:
