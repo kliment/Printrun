@@ -420,7 +420,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
         elif gline.command.startswith("T"):
             tool = gline.command[1:]
-            if self.hasattr("extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
+            if hasattr(self, "extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
         else:
             return
         self.sentlines.put_nowait(line)
