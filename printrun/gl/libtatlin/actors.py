@@ -766,7 +766,7 @@ class GcodeModelLight(Model):
             glColor4f(*self.color_current_printed)
 
             if cur_end > end_prev_layer:
-                glDrawArrays(GL_LINES, end_prev_layer + 2, cur_end - end_prev_layer - 2)
+                glDrawArrays(GL_LINES, end_prev_layer, cur_end - end_prev_layer)
 
             glColor4f(*self.color_current)
 
