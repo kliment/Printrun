@@ -141,13 +141,27 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         ebuttonssizer = wx.BoxSizer(wx.HORIZONTAL)
         if root.settings.extruders > 1:
             ebuttonssizer.Add(wx.StaticText(ebuttonspanel, -1, _("Tool:")), flag = wx.ALIGN_CENTER)
-            choices = [str(i) for i in range(0, root.settings.extruders)]
-            root.extrudersel = wx.ComboBox(ebuttonspanel, -1, choices = choices,
-                                           style = wx.CB_DROPDOWN | wx.CB_READONLY,
-                                           size = (50, -1))
-            root.extrudersel.SetToolTip(wx.ToolTip("Select current extruder"))
-            root.extrudersel.SetValue(choices[0])
-            root.extrudersel.Bind(wx.EVT_COMBOBOX, root.tool_change)
+            if root.settings.extruders == 2:
+                root.extrudersel = wx.Button(ebuttonspanel, -1, "0", style = wx.BU_EXACTFIT)
+
+                def extrudersel_cb(event):
+                    if root.extrudersel.GetLabel() == "1":
+                        new = "0"
+                    else:
+                        new = "1"
+                    root.extrudersel.SetLabel(new)
+                    root.tool_change(event)
+                root.extrudersel.Bind(wx.EVT_BUTTON, extrudersel_cb)
+                root.extrudersel.GetValue = root.extrudersel.GetLabel
+                root.extrudersel.SetValue = root.extrudersel.SetLabel
+            else:
+                choices = [str(i) for i in range(0, root.settings.extruders)]
+                root.extrudersel = wx.ComboBox(ebuttonspanel, -1, choices = choices,
+                                               style = wx.CB_DROPDOWN | wx.CB_READONLY,
+                                               size = (50, -1))
+                root.extrudersel.SetToolTip(wx.ToolTip("Select current extruder"))
+                root.extrudersel.SetValue(choices[0])
+                root.extrudersel.Bind(wx.EVT_COMBOBOX, root.tool_change)
             root.printerControls.append(root.extrudersel)
             ebuttonssizer.Add(root.extrudersel)
         ebuttonspanel.SetSizer(ebuttonssizer)
