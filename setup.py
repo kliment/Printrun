@@ -119,7 +119,8 @@ if sys.argv[1] in("install", "uninstall") and len(prefix):
     sys.argv += ["--prefix", prefix]
 
 target_images_path = "share/pronterface/images/"
-data_files = [('share/pixmaps/', ['P-face.ico', 'plater.ico', 'pronsole.ico'])]
+data_files = [('share/pixmaps/', ['P-face.ico', 'plater.ico', 'pronsole.ico']),
+              ('share/applications', ['pronterface.desktop'])]
 
 for basedir, subdirs, files in os.walk("images"):
     images = []
