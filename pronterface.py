@@ -212,6 +212,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
+        self.settings._add(HiddenSetting("last_extrusion", 5.0))
+        self.settings._add(HiddenSetting("default_extrusion", 5.0))
         self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
@@ -902,6 +904,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.settings._set("xy_feedrate", self.xyfeedc.GetValue())
         except:
             pass
+        try:
+            self.settings._set("last_extrusion", self.edist.GetValue())
+        except:
+            pass
 
     def cbuttons_reload(self):
         allcbs = getattr(self, "custombuttonbuttons", [])
@@ -1275,6 +1281,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
             self.save_in_rc("set z_feedrate", "set z_feedrate %d" % self.settings.z_feedrate)
             self.save_in_rc("set e_feedrate", "set e_feedrate %d" % self.settings.e_feedrate)
+        if self.settings.last_extrusion != self.settings.default_extrusion:
+            self.save_in_rc("set last_extrusion", "set last_extrusion %d" % self.settings.last_extrusion)
         if self.excluder:
             self.excluder.close_window()
         wx.CallAfter(self.gwindow.Destroy)
