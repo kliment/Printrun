@@ -1156,6 +1156,24 @@ class pronsole(cmd.Cmd):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.bedtemps.keys() if i.startswith(text)]
 
+    def do_tool(self, l):
+        tool = None
+        try:
+            tool = int(l.lower().strip())
+        except:
+            self.logError(_("You must specify the tool index as an integer."))
+        if tool is not None and tool >= 0:
+            if self.p.online:
+                self.p.send_now("T%d" % tool)
+                self.log(_("Using tool %d.") % tool)
+            else:
+                self.logError(_("Printer is not online."))
+        else:
+            self.logError(_("You cannot set negative tool numbers."))
+
+    def help_tool(self):
+        self.log(_("Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."))
+
     def do_move(self, l):
         if(len(l.split()) < 2):
             self.logError(_("No move specified."))

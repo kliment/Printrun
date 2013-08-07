@@ -196,6 +196,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         monitorsetting = BooleanSetting("monitor", False)
         monitorsetting.hidden = True
         self.settings._add(monitorsetting)
+        self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
@@ -203,6 +204,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "UI"))
+        self.settings._add(BooleanSetting("light3d", True, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "UI"))
         self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"))
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
@@ -373,6 +375,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
 
+        if hasattr(self, "extrudersel"):
+            self.do_tool(self.extrudersel.GetValue())
+
         for i in self.printerControls:
             i.Enable()
 
@@ -406,13 +411,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
-        elif gline.command == "M140":
+        elif gline.command in ["M140", "M190"]:
             gline.parse_coordinates(gline, split_raw, imperial = False, force = True)
             gline_s = gcoder.S(gline)
             if gline_s is not None:
                 temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
+        elif gline.command.startswith("T"):
+            tool = gline.command[1:]
+            if hasattr(self, "extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
         else:
             return
         self.sentlines.put_nowait(line)
@@ -839,6 +847,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.bsetpoint > 0:
             self.do_bedtemp("")
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
+
+    def tool_change(self, event):
+        self.do_tool(self.extrudersel.GetValue())
 
     def showwin(self, event):
         if self.fgcode:

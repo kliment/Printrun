@@ -44,8 +44,9 @@ def make_sized_button(*args):
 def make_autosize_button(*args):
     return make_button(*args, size = (-1, buttonSize[1]), style = wx.BU_EXACTFIT)
 
-def make_custom_button(root, parentpanel, i):
-    btn = make_button(parentpanel, i.label, root.procbutton, i.tooltip)
+def make_custom_button(root, parentpanel, i, style = 0):
+    btn = make_button(parentpanel, i.label, root.procbutton,
+                      i.tooltip, style = style)
     btn.SetBackgroundColour(i.background)
     btn.SetForegroundColour("black")
     btn.properties = i
@@ -138,6 +139,32 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     if not extra_buttons:
         ebuttonspanel = root.newPanel(parentpanel)
         ebuttonssizer = wx.BoxSizer(wx.HORIZONTAL)
+        if root.settings.extruders > 1:
+            ebuttonssizer.Add(wx.StaticText(ebuttonspanel, -1, _("Tool:")), flag = wx.ALIGN_CENTER)
+            if root.settings.extruders == 2:
+                root.extrudersel = wx.Button(ebuttonspanel, -1, "0", style = wx.BU_EXACTFIT)
+                root.extrudersel.SetToolTip(wx.ToolTip(_("Click to switch current extruder")))
+
+                def extrudersel_cb(event):
+                    if root.extrudersel.GetLabel() == "1":
+                        new = "0"
+                    else:
+                        new = "1"
+                    root.extrudersel.SetLabel(new)
+                    root.tool_change(event)
+                root.extrudersel.Bind(wx.EVT_BUTTON, extrudersel_cb)
+                root.extrudersel.GetValue = root.extrudersel.GetLabel
+                root.extrudersel.SetValue = root.extrudersel.SetLabel
+            else:
+                choices = [str(i) for i in range(0, root.settings.extruders)]
+                root.extrudersel = wx.ComboBox(ebuttonspanel, -1, choices = choices,
+                                               style = wx.CB_DROPDOWN | wx.CB_READONLY,
+                                               size = (50, -1))
+                root.extrudersel.SetToolTip(wx.ToolTip(_("Select current extruder")))
+                root.extrudersel.SetValue(choices[0])
+                root.extrudersel.Bind(wx.EVT_COMBOBOX, root.tool_change)
+            root.printerControls.append(root.extrudersel)
+            ebuttonssizer.Add(root.extrudersel)
         ebuttonspanel.SetSizer(ebuttonssizer)
         self.Add(ebuttonspanel, pos = (base_line + 2, 0), span = (1, 5), flag = wx.EXPAND)
 
@@ -210,7 +237,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         for i in root.cpbuttons:
             if not i.pos or i.pos[0] != 4:
                 continue
-            btn = make_custom_button(root, ebuttonspanel, i)
+            btn = make_custom_button(root, ebuttonspanel, i,
+                                     style = wx.BU_EXACTFIT)
             ebuttonssizer.Add(btn, 1, flag = wx.EXPAND)
 
 class LeftPane(wx.GridBagSizer):
@@ -285,7 +313,7 @@ class VizPane(wx.BoxSizer):
         if root.settings.mainviz == "3D":
             try:
                 import printrun.gcview
-                root.gviz = printrun.gcview.GcodeViewMainWrapper(parentpanel, root.build_dimensions_list)
+                root.gviz = printrun.gcview.GcodeViewMainWrapper(parentpanel, root.build_dimensions_list, root = root)
                 root.gviz.clickcb = root.showwin
             except:
                 use2dview = True
@@ -308,7 +336,7 @@ class VizPane(wx.BoxSizer):
                 objects = None
                 if isinstance(root.gviz, printrun.gcview.GcodeViewMainWrapper):
                     objects = root.gviz.objects
-                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list, objects = objects)
+                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list, objects = objects, root = root)
             except:
                 use3dview = False
                 print "3D view mode requested, but we failed to initialize it."

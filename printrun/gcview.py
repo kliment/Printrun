@@ -22,14 +22,22 @@ from . import gcoder
 from .gl.panel import wxGLPanel
 from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
+from .gl.libtatlin.actors import vec
 
 from pyglet.gl import glPushMatrix, glPopMatrix, \
     glTranslatef, glRotatef, glScalef, glMultMatrixd
+from pyglet.gl import *
 
 from .gviz import GvizBaseFrame
 
 from printrun_utils import imagefile, install_locale
 install_locale('pronterface')
+
+def create_model(light):
+    if light:
+        return actors.GcodeModelLight()
+    else:
+        return actors.GcodeModel()
 
 class GcodeViewPanel(wxGLPanel):
 
@@ -61,6 +69,8 @@ class GcodeViewPanel(wxGLPanel):
             for filename in self.parent.filenames:
                 self.parent.load_file(filename)
             self.parent.autoplate()
+            if hasattr(self.parent, "loadcb"):
+                self.parent.loadcb()
             self.parent.filenames = None
 
     def create_objects(self):
@@ -78,16 +88,20 @@ class GcodeViewPanel(wxGLPanel):
         self.create_objects()
 
         glPushMatrix()
-        if self.orthographic:
-            glTranslatef(0, 0, -3 * self.dist)  # Move back
-        else:
-            glTranslatef(0, 0, -self.dist)  # Move back
         # Rotate according to trackball
         glMultMatrixd(build_rotmatrix(self.basequat))
         # Move origin to bottom left of platform
         platformx0 = -self.build_dimensions[3] - self.parent.platform.width / 2
         platformy0 = -self.build_dimensions[4] - self.parent.platform.depth / 2
         glTranslatef(platformx0, platformy0, 0)
+
+        light_z = max(self.parent.platform.width, self.parent.platform.depth)
+        glLightfv(GL_LIGHT0, GL_POSITION, vec(0,
+                                              self.parent.platform.depth / 2,
+                                              light_z, 0))
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(self.parent.platform.width,
+                                              self.parent.platform.depth / 2,
+                                              light_z, 0))
 
         for obj in self.parent.objects:
             if not obj.model \
@@ -224,6 +238,7 @@ class GcodeViewPanel(wxGLPanel):
             if not self.parent.model or not self.parent.model.loaded:
                 return
             self.parent.model.only_current = not self.parent.model.only_current
+            wx.CallAfter(self.Refresh)
         if key in kreset:
             self.resetview()
         event.Skip()
@@ -246,7 +261,8 @@ class GCObject(object):
 
 class GcodeViewMainWrapper(object):
 
-    def __init__(self, parent, build_dimensions):
+    def __init__(self, parent, build_dimensions, root):
+        self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions)
         self.glpanel.SetMinSize((150, 150))
@@ -262,7 +278,8 @@ class GcodeViewMainWrapper(object):
         return getattr(self.glpanel, name)
 
     def set_current_gline(self, gline):
-        if gline.is_move and self.model and self.model.loaded:
+        if gline.is_move and gline.gcview_end_vertex is not None \
+           and self.model and self.model.loaded:
             self.model.printed_until = gline.gcview_end_vertex
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
@@ -274,7 +291,8 @@ class GcodeViewMainWrapper(object):
         pass
 
     def addfile(self, gcode = None):
-        self.model = actors.GcodeModel()
+        self.model = create_model(self.root.settings.light3d
+                                  if self.root else False)
         if gcode:
             self.model.load_data(gcode)
         self.objects[-1].model = self.model
@@ -290,9 +308,10 @@ class GcodeViewFrame(GvizBaseFrame):
 
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
-                 style = wx.DEFAULT_FRAME_STYLE):
+                 style = wx.DEFAULT_FRAME_STYLE, root = None):
         super(GcodeViewFrame, self).__init__(parent, ID, title,
                                              pos, size, style)
+        self.root = root
 
         panel, vbox = self.create_base_ui()
 
@@ -331,7 +350,8 @@ class GcodeViewFrame(GvizBaseFrame):
         wx.CallAfter(self.Refresh)
 
     def set_current_gline(self, gline):
-        if gline.is_move and self.model and self.model.loaded:
+        if gline.is_move and gline.gcview_end_vertex is not None \
+           and self.model and self.model.loaded:
             self.model.printed_until = gline.gcview_end_vertex
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
@@ -340,7 +360,8 @@ class GcodeViewFrame(GvizBaseFrame):
         if self.clonefrom:
             self.model = self.clonefrom[-1].model.copy()
         else:
-            self.model = actors.GcodeModel()
+            self.model = create_model(self.root.settings.light3d
+                                      if self.root else False)
             if gcode:
                 self.model.load_data(gcode)
         self.objects[-1].model = self.model

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+from threading import Lock
+
 import wx
 from wx import glcanvas
 
@@ -23,7 +25,7 @@ pyglet.options['debug_gl'] = True
 
 from pyglet.gl import *
 from pyglet import gl
-from .trackball import trackball, mulquat
+from .trackball import trackball, mulquat, build_rotmatrix
 
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
@@ -50,6 +52,10 @@ class wxGLPanel(wx.Panel):
         self.context = glcanvas.GLContext(self.canvas)
         self.sizer.Add(self.canvas, 1, wx.EXPAND)
         self.SetSizerAndFit(self.sizer)
+
+        self.rot_lock = Lock()
+        self.basequat = [0, 0, 0, 1]
+        self.zoom_factor = 1.0
 
         # bind events
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
@@ -119,9 +125,11 @@ class wxGLPanel(wx.Panel):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         if self.orthographic:
-            glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.1, 5 * self.dist)
+            glOrtho(-width / 2, width / 2, -height / 2, height / 2,
+                    -5 * self.dist, 5 * self.dist)
         else:
             gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
+            glTranslatef(0, 0, -self.dist)  # Move back
         glMatrixMode(GL_MODELVIEW)
 
         if not self.mview_initialized:
@@ -142,6 +150,7 @@ class wxGLPanel(wx.Panel):
         glLoadIdentity()
         if self.orthographic:
             ratio = factor * float(min(self.width, self.height)) / self.dist
+            self.zoom_factor = 1.0
             glScalef(ratio, ratio, 1)
 
     def OnDraw(self, *args, **kwargs):
@@ -195,6 +204,7 @@ class wxGLPanel(wx.Panel):
             delta_y = to[1]
             glTranslatef(delta_x, delta_y, 0)
         glScalef(factor, factor, 1)
+        self.zoom_factor *= factor
         if to:
             glTranslatef(-delta_x, -delta_y, 0)
         wx.CallAfter(self.Refresh)
@@ -216,7 +226,8 @@ class wxGLPanel(wx.Panel):
             p2x = float(p2[0]) / (sz[0] / 2) - 1
             p2y = 1 - float(p2[1]) / (sz[1] / 2)
             quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
-            self.basequat = mulquat(self.basequat, quat)
+            with self.rot_lock:
+                self.basequat = mulquat(self.basequat, quat)
             self.initpos = p2
 
     def handle_translation(self, event):

@@ -549,7 +549,10 @@ class printcore():
         if self.printer:
             self.sent.append(command)
             # run the command through the analyzer
-            self.analyzer.Analyze(command)
+            try: self.analyzer.Analyze(command)
+            except:
+                print "Warning: could not analyze command %s:" % command
+                traceback.print_exc(file = sys.stdout)
             if self.loud:
                 print "SENT:", command
             if self.sendcb:
