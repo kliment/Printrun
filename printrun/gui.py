@@ -170,7 +170,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
 
     esettingspanel = root.newPanel(parentpanel)
     esettingssizer = wx.BoxSizer(wx.HORIZONTAL)
-    root.edist = wx.SpinCtrl(esettingspanel, -1, "5", min = 0, max = 1000, size = (70, -1))
+    root.edist = wx.SpinCtrl(esettingspanel, -1, str(root.settings.extrusion_default), min = 0, max = 1000, size = (70, -1))
     root.edist.SetBackgroundColour((225, 200, 200))
     root.edist.SetForegroundColour("black")
     esettingssizer.Add(root.edist, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)

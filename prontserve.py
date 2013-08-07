@@ -189,6 +189,9 @@ class Prontserve(pronsole.pronsole, EventEmitter):
   def post_process_print_job(self, filename, filebody):
     return FastGCode(filebody.split("\n"))
 
+  def get_print_job_memory_footprint(self, filename,filebody):
+    return 0 # TODO
+
   def current_print_line(self):
     if(self.p.printing): return (self.p.queueindex)
     return 0
