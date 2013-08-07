@@ -1,0 +1,1 @@
+python setup_py2exe.py py2exe > compile_output.txt
