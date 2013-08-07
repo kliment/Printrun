@@ -244,7 +244,6 @@ class Settings(object):
         self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (mm/min)"), "Printer"))
         self._add(SpinSetting("z_feedrate", 200, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (mm/min)"), "Printer"))
         self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (mm/min)"), "Printer"))
-        self._add(SpinSetting("extrusion_default", 5, 0, 1000, _("Extrusion length"), _("Extrusion/REtraction (mm)"), "Printer"))
         self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
@@ -264,6 +263,8 @@ class Settings(object):
         self._add(HiddenSetting("project_prelift_gcode", ""))
         self._add(HiddenSetting("project_postlift_gcode", ""))
         self._add(HiddenSetting("pause_between_prints", True))
+        self._add(HiddenSetting("default_extrusion", 5.0))
+        self._add(HiddenSetting("last_extrusion", 5.0))
 
     _settings = []
 
@@ -1236,7 +1237,7 @@ class pronsole(cmd.Cmd):
             return []
 
     def do_extrude(self, l, override = None, overridefeed = 300):
-        length = 5  # default extrusion length
+        length = self.settings.default_extrusion  # default extrusion length
         feed = self.settings.e_feedrate  # default speed
         if not self.p.online:
             self.logError("Printer is not online. Unable to extrude.")
@@ -1276,7 +1277,7 @@ class pronsole(cmd.Cmd):
         self.log(_("extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"))
 
     def do_reverse(self, l):
-        length = 5  # default extrusion length
+        length = self.settings.default_extrusion  # default extrusion length
         feed = self.settings.e_feedrate  # default speed
         if not self.p.online:
             self.logError(_("Printer is not online. Unable to reverse."))

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pronterface
+Comment=Pronterface
+Icon=/usr/share/pixmaps/P-face.ico
+Exec=/usr/bin/python2 /usr/bin/pronterface.py
+Path=/usr/share/pronterface/
+StartupNotify=true
+Terminal=false
+Categories=GNOME;GTK;Utility;
