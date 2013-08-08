@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 
 import wx
 
-sys.path.append(os.path.join(os.path.abspath(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 from printrun.gcview import GcodeViewFrame
 from printrun import gcoder
