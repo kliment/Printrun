@@ -17,7 +17,7 @@
 
 import sys
 import traceback
-from printrun.console import pronsole
+from printrun.pronsole import pronsole
 
 if __name__ == "__main__":
 
