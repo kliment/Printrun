@@ -74,7 +74,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.settings.sensor_names = {'T': 'extruder', 'B': 'bed'}
     self.settings.sensor_poll_rate = 1 # seconds
     self.p.loud = kwargs['loud']
-    self.dry_run = kwargs['dry_run'] == True
+    self.dry_run = kwargs['dry_run']
+    self.heaptrace = kwargs['heaptrace']
     self.stdout = sys.stdout
     self.load_default_rc()
     self.p.sendcb = self.sendcb
@@ -150,7 +151,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       self.server.ioloop.start()
     except Exception as ex:
       print traceback.format_exc()
-      if args.heaptrace:
+      if self.heaptrace:
         from guppy import hpy
         print hpy().heap()
       self.p.disconnect()

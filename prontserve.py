@@ -4,10 +4,9 @@ import argparse
 
 from printrun.prontserve import Prontserve
 
-# Args
-# -------------------------------------------------
-
 if __name__ == "__main__":
+  # Args
+  # -------------------------------------------------
 
   parser = argparse.ArgumentParser(
     description='Runs a 3D printer server using the Construct Protocol'
@@ -27,8 +26,7 @@ if __name__ == "__main__":
 
   args = parser.parse_args()
 
-# Server Start Up
-# -------------------------------------------------
+  # Server Start Up
+  # -------------------------------------------------
 
-if __name__ == "__main__":
-  prontserve = Prontserve(dry_run=args.dry_run, loud=args.loud).start()
+  prontserve = Prontserve(**vars(args)).start()
