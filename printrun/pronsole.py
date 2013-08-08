@@ -26,7 +26,7 @@ import shlex
 import argparse
 import locale
 
-import printcore
+from . import printcore
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
 from printrun import gcoder
