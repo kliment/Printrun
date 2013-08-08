@@ -20,7 +20,6 @@ from select import error as SelectError
 from threading import Thread, Lock
 from Queue import Queue, Empty as QueueEmpty
 import time
-import getopt
 import sys
 import platform
 import os
@@ -31,7 +30,6 @@ import re
 from functools import wraps
 from collections import deque
 from printrun.GCodeAnalyzer import GCodeAnalyzer
-from printrun import gcoder
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
 
@@ -571,57 +569,3 @@ class printcore():
             except RuntimeError as e:
                 print _("Socket connection broken, disconnected. ({0}): {1}").format(e.errno, e.strerror)
                 self.writefailures += 1
-
-if __name__ == '__main__':
-    baud = 115200
-    loud = False
-    statusreport = False
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "h,b:,v,s",
-                                   ["help", "baud", "verbose", "statusreport"])
-    except getopt.GetoptError, err:
-        print str(err)
-        sys.exit(2)
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            # FIXME: Fix help
-            print "Opts are: --help, -b --baud = baudrate, -v --verbose, \
--s --statusreport"
-            sys.exit(1)
-        if o in ('-b', '--baud'):
-            baud = int(a)
-        if o in ('-v', '--verbose'):
-            loud = True
-        elif o in ('-s', '--statusreport'):
-            statusreport = True
-
-    if len(args) > 1:
-        port = args[-2]
-        filename = args[-1]
-        print "Printing: %s on %s with baudrate %d" % (filename, port, baud)
-    else:
-        print "Usage: python [-h|-b|-v|-s] printcore.py /dev/tty[USB|ACM]x filename.gcode"
-        sys.exit(2)
-    p = printcore(port, baud)
-    p.loud = loud
-    time.sleep(2)
-    gcode = [i.strip() for i in open(filename)]
-    gcode = gcoder.GCode(gcode)
-    p.startprint(gcode)
-
-    try:
-        if statusreport:
-            p.loud = False
-            sys.stdout.write("Progress: 00.0%\r")
-            sys.stdout.flush()
-        while p.printing:
-            time.sleep(1)
-            if statusreport:
-                sys.stdout.write("Progress: %02.1f%%\r"
-                                 % (100 * float(p.queueindex)
-                                    / len(p.mainqueue),))
-                sys.stdout.flush()
-        p.disconnect()
-        sys.exit(0)
-    except:
-        p.disconnect()
