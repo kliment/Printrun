@@ -821,7 +821,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             e.Skip()
 
     def plate(self, e):
-        import plater
+        from . import plater
         print _("Plate function activated")
         plater.StlPlater(size = (800, 580), callback = self.platecb, parent = self, build_dimensions = self.build_dimensions_list).Show()
 
