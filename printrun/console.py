@@ -21,7 +21,6 @@ import os
 import time
 import sys
 import subprocess
-import traceback
 import codecs
 import shlex
 import argparse
@@ -1553,16 +1552,3 @@ class pronsole(cmd.Cmd):
                 except ImportError:
                     pass
 
-
-if __name__ == "__main__":
-
-    interp = pronsole()
-    interp.parse_cmdline(sys.argv[1:])
-    try:
-        interp.cmdloop()
-    except SystemExit:
-        interp.p.disconnect()
-    except:
-        print _("Caught an exception, exiting:")
-        traceback.print_exc()
-        interp.p.disconnect()
