@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-import glob, os, time, datetime, sys, codecs, random, textwrap, re, traceback
-import logging, tornado.ioloop, printcore, pronsole
-from . import printcore
+import os, time, sys, codecs, random, textwrap, re, traceback
+import logging, tornado.ioloop
 from . import pronsole
 
 # Allow construct protocol developers to use a specific lib for dev purposes
@@ -12,8 +11,6 @@ if c_path != None:
 
 from construct_server.construct_server import ConstructServer
 from construct_server.event_emitter import EventEmitter
-from pprint import pprint
-from . import gcoder
 
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 log = logging.getLogger("root")
