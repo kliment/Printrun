@@ -87,7 +87,7 @@ class Layer(list):
         self.z = z
 
     def _preprocess(self, current_x, current_y, current_z,
-                    offset_x, offset_y, offset_z):
+                    offset_x, offset_y, offset_z, ignore_noe = False):
         xmin = float("inf")
         ymin = float("inf")
         zmin = 0
@@ -116,7 +116,7 @@ class Layer(list):
                 current_y = y or current_y
                 current_z = z or current_z
 
-                if line.e:
+                if line.e or not ignore_noe:
                     if x:
                         xmin = min(xmin, x)
                         xmax = max(xmax, x)
@@ -374,9 +374,12 @@ class GCode(object):
         offset_y = 0
         offset_z = 0
 
+        ignore_noe = self.filament_length > 0
+
         for l in self.all_layers:
             meta = l._preprocess(current_x, current_y, current_z,
-                                 offset_x, offset_y, offset_z)
+                                 offset_x, offset_y, offset_z,
+                                 ignore_noe)
             current_x, current_y, current_z = meta[0]
             offset_x, offset_y, offset_z = meta[1]
             (xm, xM), (ym, yM), (zm, zM) = meta[2:]
