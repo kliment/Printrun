@@ -478,6 +478,7 @@ class MainWindow(wx.Frame):
         page2sizer2.Add(LogPane(self, page2panel2), 1, wx.EXPAND)
         page2panel1.SetSizer(page2sizer1)
         page2panel2.SetSizer(page2sizer2)
+        self.splitterwindow.SetMinimumPaneSize(1)
         self.splitterwindow.SetSashGravity(0.5)
         self.splitterwindow.SplitVertically(page2panel1, page2panel2, 0)
         self.mainsizer.Add(self.splitterwindow, 1, wx.EXPAND)
