@@ -15,27 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+__doc__="""
 #######################
 ### How to use this ###
 #######################
-# 1. Check that you can run pronterface.py and pronsole.py directly with python.
-# 2. Get and install py2exe (see: www.py2exe.org)
-# 3. Copy "msvcp90.dll" from some copy into the directory that holds all of printruns
-#    files (same directory as this file ;)).
-#    You either have it already somewhere on your hard drive as it comes with the Microsoft 
-#    Visual C++ Runtime Components or you can get it from older binaries of print run.
-# 4. Run "compile_with_py2exe.bat". This will create the directories "build" and "dist" and
-#    "compile_output.txt" which contains all the output from the packing. Check this file for
-#    any errors and missing dependencies. It also tells you which other Windows related files
-#    you will need to distribute this package. Lastly the "dist" folder contains the *.exe
-#    files you want.
-##
-## TO DO: this does not change the slic3r settings and the resulting executables will still
-##        attemt to run slic3r via python.
-##
+  1. Check that you can run pronterface.py and pronsole.py directly with python.
+  2. Get and install py2exe (see: www.py2exe.org)
+  3. Copy "msvcp90.dll" from some copy into the directory that holds all of printruns
+     files (same directory as this file ;)).
+     You either have it already somewhere on your hard drive as it comes with the Microsoft 
+     Visual C++ Runtime Components or you can get it from older binaries of print run.
+  4. Run "compile_with_py2exe.bat". This will create the directories "build" and "dist" and
+     "compile_output.txt" which contains all the output from the packing. Check this file for
+     any errors and missing dependencies (especially the missing packages at the end of 
+     compile_output.txt). It also tells you which other Windows related files you will need to
+     distribute this package. Lastly the "dist" folder contains the *.exe files you want.
+     
+
+  TO DO: this does not change the slic3r settings and the resulting executables will still
+         attemt to run slic3r via python.
+
 #######################
 ###  End of How-To  ###
 #######################
+"""
 
 import sys
 import os
