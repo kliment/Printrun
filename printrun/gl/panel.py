@@ -72,7 +72,9 @@ class wxGLPanel(wx.Panel):
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
             self.OnReshape()
-            self.canvas.Refresh(False)
+            self.Refresh(False)
+            timer = wx.CallLater(100, self.Refresh)
+            timer.Start()
         event.Skip()
 
     def processPaintEvent(self, event):

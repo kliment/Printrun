@@ -527,7 +527,20 @@ class MainWindow(wx.Frame):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer.Add(left_pane, 0)
         self.lowersizer.Add(left_sizer, 0, wx.EXPAND)
-        vizpanel = self.newPanel(lowerpanel)
+        if not compact:  # Use a splitterwindow to group viz and log
+            rightpanel = self.newPanel(lowerpanel)
+            rightsizer = wx.BoxSizer(wx.VERTICAL)
+            rightpanel.SetSizer(rightsizer)
+            self.splitterwindow = wx.SplitterWindow(rightpanel, style = wx.SP_3D)
+            self.splitterwindow.SetMinimumPaneSize(150)
+            self.splitterwindow.SetSashGravity(0.5)
+            rightsizer.Add(self.splitterwindow, 1, wx.EXPAND)
+            vizpanel = self.newPanel(self.splitterwindow)
+            logpanel = self.newPanel(self.splitterwindow)
+            self.splitterwindow.SplitVertically(vizpanel, logpanel, 0)
+        else:
+            vizpanel = self.newPanel(lowerpanel)
+            logpanel = self.newPanel(lowerpanel)
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
         self.centersizer = wx.GridBagSizer()
@@ -535,14 +548,12 @@ class MainWindow(wx.Frame):
         self.centerpanel.SetSizer(self.centersizer)
         viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
         vizpanel.SetSizer(viz_pane)
-        self.lowersizer.Add(vizpanel, 1, wx.EXPAND | wx.ALIGN_CENTER)
-        logpanel = self.newPanel(lowerpanel)
         log_pane = LogPane(self, logpanel)
         logpanel.SetSizer(log_pane)
-        if compact:
-            left_sizer.Add(logpanel, 1, wx.EXPAND)
+        if not compact:
+            self.lowersizer.Add(rightpanel, 1, wx.EXPAND)
         else:
-            self.lowersizer.Add(logpanel, 1, wx.EXPAND)
+            left_sizer.Add(logpanel, 1, wx.EXPAND)
         self.mainsizer.Add(upperpanel, 0)
         self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
