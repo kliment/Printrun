@@ -1455,7 +1455,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def recvcb(self, l):
         isreport = False
-        if "ok C:" in l or "Count" in l:
+        if "ok C:" in l or "Count" in l \
+           or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
             self.posreport = l
             self.update_pos(l)
             if self.userm114 > 0:
