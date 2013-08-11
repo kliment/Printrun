@@ -21,17 +21,27 @@ Root tag drawer.
 """
 
 from .helpers import preserve_ratio, node_format
+from .units import size
 
 
 def svg(surface, node):
     """Draw a svg ``node``."""
+    width, height, viewbox = node_format(surface, node)
+    if viewbox:
+        node.image_width = viewbox[2] - viewbox[0]
+        node.image_height = viewbox[3] - viewbox[1]
+    else:
+        node.image_width = size(surface, node["width"], "x")
+        node.image_height = size(surface, node["height"], "y")
     if node.get("preserveAspectRatio", "none") != "none":
-        width, height, viewbox = node_format(surface, node)
-        node.image_width, node.image_height = viewbox[2:]
         scale_x, scale_y, translate_x, translate_y = \
             preserve_ratio(surface, node)
-        surface.context.rectangle(0, 0, width, height)
-        surface.context.clip()
-        surface.context.translate(*surface.context.get_current_point())
-        surface.context.scale(scale_x, scale_y)
-        surface.context.translate(translate_x, translate_y)
+        rect_width, rect_height = width, height
+    else:
+        scale_x, scale_y, translate_x, translate_y = (1, 1, 0, 0)
+        rect_width, rect_height = node.image_width, node.image_height
+    surface.context.translate(*surface.context.get_current_point())
+    surface.context.rectangle(0, 0, rect_width, rect_height)
+    surface.context.clip()
+    surface.context.scale(scale_x, scale_y)
+    surface.context.translate(translate_x, translate_y)

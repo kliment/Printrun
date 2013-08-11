@@ -21,7 +21,7 @@ Images manager.
 """
 
 import base64
-import cairo
+import gzip
 from io import BytesIO
 try:
     from urllib import urlopen, unquote
@@ -32,6 +32,8 @@ except ImportError:
     from urllib.request import urlopen
     from urllib import parse as urlparse  # Python 3
     from urllib.parse import unquote_to_bytes
+
+from . import cairo
 from .helpers import node_format, size, preserve_ratio
 from ..parser import Tree
 
@@ -56,7 +58,7 @@ def open_data_url(url):
     if header:
         semi = header.rfind(";")
         if semi >= 0 and "=" not in header[semi:]:
-            encoding = header[semi + 1:]
+            encoding = header[semi+1:]
         else:
             encoding = ""
     else:
@@ -100,8 +102,11 @@ def image(surface, node):
     surface.context.clip()
 
     if image_bytes[:4] == b"\x89PNG":
-        png_bytes = image_bytes
-    elif image_bytes[:5] == b"\x3csvg ":
+        png_file = BytesIO(image_bytes)
+    elif (image_bytes[:5] in (b"<svg ", b"<?xml", b"<!DOC") or
+            image_bytes[:2] == b"\x1f\x8b"):
+        if image_bytes[:2] == b"\x1f\x8b":
+            image_bytes = gzip.GzipFile(fileobj=BytesIO(image_bytes)).read()
         surface.context.save()
         surface.context.translate(x, y)
         if "x" in node:
@@ -110,7 +115,8 @@ def image(surface, node):
             del node["y"]
         if "viewBox" in node:
             del node["viewBox"]
-        tree = Tree(bytestring = image_bytes)
+        tree = Tree(
+            url=url, bytestring=image_bytes, tree_cache=surface.tree_cache)
         tree_width, tree_height, viewbox = node_format(surface, tree)
         if not tree_width or not tree_height:
             tree_width = tree["width"] = width
@@ -130,13 +136,15 @@ def image(surface, node):
         return
     else:
         try:
-            from pystacia import read_blob
-            png_bytes = read_blob(image_bytes).get_blob('png')
+            from PIL import Image
+            png_file = BytesIO()
+            Image.open(BytesIO(image_bytes)).save(png_file, 'PNG')
+            png_file.seek(0)
         except:
             # No way to handle the image
             return
 
-    image_surface = cairo.ImageSurface.create_from_png(BytesIO(png_bytes))
+    image_surface = cairo.ImageSurface.create_from_png(png_file)
 
     node.image_width = image_surface.get_width()
     node.image_height = image_surface.get_height()
