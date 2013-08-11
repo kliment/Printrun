@@ -136,12 +136,21 @@ def path(surface, node):
 
         elif letter == "c":
             # Relative curve
+            x, y = surface.context.get_current_point()
             x1, y1, string = point(surface, string)
             x2, y2, string = point(surface, string)
             x3, y3, string = point(surface, string)
             node.tangents.extend((
                 point_angle(x2, y2, x1, y1), point_angle(x2, y2, x3, y3)))
             surface.context.rel_curve_to(x1, y1, x2, y2, x3, y3)
+
+            # Save absolute values for x and y, useful if next letter is s or S
+            x1 += x
+            x2 += x
+            x3 += x
+            y1 += y
+            y2 += y
+            y3 += y
 
         elif letter == "C":
             # Curve
@@ -186,7 +195,10 @@ def path(surface, node):
         elif letter == "m":
             # Current point relative move
             x, y, string = point(surface, string)
-            surface.context.rel_move_to(x, y)
+            if surface.context.has_current_point():
+                surface.context.rel_move_to(x, y)
+            else:
+                surface.context.move_to(x, y)
 
         elif letter == "M":
             # Current point move
@@ -215,21 +227,28 @@ def path(surface, node):
 
         elif letter == "s":
             # Relative smooth curve
-            # TODO: manage last_letter in "CS"
-            x1 = x3 - x2 if last_letter in "cs" else 0
-            y1 = y3 - y2 if last_letter in "cs" else 0
+            x, y = surface.context.get_current_point()
+            x1 = x3 - x2 if last_letter in "csCS" else 0
+            y1 = y3 - y2 if last_letter in "csCS" else 0
             x2, y2, string = point(surface, string)
             x3, y3, string = point(surface, string)
             node.tangents.extend((
                 point_angle(x2, y2, x1, y1), point_angle(x2, y2, x3, y3)))
             surface.context.rel_curve_to(x1, y1, x2, y2, x3, y3)
 
+            # Save absolute values for x and y, useful if next letter is s or S
+            x1 += x
+            x2 += x
+            x3 += x
+            y1 += y
+            y2 += y
+            y3 += y
+
         elif letter == "S":
             # Smooth curve
-            # TODO: manage last_letter in "cs"
             x, y = surface.context.get_current_point()
-            x1 = 2 * x3 - x2 if last_letter in "CS" else x
-            y1 = 2 * y3 - y2 if last_letter in "CS" else y
+            x1 = x3 + (x3 - x2) if last_letter in "csCS" else x
+            y1 = y3 + (y3 - y2) if last_letter in "csCS" else y
             x2, y2, string = point(surface, string)
             x3, y3, string = point(surface, string)
             node.tangents.extend((
@@ -294,14 +313,12 @@ def path(surface, node):
 
         string = string.strip()
 
-        if letter in "hHvV":
-            if string.split(" ", 1)[0] not in PATH_LETTERS:
-                surface.context.move_to(*surface.context.get_current_point())
-
         if string and letter not in "mMzZ":
             draw_marker(surface, node, "mid")
 
         last_letter = letter
 
-    node.tangents.append(node.tangents[-1])
-    draw_marker(surface, node, "end")
+    if node.tangents != [None]:
+        # node.tangents == [None] means empty path
+        node.tangents.append(node.tangents[-1])
+        draw_marker(surface, node, "end")

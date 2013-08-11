@@ -32,8 +32,8 @@ def circle(surface, node):
         return
     surface.context.new_sub_path()
     surface.context.arc(
-        size(surface, node.get("x"), "x") + size(surface, node.get("cx"), "x"),
-        size(surface, node.get("y"), "y") + size(surface, node.get("cy"), "y"),
+        size(surface, node.get("cx"), "x"),
+        size(surface, node.get("cy"), "y"),
         r, 0, 2 * pi)
 
 
@@ -49,7 +49,7 @@ def ellipse(surface, node):
     surface.context.scale(1, ratio)
     surface.context.arc(
         size(surface, node.get("x"), "x") + size(surface, node.get("cx"), "x"),
-        (size(surface, node.get("y"), "y") + 
+        (size(surface, node.get("y"), "y") +
          size(surface, node.get("cy"), "y")) / ratio,
         size(surface, node.get("rx"), "x"), 0, 2 * pi)
     surface.context.restore()
@@ -83,20 +83,40 @@ def polyline(surface, node):
 
 def rect(surface, node):
     """Draw a rect ``node`` on ``surface``."""
-    # TODO: handle ry
     x, y = size(surface, node.get("x"), "x"), size(surface, node.get("y"), "y")
     width = size(surface, node.get("width"), "x")
     height = size(surface, node.get("height"), "y")
-    if size(surface, node.get("rx"), "x") == 0:
+    rx = node.get("rx")
+    ry = node.get("ry")
+    if rx and ry is None:
+        ry = rx
+    elif ry and rx is None:
+        rx = ry
+    rx = size(surface, rx, "x")
+    ry = size(surface, ry, "y")
+
+    if rx == 0 or ry == 0:
         surface.context.rectangle(x, y, width, height)
     else:
-        r = size(surface, node.get("rx"), "x")
-        a, b, c, d = x, width + x, y, height + y
-        if r > width - r:
-            r = width / 2
-        surface.context.move_to(x, y + height / 2)
-        surface.context.arc(a + r, c + r, r, 2 * pi / 2, 3 * pi / 2)
-        surface.context.arc(b - r, c + r, r, 3 * pi / 2, 0 * pi / 2)
-        surface.context.arc(b - r, d - r, r, 0 * pi / 2, 1 * pi / 2)
-        surface.context.arc(a + r, d - r, r, 1 * pi / 2, 2 * pi / 2)
+        if rx > width / 2.:
+            rx = width / 2.
+        if ry > height / 2.:
+            ry = height / 2.
+
+        # Inspired by Cairo Cookbook
+        # http://cairographics.org/cookbook/roundedrectangles/
+        ARC_TO_BEZIER = 4 * (2 ** .5 - 1) / 3
+        c1 = ARC_TO_BEZIER * rx
+        c2 = ARC_TO_BEZIER * ry
+
+        surface.context.new_path()
+        surface.context.move_to(x + rx, y)
+        surface.context.rel_line_to(width - 2 * rx, 0)
+        surface.context.rel_curve_to(c1, 0, rx, c2, rx, ry)
+        surface.context.rel_line_to(0, height - 2 * ry)
+        surface.context.rel_curve_to(0, c2, c1 - rx, ry, -rx, ry)
+        surface.context.rel_line_to(-width + 2 * rx, 0)
+        surface.context.rel_curve_to(-c1, 0, -rx, -c2, -rx, -ry)
+        surface.context.rel_line_to(0, -height + 2 * ry)
+        surface.context.rel_curve_to(0, -c2, rx - c1, -ry, rx, -ry)
         surface.context.close_path()

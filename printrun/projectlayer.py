@@ -96,21 +96,23 @@ class DisplayFrame(wx.Frame):
                     
                     layercopy.set('height', str(height*self.scale) + 'mm')
                     layercopy.set('width', str(width*self.scale) + 'mm')
-                    layercopy.set('viewBox', '0 0 ' + str(height*self.scale) + ' ' + str(width*self.scale))
-                    
+                    layercopy.set('viewBox', '0 0 ' + str(width*self.scale) + ' ' + str(height*self.scale))
+
                     g = layercopy.find("{http://www.w3.org/2000/svg}g")
                     g.set('transform', 'scale('+str(self.scale)+')')
                     stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(layercopy)))
                 else:
                     stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(image)))
-                    
-                image = wx.ImageFromStream(stream)
+
+                pngImage = wx.ImageFromStream(stream)
                 
+                #print "w:", pngImage.Width, ", dpi:",self.dpi, ", w (mm): ",(pngImage.Width / self.dpi) * 25.4
+
                 if self.layer_red:
-                    image = image.AdjustChannels(1,0,0,1)
+                    pngImage = pngImage.AdjustChannels(1,0,0,1)
                 
-                dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)
-                
+                dc.DrawBitmap(wx.BitmapFromImage(pngImage), self.offset[0], self.offset[1], True)
+
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
@@ -349,7 +351,7 @@ class SettingsFrame(wx.Frame):
         fieldsizer.Add(self.offset_Y, pos=(3, 3))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "ProjectedX (mm):"), pos=(4, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_projected_x", 560.0), increment=1, digits=1, size=(80,-1))
+        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_projected_x", 505.0), increment=1, digits=1, size=(80,-1))
         self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
         self.projected_X_mm.SetHelpText("The actual width of the entire projected image. Use the Calibrate grid to show the full size of the projected image, and measure the width at the same level where the slice will be projected onto the resin.")
         fieldsizer.Add(self.projected_X_mm, pos=(4, 3))
@@ -497,9 +499,9 @@ class SettingsFrame(wx.Frame):
                 svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
-                
-                svgSnippet.set('viewBox', '0 0 ' + height + ' ' + width)
-                svgSnippet.set('style','background-color:black')
+
+                svgSnippet.set('viewBox', '0 0 ' + width + ' ' + height)
+                svgSnippet.set('style','background-color:black;fill:white;')
                 svgSnippet.append(i)
     
                 ol += [svgSnippet]
@@ -533,8 +535,8 @@ class SettingsFrame(wx.Frame):
                 svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
-                
-                svgSnippet.set('viewBox', '0 0 ' + height + ' ' + width)
+
+                svgSnippet.set('viewBox', '0 0 ' + width + ' ' + height)
                 svgSnippet.set('style','background-color:black;fill:white;')
                 svgSnippet.append(g)
     

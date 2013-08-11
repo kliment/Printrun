@@ -20,9 +20,9 @@ Surface helpers.
 
 """
 
-import cairo
 from math import cos, sin, tan, atan2, radians
 
+from . import cairo
 from .units import size
 
 # Python 2/3 management
@@ -43,17 +43,25 @@ def distance(x1, y1, x2, y2):
     return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
 
 
-def filter_fill_or_stroke(value):
-    """Remove unnecessary characters from fill or stroke value."""
-    if not value:
-        return
+def paint(value):
+    """Extract from value an uri and a color.
 
-    content = list(urls(value))[0]
-    if "url" in value:
-        if not content.startswith("#"):
-            return
-        content = content[1:]
-    return content
+    See http://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
+
+    """
+    if not value:
+        return None, None
+
+    value = value.strip()
+
+    if value.startswith("url"):
+        source = urls(value.split(")")[0])[0][1:]
+        color = value.split(")", 1)[-1].strip() or None
+    else:
+        source = None
+        color = value.strip() or None
+
+    return (source, color)
 
 
 def node_format(surface, node):
@@ -68,7 +76,7 @@ def node_format(surface, node):
     return width, height, viewbox
 
 
-def normalize(string = None):
+def normalize(string=None):
     """Normalize a string corresponding to an array of various values."""
     string = string.replace("-", " -")
     string = string.replace(",", " ")
@@ -77,6 +85,7 @@ def normalize(string = None):
         string = string.replace("  ", " ")
 
     string = string.replace("e -", "e-")
+    string = string.replace("E -", "E-")
 
     values = string.split(" ")
     string = ""
@@ -91,7 +100,7 @@ def normalize(string = None):
     return string.strip()
 
 
-def point(surface, string = None):
+def point(surface, string=None):
     """Return ``(x, y, trailing_text)`` from ``string``."""
     if not string:
         return (0, 0, "")
@@ -180,17 +189,15 @@ def transform(surface, string):
     transformations = string.split(")")
     matrix = cairo.Matrix()
     for transformation in transformations:
-        for ttype in (
-            "scale", "translate", "matrix", "rotate", "skewX",
-            "skewY"):
+        for ttype in ("scale", "translate", "matrix", "rotate", "skewX",
+                      "skewY"):
             if ttype in transformation:
                 transformation = transformation.replace(ttype, "")
                 transformation = transformation.replace("(", "")
                 transformation = normalize(transformation).strip() + " "
                 values = []
                 while transformation:
-                    value, transformation = \
-                        transformation.split(" ", 1)
+                    value, transformation = transformation.split(" ", 1)
                     # TODO: manage the x/y sizes here
                     values.append(size(surface, value))
                 if ttype == "matrix":
@@ -236,8 +243,23 @@ def apply_matrix_transform(surface, matrix):
 
 def urls(string):
     """Parse a comma-separated list of url() strings."""
-    for link in string.split(","):
-        link = link.strip()
-        if link.startswith("url"):
-            link = link[3:]
-        yield link.strip("() ")
+    if not string:
+        return []
+
+    string = string.strip()
+    if string.startswith("url"):
+        string = string[3:]
+    return [
+        link.strip("() ") for link in string.rsplit(")")[0].split(",")
+        if link.strip("() ")]
+
+
+def rect(string):
+    """Parse the rect value of a clip."""
+    if not string:
+        return []
+    string = string.strip()
+    if string.startswith("rect"):
+        return string[4:].strip('() ').split(',')
+    else:
+        return []

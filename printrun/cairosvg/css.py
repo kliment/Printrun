@@ -20,7 +20,7 @@ Optionally handle CSS stylesheets.
 
 """
 
-
+import os
 from .parser import HAS_LXML
 
 # Detect optional depedencies
@@ -53,14 +53,28 @@ def find_stylesheets(tree):
     # TODO: support <?xml-stylesheet ... ?>
 
 
+def find_stylesheets_rules(stylesheet, url):
+    """Find the rules in a stylesheet."""
+    for rule in stylesheet.rules:
+        if isinstance(rule, tinycss.css21.ImportRule):
+            css_path = os.path.normpath(
+                os.path.join(os.path.dirname(url), rule.uri))
+            if not os.path.exists(css_path):
+                continue
+            with open(css_path) as f:
+                stylesheet = tinycss.make_parser().parse_stylesheet(f.read())
+                for rule in find_stylesheets_rules(stylesheet, css_path):
+                    yield rule
+        if not rule.at_keyword:
+            yield rule
+
+
 def find_style_rules(tree):
     """Find the style rules in ``tree``."""
-    for stylesheet in find_stylesheets(tree):
+    for stylesheet in find_stylesheets(tree.xml_tree):
         # TODO: warn for each stylesheet.errors
-        for rule in stylesheet.rules:
-            # TODO: support @import and @media
-            if not rule.at_keyword:
-                yield rule
+        for rule in find_stylesheets_rules(stylesheet, tree.url):
+            yield rule
 
 
 def get_declarations(rule):
@@ -95,7 +109,7 @@ def apply_stylesheets(tree):
     style_by_element = {}
     for rule in find_style_rules(tree):
         declarations = list(get_declarations(rule))
-        for element, specificity in match_selector(rule, tree):
+        for element, specificity in match_selector(rule, tree.xml_tree):
             style = style_by_element.setdefault(element, {})
             for name, value, important in declarations:
                 weight = important, specificity
@@ -108,5 +122,4 @@ def apply_stylesheets(tree):
     for element, style in iteritems(style_by_element):
         values = ["%s: %s" % (name, value)
                   for name, (value, weight) in iteritems(style)]
-        values.append(element.get("style", ""))
-        element.set("style", ";".join(values))
+        element.set("_style", ";".join(values))
