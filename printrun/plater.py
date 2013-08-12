@@ -27,7 +27,9 @@ import time
 import threading
 import math
 import sys
+import re
 import traceback
+import subprocess
 
 from printrun import stltool
 from printrun.objectplater import Plater
@@ -330,3 +332,43 @@ class StlPlater(Plater):
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
         print _("Wrote plate to %s") % name
+
+    def autoplate(self, event = None):
+        try:
+            self.autoplate_simarrange()
+        except:
+            traceback.print_exc(file = sys.stdout)
+            print _("Failed to use simarrange for plating, "
+                    "falling back to the standard method")
+            super(StlPlater, self).autoplate()
+
+    def autoplate_simarrange(self):
+        raise ValueError
+        print _("Autoplating using simarrange")
+        models = dict(self.models)
+        files = [model.filename for model in models.values()]
+        p = subprocess.Popen(["./simarrange/sa", "--dryrun"] + files,
+                             stdout = subprocess.PIPE)
+
+        pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
+        for line in p.stdout:
+            line = line.rstrip()
+            if "Generating plate" in line:
+                plateid = int(line.split()[-1])
+                if plateid > 0:
+                    print _("Plate full, please remove some objects")
+                    break
+            if "File:" in line:
+                bits = pos_regexp.match(line).groups()
+                filename = bits[0]
+                x = float(bits[1])
+                y = float(bits[2])
+                rot = float(bits[3])
+                for name, model in models.items():
+                    # FIXME: not sure this is going to work superwell with utf8
+                    if model.filename == filename:
+                        model.offsets[0] = x
+                        model.offsets[1] = y
+                        model.rot = rot
+                        del models[name]
+                        break
