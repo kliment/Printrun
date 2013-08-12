@@ -219,7 +219,7 @@ class StlPlater(Plater):
             viewer = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
-        self.simarrange_path = simarrange_path if simarrange_path is not None else "./simarrange/sa"
+        self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
         self.set_viewer(viewer)
 
     def done(self, event, cb):
