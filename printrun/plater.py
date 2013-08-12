@@ -343,7 +343,6 @@ class StlPlater(Plater):
             super(StlPlater, self).autoplate()
 
     def autoplate_simarrange(self):
-        raise ValueError
         print _("Autoplating using simarrange")
         models = dict(self.models)
         files = [model.filename for model in models.values()]
