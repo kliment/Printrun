@@ -30,6 +30,7 @@ import sys
 import re
 import traceback
 import subprocess
+from copy import copy
 
 from printrun import stltool
 from printrun.objectplater import Plater
@@ -270,8 +271,18 @@ class StlPlater(Plater):
         path = os.path.split(name)[0]
         self.basedir = path
         if name.lower().endswith(".stl"):
-            #Filter out the path, just show the STL filename.
-            self.load_stl_into_model(name, name)
+            for model in self.models.values():
+                if model.filename == name:
+                    newmodel = copy(model)
+                    newmodel.offsets = list(model.offsets)
+                    newmodel.rot = model.rot
+                    newmodel.scale = list(model.scale)
+                    self.add_model(name, newmodel)
+                    self.s.drawmodel(newmodel, 2)
+                    break
+            else:
+                #Filter out the path, just show the STL filename.
+                self.load_stl_into_model(name, name)
         self.Refresh()
 
     def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
