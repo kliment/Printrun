@@ -212,12 +212,14 @@ class StlPlater(Plater):
     load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
     save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
 
-    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
+    def __init__(self, filenames = [], size = (800, 580), callback = None,
+                 parent = None, build_dimensions = None, simarrange_path = None):
         super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         if glview:
             viewer = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
+        self.simarrange_path = simarrange_path if simarrange_path is not None else "./simarrange/sa"
         self.set_viewer(viewer)
 
     def done(self, event, cb):
@@ -357,7 +359,7 @@ class StlPlater(Plater):
         print _("Autoplating using simarrange")
         models = dict(self.models)
         files = [model.filename for model in models.values()]
-        p = subprocess.Popen(["./simarrange/sa", "--dryrun",
+        p = subprocess.Popen([self.simarrange_path, "--dryrun",
                               "-x", str(self.build_dimensions[0]),
                               "-y", str(self.build_dimensions[1])] + files,
                              stdout = subprocess.PIPE)
