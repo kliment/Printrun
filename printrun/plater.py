@@ -27,7 +27,10 @@ import time
 import threading
 import math
 import sys
+import re
 import traceback
+import subprocess
+from copy import copy
 
 from printrun import stltool
 from printrun.objectplater import Plater
@@ -209,12 +212,14 @@ class StlPlater(Plater):
     load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
     save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
 
-    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
+    def __init__(self, filenames = [], size = (800, 580), callback = None,
+                 parent = None, build_dimensions = None, simarrange_path = None):
         super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         if glview:
             viewer = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
+        self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
         self.set_viewer(viewer)
 
     def done(self, event, cb):
@@ -268,8 +273,18 @@ class StlPlater(Plater):
         path = os.path.split(name)[0]
         self.basedir = path
         if name.lower().endswith(".stl"):
-            #Filter out the path, just show the STL filename.
-            self.load_stl_into_model(name, name)
+            for model in self.models.values():
+                if model.filename == name:
+                    newmodel = copy(model)
+                    newmodel.offsets = list(model.offsets)
+                    newmodel.rot = model.rot
+                    newmodel.scale = list(model.scale)
+                    self.add_model(name, newmodel)
+                    self.s.drawmodel(newmodel, 2)
+                    break
+            else:
+                #Filter out the path, just show the STL filename.
+                self.load_stl_into_model(name, name)
         self.Refresh()
 
     def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
@@ -330,3 +345,44 @@ class StlPlater(Plater):
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
         print _("Wrote plate to %s") % name
+
+    def autoplate(self, event = None):
+        try:
+            self.autoplate_simarrange()
+        except:
+            traceback.print_exc(file = sys.stdout)
+            print _("Failed to use simarrange for plating, "
+                    "falling back to the standard method")
+            super(StlPlater, self).autoplate()
+
+    def autoplate_simarrange(self):
+        print _("Autoplating using simarrange")
+        models = dict(self.models)
+        files = [model.filename for model in models.values()]
+        p = subprocess.Popen([self.simarrange_path, "--dryrun",
+                              "-x", str(self.build_dimensions[0]),
+                              "-y", str(self.build_dimensions[1])] + files,
+                             stdout = subprocess.PIPE)
+
+        pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
+        for line in p.stdout:
+            line = line.rstrip()
+            if "Generating plate" in line:
+                plateid = int(line.split()[-1])
+                if plateid > 0:
+                    print _("Plate full, please remove some objects")
+                    break
+            if "File:" in line:
+                bits = pos_regexp.match(line).groups()
+                filename = bits[0]
+                x = float(bits[1])
+                y = float(bits[2])
+                rot = float(bits[3])
+                for name, model in models.items():
+                    # FIXME: not sure this is going to work superwell with utf8
+                    if model.filename == filename:
+                        model.offsets[0] = x
+                        model.offsets[1] = y
+                        model.rot = rot
+                        del models[name]
+                        break
