@@ -346,7 +346,9 @@ class StlPlater(Plater):
         print _("Autoplating using simarrange")
         models = dict(self.models)
         files = [model.filename for model in models.values()]
-        p = subprocess.Popen(["./simarrange/sa", "--dryrun"] + files,
+        p = subprocess.Popen(["./simarrange/sa", "--dryrun",
+                              "-x", str(self.build_dimensions[0]),
+                              "-y", str(self.build_dimensions[1])] + files,
                              stdout = subprocess.PIPE)
 
         pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
