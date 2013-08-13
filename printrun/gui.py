@@ -533,7 +533,7 @@ class MainWindow(wx.Frame):
             rightpanel.SetSizer(rightsizer)
             self.splitterwindow = wx.SplitterWindow(rightpanel, style = wx.SP_3D)
             self.splitterwindow.SetMinimumPaneSize(150)
-            self.splitterwindow.SetSashGravity(0.5)
+            self.splitterwindow.SetSashGravity(0.8)
             rightsizer.Add(self.splitterwindow, 1, wx.EXPAND)
             vizpanel = self.newPanel(self.splitterwindow)
             logpanel = self.newPanel(self.splitterwindow)
