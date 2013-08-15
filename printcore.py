@@ -35,8 +35,8 @@ if __name__ == '__main__':
     for o, a in opts:
         if o in ('-h', '--help'):
             # FIXME: Fix help
-            print "Opts are: --help, -b --baud = baudrate, -v --verbose, \
--s --statusreport"
+            print ("Opts are: --help, -b --baud = baudrate, -v --verbose, "
+                   "-s --statusreport")
             sys.exit(1)
         if o in ('-b', '--baud'):
             baud = int(a)
