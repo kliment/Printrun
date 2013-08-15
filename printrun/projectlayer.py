@@ -21,7 +21,7 @@ import time
 import zipfile
 import tempfile
 import shutil
-from printrun.cairosvg.surface import PNGSurface
+from cairosvg.surface import PNGSurface
 import cStringIO
 import imghdr
 import copy
