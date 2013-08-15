@@ -249,7 +249,9 @@ To use pronterface, you need:
   * pycairo (to use Projector feature)
   * cairosvg (to use Projector feature)
 
-Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)
+Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section), or pip:
+
+`pip install -r requirements.txt`
 
 ## Cython-based G-Code parser
 
