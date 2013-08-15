@@ -48,6 +48,7 @@ You can also run Printrun directly from source, if the packages are too old for 
 
 To enable Prontserve you need to also install something along the following 
 lines. Unforunately this has yet to be tested on a real Fedora system:
+
 1. `sudo yum install avahi avahi-python`
 2. `pip install -r requirements_prontserve.txt`
 
@@ -251,7 +252,7 @@ To use pronterface, you need:
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section), or pip:
 
-`pip install -r requirements.txt`
+```pip install -r requirements.txt```
 
 ## Cython-based G-Code parser
 
