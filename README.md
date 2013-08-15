@@ -28,7 +28,7 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
 1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
-2. `pip install -r requirements.txt`
+2. `pip install -r requirements_prontserve.txt`
 
 ### Fedora 17 and newer
 
@@ -49,7 +49,7 @@ You can also run Printrun directly from source, if the packages are too old for 
 To enable Prontserve you need to also install something along the following 
 lines. Unforunately this has yet to be tested on a real Fedora system:
 1. `sudo yum install avahi avahi-python`
-2. `pip install -r requirements.txt`
+2. `pip install -r requirements_prontserve.txt`
 
 ### Archlinux
 
@@ -241,11 +241,11 @@ To use pronterface, you need:
 
   * python (ideally 2.6.x or 2.7.x),
   * pyserial (or python-serial on ubuntu/debian)
-  * pyglet
-  * numpy (for 3D view)
   * pyreadline (not needed on Linux) and
   * argparse (installed by default with python >= 2.7)
   * wxPython (some features such as Tabbed mode work better with wx 2.9)
+  * pyglet
+  * numpy (for 3D view)
   * pycairo (to use Projector feature)
   * cairosvg (to use Projector feature)
 
