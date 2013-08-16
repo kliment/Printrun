@@ -361,8 +361,8 @@ class StlPlater(Plater):
         files = [model.filename for model in models.values()]
         p = subprocess.Popen([self.simarrange_path, "--dryrun",
                               "-m",  # Pack around center
-                              "-x", str(self.build_dimensions[0]),
-                              "-y", str(self.build_dimensions[1])] + files,
+                              "-x", str(int(self.build_dimensions[0])),
+                              "-y", str(int(self.build_dimensions[1]))] + files,
                              stdout = subprocess.PIPE)
 
         pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
@@ -387,3 +387,5 @@ class StlPlater(Plater):
                         model.rot = rot
                         del models[name]
                         break
+        if p.wait() != 0:
+            raise RuntimeError, _("simarrange failed")
