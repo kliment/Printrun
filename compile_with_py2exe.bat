@@ -12,7 +12,7 @@ where python
 
 IF %ERRORLEVEL% NEQ 0 (
   Echo Python not in PATH. Trying to revert to C:\Python27\python.exe.
-  If EXIST C:\Python22\python.exe (
+  If EXIST C:\Python27\python.exe (
     Echo Starting build with default path. This may take a moment...
     C:\Python27\python.exe setup_py2exe.py py2exe > compile_output.txt
     Echo Done. Check %CD%\compile_output.txt for build errors and missing packages.
