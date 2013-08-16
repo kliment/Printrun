@@ -6,3 +6,6 @@ uploads
 .DS_Store
 .vagrant
 prontserve-env
+.idea
+skeinforge
+msvcp90.dll

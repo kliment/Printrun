@@ -360,6 +360,7 @@ class StlPlater(Plater):
         models = dict(self.models)
         files = [model.filename for model in models.values()]
         p = subprocess.Popen([self.simarrange_path, "--dryrun",
+                              "-m",  # Pack around center
                               "-x", str(self.build_dimensions[0]),
                               "-y", str(self.build_dimensions[1])] + files,
                              stdout = subprocess.PIPE)
