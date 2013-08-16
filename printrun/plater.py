@@ -359,11 +359,11 @@ class StlPlater(Plater):
         print _("Autoplating using simarrange")
         models = dict(self.models)
         files = [model.filename for model in models.values()]
-        p = subprocess.Popen([self.simarrange_path, "--dryrun",
-                              "-m",  # Pack around center
-                              "-x", str(int(self.build_dimensions[0])),
-                              "-y", str(int(self.build_dimensions[1]))] + files,
-                             stdout = subprocess.PIPE)
+        command = [self.simarrange_path, "--dryrun",
+                   "-m",  # Pack around center
+                   "-x", str(int(self.build_dimensions[0])),
+                   "-y", str(int(self.build_dimensions[1]))] + files
+        p = subprocess.Popen(command, stdout = subprocess.PIPE)
 
         pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
         for line in p.stdout:
