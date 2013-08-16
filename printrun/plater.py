@@ -378,7 +378,7 @@ class StlPlater(Plater):
                 filename = bits[0]
                 x = float(bits[1])
                 y = float(bits[2])
-                rot = float(bits[3])
+                rot = -float(bits[3])
                 for name, model in models.items():
                     # FIXME: not sure this is going to work superwell with utf8
                     if model.filename == filename:
