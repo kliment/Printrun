@@ -50,6 +50,7 @@ from printrun.printrun_utils import iconfile, configfile
 from printrun.gui import MainWindow
 from printrun.excluder import Excluder
 from . import pronsole
+from . import printcore
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
 
@@ -676,6 +677,45 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.menustrip.Append(m, _("&Settings"))
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
+
+        m = wx.Menu()
+        self.Bind(wx.EVT_MENU, self.about,
+                  m.Append(-1, _("&About Printrun"), _("Show about dialog")))
+        self.menustrip.Append(m, _("&?"))
+
+    def about(self, event):
+
+        info = wx.AboutDialogInfo()
+
+        info.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        info.SetName('Printrun')
+        info.SetVersion(printcore.__version__)
+
+        description = _("\
+Printrun is a pure Python 3D printing (and other types of CNC) host software.")
+
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2011 - 2013')
+        info.SetWebSite('https://github.com/kliment/Printrun')
+
+        licence = """\
+Printrun is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+Printrun is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+Printrun. If not, see <http://www.gnu.org/licenses/>."""
+
+        info.SetLicence(licence)
+        info.AddDeveloper('Kliment Yanev')
+        info.AddDeveloper('Guillaume Seguin')
+
+        wx.AboutBox(info)
 
     def load_slic3r_configs(self, menus):
         # Hack to get correct path for Slic3r config
