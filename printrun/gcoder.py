@@ -497,7 +497,7 @@ def main():
         return
 
     print "Line object size:", sys.getsizeof(Line("G0 X0"))
-    gcode = GCode(open(sys.argv[1]))
+    gcode = GCode(open(sys.argv[1], "rU"))
 
     print "Dimensions:"
     xdims = (gcode.xmin, gcode.xmax, gcode.width)

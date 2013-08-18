@@ -1614,7 +1614,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         fn = self.filename
         try:
             self.filename = self.model_to_gcode_filename(self.filename)
-            self.fgcode = gcoder.GCode(open(self.filename))
+            self.fgcode = gcoder.GCode(open(self.filename, "rU"))
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)
 
@@ -1684,7 +1684,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.skein(name)
             else:
                 self.filename = name
-                self.fgcode = gcoder.GCode(open(self.filename))
+                self.fgcode = gcoder.GCode(open(self.filename, "rU"))
                 self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
                 print _("Loaded %s, %d lines") % (name, len(self.fgcode))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
