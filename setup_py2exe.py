@@ -56,7 +56,7 @@ except ImportError:
     build_ext = None
 
 target_images_path = "./images"
-data_files = [('.', ['P-face.ico', 'plater.ico', 'pronsole.ico'])]
+data_files = [('.', ['P-face.ico', 'plater.ico', 'pronsole.ico', 'pronterface.desktop'])]
 
 for basedir, subdirs, files in os.walk("images"):
     images = []
@@ -83,10 +83,20 @@ for extra_data_dir in extra_data_dirs:
 
 print data_files
 
-setup(
-    windows=[{'script':'pronterface.py','icon_resources':[(1,'P-face.ico')]}, {'script':'plater.py','icon_resources':[(1,'plater.ico')]}],
-    console=[{'script':'pronsole.py','icon_resources':[(1,'pronsole.ico')]}],
-    data_files=data_files,
-    options={'py2exe':{'bundle_files':1,'compressed':1}}
-)
+py2exe_options = dict(
+                      #excludes=['Tkinter'],  # Exclude Tkinter
+                      compressed=True,  # Compress library.zip
+                      bundle_files=True
+                      )
 
+setup(
+  name = "Printrun",
+  description = "Host software for 3D printers",
+  author = "Kliment Yanev",
+  url = "http://github.com/kliment/Printrun/",
+  license = "GPLv3",
+  data_files = data_files,
+  windows=[{'script':'pronterface.py','icon_resources':[(1,'P-face.ico')]}, {'script':'plater.py','icon_resources':[(1,'plater.ico')]}],
+  console=[{'script':'pronsole.py','icon_resources':[(1,'pronsole.ico')]}],
+  options={'py2exe': py2exe_options}
+)
