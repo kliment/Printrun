@@ -359,11 +359,11 @@ class StlPlater(Plater):
         print _("Autoplating using simarrange")
         models = dict(self.models)
         files = [model.filename for model in models.values()]
-        p = subprocess.Popen([self.simarrange_path, "--dryrun",
-                              "-m",  # Pack around center
-                              "-x", str(self.build_dimensions[0]),
-                              "-y", str(self.build_dimensions[1])] + files,
-                             stdout = subprocess.PIPE)
+        command = [self.simarrange_path, "--dryrun",
+                   "-m",  # Pack around center
+                   "-x", str(int(self.build_dimensions[0])),
+                   "-y", str(int(self.build_dimensions[1]))] + files
+        p = subprocess.Popen(command, stdout = subprocess.PIPE)
 
         pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
         for line in p.stdout:
@@ -378,7 +378,7 @@ class StlPlater(Plater):
                 filename = bits[0]
                 x = float(bits[1])
                 y = float(bits[2])
-                rot = float(bits[3])
+                rot = -float(bits[3])
                 for name, model in models.items():
                     # FIXME: not sure this is going to work superwell with utf8
                     if model.filename == filename:
@@ -387,3 +387,5 @@ class StlPlater(Plater):
                         model.rot = rot
                         del models[name]
                         break
+        if p.wait() != 0:
+            raise RuntimeError, _("simarrange failed")
