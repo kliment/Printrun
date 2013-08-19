@@ -113,8 +113,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
         # axes= ["x", "y", "z"]
       ),
       server_settings= dict(
-        template_path= os.path.join(dir, "printrun", "server", "templates"),
-        static_path= os.path.join(dir, "printrun", "server", "static"),
+        template_path= os.path.join(dir, "server", "templates"),
+        static_path= os.path.join(dir, "server", "static"),
         debug= True
       ),
       routes= [
