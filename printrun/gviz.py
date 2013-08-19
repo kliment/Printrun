@@ -524,6 +524,6 @@ class Gviz(wx.Panel):
 if __name__ == '__main__':
     import sys
     app = wx.App(False)
-    main = GvizWindow(open(sys.argv[1]))
+    main = GvizWindow(open(sys.argv[1], "rU"))
     main.Show()
     app.MainLoop()

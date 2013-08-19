@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+__version__ = "2013.08.17"
+
 from serial import Serial, SerialException
 from select import error as SelectError
 from threading import Thread, Lock

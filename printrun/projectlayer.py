@@ -28,6 +28,7 @@ import copy
 import re
 from collections import OrderedDict
 import itertools
+import math 
 
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
@@ -327,13 +328,15 @@ class SettingsFrame(wx.Frame):
         # Right Column
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "X (px):"), pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1920))), max=999999, size=(80,-1))
+        projectX = int(math.floor(float(self._get_setting("project_x", 1920))))
+        self.X = wx.SpinCtrl(self.panel, -1, str(projectX), max=999999, size=(80,-1))
         self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         self.X.SetHelpText("The projector resolution in the X axis.")
         fieldsizer.Add(self.X, pos=(0, 3))
 
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Y (px):"), pos=(1, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 1200))), max=999999, size=(80,-1))
+        projectY = int(math.floor(float(self._get_setting("project_y", 1200))))
+        self.Y = wx.SpinCtrl(self.panel, -1, str(projectY), max=999999, size=(80,-1))
         self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         self.Y.SetHelpText("The projector resolution in the Y axis.")
         fieldsizer.Add(self.Y, pos=(1, 3))
@@ -451,6 +454,7 @@ class SettingsFrame(wx.Frame):
         self.Fit() 
         self.SetPosition((0, 0)) 
         self.Show()
+
 
     def __del__(self):
         if hasattr(self, 'image_dir') and self.image_dir != '':
@@ -751,8 +755,8 @@ class SettingsFrame(wx.Frame):
         self.refresh_display(event)
     
     def update_resolution(self, event):
-        x = float(self.X.GetValue())
-        y = float(self.Y.GetValue())
+        x = int(self.X.GetValue())
+        y = int(self.Y.GetValue())
         self.display_frame.resize((x,y))
         self._set_setting('project_x',x)
         self._set_setting('project_y',y)
