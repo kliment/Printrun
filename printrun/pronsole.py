@@ -1175,6 +1175,9 @@ class pronsole(cmd.Cmd):
     def help_tool(self):
         self.log(_("Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."))
 
+    def do_raw(self, r):
+        self.p.send_now(r.upper())
+
     def do_move(self, l):
         if(len(l.split()) < 2):
             self.logError(_("No move specified."))

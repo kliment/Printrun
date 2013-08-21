@@ -25,8 +25,8 @@ if c_path != None:
   print "$PY_CONSTRUCT_PATH detected, loading server lib from: \n%s"%c_path
   sys.path.insert(1, c_path)
 
-from construct_server.construct_server import ConstructServer
-from construct_server.event_emitter import EventEmitter
+from construct_server import ConstructServer
+from event_emitter import EventEmitter
 
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 log = logging.getLogger("root")
@@ -40,8 +40,8 @@ class RootHandler(tornado.web.RequestHandler):
     self.render("index.html")
 
 class InspectHandler(tornado.web.RequestHandler):
-  def prepare(self):
-    construct_auth(self, None)
+  #def prepare(self):
+  #  construct_auth(self, None)
 
   def get(self):
     self.render("inspect.html")
@@ -221,6 +221,9 @@ class Prontserve(pronsole.pronsole, EventEmitter):
       cmd = "%(axis)s %(dist)s %(speed)s" % args
       print "move %s"%cmd
       pronsole.pronsole.do_move(self, cmd )
+
+  def do_raw(self, *args):
+    pronsole.pronsole.do_raw(self, " ".join(args))
 
   def do_stop_move(self):
     raise Exception("Continuous movement not supported")
