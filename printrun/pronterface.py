@@ -724,14 +724,20 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.app.SetAppName("Slic3r")
         configpath = wx.StandardPaths.Get().GetUserDataDir()
         self.app.SetAppName(orig_appname)
+        self.slic3r_configpath = configpath
         configfile = os.path.join(configpath, "slic3r.ini")
         config = self.read_slic3r_config(configfile)
+        self.slic3r_configs = {}
         for cat in menus:
             menu = menus[cat]
             pattern = os.path.join(configpath, cat, "*.ini")
             files = sorted(glob.glob(pattern))
-            try: preset = config.get("presets", cat)
-            except: preset = None
+            try:
+                preset = config.get("presets", cat)
+                self.slic3r_configs[cat] = preset
+            except:
+                preset = None
+                self.slic3r_configs[cat] = None
             for f in files:
                 name = os.path.splitext(os.path.basename(f))[0]
                 item = menu.Append(-1, name, f, wx.ITEM_RADIO)
@@ -759,6 +765,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         return parser
 
     def set_slic3r_config(self, configfile, cat, file):
+        self.slic3r_configs[cat] = file
         if self.settings.slic3rupdate:
             config = self.read_slic3r_config(configfile)
             config.set("presets", cat, os.path.basename(file))
@@ -1593,6 +1600,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             param = self.expandcommand(self.settings.slicecommand)
             output_filename = self.model_to_gcode_filename(self.filename)
             pararray = [i.replace("$s", self.filename).replace("$o", output_filename) for i in shlex.split(param.replace("\\", "\\\\"))]
+            if self.settings.slic3rintegration:
+                for cat, config in self.slic3r_configs.items():
+                    if config:
+                        fpath = os.path.join(self.slic3r_configpath, cat, config)
+                        pararray += ["--load", fpath]
             print "Slicing: " + " ".join(pararray)
             self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
