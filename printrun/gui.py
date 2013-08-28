@@ -30,6 +30,9 @@ from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
 from printrun.pronterface_widgets import TempGauge
 
+from printrun.printrun_utils import install_locale
+install_locale('pronterface')
+
 def make_button(parent, label, callback, tooltip, container = None, size = wx.DefaultSize, style = 0):
     button = wx.Button(parent, -1, label, style = style, size = size)
     button.Bind(wx.EVT_BUTTON, callback)
@@ -388,7 +391,7 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
         glob.Add(root.locker, 0)
     ToolbarSizer = wx.WrapSizer if use_wrapsizer and wx.VERSION > (2, 9) else wx.BoxSizer
     self = ToolbarSizer(wx.HORIZONTAL)
-    root.rescanbtn = make_sized_button(parentpanel, _("Port"), root.rescanports, _("Communication Settings\nClick to rescan ports"))
+    root.rescanbtn = make_autosize_button(parentpanel, _("Port"), root.rescanports, _("Communication Settings\nClick to rescan ports"))
     self.Add(root.rescanbtn, 0, wx.TOP | wx.LEFT, 0)
 
     root.serialport = wx.ComboBox(parentpanel, -1, choices = root.scanserial(),
@@ -409,16 +412,16 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     except:
         pass
     self.Add(root.baud)
-    root.connectbtn = make_sized_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"), self)
+    root.connectbtn = make_autosize_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"), self)
 
     root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"), self)
     root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
     root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
     root.printerControls.append(root.sdbtn)
-    root.printbtn = make_sized_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
+    root.printbtn = make_autosize_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
     root.printbtn.Disable()
-    root.pausebtn = make_sized_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
-    root.offbtn = make_sized_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
+    root.pausebtn = make_autosize_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
+    root.offbtn = make_autosize_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
     root.printerControls.append(root.offbtn)
     if root.settings.lockbox:
         parentpanel.SetSizer(self)
