@@ -70,6 +70,13 @@ def sharedfile(filename):
 def configfile(filename):
     return lookup_file(filename, [os.path.expanduser("~/.printrun/"), ])
 
+def decode_utf8(s):
+    try:
+        s = s.decode("utf-8")
+    except:
+        pass
+    return s
+
 class RemainingTimeEstimator(object):
 
     drift = None
