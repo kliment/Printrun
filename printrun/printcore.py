@@ -35,6 +35,9 @@ from printrun.GCodeAnalyzer import GCodeAnalyzer
 from printrun.printrun_utils import install_locale, decode_utf8
 install_locale('pronterface')
 
+import logging
+logging.basicConfig(format = "%(levelname)s: %(message)s")
+
 def locked(f):
     @wraps(f)
     def inner(*args, **kw):
