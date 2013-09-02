@@ -166,10 +166,10 @@ class printcore():
                     self.printer_tcp.settimeout(self.timeout)
                     self.printer = self.printer_tcp.makefile()
                 except socket.error as e:
-                    print _("Could not connect to %s:%s:") % (hostname, port)
+                    logging.error(_("Could not connect to %s:%s:") % (hostname, port))
                     self.printer = None
                     self.printer_tcp = None
-                    print _("Socket error %s:") % e.errno,
+                    logging.error(_("Socket error %s:") % e.errno,)
                     print e.strerror
                     return
             else:
@@ -180,9 +180,9 @@ class printcore():
                                           baudrate = self.baud,
                                           timeout = 0.25)
                 except SerialException as e:
-                    print _("Could not connect to %s at baudrate %s:") % (self.port, self.baud)
+                    logging.error(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud))
                     self.printer = None
-                    print _("Serial error: %s") % e
+                    logging.error(_("Serial error: %s") % e)
                     return
             self.stop_read_thread = False
             self.read_thread = Thread(target = self._listen)
@@ -215,21 +215,21 @@ class printcore():
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                print _(u"Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                logging.error(_(u"Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 return None
             else:
-                print _(u"SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                logging.error(_(u"SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 raise
         except SerialException as e:
-            print _(u"Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e)))
+            logging.error(_(u"Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
             return None
         except socket.error as e:
-            print _(u"Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror))
+            logging.error(_(u"Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
             return None
         except OSError as e:
             if e.errno == errno.EAGAIN:  # Not a real error, no data was available
                 return ""
-            print _(u"Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror)
+            logging.error(_(u"Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
             return None
 
     def _listen_can_continue(self):
@@ -566,11 +566,11 @@ class printcore():
                 if self.printer_tcp: self.printer.flush()
                 self.writefailures = 0
             except socket.error as e:
-                print _(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                logging.error(_(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
             except SerialException as e:
-                print _(u"Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e)))
+                logging.error(_(u"Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
                 self.writefailures += 1
             except RuntimeError as e:
-                print _(u"Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                logging.error(_(u"Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
