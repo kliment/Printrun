@@ -22,7 +22,6 @@ from select import error as SelectError
 from threading import Thread, Lock
 from Queue import Queue, Empty as QueueEmpty
 import time
-import sys
 import platform
 import os
 import traceback
@@ -170,7 +169,7 @@ class printcore():
                     self.printer = None
                     self.printer_tcp = None
                     logging.error(_("Socket error %s:") % e.errno,)
-                    print e.strerror
+                    logging.error(e.strerror)
                     return
             else:
                 disable_hup(self.port)
@@ -211,7 +210,7 @@ class printcore():
                 if self.recvcb:
                     try: self.recvcb(line)
                     except: pass
-                if self.loud: print "RECV:", line.rstrip()
+                if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
@@ -435,7 +434,7 @@ class printcore():
             else:
                 self.priqueue.put_nowait(command)
         else:
-            print "Not connected to printer."
+            logging.error(_("Not connected to printer."))
 
     def send_now(self, command, wait = 0):
         """Sends a command to the printer ahead of the command queue, without a
@@ -443,7 +442,7 @@ class printcore():
         if self.online:
             self.priqueue.put_nowait(command)
         else:
-            print "Not connected to printer."
+            logging.error(_("Not connected to printer."))
 
     def _print(self, resuming = False):
         self._stop_sender()
@@ -452,8 +451,8 @@ class printcore():
                 #callback for printing started
                 try: self.startcb(resuming)
                 except:
-                    print "Print start callback failed with:"
-                    traceback.print_exc(file = sys.stdout)
+                    logging.error(_("Print start callback failed with:") +
+                                  "\n" + traceback.format_exc())
             while self.printing and self.printer and self.online:
                 self._sendnext()
             self.sentlines = {}
@@ -463,11 +462,11 @@ class printcore():
                 #callback for printing done
                 try: self.endcb()
                 except:
-                    print "Print end callback failed with:"
-                    traceback.print_exc(file = sys.stdout)
+                    logging.error(_("Print end callback failed with:") +
+                                  "\n" + traceback.format_exc())
         except:
-            print "Print thread died due to the following error:"
-            traceback.print_exc(file = sys.stdout)
+            logging.error(_("Print thread died due to the following error:") +
+                          "\n" + traceback.format_exc())
         finally:
             self.print_thread = None
             self._start_sender()
@@ -554,10 +553,10 @@ class printcore():
             # run the command through the analyzer
             try: self.analyzer.Analyze(command)
             except:
-                print "Warning: could not analyze command %s:" % command
-                traceback.print_exc(file = sys.stdout)
+                logging.error(_("Warning: could not analyze command %s:") % command +
+                              "\n" + traceback.format_exc())
             if self.loud:
-                print "SENT:", command
+                logging.info("SENT: %s" % command)
             if self.sendcb:
                 try: self.sendcb(command)
                 except: pass
