@@ -25,6 +25,7 @@ import codecs
 import shlex
 import argparse
 import locale
+import logging
 
 from . import printcore
 from printrun.printrun_utils import install_locale
@@ -402,7 +403,7 @@ class pronsole(cmd.Cmd):
         print u"".join(unicode(i) for i in msg)
 
     def logError(self, *msg):
-        print u"".join(unicode(i) for i in msg)
+        logging.error(u"".join(unicode(i) for i in msg))
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
@@ -1551,4 +1552,3 @@ class pronsole(cmd.Cmd):
                     readline.set_completer(self.old_completer)
                 except ImportError:
                     pass
-
