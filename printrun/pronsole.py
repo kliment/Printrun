@@ -559,6 +559,7 @@ class pronsole(cmd.Cmd):
         if macro_def.strip() == "":
             self.logError("Empty macro - cancelled")
             return
+        macro = None
         pycode = "def macro(self,*arg):\n"
         if "\n" not in macro_def.strip():
             pycode += self.compile_macro_line("  " + macro_def.strip())
