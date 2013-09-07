@@ -214,7 +214,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
         self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
-        self.settings._add(HiddenSetting("last_file_path", ""))
+        self.settings._add(HiddenSetting("last_file_path", u""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
         self.settings._add(HiddenSetting("last_extrusion", 5.0))
         self.settings._add(HiddenSetting("default_extrusion", 5.0))
