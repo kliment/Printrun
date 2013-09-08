@@ -1347,7 +1347,7 @@ class pronsole(cmd.Cmd):
         try:
             while True:
                 self.p.send_now("M105")
-                if(self.sdprinting):
+                if self.sdprinting:
                     self.p.send_now("M27")
                 time.sleep(interval)
                 #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
