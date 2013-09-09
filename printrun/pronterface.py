@@ -238,6 +238,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.tempreport = ""
         self.userm114 = 0
         self.userm105 = 0
+        self.m105_waitcycles = 0
         self.monitor = 0
         self.fgcode = None
         self.excluder = None
@@ -1483,7 +1484,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if self.monitor and self.p.online:
                 if self.sdprinting:
                     self.p.send_now("M27")
-                self.p.send_now("M105")
+                if self.m105_waitcycles % 10 == 0:
+                    self.p.send_now("M105")
+                self.m105_waitcycles += 1
             cur_time = time.time()
             wait_time = 0
             while time.time() < cur_time + self.monitor_interval - 0.25:
@@ -1524,6 +1527,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if self.userm105 > 0:
                 self.userm105 -= 1
             else:
+                self.m105_waitcycles = 0
                 isreport = True
         tstring = l.rstrip()
         if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
