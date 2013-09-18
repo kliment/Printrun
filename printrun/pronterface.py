@@ -1845,8 +1845,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 logging.error(_("Error: You don't have permission to open %s.") % port)
                 logging.error(_("You might need to add yourself to the dialout group."))
             else:
-                traceback.print_exc()
+                logging.error(traceback.format_exc())
             # Kill the scope anyway
+            return
+        except OSError as e:
+            if e.errno == 2:
+                logging.error(_("Error: You are trying to connect to a non-existing port."))
+            else:
+                logging.error(traceback.format_exc())
             return
         self.statuscheck = True
         if port != self.settings.port:
