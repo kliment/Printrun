@@ -16,6 +16,7 @@
 import os
 import sys
 import gettext
+import datetime
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not
@@ -76,6 +77,12 @@ def decode_utf8(s):
     except:
         pass
     return s
+
+def format_time(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+
+def format_duration(delta):
+    return str(datetime.timedelta(seconds = int(delta)))
 
 class RemainingTimeEstimator(object):
 

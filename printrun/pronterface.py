@@ -20,7 +20,6 @@ import Queue
 import re
 import sys
 import time
-import datetime
 import threading
 import traceback
 import cStringIO as StringIO
@@ -49,7 +48,7 @@ layerindex = 0
 if os.name == "nt":
     winsize = (800, 530)
 
-from printrun.printrun_utils import iconfile, configfile
+from printrun.printrun_utils import iconfile, configfile, format_time, format_duration
 from printrun.gui import MainWindow
 from printrun.excluder import Excluder
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
@@ -60,12 +59,6 @@ tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
     return dict((m[0], (m[1], m[2])) for m in matches)
-
-def format_time(timestamp):
-    return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
-
-def format_duration(delta):
-    return str(datetime.timedelta(seconds = int(delta)))
 
 class Tee(object):
     def __init__(self, target):
