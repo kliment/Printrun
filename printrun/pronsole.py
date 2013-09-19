@@ -28,7 +28,7 @@ import locale
 import logging
 
 from . import printcore
-from printrun.printrun_utils import install_locale
+from printrun.printrun_utils import install_locale, format_time, format_duration
 install_locale('pronterface')
 from printrun import gcoder
 
@@ -361,6 +361,8 @@ class pronsole(cmd.Cmd):
         self.dynamic_temp = False
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
+        self.p.startcb = self.startcb
+        self.p.endcb = self.endcb
         self.recvlisteners = []
         self.in_macro = False
         self.p.onlinecb = self.online
@@ -384,6 +386,8 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.monitoring = 0
+        self.starttime = 0
+        self.extra_print_time = 0
         self.silent = False
         self.commandprefixes = 'MGT$'
         self.promptstrs = {"offline": "%(bold)suninitialized>%(normal)s ",
@@ -1048,6 +1052,27 @@ class pronsole(cmd.Cmd):
             sys.stdout.flush()
         for i in self.recvlisteners:
             i(l)
+
+    def startcb(self, resuming = False):
+        self.starttime = time.time()
+        if resuming:
+            print _("Print resumed at: %s") % format_time(self.starttime)
+        else:
+            print _("Print started at: %s") % format_time(self.starttime)
+
+    def endcb(self):
+        if self.p.queueindex == 0:
+            print_duration = int(time.time() - self.starttime + self.extra_print_time)
+            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
+                                                                             "duration": format_duration(print_duration)}
+
+            self.p.runSmallScript(self.endScript)
+
+            param = self.settings.final_command
+            if not param:
+                return
+            pararray = [i.replace("$s", str(self.filename)).replace("$t", format_duration(print_duration)).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
+            self.finalp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
 
     def help_shell(self):
         self.log("Executes a python command. Example:")

@@ -316,8 +316,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
         self.compute_eta = None
-        self.starttime = 0
-        self.extra_print_time = 0
         self.curlayer = 0
         self.cur_button = None
         self.predisconnect_mainqueue = None
@@ -341,30 +339,17 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.autoconnect = args.autoconnect
 
     def startcb(self, resuming = False):
-        self.starttime = time.time()
-        if resuming:
-            print _("Print resumed at: %s") % format_time(self.starttime)
-        else:
-            print _("Print started at: %s") % format_time(self.starttime)
+        pronsole.pronsole.startcb(self, resuming)
+        if not resuming:
             self.compute_eta = RemainingTimeEstimator(self.fgcode)
         if self.settings.lockbox and self.settings.lockonstart:
             wx.CallAfter(self.lock, force = True)
 
     def endcb(self):
+        pronsole.pronsole.endcb(self)
         if self.p.queueindex == 0:
-            print_duration = int(time.time() - self.starttime + self.extra_print_time)
-            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
-                                                                             "duration": format_duration(print_duration)}
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-
-            self.p.runSmallScript(self.endScript)
-
-            param = self.settings.final_command
-            if not param:
-                return
-            pararray = [i.replace("$s", str(self.filename)).replace("$t", format_duration(print_duration)).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
-            self.finalp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
 
     def online(self):
         print _("Printer is now online.")
