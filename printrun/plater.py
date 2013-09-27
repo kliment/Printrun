@@ -235,9 +235,17 @@ class StlPlater(Plater):
 
     def load_file(self, filename):
         if filename.lower().endswith(".stl"):
-            self.load_stl(filename)
+            try:
+                self.load_stl(filename)
+            except:
+                dlg = wx.MessageDialog(self, _("Loading STL file failed"), _("Error"),wx.OK)
+                dlg.ShowModal()
         elif filename.lower().endswith(".scad"):
-            self.load_scad(filename)
+            try:
+                self.load_scad(filename)
+            except:
+                dlg = wx.MessageDialog(self, _("Loading OpenSCAD file failed"), _("Error"),wx.OK)
+                dlg.ShowModal()
 
     def load_scad(self, name):
         lf = open(name)
