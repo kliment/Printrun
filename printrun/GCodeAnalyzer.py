@@ -70,9 +70,14 @@ class GCodeAnalyzer():
         gline = gcoder.Line(gcode)
         split_raw = gcoder.split(gline)
         if gline.command.startswith(";@"): return  # code is a host command
+        try:
+            code_g = int(gline.command[1:]) if gline.command.startswith("G") else None
+            code_m = int(gline.command[1:]) if gline.command.startswith("M") else None
+        except ValueError:
+            # If we fail to parse the code number, this is probably not a
+            # standard G-Code but rather a host command, so return immediately
+            return
         gcoder.parse_coordinates(gline, split_raw, self.imperial)
-        code_g = int(gline.command[1:]) if gline.command.startswith("G") else None
-        code_m = int(gline.command[1:]) if gline.command.startswith("M") else None
 
         #get movement codes
         if gline.is_move:
