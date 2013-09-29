@@ -239,6 +239,9 @@ class printcore():
     def _listen_until_online(self):
         while not self.online and self._listen_can_continue():
             self._send("M105")
+            if self.writefailures >= 4:
+                print _("Aborting connection attempt after 4 failed writes.")
+                return
             empty_lines = 0
             while self._listen_can_continue():
                 line = self._readline()
