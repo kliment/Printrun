@@ -51,7 +51,6 @@ class InspectHandler(tornado.web.RequestHandler):
 # -------------------------------------------------
 
 class Line(object):
-
     __slots__ = ('raw', 'command', 'is_move')
 
     def __init__(self, l):
@@ -60,21 +59,20 @@ class Line(object):
     def __getattr__(self, name):
         return None
 
+
 class FastGCode(object):
-  def __init__(self,data):
-    self.lines = [Line(l2) for l2 in
-                    (l.strip() for l in data)
-                  if l2]
-    self.all_layers = [self.lines]
+    def __init__(self, data):
+        self.lines = [Line(l2) for l2 in (l.strip() for l in data) if l2]
+        self.all_layers = [self.lines]
 
-  def __len__(self):
-    return len(self.lines)
+    def __len__(self):
+        return len(self.lines)
 
-  def __iter__(self):
-    return self.lines.__iter__()
+    def __iter__(self):
+        return self.lines.__iter__()
 
-  def idxs(self, index):
-    return (0, index)
+    def idxs(self, index):
+        return 0, index
 
 
 # Prontserve: Server-specific functionality
@@ -180,7 +178,8 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     return self.p.printing == False and self.p.online
 
   def post_process_print_job(self, filename, filebody):
-    return FastGCode(filebody.split("\n"))
+    return filebody.split("\n")
+    #return FastGCode(filebody.split("\n"))
 
   def get_print_job_memory_footprint(self, filename,filebody):
     return 0 # TODO
@@ -271,10 +270,10 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     self.p.send_now({True: "M17", False: "M18"}[value])
 
   def request_sensor_update(self):
-    if self.dry_run:
-      return self._receive_sensor_update(
-        "ok T:%i B:%i"%(random.randint(30, 60), random.randint(30, 60))
-      )
+    #if self.dry_run:
+    #  return self._receive_sensor_update(
+    #    "ok T:%i B:%i"%(random.randint(30, 60), random.randint(30, 60))
+    #  )
     if self.p.online: self.p.send_now("M105")
 
   def recvcb(self, l):

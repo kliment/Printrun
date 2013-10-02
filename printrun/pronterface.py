@@ -204,6 +204,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
+        self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "UI"))
         self.settings._add(BooleanSetting("light3d", True, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "UI"))
@@ -723,14 +724,20 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.app.SetAppName("Slic3r")
         configpath = wx.StandardPaths.Get().GetUserDataDir()
         self.app.SetAppName(orig_appname)
+        self.slic3r_configpath = configpath
         configfile = os.path.join(configpath, "slic3r.ini")
         config = self.read_slic3r_config(configfile)
+        self.slic3r_configs = {}
         for cat in menus:
             menu = menus[cat]
             pattern = os.path.join(configpath, cat, "*.ini")
             files = sorted(glob.glob(pattern))
-            try: preset = config.get("presets", cat)
-            except: preset = None
+            try:
+                preset = config.get("presets", cat)
+                self.slic3r_configs[cat] = preset
+            except:
+                preset = None
+                self.slic3r_configs[cat] = None
             for f in files:
                 name = os.path.splitext(os.path.basename(f))[0]
                 item = menu.Append(-1, name, f, wx.ITEM_RADIO)
@@ -758,15 +765,17 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         return parser
 
     def set_slic3r_config(self, configfile, cat, file):
-        config = self.read_slic3r_config(configfile)
-        config.set("presets", cat, os.path.basename(file))
-        f = StringIO.StringIO()
-        config.write(f)
-        data = f.getvalue()
-        f.close()
-        data = data.replace("[dummy]\n", "")
-        with open(configfile, "w") as f:
-            f.write(data)
+        self.slic3r_configs[cat] = file
+        if self.settings.slic3rupdate:
+            config = self.read_slic3r_config(configfile)
+            config.set("presets", cat, os.path.basename(file))
+            f = StringIO.StringIO()
+            config.write(f)
+            data = f.getvalue()
+            f.close()
+            data = data.replace("[dummy]\n", "")
+            with open(configfile, "w") as f:
+                f.write(data)
 
     def doneediting(self, gcode):
         open(self.filename, "w").write("\n".join(gcode))
@@ -1591,6 +1600,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             param = self.expandcommand(self.settings.slicecommand)
             output_filename = self.model_to_gcode_filename(self.filename)
             pararray = [i.replace("$s", self.filename).replace("$o", output_filename) for i in shlex.split(param.replace("\\", "\\\\"))]
+            if self.settings.slic3rintegration:
+                for cat, config in self.slic3r_configs.items():
+                    if config:
+                        fpath = os.path.join(self.slic3r_configpath, cat, config)
+                        pararray += ["--load", fpath]
             print "Slicing: " + " ".join(pararray)
             self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
