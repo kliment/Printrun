@@ -22,13 +22,12 @@ import time
 import sys
 import subprocess
 import codecs
-import shlex
 import argparse
 import locale
 import logging
 
 from . import printcore
-from printrun.printrun_utils import install_locale, format_time, format_duration
+from printrun.printrun_utils import install_locale, format_time, format_duration, run_command
 install_locale('pronterface')
 from printrun import gcoder
 
@@ -1068,11 +1067,14 @@ class pronsole(cmd.Cmd):
 
             self.p.runSmallScript(self.endScript)
 
-            param = self.settings.final_command
-            if not param:
+            command = self.settings.final_command
+            if not command:
                 return
-            pararray = [i.replace("$s", str(self.filename)).replace("$t", format_duration(print_duration)).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
-            self.finalp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
+            self.finalp = run_command(command,
+                                      {"$s": str(self.filename),
+                                       "$t": format_duration(print_duration)},
+                                      stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
+                                      blocking = False)
 
     def help_shell(self):
         self.log("Executes a python command. Example:")
@@ -1414,14 +1416,18 @@ class pronsole(cmd.Cmd):
                 return
         try:
             if settings:
-                param = self.expandcommand(self.settings.sliceoptscommand).replace("\\", "\\\\").encode()
-                self.log(_("Entering slicer settings: %s") % param)
-                subprocess.call(shlex.split(param))
+                command = self.settings.sliceoptscommand
+                self.log(_("Entering slicer settings: %s") % command)
+                run_command(command, blocking = True)
             else:
-                param = self.expandcommand(self.settings.slicecommand).encode()
-                self.log(_("Slicing: ") % param)
-                params = [i.replace("$s", l[0]).replace("$o", l[0].replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
-                subprocess.call(params)
+                command = self.settings.slicecommand
+                self.log(_("Slicing: ") % command)
+                stl_name = l[0]
+                gcode_name = stl_name.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")
+                run_command(command,
+                            {"$s": stl_name,
+                             "$o": gcode_name},
+                            blocking = True)
                 self.log(_("Loading sliced file."))
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
         except Exception, e:
