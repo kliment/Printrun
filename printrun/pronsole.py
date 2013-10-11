@@ -1076,14 +1076,13 @@ class pronsole(cmd.Cmd):
 
             self.p.runSmallScript(self.endScript)
 
-            command = self.settings.final_command
-            if not command:
+            if not self.settings.final_command:
                 return
-            self.finalp = run_command(command,
-                                      {"$s": str(self.filename),
-                                       "$t": format_duration(print_duration)},
-                                      stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
-                                      blocking = False)
+            run_command(self.settings.final_command,
+                        {"$s": str(self.filename),
+                         "$t": format_duration(print_duration)},
+                        stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
+                        blocking = False)
 
     def help_shell(self):
         self.log("Executes a python command. Example:")
