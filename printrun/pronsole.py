@@ -246,6 +246,7 @@ class Settings(object):
         self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
+        self._add(StringSetting("error_command", "", _("Error command"), _("Executable to run when an error occurs"), "External"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))
@@ -365,6 +366,7 @@ class pronsole(cmd.Cmd):
         self.recvlisteners = []
         self.in_macro = False
         self.p.onlinecb = self.online
+        self.p.errorcb = self.logError
         self.fgcode = None
         self.listing = 0
         self.sdfiles = []
@@ -406,7 +408,14 @@ class pronsole(cmd.Cmd):
         print u"".join(unicode(i) for i in msg)
 
     def logError(self, *msg):
-        logging.error(u"".join(unicode(i) for i in msg))
+        msg = u"".join(unicode(i) for i in msg)
+        logging.error(msg)
+        if not self.settings.error_command:
+            return
+        run_command(self.settings.error_command,
+                    {"$m": msg},
+                    stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
+                    blocking = False)
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
