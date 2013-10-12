@@ -1455,7 +1455,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             wx.CallAfter(self.gviz.Refresh)
             if self.p.online:
                 if self.p.writefailures >= 4:
-                    logging.error(_("Disconnecting after 4 failed writes."))
+                    self.logError(_("Disconnecting after 4 failed writes."))
                     self.status_thread = None
                     self.disconnect()
                     return
@@ -1818,19 +1818,19 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         except SerialException as e:
             # Currently, there is no errno, but it should be there in the future
             if e.errno == 2:
-                logging.error(_("Error: You are trying to connect to a non-existing port."))
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
             elif e.errno == 8:
-                logging.error(_("Error: You don't have permission to open %s.") % port)
-                logging.error(_("You might need to add yourself to the dialout group."))
+                self.logError(_("Error: You don't have permission to open %s.") % port)
+                self.logError(_("You might need to add yourself to the dialout group."))
             else:
-                logging.error(traceback.format_exc())
+                self.logError(traceback.format_exc())
             # Kill the scope anyway
             return
         except OSError as e:
             if e.errno == 2:
-                logging.error(_("Error: You are trying to connect to a non-existing port."))
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
             else:
-                logging.error(traceback.format_exc())
+                self.logError(traceback.format_exc())
             return
         self.statuscheck = True
         if port != self.settings.port:
