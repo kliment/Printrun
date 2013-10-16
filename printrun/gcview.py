@@ -290,7 +290,7 @@ class GcodeViewMainWrapper(object):
     def setlayer(self, *a):
         pass
 
-    def addfile(self, gcode = None):
+    def addfile(self, gcode = None, showall = False):
         self.model = create_model(self.root.settings.light3d
                                   if self.root else False)
         if gcode:

@@ -1721,9 +1721,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         print _("Estimated duration: %s") % gcode.estimate_duration()
         self.gviz.clear()
         self.gwindow.p.clear()
-        self.gviz.addfile(gcode)
+        self.gviz.addfile(gcode, True)
         self.gwindow.p.addfile(gcode)
-        self.gviz.showall = 1
         wx.CallAfter(self.gviz.Refresh)
 
     def printfile(self, event):
