@@ -100,7 +100,9 @@ class GvizWindow(GvizBaseFrame):
 
     def process_slider(self, event):
         self.p.layerindex = self.layerslider.GetValue()
-        self.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.p.layerindex + 1, self.p.layers[self.p.layerindex]), 0)
+        z = self.p.layers[self.p.layerindex]
+        z = 0. if z is None else z
+        self.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
         self.p.dirty = 1
         wx.CallAfter(self.p.Refresh)
 
