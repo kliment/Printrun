@@ -102,7 +102,6 @@ class Platform(object):
         self.color_grads_minor = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
         self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
         self.color_grads_major = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
-        self.color_fill = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
 
         self.initialized = False
         self.loaded = True
@@ -138,10 +137,6 @@ class Platform(object):
                 glVertex3f(0, float(i), 0.0)
                 glVertex3f(self.width, float(i), 0.0)
         glEnd()
-
-        # draw fill
-        glColor4f(*self.color_fill)
-        glRectf(0.0, 0.0, float(self.width), float(self.depth))
 
         glPopMatrix()
 
