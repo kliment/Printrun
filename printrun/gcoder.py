@@ -67,7 +67,7 @@ def split(line):
     if not split_raw:
         line.command = line.raw
         line.is_move = False
-        logging.warning("raw G-Code line \"%s\" could not be parsed" % line.raw)
+        logging.warning(_("raw G-Code line \"%s\" could not be parsed") % line.raw)
         return line.raw
     command = split_raw[0] if split_raw[0][0] != "n" else split_raw[1]
     line.command = command[0].upper() + command[1]
