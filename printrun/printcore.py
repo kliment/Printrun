@@ -25,6 +25,9 @@ import time
 import sys
 import platform
 import os
+import sys
+reload(sys).setdefaultencoding('utf8')
+import logging
 import traceback
 import errno
 import socket
@@ -32,8 +35,10 @@ import re
 from functools import wraps
 from collections import deque
 from printrun.GCodeAnalyzer import GCodeAnalyzer
-from printrun.printrun_utils import install_locale, decode_utf8
+from printrun.printrun_utils import install_locale, decode_utf8, setup_logging
 install_locale('pronterface')
+
+setup_logging(sys.stdout)
 
 def locked(f):
     @wraps(f)

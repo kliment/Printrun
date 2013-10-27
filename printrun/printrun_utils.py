@@ -16,6 +16,7 @@
 import os
 import sys
 import gettext
+import logging
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not
@@ -28,6 +29,13 @@ def install_locale(domain):
                         unicode = 1)
     else:
         gettext.install(domain, './locale', unicode = 1)
+
+def setup_logging(stdout):
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    logging_handler = logging.StreamHandler(stdout)
+    logging_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+    logger.addHandler(logging_handler)
 
 def iconfile(filename):
     if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
