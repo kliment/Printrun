@@ -30,10 +30,10 @@ def install_locale(domain):
     else:
         gettext.install(domain, './locale', unicode = 1)
 
-def setup_logging(stdout):
+def setup_logging(out):
     logger = logging.getLogger()
     logger.handlers.clear()
-    logging_handler = logging.StreamHandler(stdout)
+    logging_handler = logging.StreamHandler(out)
     logging_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
     logger.addHandler(logging_handler)
 
