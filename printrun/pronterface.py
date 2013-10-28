@@ -28,7 +28,8 @@ import subprocess
 import shlex
 import glob
 
-from printrun.printrun_utils import install_locale, RemainingTimeEstimator
+from printrun.printrun_utils import install_locale, \
+    RemainingTimeEstimator, setup_logging
 install_locale('pronterface')
 
 try:
@@ -70,6 +71,7 @@ class Tee(object):
     def __init__(self, target):
         self.stdout = sys.stdout
         sys.stdout = self
+        setup_logging(sys.stdout)
         self.target = target
 
     def __del__(self):
