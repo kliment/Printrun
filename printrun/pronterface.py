@@ -999,7 +999,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttonbuttons.append(b)
             self.centersizer.Add(b, pos = (i // 4, i % 4))
-        self.panel.GetSizer().Layout()
+        self.panel.Fit()
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
