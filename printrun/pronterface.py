@@ -995,7 +995,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.Bind(wx.EVT_BUTTON, self.procbutton)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttonbuttons.append(b)
-            self.centersizer.Add(b, pos = (i // 4, i % 4))
+            self.centersizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
         self.panel.Fit()
 
     def help_button(self):
