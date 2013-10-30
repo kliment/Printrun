@@ -972,15 +972,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.custombuttonbuttons = []
         custombuttons = self.custombuttons[:] + [None]
         for i, btndef in enumerate(custombuttons):
-            try:
-                b = wx.Button(self.centerpanel, -1, btndef.label, style = wx.BU_EXACTFIT)
-                b.SetToolTip(wx.ToolTip(_("Execute command: ") + btndef.command))
-                if btndef.background:
-                    b.SetBackgroundColour(btndef.background)
-                    rr, gg, bb = b.GetBackgroundColour().Get()
-                    if 0.3 * rr + 0.59 * gg + 0.11 * bb < 60:
-                        b.SetForegroundColour("#ffffff")
-            except:
+            if btndef is None:
                 if i == len(custombuttons) - 1:
                     self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
                     #b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
@@ -988,12 +980,17 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
                 else:
-                    b = wx.Button(self.centerpanel, -1, ".", size = (1, 1))
-                    #b = wx.StaticText(self.panel,-1, "", size = (72, 22), style = wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE) #+wx.SIMPLE_BORDER
-                    b.Disable()
-                    #continue
-            b.custombutton = i
-            b.properties = btndef
+                    b = wx.StaticText(self.panel, -1, "")
+            else:
+                b = wx.Button(self.centerpanel, -1, btndef.label, style = wx.BU_EXACTFIT)
+                b.SetToolTip(wx.ToolTip(_("Execute command: ") + btndef.command))
+                if btndef.background:
+                    b.SetBackgroundColour(btndef.background)
+                    rr, gg, bb = b.GetBackgroundColour().Get()
+                    if 0.3 * rr + 0.59 * gg + 0.11 * bb < 60:
+                        b.SetForegroundColour("#ffffff")
+                b.custombutton = i
+                b.properties = btndef
             if btndef is not None:
                 b.Bind(wx.EVT_BUTTON, self.procbutton)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
