@@ -27,6 +27,9 @@ import cStringIO as StringIO
 import subprocess
 import shlex
 import glob
+import logging
+from . import pronsole
+from . import printcore
 
 from printrun.printrun_utils import install_locale, RemainingTimeEstimator
 install_locale('pronterface')
@@ -34,7 +37,7 @@ install_locale('pronterface')
 try:
     import wx
 except:
-    print _("WX is not installed. This program requires WX to run.")
+    logging.error(_("WX is not installed. This program requires WX to run."))
     raise
 
 from printrun.pronterface_widgets import SpecialButton, MacroEditor, \
@@ -49,8 +52,6 @@ if os.name == "nt":
 from printrun.printrun_utils import iconfile, configfile
 from printrun.gui import MainWindow
 from printrun.excluder import Excluder
-from . import pronsole
-from . import printcore
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
 
@@ -213,7 +214,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
         self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
-        self.settings._add(HiddenSetting("last_file_path", ""))
+        self.settings._add(HiddenSetting("last_file_path", u""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
         self.settings._add(HiddenSetting("last_extrusion", 5.0))
         self.settings._add(HiddenSetting("default_extrusion", 5.0))
@@ -298,10 +299,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                         rco.write(_("# I moved all your custom buttons into .pronsolerc.\n# Please don't add them here any more.\n# Backup of your old buttons is in custombtn.old\n"))
                         rco.close()
                     except IOError, x:
-                        print str(x)
+                        logging.error(str(x))
                 else:
-                    print _("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc")
-                    print _("Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt")
+                    logging.warning(_("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"))
+                    logging.warning(_("Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"))
 
         except:
             pass
@@ -1475,7 +1476,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             wx.CallAfter(self.gviz.Refresh)
             if self.p.online:
                 if self.p.writefailures >= 4:
-                    print _("Disconnecting after 4 failed writes.")
+                    logging.error(_("Disconnecting after 4 failed writes."))
                     self.status_thread = None
                     self.disconnect()
                     return
@@ -1605,7 +1606,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     if config:
                         fpath = os.path.join(self.slic3r_configpath, cat, config)
                         pararray += ["--load", fpath]
-            print "Slicing: " + " ".join(pararray)
+            print _("Slicing ") + " ".join(pararray)
             self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
                 o = self.skeinp.stdout.read(1)
@@ -1614,7 +1615,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.skeinp.wait()
             self.stopsf = 1
         except:
-            print _("Failed to execute slicing software: ")
+            logging.error(_("Failed to execute slicing software: "))
             self.stopsf = 1
             traceback.print_exc(file = sys.stdout)
 
@@ -1835,10 +1836,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         except SerialException as e:
             # Currently, there is no errno, but it should be there in the future
             if e.errno == 2:
-                print _("Error: You are trying to connect to a non-existing port.")
+                logging.error(_("Error: You are trying to connect to a non-existing port."))
             elif e.errno == 8:
-                print _("Error: You don't have permission to open %s.") % port
-                print _("You might need to add yourself to the dialout group.")
+                logging.error(_("Error: You don't have permission to open %s.") % port)
+                logging.error(_("You might need to add yourself to the dialout group."))
             else:
                 traceback.print_exc()
             # Kill the scope anyway

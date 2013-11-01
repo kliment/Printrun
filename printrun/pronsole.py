@@ -25,6 +25,7 @@ import codecs
 import shlex
 import argparse
 import locale
+import logging
 
 from . import printcore
 from printrun.printrun_utils import install_locale
@@ -402,7 +403,7 @@ class pronsole(cmd.Cmd):
         print u"".join(unicode(i) for i in msg)
 
     def logError(self, *msg):
-        print u"".join(unicode(i) for i in msg)
+        logging.error(u"".join(unicode(i) for i in msg))
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
@@ -558,6 +559,7 @@ class pronsole(cmd.Cmd):
         if macro_def.strip() == "":
             self.logError("Empty macro - cancelled")
             return
+        macro = None
         pycode = "def macro(self,*arg):\n"
         if "\n" not in macro_def.strip():
             pycode += self.compile_macro_line("  " + macro_def.strip())
@@ -1345,7 +1347,7 @@ class pronsole(cmd.Cmd):
         try:
             while True:
                 self.p.send_now("M105")
-                if(self.sdprinting):
+                if self.sdprinting:
                     self.p.send_now("M27")
                 time.sleep(interval)
                 #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
@@ -1551,4 +1553,3 @@ class pronsole(cmd.Cmd):
                     readline.set_completer(self.old_completer)
                 except ImportError:
                     pass
-
