@@ -824,7 +824,7 @@ msgstr "Vous devez spécifier l'indice de l'outil avec un entier."
 
 #: printrun/pronsole.py:1171
 msgid "Using tool %d."
-msgstr "Utilisation de l'outils %d."
+msgstr "Utilisation de l'outil %d."
 
 #: printrun/pronsole.py:1175
 msgid "You cannot set negative tool numbers."
