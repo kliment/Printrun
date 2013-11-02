@@ -29,6 +29,8 @@ except ImportError:
     extensions = None
     build_ext = None
 
+from printrun.printcore import __version__ as printcore_version
+
 INSTALLED_FILES = "installed_files"
 
 class install (_install):
@@ -152,6 +154,7 @@ if build_ext:
     cmdclass['build_ext'] = build_ext
 
 setup(name = "Printrun",
+      version = printcore_version,
       description = "Host software for 3D printers",
       author = "Kliment Yanev",
       url = "http://github.com/kliment/Printrun/",
