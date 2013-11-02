@@ -16,6 +16,7 @@
 from Queue import Queue
 from collections import deque
 import wx
+import time
 from printrun import gcoder
 
 from printrun_utils import imagefile, install_locale
@@ -382,8 +383,9 @@ class Gviz(wx.Panel):
         if self.paint_overlay:
             self.paint_overlay(dc)
 
-    def addfile(self, gcode):
+    def addfile(self, gcode, showall = False):
         self.clear()
+        self.showall = showall
         self.add_parsed_gcodes(gcode)
         max_layers = len(self.layers)
         if hasattr(self.parent, "layerslider"):
@@ -401,6 +403,8 @@ class Gviz(wx.Panel):
         def _x(x):
             return x - self.build_dimensions[3]
 
+        start_time = time.time()
+
         for layer_idx, layer in enumerate(gcode.all_layers):
             has_move = False
             for gline in layer:
@@ -413,7 +417,6 @@ class Gviz(wx.Panel):
             self.pens[layer.z] = []
             self.arcs[layer.z] = []
             self.arcpens[layer.z] = []
-            self.layers.append(layer.z)
             for gline in layer:
                 if not gline.is_move:
                     continue
@@ -450,8 +453,16 @@ class Gviz(wx.Panel):
                     self.arcpens[layer.z].append(self.arcpen)
 
                 self.lastpos = target
+            # Only add layer.z to self.layers now to prevent the display of an
+            # unfinished layer
+            self.layers.append(layer.z)
+            # Refresh display if more than 0.2s have passed
+            if time.time() - start_time > 0.2:
+                start_time = time.time()
+                self.dirty = 1
+                wx.CallAfter(self.Refresh)
         self.dirty = 1
-        self.Refresh()
+        wx.CallAfter(self.Refresh)
 
     def addgcode(self, gcode = "M105", hilight = 0):
         gcode = gcode.split("*")[0]
@@ -521,7 +532,7 @@ class Gviz(wx.Panel):
             self.dirty = 1
         else:
             self.hilightpos = target
-        self.Refresh()
+        wx.CallAfter(self.Refresh)
 
 if __name__ == '__main__':
     import sys

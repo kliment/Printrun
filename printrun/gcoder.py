@@ -96,7 +96,8 @@ class Layer(list):
         self.z = z
 
     def _preprocess(self, current_x, current_y, current_z,
-                    offset_x, offset_y, offset_z, ignore_noe = False):
+                    offset_x, offset_y, offset_z,
+                    ignore_noe = False, host_mode = True):
         xmin = float("inf")
         ymin = float("inf")
         zmin = 0
@@ -117,22 +118,22 @@ class Layer(list):
                     y = current_y + (y or 0)
                     z = current_z + (z or 0)
                 else:
-                    if line.x: x = line.x + offset_x
-                    if line.y: y = line.y + offset_y
-                    if line.z: z = line.z + offset_z
+                    if x is not None: x = x + offset_x
+                    if y is not None: y = y + offset_y
+                    if z is not None: z = z + offset_z
 
                 current_x = x or current_x
                 current_y = y or current_y
                 current_z = z or current_z
 
                 if line.e or not ignore_noe:
-                    if x:
+                    if x is not None:
                         xmin = min(xmin, x)
                         xmax = max(xmax, x)
-                    if y:
+                    if y is not None:
                         ymin = min(ymin, y)
                         ymax = max(ymax, y)
-                    if current_z:
+                    if current_z is not None:
                         zmin = min(zmin, current_z)
                         zmax = max(zmax, current_z)
 
@@ -140,14 +141,19 @@ class Layer(list):
                 if not any([line.x, line.y, line.z]):
                     current_x = current_y = current_z = 0
                 else:
-                    if line.x: current_x = 0
-                    if line.y: current_y = 0
-                    if line.z: current_z = 0
+                    if line.x is not None: current_x = 0
+                    if line.y is not None: current_y = 0
+                    if line.z is not None: current_z = 0
 
             elif line.command == "G92":
-                if line.x: offset_x = current_x - line.x
-                if line.y: offset_y = current_y - line.y
-                if line.z: offset_z = current_z - line.z
+                if host_mode:
+                    current_x = line.x or current_x
+                    current_y = line.y or current_y
+                    current_z = line.z or current_z
+                else:
+                    if line.x is not None: offset_x = current_x - line.x
+                    if line.y is not None: offset_y = current_y - line.y
+                    if line.z is not None: offset_z = current_z - line.z
 
             line.current_x = current_x
             line.current_y = current_y
@@ -184,14 +190,14 @@ class GCode(object):
 
     est_layer_height = None
 
-    def __init__(self, data):
+    def __init__(self, data, host_mode = True):
         self.lines = [Line(l2) for l2 in
                       (l.strip() for l in data)
                       if l2]
         self._preprocess_lines()
         self.filament_length = self._preprocess_extrusion()
         self._create_layers()
-        self._preprocess_layers()
+        self._preprocess_layers(host_mode = host_mode)
 
     def __len__(self):
         return len(self.line_idxs)
@@ -368,7 +374,7 @@ class GCode(object):
     def num_layers(self):
         return len(self.layers)
 
-    def _preprocess_layers(self):
+    def _preprocess_layers(self, host_mode = True):
         xmin = float("inf")
         ymin = float("inf")
         zmin = 0
@@ -388,7 +394,7 @@ class GCode(object):
         for l in self.all_layers:
             meta = l._preprocess(current_x, current_y, current_z,
                                  offset_x, offset_y, offset_z,
-                                 ignore_noe)
+                                 ignore_noe, host_mode)
             current_x, current_y, current_z = meta[0]
             offset_x, offset_y, offset_z = meta[1]
             (xm, xM), (ym, yM), (zm, zM) = meta[2:]
