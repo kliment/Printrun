@@ -492,7 +492,9 @@ class printcore():
             return
         while self.printer and self.printing and not self.clear:
             time.sleep(0.001)
-        self.clear = False
+        # Only wait for oks when using serial connections
+        if not self.printer_tcp:
+            self.clear = False
         if not (self.printing and self.printer and self.online):
             self.clear = True
             return
