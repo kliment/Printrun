@@ -20,7 +20,6 @@ import Queue
 import re
 import sys
 import time
-import datetime
 import threading
 import traceback
 import cStringIO as StringIO
@@ -49,7 +48,7 @@ layerindex = 0
 if os.name == "nt":
     winsize = (800, 530)
 
-from printrun.printrun_utils import iconfile, configfile
+from printrun.printrun_utils import iconfile, configfile, format_time, format_duration
 from printrun.gui import MainWindow
 from printrun.excluder import Excluder
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
@@ -60,12 +59,6 @@ tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
     return dict((m[0], (m[1], m[2])) for m in matches)
-
-def format_time(timestamp):
-    return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
-
-def format_duration(delta):
-    return str(datetime.timedelta(seconds = int(delta)))
 
 class Tee(object):
     def __init__(self, target):
@@ -323,8 +316,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
         self.compute_eta = None
-        self.starttime = 0
-        self.extra_print_time = 0
         self.curlayer = 0
         self.cur_button = None
         self.predisconnect_mainqueue = None
@@ -348,30 +339,17 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.autoconnect = args.autoconnect
 
     def startcb(self, resuming = False):
-        self.starttime = time.time()
-        if resuming:
-            print _("Print resumed at: %s") % format_time(self.starttime)
-        else:
-            print _("Print started at: %s") % format_time(self.starttime)
+        pronsole.pronsole.startcb(self, resuming)
+        if not resuming:
             self.compute_eta = RemainingTimeEstimator(self.fgcode)
         if self.settings.lockbox and self.settings.lockonstart:
             wx.CallAfter(self.lock, force = True)
 
     def endcb(self):
+        pronsole.pronsole.endcb(self)
         if self.p.queueindex == 0:
-            print_duration = int(time.time() - self.starttime + self.extra_print_time)
-            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
-                                                                             "duration": format_duration(print_duration)}
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-
-            self.p.runSmallScript(self.endScript)
-
-            param = self.settings.final_command
-            if not param:
-                return
-            pararray = [i.replace("$s", str(self.filename)).replace("$t", format_duration(print_duration)).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
-            self.finalp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
 
     def online(self):
         print _("Printer is now online.")
@@ -1477,7 +1455,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             wx.CallAfter(self.gviz.Refresh)
             if self.p.online:
                 if self.p.writefailures >= 4:
-                    logging.error(_("Disconnecting after 4 failed writes."))
+                    self.logError(_("Disconnecting after 4 failed writes."))
                     self.status_thread = None
                     self.disconnect()
                     return
@@ -1840,19 +1818,19 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         except SerialException as e:
             # Currently, there is no errno, but it should be there in the future
             if e.errno == 2:
-                logging.error(_("Error: You are trying to connect to a non-existing port."))
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
             elif e.errno == 8:
-                logging.error(_("Error: You don't have permission to open %s.") % port)
-                logging.error(_("You might need to add yourself to the dialout group."))
+                self.logError(_("Error: You don't have permission to open %s.") % port)
+                self.logError(_("You might need to add yourself to the dialout group."))
             else:
-                logging.error(traceback.format_exc())
+                self.logError(traceback.format_exc())
             # Kill the scope anyway
             return
         except OSError as e:
             if e.errno == 2:
-                logging.error(_("Error: You are trying to connect to a non-existing port."))
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
             else:
-                logging.error(traceback.format_exc())
+                self.logError(traceback.format_exc())
             return
         self.statuscheck = True
         if port != self.settings.port:

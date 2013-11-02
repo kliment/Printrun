@@ -22,13 +22,12 @@ import time
 import sys
 import subprocess
 import codecs
-import shlex
 import argparse
 import locale
 import logging
 
 from . import printcore
-from printrun.printrun_utils import install_locale
+from printrun.printrun_utils import install_locale, format_time, format_duration, run_command
 install_locale('pronterface')
 from printrun import gcoder
 
@@ -247,6 +246,7 @@ class Settings(object):
         self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
+        self._add(StringSetting("error_command", "", _("Error command"), _("Executable to run when an error occurs"), "External"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))
@@ -361,9 +361,12 @@ class pronsole(cmd.Cmd):
         self.dynamic_temp = False
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
+        self.p.startcb = self.startcb
+        self.p.endcb = self.endcb
         self.recvlisteners = []
         self.in_macro = False
         self.p.onlinecb = self.online
+        self.p.errorcb = self.logError
         self.fgcode = None
         self.listing = 0
         self.sdfiles = []
@@ -384,6 +387,8 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.monitoring = 0
+        self.starttime = 0
+        self.extra_print_time = 0
         self.silent = False
         self.commandprefixes = 'MGT$'
         self.promptstrs = {"offline": "%(bold)suninitialized>%(normal)s ",
@@ -403,7 +408,14 @@ class pronsole(cmd.Cmd):
         print u"".join(unicode(i) for i in msg)
 
     def logError(self, *msg):
-        logging.error(u"".join(unicode(i) for i in msg))
+        msg = u"".join(unicode(i) for i in msg)
+        logging.error(msg)
+        if not self.settings.error_command:
+            return
+        run_command(self.settings.error_command,
+                    {"$m": msg},
+                    stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
+                    blocking = False)
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
@@ -1049,6 +1061,29 @@ class pronsole(cmd.Cmd):
         for i in self.recvlisteners:
             i(l)
 
+    def startcb(self, resuming = False):
+        self.starttime = time.time()
+        if resuming:
+            print _("Print resumed at: %s") % format_time(self.starttime)
+        else:
+            print _("Print started at: %s") % format_time(self.starttime)
+
+    def endcb(self):
+        if self.p.queueindex == 0:
+            print_duration = int(time.time() - self.starttime + self.extra_print_time)
+            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
+                                                                             "duration": format_duration(print_duration)}
+
+            self.p.runSmallScript(self.endScript)
+
+            if not self.settings.final_command:
+                return
+            run_command(self.settings.final_command,
+                        {"$s": str(self.filename),
+                         "$t": format_duration(print_duration)},
+                        stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
+                        blocking = False)
+
     def help_shell(self):
         self.log("Executes a python command. Example:")
         self.log("! os.listdir('.')")
@@ -1389,14 +1424,18 @@ class pronsole(cmd.Cmd):
                 return
         try:
             if settings:
-                param = self.expandcommand(self.settings.sliceoptscommand).replace("\\", "\\\\").encode()
-                self.log(_("Entering slicer settings: %s") % param)
-                subprocess.call(shlex.split(param))
+                command = self.settings.sliceoptscommand
+                self.log(_("Entering slicer settings: %s") % command)
+                run_command(command, blocking = True)
             else:
-                param = self.expandcommand(self.settings.slicecommand).encode()
-                self.log(_("Slicing: ") % param)
-                params = [i.replace("$s", l[0]).replace("$o", l[0].replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
-                subprocess.call(params)
+                command = self.settings.slicecommand
+                self.log(_("Slicing: ") % command)
+                stl_name = l[0]
+                gcode_name = stl_name.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")
+                run_command(command,
+                            {"$s": stl_name,
+                             "$o": gcode_name},
+                            blocking = True)
                 self.log(_("Loading sliced file."))
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
         except Exception, e:

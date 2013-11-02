@@ -16,6 +16,9 @@
 import os
 import sys
 import gettext
+import datetime
+import subprocess
+import shlex
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not
@@ -76,6 +79,24 @@ def decode_utf8(s):
     except:
         pass
     return s
+
+def format_time(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+
+def format_duration(delta):
+    return str(datetime.timedelta(seconds = int(delta)))
+
+def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
+    command = shlex.split(command.replace("\\", "\\\\").encode())
+    if replaces is not None:
+        replaces["$python"] = sys.executable
+        for pattern, rep in replaces.items():
+            command = [bit.replace(pattern, rep) for bit in command]
+        command = [bit.encode() for bit in command]
+    if blocking:
+        return subprocess.call(command)
+    else:
+        return subprocess.Popen(command, stderr = stderr, stdout = stdout)
 
 class RemainingTimeEstimator(object):
 
