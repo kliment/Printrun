@@ -552,7 +552,8 @@ class printcore():
                 self._send("M110", -1, True)
 
     def _send(self, command, lineno = 0, calcchecksum = False):
-        if calcchecksum:
+        # Only add checksums if over serial (tcp does the flow control itself)
+        if calcchecksum and not self.printer_tcp:
             prefix = "N" + str(lineno) + " " + command
             command = prefix + "*" + str(self._checksum(prefix))
             if "M110" not in command:
