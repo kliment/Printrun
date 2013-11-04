@@ -56,12 +56,6 @@ class GCodeAnalyzer():
         self.homeX = 0
         self.homeY = 0
         self.homeZ = 0
-        self.maxX = 150
-        self.maxY = 150
-        self.maxZ = 150
-        self.minX = 0
-        self.minY = 0
-        self.minZ = 0
         self.hasHomeX = False
         self.hasHomeY = False
         self.hasHomeZ = False
@@ -114,17 +108,6 @@ class GCodeAnalyzer():
                     # e is absolute. Is it changed?
                         if self.e != self.eOffset + code_e:
                             self.e = self.eOffset + code_e
-            #limit checking
-            """
-            if self.x < self.minX: self.x = self.minX
-            if self.y < self.minY: self.y = self.minY
-            if self.z < self.minZ: self.z = self.minZ
-
-            if self.x > self.maxX: self.x = self.maxX
-            if self.y > self.maxY: self.y = self.maxY
-            if self.z > self.maxZ: self.z = self.maxZ
-            """
-            #Repetier has a bunch of limit-checking code here and time calculations: we are leaving them for now
         elif code_g == 20: self.imperial = True
         elif code_g == 21: self.imperial = False
         elif code_g == 28 or code_g == 161:
@@ -153,28 +136,6 @@ class GCodeAnalyzer():
             if code_e is not None:
                 self.eOffset = 0
                 self.e = 0
-        elif code_g == 162:
-            self.lastX = self.x
-            self.lastY = self.y
-            self.lastZ = self.z
-            self.lastE = self.e
-            code_x = gline.x
-            code_y = gline.y
-            code_z = gline.z
-            homeAll = False
-            if code_x is None and code_y is None and code_z is None: homeAll = True
-            if code_x is not None or homeAll:
-                self.hasHomeX = True
-                self.xOffset = 0
-                self.x = self.maxX
-            if code_y is not None or homeAll:
-                self.hasHomeY = True
-                self.yOffset = 0
-                self.y = self.maxY
-            if code_z is not None or homeAll:
-                self.hasHomeZ = True
-                self.zOffset = 0
-                self.z = self.maxZ
         elif code_g == 90: self.relative = False
         elif code_g == 91: self.relative = True
         elif code_g == 92:
