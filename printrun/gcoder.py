@@ -112,6 +112,7 @@ class GCode(object):
     current_x = 0
     current_y = 0
     current_z = 0
+    current_e = 0
     offset_x = 0
     offset_y = 0
     offset_z = 0
@@ -246,10 +247,11 @@ class GCode(object):
         self.offset_y = offset_y
         self.offset_z = offset_z
 
-    def _preprocess_extrusion(self, lines = None, cur_e = 0):
+    def _preprocess_extrusion(self, lines = None):
         if not lines:
             lines = self.lines
 
+        cur_e = self.current_e
         total_e = 0
         max_e = 0
 
@@ -268,6 +270,7 @@ class GCode(object):
             elif line.command == "G92":
                 cur_e = line.e
 
+        self.current_e = cur_e
         return max_e
 
     # FIXME : looks like this needs to be tested with list Z on move
