@@ -75,77 +75,63 @@ class GCodeAnalyzer():
             self.lastY = self.y
             self.lastZ = self.z
             self.lastE = self.e
-            code_f = gline.f
-            if code_f is not None:
-                self.f = code_f
-
-            code_x = gline.x
-            code_y = gline.y
-            code_z = gline.z
-            code_e = gline.e
+            if gline.f is not None:
+                self.f = gline.f
 
             if self.gcoder.relative:
-                if code_x is not None: self.x += code_x
-                if code_y is not None: self.y += code_y
-                if code_z is not None: self.z += code_z
-                if code_e is not None:
-                    if code_e != 0:
-                        self.e += code_e
+                if gline.x is not None: self.x += gline.x
+                if gline.y is not None: self.y += gline.y
+                if gline.z is not None: self.z += gline.z
+                if gline.e is not None:
+                    if gline.e != 0:
+                        self.e += gline.e
             else:
                 # absolute coordinates
-                if code_x is not None: self.x = self.xOffset + code_x
-                if code_y is not None: self.y = self.yOffset + code_y
-                if code_z is not None: self.z = self.zOffset + code_z
-                if code_e is not None:
+                if gline.x is not None: self.x = self.xOffset + gline.x
+                if gline.y is not None: self.y = self.yOffset + gline.y
+                if gline.z is not None: self.z = self.zOffset + gline.z
+                if gline.e is not None:
                     if self.gcoder.relative_e:
-                        if code_e != 0:
-                            self.e += code_e
+                        if gline.e != 0:
+                            self.e += gline.e
                     else:
                     # e is absolute. Is it changed?
-                        if self.e != self.eOffset + code_e:
-                            self.e = self.eOffset + code_e
+                        if self.e != self.eOffset + gline.e:
+                            self.e = self.eOffset + gline.e
         elif code_g == 28 or code_g == 161:
             self.lastX = self.x
             self.lastY = self.y
             self.lastZ = self.z
             self.lastE = self.e
-            code_x = gline.x
-            code_y = gline.y
-            code_z = gline.z
-            code_e = gline.e
             homeAll = False
-            if code_x is None and code_y is None and code_z is None: homeAll = True
-            if code_x is not None or homeAll:
+            if gline.x is None and gline.y is None and gline.z is None: homeAll = True
+            if gline.x is not None or homeAll:
                 self.hasHomeX = True
                 self.xOffset = 0
                 self.x = self.homeX
-            if code_y is not None or homeAll:
+            if gline.y is not None or homeAll:
                 self.hasHomeY = True
                 self.yOffset = 0
                 self.y = self.homeY
-            if code_z is not None or homeAll:
+            if gline.z is not None or homeAll:
                 self.hasHomeZ = True
                 self.zOffset = 0
                 self.z = self.homeZ
-            if code_e is not None:
+            if gline.e is not None:
                 self.eOffset = 0
                 self.e = 0
         elif code_g == 92:
-            code_x = gline.x
-            code_y = gline.y
-            code_z = gline.z
-            code_e = gline.e
-            if code_x is not None:
-                self.xOffset = self.x - float(code_x)
+            if gline.x is not None:
+                self.xOffset = self.x - float(gline.x)
                 self.x = self.xOffset
-            if code_y is not None:
-                self.yOffset = self.y - float(code_y)
+            if gline.y is not None:
+                self.yOffset = self.y - float(gline.y)
                 self.y = self.yOffset
-            if code_z is not None:
-                self.zOffset = self.z - float(code_z)
+            if gline.z is not None:
+                self.zOffset = self.z - float(gline.z)
                 self.z = self.zOffset
-            if code_e is not None:
-                self.xOffset = self.e - float(code_e)
+            if gline.e is not None:
+                self.xOffset = self.e - float(gline.e)
                 self.e = self.eOffset
 
     def print_status(self):
