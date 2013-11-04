@@ -70,26 +70,17 @@ class GCodeAnalyzer():
             if gline.f is not None:
                 self.f = gline.f
 
-            if self.gcoder.relative:
-                if gline.x is not None: self.x += gline.x
-                if gline.y is not None: self.y += gline.y
-                if gline.z is not None: self.z += gline.z
-                if gline.e is not None:
-                    if gline.e != 0:
-                        self.e += gline.e
+            if gline.current_x is not None: self.x = gline.current_x
+            if gline.current_y is not None: self.y = gline.current_y
+            if gline.current_z is not None: self.z = gline.current_z
+            if self.gcoder.relative and gline.e:
+                self.e += gline.e
             else:
-                # absolute coordinates
-                if gline.x is not None: self.x = self.xOffset + gline.x
-                if gline.y is not None: self.y = self.yOffset + gline.y
-                if gline.z is not None: self.z = self.zOffset + gline.z
                 if gline.e is not None:
                     if self.gcoder.relative_e:
-                        if gline.e != 0:
-                            self.e += gline.e
+                        self.e += gline.e
                     else:
-                    # e is absolute. Is it changed?
-                        if self.e != self.eOffset + gline.e:
-                            self.e = self.eOffset + gline.e
+                        self.e = self.eOffset + gline.e
         elif code_g == 28 or code_g == 161:
             homeAll = False
             if gline.x is None and gline.y is None and gline.z is None: homeAll = True
