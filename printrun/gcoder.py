@@ -134,10 +134,11 @@ class GCode(object):
         self.lines = [Line(l2) for l2 in
                       (l.strip() for l in data)
                       if l2]
-        self._preprocess_lines()
-        self.filament_length = self._preprocess_extrusion()
-        self._create_layers()
-        self._preprocess_layers()
+        if self.lines:
+            self._preprocess_lines()
+            self.filament_length = self._preprocess_extrusion()
+            self._create_layers()
+            self._preprocess_layers()
 
     def __len__(self):
         return len(self.line_idxs)
