@@ -34,6 +34,7 @@ import gcoder
 
 class GCodeAnalyzer():
     def __init__(self):
+        self.gcoder = gcoder.GCode([])
         self.x = 0
         self.y = 0
         self.z = 0
@@ -61,8 +62,7 @@ class GCodeAnalyzer():
         self.hasHomeZ = False
 
     def Analyze(self, gcode):
-        gline = gcoder.Line(gcode)
-        split_raw = gcoder.split(gline)
+        gline = self.gcoder.append(gcode, store = False)
         if gline.command.startswith(";@"): return  # code is a host command
         try:
             code_g = int(gline.command[1:]) if gline.command.startswith("G") else None
@@ -71,7 +71,6 @@ class GCodeAnalyzer():
             # If we fail to parse the code number, this is probably not a
             # standard G-Code but rather a host command, so return immediately
             return
-        gcoder.parse_coordinates(gline, split_raw, self.imperial)
 
         #get movement codes
         if gline.is_move:
