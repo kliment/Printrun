@@ -258,10 +258,10 @@ class GCode(object):
                 continue
             if line.is_move:
                 if line.relative_e:
-                    line.extruding = line.e != 0
+                    line.extruding = line.e > 0
                     total_e += line.e
                 else:
-                    line.extruding = line.e != cur_e
+                    line.extruding = line.e > cur_e
                     total_e += line.e - cur_e
                     cur_e = line.e
                 max_e = max(max_e, total_e)
