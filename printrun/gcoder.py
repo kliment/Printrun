@@ -375,19 +375,16 @@ class GCode(object):
         count_noe = self.filament_length <= 0
 
         for line in self.lines:
-            if not line.is_move and line.command != "G92" and line.command != "G28":
-                continue
-            if line.is_move:
-                if line.e or count_noe:
-                    if line.current_x is not None:
-                        xmin = min(xmin, line.current_x)
-                        xmax = max(xmax, line.current_x)
-                    if line.current_y is not None:
-                        ymin = min(ymin, line.current_y)
-                        ymax = max(ymax, line.current_y)
-                    if line.current_z is not None:
-                        zmin = min(zmin, line.current_z)
-                        zmax = max(zmax, line.current_z)
+            if line.is_move and (line.extruding or count_noe):
+                if line.current_x is not None:
+                    xmin = min(xmin, line.current_x)
+                    xmax = max(xmax, line.current_x)
+                if line.current_y is not None:
+                    ymin = min(ymin, line.current_y)
+                    ymax = max(ymax, line.current_y)
+                if line.current_z is not None:
+                    zmin = min(zmin, line.current_z)
+                    zmax = max(zmax, line.current_z)
 
         self.xmin = xmin if not math.isinf(xmin) else 0
         self.xmax = xmax if not math.isinf(xmax) else 0
