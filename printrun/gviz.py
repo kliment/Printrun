@@ -329,17 +329,17 @@ class Gviz(wx.Panel):
                 dc.DrawRectangle(width - 14, (1.0 - (1.0 * (self.layerindex + 1)) / len(self.layers)) * height, 13, height - 1)
 
         if self.showall:
-            for i in self.layers:
+            for i, _ in enumerate(self.layers):
                 self._drawlines(dc, self.lines[i], self.pens[i])
                 self._drawarcs(dc, self.arcs[i], self.arcpens[i])
             return
 
-        if self.layerindex < len(self.layers) and self.layers[self.layerindex] in self.lines:
+        if self.layerindex < len(self.layers) and self.layerindex in self.lines:
             for layer_i in range(max(0, self.layerindex - 6), self.layerindex):
-                self._drawlines(dc, self.lines[self.layers[layer_i]], self.fades[self.layerindex - layer_i - 1])
-                self._drawarcs(dc, self.arcs[self.layers[layer_i]], self.fades[self.layerindex - layer_i - 1])
-            self._drawlines(dc, self.lines[self.layers[self.layerindex]], self.pens[self.layers[self.layerindex]])
-            self._drawarcs(dc, self.arcs[self.layers[self.layerindex]], self.arcpens[self.layers[self.layerindex]])
+                self._drawlines(dc, self.lines[layer_i], self.fades[self.layerindex - layer_i - 1])
+                self._drawarcs(dc, self.arcs[layer_i], self.fades[self.layerindex - layer_i - 1])
+            self._drawlines(dc, self.lines[self.layerindex], self.pens[self.layerindex])
+            self._drawarcs(dc, self.arcs[self.layerindex], self.arcpens[self.layerindex])
 
         self._drawlines(dc, self.hilight, self.hlpen)
         self._drawarcs(dc, self.hilightarcs, self.hlpen)
@@ -405,10 +405,11 @@ class Gviz(wx.Panel):
                     break
             if not has_move:
                 continue
-            self.lines[layer.z] = []
-            self.pens[layer.z] = []
-            self.arcs[layer.z] = []
-            self.arcpens[layer.z] = []
+            viz_layer = len(self.layers)
+            self.lines[viz_layer] = []
+            self.pens[viz_layer] = []
+            self.arcs[viz_layer] = []
+            self.arcpens[viz_layer] = []
             for gline in layer:
                 if not gline.is_move:
                     continue
@@ -431,8 +432,8 @@ class Gviz(wx.Panel):
                 start_pos = self.lastpos[:]
 
                 if gline.command in ["G0", "G1"]:
-                    self.lines[layer.z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
-                    self.pens[layer.z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
+                    self.lines[viz_layer].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
+                    self.pens[viz_layer].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
                 elif gline.command in ["G2", "G3"]:
                     # startpos, endpos, arc center
                     arc = [_x(start_pos[0]), _y(start_pos[1]),
@@ -441,8 +442,8 @@ class Gviz(wx.Panel):
                     if gline.command == "G2":  # clockwise, reverse endpoints
                         arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
-                    self.arcs[layer.z].append(arc)
-                    self.arcpens[layer.z].append(self.arcpen)
+                    self.arcs[viz_layer].append(arc)
+                    self.arcpens[viz_layer].append(self.arcpen)
 
                 self.lastpos = target
             # Only add layer.z to self.layers now to prevent the display of an
