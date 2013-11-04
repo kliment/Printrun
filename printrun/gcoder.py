@@ -218,9 +218,9 @@ class GCode(object):
                     if y is not None: y = y + offset_y
                     if z is not None: z = z + offset_z
 
-                current_x = x or current_x
-                current_y = y or current_y
-                current_z = z or current_z
+                if x is not None: current_x = x
+                if y is not None: current_y = y
+                if z is not None: current_z = z
 
             elif line.command == "G28":
                 if not any([line.x, line.y, line.z]):
