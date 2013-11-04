@@ -131,7 +131,7 @@ class GCodeAnalyzer():
                 self.zOffset = self.z - float(gline.z)
                 self.z = self.zOffset
             if gline.e is not None:
-                self.xOffset = self.e - float(gline.e)
+                self.eOffset = self.e - float(gline.e)
                 self.e = self.eOffset
 
     def print_status(self):
