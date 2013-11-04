@@ -24,6 +24,9 @@ from Queue import Queue, Empty as QueueEmpty
 import time
 import platform
 import os
+import sys
+reload(sys).setdefaultencoding('utf8')
+import logging
 import traceback
 import errno
 import socket
@@ -31,11 +34,10 @@ import re
 from functools import wraps
 from collections import deque
 from printrun.GCodeAnalyzer import GCodeAnalyzer
-from printrun.printrun_utils import install_locale, decode_utf8
+from printrun.printrun_utils import install_locale, decode_utf8, setup_logging
 install_locale('pronterface')
 
-import logging
-logging.basicConfig(format = "%(levelname)s: %(message)s")
+setup_logging(sys.stderr)
 
 def locked(f):
     @wraps(f)
