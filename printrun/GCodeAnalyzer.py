@@ -154,10 +154,10 @@ class GCodeAnalyzer():
             if code_e is not None:
                 self.xOffset = self.e - float(code_e)
                 self.e = self.eOffset
-            #End code_g is not None
-            if code_m is not None:
-                if code_m == 82: self.eRelative = False
-                elif code_m == 83: self.eRelative = True
+        #End code_g is not None
+        if code_m is not None:
+            if code_m == 82: self.eRelative = False
+            elif code_m == 83: self.eRelative = True
 
     def print_status(self):
         attrs = vars(self)
