@@ -144,7 +144,7 @@ class GCode(object):
     def __iter__(self):
         return self.lines.__iter__()
 
-    def append(self, command):
+    def append(self, command, store = True):
         command = command.strip()
         if not command:
             return
@@ -152,9 +152,10 @@ class GCode(object):
         self.lines.append(gline)
         self._preprocess_lines([gline])
         self._preprocess_extrusion([gline])
-        self.append_layer.append(gline)
-        self.layer_idxs.append(self.append_layer_id)
-        self.line_idxs.append(len(self.append_layer))
+        if store:
+            self.append_layer.append(gline)
+            self.layer_idxs.append(self.append_layer_id)
+            self.line_idxs.append(len(self.append_layer))
         return gline
 
     def _preprocess_lines(self, lines = None):
