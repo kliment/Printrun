@@ -51,9 +51,6 @@ class GCodeAnalyzer():
         self.eOffset = 0
         self.lastZPrint = 0
         self.layerZ = 0
-        self.imperial = False
-        self.relative = False
-        self.eRelative = False
         self.homeX = 0
         self.homeY = 0
         self.homeZ = 0
@@ -87,7 +84,7 @@ class GCodeAnalyzer():
             code_z = gline.z
             code_e = gline.e
 
-            if self.relative:
+            if self.gcoder.relative:
                 if code_x is not None: self.x += code_x
                 if code_y is not None: self.y += code_y
                 if code_z is not None: self.z += code_z
@@ -100,15 +97,13 @@ class GCodeAnalyzer():
                 if code_y is not None: self.y = self.yOffset + code_y
                 if code_z is not None: self.z = self.zOffset + code_z
                 if code_e is not None:
-                    if self.eRelative:
+                    if self.gcoder.relative_e:
                         if code_e != 0:
                             self.e += code_e
                     else:
                     # e is absolute. Is it changed?
                         if self.e != self.eOffset + code_e:
                             self.e = self.eOffset + code_e
-        elif code_g == 20: self.imperial = True
-        elif code_g == 21: self.imperial = False
         elif code_g == 28 or code_g == 161:
             self.lastX = self.x
             self.lastY = self.y
@@ -135,8 +130,6 @@ class GCodeAnalyzer():
             if code_e is not None:
                 self.eOffset = 0
                 self.e = 0
-        elif code_g == 90: self.relative = False
-        elif code_g == 91: self.relative = True
         elif code_g == 92:
             code_x = gline.x
             code_y = gline.y
@@ -154,10 +147,6 @@ class GCodeAnalyzer():
             if code_e is not None:
                 self.xOffset = self.e - float(code_e)
                 self.e = self.eOffset
-        #End code_g is not None
-        if code_m is not None:
-            if code_m == 82: self.eRelative = False
-            elif code_m == 83: self.eRelative = True
 
     def print_status(self):
         attrs = vars(self)
