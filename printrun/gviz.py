@@ -217,6 +217,7 @@ class Gviz(wx.Panel):
     def clear(self):
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
         self.hilightpos = self.lastpos[:]
+        self.gcoder = gcoder.GCode([])
         self.lines = {}
         self.pens = {}
         self.arcs = {}
@@ -463,9 +464,7 @@ class Gviz(wx.Panel):
         gcode = gcode.lower().strip()
         if not gcode:
             return
-        gline = gcoder.Line(gcode)
-        split_raw = gcoder.split(gline)
-        gcoder.parse_coordinates(gline, split_raw, imperial = False)
+        gline = self.gcoder.append(gcode, store = False)
 
         def _y(y):
             return self.build_dimensions[1] - (y - self.build_dimensions[4])
@@ -481,9 +480,9 @@ class Gviz(wx.Panel):
         target = start_pos[:]
         target[5] = 0.0
         target[6] = 0.0
-        if gline.x is not None: target[0] = gline.x
-        if gline.y is not None: target[1] = gline.y
-        if gline.z is not None: target[2] = gline.z
+        if gline.current_x is not None: target[0] = gline.current_x
+        if gline.current_y is not None: target[1] = gline.current_y
+        if gline.current_z is not None: target[2] = gline.current_z
         if gline.e is not None: target[3] = gline.e
         if gline.f is not None: target[4] = gline.f
         if gline.i is not None: target[5] = gline.i
