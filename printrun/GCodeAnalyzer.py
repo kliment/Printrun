@@ -41,10 +41,6 @@ class GCodeAnalyzer():
         self.e = 0
         self.emax = 0
         self.f = 1000
-        self.lastX = 0
-        self.lastY = 0
-        self.lastZ = 0
-        self.lastE = 0
         self.xOffset = 0
         self.yOffset = 0
         self.zOffset = 0
@@ -71,10 +67,6 @@ class GCodeAnalyzer():
 
         #get movement codes
         if gline.is_move:
-            self.lastX = self.x
-            self.lastY = self.y
-            self.lastZ = self.z
-            self.lastE = self.e
             if gline.f is not None:
                 self.f = gline.f
 
@@ -99,10 +91,6 @@ class GCodeAnalyzer():
                         if self.e != self.eOffset + gline.e:
                             self.e = self.eOffset + gline.e
         elif code_g == 28 or code_g == 161:
-            self.lastX = self.x
-            self.lastY = self.y
-            self.lastZ = self.z
-            self.lastE = self.e
             homeAll = False
             if gline.x is None and gline.y is None and gline.z is None: homeAll = True
             if gline.x is not None or homeAll:
