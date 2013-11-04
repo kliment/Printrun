@@ -178,16 +178,13 @@ class Gviz(wx.Panel):
         self.size = size
         self.build_dimensions = build_dimensions
         self.grid = grid
-        self.lastpos = [0, 0, 0, 0, 0, 0, 0]
-        self.hilightpos = self.lastpos[:]
         self.Bind(wx.EVT_PAINT, self.paint)
         self.Bind(wx.EVT_SIZE, self.resize)
-        self.lines = {}
-        self.pens = {}
-        self.arcs = {}
-        self.arcpens = {}
-        self.layers = []
-        self.layerindex = 0
+        self.hilight = deque()
+        self.hilightarcs = deque()
+        self.hilightqueue = Queue(0)
+        self.hilightarcsqueue = Queue(0)
+        self.clear()
         self.filament_width = extrusion_width  # set it to 0 to disable scaling lines with zoom
         self.update_basescale()
         self.scale = self.basescale
@@ -199,12 +196,6 @@ class Gviz(wx.Panel):
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
         self.fades = [wx.Pen(wx.Colour(250 - 0.6 ** i * 100, 250 - 0.6 ** i * 100, 200 - 0.4 ** i * 50), penwidth) for i in xrange(6)]
         self.penslist = [self.mainpen, self.travelpen, self.hlpen] + self.fades
-        self.showall = 0
-        self.hilight = deque()
-        self.hilightarcs = deque()
-        self.hilightqueue = Queue(0)
-        self.hilightarcsqueue = Queue(0)
-        self.dirty = 1
         self.bgcolor = wx.Colour()
         self.bgcolor.SetFromName(bgcolor)
         self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
@@ -225,6 +216,7 @@ class Gviz(wx.Panel):
 
     def clear(self):
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
+        self.hilightpos = self.lastpos[:]
         self.lines = {}
         self.pens = {}
         self.arcs = {}
