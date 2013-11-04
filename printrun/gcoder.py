@@ -95,67 +95,6 @@ class Layer(list):
         super(Layer, self).__init__(lines)
         self.z = z
 
-    def _preprocess(self, current_x, current_y, current_z,
-                    offset_x, offset_y, offset_z, ignore_noe = False):
-        xmin = float("inf")
-        ymin = float("inf")
-        zmin = 0
-        xmax = float("-inf")
-        ymax = float("-inf")
-        zmax = float("-inf")
-
-        for line in self:
-            if not line.is_move and line.command != "G92" and line.command != "G28":
-                continue
-            if line.is_move:
-                x = line.x
-                y = line.y
-                z = line.z
-
-                if line.relative:
-                    x = current_x + (x or 0)
-                    y = current_y + (y or 0)
-                    z = current_z + (z or 0)
-                else:
-                    if x is not None: x = x + offset_x
-                    if y is not None: y = y + offset_y
-                    if z is not None: z = z + offset_z
-
-                current_x = x or current_x
-                current_y = y or current_y
-                current_z = z or current_z
-
-                if line.e or not ignore_noe:
-                    if x is not None:
-                        xmin = min(xmin, x)
-                        xmax = max(xmax, x)
-                    if y is not None:
-                        ymin = min(ymin, y)
-                        ymax = max(ymax, y)
-                    if current_z is not None:
-                        zmin = min(zmin, current_z)
-                        zmax = max(zmax, current_z)
-
-            elif line.command == "G28":
-                if not any([line.x, line.y, line.z]):
-                    current_x = current_y = current_z = 0
-                else:
-                    if line.x is not None: current_x = 0
-                    if line.y is not None: current_y = 0
-                    if line.z is not None: current_z = 0
-
-            elif line.command == "G92":
-                if line.x is not None: offset_x = current_x - line.x
-                if line.y is not None: offset_y = current_y - line.y
-                if line.z is not None: offset_z = current_z - line.z
-
-            line.current_x = current_x
-            line.current_y = current_y
-            line.current_z = current_z
-        return ((current_x, current_y, current_z),
-                (offset_x, offset_y, offset_z),
-                (xmin, xmax), (ymin, ymax), (zmin, zmax))
-
 class GCode(object):
 
     lines = None
@@ -170,6 +109,12 @@ class GCode(object):
     relative = False
     relative_e = False
     current_tool = 0
+    current_x = 0
+    current_y = 0
+    current_z = 0
+    offset_x = 0
+    offset_y = 0
+    offset_z = 0
 
     filament_length = None
     xmin = None
@@ -220,10 +165,19 @@ class GCode(object):
         relative = self.relative
         relative_e = self.relative_e
         current_tool = self.current_tool
+        current_x = self.current_x
+        current_y = self.current_y
+        current_z = self.current_z
+        offset_x = self.offset_x
+        offset_y = self.offset_y
+        offset_z = self.offset_z
+
         for line in lines:
             split_raw = split(line)
             if not line.command:
                 continue
+
+            # Update properties
             if line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e
@@ -244,12 +198,52 @@ class GCode(object):
                 relative_e = True
             elif line.command[0] == "T":
                 current_tool = int(line.command[1:])
+
             if line.command[0] == "G":
                 parse_coordinates(line, split_raw, imperial)
+
+            # Compute current position
+            if line.is_move:
+                x = line.x
+                y = line.y
+                z = line.z
+
+                if line.relative:
+                    x = current_x + (x or 0)
+                    y = current_y + (y or 0)
+                    z = current_z + (z or 0)
+                else:
+                    if x is not None: x = x + offset_x
+                    if y is not None: y = y + offset_y
+                    if z is not None: z = z + offset_z
+
+                current_x = x or current_x
+                current_y = y or current_y
+                current_z = z or current_z
+
+            elif line.command == "G28":
+                if not any([line.x, line.y, line.z]):
+                    current_x = current_y = current_z = 0
+                else:
+                    if line.x is not None: current_x = 0
+                    if line.y is not None: current_y = 0
+                    if line.z is not None: current_z = 0
+
+            elif line.command == "G92":
+                if line.x is not None: offset_x = current_x - line.x
+                if line.y is not None: offset_y = current_y - line.y
+                if line.z is not None: offset_z = current_z - line.z
+
+            line.current_x = current_x
+            line.current_y = current_y
+            line.current_z = current_z
         self.imperial = imperial
         self.relative = relative
         self.relative_e = relative_e
         self.current_tool = current_tool
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+        self.offset_z = offset_z
 
     def _preprocess_extrusion(self, lines = None, cur_e = 0):
         if not lines:
@@ -376,28 +370,23 @@ class GCode(object):
         ymax = float("-inf")
         zmax = float("-inf")
 
-        current_x = 0
-        current_y = 0
-        current_z = 0
-        offset_x = 0
-        offset_y = 0
-        offset_z = 0
+        # Count moves without extrusion if filament length is lower than 0
+        count_noe = self.filament_length <= 0
 
-        ignore_noe = self.filament_length > 0
-
-        for l in self.all_layers:
-            meta = l._preprocess(current_x, current_y, current_z,
-                                 offset_x, offset_y, offset_z,
-                                 ignore_noe)
-            current_x, current_y, current_z = meta[0]
-            offset_x, offset_y, offset_z = meta[1]
-            (xm, xM), (ym, yM), (zm, zM) = meta[2:]
-            xmin = min(xm, xmin)
-            xmax = max(xM, xmax)
-            ymin = min(ym, ymin)
-            ymax = max(yM, ymax)
-            zmin = min(zm, zmin)
-            zmax = max(zM, zmax)
+        for line in self.lines:
+            if not line.is_move and line.command != "G92" and line.command != "G28":
+                continue
+            if line.is_move:
+                if line.e or count_noe:
+                    if line.current_x is not None:
+                        xmin = min(xmin, line.current_x)
+                        xmax = max(xmax, line.current_x)
+                    if line.current_y is not None:
+                        ymin = min(ymin, line.current_y)
+                        ymax = max(ymax, line.current_y)
+                    if line.current_z is not None:
+                        zmin = min(zmin, line.current_z)
+                        zmax = max(zmax, line.current_z)
 
         self.xmin = xmin if not math.isinf(xmin) else 0
         self.xmax = xmax if not math.isinf(xmax) else 0
