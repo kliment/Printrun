@@ -27,6 +27,10 @@ import subprocess
 import shlex
 import glob
 import logging
+
+try: import simplejson as json
+except ImportError: import json
+
 from . import pronsole
 from . import printcore
 
@@ -140,6 +144,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing most settings here will require restart to get effect"), group = "UI"))
+        recentfilessetting = StringSetting("recentfiles", "[]")
+        recentfilessetting.hidden = True
+        self.settings._add(recentfilessetting)
 
         self.pauseScript = "pause.gcode"
         self.endScript = "end.gcode"
@@ -1569,6 +1576,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             path = os.path.split(name)[0]
             if path != self.settings.last_file_path:
                 self.set("last_file_path", path)
+            abspath = os.path.abspath(name)
+            recent_files = json.loads(self.settings.recentfiles)
+            if abspath in recent_files:
+                recent_files.remove(abspath)
+            recent_files.insert(0, abspath)
+            if len(recent_files) > 5:
+                recent_files = recent_files[:5]
+            self.set("recentfiles", json.dumps(recent_files))
             if name.lower().endswith(".stl"):
                 self.skein(name)
             elif name.lower().endswith(".obj"):
