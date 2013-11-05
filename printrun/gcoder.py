@@ -166,12 +166,19 @@ class GCode(object):
         return self.current_e - self.offset_e
     abs_e = property(_get_abs_e)
 
+    def _get_home_pos(self):
+        return (self.home_x, self.home_y, self.home_z)
+
+    def _set_home_pos(self, home_pos):
+        if home_pos:
+            self.home_x, self.home_y, self.home_z = home_pos
+    home_pos = property(_get_home_pos, _set_home_pos)
+
     def __init__(self, data, home_pos = None):
         self.lines = [Line(l2) for l2 in
                       (l.strip() for l in data)
                       if l2]
-        if home_pos:
-            self.home_x, self.home_y, self.home_z = home_pos
+        self.home_pos = home_pos
         if self.lines:
             self._preprocess_lines()
             self.filament_length = self._preprocess_extrusion()
