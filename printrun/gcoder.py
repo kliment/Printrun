@@ -147,6 +147,9 @@ class GCode(object):
 
     est_layer_height = None
 
+    # abs_x is the current absolute X in machine current coordinate system
+    # (after the various G92 transformations) and can be used to store the
+    # absolute position of the head at a given time
     def _get_abs_x(self):
         return self.current_x - self.offset_x
     abs_x = property(_get_abs_x)
