@@ -445,7 +445,7 @@ class pronsole(cmd.Cmd):
         self.settings._temperature_pla_cb = self.set_temp_preset
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
-        self.build_dimensions_list = parse_build_dimensions(self.settings.build_dimensions)
+        self.update_build_dimensions(None, self.settings.build_dimensions)
         self.monitoring = 0
         self.starttime = 0
         self.extra_print_time = 0
@@ -1597,6 +1597,7 @@ class pronsole(cmd.Cmd):
 
     def update_build_dimensions(self, param, value):
         self.build_dimensions_list = parse_build_dimensions(value)
+        self.p.analyzer.home_pos = get_home_pos(self.build_dimensions_list)
 
     # We replace this function, defined in cmd.py .
     # It's default behavior with reagrds to Ctr-C

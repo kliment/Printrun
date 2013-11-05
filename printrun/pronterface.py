@@ -177,13 +177,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.btndict = {}
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
-        self.build_dimensions_list = parse_build_dimensions(self.settings.build_dimensions)
         self.display_graph = self.settings.tempgraph
         self.display_gauges = self.settings.tempgauges
-
-        self.p.analyzer.homeX = self.build_dimensions_list[6]
-        self.p.analyzer.homeY = self.build_dimensions_list[7]
-        self.p.analyzer.homeZ = self.build_dimensions_list[8]
 
         #set feedrates in printcore for pause/resume
         self.p.xy_feedrate = self.settings.xy_feedrate
