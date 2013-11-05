@@ -898,7 +898,8 @@ class pronsole(cmd.Cmd):
             self.logError("File not found!")
             return
         self.load_gcode(filename)
-        self.log("Loaded %s, %d lines." % (filename, len(self.fgcode)))
+        self.log(_("Loaded %s, %d lines.") % (filename, len(self.fgcode)))
+        self.log(_("Estimated duration: %s") % self.fgcode.estimate_duration())
 
     def load_gcode(self, filename):
         self.fgcode = gcoder.GCode(open(filename, "rU"),
