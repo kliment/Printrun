@@ -654,7 +654,7 @@ class pronsole(cmd.Cmd):
             if not self.processing_rc and not self.processing_args:
                 self.save_in_rc("set " + var, "set %s %s" % (var, value))
         except AttributeError:
-            self.logError("Unknown variable '%s'" % var)
+            logging.warning("Unknown variable '%s'" % var)
         except ValueError, ve:
             self.logError("Bad value for variable '%s', expecting %s (%s)" % (var, repr(t)[1:-1], ve.args[0]))
 
@@ -668,7 +668,7 @@ class pronsole(cmd.Cmd):
             try:
                 self.log("%s = %s" % (args[0], getattr(self.settings, args[0])))
             except AttributeError:
-                self.logError("Unknown variable '%s'" % args[0])
+                logging.warning("Unknown variable '%s'" % args[0])
             return
         self.set(args[0], args[1])
 
