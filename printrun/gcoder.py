@@ -109,13 +109,23 @@ class GCode(object):
     relative = False
     relative_e = False
     current_tool = 0
+    # Current position: current absolute position counted from machine origin
     current_x = 0
     current_y = 0
     current_z = 0
     current_e = 0
+    # Offset: current offset between the machine origin and the machine current
+    # absolute coordinate system (as shifted by G92s)
     offset_x = 0
     offset_y = 0
     offset_z = 0
+    # Expected behavior:
+    # - G28 X => X axis is homed, offset_x <- 0, current_x <- home_x
+    # - G92 Xk => X axis does not move, offset_x <- current_x - k,
+    # current_x does not change
+    # How to get...
+    # current abs X from machine origin: current_x
+    # current abs X in machine current coordinate system: current_x - offset_x
 
     filament_length = None
     xmin = None
