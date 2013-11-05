@@ -147,6 +147,22 @@ class GCode(object):
 
     est_layer_height = None
 
+    def _get_abs_x(self):
+        return self.current_x - self.offset_x
+    abs_x = property(_get_abs_x)
+
+    def _get_abs_y(self):
+        return self.current_y - self.offset_y
+    abs_y = property(_get_abs_y)
+
+    def _get_abs_z(self):
+        return self.current_z - self.offset_z
+    abs_z = property(_get_abs_z)
+
+    def _get_abs_e(self):
+        return self.current_e - self.offset_e
+    abs_e = property(_get_abs_e)
+
     def __init__(self, data, home_pos = None):
         self.lines = [Line(l2) for l2 in
                       (l.strip() for l in data)
