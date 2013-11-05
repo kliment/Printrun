@@ -254,6 +254,9 @@ class GCode(object):
         self.relative = relative
         self.relative_e = relative_e
         self.current_tool = current_tool
+        self.current_x = current_x
+        self.current_y = current_y
+        self.current_z = current_z
         self.offset_x = offset_x
         self.offset_y = offset_y
         self.offset_z = offset_z
