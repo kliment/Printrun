@@ -189,6 +189,36 @@ sender, or the following code example:
     p.resume()
     p.disconnect()
 
+## CONFIGURATION
+
+### Build dimensions
+
+Build dimensions can be specified using the build_dimensions option (which can
+be graphically edited in Pronterface settings). This option is formed of 9 parameters:
+3 for the build volume dimensions, 3 for the build volume coordinate system
+offset minimum, 3 for the endstop positions.
+
+The default value is `200x200x100+0+0+0+0+0+0`, which corresponds to a
+200x200mm (width x height) bed with 100mm travel in Z (there are the first
+three numbers) and no offset. The absolute coordinates system origin (0,0,0) is
+at the bottom left corner on the bed surface, and the top right corner on the
+bed surface is (200,200,0).
+
+A common practice is to have the origin of the coordinate system (0,0,0) at the
+center of the bed surface. This is achieved by using the next three parameters,
+for instance with `200x200x100-100-100+0+0+0+0`.
+In this case, the bottom left corner of the bed will be at (-100,-100,0) and
+the top right one at (100,100,0).
+
+These two sets of settings should be sufficient for most people. However, for
+some specific complicated setups and GCodes and some features, we might also
+need the endstops positions for perfect display. These positions (which are
+usually 0,0,0, so if you don't know you probably have a standard setup) are
+specified in absolute coordinates, so if you have your bed starting at
+(-100,-100,0) and your endstops are 10mm away from the bed left and right and
+the Z endstop 5mm above the bed, you'll want to set the endstops positions to
+(-110,-110,5) for this option.
+
 ## USING MACROS AND CUSTOM BUTTONS
 
 ### Macros in pronsole and pronterface
