@@ -31,7 +31,7 @@ from . import pronsole
 from . import printcore
 
 from printrun.printrun_utils import install_locale, setup_logging, \
-    RemainingTimeEstimator, get_home_pos, parse_build_dimensions
+    get_home_pos
 install_locale('pronterface')
 
 try:
@@ -221,10 +221,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.sendcb = self.sentcb
         self.p.preprintsendcb = self.preprintsendcb
         self.p.printsendcb = self.printsentcb
-        self.p.layerchangecb = self.layer_change_cb
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
-        self.compute_eta = None
         self.curlayer = 0
         self.cur_button = None
         self.predisconnect_mainqueue = None
@@ -249,8 +247,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def startcb(self, resuming = False):
         pronsole.pronsole.startcb(self, resuming)
-        if not resuming:
-            self.compute_eta = RemainingTimeEstimator(self.fgcode)
         if self.settings.lockbox and self.settings.lockonstart:
             wx.CallAfter(self.lock, force = True)
 
@@ -281,11 +277,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         if self.filename:
             self.printbtn.Enable()
-
-    def layer_change_cb(self, newlayer):
-        if self.compute_eta:
-            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-            self.compute_eta.update_layer(newlayer, secondselapsed)
 
     def sentcb(self, line):
         gline = gcoder.Line(line)

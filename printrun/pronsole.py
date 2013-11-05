@@ -28,7 +28,8 @@ import logging
 
 from . import printcore
 from printrun.printrun_utils import install_locale, run_command, \
-    format_time, format_duration, get_home_pos, parse_build_dimensions
+    format_time, format_duration, RemainingTimeEstimator, \
+    get_home_pos, parse_build_dimensions
 install_locale('pronterface')
 from printrun import gcoder
 
@@ -417,10 +418,12 @@ class pronsole(cmd.Cmd):
             self.completekey = None
         self.status = Status()
         self.dynamic_temp = False
+        self.compute_eta = None
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
+        self.p.layerchangecb = self.layer_change_cb
         self.recvlisteners = []
         self.in_macro = False
         self.p.onlinecb = self.online
@@ -1126,6 +1129,7 @@ class pronsole(cmd.Cmd):
         self.starttime = time.time()
         if resuming:
             print _("Print resumed at: %s") % format_time(self.starttime)
+            self.compute_eta = RemainingTimeEstimator(self.fgcode)
         else:
             print _("Print started at: %s") % format_time(self.starttime)
 
@@ -1144,6 +1148,11 @@ class pronsole(cmd.Cmd):
                          "$t": format_duration(print_duration)},
                         stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
                         blocking = False)
+
+    def layer_change_cb(self, newlayer):
+        if self.compute_eta:
+            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+            self.compute_eta.update_layer(newlayer, secondselapsed)
 
     def help_shell(self):
         self.log("Executes a python command. Example:")
