@@ -109,10 +109,15 @@ class GCode(object):
     relative = False
     relative_e = False
     current_tool = 0
+    # Home position: current absolute position counted from machine origin
+    home_x = 0
+    home_y = 0
+    home_z = 0
     # Current position: current absolute position counted from machine origin
     current_x = 0
     current_y = 0
     current_z = 0
+    # For E this is the absolute position from machine start
     current_e = 0
     # Offset: current offset between the machine origin and the machine current
     # absolute coordinate system (as shifted by G92s)
@@ -122,8 +127,9 @@ class GCode(object):
     offset_e = 0
     # Expected behavior:
     # - G28 X => X axis is homed, offset_x <- 0, current_x <- home_x
-    # - G92 Xk => X axis does not move, offset_x <- current_x - k,
-    # current_x does not change
+    # - G92 Xk => X axis does not move, so current_x does not change
+    #             and offset_x <- current_x - k,
+    # - absolute G1 Xk => X axis moves, current_x <- offset_x + k
     # How to get...
     # current abs X from machine origin: current_x
     # current abs X in machine current coordinate system: current_x - offset_x
@@ -141,10 +147,12 @@ class GCode(object):
 
     est_layer_height = None
 
-    def __init__(self, data):
+    def __init__(self, data, home_pos = None):
         self.lines = [Line(l2) for l2 in
                       (l.strip() for l in data)
                       if l2]
+        if home_pos:
+            self.home_x, self.home_y, self.home_z = home_pos
         if self.lines:
             self._preprocess_lines()
             self.filament_length = self._preprocess_extrusion()
@@ -237,11 +245,20 @@ class GCode(object):
 
             elif line.command == "G28":
                 if not any([line.x, line.y, line.z]):
-                    current_x = current_y = current_z = 0
+                    offset_x = offset_y = offset_z = 0
+                    current_x = self.home_x
+                    current_y = self.home_y
+                    current_z = self.home_z
                 else:
-                    if line.x is not None: current_x = 0
-                    if line.y is not None: current_y = 0
-                    if line.z is not None: current_z = 0
+                    if line.x is not None:
+                        offset_x = 0
+                        current_x = self.home_x
+                    if line.y is not None:
+                        offset_y = 0
+                        current_y = self.home_y
+                    if line.z is not None:
+                        offset_z = 0
+                        current_z = self.home_z
 
             elif line.command == "G92":
                 if line.x is not None: offset_x = current_x - line.x
