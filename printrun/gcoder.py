@@ -186,6 +186,8 @@ class GCode(object):
             self.filament_length = self._preprocess_extrusion()
             self._create_layers()
             self._preprocess_layers()
+        else:
+            self.lines = []
 
     def __len__(self):
         return len(self.line_idxs)
@@ -198,10 +200,10 @@ class GCode(object):
         if not command:
             return
         gline = Line(command)
-        self.lines.append(gline)
         self._preprocess_lines([gline])
         self._preprocess_extrusion([gline])
         if store:
+            self.lines.append(gline)
             self.append_layer.append(gline)
             self.layer_idxs.append(self.append_layer_id)
             self.line_idxs.append(len(self.append_layer))
