@@ -30,8 +30,7 @@ import logging
 from . import pronsole
 from . import printcore
 
-from printrun.printrun_utils import install_locale, setup_logging, \
-    get_home_pos
+from printrun.printrun_utils import install_locale, setup_logging
 install_locale('pronterface')
 
 try:
@@ -1511,8 +1510,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         fn = self.filename
         try:
             self.filename = self.model_to_gcode_filename(self.filename)
-            self.fgcode = gcoder.GCode(open(self.filename, "rU"),
-                                       get_home_pos(self.build_dimensions_list))
+            self.load_gcode(self.filename)
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)
 
@@ -1582,8 +1580,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.skein(name)
             else:
                 self.filename = name
-                self.fgcode = gcoder.GCode(open(self.filename, "rU"),
-                                           get_home_pos(self.build_dimensions_list))
+                self.load_gcode(self.filename)
                 self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
                 print _("Loaded %s, %d lines") % (name, len(self.fgcode))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
