@@ -1158,6 +1158,19 @@ class pronsole(cmd.Cmd):
             secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
             self.compute_eta.update_layer(newlayer, secondselapsed)
 
+    def do_eta(self, l):
+        if not self.p.printing:
+            self.logError(_("Printer is not currently printing. No ETA available."))
+        else:
+            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+            secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
+            eta = _("Est: %s of %s remaining") % (format_duration(secondsremain),
+                                                  format_duration(secondsestimate))
+            self.log(eta.strip())
+
+    def help_eta(self):
+        self.log(_("Displays estimated remaining print time."))
+
     def help_shell(self):
         self.log("Executes a python command. Example:")
         self.log("! os.listdir('.')")
