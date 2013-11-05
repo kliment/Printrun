@@ -19,7 +19,7 @@ import wx
 import time
 from printrun import gcoder
 
-from printrun_utils import imagefile, install_locale
+from printrun_utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
 
 class GvizBaseFrame(wx.Frame):
@@ -93,7 +93,7 @@ class GvizWindow(GvizBaseFrame):
         self.Bind(wx.EVT_MOUSE_EVENTS, self.mouse)
 
         if f:
-            gcode = gcoder.GCode(f)
+            gcode = gcoder.GCode(f, get_home_pos(self.p.build_dimensions))
             self.p.addfile(gcode)
 
     def set_current_gline(self, gline):
@@ -217,7 +217,7 @@ class Gviz(wx.Panel):
     def clear(self):
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
         self.hilightpos = self.lastpos[:]
-        self.gcoder = gcoder.GCode([])
+        self.gcoder = gcoder.GCode([], get_home_pos(self.build_dimensions))
         self.lines = {}
         self.pens = {}
         self.arcs = {}

@@ -894,7 +894,8 @@ class pronsole(cmd.Cmd):
         if not os.path.exists(filename):
             self.logError("File not found!")
             return
-        self.fgcode = gcoder.GCode(open(filename, "rU"))
+        self.fgcode = gcoder.GCode(open(filename, "rU"),
+                                   get_home_pos(self.build_dimensions_list))
         self.filename = filename
         self.log("Loaded %s, %d lines." % (filename, len(self.fgcode)))
 
