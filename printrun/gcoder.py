@@ -119,6 +119,8 @@ class GCode(object):
     current_z = 0
     # For E this is the absolute position from machine start
     current_e = 0
+    # Current feedrate
+    current_f = 0
     # Offset: current offset between the machine origin and the machine current
     # absolute coordinate system (as shifted by G92s)
     offset_x = 0
@@ -255,6 +257,9 @@ class GCode(object):
                 x = line.x
                 y = line.y
                 z = line.z
+
+                if line.f is not None:
+                    self.current_f = line.f
 
                 if line.relative:
                     x = current_x + (x or 0)
