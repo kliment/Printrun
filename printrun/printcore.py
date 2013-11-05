@@ -33,7 +33,7 @@ import socket
 import re
 from functools import wraps
 from collections import deque
-from printrun.GCodeAnalyzer import GCodeAnalyzer
+from printrun import gcoder
 from printrun.printrun_utils import install_locale, decode_utf8, setup_logging
 install_locale('pronterface')
 
@@ -67,7 +67,7 @@ class printcore():
            connect immediately"""
         self.baud = None
         self.port = None
-        self.analyzer = GCodeAnalyzer()
+        self.analyzer = gcoder.GCode()
         self.printer = None  # Serial instance connected to the printer,
                              # should be None when disconnected
         self.clear = 0  # clear to send, enabled after responses
@@ -395,11 +395,11 @@ class printcore():
         self.print_thread = None
 
         # saves the status
-        self.pauseX = self.analyzer.x - self.analyzer.xOffset
-        self.pauseY = self.analyzer.y - self.analyzer.yOffset
-        self.pauseZ = self.analyzer.z - self.analyzer.zOffset
-        self.pauseE = self.analyzer.e - self.analyzer.eOffset
-        self.pauseF = self.analyzer.f
+        self.pauseX = self.analyzer.abs_x
+        self.pauseY = self.analyzer.abs_y
+        self.pauseZ = self.analyzer.abs_z
+        self.pauseE = self.analyzer.abs_e
+        self.pauseF = self.analyzer.current_f
         self.pauseRelative = self.analyzer.relative
 
     def resume(self):
@@ -563,7 +563,7 @@ class printcore():
         if self.printer:
             self.sent.append(command)
             # run the command through the analyzer
-            try: self.analyzer.Analyze(command)
+            try: self.analyzer.append(command, store = False)
             except:
                 logging.warning(_("Could not analyze command %s:") % command +
                                 "\n" + traceback.format_exc())
