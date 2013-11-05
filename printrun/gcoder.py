@@ -263,21 +263,16 @@ class GCode(object):
                 if z is not None: current_z = z
 
             elif line.command == "G28":
-                if not any([line.x, line.y, line.z]):
-                    offset_x = offset_y = offset_z = 0
+                home_all = not any([line.x, line.y, line.z])
+                if home_all or line.x is not None:
+                    offset_x = 0
                     current_x = self.home_x
+                if home_all or line.y is not None:
+                    offset_y = 0
                     current_y = self.home_y
+                if home_all or line.z is not None:
+                    offset_z = 0
                     current_z = self.home_z
-                else:
-                    if line.x is not None:
-                        offset_x = 0
-                        current_x = self.home_x
-                    if line.y is not None:
-                        offset_y = 0
-                        current_y = self.home_y
-                    if line.z is not None:
-                        offset_z = 0
-                        current_z = self.home_z
 
             elif line.command == "G92":
                 if line.x is not None: offset_x = current_x - line.x
