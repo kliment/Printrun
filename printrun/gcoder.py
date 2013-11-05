@@ -137,6 +137,7 @@ class GCode(object):
     # current abs X in machine current coordinate system: current_x - offset_x
 
     filament_length = None
+    duration = None
     xmin = None
     xmax = None
     ymin = None
@@ -464,6 +465,8 @@ class GCode(object):
         self.height = self.zmax - self.zmin
 
     def estimate_duration(self):
+        if self.duration is not None:
+            return self.duration
         lastx = lasty = lastz = laste = lastf = 0.0
         lastdx = 0
         lastdy = 0
@@ -552,6 +555,7 @@ class GCode(object):
             layerbeginduration = totalduration
 
         totaltime = datetime.timedelta(seconds = int(totalduration))
+        self.duration = totaltime
         return "%d layers, %s" % (len(self.layers), str(totaltime))
 
 def main():
