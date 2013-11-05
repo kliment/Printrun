@@ -1133,9 +1133,9 @@ class pronsole(cmd.Cmd):
         self.starttime = time.time()
         if resuming:
             print _("Print resumed at: %s") % format_time(self.starttime)
-            self.compute_eta = RemainingTimeEstimator(self.fgcode)
         else:
             print _("Print started at: %s") % format_time(self.starttime)
+            self.compute_eta = RemainingTimeEstimator(self.fgcode)
 
     def endcb(self):
         if self.p.queueindex == 0:
