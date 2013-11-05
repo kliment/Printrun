@@ -174,12 +174,12 @@ class GCode(object):
             self.home_x, self.home_y, self.home_z = home_pos
     home_pos = property(_get_home_pos, _set_home_pos)
 
-    def __init__(self, data, home_pos = None):
-        self.lines = [Line(l2) for l2 in
-                      (l.strip() for l in data)
-                      if l2]
+    def __init__(self, data = None, home_pos = None):
         self.home_pos = home_pos
-        if self.lines:
+        if data:
+            self.lines = [Line(l2) for l2 in
+                          (l.strip() for l in data)
+                          if l2]
             self._preprocess_lines()
             self.filament_length = self._preprocess_extrusion()
             self._create_layers()
