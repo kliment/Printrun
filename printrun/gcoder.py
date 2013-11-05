@@ -119,6 +119,7 @@ class GCode(object):
     offset_x = 0
     offset_y = 0
     offset_z = 0
+    offset_e = 0
     # Expected behavior:
     # - G28 X => X axis is homed, offset_x <- 0, current_x <- home_x
     # - G92 Xk => X axis does not move, offset_x <- current_x - k,
@@ -265,7 +266,8 @@ class GCode(object):
         if not lines:
             lines = self.lines
 
-        cur_e = self.current_e
+        current_e = self.current_e
+        offset_e = self.offset_e
         total_e = 0
         max_e = 0
 
@@ -276,15 +278,18 @@ class GCode(object):
                 if line.relative_e:
                     line.extruding = line.e > 0
                     total_e += line.e
+                    current_e += line.e
                 else:
-                    line.extruding = line.e > cur_e
-                    total_e += line.e - cur_e
-                    cur_e = line.e
+                    new_e = line.e + offset_e
+                    line.extruding = new_e > current_e
+                    total_e += new_e - current_e
+                    current_e = new_e
                 max_e = max(max_e, total_e)
             elif line.command == "G92":
-                cur_e = line.e
+                offset_e = current_e - line.e
 
-        self.current_e = cur_e
+        self.current_e = current_e
+        self.offset_e = offset_e
         return max_e
 
     # FIXME : looks like this needs to be tested with list Z on move
