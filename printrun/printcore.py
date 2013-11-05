@@ -563,14 +563,16 @@ class printcore():
         if self.printer:
             self.sent.append(command)
             # run the command through the analyzer
-            try: self.analyzer.append(command, store = False)
+            gline = None
+            try:
+                gline = self.analyzer.append(command, store = False)
             except:
                 logging.warning(_("Could not analyze command %s:") % command +
                                 "\n" + traceback.format_exc())
             if self.loud:
                 logging.info("SENT: %s" % command)
             if self.sendcb:
-                try: self.sendcb(command)
+                try: self.sendcb(command, gline)
                 except: pass
             try:
                 self.printer.write(str(command + "\n"))

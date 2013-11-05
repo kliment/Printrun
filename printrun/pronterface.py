@@ -277,11 +277,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.filename:
             self.printbtn.Enable()
 
-    def sentcb(self, line):
-        gline = gcoder.Line(line)
-        split_raw = gcoder.split(gline)
-        gcoder.parse_coordinates(gline, split_raw, imperial = False)
-        if gline.is_move:
+    def sentcb(self, line, gline):
+        if not gline:
+            pass
+        elif gline.is_move:
             if gline.z is not None:
                 layer = gline.z
                 if layer != self.curlayer:
@@ -289,14 +288,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     wx.CallAfter(self.gviz.clearhilights)
                     wx.CallAfter(self.gviz.setlayer, layer)
         elif gline.command in ["M104", "M109"]:
-            gcoder.parse_coordinates(gline, split_raw, imperial = False, force = True)
             gline_s = gcoder.S(gline)
             if gline_s is not None:
                 temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
         elif gline.command in ["M140", "M190"]:
-            gline.parse_coordinates(gline, split_raw, imperial = False, force = True)
             gline_s = gcoder.S(gline)
             if gline_s is not None:
                 temp = gline_s
@@ -305,8 +302,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         elif gline.command.startswith("T"):
             tool = gline.command[1:]
             if hasattr(self, "extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
-        else:
-            return
         self.sentlines.put_nowait(line)
 
     def is_excluded_move(self, gline):
