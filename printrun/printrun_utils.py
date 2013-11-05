@@ -15,6 +15,7 @@
 
 import os
 import sys
+import re
 import gettext
 import datetime
 import subprocess
@@ -144,3 +145,24 @@ class RemainingTimeEstimator(object):
         self.last_idx = idx
         self.last_estimate = (estimate, total)
         return self.last_estimate
+
+def parse_build_dimensions(bdim):
+    # a string containing up to six numbers delimited by almost anything
+    # first 0-3 numbers specify the build volume, no sign, always positive
+    # remaining 0-3 numbers specify the coordinates of the "southwest" corner of the build platform
+    # "XXX,YYY"
+    # "XXXxYYY+xxx-yyy"
+    # "XXX,YYY,ZZZ+xxx+yyy-zzz"
+    # etc
+    bdl = re.findall("([-+]?[0-9]*\.?[0-9]*)", bdim)
+    defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
+    bdl = filter(None, bdl)
+    bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
+    if len(bdl_float) < len(defaults):
+        bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
+    for i in range(3):  # Check for nonpositive dimensions for build volume
+        if bdl_float[i] <= 0: bdl_float[i] = 1
+    return bdl_float
+
+def get_home_pos(build_dimensions):
+    return build_dimensions[6:9] if len(build_dimensions) >= 9 else None

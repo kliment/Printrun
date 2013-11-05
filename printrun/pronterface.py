@@ -30,8 +30,8 @@ import logging
 from . import pronsole
 from . import printcore
 
-from printrun.printrun_utils import install_locale, \
-    RemainingTimeEstimator, setup_logging
+from printrun.printrun_utils import install_locale, setup_logging, \
+    RemainingTimeEstimator, get_home_pos, parse_build_dimensions
 install_locale('pronterface')
 
 try:
@@ -85,81 +85,6 @@ class Tee(object):
     def flush(self):
         self.stdout.flush()
 
-def parse_build_dimensions(bdim):
-    # a string containing up to six numbers delimited by almost anything
-    # first 0-3 numbers specify the build volume, no sign, always positive
-    # remaining 0-3 numbers specify the coordinates of the "southwest" corner of the build platform
-    # "XXX,YYY"
-    # "XXXxYYY+xxx-yyy"
-    # "XXX,YYY,ZZZ+xxx+yyy-zzz"
-    # etc
-    bdl = re.findall("([-+]?[0-9]*\.?[0-9]*)", bdim)
-    defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
-    bdl = filter(None, bdl)
-    bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
-    if len(bdl_float) < len(defaults):
-        bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
-    for i in range(3):  # Check for nonpositive dimensions for build volume
-        if bdl_float[i] <= 0: bdl_float[i] = 1
-    return bdl_float
-
-class BuildDimensionsSetting(wxSetting):
-
-    widgets = None
-
-    def _set_value(self, value):
-        self._value = value
-        if self.widgets:
-            self._set_widgets_values(value)
-    value = property(wxSetting._get_value, _set_value)
-
-    def _set_widgets_values(self, value):
-        build_dimensions_list = parse_build_dimensions(value)
-        for i in range(len(self.widgets)):
-            self.widgets[i].SetValue(build_dimensions_list[i])
-
-    def get_widget(self, parent):
-        from wx.lib.agw.floatspin import FloatSpin
-        import wx
-        build_dimensions = parse_build_dimensions(self.value)
-        self.widgets = []
-        w = lambda val, m, M: self.widgets.append(FloatSpin(parent, -1, value = val, min_val = m, max_val = M, digits = 2))
-        addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
-        addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
-        self.widget = wx.GridBagSizer()
-        addlabel(_("Width"), (0, 0))
-        w(build_dimensions[0], 0, 2000)
-        addwidget(0, 1)
-        addlabel(_("Depth"), (0, 2))
-        w(build_dimensions[1], 0, 2000)
-        addwidget(0, 3)
-        addlabel(_("Height"), (0, 4))
-        w(build_dimensions[2], 0, 2000)
-        addwidget(0, 5)
-        addlabel(_("X offset"), (1, 0))
-        w(build_dimensions[3], -2000, 2000)
-        addwidget(1, 1)
-        addlabel(_("Y offset"), (1, 2))
-        w(build_dimensions[4], -2000, 2000)
-        addwidget(1, 3)
-        addlabel(_("Z offset"), (1, 4))
-        w(build_dimensions[5], -2000, 2000)
-        addwidget(1, 5)
-        addlabel(_("X home pos."), (2, 0))
-        w(build_dimensions[6], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 1))
-        addlabel(_("Y home pos."), (2, 2))
-        w(build_dimensions[7], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 3))
-        addlabel(_("Z home pos."), (2, 4))
-        w(build_dimensions[8], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 5))
-        return self.widget
-
-    def update(self):
-        values = [float(w.GetValue()) for w in self.widgets]
-        self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
-
 class ComboSetting(wxSetting):
 
     def __init__(self, name, default, choices, label = None, help = None, group = None):
@@ -195,7 +120,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(monitorsetting)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
-        self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))

@@ -27,7 +27,8 @@ import locale
 import logging
 
 from . import printcore
-from printrun.printrun_utils import install_locale, format_time, format_duration, run_command
+from printrun.printrun_utils import install_locale, run_command, \
+    format_time, format_duration, get_home_pos, parse_build_dimensions
 install_locale('pronterface')
 from printrun import gcoder
 
@@ -224,6 +225,63 @@ class StaticTextSetting(wxSetting):
         self.widget = wx.StaticText(parent, -1, self.text)
         return self.widget
 
+class BuildDimensionsSetting(wxSetting):
+
+    widgets = None
+
+    def _set_value(self, value):
+        self._value = value
+        if self.widgets:
+            self._set_widgets_values(value)
+    value = property(wxSetting._get_value, _set_value)
+
+    def _set_widgets_values(self, value):
+        build_dimensions_list = parse_build_dimensions(value)
+        for i in range(len(self.widgets)):
+            self.widgets[i].SetValue(build_dimensions_list[i])
+
+    def get_widget(self, parent):
+        from wx.lib.agw.floatspin import FloatSpin
+        import wx
+        build_dimensions = parse_build_dimensions(self.value)
+        self.widgets = []
+        w = lambda val, m, M: self.widgets.append(FloatSpin(parent, -1, value = val, min_val = m, max_val = M, digits = 2))
+        addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
+        addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
+        self.widget = wx.GridBagSizer()
+        addlabel(_("Width"), (0, 0))
+        w(build_dimensions[0], 0, 2000)
+        addwidget(0, 1)
+        addlabel(_("Depth"), (0, 2))
+        w(build_dimensions[1], 0, 2000)
+        addwidget(0, 3)
+        addlabel(_("Height"), (0, 4))
+        w(build_dimensions[2], 0, 2000)
+        addwidget(0, 5)
+        addlabel(_("X offset"), (1, 0))
+        w(build_dimensions[3], -2000, 2000)
+        addwidget(1, 1)
+        addlabel(_("Y offset"), (1, 2))
+        w(build_dimensions[4], -2000, 2000)
+        addwidget(1, 3)
+        addlabel(_("Z offset"), (1, 4))
+        w(build_dimensions[5], -2000, 2000)
+        addwidget(1, 5)
+        addlabel(_("X home pos."), (2, 0))
+        w(build_dimensions[6], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 1))
+        addlabel(_("Y home pos."), (2, 2))
+        w(build_dimensions[7], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 3))
+        addlabel(_("Z home pos."), (2, 4))
+        w(build_dimensions[8], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 5))
+        return self.widget
+
+    def update(self):
+        values = [float(w.GetValue()) for w in self.widgets]
+        self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
+
 class Settings(object):
     #def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
     #def _temperature_validate(self, v):
@@ -381,11 +439,13 @@ class pronsole(cmd.Cmd):
         self.processing_rc = False
         self.processing_args = False
         self.settings = Settings()
+        self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"), self.update_build_dimensions)
         self.settings._port_list = self.scanserial
         self.settings._temperature_abs_cb = self.set_temp_preset
         self.settings._temperature_pla_cb = self.set_temp_preset
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
+        self.build_dimensions_list = parse_build_dimensions(self.settings.build_dimensions)
         self.monitoring = 0
         self.starttime = 0
         self.extra_print_time = 0
@@ -1533,6 +1593,9 @@ class pronsole(cmd.Cmd):
         args = [arg for arg in args if not arg.startswith("-psn")]
         args = parser.parse_args(args = args)
         self.process_cmdline_arguments(args)
+
+    def update_build_dimensions(self, param, value):
+        self.build_dimensions_list = parse_build_dimensions(value)
 
     # We replace this function, defined in cmd.py .
     # It's default behavior with reagrds to Ctr-C
