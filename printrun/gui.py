@@ -497,6 +497,8 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.kill)
 
         # Custom buttons
+        if wx.VERSION > (2, 9): self.centersizer = wx.WrapSizer(wx.HORIZONTAL)
+        else: self.centersizer = wx.GridBagSizer()
         self.centersizer = wx.GridBagSizer()
         self.centerpanel = self.newPanel(page1panel2)
         self.centerpanel.SetSizer(self.centersizer)
@@ -546,7 +548,8 @@ class MainWindow(wx.Frame):
             logpanel = self.newPanel(lowerpanel)
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
-        self.centersizer = wx.GridBagSizer()
+        if wx.VERSION > (2, 9): self.centersizer = wx.WrapSizer(wx.HORIZONTAL)
+        else: self.centersizer = wx.GridBagSizer()
         self.centerpanel = self.newPanel(vizpanel)
         self.centerpanel.SetSizer(self.centersizer)
         viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
