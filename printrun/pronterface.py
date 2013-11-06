@@ -902,6 +902,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.centersizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
                 self.centersizer.Add(b, flag = wx.EXPAND)
+        self.panel.Fit()
         self.Fit()
 
     def help_button(self):
