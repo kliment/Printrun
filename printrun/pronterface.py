@@ -146,7 +146,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing most settings here will require restart to get effect"), group = "UI"))
         recentfilessetting = StringSetting("recentfiles", "[]")
         recentfilessetting.hidden = True
-        self.settings._add(recentfilessetting)
+        self.settings._add(recentfilessetting, self.update_recent_files)
 
         self.pauseScript = "pause.gcode"
         self.endScript = "end.gcode"
@@ -181,6 +181,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         ]
         self.custombuttons = []
         self.btndict = {}
+        self.filehistory = None
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
         self.display_graph = self.settings.tempgraph
@@ -216,6 +217,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except:
             pass
         self.popmenu()
+        self.update_recent_files("recentfiles", self.settings.recentfiles)
         if self.settings.uimode == "Tabbed":
             self.createTabbedGui()
         else:
@@ -505,6 +507,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         # File menu
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Opens file")))
+
+        self.filehistory = wx.FileHistory(maxFiles = 8, idBase = wx.ID_FILE1)
+        recent = wx.Menu()
+        self.filehistory.UseMenu(recent)
+        self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
+                  id = wx.ID_FILE1, id2 = wx.ID_FILE9)
+        m.AppendMenu(wx.ID_ANY, "&Recent Files", recent)
         self.Bind(wx.EVT_MENU, self.clearOutput, m.Append(-1, _("Clear console"), _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
@@ -792,6 +801,21 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
             self.gwindow.Raise()
+
+    def update_recent_files(self, param, value):
+        if self.filehistory is None:
+            return
+        try:
+            recent_files = json.loads(value)
+        except:
+            self.logError(_("Failed to load recent files list:") +
+                          "\n" + traceback.format_exc())
+        # Clear history
+        while self.filehistory.GetCount():
+            self.filehistory.RemoveFileFromHistory(0)
+        recent_files.reverse()
+        for f in recent_files:
+            self.filehistory.AddFileToHistory(f)
 
     def update_gviz_params(self, param, value):
         params_map = {"preview_extrusion_width": "extrusion_width",
@@ -1548,6 +1572,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.loadfile(None, l)
         else:
             self._do_load(l)
+
+    def load_recent_file(self, event):
+        fileid = event.GetId() - wx.ID_FILE1
+        path = self.filehistory.GetHistoryFile(fileid)
+        self.loadfile(None, filename = path)
 
     def loadfile(self, event, filename = None):
         if self.skeining and self.skeinp is not None:
