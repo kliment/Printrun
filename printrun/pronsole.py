@@ -25,6 +25,7 @@ import codecs
 import argparse
 import locale
 import logging
+import traceback
 
 from . import printcore
 from printrun.printrun_utils import install_locale, run_command, \
@@ -364,9 +365,15 @@ class Settings(object):
         if t == bool and value == "False": setattr(self, key, False)
         else: setattr(self, key, t(value))
         try:
-            getattr(self, "_%s_cb" % key)(key, value)
-        except AttributeError:
-            pass
+            cb = None
+            try:
+                cb = getattr(self, "_%s_cb" % key)
+            except AttributeError:
+                pass
+            if cb is not None: cb(key, value)
+        except:
+            logging.warning((_("Failed to run callback after setting \"%s\":") % key) +
+                            "\n" + traceback.format_exc())
         return value
 
     def _tabcomplete(self, key):
