@@ -100,11 +100,11 @@ class GcodePlater(Plater):
                         f.write(l.raw + "\n")
                 # Find the current real position
                 for i in xrange(len(model.gcode) - 1, -1, -1):
-                    if model.gcode.lines[i].is_move:
-                        gline = model.gcode.lines[i]
-                        last_real_position = [- trans[0] + gline.current_x,
+                    gline = model.gcode.lines[i]
+                    if gline.is_move:
+                        last_real_position = (- trans[0] + gline.current_x,
                                               - trans[1] + gline.current_y,
-                                              - trans[2] + gline.current_z]
+                                              - trans[2] + gline.current_z)
                         break
         print _("Exported merged G-Codes to %s") % name
 
