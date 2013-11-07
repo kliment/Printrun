@@ -28,6 +28,10 @@ from printrun import gcoder
 from printrun.objectplater import Plater
 from printrun.gl.libtatlin import actors
 
+def extrusion_only(gline):
+    return gline.e is not None \
+        and (gline.x, gline.y, gline.z) == (None, None, None)
+
 class GcodePlater(Plater):
 
     load_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
@@ -92,7 +96,7 @@ class GcodePlater(Plater):
                 f.write("G90\n")
                 f.write("G92 X%.5f Y%.5f Z%.5f E0\n" % trans)
                 for l in model.gcode:
-                    if l.command != "G28" and (l.command != "92" or not any([l.x, l.y, l.z])):
+                    if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
                         f.write(l.raw + "\n")
                 # Find the current real position
                 for i in xrange(len(model.gcode) - 1, -1, -1):
