@@ -15,7 +15,12 @@
 
 import os
 import sys
+import re
 import gettext
+import datetime
+import subprocess
+import shlex
+import logging
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not
@@ -28,6 +33,13 @@ def install_locale(domain):
                         unicode = 1)
     else:
         gettext.install(domain, './locale', unicode = 1)
+
+def setup_logging(out):
+    logger = logging.getLogger()
+    logger.handlers = []
+    logging_handler = logging.StreamHandler(out)
+    logging_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+    logger.addHandler(logging_handler)
 
 def iconfile(filename):
     if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
@@ -77,6 +89,24 @@ def decode_utf8(s):
         pass
     return s
 
+def format_time(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
+
+def format_duration(delta):
+    return str(datetime.timedelta(seconds = int(delta)))
+
+def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
+    command = shlex.split(command.replace("\\", "\\\\").encode())
+    if replaces is not None:
+        replaces["$python"] = sys.executable
+        for pattern, rep in replaces.items():
+            command = [bit.replace(pattern, rep) for bit in command]
+        command = [bit.encode() for bit in command]
+    if blocking:
+        return subprocess.call(command)
+    else:
+        return subprocess.Popen(command, stderr = stderr, stdout = stdout)
+
 class RemainingTimeEstimator(object):
 
     drift = None
@@ -115,3 +145,24 @@ class RemainingTimeEstimator(object):
         self.last_idx = idx
         self.last_estimate = (estimate, total)
         return self.last_estimate
+
+def parse_build_dimensions(bdim):
+    # a string containing up to six numbers delimited by almost anything
+    # first 0-3 numbers specify the build volume, no sign, always positive
+    # remaining 0-3 numbers specify the coordinates of the "southwest" corner of the build platform
+    # "XXX,YYY"
+    # "XXXxYYY+xxx-yyy"
+    # "XXX,YYY,ZZZ+xxx+yyy-zzz"
+    # etc
+    bdl = re.findall("([-+]?[0-9]*\.?[0-9]*)", bdim)
+    defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
+    bdl = filter(None, bdl)
+    bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
+    if len(bdl_float) < len(defaults):
+        bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
+    for i in range(3):  # Check for nonpositive dimensions for build volume
+        if bdl_float[i] <= 0: bdl_float[i] = 1
+    return bdl_float
+
+def get_home_pos(build_dimensions):
+    return build_dimensions[6:9] if len(build_dimensions) >= 9 else None

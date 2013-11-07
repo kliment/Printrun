@@ -18,7 +18,11 @@ import sys
 import re
 import math
 import datetime
+import logging
 from array import array
+
+from printrun_utils import install_locale
+install_locale('pronterface')
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "i", "j"]
 gcode_parsed_nonargs = ["g", "t", "m", "n"]
@@ -63,6 +67,11 @@ def P(line):
 
 def split(line):
     split_raw = gcode_exp.findall(line.raw.lower())
+    if not split_raw:
+        line.command = line.raw
+        line.is_move = False
+        logging.warning(_("raw G-Code line \"%s\" could not be parsed") % line.raw)
+        return [line.raw]
     command = split_raw[0] if split_raw[0][0] != "n" else split_raw[1]
     line.command = command[0].upper() + command[1]
     line.is_move = line.command in move_gcodes
@@ -86,67 +95,6 @@ class Layer(list):
         super(Layer, self).__init__(lines)
         self.z = z
 
-    def _preprocess(self, current_x, current_y, current_z,
-                    offset_x, offset_y, offset_z, ignore_noe = False):
-        xmin = float("inf")
-        ymin = float("inf")
-        zmin = 0
-        xmax = float("-inf")
-        ymax = float("-inf")
-        zmax = float("-inf")
-
-        for line in self:
-            if not line.is_move and line.command != "G92" and line.command != "G28":
-                continue
-            if line.is_move:
-                x = line.x
-                y = line.y
-                z = line.z
-
-                if line.relative:
-                    x = current_x + (x or 0)
-                    y = current_y + (y or 0)
-                    z = current_z + (z or 0)
-                else:
-                    if line.x: x = line.x + offset_x
-                    if line.y: y = line.y + offset_y
-                    if line.z: z = line.z + offset_z
-
-                current_x = x or current_x
-                current_y = y or current_y
-                current_z = z or current_z
-
-                if line.e or not ignore_noe:
-                    if x:
-                        xmin = min(xmin, x)
-                        xmax = max(xmax, x)
-                    if y:
-                        ymin = min(ymin, y)
-                        ymax = max(ymax, y)
-                    if current_z:
-                        zmin = min(zmin, current_z)
-                        zmax = max(zmax, current_z)
-
-            elif line.command == "G28":
-                if not any([line.x, line.y, line.z]):
-                    current_x = current_y = current_z = 0
-                else:
-                    if line.x: current_x = 0
-                    if line.y: current_y = 0
-                    if line.z: current_z = 0
-
-            elif line.command == "G92":
-                if line.x: offset_x = current_x - line.x
-                if line.y: offset_y = current_y - line.y
-                if line.z: offset_z = current_z - line.z
-
-            line.current_x = current_x
-            line.current_y = current_y
-            line.current_z = current_z
-        return ((current_x, current_y, current_z),
-                (offset_x, offset_y, offset_z),
-                (xmin, xmax), (ymin, ymax), (zmin, zmax))
-
 class GCode(object):
 
     lines = None
@@ -161,8 +109,35 @@ class GCode(object):
     relative = False
     relative_e = False
     current_tool = 0
+    # Home position: current absolute position counted from machine origin
+    home_x = 0
+    home_y = 0
+    home_z = 0
+    # Current position: current absolute position counted from machine origin
+    current_x = 0
+    current_y = 0
+    current_z = 0
+    # For E this is the absolute position from machine start
+    current_e = 0
+    # Current feedrate
+    current_f = 0
+    # Offset: current offset between the machine origin and the machine current
+    # absolute coordinate system (as shifted by G92s)
+    offset_x = 0
+    offset_y = 0
+    offset_z = 0
+    offset_e = 0
+    # Expected behavior:
+    # - G28 X => X axis is homed, offset_x <- 0, current_x <- home_x
+    # - G92 Xk => X axis does not move, so current_x does not change
+    #             and offset_x <- current_x - k,
+    # - absolute G1 Xk => X axis moves, current_x <- offset_x + k
+    # How to get...
+    # current abs X from machine origin: current_x
+    # current abs X in machine current coordinate system: current_x - offset_x
 
     filament_length = None
+    duration = None
     xmin = None
     xmax = None
     ymin = None
@@ -175,14 +150,45 @@ class GCode(object):
 
     est_layer_height = None
 
-    def __init__(self, data):
-        self.lines = [Line(l2) for l2 in
-                      (l.strip() for l in data)
-                      if l2]
-        self._preprocess_lines()
-        self.filament_length = self._preprocess_extrusion()
-        self._create_layers()
-        self._preprocess_layers()
+    # abs_x is the current absolute X in machine current coordinate system
+    # (after the various G92 transformations) and can be used to store the
+    # absolute position of the head at a given time
+    def _get_abs_x(self):
+        return self.current_x - self.offset_x
+    abs_x = property(_get_abs_x)
+
+    def _get_abs_y(self):
+        return self.current_y - self.offset_y
+    abs_y = property(_get_abs_y)
+
+    def _get_abs_z(self):
+        return self.current_z - self.offset_z
+    abs_z = property(_get_abs_z)
+
+    def _get_abs_e(self):
+        return self.current_e - self.offset_e
+    abs_e = property(_get_abs_e)
+
+    def _get_home_pos(self):
+        return (self.home_x, self.home_y, self.home_z)
+
+    def _set_home_pos(self, home_pos):
+        if home_pos:
+            self.home_x, self.home_y, self.home_z = home_pos
+    home_pos = property(_get_home_pos, _set_home_pos)
+
+    def __init__(self, data = None, home_pos = None):
+        self.home_pos = home_pos
+        if data:
+            self.lines = [Line(l2) for l2 in
+                          (l.strip() for l in data)
+                          if l2]
+            self._preprocess_lines()
+            self.filament_length = self._preprocess_extrusion()
+            self._create_layers()
+            self._preprocess_layers()
+        else:
+            self.lines = []
 
     def __len__(self):
         return len(self.line_idxs)
@@ -190,17 +196,18 @@ class GCode(object):
     def __iter__(self):
         return self.lines.__iter__()
 
-    def append(self, command):
+    def append(self, command, store = True):
         command = command.strip()
         if not command:
             return
         gline = Line(command)
-        self.lines.append(gline)
         self._preprocess_lines([gline])
         self._preprocess_extrusion([gline])
-        self.append_layer.append(gline)
-        self.layer_idxs.append(self.append_layer_id)
-        self.line_idxs.append(len(self.append_layer))
+        if store:
+            self.lines.append(gline)
+            self.append_layer.append(gline)
+            self.layer_idxs.append(self.append_layer_id)
+            self.line_idxs.append(len(self.append_layer))
         return gline
 
     def _preprocess_lines(self, lines = None):
@@ -211,10 +218,19 @@ class GCode(object):
         relative = self.relative
         relative_e = self.relative_e
         current_tool = self.current_tool
+        current_x = self.current_x
+        current_y = self.current_y
+        current_z = self.current_z
+        offset_x = self.offset_x
+        offset_y = self.offset_y
+        offset_z = self.offset_z
+
         for line in lines:
             split_raw = split(line)
             if not line.command:
                 continue
+
+            # Update properties
             if line.is_move:
                 line.relative = relative
                 line.relative_e = relative_e
@@ -235,17 +251,69 @@ class GCode(object):
                 relative_e = True
             elif line.command[0] == "T":
                 current_tool = int(line.command[1:])
+
             if line.command[0] == "G":
                 parse_coordinates(line, split_raw, imperial)
+
+            # Compute current position
+            if line.is_move:
+                x = line.x
+                y = line.y
+                z = line.z
+
+                if line.f is not None:
+                    self.current_f = line.f
+
+                if line.relative:
+                    x = current_x + (x or 0)
+                    y = current_y + (y or 0)
+                    z = current_z + (z or 0)
+                else:
+                    if x is not None: x = x + offset_x
+                    if y is not None: y = y + offset_y
+                    if z is not None: z = z + offset_z
+
+                if x is not None: current_x = x
+                if y is not None: current_y = y
+                if z is not None: current_z = z
+
+            elif line.command == "G28":
+                home_all = not any([line.x, line.y, line.z])
+                if home_all or line.x is not None:
+                    offset_x = 0
+                    current_x = self.home_x
+                if home_all or line.y is not None:
+                    offset_y = 0
+                    current_y = self.home_y
+                if home_all or line.z is not None:
+                    offset_z = 0
+                    current_z = self.home_z
+
+            elif line.command == "G92":
+                if line.x is not None: offset_x = current_x - line.x
+                if line.y is not None: offset_y = current_y - line.y
+                if line.z is not None: offset_z = current_z - line.z
+
+            line.current_x = current_x
+            line.current_y = current_y
+            line.current_z = current_z
         self.imperial = imperial
         self.relative = relative
         self.relative_e = relative_e
         self.current_tool = current_tool
+        self.current_x = current_x
+        self.current_y = current_y
+        self.current_z = current_z
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+        self.offset_z = offset_z
 
-    def _preprocess_extrusion(self, lines = None, cur_e = 0):
+    def _preprocess_extrusion(self, lines = None):
         if not lines:
             lines = self.lines
 
+        current_e = self.current_e
+        offset_e = self.offset_e
         total_e = 0
         max_e = 0
 
@@ -254,16 +322,20 @@ class GCode(object):
                 continue
             if line.is_move:
                 if line.relative_e:
-                    line.extruding = line.e != 0
+                    line.extruding = line.e > 0
                     total_e += line.e
+                    current_e += line.e
                 else:
-                    line.extruding = line.e != cur_e
-                    total_e += line.e - cur_e
-                    cur_e = line.e
+                    new_e = line.e + offset_e
+                    line.extruding = new_e > current_e
+                    total_e += new_e - current_e
+                    current_e = new_e
                 max_e = max(max_e, total_e)
             elif line.command == "G92":
-                cur_e = line.e
+                offset_e = current_e - line.e
 
+        self.current_e = current_e
+        self.offset_e = offset_e
         return max_e
 
     # FIXME : looks like this needs to be tested with list Z on move
@@ -367,28 +439,20 @@ class GCode(object):
         ymax = float("-inf")
         zmax = float("-inf")
 
-        current_x = 0
-        current_y = 0
-        current_z = 0
-        offset_x = 0
-        offset_y = 0
-        offset_z = 0
+        # Count moves without extrusion if filament length is lower than 0
+        count_noe = self.filament_length <= 0
 
-        ignore_noe = self.filament_length > 0
-
-        for l in self.all_layers:
-            meta = l._preprocess(current_x, current_y, current_z,
-                                 offset_x, offset_y, offset_z,
-                                 ignore_noe)
-            current_x, current_y, current_z = meta[0]
-            offset_x, offset_y, offset_z = meta[1]
-            (xm, xM), (ym, yM), (zm, zM) = meta[2:]
-            xmin = min(xm, xmin)
-            xmax = max(xM, xmax)
-            ymin = min(ym, ymin)
-            ymax = max(yM, ymax)
-            zmin = min(zm, zmin)
-            zmax = max(zM, zmax)
+        for line in self.lines:
+            if line.is_move and (line.extruding or count_noe):
+                if line.current_x is not None:
+                    xmin = min(xmin, line.current_x)
+                    xmax = max(xmax, line.current_x)
+                if line.current_y is not None:
+                    ymin = min(ymin, line.current_y)
+                    ymax = max(ymax, line.current_y)
+                if line.current_z is not None:
+                    zmin = min(zmin, line.current_z)
+                    zmax = max(zmax, line.current_z)
 
         self.xmin = xmin if not math.isinf(xmin) else 0
         self.xmax = xmax if not math.isinf(xmax) else 0
@@ -401,6 +465,8 @@ class GCode(object):
         self.height = self.zmax - self.zmin
 
     def estimate_duration(self):
+        if self.duration is not None:
+            return self.duration
         lastx = lasty = lastz = laste = lastf = 0.0
         lastdx = 0
         lastdy = 0
@@ -489,6 +555,7 @@ class GCode(object):
             layerbeginduration = totalduration
 
         totaltime = datetime.timedelta(seconds = int(totalduration))
+        self.duration = totaltime
         return "%d layers, %s" % (len(self.layers), str(totaltime))
 
 def main():

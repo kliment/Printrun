@@ -30,7 +30,7 @@ from pyglet.gl import *
 
 from .gviz import GvizBaseFrame
 
-from printrun_utils import imagefile, install_locale
+from printrun_utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
 
 def create_model(light):
@@ -290,7 +290,7 @@ class GcodeViewMainWrapper(object):
     def setlayer(self, *a):
         pass
 
-    def addfile(self, gcode = None):
+    def addfile(self, gcode = None, showall = False):
         self.model = create_model(self.root.settings.light3d
                                   if self.root else False)
         if gcode:
@@ -381,7 +381,7 @@ if __name__ == "__main__":
     title = 'Gcode view, shift to move view, mousewheel to set layer'
     frame = GcodeViewFrame(None, wx.ID_ANY, title, size = (400, 400),
                            build_dimensions = build_dimensions)
-    gcode = gcoder.GCode(open(sys.argv[1]))
+    gcode = gcoder.GCode(open(sys.argv[1]), get_home_pos(build_dimensions))
     frame.addfile(gcode)
 
     first_move = None

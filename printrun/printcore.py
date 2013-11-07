@@ -15,25 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "2013.08.17"
+__version__ = "2013.10.19"
 
 from serial import Serial, SerialException
 from select import error as SelectError
 from threading import Thread, Lock
 from Queue import Queue, Empty as QueueEmpty
 import time
-import sys
 import platform
 import os
+import sys
+reload(sys).setdefaultencoding('utf8')
+import logging
 import traceback
 import errno
 import socket
 import re
 from functools import wraps
 from collections import deque
-from printrun.GCodeAnalyzer import GCodeAnalyzer
-from printrun.printrun_utils import install_locale, decode_utf8
+from printrun import gcoder
+from printrun.printrun_utils import install_locale, decode_utf8, setup_logging
 install_locale('pronterface')
+
+setup_logging(sys.stderr)
 
 def locked(f):
     @wraps(f)
@@ -63,7 +67,7 @@ class printcore():
            connect immediately"""
         self.baud = None
         self.port = None
-        self.analyzer = GCodeAnalyzer()
+        self.analyzer = gcoder.GCode()
         self.printer = None  # Serial instance connected to the printer,
                              # should be None when disconnected
         self.clear = 0  # clear to send, enabled after responses
@@ -104,6 +108,13 @@ class printcore():
         self.xy_feedrate = None
         self.z_feedrate = None
         self.pronterface = None
+
+    def logError(self, error):
+        if self.errorcb:
+            try: self.errorcb(error)
+            except: pass
+        else:
+            logging.error(error)
 
     @locked
     def disconnect(self):
@@ -163,11 +174,11 @@ class printcore():
                     self.printer_tcp.settimeout(self.timeout)
                     self.printer = self.printer_tcp.makefile()
                 except socket.error as e:
-                    print _("Could not connect to %s:%s:") % (hostname, port)
+                    self.logError(_("Could not connect to %s:%s:") % (hostname, port) +
+                                  "\n" + _("Socket error %s:") % e.errno +
+                                  "\n" + e.strerror)
                     self.printer = None
                     self.printer_tcp = None
-                    print _("Socket error %s:") % e.errno,
-                    print e.strerror
                     return
             else:
                 disable_hup(self.port)
@@ -177,9 +188,9 @@ class printcore():
                                           baudrate = self.baud,
                                           timeout = 0.25)
                 except SerialException as e:
-                    print _("Could not connect to %s at baudrate %s:") % (self.port, self.baud)
+                    self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
+                                  "\n" + _("Serial error: %s") % e)
                     self.printer = None
-                    print _("Serial error: %s") % e
                     return
             self.stop_read_thread = False
             self.read_thread = Thread(target = self._listen)
@@ -208,25 +219,25 @@ class printcore():
                 if self.recvcb:
                     try: self.recvcb(line)
                     except: pass
-                if self.loud: print "RECV:", line.rstrip()
+                if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                print _(u"Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                self.logError(_(u"Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 return None
             else:
-                print _(u"SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                self.logError(_(u"SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 raise
         except SerialException as e:
-            print _(u"Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e)))
+            self.logError(_(u"Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
             return None
         except socket.error as e:
-            print _(u"Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror))
+            self.logError(_(u"Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
             return None
         except OSError as e:
             if e.errno == errno.EAGAIN:  # Not a real error, no data was available
                 return ""
-            print _(u"Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror)
+            self.logError(_(u"Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
             return None
 
     def _listen_can_continue(self):
@@ -239,6 +250,9 @@ class printcore():
     def _listen_until_online(self):
         while not self.online and self._listen_can_continue():
             self._send("M105")
+            if self.writefailures >= 4:
+                print _("Aborting connection attempt after 4 failed writes.")
+                return
             empty_lines = 0
             while self._listen_can_continue():
                 line = self._readline()
@@ -283,10 +297,7 @@ class printcore():
                 try: self.tempcb(line)
                 except: pass
             elif line.startswith('Error'):
-                if self.errorcb:
-                    #callback for errors
-                    try: self.errorcb(line)
-                    except: pass
+                self.logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
             # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
@@ -384,11 +395,11 @@ class printcore():
         self.print_thread = None
 
         # saves the status
-        self.pauseX = self.analyzer.x - self.analyzer.xOffset
-        self.pauseY = self.analyzer.y - self.analyzer.yOffset
-        self.pauseZ = self.analyzer.z - self.analyzer.zOffset
-        self.pauseE = self.analyzer.e - self.analyzer.eOffset
-        self.pauseF = self.analyzer.f
+        self.pauseX = self.analyzer.abs_x
+        self.pauseY = self.analyzer.abs_y
+        self.pauseZ = self.analyzer.abs_z
+        self.pauseE = self.analyzer.abs_e
+        self.pauseF = self.analyzer.current_f
         self.pauseRelative = self.analyzer.relative
 
     def resume(self):
@@ -432,7 +443,7 @@ class printcore():
             else:
                 self.priqueue.put_nowait(command)
         else:
-            print "Not connected to printer."
+            self.logError(_("Not connected to printer."))
 
     def send_now(self, command, wait = 0):
         """Sends a command to the printer ahead of the command queue, without a
@@ -440,7 +451,7 @@ class printcore():
         if self.online:
             self.priqueue.put_nowait(command)
         else:
-            print "Not connected to printer."
+            self.logError(_("Not connected to printer."))
 
     def _print(self, resuming = False):
         self._stop_sender()
@@ -449,8 +460,8 @@ class printcore():
                 #callback for printing started
                 try: self.startcb(resuming)
                 except:
-                    print "Print start callback failed with:"
-                    traceback.print_exc(file = sys.stdout)
+                    self.logError(_("Print start callback failed with:") +
+                                  "\n" + traceback.format_exc())
             while self.printing and self.printer and self.online:
                 self._sendnext()
             self.sentlines = {}
@@ -460,11 +471,11 @@ class printcore():
                 #callback for printing done
                 try: self.endcb()
                 except:
-                    print "Print end callback failed with:"
-                    traceback.print_exc(file = sys.stdout)
+                    self.logError(_("Print end callback failed with:") +
+                                  "\n" + traceback.format_exc())
         except:
-            print "Print thread died due to the following error:"
-            traceback.print_exc(file = sys.stdout)
+            self.logError(_("Print thread died due to the following error:") +
+                          "\n" + traceback.format_exc())
         finally:
             self.print_thread = None
             self._start_sender()
@@ -483,7 +494,9 @@ class printcore():
             return
         while self.printer and self.printing and not self.clear:
             time.sleep(0.001)
-        self.clear = False
+        # Only wait for oks when using serial connections
+        if not self.printer_tcp:
+            self.clear = False
         if not (self.printing and self.printer and self.online):
             self.clear = True
             return
@@ -541,7 +554,8 @@ class printcore():
                 self._send("M110", -1, True)
 
     def _send(self, command, lineno = 0, calcchecksum = False):
-        if calcchecksum:
+        # Only add checksums if over serial (tcp does the flow control itself)
+        if calcchecksum and not self.printer_tcp:
             prefix = "N" + str(lineno) + " " + command
             command = prefix + "*" + str(self._checksum(prefix))
             if "M110" not in command:
@@ -549,25 +563,27 @@ class printcore():
         if self.printer:
             self.sent.append(command)
             # run the command through the analyzer
-            try: self.analyzer.Analyze(command)
+            gline = None
+            try:
+                gline = self.analyzer.append(command, store = False)
             except:
-                print "Warning: could not analyze command %s:" % command
-                traceback.print_exc(file = sys.stdout)
+                logging.warning(_("Could not analyze command %s:") % command +
+                                "\n" + traceback.format_exc())
             if self.loud:
-                print "SENT:", command
+                logging.info("SENT: %s" % command)
             if self.sendcb:
-                try: self.sendcb(command)
+                try: self.sendcb(command, gline)
                 except: pass
             try:
                 self.printer.write(str(command + "\n"))
                 if self.printer_tcp: self.printer.flush()
                 self.writefailures = 0
             except socket.error as e:
-                print _(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                self.logError(_(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
             except SerialException as e:
-                print _(u"Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e)))
+                self.logError(_(u"Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
                 self.writefailures += 1
             except RuntimeError as e:
-                print _(u"Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror))
+                self.logError(_(u"Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1

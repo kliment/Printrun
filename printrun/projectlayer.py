@@ -229,7 +229,7 @@ class SettingsFrame(wx.Frame):
         if self.pronterface:
             self.pronterface.set(name,value)
     
-    def _get_setting(self,name, val):
+    def _get_setting(self, name, val):
         if self.pronterface:
             try:
                 return getattr(self.pronterface.settings, name)

@@ -22,12 +22,15 @@ import time
 import sys
 import subprocess
 import codecs
-import shlex
 import argparse
 import locale
+import logging
+import traceback
 
 from . import printcore
-from printrun.printrun_utils import install_locale
+from printrun.printrun_utils import install_locale, run_command, \
+    format_time, format_duration, RemainingTimeEstimator, \
+    get_home_pos, parse_build_dimensions
 install_locale('pronterface')
 from printrun import gcoder
 
@@ -224,6 +227,63 @@ class StaticTextSetting(wxSetting):
         self.widget = wx.StaticText(parent, -1, self.text)
         return self.widget
 
+class BuildDimensionsSetting(wxSetting):
+
+    widgets = None
+
+    def _set_value(self, value):
+        self._value = value
+        if self.widgets:
+            self._set_widgets_values(value)
+    value = property(wxSetting._get_value, _set_value)
+
+    def _set_widgets_values(self, value):
+        build_dimensions_list = parse_build_dimensions(value)
+        for i in range(len(self.widgets)):
+            self.widgets[i].SetValue(build_dimensions_list[i])
+
+    def get_widget(self, parent):
+        from wx.lib.agw.floatspin import FloatSpin
+        import wx
+        build_dimensions = parse_build_dimensions(self.value)
+        self.widgets = []
+        w = lambda val, m, M: self.widgets.append(FloatSpin(parent, -1, value = val, min_val = m, max_val = M, digits = 2))
+        addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
+        addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
+        self.widget = wx.GridBagSizer()
+        addlabel(_("Width"), (0, 0))
+        w(build_dimensions[0], 0, 2000)
+        addwidget(0, 1)
+        addlabel(_("Depth"), (0, 2))
+        w(build_dimensions[1], 0, 2000)
+        addwidget(0, 3)
+        addlabel(_("Height"), (0, 4))
+        w(build_dimensions[2], 0, 2000)
+        addwidget(0, 5)
+        addlabel(_("X offset"), (1, 0))
+        w(build_dimensions[3], -2000, 2000)
+        addwidget(1, 1)
+        addlabel(_("Y offset"), (1, 2))
+        w(build_dimensions[4], -2000, 2000)
+        addwidget(1, 3)
+        addlabel(_("Z offset"), (1, 4))
+        w(build_dimensions[5], -2000, 2000)
+        addwidget(1, 5)
+        addlabel(_("X home pos."), (2, 0))
+        w(build_dimensions[6], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 1))
+        addlabel(_("Y home pos."), (2, 2))
+        w(build_dimensions[7], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 3))
+        addlabel(_("Z home pos."), (2, 4))
+        w(build_dimensions[8], -2000, 2000)
+        self.widget.Add(self.widgets[-1], pos = (2, 5))
+        return self.widget
+
+    def update(self):
+        values = [float(w.GetValue()) for w in self.widgets]
+        self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
+
 class Settings(object):
     #def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
     #def _temperature_validate(self, v):
@@ -246,6 +306,7 @@ class Settings(object):
         self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
+        self._add(StringSetting("error_command", "", _("Error command"), _("Executable to run when an error occurs"), "External"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))
@@ -304,9 +365,15 @@ class Settings(object):
         if t == bool and value == "False": setattr(self, key, False)
         else: setattr(self, key, t(value))
         try:
-            getattr(self, "_%s_cb" % key)(key, value)
-        except AttributeError:
-            pass
+            cb = None
+            try:
+                cb = getattr(self, "_%s_cb" % key)
+            except AttributeError:
+                pass
+            if cb is not None: cb(key, value)
+        except:
+            logging.warning((_("Failed to run callback after setting \"%s\":") % key) +
+                            "\n" + traceback.format_exc())
         return value
 
     def _tabcomplete(self, key):
@@ -358,11 +425,16 @@ class pronsole(cmd.Cmd):
             self.completekey = None
         self.status = Status()
         self.dynamic_temp = False
+        self.compute_eta = None
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
+        self.p.startcb = self.startcb
+        self.p.endcb = self.endcb
+        self.p.layerchangecb = self.layer_change_cb
         self.recvlisteners = []
         self.in_macro = False
         self.p.onlinecb = self.online
+        self.p.errorcb = self.logError
         self.fgcode = None
         self.listing = 0
         self.sdfiles = []
@@ -377,12 +449,16 @@ class pronsole(cmd.Cmd):
         self.processing_rc = False
         self.processing_args = False
         self.settings = Settings()
+        self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"), self.update_build_dimensions)
         self.settings._port_list = self.scanserial
         self.settings._temperature_abs_cb = self.set_temp_preset
         self.settings._temperature_pla_cb = self.set_temp_preset
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
+        self.update_build_dimensions(None, self.settings.build_dimensions)
         self.monitoring = 0
+        self.starttime = 0
+        self.extra_print_time = 0
         self.silent = False
         self.commandprefixes = 'MGT$'
         self.promptstrs = {"offline": "%(bold)suninitialized>%(normal)s ",
@@ -402,7 +478,14 @@ class pronsole(cmd.Cmd):
         print u"".join(unicode(i) for i in msg)
 
     def logError(self, *msg):
-        print u"".join(unicode(i) for i in msg)
+        msg = u"".join(unicode(i) for i in msg)
+        logging.error(msg)
+        if not self.settings.error_command:
+            return
+        run_command(self.settings.error_command,
+                    {"$m": msg},
+                    stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
+                    blocking = False)
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
@@ -558,6 +641,7 @@ class pronsole(cmd.Cmd):
         if macro_def.strip() == "":
             self.logError("Empty macro - cancelled")
             return
+        macro = None
         pycode = "def macro(self,*arg):\n"
         if "\n" not in macro_def.strip():
             pycode += self.compile_macro_line("  " + macro_def.strip())
@@ -640,7 +724,7 @@ class pronsole(cmd.Cmd):
             if not self.processing_rc and not self.processing_args:
                 self.save_in_rc("set " + var, "set %s %s" % (var, value))
         except AttributeError:
-            self.logError("Unknown variable '%s'" % var)
+            logging.warning("Unknown variable '%s'" % var)
         except ValueError, ve:
             self.logError("Bad value for variable '%s', expecting %s (%s)" % (var, repr(t)[1:-1], ve.args[0]))
 
@@ -654,7 +738,7 @@ class pronsole(cmd.Cmd):
             try:
                 self.log("%s = %s" % (args[0], getattr(self.settings, args[0])))
             except AttributeError:
-                self.logError("Unknown variable '%s'" % args[0])
+                logging.warning("Unknown variable '%s'" % args[0])
             return
         self.set(args[0], args[1])
 
@@ -820,9 +904,15 @@ class pronsole(cmd.Cmd):
         if not os.path.exists(filename):
             self.logError("File not found!")
             return
-        self.fgcode = gcoder.GCode(open(filename, "rU"))
+        self.load_gcode(filename)
+        self.log(_("Loaded %s, %d lines.") % (filename, len(self.fgcode)))
+        self.log(_("Estimated duration: %s") % self.fgcode.estimate_duration())
+
+    def load_gcode(self, filename):
+        self.fgcode = gcoder.GCode(open(filename, "rU"),
+                                   get_home_pos(self.build_dimensions_list))
+        self.fgcode.estimate_duration()
         self.filename = filename
-        self.log("Loaded %s, %d lines." % (filename, len(self.fgcode)))
 
     def complete_load(self, text, line, begidx, endidx):
         s = line.split()
@@ -1047,6 +1137,48 @@ class pronsole(cmd.Cmd):
         for i in self.recvlisteners:
             i(l)
 
+    def startcb(self, resuming = False):
+        self.starttime = time.time()
+        if resuming:
+            print _("Print resumed at: %s") % format_time(self.starttime)
+        else:
+            print _("Print started at: %s") % format_time(self.starttime)
+            self.compute_eta = RemainingTimeEstimator(self.fgcode)
+
+    def endcb(self):
+        if self.p.queueindex == 0:
+            print_duration = int(time.time() - self.starttime + self.extra_print_time)
+            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
+                                                                             "duration": format_duration(print_duration)}
+
+            self.p.runSmallScript(self.endScript)
+
+            if not self.settings.final_command:
+                return
+            run_command(self.settings.final_command,
+                        {"$s": str(self.filename),
+                         "$t": format_duration(print_duration)},
+                        stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
+                        blocking = False)
+
+    def layer_change_cb(self, newlayer):
+        if self.compute_eta:
+            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+            self.compute_eta.update_layer(newlayer, secondselapsed)
+
+    def do_eta(self, l):
+        if not self.p.printing:
+            self.logError(_("Printer is not currently printing. No ETA available."))
+        else:
+            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+            secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
+            eta = _("Est: %s of %s remaining") % (format_duration(secondsremain),
+                                                  format_duration(secondsestimate))
+            self.log(eta.strip())
+
+    def help_eta(self):
+        self.log(_("Displays estimated remaining print time."))
+
     def help_shell(self):
         self.log("Executes a python command. Example:")
         self.log("! os.listdir('.')")
@@ -1174,9 +1306,6 @@ class pronsole(cmd.Cmd):
 
     def help_tool(self):
         self.log(_("Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."))
-
-    def do_raw(self, r):
-        self.p.send_now(r.upper())
 
     def do_move(self, l):
         if(len(l.split()) < 2):
@@ -1348,7 +1477,7 @@ class pronsole(cmd.Cmd):
         try:
             while True:
                 self.p.send_now("M105")
-                if(self.sdprinting):
+                if self.sdprinting:
                     self.p.send_now("M27")
                 time.sleep(interval)
                 #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
@@ -1390,14 +1519,18 @@ class pronsole(cmd.Cmd):
                 return
         try:
             if settings:
-                param = self.expandcommand(self.settings.sliceoptscommand).replace("\\", "\\\\").encode()
-                self.log(_("Entering slicer settings: %s") % param)
-                subprocess.call(shlex.split(param))
+                command = self.settings.sliceoptscommand
+                self.log(_("Entering slicer settings: %s") % command)
+                run_command(command, blocking = True)
             else:
-                param = self.expandcommand(self.settings.slicecommand).encode()
-                self.log(_("Slicing: ") % param)
-                params = [i.replace("$s", l[0]).replace("$o", l[0].replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
-                subprocess.call(params)
+                command = self.settings.slicecommand
+                self.log(_("Slicing: ") % command)
+                stl_name = l[0]
+                gcode_name = stl_name.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")
+                run_command(command,
+                            {"$s": stl_name,
+                             "$o": gcode_name},
+                            blocking = True)
                 self.log(_("Loading sliced file."))
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
         except Exception, e:
@@ -1496,6 +1629,10 @@ class pronsole(cmd.Cmd):
         args = parser.parse_args(args = args)
         self.process_cmdline_arguments(args)
 
+    def update_build_dimensions(self, param, value):
+        self.build_dimensions_list = parse_build_dimensions(value)
+        self.p.analyzer.home_pos = get_home_pos(self.build_dimensions_list)
+
     # We replace this function, defined in cmd.py .
     # It's default behavior with reagrds to Ctr-C
     # and Ctr-D doesn't make much sense...
@@ -1554,4 +1691,3 @@ class pronsole(cmd.Cmd):
                     readline.set_completer(self.old_completer)
                 except ImportError:
                     pass
-

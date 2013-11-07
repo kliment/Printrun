@@ -59,7 +59,6 @@ class Line(object):
     def __getattr__(self, name):
         return None
 
-
 class FastGCode(object):
     def __init__(self, data):
         self.lines = [Line(l2) for l2 in (l.strip() for l in data) if l2]
@@ -287,7 +286,7 @@ class Prontserve(pronsole.pronsole, EventEmitter):
     if l!="ok" and not l.startswith("ok T") and not l.startswith("T:"):
       self.async(self._receive_printer_error, l)
 
-  def sendcb(self, l):
+  def sendcb(self, l, gl):
     # Monitor the sent commands for new extruder target temperatures
     if ("M109" in l) or ("M104" in l) or ("M140" in l) or ("M190" in l):
       temp = float(re.search('S([0-9]+)', l).group(1))
