@@ -77,6 +77,54 @@ class GcodePlater(Plater):
     # Initial implementation should just print the objects sequentially,
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
+        return self.export_combined(name)
+        return self.export_sequential(name)
+
+    def export_combined(self, name):
+        models = self.models.values()
+        last_real_position = None
+        # Sort models by Z max to print smaller objects first
+        models.sort(key = lambda x: x.dims[-1])
+        alllayers = []
+        for (model_i, model) in enumerate(models):
+            alllayers += [(layer.z, model_i, layer_i)
+                          for (layer_i, layer) in enumerate(model.gcode.all_layers) if layer]
+        alllayers.sort()
+        with open(name, "w") as f:
+            for (layer_z, model_i, layer_i) in alllayers:
+                model = models[model_i]
+                layer = model.gcode.all_layers[layer_i]
+                r = model.rot  # no rotation support for now
+                if r != 0 and layer_i == 0:
+                    print _("Warning: no rotation support for now, "
+                            "object won't be correctly rotated")
+                o = model.offsets
+                co = model.centeroffset
+                offset_pos = last_real_position if last_real_position is not None else (0, 0, 0)
+                f.write("; %f %f %f\n" % offset_pos)
+                trans = (- (o[0] + co[0]),
+                         - (o[1] + co[1]),
+                         - (o[2] + co[2]))
+                trans_wpos = (offset_pos[0] + trans[0],
+                              offset_pos[1] + trans[1],
+                              offset_pos[2] + trans[2])
+                f.write("; GCodePlater: Model %d Layer %d at Z = %s\n" % (model_i, layer_i, layer_z))
+                f.write("G90\n")
+                f.write("G92 X%.5f Y%.5f Z%.5f\n" % trans_wpos)
+                for l in layer:
+                    if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
+                        f.write(l.raw + "\n")
+                # Find the current real position
+                for i in xrange(len(layer) - 1, -1, -1):
+                    gline = layer[i]
+                    if gline.is_move and not extrusion_only(gline):
+                        last_real_position = (- trans[0] + gline.current_x,
+                                              - trans[1] + gline.current_y,
+                                              - trans[2] + gline.current_z)
+                        break
+        print _("Exported merged G-Codes to %s") % name
+
+    def export_sequential(self, name):
         models = self.models.values()
         last_real_position = None
         # Sort models by Z max to print smaller objects first
