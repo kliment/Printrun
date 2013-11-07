@@ -98,6 +98,7 @@ class GcodePlater(Plater):
                           for (layer_i, layer) in enumerate(model.gcode.all_layers) if layer]
         alllayers.sort()
         laste = [0] * len(models)
+        lasttool = [0] * len(models)
         lastrelative = [False] * len(models)
         with open(name, "w") as f:
             analyzer = gcoder.GCode(None, get_home_pos(self.build_dimensions))
@@ -124,6 +125,8 @@ class GcodePlater(Plater):
                     analyzer.write("G91\n")
                 else:
                     analyzer.write("G90\n")
+                if analyzer.current_tool != lasttool[model_i]:
+                    analyzer.write("T%d\n" % lasttool[model_i])
                 analyzer.write("G92 X%.5f Y%.5f Z%.5f\n" % trans_wpos)
                 analyzer.write("G92 E%.5f\n" % laste[model_i])
                 for l in layer:
@@ -133,6 +136,7 @@ class GcodePlater(Plater):
                 last_real_position = analyzer.current_pos
                 laste[model_i] = analyzer.current_e
                 lastrelative[model_i] = analyzer.relative
+                lasttool[model_i] = analyzer.current_tool
         print _("Exported merged G-Codes to %s") % name
 
     def export_sequential(self, name):
