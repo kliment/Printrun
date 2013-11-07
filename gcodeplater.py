@@ -17,7 +17,7 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-from printrun.printrun_utils import install_locale
+from printrun.printrun_utils import install_locale, get_home_pos
 install_locale('pronterface')
 
 import wx
@@ -45,7 +45,8 @@ class GcodePlater(Plater):
     objects = property(get_objects)
 
     def load_file(self, filename):
-        gcode = gcoder.GCode(open(filename))
+        gcode = gcoder.GCode(open(filename, "rU"),
+                             get_home_pos(self.build_dimensions))
         model = actors.GcodeModel()
         model.load_data(gcode)
         obj = gcview.GCObject(model)
