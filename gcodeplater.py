@@ -99,6 +99,7 @@ class GcodePlater(Plater):
                 f.write("; GCodePlater: Model %d\n" % model_i)
                 f.write("G90\n")
                 f.write("G92 X%.5f Y%.5f Z%.5f E0\n" % trans_wpos)
+                f.write("G1 X%.5f Y%.5f" % (-co[0], -co[1]))
                 for l in model.gcode:
                     if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
                         f.write(l.raw + "\n")
