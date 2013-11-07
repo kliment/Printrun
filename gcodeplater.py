@@ -71,16 +71,16 @@ class GcodePlater(Plater):
         wx.CallAfter(self.Refresh)
 
     # What's hard in there ?
-    # 1) finding the order in which the objects are printed
-    # 2) handling layers correctly
-    # 3) handling E correctly
-    # 4) handling position shifts: should we either reset absolute 0 using G92
-    # or should we rewrite all positions ?
-    # 5) handling the start & end gcode properly ?
-    # 6) handling of current tool
-    # 7) handling of Z moves for sequential printing (don't lower Z before
-    #    reaching the next object print area)
-    # 8) handling of absolute/relative status
+    # 1) [x] finding the order in which the objects are printed
+    # 2) [x] handling layers correctly
+    # 3) [x] handling E correctly
+    # 4) [x] handling position shifts: should we either reset absolute 0 using
+    #        G92 or should we rewrite all positions ? => we use G92s
+    # 5) [ ] handling the start & end gcode properly ?
+    # 6) [x] handling of current tool
+    # 7) [x] handling of Z moves for sequential printing (don't lower Z before
+    #        reaching the next object print area)
+    # 8) [x] handling of absolute/relative status
     # Initial implementation should just print the objects sequentially,
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
