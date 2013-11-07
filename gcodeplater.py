@@ -80,6 +80,7 @@ class GcodePlater(Plater):
     # 6) handling of current tool
     # 7) handling of Z moves for sequential printing (don't lower Z before
     #    reaching the next object print area)
+    # 8) handling of absolute/relative status
     # Initial implementation should just print the objects sequentially,
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
@@ -97,6 +98,7 @@ class GcodePlater(Plater):
                           for (layer_i, layer) in enumerate(model.gcode.all_layers) if layer]
         alllayers.sort()
         laste = [0] * len(models)
+        lastrelative = [False] * len(models)
         with open(name, "w") as f:
             analyzer = gcoder.GCode(None, get_home_pos(self.build_dimensions))
             analyzer.write = types.MethodType(lambda self, line: gcoder_write(self, f, line), analyzer)
@@ -118,7 +120,10 @@ class GcodePlater(Plater):
                               offset_pos[1] + trans[1],
                               offset_pos[2] + trans[2])
                 analyzer.write("; GCodePlater: Model %d Layer %d at Z = %s\n" % (model_i, layer_i, layer_z))
-                analyzer.write("G90\n")
+                if lastrelative[model_i]:
+                    analyzer.write("G91\n")
+                else:
+                    analyzer.write("G90\n")
                 analyzer.write("G92 X%.5f Y%.5f Z%.5f\n" % trans_wpos)
                 analyzer.write("G92 E%.5f\n" % laste[model_i])
                 for l in layer:
@@ -127,6 +132,7 @@ class GcodePlater(Plater):
                 # Find the current real position & E
                 last_real_position = analyzer.current_pos
                 laste[model_i] = analyzer.current_e
+                lastrelative[model_i] = analyzer.relative
         print _("Exported merged G-Codes to %s") % name
 
     def export_sequential(self, name):
