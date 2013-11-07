@@ -96,6 +96,7 @@ class GcodePlater(Plater):
                 trans_wpos = (offset_pos[0] + trans[0],
                               offset_pos[1] + trans[1],
                               offset_pos[2] + trans[2])
+                f.write("; GCodePlater: Model %d\n" % model_i)
                 f.write("G90\n")
                 f.write("G92 X%.5f Y%.5f Z%.5f E0\n" % trans_wpos)
                 for l in model.gcode:
