@@ -90,11 +90,14 @@ class GcodePlater(Plater):
                 o = model.offsets
                 co = model.centeroffset
                 offset_pos = last_real_position if last_real_position is not None else [0, 0, 0]
-                trans = (offset_pos[0] - (o[0] + co[0]),
-                         offset_pos[1] - (o[1] + co[1]),
-                         offset_pos[2] - (o[2] + co[2]))
+                trans = (- (o[0] + co[0]),
+                         - (o[1] + co[1]),
+                         - (o[2] + co[2]))
+                trans_wpos = (offset_pos[0] + trans[0],
+                              offset_pos[1] + trans[1],
+                              offset_pos[2] + trans[2])
                 f.write("G90\n")
-                f.write("G92 X%.5f Y%.5f Z%.5f E0\n" % trans)
+                f.write("G92 X%.5f Y%.5f Z%.5f E0\n" % trans_wpos)
                 for l in model.gcode:
                     if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
                         f.write(l.raw + "\n")
