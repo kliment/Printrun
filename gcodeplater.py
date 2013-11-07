@@ -77,12 +77,12 @@ class GcodePlater(Plater):
     # Initial implementation should just print the objects sequentially,
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
+        models = self.models.values()
+        last_real_position = None
+        # Sort models by Z max to print smaller objects first
+        models.sort(key = lambda x: x.dims[-1])
         with open(name, "w") as f:
-            models = self.models.values()
-            last_real_position = None
-            # Sort models by Z max to print smaller objects first
-            models.sort(key = lambda x: x.dims[-1])
-            for model in models:
+            for model_i, model in enumerate(models):
                 r = model.rot  # no rotation support for now
                 if r != 0:
                     print _("Warning: no rotation support for now, "
