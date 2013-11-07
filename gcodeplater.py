@@ -67,6 +67,9 @@ class GcodePlater(Plater):
     # 4) handling position shifts: should we either reset absolute 0 using G92
     # or should we rewrite all positions ?
     # 5) handling the start & end gcode properly ?
+    # 6) handling of current tool
+    # 7) handling of Z moves for sequential printing (don't lower Z before
+    #    reaching the next object print area)
     # Initial implementation should just print the objects sequentially,
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
