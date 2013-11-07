@@ -122,14 +122,8 @@ class GcodePlater(Plater):
                 for l in layer:
                     if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
                         analyzer.write(l.raw + "\n")
-                # Find the current real position
-                for i in xrange(len(layer) - 1, -1, -1):
-                    gline = layer[i]
-                    if gline.is_move and not extrusion_only(gline):
-                        last_real_position = (- trans[0] + gline.current_x,
-                                              - trans[1] + gline.current_y,
-                                              - trans[2] + gline.current_z)
-                        break
+                # Find the current real position & E
+                last_real_position = analyzer.current_pos
         print _("Exported merged G-Codes to %s") % name
 
     def export_sequential(self, name):
