@@ -120,7 +120,7 @@ class GcodePlater(Plater):
                 analyzer.write("; GCodePlater: Model %d Layer %d at Z = %s\n" % (model_i, layer_i, layer_z))
                 analyzer.write("G90\n")
                 analyzer.write("G92 X%.5f Y%.5f Z%.5f\n" % trans_wpos)
-                analyzer.write("G92 E%.5f" % laste[model_i])
+                analyzer.write("G92 E%.5f\n" % laste[model_i])
                 for l in layer:
                     if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
                         analyzer.write(l.raw + "\n")
