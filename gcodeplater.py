@@ -22,6 +22,7 @@ install_locale('pronterface')
 
 import wx
 import sys
+import types
 
 from printrun import gcview
 from printrun import gcoder
@@ -31,6 +32,11 @@ from printrun.gl.libtatlin import actors
 def extrusion_only(gline):
     return gline.e is not None \
         and (gline.x, gline.y, gline.z) == (None, None, None)
+
+# Custom method for gcoder.GCode to analyze & output gcode in a single call
+def gcoder_write(self, f, line, store = False):
+    f.write(line)
+    self.append(line, store = store)
 
 class GcodePlater(Plater):
 
@@ -91,6 +97,8 @@ class GcodePlater(Plater):
                           for (layer_i, layer) in enumerate(model.gcode.all_layers) if layer]
         alllayers.sort()
         with open(name, "w") as f:
+            analyzer = gcoder.GCode(None, get_home_pos(self.build_dimensions))
+            analyzer.write = types.MethodType(lambda self, line: gcoder_write(self, f, line), analyzer)
             for (layer_z, model_i, layer_i) in alllayers:
                 model = models[model_i]
                 layer = model.gcode.all_layers[layer_i]
@@ -101,19 +109,19 @@ class GcodePlater(Plater):
                 o = model.offsets
                 co = model.centeroffset
                 offset_pos = last_real_position if last_real_position is not None else (0, 0, 0)
-                f.write("; %f %f %f\n" % offset_pos)
+                analyzer.write("; %f %f %f\n" % offset_pos)
                 trans = (- (o[0] + co[0]),
                          - (o[1] + co[1]),
                          - (o[2] + co[2]))
                 trans_wpos = (offset_pos[0] + trans[0],
                               offset_pos[1] + trans[1],
                               offset_pos[2] + trans[2])
-                f.write("; GCodePlater: Model %d Layer %d at Z = %s\n" % (model_i, layer_i, layer_z))
-                f.write("G90\n")
-                f.write("G92 X%.5f Y%.5f Z%.5f\n" % trans_wpos)
+                analyzer.write("; GCodePlater: Model %d Layer %d at Z = %s\n" % (model_i, layer_i, layer_z))
+                analyzer.write("G90\n")
+                analyzer.write("G92 X%.5f Y%.5f Z%.5f\n" % trans_wpos)
                 for l in layer:
                     if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
-                        f.write(l.raw + "\n")
+                        analyzer.write(l.raw + "\n")
                 # Find the current real position
                 for i in xrange(len(layer) - 1, -1, -1):
                     gline = layer[i]
