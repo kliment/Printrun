@@ -89,7 +89,7 @@ class GcodePlater(Plater):
                             "object won't be correctly rotated")
                 o = model.offsets
                 co = model.centeroffset
-                offset_pos = last_real_position if last_real_position is not None else [0, 0, 0]
+                offset_pos = last_real_position if last_real_position is not None else (0, 0, 0)
                 trans = (- (o[0] + co[0]),
                          - (o[1] + co[1]),
                          - (o[2] + co[2]))
