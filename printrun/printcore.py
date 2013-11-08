@@ -192,6 +192,11 @@ class printcore():
                                   "\n" + _("Serial error: %s") % e)
                     self.printer = None
                     return
+                except IOError as e:
+                    self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
+                                  "\n" + _("IO error: %s") % e)
+                    self.printer = None
+                    return
             self.stop_read_thread = False
             self.read_thread = Thread(target = self._listen)
             self.read_thread.start()
