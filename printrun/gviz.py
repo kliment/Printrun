@@ -101,8 +101,7 @@ class GvizWindow(GvizBaseFrame):
 
     def process_slider(self, event):
         self.p.layerindex = self.layerslider.GetValue()
-        z = self.p.layers[self.p.layerindex]
-        z = 0. if z is None else z
+        z = self.p.get_currentz()
         self.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
         self.p.dirty = 1
         wx.CallAfter(self.p.Refresh)
@@ -229,10 +228,16 @@ class Gviz(wx.Panel):
         self.dirty = 1
         wx.CallAfter(self.Refresh)
 
+    def get_currentz(self):
+        z = self.layers[self.layerindex]
+        z = 0. if z is None else z
+        return z
+
     def layerup(self):
         if self.layerindex + 1 < len(self.layers):
             self.layerindex += 1
-            self.parent.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, self.layers[self.layerindex]), 0)
+            z = self.get_currentz()
+            self.parent.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, z), 0)
             self.dirty = 1
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
@@ -240,7 +245,8 @@ class Gviz(wx.Panel):
     def layerdown(self):
         if self.layerindex > 0:
             self.layerindex -= 1
-            self.parent.SetStatusText(_("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, self.layers[self.layerindex]), 0)
+            z = self.get_currentz()
+            self.parent.SetStatusText(_("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, z), 0)
             self.dirty = 1
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
