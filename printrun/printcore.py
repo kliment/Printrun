@@ -581,7 +581,11 @@ class printcore():
                 except: pass
             try:
                 self.printer.write(str(command + "\n"))
-                if self.printer_tcp: self.printer.flush()
+                if self.printer_tcp:
+                    try:
+                        self.printer.flush()
+                    except socket.timeout:
+                        pass
                 self.writefailures = 0
             except socket.error as e:
                 if e.errno is None:
