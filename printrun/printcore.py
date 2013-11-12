@@ -589,7 +589,7 @@ class printcore():
                 self.writefailures = 0
             except socket.error as e:
                 if e.errno is None:
-                    self.logError("Can't write to printer (disconnected ?):" +
+                    self.logError(_(u"Can't write to printer (disconnected ?):") +
                                   "\n" + traceback.format_exc())
                 else:
                     self.logError(_(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
