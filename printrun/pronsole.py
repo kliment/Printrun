@@ -570,10 +570,10 @@ class pronsole(cmd.Cmd):
         sys.stdout.write(self.promptf())
         sys.stdout.flush()
 
-    def help_help(self, l):
+    def help_help(self, l = ""):
         self.do_help("")
 
-    def do_gcodes(self, l):
+    def do_gcodes(self, l = ""):
         self.help_gcodes()
 
     def help_gcodes(self):
