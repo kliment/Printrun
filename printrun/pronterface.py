@@ -572,7 +572,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.about,
                   m.Append(-1, _("&About Printrun"), _("Show about dialog")))
-        self.menustrip.Append(m, _("&?"))
+        self.menustrip.Append(m, _("&Help"))
 
     def about(self, event):
 
