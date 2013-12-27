@@ -8,5 +8,5 @@ Exec=/usr/bin/pronterface.py %f
 Path=/usr/share/pronterface/
 StartupNotify=true
 Terminal=false
-Categories=GNOME;GTK;Utility;Graphics;
+Categories=GNOME;GTK;Utility;Graphics;3DGraphics;
 MimeType=text/plain;application/octet-stream;application/sla;

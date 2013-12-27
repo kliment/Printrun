@@ -7,4 +7,4 @@ Icon=/usr/share/pixmaps/pronsole.ico
 Exec=/usr/bin/pronsole.py
 StartupNotify=true
 Terminal=true
-Categories=Utility;Graphics;ConsoleOnly;
+Categories=Utility;Graphics;3DGraphics;ConsoleOnly;
