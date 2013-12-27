@@ -30,7 +30,7 @@ You can run Printrun directly from source, as there are no packages available ye
 1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
 2. `pip install -r requirements_prontserve.txt`
 
-### Fedora 17 and newer
+### Fedora
 
 You can install Printrun from official packages. Install the whole package using
 
@@ -42,9 +42,11 @@ Or get only apps you need by
 
 Adding `--enablerepo updates-testing` option to `yum` might give you newer packages (but also not very tested).
 
-You can also run Printrun directly from source, if the packages are too old for you anyway, or you have Fedora 15 or 16. Fetch and install the dependencies using
+You can also run Printrun directly from source, if the packages are too old for you. Fetch and install the dependencies using
 
-1. `sudo yum install pyserial wxpython pyglet`
+1. `sudo yum install pyserial wxPython python-pyglet python-cairosvg`
+
+Optional: `sudo yum install skeinforge simarrange`
 
 To enable Prontserve you need to also install something along the following 
 lines. Unforunately this has yet to be tested on a real Fedora system:
