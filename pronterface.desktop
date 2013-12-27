@@ -1,10 +1,11 @@
 [Desktop Entry]
 Type=Application
 Name=Pronterface
-Comment=Pronterface
+GenericName=Printer Interface
+Comment=Controls your 3D printer
 Icon=/usr/share/pixmaps/P-face.ico
 Exec=/usr/bin/pronterface.py
 Path=/usr/share/pronterface/
 StartupNotify=true
 Terminal=false
-Categories=GNOME;GTK;Utility;
+Categories=GNOME;GTK;Utility;Graphics;
