@@ -380,6 +380,7 @@ class GCode(object):
                         if self.est_layer_height is None:
                             zs = sorted([l.z for l in all_layers if l.z is not None])
                             heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
+                            heights = [height for height in heights if height]
                             if len(heights) >= 2: self.est_layer_height = heights[1]
                             elif heights: self.est_layer_height = heights[0]
                             else: self.est_layer_height = 0.1
