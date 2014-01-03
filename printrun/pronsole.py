@@ -1390,6 +1390,9 @@ class pronsole(cmd.Cmd):
         if override is not None:
             length = override
             feed = overridefeed
+        self.do_extrude_final(length, feed)
+
+    def do_extrude_final(self, length, feed):
         if length > 0:
             self.log(_("Extruding %fmm of filament.") % (length,))
         elif length < 0:

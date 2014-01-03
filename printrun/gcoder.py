@@ -366,7 +366,7 @@ class GCode(object):
                 cur_z = line.z
             elif line.is_move:
                 if line.z is not None:
-                    if line.relative:
+                    if line.relative and cur_z is not None:
                         cur_z += line.z
                     else:
                         cur_z = line.z

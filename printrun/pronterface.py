@@ -176,8 +176,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.cpbuttons = [
             SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), None, 0, _("Switch all motors off")),
             SpecialButton(_("Check temp"), ("M105"), (225, 200, 200), (2, 5), (1, 1), _("Check current hotend temperature")),
-            SpecialButton(_("Extrude"), ("extrude"), (225, 200, 200), (4, 0), (1, 2), _("Advance extruder by set length")),
-            SpecialButton(_("Reverse"), ("reverse"), (225, 200, 200), (4, 2), (1, 3), _("Reverse extruder by set length")),
+            SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), (4, 0), (1, 2), _("Advance extruder by set length")),
+            SpecialButton(_("Reverse"), ("pront_reverse"), (225, 200, 200), (4, 2), (1, 3), _("Reverse extruder by set length")),
         ]
         self.custombuttons = []
         self.btndict = {}
@@ -365,21 +365,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if gline.is_move and hasattr(self.gviz, "set_current_gline"):
             wx.CallAfter(self.gviz.set_current_gline, gline)
 
-    def do_extrude(self, l = ""):
-        try:
-            if not l.__class__ in (str, unicode) or not len(l):
-                l = str(self.edist.GetValue())
-            pronsole.pronsole.do_extrude(self, l)
-        except:
-            raise
+    def do_pront_extrude(self, l = ""):
+        feed = self.settings.e_feedrate
+        self.do_extrude_final(self.edit.GetValue(), feed)
 
-    def do_reverse(self, l = ""):
-        try:
-            if not l.__class__ in (str, unicode) or not len(l):
-                l = str(- float(self.edist.GetValue()))
-            pronsole.pronsole.do_extrude(self, l)
-        except:
-            pass
+    def do_pront_reverse(self, l = ""):
+        feed = self.settings.e_feedrate
+        self.do_extrude_final(- self.edit.GetValue(), feed)
 
     def setbedgui(self, f):
         self.bsetpoint = f

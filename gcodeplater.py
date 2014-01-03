@@ -179,5 +179,11 @@ class GcodePlater(Plater):
 if __name__ == '__main__':
     app = wx.App(False)
     main = GcodePlater(sys.argv[1:])
+    for fn in main.filenames:
+        main.load_file(fn)
+    main.filenames = None
+    main.autoplate()
+    main.export_to("gcodeplate___test.gcode")
+    raise SystemExit
     main.Show()
     app.MainLoop()
