@@ -894,8 +894,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.centersizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
                 self.centersizer.Add(b, flag = wx.EXPAND)
-        self.panel.Fit()
-        self.Fit()
+        self.centerpanel.Layout()
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
