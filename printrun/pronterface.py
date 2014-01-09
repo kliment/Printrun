@@ -135,6 +135,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
         self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
+        self.settings._add(HiddenSetting("last_window_width", size[0]))
+        self.settings._add(HiddenSetting("last_window_height", size[1]))
+        self.settings._add(HiddenSetting("last_window_maximized", False))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", u""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -152,9 +155,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.endScript = "end.gcode"
 
         self.filename = filename
-        os.putenv("UBUNTU_MENUPROXY", "0")
-        MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
-        self.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
 
         self.statuscheck = False
         self.status_thread = None
@@ -184,6 +184,19 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filehistory = None
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
+
+        # FIXME: We need to initialize the main window after loading the
+        # configs to restore the size, but this might have some unforeseen
+        # consequences.
+        os.putenv("UBUNTU_MENUPROXY", "0")
+        size = (self.settings.last_window_width, self.settings.last_window_height)
+        MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
+        if self.settings.last_window_maximized:
+            self.Maximize()
+        self.Bind(wx.EVT_SIZE, self.on_resize)
+        self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
+        self.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+
         self.display_graph = self.settings.tempgraph
         self.display_gauges = self.settings.tempgauges
 
@@ -244,6 +257,20 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.do_load(self.filename)
         if self.settings.monitor:
             self.setmonitor(None)
+
+    def on_resize(self, event):
+        maximized = self.IsMaximized()
+        self.set("last_window_maximized", maximized)
+        if not maximized and not self.IsIconized():
+            size = self.GetClientSize()
+            self.set("last_window_width", size[0])
+            self.set("last_window_height", size[1])
+        self.settings.last_window_maximized = self.IsMaximized()
+        event.Skip()
+
+    def on_maximize(self, event):
+        self.set("last_window_maximized", self.IsMaximized())
+        event.Skip()
 
     def add_cmdline_arguments(self, parser):
         pronsole.pronsole.add_cmdline_arguments(self, parser)

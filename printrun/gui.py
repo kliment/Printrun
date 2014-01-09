@@ -569,7 +569,6 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.kill)
 
         self.mainsizer.Layout()
-        self.mainsizer.Fit(self)
         # This prevents resizing below a reasonnable value
         # We sum the lowersizer (left pane / viz / log) min size
         # the toolbar height and the statusbar/menubar sizes
