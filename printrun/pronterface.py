@@ -394,11 +394,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_pront_extrude(self, l = ""):
         feed = self.settings.e_feedrate
-        self.do_extrude_final(self.edit.GetValue(), feed)
+        self.do_extrude_final(self.edist.GetValue(), feed)
 
     def do_pront_reverse(self, l = ""):
         feed = self.settings.e_feedrate
-        self.do_extrude_final(- self.edit.GetValue(), feed)
+        self.do_extrude_final(- self.edist.GetValue(), feed)
 
     def setbedgui(self, f):
         self.bsetpoint = f
