@@ -527,11 +527,13 @@ class MainWindow(wx.Frame):
         lowerpanel = self.newPanel(self.panel)
         upperpanel.SetSizer(self.uppersizer)
         lowerpanel.SetSizer(self.lowersizer)
-        left_pane = LeftPane(self, lowerpanel)
+        leftpanel = self.newPanel(lowerpanel)
+        left_pane = LeftPane(self, leftpanel)
         left_pane.Layout()  # required to get correct rows/cols counts
         left_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer.Add(left_pane, 0)
-        self.lowersizer.Add(left_sizer, 0, wx.EXPAND)
+        leftpanel.SetSizer(left_sizer)
+        self.lowersizer.Add(leftpanel, 0, wx.EXPAND)
         if not compact:  # Use a splitterwindow to group viz and log
             rightpanel = self.newPanel(lowerpanel)
             rightsizer = wx.BoxSizer(wx.VERTICAL)
@@ -545,7 +547,7 @@ class MainWindow(wx.Frame):
             self.splitterwindow.SplitVertically(vizpanel, logpanel, 0)
         else:
             vizpanel = self.newPanel(lowerpanel)
-            logpanel = self.newPanel(lowerpanel)
+            logpanel = self.newPanel(leftpanel)
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
         if wx.VERSION > (2, 9): self.centersizer = wx.WrapSizer(wx.HORIZONTAL)
@@ -560,6 +562,7 @@ class MainWindow(wx.Frame):
             self.lowersizer.Add(rightpanel, 1, wx.EXPAND)
         else:
             left_sizer.Add(logpanel, 1, wx.EXPAND)
+            self.lowersizer.Add(vizpanel, 1, wx.EXPAND)
         self.mainsizer.Add(upperpanel, 0)
         self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
