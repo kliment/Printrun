@@ -541,6 +541,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
         self.Bind(wx.EVT_MENU, self.plate, m.Append(-1, _("Plater"), _(" Compose 3D models into a single plate")))
+        self.Bind(wx.EVT_MENU, self.plate_gcode, m.Append(-1, _("G-Code Plater"), _(" Compose G-Codes into a single plate")))
         self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
         self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
         self.menustrip.Append(m, _("&Tools"))
@@ -788,6 +789,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                          build_dimensions = self.build_dimensions_list,
                          circular_platform = self.settings.circular_bed,
                          simarrange_path = self.settings.simarrange_path).Show()
+
+    def plate_gcode(self, e):
+        from . import gcodeplater as plater
+        print _("G-Code plate function activated")
+        plater.GcodePlater(size = (800, 580), callback = self.platecb,
+                           parent = self,
+                           build_dimensions = self.build_dimensions_list,
+                           circular_platform = self.settings.circular_bed).Show()
 
     def platecb(self, name):
         print _("Plated %s") % name
