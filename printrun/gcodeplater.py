@@ -43,11 +43,12 @@ class GcodePlater(Plater):
     load_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
     save_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
 
-    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
+    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None, circular_platform = False):
         super(GcodePlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions)
         self.set_viewer(viewer)
-        self.platform = actors.Platform(self.build_dimensions)
+        self.platform = actors.Platform(self.build_dimensions,
+                                        circular = circular_platform)
         self.platform_object = gcview.GCObject(self.platform)
 
     def get_objects(self):
