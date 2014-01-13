@@ -57,7 +57,8 @@ class stlview(object):
 
 class StlViewPanel(wxGLPanel):
 
-    def __init__(self, parent, size, id = wx.ID_ANY, build_dimensions = None):
+    def __init__(self, parent, size, id = wx.ID_ANY,
+                 build_dimensions = None, circular = False):
         super(StlViewPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0)
         self.batches = []
         self.rot = 0
@@ -71,7 +72,8 @@ class StlViewPanel(wxGLPanel):
             self.build_dimensions = build_dimensions
         else:
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
-        self.platform = actors.Platform(self.build_dimensions, light = True)
+        self.platform = actors.Platform(self.build_dimensions, light = True,
+                                        circular = circular)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.forceresize)

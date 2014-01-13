@@ -786,6 +786,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         plater.StlPlater(size = (800, 580), callback = self.platecb,
                          parent = self,
                          build_dimensions = self.build_dimensions_list,
+                         circular_platform = self.settings.circular_bed,
                          simarrange_path = self.settings.simarrange_path).Show()
 
     def platecb(self, name):
