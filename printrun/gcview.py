@@ -261,7 +261,7 @@ class GCObject(object):
 
 class GcodeViewMainWrapper(object):
 
-    def __init__(self, parent, build_dimensions, root):
+    def __init__(self, parent, build_dimensions, root, circular):
         self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions)
@@ -270,7 +270,7 @@ class GcodeViewMainWrapper(object):
         self.widget = self.glpanel
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self  # Hack for backwards compatibility with gviz API
-        self.platform = actors.Platform(build_dimensions)
+        self.platform = actors.Platform(build_dimensions, circular = circular)
         self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
 

@@ -318,7 +318,7 @@ class VizPane(wx.BoxSizer):
         if root.settings.mainviz == "3D":
             try:
                 import printrun.gcview
-                root.gviz = printrun.gcview.GcodeViewMainWrapper(parentpanel, root.build_dimensions_list, root = root)
+                root.gviz = printrun.gcview.GcodeViewMainWrapper(parentpanel, root.build_dimensions_list, root = root, circular = root.settings.circular_bed)
                 root.gviz.clickcb = root.showwin
             except:
                 use2dview = True
