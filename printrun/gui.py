@@ -341,7 +341,7 @@ class VizPane(wx.BoxSizer):
                 objects = None
                 if isinstance(root.gviz, printrun.gcview.GcodeViewMainWrapper):
                     objects = root.gviz.objects
-                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list, objects = objects, root = root)
+                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list, objects = objects, root = root, circular = root.settings.circular_bed)
             except:
                 use3dview = False
                 print "3D view mode requested, but we failed to initialize it."
