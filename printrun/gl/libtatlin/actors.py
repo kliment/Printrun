@@ -25,7 +25,7 @@ from ctypes import sizeof
 
 from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
-    GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, \
+    GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
     GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, glRectf, \
     glBegin, glEnd, GL_LINES, glEnable, glDisable, glGetFloatv, \
     GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, GLuint, \
@@ -90,8 +90,9 @@ class Platform(object):
     """
     graduations_major = 10
 
-    def __init__(self, build_dimensions, light = False):
+    def __init__(self, build_dimensions, light = False, circular = False):
         self.light = light
+        self.circular = circular
         self.width = build_dimensions[0]
         self.depth = build_dimensions[1]
         self.height = build_dimensions[2]
@@ -127,16 +128,39 @@ class Platform(object):
 
         # draw the grid
         glBegin(GL_LINES)
-        for i in range(0, int(math.ceil(self.width + 1))):
-            if color(i):
-                glVertex3f(float(i), 0.0, 0.0)
-                glVertex3f(float(i), self.depth, 0.0)
+        if self.circular:  # Draw a circular grid
+            for i in range(0, int(math.ceil(self.width + 1))):
+                angle = math.asin(2 * float(i) / self.width - 1)
+                x = (math.cos(angle) + 1) * self.depth / 2
+                if color(i):
+                    glVertex3f(float(i), self.depth - x, 0.0)
+                    glVertex3f(float(i), x, 0.0)
 
-        for i in range(0, int(math.ceil(self.depth + 1))):
-            if color(i):
-                glVertex3f(0, float(i), 0.0)
-                glVertex3f(self.width, float(i), 0.0)
+            for i in range(0, int(math.ceil(self.depth + 1))):
+                angle = math.acos(2 * float(i) / self.depth - 1)
+                x = (math.sin(angle) + 1) * self.width / 2
+                if color(i):
+                    glVertex3f(self.width - x, float(i), 0.0)
+                    glVertex3f(x, float(i), 0.0)
+        else:  # Draw a rectangular grid
+            for i in range(0, int(math.ceil(self.width + 1))):
+                if color(i):
+                    glVertex3f(float(i), 0.0, 0.0)
+                    glVertex3f(float(i), self.depth, 0.0)
+
+            for i in range(0, int(math.ceil(self.depth + 1))):
+                if color(i):
+                    glVertex3f(0, float(i), 0.0)
+                    glVertex3f(self.width, float(i), 0.0)
         glEnd()
+
+        if self.circular:
+            glBegin(GL_LINE_LOOP)
+            for i in range(0, 360):
+                angle = math.radians(i)
+                glVertex3f((math.cos(angle) + 1) * self.width / 2,
+                           (math.sin(angle) + 1) * self.depth / 2, 0.0)
+            glEnd()
 
         glPopMatrix()
 

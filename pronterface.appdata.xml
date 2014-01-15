@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+ <id type="desktop">pronterface.desktop</id>
+ <licence>CC0</licence>
+ <summary>3D printer host software</summary>
+ <description>
+  <p>Pronterface is a graphical user interface for desktop 3D printers, such as RepRap. It lets you view Gcode, connect to printer and send the Gcode to it. It's feature rich yet minimalist application.</p>
+  <p>It allows you not only to send Gcode form file, but also control the printer manually or send Gcode commands directly trough input field.</p>
+  <p>Is integrates slicing tool, so if you load an STL 3D model to it, it will slice and load it automatically.</p>
+ </description>
+ <screenshots>
+  <screenshot type="default" width="1061" height="596">https://raw.github.com/kliment/Printrun/master/screenshots/pronterface.png</screenshot>
+  <screenshot width="566" height="626">https://raw.github.com/kliment/Printrun/master/screenshots/pronterface2.png</screenshot>
+ </screenshots>
+ <url type="homepage">https://github.com/kliment/Printrun</url>
+</application>

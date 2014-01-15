@@ -318,7 +318,7 @@ class VizPane(wx.BoxSizer):
         if root.settings.mainviz == "3D":
             try:
                 import printrun.gcview
-                root.gviz = printrun.gcview.GcodeViewMainWrapper(parentpanel, root.build_dimensions_list, root = root)
+                root.gviz = printrun.gcview.GcodeViewMainWrapper(parentpanel, root.build_dimensions_list, root = root, circular = root.settings.circular_bed)
                 root.gviz.clickcb = root.showwin
             except:
                 use2dview = True
@@ -341,7 +341,7 @@ class VizPane(wx.BoxSizer):
                 objects = None
                 if isinstance(root.gviz, printrun.gcview.GcodeViewMainWrapper):
                     objects = root.gviz.objects
-                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list, objects = objects, root = root)
+                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (600, 600), build_dimensions = root.build_dimensions_list, objects = objects, root = root, circular = root.settings.circular_bed)
             except:
                 use3dview = False
                 print "3D view mode requested, but we failed to initialize it."
@@ -527,11 +527,13 @@ class MainWindow(wx.Frame):
         lowerpanel = self.newPanel(self.panel)
         upperpanel.SetSizer(self.uppersizer)
         lowerpanel.SetSizer(self.lowersizer)
-        left_pane = LeftPane(self, lowerpanel)
+        leftpanel = self.newPanel(lowerpanel)
+        left_pane = LeftPane(self, leftpanel)
         left_pane.Layout()  # required to get correct rows/cols counts
         left_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer.Add(left_pane, 0)
-        self.lowersizer.Add(left_sizer, 0, wx.EXPAND)
+        leftpanel.SetSizer(left_sizer)
+        self.lowersizer.Add(leftpanel, 0, wx.EXPAND)
         if not compact:  # Use a splitterwindow to group viz and log
             rightpanel = self.newPanel(lowerpanel)
             rightsizer = wx.BoxSizer(wx.VERTICAL)
@@ -545,7 +547,7 @@ class MainWindow(wx.Frame):
             self.splitterwindow.SplitVertically(vizpanel, logpanel, 0)
         else:
             vizpanel = self.newPanel(lowerpanel)
-            logpanel = self.newPanel(lowerpanel)
+            logpanel = self.newPanel(leftpanel)
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
         if wx.VERSION > (2, 9): self.centersizer = wx.WrapSizer(wx.HORIZONTAL)
@@ -560,6 +562,7 @@ class MainWindow(wx.Frame):
             self.lowersizer.Add(rightpanel, 1, wx.EXPAND)
         else:
             left_sizer.Add(logpanel, 1, wx.EXPAND)
+            self.lowersizer.Add(vizpanel, 1, wx.EXPAND)
         self.mainsizer.Add(upperpanel, 0)
         self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
@@ -569,7 +572,6 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.kill)
 
         self.mainsizer.Layout()
-        self.mainsizer.Fit(self)
         # This prevents resizing below a reasonnable value
         # We sum the lowersizer (left pane / viz / log) min size
         # the toolbar height and the statusbar/menubar sizes

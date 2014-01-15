@@ -122,6 +122,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         monitorsetting.hidden = True
         self.settings._add(monitorsetting)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
+        self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
@@ -135,6 +136,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"))
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"))
         self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
+        self.settings._add(HiddenSetting("last_window_width", size[0]))
+        self.settings._add(HiddenSetting("last_window_height", size[1]))
+        self.settings._add(HiddenSetting("last_window_maximized", False))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", u""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -152,9 +156,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.endScript = "end.gcode"
 
         self.filename = filename
-        os.putenv("UBUNTU_MENUPROXY", "0")
-        MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
-        self.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
 
         self.statuscheck = False
         self.status_thread = None
@@ -176,14 +177,27 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.cpbuttons = [
             SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), None, 0, _("Switch all motors off")),
             SpecialButton(_("Check temp"), ("M105"), (225, 200, 200), (2, 5), (1, 1), _("Check current hotend temperature")),
-            SpecialButton(_("Extrude"), ("extrude"), (225, 200, 200), (4, 0), (1, 2), _("Advance extruder by set length")),
-            SpecialButton(_("Reverse"), ("reverse"), (225, 200, 200), (4, 2), (1, 3), _("Reverse extruder by set length")),
+            SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), (4, 0), (1, 2), _("Advance extruder by set length")),
+            SpecialButton(_("Reverse"), ("pront_reverse"), (225, 200, 200), (4, 2), (1, 3), _("Reverse extruder by set length")),
         ]
         self.custombuttons = []
         self.btndict = {}
         self.filehistory = None
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
+
+        # FIXME: We need to initialize the main window after loading the
+        # configs to restore the size, but this might have some unforeseen
+        # consequences.
+        os.putenv("UBUNTU_MENUPROXY", "0")
+        size = (self.settings.last_window_width, self.settings.last_window_height)
+        MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
+        if self.settings.last_window_maximized:
+            self.Maximize()
+        self.Bind(wx.EVT_SIZE, self.on_resize)
+        self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
+        self.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+
         self.display_graph = self.settings.tempgraph
         self.display_gauges = self.settings.tempgauges
 
@@ -244,6 +258,20 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.do_load(self.filename)
         if self.settings.monitor:
             self.setmonitor(None)
+
+    def on_resize(self, event):
+        maximized = self.IsMaximized()
+        self.set("last_window_maximized", maximized)
+        if not maximized and not self.IsIconized():
+            size = self.GetClientSize()
+            self.set("last_window_width", size[0])
+            self.set("last_window_height", size[1])
+        self.settings.last_window_maximized = self.IsMaximized()
+        event.Skip()
+
+    def on_maximize(self, event):
+        self.set("last_window_maximized", self.IsMaximized())
+        event.Skip()
 
     def add_cmdline_arguments(self, parser):
         pronsole.pronsole.add_cmdline_arguments(self, parser)
@@ -365,21 +393,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if gline.is_move and hasattr(self.gviz, "set_current_gline"):
             wx.CallAfter(self.gviz.set_current_gline, gline)
 
-    def do_extrude(self, l = ""):
-        try:
-            if not l.__class__ in (str, unicode) or not len(l):
-                l = str(self.edist.GetValue())
-            pronsole.pronsole.do_extrude(self, l)
-        except:
-            raise
+    def do_pront_extrude(self, l = ""):
+        feed = self.settings.e_feedrate
+        self.do_extrude_final(self.edist.GetValue(), feed)
 
-    def do_reverse(self, l = ""):
-        try:
-            if not l.__class__ in (str, unicode) or not len(l):
-                l = str(- float(self.edist.GetValue()))
-            pronsole.pronsole.do_extrude(self, l)
-        except:
-            pass
+    def do_pront_reverse(self, l = ""):
+        feed = self.settings.e_feedrate
+        self.do_extrude_final(- self.edist.GetValue(), feed)
 
     def setbedgui(self, f):
         self.bsetpoint = f
@@ -521,6 +541,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
         self.Bind(wx.EVT_MENU, self.plate, m.Append(-1, _("Plater"), _(" Compose 3D models into a single plate")))
+        self.Bind(wx.EVT_MENU, self.plate_gcode, m.Append(-1, _("G-Code Plater"), _(" Compose G-Codes into a single plate")))
         self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
         self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
         self.menustrip.Append(m, _("&Tools"))
@@ -572,7 +593,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.about,
                   m.Append(-1, _("&About Printrun"), _("Show about dialog")))
-        self.menustrip.Append(m, _("&?"))
+        self.menustrip.Append(m, _("&Help"))
 
     def about(self, event):
 
@@ -766,7 +787,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         plater.StlPlater(size = (800, 580), callback = self.platecb,
                          parent = self,
                          build_dimensions = self.build_dimensions_list,
+                         circular_platform = self.settings.circular_bed,
                          simarrange_path = self.settings.simarrange_path).Show()
+
+    def plate_gcode(self, e):
+        from . import gcodeplater as plater
+        print _("G-Code plate function activated")
+        plater.GcodePlater(size = (800, 580), callback = self.platecb,
+                           parent = self,
+                           build_dimensions = self.build_dimensions_list,
+                           circular_platform = self.settings.circular_bed).Show()
 
     def platecb(self, name):
         print _("Plated %s") % name
@@ -902,8 +932,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.centersizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
                 self.centersizer.Add(b, flag = wx.EXPAND)
-        self.panel.Fit()
-        self.Fit()
+        self.centerpanel.Layout()
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')

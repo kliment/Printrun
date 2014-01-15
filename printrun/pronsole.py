@@ -570,10 +570,10 @@ class pronsole(cmd.Cmd):
         sys.stdout.write(self.promptf())
         sys.stdout.flush()
 
-    def help_help(self, l):
+    def help_help(self, l = ""):
         self.do_help("")
 
-    def do_gcodes(self, l):
+    def do_gcodes(self, l = ""):
         self.help_gcodes()
 
     def help_gcodes(self):
@@ -1390,6 +1390,9 @@ class pronsole(cmd.Cmd):
         if override is not None:
             length = override
             feed = overridefeed
+        self.do_extrude_final(length, feed)
+
+    def do_extrude_final(self, length, feed):
         if length > 0:
             self.log(_("Extruding %fmm of filament.") % (length,))
         elif length < 0:

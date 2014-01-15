@@ -169,6 +169,14 @@ class GCode(object):
         return self.current_e - self.offset_e
     abs_e = property(_get_abs_e)
 
+    def _get_abs_pos(self):
+        return (self.abs_x, self.abs_y, self.abs_z)
+    abs_pos = property(_get_abs_pos)
+
+    def _get_current_pos(self):
+        return (self.current_x, self.current_y, self.current_z)
+    current_pos = property(_get_current_pos)
+
     def _get_home_pos(self):
         return (self.home_x, self.home_y, self.home_z)
 
@@ -358,7 +366,7 @@ class GCode(object):
                 cur_z = line.z
             elif line.is_move:
                 if line.z is not None:
-                    if line.relative:
+                    if line.relative and cur_z is not None:
                         cur_z += line.z
                     else:
                         cur_z = line.z
@@ -372,6 +380,7 @@ class GCode(object):
                         if self.est_layer_height is None:
                             zs = sorted([l.z for l in all_layers if l.z is not None])
                             heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
+                            heights = [height for height in heights if height]
                             if len(heights) >= 2: self.est_layer_height = heights[1]
                             elif heights: self.est_layer_height = heights[0]
                             else: self.est_layer_height = 0.1

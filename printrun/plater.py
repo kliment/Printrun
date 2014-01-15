@@ -213,10 +213,13 @@ class StlPlater(Plater):
     save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
 
     def __init__(self, filenames = [], size = (800, 580), callback = None,
-                 parent = None, build_dimensions = None, simarrange_path = None):
+                 parent = None, build_dimensions = None, circular_platform = False,
+                 simarrange_path = None):
         super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         if glview:
-            viewer = stlview.StlViewPanel(self, (580, 580), build_dimensions = self.build_dimensions)
+            viewer = stlview.StlViewPanel(self, (580, 580),
+                                          build_dimensions = self.build_dimensions,
+                                          circular = circular_platform)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
         self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
@@ -238,14 +241,16 @@ class StlPlater(Plater):
             try:
                 self.load_stl(filename)
             except:
-                dlg = wx.MessageDialog(self, _("Loading STL file failed"), _("Error"),wx.OK)
+                dlg = wx.MessageDialog(self, _("Loading STL file failed"), _("Error"), wx.OK)
                 dlg.ShowModal()
+                traceback.print_exc(file = sys.stdout)
         elif filename.lower().endswith(".scad"):
             try:
                 self.load_scad(filename)
             except:
-                dlg = wx.MessageDialog(self, _("Loading OpenSCAD file failed"), _("Error"),wx.OK)
+                dlg = wx.MessageDialog(self, _("Loading OpenSCAD file failed"), _("Error"), wx.OK)
                 dlg.ShowModal()
+                traceback.print_exc(file = sys.stdout)
 
     def load_scad(self, name):
         lf = open(name)

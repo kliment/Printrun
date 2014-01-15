@@ -192,6 +192,11 @@ class printcore():
                                   "\n" + _("Serial error: %s") % e)
                     self.printer = None
                     return
+                except IOError as e:
+                    self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
+                                  "\n" + _("IO error: %s") % e)
+                    self.printer = None
+                    return
             self.stop_read_thread = False
             self.read_thread = Thread(target = self._listen)
             self.read_thread.start()
@@ -576,10 +581,18 @@ class printcore():
                 except: pass
             try:
                 self.printer.write(str(command + "\n"))
-                if self.printer_tcp: self.printer.flush()
+                if self.printer_tcp:
+                    try:
+                        self.printer.flush()
+                    except socket.timeout:
+                        pass
                 self.writefailures = 0
             except socket.error as e:
-                self.logError(_(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                if e.errno is None:
+                    self.logError(_(u"Can't write to printer (disconnected ?):") +
+                                  "\n" + traceback.format_exc())
+                else:
+                    self.logError(_(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
             except SerialException as e:
                 self.logError(_(u"Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
