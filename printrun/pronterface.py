@@ -836,6 +836,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def update_recent_files(self, param, value):
         if self.filehistory is None:
             return
+        recent_files = []
         try:
             recent_files = json.loads(value)
         except:
@@ -1641,7 +1642,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.set("last_file_path", path)
             try:
                 abspath = os.path.abspath(name)
-                recent_files = json.loads(self.settings.recentfiles)
+                recent_files = []
+                try:
+                    recent_files = json.loads(self.settings.recentfiles)
+                except:
+                    self.logError(_("Failed to load recent files list:") +
+                                  "\n" + traceback.format_exc())
                 if abspath in recent_files:
                     recent_files.remove(abspath)
                 recent_files.insert(0, abspath)
