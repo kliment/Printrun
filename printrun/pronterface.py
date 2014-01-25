@@ -189,6 +189,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         # FIXME: We need to initialize the main window after loading the
         # configs to restore the size, but this might have some unforeseen
         # consequences.
+        # -- Okai, it seems it breaks things like update_gviz_params ><
         os.putenv("UBUNTU_MENUPROXY", "0")
         size = (self.settings.last_window_width, self.settings.last_window_height)
         MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
@@ -852,6 +853,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                       "preview_grid_step1": "grid",
                       "preview_grid_step2": "grid"}
         if param not in params_map:
+            return
+        if not hasattr(self, "gviz"):
+            # GUI hasn't been loaded yet, ignore this setting
             return
         trueparam = params_map[param]
         if hasattr(self.gviz, trueparam):
