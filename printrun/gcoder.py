@@ -494,11 +494,12 @@ class GCode(object):
                 if line.command not in ["G1", "G0", "G4"]:
                     continue
                 if line.command == "G4":
-                    moveduration = line.p
+                    moveduration = P(line)
                     if not moveduration:
                         continue
                     else:
                         moveduration /= 1000.0
+                        totalduration += moveduration
                 else:
                     x = line.x if line.x is not None else lastx
                     y = line.y if line.y is not None else lasty
@@ -552,13 +553,13 @@ class GCode(object):
                     lastdx = dx
                     lastdy = dy
 
-                totalduration += moveduration
+                    totalduration += moveduration
 
-                lastx = x
-                lasty = y
-                lastz = z
-                laste = e
-                lastf = f
+                    lastx = x
+                    lasty = y
+                    lastz = z
+                    laste = e
+                    lastf = f
 
             layer.duration = totalduration - layerbeginduration
             layerbeginduration = totalduration
