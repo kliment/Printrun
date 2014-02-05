@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "2013.10.19"
+__version__ = "2014.01.26"
 
 from serial import Serial, SerialException
 from select import error as SelectError
