@@ -24,12 +24,12 @@ install_locale('pronterface')
 from bufferedcanvas import BufferedCanvas
 
 class GraphWindow(wx.Frame):
-    def __init__(self, root, size = (600, 600)):
+    def __init__(self, root, parent_graph = None, size = (600, 600)):
         super(GraphWindow, self).__init__(None, title = _("Temperature graph"),
                                           size = size)
         panel = wx.Panel(self, -1)
         vbox = wx.BoxSizer(wx.VERTICAL)
-        self.graph = Graph(panel, wx.ID_ANY, root)
+        self.graph = Graph(panel, wx.ID_ANY, root, parent_graph = parent_graph)
         vbox.Add(self.graph, 1, wx.EXPAND)
         panel.SetSizer(vbox)
 
@@ -37,18 +37,26 @@ class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
 
     def __init__(self, parent, id, root, pos = wx.DefaultPosition,
-                 size = wx.Size(150, 80), style = 0):
+                 size = wx.Size(150, 80), style = 0, parent_graph = None):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
         super(Graph, self).__init__(parent, id, pos, size, style)
         self.root = root
 
-        self.extruder0temps = [0]
-        self.extruder0targettemps = [0]
-        self.extruder1temps = [0]
-        self.extruder1targettemps = [0]
-        self.bedtemps = [0]
-        self.bedtargettemps = [0]
+        if parent_graph is not None:
+            self.extruder0temps = parent_graph.extruder0temps
+            self.extruder0targettemps = parent_graph.extruder0targettemps
+            self.extruder1temps = parent_graph.extruder1temps
+            self.extruder1targettemps = parent_graph.extruder1targettemps
+            self.bedtemps = parent_graph.bedtemps
+            self.bedtargettemps = parent_graph.bedtargettemps
+        else:
+            self.extruder0temps = [0]
+            self.extruder0targettemps = [0]
+            self.extruder1temps = [0]
+            self.extruder1targettemps = [0]
+            self.bedtemps = [0]
+            self.bedtargettemps = [0]
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
@@ -69,7 +77,7 @@ class Graph(BufferedCanvas):
 
     def showwin(self, event = None):
         if not self.window:
-            self.window = GraphWindow(self.root)
+            self.window = GraphWindow(self.root, self)
             self.window.Show()
             if self.timer.IsRunning():
                 self.window.graph.StartPlotting(self.timer.Interval)
@@ -235,7 +243,6 @@ class Graph(BufferedCanvas):
     def SetBedTemperature(self, value):
         self.bedtemps.pop()
         self.bedtemps.append(value)
-        if self.window: self.window.graph.SetBedTemperature(value)
 
     def AddBedTemperature(self, value):
         self.bedtemps.append(value)
@@ -245,7 +252,6 @@ class Graph(BufferedCanvas):
     def SetBedTargetTemperature(self, value):
         self.bedtargettemps.pop()
         self.bedtargettemps.append(value)
-        if self.window: self.window.graph.SetBedTargetTemperature(value)
 
     def AddBedTargetTemperature(self, value):
         self.bedtargettemps.append(value)
@@ -255,7 +261,6 @@ class Graph(BufferedCanvas):
     def SetExtruder0Temperature(self, value):
         self.extruder0temps.pop()
         self.extruder0temps.append(value)
-        if self.window: self.window.graph.SetExtruder0Temperature(value)
 
     def AddExtruder0Temperature(self, value):
         self.extruder0temps.append(value)
@@ -265,7 +270,6 @@ class Graph(BufferedCanvas):
     def SetExtruder0TargetTemperature(self, value):
         self.extruder0targettemps.pop()
         self.extruder0targettemps.append(value)
-        if self.window: self.window.graph.SetExtruder0TargetTemperature(value)
 
     def AddExtruder0TargetTemperature(self, value):
         self.extruder0targettemps.append(value)
@@ -275,7 +279,6 @@ class Graph(BufferedCanvas):
     def SetExtruder1Temperature(self, value):
         self.extruder1temps.pop()
         self.extruder1temps.append(value)
-        if self.window: self.window.graph.SetExtruder1Temperature(value)
 
     def AddExtruder1Temperature(self, value):
         self.extruder1temps.append(value)
@@ -285,7 +288,6 @@ class Graph(BufferedCanvas):
     def SetExtruder1TargetTemperature(self, value):
         self.extruder1targettemps.pop()
         self.extruder1targettemps.append(value)
-        if self.window: self.window.graph.SetExtruder1TargetTemperature(value)
 
     def AddExtruder1TargetTemperature(self, value):
         self.extruder1targettemps.append(value)
