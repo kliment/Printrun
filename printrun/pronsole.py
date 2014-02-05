@@ -26,6 +26,7 @@ import argparse
 import locale
 import logging
 import traceback
+import re
 
 from . import printcore
 from printrun.printrun_utils import install_locale, run_command, \
@@ -50,6 +51,8 @@ try:
         pass
 except:
     READLINE = False  # neither readline module is available
+
+tempreading_exp = re.compile("(^T:| T:)")
 
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8] + ".g"
@@ -1124,7 +1127,7 @@ class pronsole(cmd.Cmd):
             return [i for i in self.sdfiles if i.startswith(text)]
 
     def recvcb(self, l):
-        if "T:" in l:
+        if tempreading_exp.findall(l):
             self.tempreadings = l
             self.status.update_tempreading(l)
         tstring = l.rstrip()
