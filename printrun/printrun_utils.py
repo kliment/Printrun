@@ -36,6 +36,7 @@ def install_locale(domain):
 
 def setup_logging(out):
     logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
     logger.handlers = []
     logging_handler = logging.StreamHandler(out)
     logging_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
