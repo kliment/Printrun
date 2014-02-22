@@ -123,6 +123,7 @@ class MacroEditor(wx.Dialog):
 
 SETTINGS_GROUPS = {"Printer": _("Printer settings"),
                    "UI": _("User interface"),
+                   "Colors": _("Colors"),
                    "External": _("External commands")}
 
 class PronterOptionsDialog(wx.Dialog):

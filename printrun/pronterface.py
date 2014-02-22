@@ -34,7 +34,8 @@ except ImportError: import json
 from . import pronsole
 from . import printcore
 
-from printrun.printrun_utils import install_locale, setup_logging
+from printrun.printrun_utils import install_locale, setup_logging, \
+    hexcolor_to_float
 install_locale('pronterface')
 
 try:
@@ -127,7 +128,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
-        self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "UI"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
@@ -149,10 +149,23 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
+        self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "Colors"))
+        self.settings._add(StringSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_tool0", "#FF000099", _("3D view print moves color"), _("Color of print moves with tool 0 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_tool1", "#4F0CE599", _("3D view tool 1 moves color"), _("Color of print moves with tool 1 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_printed", "#33BF0099", _("3D view printed moves color"), _("Color of printed moves in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_current", "#00E5FFCC", _("3D view current layer moves color"), _("Color of moves in current layer in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_current_printed", "#196600CC", _("3D view printed current layer moves color"), _("Color of already printed moves from current layer in 3D view"), "Colors"), self.update_gcview_colors)
         self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing most settings here will require restart to get effect"), group = "UI"))
         recentfilessetting = StringSetting("recentfiles", "[]")
         recentfilessetting.hidden = True
         self.settings._add(recentfilessetting, self.update_recent_files)
+
+        for field in dir(self.settings):
+            if field.startswith("_gcview_color_") and not field.endswith("_cb"):
+                cleanname = field[1:]
+                color = hexcolor_to_float(getattr(self.settings, cleanname), 4)
+                setattr(self, cleanname, list(color))
 
         self.pauseScript = "pause.gcode"
         self.endScript = "end.gcode"
@@ -884,6 +897,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         setattr(widget, param, value)
         widget.dirty = 1
         wx.CallAfter(widget.Refresh)
+
+    def update_gcview_colors(self, param, value):
+        print param, value
+        color = hexcolor_to_float(value, 4)
+        # This is sort of a hack: we copy the color values into the preexisting
+        # color tuple so that we don't need to update the tuple used by gcview
+        target_color = getattr(self, param)
+        for i, v in enumerate(color):
+            target_color[i] = v
+        wx.CallAfter(self.Refresh)
 
     def setfeeds(self, e):
         self.feedrates_changed = True

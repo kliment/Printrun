@@ -39,6 +39,13 @@ def create_model(light):
     else:
         return actors.GcodeModel()
 
+def set_model_colors(model, root):
+    for field in dir(model):
+        if field.startswith("color_"):
+            root_fieldname = "gcview_" + field
+            if hasattr(root, root_fieldname):
+                setattr(model, field, getattr(root, root_fieldname))
+
 class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent, id = wx.ID_ANY,
@@ -293,6 +300,8 @@ class GcodeViewMainWrapper(object):
     def addfile(self, gcode = None, showall = False):
         self.model = create_model(self.root.settings.light3d
                                   if self.root else False)
+        if self.root:
+            set_model_colors(self.model, self.root)
         if gcode:
             self.model.load_data(gcode)
         self.objects[-1].model = self.model
@@ -362,6 +371,8 @@ class GcodeViewFrame(GvizBaseFrame):
         else:
             self.model = create_model(self.root.settings.light3d
                                       if self.root else False)
+            if self.root:
+                set_model_colors(self.model, self.root)
             if gcode:
                 self.model.load_data(gcode)
         self.objects[-1].model = self.model
