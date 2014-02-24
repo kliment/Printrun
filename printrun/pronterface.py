@@ -536,7 +536,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             return
         if not self.excluder:
             self.excluder = Excluder()
-        self.excluder.pop_window(self.fgcode, bgcolor = self.settings.bgcolor)
+        self.excluder.pop_window(self.fgcode, bgcolor = self.settings.bgcolor,
+                                 build_dimensions = self.build_dimensions_list)
 
     def popmenu(self):
         self.menustrip = wx.MenuBar()
