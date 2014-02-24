@@ -126,7 +126,7 @@ class GcodeViewPanel(wxGLPanel):
         glPopMatrix()
 
     def double(self, event):
-        if self.parent.clickcb:
+        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
             self.parent.clickcb(event)
 
     def move(self, event):
