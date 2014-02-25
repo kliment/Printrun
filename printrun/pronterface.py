@@ -61,7 +61,6 @@ from printrun import gcoder
 
 tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)")
 tempreading_exp = re.compile("(^T:| T:)")
-extruderreading_exp = re.compile("(^E:| E:)")
 
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
@@ -1483,7 +1482,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.userm114 -= 1
             else:
                 isreport = True
-        if "ok T:" in l or (tempreading_exp.findall(l) and extruderreading_exp.findall(l)):
+        if "ok T:" in l or tempreading_exp.findall(l):
             self.tempreport = l
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
             self.update_tempdisplay()
