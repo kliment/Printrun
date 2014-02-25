@@ -21,9 +21,6 @@ except:
     print _("WX is not installed. This program requires WX to run.")
     raise
 
-global buttonSize
-buttonSize = (70, 25)  # Define sizes for the buttons on top rows
-
 from printrun import gviz
 from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
@@ -40,9 +37,6 @@ def make_button(parent, label, callback, tooltip, container = None, size = wx.De
     if container:
         container.Add(button)
     return button
-
-def make_sized_button(*args):
-    return make_button(*args, size = buttonSize)
 
 def make_autosize_button(*args):
     return make_button(*args, size = (-1, -1), style = wx.BU_EXACTFIT)
