@@ -1874,9 +1874,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.status_thread.join()
             self.status_thread = None
 
-        self.connectbtn.SetLabel(_("Connect"))
-        self.connectbtn.SetToolTip(wx.ToolTip("Connect to the printer"))
-        self.connectbtn.Bind(wx.EVT_BUTTON, self.connect)
+        wx.CallAfter(self.connectbtn.SetLabel, _("Connect"))
+        wx.CallAfter(self.connectbtn.SetToolTip, wx.ToolTip(_("Connect to the printer")))
+        wx.CallAfter(self.connectbtn.Bind, wx.EVT_BUTTON, self.connect)
 
         wx.CallAfter(self.printbtn.Disable)
         wx.CallAfter(self.pausebtn.Disable)
