@@ -68,9 +68,9 @@ class Graph(BufferedCanvas):
             self._ybounds = Graph._YBounds(self)
 
         #If rescaley is set then ybars gives merely an estimate
-        #Note that "bars" actually indicate the number of grid _intervals_
+        #Note that "bars" actually indicate the number of internal+external gridlines.
         self.ybars = 5
-        self.xbars = 6  # One bar per 10 second
+        self.xbars = 7  # One bar per 10 second
         self.xsteps = 60  # Covering 1 minute in the graph
 
         self.window = None
