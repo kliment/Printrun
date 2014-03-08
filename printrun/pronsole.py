@@ -1154,8 +1154,6 @@ class pronsole(cmd.Cmd):
             print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
                                                                              "duration": format_duration(print_duration)}
 
-            self.p.runSmallScript(self.endScript)
-
             if not self.settings.final_command:
                 return
             run_command(self.settings.final_command,

@@ -304,6 +304,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def endcb(self):
         pronsole.pronsole.endcb(self)
         if self.p.queueindex == 0:
+            self.p.runSmallScript(self.endScript)
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
