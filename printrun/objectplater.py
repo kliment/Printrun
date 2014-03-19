@@ -34,7 +34,7 @@ class Plater(wx.Frame):
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         super(Plater, self).__init__(parent, title = _("Plate building tool"), size = size)
         self.filenames = filenames
-        self.SetIcon(wx.Icon(iconfile("plater.ico"), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         panel = wx.Panel(self, -1)
         sizer = wx.GridBagSizer()

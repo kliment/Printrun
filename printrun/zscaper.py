@@ -63,7 +63,7 @@ class scapewin(wx.Frame):
     def __init__(self, size = (400, 530)):
         wx.Frame.__init__(self, None,
                           title = "Right-click to load an image", size = size)
-        self.SetIcon(wx.Icon("plater.ico", wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon("plater.png", wx.BITMAP_TYPE_PNG))
         self.SetClientSize(size)
         self.panel = wx.Panel(self, size = size)
 
