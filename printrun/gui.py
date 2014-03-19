@@ -29,6 +29,7 @@ from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
 from printrun.graph import Graph
 from printrun.pronterface_widgets import TempGauge
+from wx.lib.agw.floatspin import FloatSpin
 
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
@@ -173,7 +174,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
 
     esettingspanel = root.newPanel(parentpanel)
     esettingssizer = wx.BoxSizer(wx.HORIZONTAL)
-    root.edist = wx.SpinCtrl(esettingspanel, -1, str(root.settings.last_extrusion), min = 0, max = 1000, size = (70, -1))
+    root.edist = FloatSpin(esettingspanel, -1, value = root.settings.last_extrusion, min_val = 0, max_val = 1000, size = (70, -1), digits = 1)
     root.edist.SetBackgroundColour((225, 200, 200))
     root.edist.SetForegroundColour("black")
     root.edist.Bind(wx.EVT_SPINCTRL, root.setfeeds)
@@ -181,7 +182,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     esettingssizer.Add(root.edist, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
     esettingssizer.Add(wx.StaticText(esettingspanel, -1, _("mm @")), flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
     root.edist.SetToolTip(wx.ToolTip(_("Amount to Extrude or Retract (mm)")))
-    root.efeedc = wx.SpinCtrl(esettingspanel, -1, str(root.settings.e_feedrate), min = 0, max = 50000, size = (70, -1))
+    root.efeedc = FloatSpin(esettingspanel, -1, value = root.settings.e_feedrate, min_val = 0, max_val = 50000, size = (70, -1), digits = 1)
     root.efeedc.SetToolTip(wx.ToolTip(_("Extrude / Retract speed (mm/min)")))
     root.efeedc.SetBackgroundColour((225, 200, 200))
     root.efeedc.SetForegroundColour("black")
