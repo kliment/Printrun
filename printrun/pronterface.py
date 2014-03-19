@@ -211,7 +211,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.Maximize()
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
-        self.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
 
         self.display_graph = self.settings.tempgraph
         self.display_gauges = self.settings.tempgauges
@@ -616,7 +616,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         info = wx.AboutDialogInfo()
 
-        info.SetIcon(wx.Icon(iconfile("P-face.ico"), wx.BITMAP_TYPE_ICO))
+        info.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
         info.SetName('Printrun')
         info.SetVersion(printcore.__version__)
 
