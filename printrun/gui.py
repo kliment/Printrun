@@ -21,9 +21,6 @@ except:
     print _("WX is not installed. This program requires WX to run.")
     raise
 
-global buttonSize
-buttonSize = (70, 25)  # Define sizes for the buttons on top rows
-
 from printrun import gviz
 from printrun.xybuttons import XYButtons
 from printrun.zbuttons import ZButtons
@@ -42,11 +39,8 @@ def make_button(parent, label, callback, tooltip, container = None, size = wx.De
         container.Add(button)
     return button
 
-def make_sized_button(*args):
-    return make_button(*args, size = buttonSize)
-
 def make_autosize_button(*args):
-    return make_button(*args, size = (-1, buttonSize[1]), style = wx.BU_EXACTFIT)
+    return make_button(*args, size = (-1, -1), style = wx.BU_EXACTFIT)
 
 def make_custom_button(root, parentpanel, i, style = 0):
     btn = make_button(parentpanel, i.label, root.procbutton,
@@ -396,7 +390,7 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     self.Add(root.rescanbtn, 0, wx.TOP | wx.LEFT, 0)
 
     root.serialport = wx.ComboBox(parentpanel, -1, choices = root.scanserial(),
-                                  style = wx.CB_DROPDOWN, size = (-1, 25))
+                                  style = wx.CB_DROPDOWN)
     root.serialport.SetToolTip(wx.ToolTip(_("Select Port Printer is connected to")))
     root.rescanports()
     self.Add(root.serialport)
@@ -405,7 +399,7 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     root.baud = wx.ComboBox(parentpanel, -1,
                             choices = ["2400", "9600", "19200", "38400",
                                        "57600", "115200", "250000"],
-                            style = wx.CB_DROPDOWN, size = (100, 25))
+                            style = wx.CB_DROPDOWN, size = (100, -1))
     root.baud.SetToolTip(wx.ToolTip(_("Select Baud rate for printer communication")))
     try:
         root.baud.SetValue("115200")
