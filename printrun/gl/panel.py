@@ -31,6 +31,7 @@ class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
 
     orthographic = True
+    color_background = (0.98, 0.98, 0.78, 1)
 
     def __init__(self, parent, id, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0):
@@ -104,7 +105,7 @@ class wxGLPanel(wx.Panel):
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
         #normal gl init
-        glClearColor(0.98, 0.98, 0.78, 1)
+        glClearColor(*self.color_background)
         glClearDepth(1.0)                # set depth value to 1
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_COLOR_MATERIAL)
@@ -158,6 +159,7 @@ class wxGLPanel(wx.Panel):
     def OnDraw(self, *args, **kwargs):
         """Draw the window."""
         self.pygletcontext.set_current()
+        glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.draw_objects()
         self.canvas.SwapBuffers()

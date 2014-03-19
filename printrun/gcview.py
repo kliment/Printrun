@@ -273,6 +273,8 @@ class GcodeViewMainWrapper(object):
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions)
         self.glpanel.SetMinSize((150, 150))
+        if self.root and hasattr(self.root, "gcview_color_background"):
+            self.glpanel.color_background = self.root.gcview_color_background
         self.clickcb = None
         self.widget = self.glpanel
         self.refresh_timer = wx.CallLater(100, self.Refresh)
