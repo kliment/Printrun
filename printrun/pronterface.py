@@ -572,7 +572,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         if self.settings.slic3rintegration:
             m = wx.Menu()
-            self.menustrip.Append(m, _("&Slic3r"))
             print_menu = wx.Menu()
             filament_menu = wx.Menu()
             printer_menu = wx.Menu()
@@ -582,7 +581,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             menus = {"print": print_menu,
                      "filament": filament_menu,
                      "printer": printer_menu}
-            self.load_slic3r_configs(menus)
+            try:
+                self.load_slic3r_configs(menus)
+                self.menustrip.Append(m, _("&Slic3r"))
+            except IOError:
+                self.logError(_("Failed to load Slic3r configuration:") +
+                              "\n" + traceback.format_exc())
 
         # Settings menu
         m = wx.Menu()
