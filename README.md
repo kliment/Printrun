@@ -14,13 +14,9 @@ If you want the newest, shiniest features, you can run Printrun from source usin
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
-*Note:* Prontserve is not currently included in the windows binary.
-
 ## Mac OS X
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
-
-*Note:* Prontserve is not currently included in the OSX binary.
 
 ## Linux
 ### Ubuntu/Debian
@@ -28,7 +24,6 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
 1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
-2. `pip install -r requirements_prontserve.txt`
 
 ### Fedora
 
@@ -48,12 +43,6 @@ You can also run Printrun directly from source, if the packages are too old for 
 
 Optional: `sudo yum install skeinforge simarrange`
 
-To enable Prontserve you need to also install something along the following 
-lines. Unforunately this has yet to be tested on a real Fedora system:
-
-1. `sudo yum install avahi avahi-python`
-2. `pip install -r requirements_prontserve.txt`
-
 ### Archlinux
 
 Packages are available in AUR. Just run
@@ -61,8 +50,6 @@ Packages are available in AUR. Just run
 `yaourt printrun`
 
 and enjoy the `pronterface`, `pronsole`, ... commands directly.
-
-*Note:* Prontserve is not currently included in the arch package.
 
 ## RUNNING FROM SOURCE
 
@@ -155,13 +142,6 @@ The command box recognizes all pronsole commands, but has no tabcompletion.
 
 If you want to load stl files, you need to install a slicing program such as Slic3r and add its path to the settings.
 See the Slic3r readme for more details on integration.
-
-
-## USING PRONTSERVE
-
-Prontserve runs a server for remotely monitoring and controlling your 3D printer over your network.
-
-To start the server you can run `./prontserve.py` in the directory you git cloned printrun too. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
 
 
 ## USING PRONSOLE
