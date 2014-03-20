@@ -536,6 +536,9 @@ class GcodeModel(Model):
         self.travel_buffer.unbind()
 
     def _draw_elements(self, start, end, draw_type = GL_TRIANGLES):
+        # Don't attempt printing empty layer
+        if self.count_print_indices[end] == self.count_print_indices[start - 1]:
+            return
         glDrawRangeElements(draw_type,
                             self.count_print_vertices[start - 1],
                             self.count_print_vertices[end] - 1,
