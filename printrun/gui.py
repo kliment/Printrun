@@ -412,6 +412,9 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     root.connectbtn = make_autosize_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"), self)
 
     root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"), self)
+
+    self.AddStretchSpacer(prop = 1)
+
     root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
     root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
     root.printerControls.append(root.sdbtn)
@@ -420,6 +423,9 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     root.pausebtn = make_autosize_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
     root.offbtn = make_autosize_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
     root.printerControls.append(root.offbtn)
+
+    self.AddStretchSpacer(prop = 4)
+
     if root.settings.lockbox:
         parentpanel.SetSizer(self)
         return glob
@@ -560,7 +566,7 @@ class MainWindow(wx.Frame):
         else:
             left_sizer.Add(logpanel, 1, wx.EXPAND)
             self.lowersizer.Add(vizpanel, 1, wx.EXPAND)
-        self.mainsizer.Add(upperpanel, 0)
+        self.mainsizer.Add(upperpanel, 0, wx.EXPAND)
         self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
         self.statusbar = self.CreateStatusBar()
