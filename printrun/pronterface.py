@@ -119,10 +119,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, app, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         self.app = app
-        #default build dimensions are 200x200x100 with 0, 0, 0 in the corner of the bed and endstops at 0, 0 and 0
-        monitorsetting = BooleanSetting("monitor", False)
-        monitorsetting.hidden = True
-        self.settings._add(monitorsetting)
+        self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"))
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
         self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
