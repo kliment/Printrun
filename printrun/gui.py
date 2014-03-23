@@ -416,8 +416,7 @@ class LogPaneToggleable(ToggleablePane):
     def on_show(self):
         self.splitter.SetSashPosition(self.splitter.GetSize()[0] - self.orig_width)
         self.splitter.SetMinimumPaneSize(self.orig_min_size)
-        if hasattr(self.splitter, "SetSashSize"):
-            self.splitter.SetSashSize(self.orig_sash_size)
+        if hasattr(self.splitter, "SetSashSize"): self.splitter.SetSashSize(self.orig_sash_size)
         if hasattr(self.splitter, "SetSashInvisible"): self.splitter.SetSashInvisible(False)
         self.parentsizer.Layout()
 
