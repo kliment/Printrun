@@ -66,14 +66,6 @@ class XYZControlsSizer(wx.GridBagSizer):
 def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     standalone_mode = extra_buttons is not None
     base_line = 1 if standalone_mode else 2
-    root.monitorbox = wx.CheckBox(parentpanel, -1, _("Watch"))
-    root.monitorbox.SetValue(bool(root.settings.monitor))
-    root.monitorbox.SetToolTip(wx.ToolTip(_("Monitor Temperatures in Graph")))
-    if standalone_mode:
-        self.Add(root.monitorbox, pos = (0, 3), span = (1, 3))
-    else:
-        self.Add(root.monitorbox, pos = (base_line + 1, 5))
-    root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
 
     self.Add(wx.StaticText(parentpanel, -1, _("Heat:")), pos = (base_line + 0, 0), span = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
     htemp_choices = [root.temps[i] + " (" + i + ")" for i in sorted(root.temps.keys(), key = lambda x:root.temps[x])]
@@ -218,9 +210,9 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     if root.display_graph:
         root.graph = Graph(parentpanel, wx.ID_ANY, root)
         if standalone_mode:
-            self.Add(root.graph, pos = (base_line + 5, 0), span = (3, 6))
+            self.Add(root.graph, pos = (base_line + 3, 0), span = (5, 6), flag = wx.EXPAND)
         else:
-            self.Add(root.graph, pos = (base_line + 2, 5), span = (3, 1))
+            self.Add(root.graph, pos = (base_line + 0, 5), span = (5, 1), flag = wx.EXPAND)
         root.graph.Bind(wx.EVT_LEFT_DOWN, root.graph.showwin)
 
     if extra_buttons:
