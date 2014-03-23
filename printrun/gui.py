@@ -367,6 +367,71 @@ class LogPane(wx.BoxSizer):
         #root.printerControls.append(root.sendbtn)
         self.Add(lbrs, 0, wx.EXPAND)
 
+class ToggleablePane(wx.BoxSizer):
+
+    def __init__(self, root, label, parentpanel, parentsizer):
+        super(ToggleablePane, self).__init__(wx.HORIZONTAL)
+        if not parentpanel: parentpanel = root.panel
+        self.root = root
+        self.visible = True
+        self.parentpanel = parentpanel
+        self.parentsizer = parentsizer
+        self.panepanel = root.newPanel(parentpanel)
+        self.button = wx.Button(parentpanel, -1, label, size = (22, 18), style = wx.BU_EXACTFIT)
+        self.button.Bind(wx.EVT_BUTTON, self.toggle)
+
+    def toggle(self, event):
+        if self.visible:
+            self.Hide(self.panepanel)
+            self.on_hide()
+        else:
+            self.Show(self.panepanel)
+            self.on_show()
+        self.visible = not self.visible
+        self.button.SetLabel(">" if self.button.GetLabel() == "<" else "<")
+
+class LeftPaneToggleable(ToggleablePane):
+    def __init__(self, root, parentpanel, parentsizer):
+        super(LeftPaneToggleable, self).__init__(root, "<", parentpanel, parentsizer)
+        pane = LeftPane(root, self.panepanel)
+        self.panepanel.SetSizer(pane)
+        self.Add(self.panepanel, 0, wx.EXPAND)
+        self.Add(self.button, 0)
+
+    def on_show(self):
+        self.parentsizer.Layout()
+
+    def on_hide(self):
+        self.parentsizer.Layout()
+
+class LogPaneToggleable(ToggleablePane):
+    def __init__(self, root, parentpanel, parentsizer):
+        super(LogPaneToggleable, self).__init__(root, ">", parentpanel, parentsizer)
+        self.Add(self.button, 0)
+        pane = LogPane(root, self.panepanel)
+        self.panepanel.SetSizer(pane)
+        self.Add(self.panepanel, 1, wx.EXPAND)
+        self.splitter = self.parentpanel.GetParent()
+
+    def on_show(self):
+        self.splitter.SetSashPosition(self.splitter.GetSize()[0] - self.orig_width)
+        self.splitter.SetMinimumPaneSize(self.orig_min_size)
+        if hasattr(self.splitter, "SetSashSize"):
+            self.splitter.SetSashSize(self.orig_sash_size)
+        if hasattr(self.splitter, "SetSashInvisible"): self.splitter.SetSashInvisible(False)
+        self.parentsizer.Layout()
+
+    def on_hide(self):
+        self.orig_width = self.splitter.GetSize()[0] - self.splitter.GetSashPosition()
+        button_width = self.button.GetSize()[0]
+        self.orig_min_size = self.splitter.GetMinimumPaneSize()
+        self.splitter.SetMinimumPaneSize(button_width)
+        self.splitter.SetSashPosition(self.splitter.GetSize()[0] - button_width)
+        if hasattr(self.splitter, "SetSashSize"):
+            self.orig_sash_size = self.splitter.GetSashSize()
+            self.splitter.SetSashSize(0)
+        if hasattr(self.splitter, "SetSashInvisible"): self.splitter.SetSashInvisible(True)
+        self.parentsizer.Layout()
 
 def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     if not parentpanel: parentpanel = root.panel
@@ -523,7 +588,7 @@ class MainWindow(wx.Frame):
         upperpanel.SetSizer(self.uppersizer)
         lowerpanel.SetSizer(self.lowersizer)
         leftpanel = self.newPanel(lowerpanel)
-        left_pane = LeftPane(self, leftpanel)
+        left_pane = LeftPaneToggleable(self, leftpanel, self.lowersizer)
         left_pane.Layout()  # required to get correct rows/cols counts
         left_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer.Add(left_pane, 0)
@@ -551,7 +616,7 @@ class MainWindow(wx.Frame):
         self.centerpanel.SetSizer(self.centersizer)
         viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
         vizpanel.SetSizer(viz_pane)
-        log_pane = LogPane(self, logpanel)
+        log_pane = LogPaneToggleable(self, logpanel, self.lowersizer)
         logpanel.SetSizer(log_pane)
         if not compact:
             self.lowersizer.Add(rightpanel, 1, wx.EXPAND)
