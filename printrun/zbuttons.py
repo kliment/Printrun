@@ -27,13 +27,15 @@ class ZButtons(BufferedCanvas):
     button_ydistances = [7, 30, 55, 83]  # ,112
     center = (30, 118)
     label_overlay_positions = {
-        0: (0.3, 18, 9),
-        1: (0.3, 41.5, 10.6),
-        2: (0.3, 68, 13),
+        0: (1.1, 18, 9),
+        1: (1.1, 41.5, 10.6),
+        2: (1.1, 68, 13),
     }
+    imagename = "control_z.png"
+    size = (59, 244)
 
     def __init__(self, parent, moveCallback = None, bgcolor = "#FFFFFF", ID=-1):
-        self.bg_bmp = wx.Image(imagefile("control_z.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        self.bg_bmp = wx.Image(imagefile(self.imagename), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.range = None
         self.direction = None
         self.orderOfMagnitudeIdx = 0  # 0 means '1', 1 means '10', 2 means '100', etc.
@@ -46,7 +48,7 @@ class ZButtons(BufferedCanvas):
         self.bgcolor.SetFromName(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        BufferedCanvas.__init__(self, parent, ID, size=wx.Size(59, 244))
+        BufferedCanvas.__init__(self, parent, ID, size=wx.Size(*self.size))
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -71,7 +73,7 @@ class ZButtons(BufferedCanvas):
 
     def lookupRange(self, ydist):
         idx = -1
-        for d in ZButtons.button_ydistances:
+        for d in self.button_ydistances:
             if ydist < d:
                 return idx
             idx += 1
@@ -86,14 +88,14 @@ class ZButtons(BufferedCanvas):
         w = 59 - fudge * 2
         if rng >= 0:
             k = 1 if dir > 0 else 0
-            y = ZButtons.center[1] - (dir * ZButtons.button_ydistances[rng + k])
-            h = ZButtons.button_ydistances[rng + 1] - ZButtons.button_ydistances[rng]
+            y = self.center[1] - (dir * self.button_ydistances[rng + k])
+            h = self.button_ydistances[rng + 1] - self.button_ydistances[rng]
             gc.DrawRoundedRectangle(x, y, w, h, 4)
             # gc.DrawRectangle(x, y, w, h)
         # self.drawPartialPie(dc, center, r1-inner_ring_radius, r2-inner_ring_radius, a1+fudge, a2-fudge)
 
     def getRangeDir(self, pos):
-        ydelta = ZButtons.center[1] - pos[1]
+        ydelta = self.center[1] - pos[1]
         return (self.lookupRange(abs(ydelta)), sign(ydelta))
 
     def draw(self, dc, w, h):
@@ -108,10 +110,10 @@ class ZButtons(BufferedCanvas):
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
             gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128 + 64)))
-            for idx, kpos in ZButtons.label_overlay_positions.items():
+            for idx, kpos in self.label_overlay_positions.items():
                 if idx != self.range:
                     r = kpos[2]
-                    gc.DrawEllipse(ZButtons.center[0] - kpos[0] - r, ZButtons.center[1] - kpos[1] - r, r * 2, r * 2)
+                    gc.DrawEllipse(self.center[0] - kpos[0] - r, self.center[1] - kpos[1] - r, r * 2, r * 2)
 
             # Top 'layer' is the mouse-over highlights
             gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
