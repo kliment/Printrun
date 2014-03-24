@@ -25,24 +25,25 @@ def sign(n):
 
 class XYButtons(BufferedCanvas):
     keypad_positions = {
-        0: (105, 102),
+        0: (107, 103),
         1: (86, 83),
         2: (68, 65),
         3: (53, 50)
     }
     corner_size = (49, 49)
-    corner_inset = (8, 6)
+    corner_inset = (7, 13)
     label_overlay_positions = {
-        0: (142, 105, 11),
-        1: (160, 85, 13),
-        2: (179, 65, 15),
-        3: (201, 42, 16)
+        0: (145, 98.5, 9),
+        1: (160.5, 83.5, 10.6),
+        2: (178, 66, 13),
+        3: (197.3, 46.3, 13.3)
     }
     concentric_circle_radii = [11, 45, 69, 94, 115]
     center = (124, 121)
     spacer = 7
 
     def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1, zcallback=None):
+        print imagefile("control_xy.png")
         self.bg_bmp = wx.Image(imagefile("control_xy.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
@@ -194,8 +195,9 @@ class XYButtons(BufferedCanvas):
         path = gc.CreatePath()
         path.MoveToPoint(-w / 2, -h / 2)
         path.AddLineToPoint(w / 2, -h / 2)
-        path.AddLineToPoint(w / 2, -h / 2 + h / 3)
-        path.AddLineToPoint(-w / 2 + w / 3, h / 2)
+        path.AddLineToPoint(w / 2, -h / 2 + h / 4)
+        path.AddLineToPoint(w / 12, h / 12)
+        path.AddLineToPoint(-w / 2 + w / 4, h / 2)
         path.AddLineToPoint(-w / 2, h / 2)
         path.AddLineToPoint(-w / 2, -h / 2)
         gc.DrawPath(path)
@@ -203,21 +205,21 @@ class XYButtons(BufferedCanvas):
 
     def highlightCorner(self, gc, corner = 0):
         w, h = XYButtons.corner_size
+        xinset, yinset = XYButtons.corner_inset
         cx, cy = XYButtons.center
         ww, wh = self.GetSizeTuple()
 
-        inset = 10
         if corner == 0:
-            x, y = (cx - ww / 2 + inset, cy - wh / 2 + inset)
+            x, y = (cx - ww / 2 + xinset + 1, cy - wh / 2 + yinset)
             self.drawCorner(gc, x + w / 2, y + h / 2, 0)
         elif corner == 1:
-            x, y = (cx + ww / 2 - inset, cy - wh / 2 + inset)
+            x, y = (cx + ww / 2 - xinset, cy - wh / 2 + yinset)
             self.drawCorner(gc, x - w / 2, y + h / 2, math.pi / 2)
         elif corner == 2:
-            x, y = (cx + ww / 2 - inset, cy + wh / 2 - inset)
+            x, y = (cx + ww / 2 - xinset, cy + wh / 2 - yinset - 1)
             self.drawCorner(gc, x - w / 2, y - h / 2, math.pi)
         elif corner == 3:
-            x, y = (cx - ww / 2 + inset, cy + wh / 2 - inset)
+            x, y = (cx - ww / 2 + xinset + 1, cy + wh / 2 - yinset - 1)
             self.drawCorner(gc, x + w / 2, y - h / 2, math.pi * 3 / 2)
 
     def draw(self, dc, w, h):

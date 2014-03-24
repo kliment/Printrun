@@ -27,10 +27,9 @@ class ZButtons(BufferedCanvas):
     button_ydistances = [7, 30, 55, 83]  # ,112
     center = (30, 118)
     label_overlay_positions = {
-        0: (1, 18, 11),
-        1: (1, 41, 13),
-        2: (1, 67, 15),
-        3: None
+        0: (0.3, 18, 9),
+        1: (0.3, 41.5, 10.6),
+        2: (0.3, 68, 13),
     }
 
     def __init__(self, parent, moveCallback = None, bgcolor = "#FFFFFF", ID=-1):
@@ -110,7 +109,7 @@ class ZButtons(BufferedCanvas):
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
             gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128 + 64)))
             for idx, kpos in ZButtons.label_overlay_positions.items():
-                if kpos and idx != self.range:
+                if idx != self.range:
                     r = kpos[2]
                     gc.DrawEllipse(ZButtons.center[0] - kpos[0] - r, ZButtons.center[1] - kpos[1] - r, r * 2, r * 2)
 
