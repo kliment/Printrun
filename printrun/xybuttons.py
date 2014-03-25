@@ -41,9 +41,16 @@ class XYButtons(BufferedCanvas):
     concentric_circle_radii = [11, 45, 69, 94, 115]
     center = (124, 121)
     spacer = 7
+    imagename = "control_xy.png"
+    corner_to_axis = {
+        0: "x",
+        1: "z",
+        2: "y",
+        3: "all",
+    }
 
     def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1, zcallback=None):
-        self.bg_bmp = wx.Image(imagefile("control_xy.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        self.bg_bmp = wx.Image(imagefile(self.imagename), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
         self.quadrant = None
@@ -64,6 +71,9 @@ class XYButtons(BufferedCanvas):
 
         BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())
 
+        self.bind_events()
+
+    def bind_events(self):
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
@@ -84,7 +94,7 @@ class XYButtons(BufferedCanvas):
         if self.lastMove:
             self.moveCallback(*self.lastMove)
         if self.lastCorner:
-            self.cornerCallback(self.lastCorner)
+            self.cornerCallback(self.corner_to_axis[self.lastCorner])
 
     def clearRepeat(self):
         self.lastMove = None
@@ -120,15 +130,15 @@ class XYButtons(BufferedCanvas):
 
     def lookupConcentric(self, radius):
         idx = 0
-        for r in XYButtons.concentric_circle_radii[1:]:
+        for r in self.concentric_circle_radii[1:]:
             if radius < r:
                 return idx
             idx += 1
-        return len(XYButtons.concentric_circle_radii)
+        return len(self.concentric_circle_radii)
 
     def getQuadrantConcentricFromPosition(self, pos):
-        rel_x = pos[0] - XYButtons.center[0]
-        rel_y = pos[1] - XYButtons.center[1]
+        rel_x = pos[0] - self.center[0]
+        rel_y = pos[1] - self.center[1]
         radius = math.sqrt(rel_x ** 2 + rel_y ** 2)
         if rel_x > rel_y and rel_x > -rel_y:
             quadrant = 0  # Right
@@ -143,7 +153,7 @@ class XYButtons(BufferedCanvas):
         return (quadrant, idx)
 
     def mouseOverKeypad(self, mpos):
-        for idx, kpos in XYButtons.keypad_positions.items():
+        for idx, kpos in self.keypad_positions.items():
             radius = self.distanceToPoint(mpos[0], mpos[1], kpos[0], kpos[1])
             if radius < 9:
                 return idx
@@ -163,10 +173,10 @@ class XYButtons(BufferedCanvas):
         assert(quadrant >= 0 and quadrant <= 3)
         assert(concentric >= 0 and concentric <= 3)
 
-        inner_ring_radius = XYButtons.concentric_circle_radii[0]
+        inner_ring_radius = self.concentric_circle_radii[0]
         # fudge = math.pi*0.002
         fudge = -0.02
-        center = wx.Point(XYButtons.center[0], XYButtons.center[1])
+        center = wx.Point(self.center[0], self.center[1])
         if quadrant == 0:
             a1, a2 = (-math.pi * 0.25, math.pi * 0.25)
             center.x += inner_ring_radius
@@ -180,13 +190,13 @@ class XYButtons(BufferedCanvas):
             a1, a2 = (math.pi * 0.25, math.pi * 0.75)
             center.y += inner_ring_radius
 
-        r1 = XYButtons.concentric_circle_radii[concentric]
-        r2 = XYButtons.concentric_circle_radii[concentric + 1]
+        r1 = self.concentric_circle_radii[concentric]
+        r2 = self.concentric_circle_radii[concentric + 1]
 
         self.drawPartialPie(gc, center, r1 - inner_ring_radius, r2 - inner_ring_radius, a1 + fudge, a2 - fudge)
 
     def drawCorner(self, gc, x, y, angle = 0.0):
-        w, h = XYButtons.corner_size
+        w, h = self.corner_size
 
         gc.PushState()
         gc.Translate(x, y)
@@ -203,9 +213,9 @@ class XYButtons(BufferedCanvas):
         gc.PopState()
 
     def highlightCorner(self, gc, corner = 0):
-        w, h = XYButtons.corner_size
-        xinset, yinset = XYButtons.corner_inset
-        cx, cy = XYButtons.center
+        w, h = self.corner_size
+        xinset, yinset = self.corner_inset
+        cx, cy = self.center
         ww, wh = self.GetSizeTuple()
 
         if corner == 0:
@@ -236,7 +246,7 @@ class XYButtons(BufferedCanvas):
             gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
 
             if self.concentric is not None:
-                if self.concentric < len(XYButtons.concentric_circle_radii):
+                if self.concentric < len(self.concentric_circle_radii):
                     if self.quadrant is not None:
                         self.highlightQuadrant(gc, self.quadrant, self.concentric)
                 elif self.corner is not None:
@@ -244,14 +254,14 @@ class XYButtons(BufferedCanvas):
 
             if self.keypad_idx >= 0:
                 padw, padh = (self.keypad_bmp.GetWidth(), self.keypad_bmp.GetHeight())
-                pos = XYButtons.keypad_positions[self.keypad_idx]
+                pos = self.keypad_positions[self.keypad_idx]
                 pos = (pos[0] - padw / 2 - 3, pos[1] - padh / 2 - 3)
                 gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], padw, padh)
 
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
             gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128 + 64)))
-            for idx, kpos in XYButtons.label_overlay_positions.items():
+            for idx, kpos in self.label_overlay_positions.items():
                 if idx != self.concentric:
                     r = kpos[2]
                     gc.DrawEllipse(kpos[0] - r, kpos[1] - r, r * 2, r * 2)
@@ -260,7 +270,7 @@ class XYButtons(BufferedCanvas):
             gc.SetBrush(wx.Brush(self.bgcolormask))
             gc.DrawRectangle(0, 0, w, h)
         # Used to check exact position of keypad dots, should we ever resize the bg image
-        # for idx, kpos in XYButtons.label_overlay_positions.items():
+        # for idx, kpos in self.label_overlay_positions.items():
         #    dc.DrawCircle(kpos[0], kpos[1], kpos[2])
 
     ## ------ ##
@@ -316,16 +326,16 @@ class XYButtons(BufferedCanvas):
         self.quadrant = None
         self.concentric = None
         if idx is None:
-            center = wx.Point(XYButtons.center[0], XYButtons.center[1])
+            center = wx.Point(self.center[0], self.center[1])
             riseDist = self.distanceToLine(mpos, center.x - 1, center.y - 1, center.x + 1, center.y + 1)
             fallDist = self.distanceToLine(mpos, center.x - 1, center.y + 1, center.x + 1, center.y - 1)
             self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
 
             # If mouse hovers in space between quadrants, don't commit to a quadrant
-            if riseDist <= XYButtons.spacer or fallDist <= XYButtons.spacer:
+            if riseDist <= self.spacer or fallDist <= self.spacer:
                 self.quadrant = None
 
-        cx, cy = XYButtons.center
+        cx, cy = self.center
         if mpos.x < cx and mpos.y < cy:
             self.corner = 0
         if mpos.x >= cx and mpos.y < cy:
@@ -351,7 +361,7 @@ class XYButtons(BufferedCanvas):
         if idx is None:
             self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
             if self.concentric is not None:
-                if self.concentric < len(XYButtons.concentric_circle_radii):
+                if self.concentric < len(self.concentric_circle_radii):
                     if self.quadrant is not None:
                         x, y, z = self.getMovement()
                         if self.moveCallback:
@@ -362,7 +372,7 @@ class XYButtons(BufferedCanvas):
                     if self.cornerCallback:
                         self.lastCorner = self.corner
                         self.lastMove = None
-                        self.cornerCallback(self.corner)
+                        self.cornerCallback(self.corner_to_axis[self.corner])
         else:
             if self.keypad_idx == idx:
                 self.setKeypadIndex(-1)
