@@ -355,17 +355,13 @@ class SpecialButton(object):
     label = None
     command = None
     background = None
-    pos = None
-    span = None
     tooltip = None
     custom = None
 
-    def __init__(self, label, command, background = None, pos = None,
-                 span = None, tooltip = None, custom = False):
+    def __init__(self, label, command, background = None,
+                 tooltip = None, custom = False):
         self.label = label
         self.command = command
-        self.pos = pos
         self.background = background
-        self.span = span
         self.tooltip = tooltip
         self.custom = custom

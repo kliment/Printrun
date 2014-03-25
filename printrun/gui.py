@@ -22,8 +22,8 @@ except:
     raise
 
 from printrun import gviz
-from printrun.xybuttons import XYButtons
-from printrun.zbuttons import ZButtons
+from printrun.xybuttons import XYButtons, XYButtonsMini
+from printrun.zbuttons import ZButtons, ZButtonsMini
 from printrun.graph import Graph
 from printrun.pronterface_widgets import TempGauge
 from wx.lib.agw.floatspin import FloatSpin
@@ -63,19 +63,94 @@ class XYZControlsSizer(wx.GridBagSizer):
         self.Add(root.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
         wx.CallAfter(root.xyb.SetFocus)
 
-def add_extra_controls(self, root, parentpanel, extra_buttons = None):
+def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode = False):
     standalone_mode = extra_buttons is not None
     base_line = 1 if standalone_mode else 2
+
+    gauges_base_line = base_line + 8 if standalone_mode else base_line + 5
+    tempdisp_line = gauges_base_line + (2 if root.display_gauges else 0)
+    e_base_line = base_line + 3 if mini_mode else base_line + 2
+
+    pos_mapping = {
+        "htemp_label": (base_line + 0, 0),
+        "htemp_off": (base_line + 0, 2),
+        "htemp_val": (base_line + 0, 3),
+        "htemp_set": (base_line + 0, 4),
+        "btemp_label": (base_line + 1, 0),
+        "btemp_off": (base_line + 1, 2),
+        "btemp_val": (base_line + 1, 3),
+        "btemp_set": (base_line + 1, 4),
+        "ebuttons": (e_base_line + 0, 0),
+        "esettings": (e_base_line + 1, 0),
+        "htemp_gauge": (gauges_base_line + 0, 0),
+        "btemp_gauge": (gauges_base_line + 1, 0),
+        "tempdisp": (tempdisp_line, 0),
+        "extrude": (3, 0),
+        "reverse": (3, 2),
+    }
+
+    span_mapping = {
+        "htemp_label": (1, 2),
+        "htemp_off": (1, 1),
+        "htemp_val": (1, 1),
+        "htemp_set": (1, 1),
+        "btemp_label": (1, 2),
+        "btemp_off": (1, 1),
+        "btemp_val": (1, 1),
+        "btemp_set": (1, 1),
+        "ebuttons": (1, 5),
+        "esettings": (1, 5),
+        "htemp_gauge": (1, 5 if mini_mode else 6),
+        "btemp_gauge": (1, 5 if mini_mode else 6),
+        "tempdisp": (1, 5 if mini_mode else 6),
+        "extrude": (1, 2),
+        "reverse": (1, 3),
+    }
+
+    if standalone_mode:
+        pos_mapping["tempgraph"] = (base_line + 3, 0)
+        span_mapping["tempgraph"] = (5, 6)
+    elif mini_mode:
+        pos_mapping["tempgraph"] = (base_line + 2, 0)
+        span_mapping["tempgraph"] = (1, 5)
+    else:
+        pos_mapping["tempgraph"] = (base_line + 0, 5)
+        span_mapping["tempgraph"] = (5, 1)
+
+    if mini_mode:
+        pos_mapping["etool_label"] = (0, 0)
+        pos_mapping["etool_val"] = (0, 1)
+        pos_mapping["edist_label"] = (0, 2)
+        pos_mapping["edist_val"] = (0, 3)
+        pos_mapping["edist_unit"] = (0, 4)
+    else:
+        pos_mapping["edist_label"] = (0, 0)
+        pos_mapping["edist_val"] = (1, 0)
+        pos_mapping["edist_unit"] = (1, 1)
+        pos_mapping["efeed_label"] = (0, 2)
+        pos_mapping["efeed_val"] = (1, 2)
+        pos_mapping["efeed_unit"] = (1, 3)
+
+    def add(name, widget, *args, **kwargs):
+        kwargs["pos"] = pos_mapping[name]
+        if name in span_mapping:
+            kwargs["span"] = span_mapping[name]
+        if "container" in kwargs:
+            container = kwargs["container"]
+            del kwargs["container"]
+        else:
+            container = self
+        container.Add(widget, *args, **kwargs)
 
     ## Hotend & bed temperatures
 
     # Hotend temp
-    self.Add(wx.StaticText(parentpanel, -1, _("Heat:")), pos = (base_line + 0, 0), span = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+    add("htemp_label", wx.StaticText(parentpanel, -1, _("Heat:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
     htemp_choices = [root.temps[i] + " (" + i + ")" for i in sorted(root.temps.keys(), key = lambda x:root.temps[x])]
 
     root.settoff = make_button(parentpanel, _("Off"), lambda e: root.do_settemp("off"), _("Switch Hotend Off"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.settoff)
-    self.Add(root.settoff, pos = (base_line + 0, 2), span = (1, 1))
+    add("htemp_off", root.settoff)
 
     if root.settings.last_temperature not in map(float, root.temps.values()):
         htemp_choices = [str(root.settings.last_temperature)] + htemp_choices
@@ -84,18 +159,18 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     root.htemp.SetToolTip(wx.ToolTip(_("Select Temperature for Hotend")))
     root.htemp.Bind(wx.EVT_COMBOBOX, root.htemp_change)
 
-    self.Add(root.htemp, pos = (base_line + 0, 3), span = (1, 1))
+    add("htemp_val", root.htemp)
     root.settbtn = make_button(parentpanel, _("Set"), root.do_settemp, _("Switch Hotend On"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.settbtn)
-    self.Add(root.settbtn, pos = (base_line + 0, 4), span = (1, 1))
+    add("htemp_set", root.settbtn)
 
     # Bed temp
-    self.Add(wx.StaticText(parentpanel, -1, _("Bed:")), pos = (base_line + 1, 0), span = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+    add("btemp_label", wx.StaticText(parentpanel, -1, _("Bed:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
     btemp_choices = [root.bedtemps[i] + " (" + i + ")" for i in sorted(root.bedtemps.keys(), key = lambda x:root.temps[x])]
 
     root.setboff = make_button(parentpanel, _("Off"), lambda e: root.do_bedtemp("off"), _("Switch Heated Bed Off"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.setboff)
-    self.Add(root.setboff, pos = (base_line + 1, 2), span = (1, 1))
+    add("btemp_off", root.setboff)
 
     if root.settings.last_bed_temperature not in map(float, root.bedtemps.values()):
         btemp_choices = [str(root.settings.last_bed_temperature)] + btemp_choices
@@ -103,11 +178,11 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
                              style = wx.CB_DROPDOWN, size = (80, -1))
     root.btemp.SetToolTip(wx.ToolTip(_("Select Temperature for Heated Bed")))
     root.btemp.Bind(wx.EVT_COMBOBOX, root.btemp_change)
-    self.Add(root.btemp, pos = (base_line + 1, 3), span = (1, 1))
+    add("btemp_val", root.btemp)
 
     root.setbbtn = make_button(parentpanel, _("Set"), root.do_bedtemp, _("Switch Heated Bed On"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.setbbtn)
-    self.Add(root.setbbtn, pos = (base_line + 1, 4), span = (1, 1))
+    add("btemp_set", root.setbbtn)
 
     root.btemp.SetValue(str(root.settings.last_bed_temperature))
     root.htemp.SetValue(str(root.settings.last_temperature))
@@ -128,73 +203,13 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     if '(' not in root.htemp.Value:
         root.htemp.SetValue(root.htemp.Value + ' (user)')
 
-    root.tempdisp = wx.StaticText(parentpanel, -1, "")
-
-    ## Extrusion controls
-
-    if not extra_buttons:
-        ebuttonspanel = root.newPanel(parentpanel)
-        ebuttonssizer = wx.BoxSizer(wx.HORIZONTAL)
-        if root.settings.extruders > 1:
-            ebuttonssizer.Add(wx.StaticText(ebuttonspanel, -1, _("Tool:")), flag = wx.ALIGN_CENTER)
-            if root.settings.extruders == 2:
-                root.extrudersel = wx.Button(ebuttonspanel, -1, "0", style = wx.BU_EXACTFIT)
-                root.extrudersel.SetToolTip(wx.ToolTip(_("Click to switch current extruder")))
-
-                def extrudersel_cb(event):
-                    if root.extrudersel.GetLabel() == "1":
-                        new = "0"
-                    else:
-                        new = "1"
-                    root.extrudersel.SetLabel(new)
-                    root.tool_change(event)
-                root.extrudersel.Bind(wx.EVT_BUTTON, extrudersel_cb)
-                root.extrudersel.GetValue = root.extrudersel.GetLabel
-                root.extrudersel.SetValue = root.extrudersel.SetLabel
-            else:
-                choices = [str(i) for i in range(0, root.settings.extruders)]
-                root.extrudersel = wx.ComboBox(ebuttonspanel, -1, choices = choices,
-                                               style = wx.CB_DROPDOWN | wx.CB_READONLY,
-                                               size = (50, -1))
-                root.extrudersel.SetToolTip(wx.ToolTip(_("Select current extruder")))
-                root.extrudersel.SetValue(choices[0])
-                root.extrudersel.Bind(wx.EVT_COMBOBOX, root.tool_change)
-            root.printerControls.append(root.extrudersel)
-            ebuttonssizer.Add(root.extrudersel)
-        ebuttonspanel.SetSizer(ebuttonssizer)
-        self.Add(ebuttonspanel, pos = (base_line + 2, 0), span = (1, 5), flag = wx.EXPAND)
-
-    esettingspanel = root.newPanel(parentpanel)
-    esettingssizer = wx.GridBagSizer()
-    root.edist = FloatSpin(esettingspanel, -1, value = root.settings.last_extrusion, min_val = 0, max_val = 1000, size = (70, -1), digits = 1)
-    root.edist.SetBackgroundColour((225, 200, 200))
-    root.edist.SetForegroundColour("black")
-    root.edist.Bind(wx.EVT_SPINCTRL, root.setfeeds)
-    root.edist.Bind(wx.EVT_TEXT, root.setfeeds)
-    esettingssizer.Add(root.edist, pos = (1, 0), flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
-    esettingssizer.Add(wx.StaticText(esettingspanel, -1, _("Length:")), pos = (0, 0), flag = wx.ALIGN_LEFT)
-    esettingssizer.Add(wx.StaticText(esettingspanel, -1, _("mm @")), pos = (1, 1), flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
-    root.edist.SetToolTip(wx.ToolTip(_("Amount to Extrude or Retract (mm)")))
-    root.efeedc = FloatSpin(esettingspanel, -1, value = root.settings.e_feedrate, min_val = 0, max_val = 50000, size = (70, -1), digits = 1)
-    root.efeedc.SetToolTip(wx.ToolTip(_("Extrude / Retract speed (mm/min)")))
-    root.efeedc.SetBackgroundColour((225, 200, 200))
-    root.efeedc.SetForegroundColour("black")
-    root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
-    root.efeedc.Bind(wx.EVT_TEXT, root.setfeeds)
-    esettingssizer.Add(root.efeedc, pos = (1, 2), flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
-    esettingssizer.Add(wx.StaticText(esettingspanel, -1, _("Speed:")), pos = (0, 2), flag = wx.ALIGN_LEFT)
-    esettingssizer.Add(wx.StaticText(esettingspanel, -1, _("mm/\nmin")), pos = (1, 3), flag = wx.ALIGN_CENTER)
-    esettingspanel.SetSizer(esettingssizer)
-    self.Add(esettingspanel, pos = (base_line + 3, 0), span = (1, 5))
-
     ## Temperature gauges
 
-    gauges_base_line = base_line + 8 if standalone_mode else base_line + 5
     if root.display_gauges:
         root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300)
-        self.Add(root.hottgauge, pos = (gauges_base_line + 0, 0), span = (1, 6), flag = wx.EXPAND)
+        add("htemp_gauge", root.hottgauge, flag = wx.EXPAND)
         root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed:"), maxval = 150)
-        self.Add(root.bedtgauge, pos = (gauges_base_line + 1, 0), span = (1, 6), flag = wx.EXPAND)
+        add("btemp_gauge", root.bedtgauge, flag = wx.EXPAND)
 
         def hotendgauge_scroll_setpoint(e):
             rot = e.GetWheelRotation()
@@ -211,62 +226,128 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
                 root.do_settemp(str(max(0, root.bsetpoint - 1)))
         root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
         root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
-        self.Add(root.tempdisp, pos = (gauges_base_line + 2, 0), span = (1, 6))
-    else:
-        self.Add(root.tempdisp, pos = (gauges_base_line + 0, 0), span = (1, 6))
+
+    ## Temperature (M105) feedback display
+    # TODO: make it wrap around
+    root.tempdisp = wx.StaticText(parentpanel, -1, "")
+    add("tempdisp", root.tempdisp)
 
     ## Temperature graph
 
     if root.display_graph:
         root.graph = Graph(parentpanel, wx.ID_ANY, root)
-        if standalone_mode:
-            self.Add(root.graph, pos = (base_line + 3, 0), span = (5, 6), flag = wx.EXPAND)
-        else:
-            self.Add(root.graph, pos = (base_line + 0, 5), span = (5, 1), flag = wx.EXPAND)
+        add("tempgraph", root.graph, flag = wx.EXPAND | wx.ALL, border = 5)
         root.graph.Bind(wx.EVT_LEFT_DOWN, root.graph.showwin)
 
-    if extra_buttons:
-        pos_mapping = {(2, 5): (0, 0),
-                       (4, 0): (3, 0),
-                       (4, 2): (3, 2),
-                       }
-        span_mapping = {(2, 5): (1, 3),
-                        (4, 0): (1, 2),
-                        (4, 2): (1, 3),
-                        }
-        for i in extra_buttons:
-            btn = extra_buttons[i]
-            self.Add(btn, pos = pos_mapping[i.pos], span = span_mapping[i.pos], flag = wx.EXPAND)
+    ## Extrusion controls
+
+    # Extrusion settings
+    esettingspanel = root.newPanel(parentpanel)
+    esettingssizer = wx.GridBagSizer()
+    root.edist = FloatSpin(esettingspanel, -1, value = root.settings.last_extrusion, min_val = 0, max_val = 1000, size = (70, -1), digits = 1)
+    root.edist.SetBackgroundColour((225, 200, 200))
+    root.edist.SetForegroundColour("black")
+    root.edist.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+    root.edist.Bind(wx.EVT_TEXT, root.setfeeds)
+    add("edist_label", wx.StaticText(esettingspanel, -1, _("Length:")), container = esettingssizer, flag = wx.ALIGN_CENTER | wx.LEFT if mini_mode else wx.ALIGN_LEFT, border = 5)
+    add("edist_val", root.edist, container = esettingssizer, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
+    unit_label = _("mm") if mini_mode else _("mm @")
+    add("edist_unit", wx.StaticText(esettingspanel, -1, unit_label), container = esettingssizer, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
+    root.edist.SetToolTip(wx.ToolTip(_("Amount to Extrude or Retract (mm)")))
+    if not mini_mode:
+        root.efeedc = FloatSpin(esettingspanel, -1, value = root.settings.e_feedrate, min_val = 0, max_val = 50000, size = (70, -1), digits = 1)
+        root.efeedc.SetToolTip(wx.ToolTip(_("Extrude / Retract speed (mm/min)")))
+        root.efeedc.SetBackgroundColour((225, 200, 200))
+        root.efeedc.SetForegroundColour("black")
+        root.efeedc.Bind(wx.EVT_SPINCTRL, root.setfeeds)
+        root.efeedc.Bind(wx.EVT_TEXT, root.setfeeds)
+        add("efeed_val", root.efeedc, container = esettingssizer, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
+        add("efeed_label", wx.StaticText(esettingspanel, -1, _("Speed:")), container = esettingssizer, flag = wx.ALIGN_LEFT)
+        add("efeed_unit", wx.StaticText(esettingspanel, -1, _("mm/\nmin")), container = esettingssizer, flag = wx.ALIGN_CENTER)
     else:
-        for i in root.cpbuttons:
-            if not i.pos or i.pos[0] != 4:
-                continue
-            btn = make_custom_button(root, ebuttonspanel, i,
+        root.efeedc = None
+    esettingspanel.SetSizer(esettingssizer)
+    add("esettings", esettingspanel)
+
+    if not standalone_mode:
+        ebuttonspanel = root.newPanel(parentpanel)
+        ebuttonssizer = wx.BoxSizer(wx.HORIZONTAL)
+        if root.settings.extruders > 1:
+            etool_sel_panel = esettingspanel if mini_mode else ebuttonspanel
+            etool_label = wx.StaticText(etool_sel_panel, -1, _("Tool:"))
+            if root.settings.extruders == 2:
+                root.extrudersel = wx.Button(etool_sel_panel, -1, "0", style = wx.BU_EXACTFIT)
+                root.extrudersel.SetToolTip(wx.ToolTip(_("Click to switch current extruder")))
+
+                def extrudersel_cb(event):
+                    if root.extrudersel.GetLabel() == "1":
+                        new = "0"
+                    else:
+                        new = "1"
+                    root.extrudersel.SetLabel(new)
+                    root.tool_change(event)
+                root.extrudersel.Bind(wx.EVT_BUTTON, extrudersel_cb)
+                root.extrudersel.GetValue = root.extrudersel.GetLabel
+                root.extrudersel.SetValue = root.extrudersel.SetLabel
+            else:
+                choices = [str(i) for i in range(0, root.settings.extruders)]
+                root.extrudersel = wx.ComboBox(etool_sel_panel, -1, choices = choices,
+                                               style = wx.CB_DROPDOWN | wx.CB_READONLY,
+                                               size = (50, -1))
+                root.extrudersel.SetToolTip(wx.ToolTip(_("Select current extruder")))
+                root.extrudersel.SetValue(choices[0])
+                root.extrudersel.Bind(wx.EVT_COMBOBOX, root.tool_change)
+            root.printerControls.append(root.extrudersel)
+            if mini_mode:
+                add("etool_label", etool_label, container = esettingssizer, flag = wx.ALIGN_CENTER)
+                add("etool_val", root.extrudersel, container = esettingssizer)
+            else:
+                ebuttonssizer.Add(etool_label, flag = wx.ALIGN_CENTER)
+                ebuttonssizer.Add(root.extrudersel)
+
+        for key in ["extrude", "reverse"]:
+            desc = root.cpbuttons[key]
+            btn = make_custom_button(root, ebuttonspanel, desc,
                                      style = wx.BU_EXACTFIT)
             ebuttonssizer.Add(btn, 1, flag = wx.EXPAND)
 
+        ebuttonspanel.SetSizer(ebuttonssizer)
+        add("ebuttons", ebuttonspanel, flag = wx.EXPAND)
+    else:
+        for key, btn in extra_buttons.items():
+            add(key, btn, flag = wx.EXPAND)
+
 class LeftPane(wx.GridBagSizer):
 
-    def __init__(self, root, parentpanel = None, standalone_mode = False):
+    def __init__(self, root, parentpanel = None, standalone_mode = False, mini_mode = False):
         super(LeftPane, self).__init__()
         if not parentpanel: parentpanel = root.panel
+        if mini_mode: self.make_mini(root, parentpanel)
+        else: self.make_standard(root, parentpanel, standalone_mode)
+
+    def make_standard(self, root, parentpanel, standalone_mode):
         llts = wx.BoxSizer(wx.HORIZONTAL)
         self.Add(llts, pos = (0, 0), span = (1, 6))
         self.xyzsizer = XYZControlsSizer(root, parentpanel)
         self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
 
         self.extra_buttons = {}
-        for i in root.cpbuttons:
-            if not standalone_mode and i.pos and i.pos[0] == 4:
+        pos_mapping = {"extrude": (4, 0),
+                       "reverse": (4, 2),
+                       }
+        span_mapping = {"extrude": (1, 2),
+                        "reverse": (1, 3),
+                        }
+        for key, desc in root.cpbuttons.items():
+            if not standalone_mode and key in ["extrude", "reverse"]:
                 continue
-            btn = make_custom_button(root, parentpanel, i)
-            if i.pos is None:
-                if i.span == 0:
-                    llts.Add(btn)
+            btn = make_custom_button(root, parentpanel, desc)
+            if key == "motorsoff":
+                llts.Add(btn)
             elif not standalone_mode:
-                self.Add(btn, pos = i.pos, span = i.span, flag = wx.EXPAND)
+                self.Add(btn, pos = pos_mapping[key], span = span_mapping[key], flag = wx.EXPAND)
             else:
-                self.extra_buttons[i] = btn
+                self.extra_buttons[key] = btn
 
         root.xyfeedc = wx.SpinCtrl(parentpanel, -1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70, -1))
         root.xyfeedc.SetToolTip(wx.ToolTip(_("Set Maximum Speed for X & Y axes (mm/min)")))
@@ -286,6 +367,24 @@ class LeftPane(wx.GridBagSizer):
 
         if not standalone_mode:
             add_extra_controls(self, root, parentpanel, None)
+
+    def make_mini(self, root, parentpanel):
+        root.xyb = XYButtonsMini(parentpanel, root.moveXY, root.homeButtonClicked,
+                                 root.spacebarAction, root.settings.bgcolor,
+                                 zcallback = root.moveZ)
+        self.Add(root.xyb, pos = (1, 0), span = (1, 4), flag = wx.ALIGN_CENTER)
+        root.zb = ZButtonsMini(parentpanel, root.moveZ, root.settings.bgcolor)
+        self.Add(root.zb, pos = (0, 4), span = (2, 1), flag = wx.ALIGN_CENTER)
+        wx.CallAfter(root.xyb.SetFocus)
+
+        pos_mapping = {"motorsoff": (0, 0),
+                       }
+        span_mapping = {"motorsoff": (1, 4),
+                        }
+        btn = make_custom_button(root, parentpanel, root.cpbuttons["motorsoff"])
+        self.Add(btn, pos = pos_mapping["motorsoff"], span = span_mapping["motorsoff"], flag = wx.EXPAND)
+
+        add_extra_controls(self, root, parentpanel, None, True)
 
 class NoViz(object):
 
@@ -401,9 +500,9 @@ class ToggleablePane(wx.BoxSizer):
         self.button.SetLabel(">" if self.button.GetLabel() == "<" else "<")
 
 class LeftPaneToggleable(ToggleablePane):
-    def __init__(self, root, parentpanel, parentsizer):
+    def __init__(self, root, parentpanel, parentsizer, mini_mode):
         super(LeftPaneToggleable, self).__init__(root, "<", parentpanel, parentsizer)
-        pane = LeftPane(root, self.panepanel)
+        pane = LeftPane(root, self.panepanel, mini_mode = mini_mode)
         self.panepanel.SetSizer(pane)
         self.Add(self.panepanel, 0, wx.EXPAND)
         self.Add(self.button, 0)
@@ -588,7 +687,7 @@ class MainWindow(wx.Frame):
         self.SetMinSize(self.ClientToWindowSize(minsize))  # client to window
         self.Fit()
 
-    def createGui(self, compact = False):
+    def createGui(self, compact = False, mini = False):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
         upperpanel = self.newPanel(self.panel, False)
@@ -597,7 +696,8 @@ class MainWindow(wx.Frame):
         upperpanel.SetSizer(self.uppersizer)
         lowerpanel.SetSizer(self.lowersizer)
         leftpanel = self.newPanel(lowerpanel)
-        left_pane = LeftPaneToggleable(self, leftpanel, self.lowersizer)
+        left_pane = LeftPaneToggleable(self, leftpanel,
+                                       self.lowersizer, mini_mode = mini)
         left_pane.Layout()  # required to get correct rows/cols counts
         left_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer.Add(left_pane, 0)

@@ -125,6 +125,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
+        self.settings._add(ComboSetting("controlsmode", "Standard", ["Standard", "Mini"], _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"))
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
@@ -184,11 +185,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.paused = False
         self.uploading = False
         self.sentlines = Queue.Queue(0)
-        self.cpbuttons = [
-            SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), None, 0, _("Switch all motors off")),
-            SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), (4, 0), (1, 2), _("Advance extruder by set length")),
-            SpecialButton(_("Reverse"), ("pront_reverse"), (225, 200, 200), (4, 2), (1, 3), _("Reverse extruder by set length")),
-        ]
+        self.cpbuttons = {
+            "motorsoff": SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), _("Switch all motors off")),
+            "extrude": SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), _("Advance extruder by set length")),
+            "reverse": SpecialButton(_("Reverse"), ("pront_reverse"), (225, 200, 200), _("Reverse extruder by set length")),
+        }
         self.custombuttons = []
         self.btndict = {}
         self.filehistory = None
@@ -245,7 +246,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.settings.uimode == "Tabbed":
             self.createTabbedGui()
         else:
-            self.createGui(self.settings.uimode == "Compact")
+            self.createGui(self.settings.uimode == "Compact",
+                           self.settings.controlsmode == "Mini")
         self.t = Tee(self.catchprint)
         self.stdout = sys.stdout
         self.skeining = 0
@@ -910,7 +912,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def setfeeds(self, e):
         self.feedrates_changed = True
         try:
-            self.settings._set("e_feedrate", self.efeedc.GetValue())
+            if self.efeedc is not None:
+                self.settings._set("e_feedrate", self.efeedc.GetValue())
         except:
             pass
         try:
