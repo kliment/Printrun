@@ -158,3 +158,14 @@ class ZButtons(BufferedCanvas):
         self.range = None
         self.direction = None
         self.update()
+
+class ZButtonsMini(ZButtons):
+    button_ydistances = [7, 30, 55]
+    center = (30, 84)
+    label_overlay_positions = {
+        0: (1, 18, 9),
+        1: (1, 42.8, 12.9),
+    }
+    imagename = "control_z_mini.png"
+    size = (59, 244)
+    move_values = [0.1, 10]

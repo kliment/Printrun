@@ -383,3 +383,109 @@ class XYButtons(BufferedCanvas):
         self.quadrant = None
         self.concentric = None
         self.update()
+
+class XYButtonsMini(XYButtons):
+    imagename = "control_mini.png"
+    center = (57, 56.5)
+    concentric_circle_radii = [0, 30.3]
+    corner_inset = (5, 5)
+    corner_size = (50, 50)
+    outer_radius = 31
+    corner_to_axis = {
+        0: "x",
+        1: "z",
+        2: "y",
+        3: "xy",
+    }
+
+    def bind_events(self):
+        # Set up mouse and keyboard event capture
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+        self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
+        self.Bind(wx.EVT_MOTION, self.OnMotion)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+
+    def OnMotion(self, event):
+        if not self.enabled:
+            return
+
+        oldcorner = self.corner
+        oldq, oldc = self.quadrant, self.concentric
+
+        mpos = event.GetPosition()
+
+        self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
+
+        cx, cy = XYButtonsMini.center
+        if mpos.x < cx and mpos.y < cy:
+            self.corner = 0
+        if mpos.x >= cx and mpos.y < cy:
+            self.corner = 1
+        if mpos.x >= cx and mpos.y >= cy:
+            self.corner = 2
+        if mpos.x < cx and mpos.y >= cy:
+            self.corner = 3
+
+        if oldq != self.quadrant or oldc != self.concentric or oldcorner != self.corner:
+            self.update()
+
+    def OnLeftDown(self, event):
+        if not self.enabled:
+            return
+
+        # Take focus when clicked so that arrow keys can control movement
+        self.SetFocus()
+
+        mpos = event.GetPosition()
+
+        self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
+        if self.concentric is not None:
+            if self.concentric < len(self.concentric_circle_radii):
+                self.cornerCallback("all")
+            elif self.corner is not None:
+                if self.cornerCallback:
+                    self.lastCorner = self.corner
+                    self.lastMove = None
+                    self.cornerCallback(self.corner_to_axis[self.corner])
+
+    def drawCorner(self, gc, x, y, angle = 0.0):
+        w, h = self.corner_size
+
+        gc.PushState()
+        gc.Translate(x, y)
+        gc.Rotate(angle)
+        path = gc.CreatePath()
+        path.MoveToPoint(-w / 2, -h / 2)
+        path.AddLineToPoint(w / 2, -h / 2)
+        path.AddLineToPoint(w / 2, -h / 2 + h / 4)
+        path.AddArc(w / 2, h / 2, self.outer_radius, 3 * math.pi / 2, math.pi, False)
+        path.AddLineToPoint(-w / 2, h / 2)
+        path.AddLineToPoint(-w / 2, -h / 2)
+        gc.DrawPath(path)
+        gc.PopState()
+
+    def draw(self, dc, w, h):
+        dc.SetBackground(wx.Brush(self.bgcolor))
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+
+        if self.bg_bmp:
+            w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
+            gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+
+        if self.enabled:
+            # Brush and pen for grey overlay when mouse hovers over
+            gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
+            gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
+
+            if self.concentric is not None:
+                if self.concentric < len(self.concentric_circle_radii):
+                    cx, cy = XYButtonsMini.center
+                    r = self.concentric_circle_radii[-1]
+                    gc.DrawEllipse(cx - r, cy - r, r * 2, r * 2)
+                elif self.corner is not None:
+                    self.highlightCorner(gc, self.corner)
+        else:
+            gc.SetPen(wx.Pen(self.bgcolor, 0))
+            gc.SetBrush(wx.Brush(self.bgcolormask))
+            gc.DrawRectangle(0, 0, w, h)
