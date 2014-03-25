@@ -67,6 +67,9 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     standalone_mode = extra_buttons is not None
     base_line = 1 if standalone_mode else 2
 
+    ## Hotend & bed temperatures
+
+    # Hotend temp
     self.Add(wx.StaticText(parentpanel, -1, _("Heat:")), pos = (base_line + 0, 0), span = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
     htemp_choices = [root.temps[i] + " (" + i + ")" for i in sorted(root.temps.keys(), key = lambda x:root.temps[x])]
 
@@ -86,6 +89,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     root.printerControls.append(root.settbtn)
     self.Add(root.settbtn, pos = (base_line + 0, 4), span = (1, 1))
 
+    # Bed temp
     self.Add(wx.StaticText(parentpanel, -1, _("Bed:")), pos = (base_line + 1, 0), span = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
     btemp_choices = [root.bedtemps[i] + " (" + i + ")" for i in sorted(root.bedtemps.keys(), key = lambda x:root.temps[x])]
 
@@ -125,6 +129,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         root.htemp.SetValue(root.htemp.Value + ' (user)')
 
     root.tempdisp = wx.StaticText(parentpanel, -1, "")
+
+    ## Extrusion controls
 
     if not extra_buttons:
         ebuttonspanel = root.newPanel(parentpanel)
@@ -181,6 +187,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
     esettingspanel.SetSizer(esettingssizer)
     self.Add(esettingspanel, pos = (base_line + 3, 0), span = (1, 5))
 
+    ## Temperature gauges
+
     gauges_base_line = base_line + 8 if standalone_mode else base_line + 5
     if root.display_gauges:
         root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300)
@@ -206,6 +214,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None):
         self.Add(root.tempdisp, pos = (gauges_base_line + 2, 0), span = (1, 6))
     else:
         self.Add(root.tempdisp, pos = (gauges_base_line + 0, 0), span = (1, 6))
+
+    ## Temperature graph
 
     if root.display_graph:
         root.graph = Graph(parentpanel, wx.ID_ANY, root)
