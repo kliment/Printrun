@@ -729,7 +729,7 @@ class MainWindow(wx.Frame):
             self.splitterwindow.SplitVertically(vizpanel, logpanel, 0)
         else:
             vizpanel = self.newPanel(lowerpanel)
-            logpanel = self.newPanel(leftpanel)
+            logpanel = self.newPanel(left_real_panel)
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
         if wx.VERSION > (2, 9): self.centersizer = wx.WrapSizer(wx.HORIZONTAL)
@@ -738,7 +738,10 @@ class MainWindow(wx.Frame):
         self.centerpanel.SetSizer(self.centersizer)
         viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
         vizpanel.SetSizer(viz_pane)
-        log_pane = LogPaneToggleable(self, logpanel, self.lowersizer)
+        if compact:
+            log_pane = LogPane(self, logpanel)
+        else:
+            log_pane = LogPaneToggleable(self, logpanel, self.lowersizer)
         logpanel.SetSizer(log_pane)
         if not compact:
             self.lowersizer.Add(rightpanel, 1, wx.EXPAND)
