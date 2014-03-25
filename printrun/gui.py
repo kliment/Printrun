@@ -67,7 +67,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     standalone_mode = extra_buttons is not None
     base_line = 1 if standalone_mode else 2
 
-    gauges_base_line = base_line + 9 if standalone_mode else base_line + 5
+    gauges_base_line = base_line + 10 if standalone_mode else base_line + 6
     tempdisp_line = gauges_base_line + (2 if root.display_gauges else 0)
     e_base_line = base_line + 3 if mini_mode else base_line + 2
 
@@ -82,6 +82,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "btemp_set": (base_line + 1, 4),
         "ebuttons": (e_base_line + 0, 0),
         "esettings": (e_base_line + 1, 0),
+        "speedcontrol": (e_base_line + 2, 0),
         "htemp_gauge": (gauges_base_line + 0, 0),
         "btemp_gauge": (gauges_base_line + 1, 0),
         "tempdisp": (tempdisp_line, 0),
@@ -100,6 +101,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "btemp_set": (1, 1),
         "ebuttons": (1, 5),
         "esettings": (1, 5),
+        "speedcontrol": (1, 5),
         "htemp_gauge": (1, 5 if mini_mode else 6),
         "btemp_gauge": (1, 5 if mini_mode else 6),
         "tempdisp": (1, 5 if mini_mode else 6),
@@ -202,6 +204,32 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         root.btemp.SetValue(root.btemp.Value + ' (user)')
     if '(' not in root.htemp.Value:
         root.htemp.SetValue(root.htemp.Value + ' (user)')
+
+    ## Speed control
+    speedpanel = root.newPanel(parentpanel)
+    speedsizer = wx.BoxSizer(wx.HORIZONTAL)
+    speedsizer.Add(wx.StaticText(speedpanel, -1, _("Print speed:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+
+    root.speed_slider = wx.Slider(speedpanel, -1, 100, 1, 300)
+    speedsizer.Add(root.speed_slider, 1, flag = wx.EXPAND)
+
+    root.speed_label = wx.StaticText(speedpanel, -1, _("%d%%") % 100)
+    speedsizer.Add(root.speed_label, flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+
+    def speedslider_set(event):
+        root.do_setspeed()
+        root.speed_setbtn.SetBackgroundColour(wx.NullColour)
+    root.speed_setbtn = make_button(speedpanel, _("Set"), speedslider_set, _("Set print speed factor"), size = (38, -1), style = wx.BU_EXACTFIT)
+    root.printerControls.append(root.speed_setbtn)
+    speedsizer.Add(root.speed_setbtn, flag = wx.ALIGN_CENTER)
+    speedpanel.SetSizer(speedsizer)
+    add("speedcontrol", speedpanel, flag = wx.EXPAND)
+
+    def speedslider_scroll(event):
+        value = root.speed_slider.GetValue()
+        root.speed_setbtn.SetBackgroundColour("red")
+        root.speed_label.SetLabel(_("%d%%") % value)
+    root.speed_slider.Bind(wx.EVT_SCROLL, speedslider_scroll)
 
     ## Temperature gauges
 
