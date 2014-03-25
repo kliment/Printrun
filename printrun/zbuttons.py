@@ -14,7 +14,6 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-import math
 from bufferedcanvas import BufferedCanvas
 from printrun_utils import imagefile
 
