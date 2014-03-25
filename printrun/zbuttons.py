@@ -25,6 +25,7 @@ def sign(n):
 
 class ZButtons(BufferedCanvas):
     button_ydistances = [7, 30, 55, 83]  # ,112
+    move_values = [0.1, 1, 10]
     center = (30, 118)
     label_overlay_positions = {
         0: (1.1, 18, 9),
@@ -148,7 +149,7 @@ class ZButtons(BufferedCanvas):
         mpos = event.GetPosition()
         r, d = self.getRangeDir(mpos)
         if r >= 0:
-            value = math.pow(10, self.orderOfMagnitudeIdx) * math.pow(10, r - 1) * d
+            value = d * self.move_values[r]
             if self.moveCallback:
                 self.lastValue = value
                 self.moveCallback(value)
