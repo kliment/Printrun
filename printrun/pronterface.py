@@ -1211,16 +1211,18 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         else:
             e.Skip()
 
-    def homeButtonClicked(self, corner):
+    def homeButtonClicked(self, axis):
         # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
         self.zb.clearRepeat()
-        if corner == 0:  # upper-left
+        if axis == "x":
             self.onecmd('home X')
-        elif corner == 1:  # upper-right
+        elif axis == "y":  # upper-right
             self.onecmd('home Y')
-        elif corner == 2:  # lower-right
+        elif axis == "z":
             self.onecmd('home Z')
-        elif corner == 3:  # lower-left
+        elif axis == "xy":
+            self.onecmd('home XY')
+        elif axis == "all":
             self.onecmd('home')
         else:
             return
