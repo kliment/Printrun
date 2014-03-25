@@ -67,7 +67,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     standalone_mode = extra_buttons is not None
     base_line = 1 if standalone_mode else 2
 
-    gauges_base_line = base_line + 10 if standalone_mode else base_line + 6
+    if standalone_mode:
+        gauges_base_line = base_line + 10
+    elif mini_mode:
+        gauges_base_line = base_line + 6
+    else:
+        gauges_base_line = base_line + 5
     tempdisp_line = gauges_base_line + (2 if root.display_gauges else 0)
     e_base_line = base_line + 3 if mini_mode else base_line + 2
 
