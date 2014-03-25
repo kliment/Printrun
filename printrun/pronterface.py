@@ -247,6 +247,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         else:
             self.createGui(self.settings.uimode == "Compact",
                            self.settings.controlsmode == "Mini")
+
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText(_("Not connected to printer."))
+
         self.t = Tee(self.catchprint)
         self.stdout = sys.stdout
         self.skeining = 0
