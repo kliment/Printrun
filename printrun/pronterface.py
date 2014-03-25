@@ -119,7 +119,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, app, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         self.app = app
-        self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"))
+        self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
         self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
@@ -176,7 +176,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.userm114 = 0
         self.userm105 = 0
         self.m105_waitcycles = 0
-        self.monitor = 0
         self.fgcode = None
         self.excluder = None
         self.skeinp = None
@@ -269,7 +268,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.filename is not None:
             self.do_load(self.filename)
         if self.settings.monitor:
-            self.setmonitor(None)
+            self.update_monitor()
 
     def on_resize(self, event):
         maximized = self.IsMaximized()
@@ -1312,26 +1311,23 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def do_monitor(self, l = ""):
         if l.strip() == "":
-            self.monitorbox.SetValue(not self.monitorbox.GetValue())
+            self.set("monitor", not self.settings.monitor)
         elif l.strip() == "off":
-            wx.CallAfter(self.monitorbox.SetValue, False)
+            self.set("monitor", False)
         else:
             try:
                 self.monitor_interval = float(l)
-                wx.CallAfter(self.monitorbox.SetValue, self.monitor_interval > 0)
+                self.set("monitor", self.monitor_interval > 0)
             except:
                 print _("Invalid period given.")
-        self.setmonitor(None)
-        if self.monitor:
+        if self.settings.monitor:
             print _("Monitoring printer.")
         else:
             print _("Done monitoring.")
 
-    def setmonitor(self, e):
-        self.monitor = self.monitorbox.GetValue()
-        self.set("monitor", self.monitor)
-        if self.display_graph:
-            if self.monitor:
+    def update_monitor(self, *args):
+        if hasattr(self, "display_graph") and self.display_graph:
+            if self.settings.monitor:
                 wx.CallAfter(self.graph.StartPlotting, 1000)
             else:
                 wx.CallAfter(self.graph.StopPlotting)
@@ -1448,7 +1444,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     self.status_thread = None
                     self.disconnect()
                     return
-            if self.monitor and self.p.online:
+            if self.settings.monitor and self.p.online:
                 if self.sdprinting:
                     self.p.send_now("M27")
                 if self.m105_waitcycles % 10 == 0:
