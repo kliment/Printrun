@@ -368,10 +368,14 @@ class ControlsSizer(wx.GridBagSizer):
         else: self.make_standard(root, parentpanel, standalone_mode)
 
     def make_standard(self, root, parentpanel, standalone_mode):
+        lltspanel = root.newPanel(parentpanel)
         llts = wx.BoxSizer(wx.HORIZONTAL)
-        self.Add(llts, pos = (0, 0), span = (1, 6))
-        self.xyzsizer = XYZControlsSizer(root, parentpanel)
-        self.Add(self.xyzsizer, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
+        lltspanel.SetSizer(llts)
+        self.Add(lltspanel, pos = (0, 0), span = (1, 6))
+        xyzpanel = root.newPanel(parentpanel)
+        self.xyzsizer = XYZControlsSizer(root, xyzpanel)
+        xyzpanel.SetSizer(self.xyzsizer)
+        self.Add(xyzpanel, pos = (1, 0), span = (1, 6), flag = wx.ALIGN_CENTER)
 
         self.extra_buttons = {}
         pos_mapping = {"extrude": (4, 0),
@@ -383,7 +387,8 @@ class ControlsSizer(wx.GridBagSizer):
         for key, desc in root.cpbuttons.items():
             if not standalone_mode and key in ["extrude", "reverse"]:
                 continue
-            btn = make_custom_button(root, parentpanel, desc)
+            panel = lltspanel if key == "motorsoff" else parentpanel
+            btn = make_custom_button(root, panel, desc)
             if key == "motorsoff":
                 llts.Add(btn)
             elif not standalone_mode:
@@ -391,12 +396,12 @@ class ControlsSizer(wx.GridBagSizer):
             else:
                 self.extra_buttons[key] = btn
 
-        root.xyfeedc = wx.SpinCtrl(parentpanel, -1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70, -1))
+        root.xyfeedc = wx.SpinCtrl(lltspanel, -1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (70, -1))
         root.xyfeedc.SetToolTip(wx.ToolTip(_("Set Maximum Speed for X & Y axes (mm/min)")))
-        llts.Add(wx.StaticText(parentpanel, -1, _("XY:")), flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        llts.Add(wx.StaticText(lltspanel, -1, _("XY:")), flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         llts.Add(root.xyfeedc)
-        llts.Add(wx.StaticText(parentpanel, -1, _("mm/min Z:")), flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
-        root.zfeedc = wx.SpinCtrl(parentpanel, -1, str(root.settings.z_feedrate), min = 0, max = 50000, size = (70, -1))
+        llts.Add(wx.StaticText(lltspanel, -1, _("mm/min Z:")), flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        root.zfeedc = wx.SpinCtrl(lltspanel, -1, str(root.settings.z_feedrate), min = 0, max = 50000, size = (70, -1))
         root.zfeedc.SetToolTip(wx.ToolTip(_("Set Maximum Speed for Z axis (mm/min)")))
         llts.Add(root.zfeedc,)
 
@@ -505,8 +510,9 @@ class LogPane(wx.BoxSizer):
         root.logbox.SetMinSize((100, -1))
         root.logbox.SetEditable(0)
         self.Add(root.logbox, 1, wx.EXPAND)
+        bottom_panel = root.newPanel(parentpanel)
         lbrs = wx.BoxSizer(wx.HORIZONTAL)
-        root.commandbox = wx.TextCtrl(parentpanel, style = wx.TE_PROCESS_ENTER)
+        root.commandbox = wx.TextCtrl(bottom_panel, style = wx.TE_PROCESS_ENTER)
         root.commandbox.SetToolTip(wx.ToolTip(_("Send commands to printer\n(Type 'help' for simple\nhelp function)")))
         root.commandbox.Bind(wx.EVT_TEXT_ENTER, root.sendline)
         root.commandbox.Bind(wx.EVT_CHAR, root.cbkey)
@@ -514,9 +520,10 @@ class LogPane(wx.BoxSizer):
         root.commandbox.histindex = 1
         #root.printerControls.append(root.commandbox)
         lbrs.Add(root.commandbox, 1)
-        root.sendbtn = make_button(parentpanel, _("Send"), root.sendline, _("Send Command to Printer"), style = wx.BU_EXACTFIT, container = lbrs)
+        root.sendbtn = make_button(bottom_panel, _("Send"), root.sendline, _("Send Command to Printer"), style = wx.BU_EXACTFIT, container = lbrs)
         #root.printerControls.append(root.sendbtn)
-        self.Add(lbrs, 0, wx.EXPAND)
+        bottom_panel.SetSizer(lbrs)
+        self.Add(bottom_panel, 0, wx.EXPAND)
 
 class ToggleablePane(wx.BoxSizer):
 
