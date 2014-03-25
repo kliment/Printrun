@@ -326,10 +326,10 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         for key, btn in extra_buttons.items():
             add(key, btn, flag = wx.EXPAND)
 
-class LeftPane(wx.GridBagSizer):
+class ControlsSizer(wx.GridBagSizer):
 
     def __init__(self, root, parentpanel = None, standalone_mode = False, mini_mode = False):
-        super(LeftPane, self).__init__()
+        super(ControlsSizer, self).__init__()
         if not parentpanel: parentpanel = root.panel
         if mini_mode: self.make_mini(root, parentpanel)
         else: self.make_standard(root, parentpanel, standalone_mode)
@@ -509,12 +509,13 @@ class ToggleablePane(wx.BoxSizer):
         self.button.SetLabel(">" if self.button.GetLabel() == "<" else "<")
 
 class LeftPaneToggleable(ToggleablePane):
-    def __init__(self, root, parentpanel, parentsizer, mini_mode):
+    def __init__(self, root, parentpanel, parentsizer):
         super(LeftPaneToggleable, self).__init__(root, "<", parentpanel, parentsizer)
-        pane = LeftPane(root, self.panepanel, mini_mode = mini_mode)
-        self.panepanel.SetSizer(pane)
         self.Add(self.panepanel, 0, wx.EXPAND)
         self.Add(self.button, 0)
+
+    def set_sizer(self, sizer):
+        self.panepanel.SetSizer(sizer)
 
     def on_show(self):
         self.parentsizer.Layout()
@@ -637,11 +638,11 @@ class MainWindow(wx.Frame):
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
         page1panel2.SetSizer(self.lowersizer)
         leftsizer = wx.BoxSizer(wx.VERTICAL)
-        left_pane = LeftPane(self, page1panel2, True)
-        leftsizer.Add(left_pane, 1, wx.ALIGN_CENTER)
+        controls_sizer = ControlsSizer(self, page1panel2, True)
+        leftsizer.Add(controls_sizer, 1, wx.ALIGN_CENTER)
         rightsizer = wx.BoxSizer(wx.VERTICAL)
         extracontrols = wx.GridBagSizer()
-        add_extra_controls(extracontrols, self, page1panel2, left_pane.extra_buttons)
+        add_extra_controls(extracontrols, self, page1panel2, controls_sizer.extra_buttons)
         rightsizer.AddStretchSpacer()
         rightsizer.Add(extracontrols, 0, wx.ALIGN_CENTER)
         self.lowersizer.Add(leftsizer, 0, wx.ALIGN_CENTER | wx.RIGHT, border = 10)
@@ -705,12 +706,15 @@ class MainWindow(wx.Frame):
         upperpanel.SetSizer(self.uppersizer)
         lowerpanel.SetSizer(self.lowersizer)
         leftpanel = self.newPanel(lowerpanel)
-        left_pane = LeftPaneToggleable(self, leftpanel,
-                                       self.lowersizer, mini_mode = mini)
-        left_pane.Layout()  # required to get correct rows/cols counts
+        left_pane = LeftPaneToggleable(self, leftpanel, self.lowersizer)
+        leftpanel.SetSizer(left_pane)
+        left_real_panel = left_pane.panepanel
+        controls_panel = self.newPanel(left_real_panel)
+        controls_sizer = ControlsSizer(self, controls_panel, mini_mode = mini)
+        controls_panel.SetSizer(controls_sizer)
         left_sizer = wx.BoxSizer(wx.VERTICAL)
-        left_sizer.Add(left_pane, 1, wx.EXPAND)
-        leftpanel.SetSizer(left_sizer)
+        left_sizer.Add(controls_panel, 1, wx.EXPAND)
+        left_pane.set_sizer(left_sizer)
         self.lowersizer.Add(leftpanel, 0, wx.EXPAND)
         if not compact:  # Use a splitterwindow to group viz and log
             rightpanel = self.newPanel(lowerpanel)
