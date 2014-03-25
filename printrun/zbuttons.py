@@ -33,7 +33,6 @@ class ZButtons(BufferedCanvas):
         2: (1.1, 68, 13),
     }
     imagename = "control_z.png"
-    size = (59, 244)
 
     def __init__(self, parent, moveCallback = None, bgcolor = "#FFFFFF", ID=-1):
         self.bg_bmp = wx.Image(imagefile(self.imagename), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
@@ -49,7 +48,7 @@ class ZButtons(BufferedCanvas):
         self.bgcolor.SetFromName(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        BufferedCanvas.__init__(self, parent, ID, size=wx.Size(*self.size))
+        BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -167,5 +166,4 @@ class ZButtonsMini(ZButtons):
         1: (1, 42.8, 12.9),
     }
     imagename = "control_z_mini.png"
-    size = (59, 244)
     move_values = [0.1, 10]
