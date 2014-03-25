@@ -498,11 +498,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if not l.__class__ in (str, unicode) or not len(l):
                 l = str(self.speed_slider.GetValue())
             else:
-                l = l.lower().replace(", ", ".")
-            f = float(l)
+                l = l.lower()
+            speed = int(l)
             if self.p.online:
                 self.p.send_now("M220 S" + l)
-                print _("Setting print speed factor to %.1f%%.") % f
+                print _("Setting print speed factor to %d%%.") % speed
             else:
                 print _("Printer is not online.")
         except Exception, x:
