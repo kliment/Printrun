@@ -240,7 +240,7 @@ class XYButtons(BufferedCanvas):
             w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
             gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
 
-        if self.enabled:
+        if self.enabled and self.IsEnabled():
             # Brush and pen for grey overlay when mouse hovers over
             gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
             gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
@@ -473,7 +473,7 @@ class XYButtonsMini(XYButtons):
             w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
             gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
 
-        if self.enabled:
+        if self.enabled and self.IsEnabled():
             # Brush and pen for grey overlay when mouse hovers over
             gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
             gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
