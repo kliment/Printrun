@@ -228,9 +228,18 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
 
     ## Temperature (M105) feedback display
-    # TODO: make it wrap around
-    root.tempdisp = wx.StaticText(parentpanel, -1, "")
-    add("tempdisp", root.tempdisp)
+    root.tempdisp = wx.StaticText(parentpanel, -1, "", style = wx.ST_NO_AUTORESIZE)
+
+    def on_tempdisp_size(evt):
+        root.tempdisp.Wrap(root.tempdisp.GetSize().width)
+    root.tempdisp.Bind(wx.EVT_SIZE, on_tempdisp_size)
+
+    def tempdisp_setlabel(label):
+        wx.StaticText.SetLabel(root.tempdisp, label)
+        root.tempdisp.Wrap(root.tempdisp.GetSize().width)
+        root.tempdisp.SetSize(root.tempdisp.GetBestSize())
+    root.tempdisp.SetLabel = tempdisp_setlabel
+    add("tempdisp", root.tempdisp, flag = wx.EXPAND)
 
     ## Temperature graph
 
@@ -700,7 +709,7 @@ class MainWindow(wx.Frame):
                                        self.lowersizer, mini_mode = mini)
         left_pane.Layout()  # required to get correct rows/cols counts
         left_sizer = wx.BoxSizer(wx.VERTICAL)
-        left_sizer.Add(left_pane, 0)
+        left_sizer.Add(left_pane, 1, wx.EXPAND)
         leftpanel.SetSizer(left_sizer)
         self.lowersizer.Add(leftpanel, 0, wx.EXPAND)
         if not compact:  # Use a splitterwindow to group viz and log
