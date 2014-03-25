@@ -10,14 +10,39 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="50.611038"
-   height="169.64636"
-   id="svg12413"
+   width="59"
+   height="170"
+   id="svg12207"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="Nouveau document 173">
+   sodipodi:docname="control_z_mini.svg"
+   inkscape:export-filename="/home/ixce/Printrun/images/control_z.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
-     id="defs12415">
+     id="defs12209">
+    <linearGradient
+       id="linearGradient5876-3-0-7-6-6">
+      <stop
+         style="stop-color:#a1cca1;stop-opacity:1;"
+         offset="0"
+         id="stop5878-6-87-22-45-3" />
+      <stop
+         style="stop-color:#6ba469;stop-opacity:1;"
+         offset="1"
+         id="stop5880-4-0-33-1-6" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient5876-3-0-7-6">
+      <stop
+         style="stop-color:#a1cca1;stop-opacity:1;"
+         offset="0"
+         id="stop5878-6-87-22-45" />
+      <stop
+         style="stop-color:#6ba469;stop-opacity:1;"
+         offset="1"
+         id="stop5880-4-0-33-1" />
+    </linearGradient>
     <filter
        color-interpolation-filters="sRGB"
        inkscape:collect="always"
@@ -81,9 +106,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="66.019804"
-     inkscape:cy="110.53747"
+     inkscape:zoom="2.8"
+     inkscape:cx="-77.099747"
+     inkscape:cy="104.74986"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -91,13 +116,13 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="628"
-     inkscape:window-height="405"
-     inkscape:window-x="2"
-     inkscape:window-y="104"
-     inkscape:window-maximized="0" />
+     inkscape:window-width="1600"
+     inkscape:window-height="835"
+     inkscape:window-x="0"
+     inkscape:window-y="26"
+     inkscape:window-maximized="1" />
   <metadata
-     id="metadata12418">
+     id="metadata12212">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -112,10 +137,10 @@
      inkscape:label="Calque 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-308.9802,-473.25329)">
+     transform="translate(82.282768,-154.30468)">
     <g
        id="g12048"
-       transform="translate(584.90719,693.56058)">
+       transform="translate(199.00042,374.61197)">
       <rect
          style="color:#000000;fill:#666666;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;marker:none;visibility:visible;display:inline;overflow:visible;filter:url(#filter12355);enable-background:accumulate"
          id="rect12337"
