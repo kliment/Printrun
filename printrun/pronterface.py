@@ -944,11 +944,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             pass
 
     def cbuttons_reload(self):
-        allcbs = getattr(self, "custombuttonbuttons", [])
+        allcbs = getattr(self, "custombuttons", [])
         for button in allcbs:
             self.centersizer.Detach(button)
             button.Destroy()
-        self.custombuttonbuttons = []
+        self.custombuttons = []
         custombuttons = self.custombuttons[:] + [None]
         for i, btndef in enumerate(custombuttons):
             if btndef is None:
@@ -973,7 +973,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if btndef is not None:
                 b.Bind(wx.EVT_BUTTON, self.procbutton)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
-            self.custombuttonbuttons.append(b)
+            self.custombuttons.append(b)
             if type(self.centersizer) == wx.GridBagSizer:
                 self.centersizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
@@ -1131,7 +1131,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     #if self.uppersizer.GetItem(self.newbuttonbutton) is not None:
                     #    self.uppersizer.SetItemMinSize(self.newbuttonbutton, obj.GetSize())
                     #    self.mainsizer.Layout()
-                    for b in self.custombuttonbuttons:
+                    for b in self.custombuttons:
                         #if b.IsFrozen(): b.Thaw()
                         if b.properties is None:
                             b.Enable()
@@ -1161,7 +1161,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 dst = None
                 src = self.dragging.sourcebutton
                 drg = self.dragging
-                for b in self.custombuttonbuttons:
+                for b in self.custombuttons:
                     if b.GetScreenRect().Contains(scrpos):
                         dst = b
                         break
@@ -1208,7 +1208,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             dst = None
             src = self.dragging.sourcebutton
             drg = self.dragging
-            for b in self.custombuttonbuttons:
+            for b in self.custombuttons:
                 if b.GetScreenRect().Contains(scrpos):
                     dst = b
                     break
