@@ -67,7 +67,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     standalone_mode = extra_buttons is not None
     base_line = 1 if standalone_mode else 2
 
-    gauges_base_line = base_line + 8 if standalone_mode else base_line + 5
+    gauges_base_line = base_line + 9 if standalone_mode else base_line + 5
     tempdisp_line = gauges_base_line + (2 if root.display_gauges else 0)
     e_base_line = base_line + 3 if mini_mode else base_line + 2
 
@@ -108,7 +108,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     }
 
     if standalone_mode:
-        pos_mapping["tempgraph"] = (base_line + 3, 0)
+        pos_mapping["tempgraph"] = (base_line + 4, 0)
         span_mapping["tempgraph"] = (5, 6)
     elif mini_mode:
         pos_mapping["tempgraph"] = (base_line + 2, 0)
