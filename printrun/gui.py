@@ -800,8 +800,13 @@ class MainWindow(wx.Frame):
         # This prevents resizing below a reasonnable value
         # We sum the lowersizer (left pane / viz / log) min size
         # the toolbar height and the statusbar/menubar sizes
-        minsize = self.lowersizer.GetMinSize()  # lower pane
+        minsize = [0, 0]
+        minsize[0] = self.lowersizer.GetMinSize()[0]  # lower pane
+        minsize[1] = max(viz_pane.GetMinSize()[1], controls_sizer.GetMinSize()[1])
         minsize[1] += self.uppersizer.GetMinSize()[1]  # toolbar height
+        displaysize = wx.DisplaySize()
+        minsize[0] = min(minsize[0], displaysize[0])
+        minsize[1] = min(minsize[1], displaysize[1])
         self.SetMinSize(self.ClientToWindowSize(minsize))  # client to window
 
         # disable all printer controls until we connect to a printer
