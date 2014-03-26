@@ -1030,6 +1030,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             else:
                 self.centersizer.Add(b, flag = wx.EXPAND)
         self.centerpanel.Layout()
+        self.centerpanel.GetContainingSizer().Layout()
 
     def help_button(self):
         print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
