@@ -653,9 +653,12 @@ class MainWindow(wx.Frame):
         super(MainWindow, self).__init__(*args, **kwargs)
         # this list will contain all controls that should be only enabled
         # when we're connected to a printer
-        self.printerControls = []
         self.panel = wx.Panel(self, -1, size = kwargs["size"])
+        self.reset_ui()
+
+    def reset_ui(self):
         self.panels = []
+        self.printerControls = []
 
     def newPanel(self, parent, add_to_list = True):
         panel = wx.Panel(parent)

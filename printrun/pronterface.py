@@ -119,13 +119,15 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def __init__(self, app, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         self.app = app
+        self.window_ready = False
+        self.ui_ready = False
         self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
         self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
-        self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"))
-        self.settings._add(ComboSetting("controlsmode", "Standard", ["Standard", "Mini"], _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"))
+        self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"), self.reload_ui)
+        self.settings._add(ComboSetting("controlsmode", "Standard", ["Standard", "Mini"], _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"))
@@ -207,6 +209,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+        self.window_ready = True
 
         self.display_graph = self.settings.tempgraph
         self.display_gauges = self.settings.tempgauges
@@ -242,12 +245,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             pass
         self.popmenu()
         self.update_recent_files("recentfiles", self.settings.recentfiles)
-        if self.settings.uimode == "Tabbed":
-            self.createTabbedGui()
-        else:
-            self.createGui(self.settings.uimode == "Compact",
-                           self.settings.controlsmode == "Mini")
 
+        self.reload_ui()
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetStatusText(_("Not connected to printer."))
 
@@ -273,6 +272,27 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.do_load(self.filename)
         if self.settings.monitor:
             self.update_monitor()
+
+    def reset_ui(self):
+        MainWindow.reset_ui(self)
+        self.custombuttons_widgets = []
+
+    def reload_ui(self, *args):
+        if not self.window_ready: return
+        self.Freeze()
+        if self.ui_ready:
+            self.panel.DestroyChildren()
+            self.gwindow.Destroy()
+            self.reset_ui()
+        if self.settings.uimode == "Tabbed":
+            self.createTabbedGui()
+        else:
+            self.createGui(self.settings.uimode == "Compact",
+                           self.settings.controlsmode == "Mini")
+        if self.ui_ready:
+            self.panel.Layout()
+        self.ui_ready = True
+        self.Thaw()
 
     def on_resize(self, event):
         maximized = self.IsMaximized()
@@ -539,7 +559,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             pronsole.pronsole.start_macro(self, macro_name, old_macro_definition)
 
     def catchprint(self, l):
-        wx.CallAfter(self.addtexttolog, l)
+        if not self.IsFrozen():
+            wx.CallAfter(self.addtexttolog, l)
 
     def project(self, event):
         from printrun import projectlayer
