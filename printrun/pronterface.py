@@ -285,10 +285,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         # If UI is being recreated, delete current one
         if self.ui_ready:
+            # Store log console content
+            logcontent = self.logbox.GetValue()
             # Create a temporary panel to reparent widgets with state we want
             # to retain across UI changes
-            logcontent = self.logbox.GetValue()
             temppanel = wx.Panel(self)
+            # TODO: add viz widgets to statefulControls
             for control in self.statefulControls:
                 control.GetContainingSizer().Detach(control)
                 control.Reparent(temppanel)
