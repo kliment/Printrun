@@ -123,7 +123,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.ui_ready = False
         self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
-        self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"))
+        self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"), self.update_bed_viz)
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"), self.reload_ui)
@@ -963,6 +963,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         for i, v in enumerate(color):
             target_color[i] = v
         wx.CallAfter(self.Refresh)
+
+    def update_build_dimensions(self, param, value):
+        pronsole.pronsole.update_build_dimensions(self, param, value)
+        self.update_bed_viz()
+
+    def update_bed_viz(self, *args):
+        if hasattr(self, "gviz") and hasattr(self.gviz, "recreate_platform"):
+            self.gviz.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
+        if hasattr(self, "gwindow") and hasattr(self.gwindow, "recreate_platform"):
+            self.gwindow.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
 
     def setfeeds(self, e):
         self.feedrates_changed = True

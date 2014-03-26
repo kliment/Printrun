@@ -293,6 +293,11 @@ class GcodeViewMainWrapper(object):
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
+    def recreate_platform(self, build_dimensions, circular):
+        self.platform = actors.Platform(build_dimensions, circular = circular)
+        self.objects[0].model = self.platform
+        wx.CallAfter(self.Refresh)
+
     def addgcode(self, *a):
         pass
 
@@ -366,6 +371,11 @@ class GcodeViewFrame(GvizBaseFrame):
             self.model.printed_until = gline.gcview_end_vertex
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
+
+    def recreate_platform(self, build_dimensions, circular):
+        self.platform = actors.Platform(build_dimensions, circular = circular)
+        self.objects[0].model = self.platform
+        wx.CallAfter(self.Refresh)
 
     def addfile(self, gcode = None):
         if self.clonefrom:
