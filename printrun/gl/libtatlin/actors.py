@@ -467,7 +467,9 @@ class GcodeModel(Model):
         copy = GcodeModel()
         for var in ["vertices", "colors", "travels", "indices",
                     "max_layers", "num_layers_to_draw", "printed_until",
-                    "layer_stops", "dims", "only_current"]:
+                    "layer_stops", "dims", "only_current",
+                    "count_travel_indices", "count_print_indices",
+                    "count_print_vertices"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False
