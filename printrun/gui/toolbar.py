@@ -50,18 +50,38 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     except:
         pass
     self.Add(root.baud)
-    root.connectbtn = make_autosize_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"), self)
 
-    root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"), self)
+    if not hasattr(root, "connectbtn"):
+        root.connectbtn = make_autosize_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"))
+        root.statefulControls.append(root.connectbtn)
+    else:
+        root.connectbtn.Reparent(parentpanel)
+    self.Add(root.connectbtn)
+    if not hasattr(root, "resetbtn"):
+        root.resetbtn = make_autosize_button(parentpanel, _("Reset"), root.reset, _("Reset the printer"))
+        root.statefulControls.append(root.resetbtn)
+    else:
+        root.resetbtn.Reparent(parentpanel)
+    self.Add(root.resetbtn)
 
     self.AddStretchSpacer(prop = 1)
 
     root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
     root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
+    root.sdbtn.Reparent(parentpanel)
     root.printerControls.append(root.sdbtn)
-    root.printbtn = make_autosize_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"), self)
-    root.printbtn.Disable()
-    root.pausebtn = make_autosize_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"), self)
+    if not hasattr(root, "printbtn"):
+        root.printbtn = make_autosize_button(parentpanel, _("Print"), root.printfile, _("Start Printing Loaded File"))
+        root.statefulControls.append(root.printbtn)
+    else:
+        root.printbtn.Reparent(parentpanel)
+    self.Add(root.printbtn)
+    if not hasattr(root, "pausebtn"):
+        root.pausebtn = make_autosize_button(parentpanel, _("Pause"), root.pause, _("Pause Current Print"))
+        root.statefulControls.append(root.pausebtn)
+    else:
+        root.pausebtn.Reparent(parentpanel)
+    self.Add(root.pausebtn)
     root.offbtn = make_autosize_button(parentpanel, _("Off"), root.off, _("Turn printer off"), self)
     root.printerControls.append(root.offbtn)
 

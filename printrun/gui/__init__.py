@@ -101,6 +101,7 @@ class MainWindow(wx.Frame):
         # when we're connected to a printer
         self.panel = wx.Panel(self, -1, size = kwargs["size"])
         self.reset_ui()
+        self.statefulControls = []
 
     def reset_ui(self):
         self.panels = []
@@ -171,12 +172,6 @@ class MainWindow(wx.Frame):
         rightsizer.AddStretchSpacer()
 
         self.panel.SetSizerAndFit(self.notesizer)
-
-        # disable all printer controls until we connect to a printer
-        self.pausebtn.Disable()
-        self.recoverbtn.Disable()
-        for i in self.printerControls:
-            i.Disable()
 
         self.cbuttons_reload()
         minsize = self.lowersizer.GetMinSize()  # lower pane
@@ -254,10 +249,19 @@ class MainWindow(wx.Frame):
         minsize[1] = min(minsize[1], displaysize[1])
         self.SetMinSize(self.ClientToWindowSize(minsize))  # client to window
 
-        # disable all printer controls until we connect to a printer
+        self.cbuttons_reload()
+
+    def gui_set_connected(self):
+        self.xyb.enable()
+        self.zb.enable()
+        for control in self.printerControls:
+            control.Enable()
+
+    def gui_set_disconnected(self):
+        self.printbtn.Disable()
         self.pausebtn.Disable()
         self.recoverbtn.Disable()
-        for i in self.printerControls:
-            i.Disable()
-
-        self.cbuttons_reload()
+        for control in self.printerControls:
+            control.Disable()
+        self.xyb.disable()
+        self.zb.disable()

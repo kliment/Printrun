@@ -247,6 +247,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.update_recent_files("recentfiles", self.settings.recentfiles)
 
         self.reload_ui()
+        # disable all printer controls until we connect to a printer
+        self.gui_set_disconnected()
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetStatusText(_("Not connected to printer."))
 
@@ -280,16 +282,33 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def reload_ui(self, *args):
         if not self.window_ready: return
         self.Freeze()
+
+        # If UI is being recreated, delete current one
         if self.ui_ready:
+            # Create a temporary panel to reparent widgets with state we want
+            # to retain across UI changes
+            logcontent = self.logbox.GetValue()
+            temppanel = wx.Panel(self)
+            for control in self.statefulControls:
+                control.GetContainingSizer().Detach(control)
+                control.Reparent(temppanel)
             self.panel.DestroyChildren()
             self.gwindow.Destroy()
             self.reset_ui()
+
+        # Create UI
         if self.settings.uimode == "Tabbed":
             self.createTabbedGui()
         else:
             self.createGui(self.settings.uimode == "Compact",
                            self.settings.controlsmode == "Mini")
+
+        # Finalize
+        if self.online:
+            self.gui_set_connected()
         if self.ui_ready:
+            self.logbox.SetValue(logcontent)
+            temppanel.Destroy()
             self.panel.Layout()
         self.ui_ready = True
         self.Thaw()
@@ -340,12 +359,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if hasattr(self, "extrudersel"):
             self.do_tool(self.extrudersel.GetValue())
 
-        for i in self.printerControls:
-            i.Enable()
-
-        # Enable XYButtons and ZButtons
-        self.xyb.enable()
-        self.zb.enable()
+        self.gui_set_connected()
 
         if self.filename:
             self.printbtn.Enable()
@@ -1919,15 +1933,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         wx.CallAfter(self.connectbtn.SetToolTip, wx.ToolTip(_("Connect to the printer")))
         wx.CallAfter(self.connectbtn.Bind, wx.EVT_BUTTON, self.connect)
 
-        wx.CallAfter(self.printbtn.Disable)
-        wx.CallAfter(self.pausebtn.Disable)
-        wx.CallAfter(self.recoverbtn.Disable)
-        for i in self.printerControls:
-            wx.CallAfter(i.Disable)
-
-        # Disable XYButtons and ZButtons
-        wx.CallAfter(self.xyb.disable)
-        wx.CallAfter(self.zb.disable)
+        wx.CallAfter(self.gui_set_disconnected)
 
         if self.paused:
             self.p.paused = 0
