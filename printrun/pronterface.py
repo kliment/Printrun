@@ -1400,6 +1400,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def addtexttolog(self, text):
         try:
+            max_length = 20000
+            current_length = self.logbox.GetLastPosition()
+            if current_length > max_length:
+                self.logbox.Remove(0, current_length / 10)
             self.logbox.AppendText(text)
         except:
             print _("Attempted to write invalid text to console, which could be due to an invalid baudrate")
