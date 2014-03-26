@@ -690,8 +690,8 @@ class GcodeModelLight(Model):
 
         t_end = time.time()
 
-        logging.log(logging.INFO, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
-        logging.log(logging.INFO, _('Vertex count: %d') % (len(self.vertices) / 3))
+        logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
+        logging.debug(_('Vertex count: %d') % (len(self.vertices) / 3))
 
     def copy(self):
         copy = GcodeModelLight()
