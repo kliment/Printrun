@@ -69,6 +69,9 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
+        if self.IsFrozen():
+            event.Skip()
+            return
         if (wx.VERSION > (2, 9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
@@ -121,6 +124,8 @@ class wxGLPanel(wx.Panel):
         size = self.GetClientSize()
         oldwidth, oldheight = self.width, self.height
         width, height = size.width, size.height
+        if width < 1 or height < 1:
+            return
         self.width = max(float(width), 1.0)
         self.height = max(float(height), 1.0)
         self.OnInitGL(call_reshape = False)
