@@ -31,7 +31,7 @@ import re
 from . import printcore
 from printrun.printrun_utils import install_locale, run_command, \
     format_time, format_duration, RemainingTimeEstimator, \
-    get_home_pos, parse_build_dimensions
+    get_home_pos, parse_build_dimensions, parse_temperature_report
 install_locale('pronterface')
 from printrun.power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
@@ -405,13 +405,23 @@ class Status:
         self.print_job_progress = 1.0
 
     def update_tempreading(self, tempstr):
-            r = tempstr.split()
-            # eg. r = ["ok", "T:20.5", "/0.0", "B:0.0", "/0.0", "@:0"]
-            if len(r) == 6:
-                self.extruder_temp = float(r[1][2:])
-                self.extruder_temp_target = float(r[2][1:])
-                self.bed_temp = float(r[3][2:])
-                self.bed_temp_target = float(r[4][1:])
+        temps = parse_temperature_report(tempstr)
+        if "T0" in temps: hotend_temp = float(temps["T0"][0])
+        elif "T" in temps: hotend_temp = float(temps["T"][0])
+        else: hotend_temp = None
+        if temps["T"][1]: hotend_setpoint = float(temps["T"][1])
+        elif temps["T0"][1]: hotend_setpoint = float(temps["T0"][1])
+        else: hotend_setpoint = None
+        if hotend_temp is not None:
+            self.extruder_temp = hotend_temp
+            if hotend_setpoint is not None:
+                self.extruder_temp_target = hotend_setpoint
+        bed_temp = float(temps["B"][0]) if "B" in temps else None
+        if bed_temp is not None:
+            self.bed_temp = bed_temp
+            setpoint = temps["B"][1]
+            if setpoint:
+                self.bed_temp_target = float(setpoint)
 
     @property
     def bed_enabled(self):
