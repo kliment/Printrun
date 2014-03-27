@@ -1540,7 +1540,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             try:
                 while not self.sentlines.empty():
                     gc = self.sentlines.get_nowait()
-                    wx.CallAfter(self.gviz.addgcode, gc, 1)
+                    wx.CallAfter(self.gviz.addgcodehighlight, gc)
                     self.sentlines.task_done()
             except Queue.Empty:
                 pass

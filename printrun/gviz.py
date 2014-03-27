@@ -464,7 +464,7 @@ class Gviz(wx.Panel):
         self.dirty = 1
         wx.CallAfter(self.Refresh)
 
-    def addgcode(self, gcode = "M105", hilight = 0):
+    def addgcodehighlight(self, gcode = "M105"):
         gcode = gcode.split("*")[0]
         gcode = gcode.split(";")[0]
         gcode = gcode.lower().strip()
@@ -481,7 +481,7 @@ class Gviz(wx.Panel):
         if gline.command not in ["G0", "G1", "G2", "G3"]:
             return
 
-        start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
+        start_pos = self.hilightpos[:]
 
         target = start_pos[:]
         target[5] = 0.0
@@ -494,22 +494,10 @@ class Gviz(wx.Panel):
         if gline.i is not None: target[5] = gline.i
         if gline.j is not None: target[6] = gline.j
 
-        z = target[2]
-        if not hilight and z not in self.layers:
-            self.lines[z] = []
-            self.pens[z] = []
-            self.arcs[z] = []
-            self.arcpens[z] = []
-            self.layers.append(z)
-
         if gline.command in ["G0", "G1"]:
             line = [_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])]
-            if not hilight:
-                self.lines[z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
-                self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
-            else:
-                self.hilight.append(line)
-                self.hilightqueue.put_nowait(line)
+            self.hilight.append(line)
+            self.hilightqueue.put_nowait(line)
         elif gline.command in ["G2", "G3"]:
             # startpos, endpos, arc center
             arc = [_x(start_pos[0]), _y(start_pos[1]),
@@ -518,18 +506,10 @@ class Gviz(wx.Panel):
             if gline.command == "G2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
 
-            if not hilight:
-                self.arcs[z].append(arc)
-                self.arcpens[z].append(self.arcpen)
-            else:
-                self.hilightarcs.append(arc)
-                self.hilightarcsqueue.put_nowait(arc)
+            self.hilightarcs.append(arc)
+            self.hilightarcsqueue.put_nowait(arc)
 
-        if not hilight:
-            self.lastpos = target
-            self.dirty = 1
-        else:
-            self.hilightpos = target
+        self.hilightpos = target
         wx.CallAfter(self.Refresh)
 
 if __name__ == '__main__':

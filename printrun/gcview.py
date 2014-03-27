@@ -298,7 +298,7 @@ class GcodeViewMainWrapper(object):
         self.objects[0].model = self.platform
         wx.CallAfter(self.Refresh)
 
-    def addgcode(self, *a):
+    def addgcodehighlight(self, *a):
         pass
 
     def setlayer(self, *a):
