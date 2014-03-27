@@ -1676,7 +1676,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
-            threading.Thread(target = self.loadviz).start()
+            self.post_gcode_load()
         except:
             self.filename = fn
         wx.CallAfter(self.loadbtn.SetLabel, _("Load File"))
@@ -1768,11 +1768,15 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 wx.CallAfter(self.recoverbtn.Disable)
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
-                threading.Thread(target = self.loadviz).start()
+                self.post_gcode_load()
         else:
             dlg.Destroy()
 
-    def loadviz(self):
+    def post_gcode_load(self):
+        self.output_gcode_stats()
+        threading.Thread(target = self.loadviz).start()
+
+    def output_gcode_stats(self):
         gcode = self.fgcode
         print gcode.filament_length, _("mm of filament used in this print")
         print _("The print goes:")
@@ -1780,6 +1784,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         print _("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth)
         print _("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height)
         print _("Estimated duration: %s") % gcode.estimate_duration()
+
+    def loadviz(self):
+        gcode = self.fgcode
         self.gviz.clear()
         self.gwindow.p.clear()
         self.gviz.addfile(gcode, True)
