@@ -45,7 +45,7 @@ except:
     logging.error(_("WX is not installed. This program requires WX to run."))
     raise
 
-from printrun.pronterface_widgets import SpecialButton, MacroEditor, \
+from printrun.gui.widgets import SpecialButton, MacroEditor, \
     PronterOptions, ButtonEdit
 from serial import SerialException
 
