@@ -15,9 +15,9 @@
 
 import wx
 
-from printrun.xybuttons import XYButtons, XYButtonsMini
-from printrun.zbuttons import ZButtons, ZButtonsMini
-from printrun.graph import Graph
+from .xybuttons import XYButtons, XYButtonsMini
+from .zbuttons import ZButtons, ZButtonsMini
+from .graph import Graph
 from printrun.pronterface_widgets import TempGauge
 from wx.lib.agw.floatspin import FloatSpin
 

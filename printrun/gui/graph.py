@@ -18,10 +18,10 @@
 import wx
 from math import log10, floor, ceil
 
-from .utils import install_locale
+from printrun.utils import install_locale
 install_locale('pronterface')
 
-from bufferedcanvas import BufferedCanvas
+from .bufferedcanvas import BufferedCanvas
 
 class GraphWindow(wx.Frame):
     def __init__(self, root, parent_graph = None, size = (600, 600)):
