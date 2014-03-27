@@ -1456,7 +1456,7 @@ class pronsole(cmd.Cmd):
             print "Setting extruder temp to 0"
         self.p.send_now("M104 S0.0")
         if self.status.bed_enabled:
-            if self.status.bed_temp_taret != 0:
+            if self.status.bed_temp_target != 0:
                 print "Setting bed temp to 0"
             self.p.send_now("M140 S0.0")
         self.log("Disconnecting from printer...")
