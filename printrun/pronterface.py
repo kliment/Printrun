@@ -312,6 +312,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.logbox.SetValue(logcontent)
             temppanel.Destroy()
             self.panel.Layout()
+            if self.fgcode:
+                self.post_gcode_load(print_stats = False)
         self.ui_ready = True
         self.Thaw()
 
@@ -1772,8 +1774,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         else:
             dlg.Destroy()
 
-    def post_gcode_load(self):
-        self.output_gcode_stats()
+    def post_gcode_load(self, print_stats = True):
+        if print_stats:
+            self.output_gcode_stats()
         threading.Thread(target = self.loadviz).start()
 
     def output_gcode_stats(self):
