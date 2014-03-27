@@ -446,7 +446,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         layerz = self.fgcode.all_layers[newlayer].z
         if layerz is not None:
             self.curlayer = layerz
-        wx.CallAfter(self.gviz.clearhilights)
         wx.CallAfter(self.gviz.setlayer, newlayer)
 
     def do_pront_extrude(self, l = ""):

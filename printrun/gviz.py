@@ -254,6 +254,7 @@ class Gviz(wx.Panel):
 
     def setlayer(self, layer):
         if layer in self.layers:
+            self.clearhilights()
             self.layerindex = self.layers[layer]
             self.dirty = 1
             self.showall = 0
