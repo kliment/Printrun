@@ -197,6 +197,12 @@ class GCode(object):
             self._preprocess_layers()
         else:
             self.lines = []
+            self.append_layer_id = 0
+            self.append_layer = Layer([])
+            self.all_layers = [self.append_layer]
+            self.layers = {}
+            self.layer_idxs = array('I', [])
+            self.line_idxs = array('I', [])
 
     def __len__(self):
         return len(self.line_idxs)
