@@ -392,17 +392,47 @@ class Gviz(wx.Panel):
             self.parent.layerslider.SetRange(0, max_layers - 1)
             self.parent.layerslider.SetValue(0)
 
-    # FIXME : there's code duplication going on there, we should factor it (but
-    # the reason addgcode is not factored as a add_parsed_gcodes([gline]) is
-    # because when loading a file there's no hilight, so it simply lets us not
-    # do the if hilight: all the time for nothing when loading a lot of lines
+    def _get_movement(self, start_pos, gline):
+        """Takes a start position and a gcode, and returns a 3-uple containing
+        (final position, line, arc), with line and arc being None if not
+        used"""
+        target = start_pos[:]
+        target[5] = 0.0
+        target[6] = 0.0
+        if gline.current_x is not None: target[0] = gline.current_x
+        if gline.current_y is not None: target[1] = gline.current_y
+        if gline.current_z is not None: target[2] = gline.current_z
+        if gline.e is not None:
+            if gline.relative_e:
+                target[3] += gline.e
+            else:
+                target[3] = gline.e
+        if gline.f is not None: target[4] = gline.f
+        if gline.i is not None: target[5] = gline.i
+        if gline.j is not None: target[6] = gline.j
+
+        if gline.command in ["G0", "G1"]:
+            line = [self._x(start_pos[0]),
+                    self._y(start_pos[1]),
+                    self._x(target[0]),
+                    self._y(target[1])]
+            return target, line, None
+        elif gline.command in ["G2", "G3"]:
+            # startpos, endpos, arc center
+            arc = [self._x(start_pos[0]), self._y(start_pos[1]),
+                   self._x(target[0]), self._y(target[1]),
+                   self._x(start_pos[0] + target[5]), self._y(start_pos[1] + target[6])]
+            if gline.command == "G2":  # clockwise, reverse endpoints
+                arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
+            return target, None, arc
+
+    def _y(self, y):
+        return self.build_dimensions[1] - (y - self.build_dimensions[4])
+
+    def _x(self, x):
+        return x - self.build_dimensions[3]
+
     def add_parsed_gcodes(self, gcode):
-        def _y(y):
-            return self.build_dimensions[1] - (y - self.build_dimensions[4])
-
-        def _x(x):
-            return x - self.build_dimensions[3]
-
         start_time = time.time()
 
         for layer_idx, layer in enumerate(gcode.all_layers):
@@ -422,34 +452,12 @@ class Gviz(wx.Panel):
                 if not gline.is_move:
                     continue
 
-                target = self.lastpos[:]
-                target[0] = gline.current_x
-                target[1] = gline.current_y
-                target[2] = gline.current_z
-                target[5] = 0.0
-                target[6] = 0.0
-                if gline.e is not None:
-                    if gline.relative_e:
-                        target[3] += gline.e
-                    else:
-                        target[3] = gline.e
-                if gline.f is not None: target[4] = gline.f
-                if gline.i is not None: target[5] = gline.i
-                if gline.j is not None: target[6] = gline.j
+                target, line, arc = self._get_movement(self.lastpos[:], gline)
 
-                start_pos = self.lastpos[:]
-
-                if gline.command in ["G0", "G1"]:
-                    self.lines[viz_layer].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
+                if line is not None:
+                    self.lines[viz_layer].append(line)
                     self.pens[viz_layer].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
-                elif gline.command in ["G2", "G3"]:
-                    # startpos, endpos, arc center
-                    arc = [_x(start_pos[0]), _y(start_pos[1]),
-                           _x(target[0]), _y(target[1]),
-                           _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
-                    if gline.command == "G2":  # clockwise, reverse endpoints
-                        arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
-
+                elif arc is not None:
                     self.arcs[viz_layer].append(arc)
                     self.arcpens[viz_layer].append(self.arcpen)
 
@@ -474,40 +482,15 @@ class Gviz(wx.Panel):
             return
         gline = self.gcoder.append(gcode, store = False)
 
-        def _y(y):
-            return self.build_dimensions[1] - (y - self.build_dimensions[4])
-
-        def _x(x):
-            return x - self.build_dimensions[3]
-
         if gline.command not in ["G0", "G1", "G2", "G3"]:
             return
 
-        start_pos = self.hilightpos[:]
+        target, line, arc = self._get_movement(self.hilightpos[:], gline)
 
-        target = start_pos[:]
-        target[5] = 0.0
-        target[6] = 0.0
-        if gline.current_x is not None: target[0] = gline.current_x
-        if gline.current_y is not None: target[1] = gline.current_y
-        if gline.current_z is not None: target[2] = gline.current_z
-        if gline.e is not None: target[3] = gline.e
-        if gline.f is not None: target[4] = gline.f
-        if gline.i is not None: target[5] = gline.i
-        if gline.j is not None: target[6] = gline.j
-
-        if gline.command in ["G0", "G1"]:
-            line = [_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])]
+        if line is not None:
             self.hilight.append(line)
             self.hilightqueue.put_nowait(line)
-        elif gline.command in ["G2", "G3"]:
-            # startpos, endpos, arc center
-            arc = [_x(start_pos[0]), _y(start_pos[1]),
-                   _x(target[0]), _y(target[1]),
-                   _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
-            if gline.command == "G2":  # clockwise, reverse endpoints
-                arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
-
+        elif arc is not None:
             self.hilightarcs.append(arc)
             self.hilightarcsqueue.put_nowait(arc)
 
