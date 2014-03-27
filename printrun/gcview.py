@@ -301,8 +301,11 @@ class GcodeViewMainWrapper(object):
     def addgcodehighlight(self, *a):
         pass
 
-    def setlayer(self, *a):
-        pass
+    def setlayer(self, layer):
+        if layer in self.model.layer_idxs_map:
+            viz_layer = self.model.layer_idxs_map[layer]
+            self.parent.model.num_layers_to_draw = viz_layer
+            wx.CallAfter(self.Refresh)
 
     def addfile(self, gcode = None, showall = False):
         self.model = create_model(self.root.settings.light3d

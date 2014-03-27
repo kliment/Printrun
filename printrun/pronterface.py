@@ -133,6 +133,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("light3d", True, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "UI"))
+        self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "UI"))
         self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"), self.reload_ui)
@@ -446,7 +447,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         layerz = self.fgcode.all_layers[newlayer].z
         if layerz is not None:
             self.curlayer = layerz
-        wx.CallAfter(self.gviz.setlayer, newlayer)
+        if self.settings.mainviz != "3D" or self.settings.trackcurrentlayer3d:
+            wx.CallAfter(self.gviz.setlayer, newlayer)
 
     def do_pront_extrude(self, l = ""):
         feed = self.settings.e_feedrate
