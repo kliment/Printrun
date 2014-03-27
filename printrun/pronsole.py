@@ -33,6 +33,7 @@ from printrun.printrun_utils import install_locale, run_command, \
     format_time, format_duration, RemainingTimeEstimator, \
     get_home_pos, parse_build_dimensions
 install_locale('pronterface')
+from printrun.power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
 
 from functools import wraps
@@ -1147,8 +1148,18 @@ class pronsole(cmd.Cmd):
         else:
             print _("Print started at: %s") % format_time(self.starttime)
             self.compute_eta = RemainingTimeEstimator(self.fgcode)
+        try:
+            powerset_print_start(reason = "Preventing sleep during print")
+        except:
+            logging.error(_("Failed to inhibit sleep:"))
+            traceback.print_exc(file = sys.stdout)
 
     def endcb(self):
+        try:
+            powerset_print_stop()
+        except:
+            logging.error(_("Failed to uninhibit sleep:"))
+            traceback.print_exc(file = sys.stdout)
         if self.p.queueindex == 0:
             print_duration = int(time.time() - self.starttime + self.extra_print_time)
             print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
