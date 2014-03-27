@@ -19,7 +19,7 @@ import wx
 import time
 from printrun import gcoder
 
-from printrun_utils import imagefile, install_locale, get_home_pos
+from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
 
 class GvizBaseFrame(wx.Frame):

@@ -33,7 +33,7 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
-from printrun.printrun_utils import install_locale
+from printrun.utils import install_locale
 install_locale('pronterface')
 
 def vec(*args):

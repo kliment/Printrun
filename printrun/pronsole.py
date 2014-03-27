@@ -29,7 +29,7 @@ import traceback
 import re
 
 from . import printcore
-from printrun.printrun_utils import install_locale, run_command, \
+from .utils import install_locale, run_command, \
     format_time, format_duration, RemainingTimeEstimator, \
     get_home_pos, parse_build_dimensions, parse_temperature_report
 install_locale('pronterface')

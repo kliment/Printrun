@@ -19,7 +19,7 @@ except:
     print _("WX is not installed. This program requires WX to run.")
     raise
 
-from printrun.printrun_utils import install_locale
+from printrun.utils import install_locale
 install_locale('pronterface')
 
 from .controls import ControlsSizer, add_extra_controls

@@ -17,7 +17,7 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-from printrun.printrun_utils import install_locale, get_home_pos
+from .utils import install_locale, get_home_pos
 install_locale('pronterface')
 
 import wx

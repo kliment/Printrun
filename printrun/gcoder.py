@@ -21,7 +21,7 @@ import datetime
 import logging
 from array import array
 
-from printrun_utils import install_locale
+from .utils import install_locale
 install_locale('pronterface')
 
 gcode_parsed_args = ["x", "y", "e", "f", "z", "i", "j"]

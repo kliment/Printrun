@@ -18,7 +18,7 @@
 import wx
 from math import log10, floor, ceil
 
-from printrun.printrun_utils import install_locale
+from .utils import install_locale
 install_locale('pronterface')
 
 from bufferedcanvas import BufferedCanvas

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from printrun.printrun_utils import install_locale, iconfile
+from .utils import install_locale, iconfile
 install_locale('plater')
 
 import os

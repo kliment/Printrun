@@ -30,7 +30,7 @@ from pyglet.gl import *
 
 from .gviz import GvizBaseFrame
 
-from printrun_utils import imagefile, install_locale, get_home_pos
+from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
 
 def create_model(light):

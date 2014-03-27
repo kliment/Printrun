@@ -15,7 +15,7 @@
 
 import wx
 from bufferedcanvas import BufferedCanvas
-from printrun_utils import imagefile
+from .utils import imagefile
 
 def sign(n):
     if n < 0: return -1

@@ -16,7 +16,7 @@
 import wx
 from printrun import gviz
 
-from printrun_utils import imagefile, install_locale
+from .utils import imagefile, install_locale
 install_locale('pronterface')
 
 class ExcluderWindow(gviz.GvizWindow):

@@ -34,7 +34,7 @@ import re
 from functools import wraps
 from collections import deque
 from printrun import gcoder
-from printrun.printrun_utils import install_locale, decode_utf8, setup_logging
+from .utils import install_locale, decode_utf8, setup_logging
 install_locale('pronterface')
 
 setup_logging(sys.stderr)

@@ -34,7 +34,8 @@ except ImportError: import json
 from . import pronsole
 from . import printcore
 
-from printrun.printrun_utils import install_locale, setup_logging, \
+from .utils import install_locale, setup_logging, \
+    iconfile, configfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report
 install_locale('pronterface')
 
@@ -53,7 +54,6 @@ layerindex = 0
 if os.name == "nt":
     winsize = (800, 530)
 
-from printrun.printrun_utils import iconfile, configfile, format_time, format_duration
 from printrun.gui import MainWindow
 from printrun.excluder import Excluder
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
