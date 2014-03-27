@@ -25,7 +25,7 @@ def sign(n):
 
 class XYButtons(BufferedCanvas):
     keypad_positions = {
-        0: (107, 103),
+        0: (106, 100),
         1: (86, 83),
         2: (68, 65),
         3: (53, 50)
@@ -33,16 +33,18 @@ class XYButtons(BufferedCanvas):
     corner_size = (49, 49)
     corner_inset = (7, 13)
     label_overlay_positions = {
-        0: (145, 98.5, 9),
-        1: (160.5, 83.5, 10.6),
-        2: (178, 66, 13),
-        3: (197.3, 46.3, 13.3)
+        1: (145, 98.5, 9),
+        2: (160.5, 83.5, 10.6),
+        3: (178, 66, 13),
+        4: (197.3, 46.3, 13.3)
     }
-    concentric_circle_radii = [11, 45, 69, 94, 115]
+    concentric_circle_radii = [0, 17, 45, 69, 94, 115]
+    concentric_inset = 11
     center = (124, 121)
     spacer = 7
     imagename = "control_xy.png"
     corner_to_axis = {
+        -1: "xy",
         0: "x",
         1: "z",
         2: "y",
@@ -123,7 +125,7 @@ class XYButtons(BufferedCanvas):
         xdir = [1, 0, -1, 0, 0, 0][self.quadrant]
         ydir = [0, 1, 0, -1, 0, 0][self.quadrant]
         zdir = [0, 0, 0, 0, 1, -1][self.quadrant]
-        magnitude = math.pow(10, self.concentric - 1)
+        magnitude = math.pow(10, self.concentric - 2)
         if not zdir == 0:
             magnitude = min(magnitude, 10)
         return (magnitude * xdir, magnitude * ydir, magnitude * zdir)
@@ -171,9 +173,9 @@ class XYButtons(BufferedCanvas):
 
     def highlightQuadrant(self, gc, quadrant, concentric):
         assert(quadrant >= 0 and quadrant <= 3)
-        assert(concentric >= 0 and concentric <= 3)
+        assert(concentric >= 0 and concentric <= 4)
 
-        inner_ring_radius = self.concentric_circle_radii[0]
+        inner_ring_radius = self.concentric_inset
         # fudge = math.pi*0.002
         fudge = -0.02
         center = wx.Point(self.center[0], self.center[1])
@@ -231,6 +233,10 @@ class XYButtons(BufferedCanvas):
             x, y = (cx - ww / 2 + xinset + 1, cy + wh / 2 - yinset - 1)
             self.drawCorner(gc, x + w / 2, y - h / 2, math.pi * 3 / 2)
 
+    def drawCenteredDisc(self, gc, radius):
+        cx, cy = self.center
+        gc.DrawEllipse(cx - radius, cy - radius, radius * 2, radius * 2)
+
     def draw(self, dc, w, h):
         dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
@@ -247,7 +253,9 @@ class XYButtons(BufferedCanvas):
 
             if self.concentric is not None:
                 if self.concentric < len(self.concentric_circle_radii):
-                    if self.quadrant is not None:
+                    if self.concentric == 0:
+                        self.drawCenteredDisc(gc, self.concentric_circle_radii[1])
+                    elif self.quadrant is not None:
                         self.highlightQuadrant(gc, self.quadrant, self.concentric)
                 elif self.corner is not None:
                     self.highlightCorner(gc, self.corner)
@@ -362,7 +370,11 @@ class XYButtons(BufferedCanvas):
             self.quadrant, self.concentric = self.getQuadrantConcentricFromPosition(mpos)
             if self.concentric is not None:
                 if self.concentric < len(self.concentric_circle_radii):
-                    if self.quadrant is not None:
+                    if self.concentric == 0:
+                        self.lastCorner = -1
+                        self.lastMove = None
+                        self.cornerCallback(self.corner_to_axis[-1])
+                    elif self.quadrant is not None:
                         x, y, z = self.getMovement()
                         if self.moveCallback:
                             self.lastMove = (x, y)
@@ -480,9 +492,7 @@ class XYButtonsMini(XYButtons):
 
             if self.concentric is not None:
                 if self.concentric < len(self.concentric_circle_radii):
-                    cx, cy = XYButtonsMini.center
-                    r = self.concentric_circle_radii[-1]
-                    gc.DrawEllipse(cx - r, cy - r, r * 2, r * 2)
+                    self.drawCenteredDisc(gc, self.concentric_circle_radii[-1])
                 elif self.corner is not None:
                     self.highlightCorner(gc, self.corner)
         else:
