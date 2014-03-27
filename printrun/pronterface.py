@@ -35,7 +35,7 @@ from . import pronsole
 from . import printcore
 
 from printrun.printrun_utils import install_locale, setup_logging, \
-    hexcolor_to_float
+    hexcolor_to_float, parse_temperature_report
 install_locale('pronterface')
 
 try:
@@ -59,12 +59,7 @@ from printrun.excluder import Excluder
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
 
-tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)")
 tempreading_exp = re.compile("(^T:| T:)")
-
-def parse_temperature_report(report):
-    matches = tempreport_exp.findall(report)
-    return dict((m[0], (m[1], m[2])) for m in matches)
 
 class Tee(object):
     def __init__(self, target):
