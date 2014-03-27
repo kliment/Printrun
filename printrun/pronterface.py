@@ -371,13 +371,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def sentcb(self, line, gline):
         if not gline:
             pass
-        elif gline.is_move:
-            if gline.z is not None:
-                layer = gline.z
-                if layer != self.curlayer:
-                    self.curlayer = layer
-                    wx.CallAfter(self.gviz.clearhilights)
-                    wx.CallAfter(self.gviz.setlayer, layer)
         elif gline.command in ["M104", "M109"]:
             gline_s = gcoder.S(gline)
             if gline_s is not None:
@@ -442,10 +435,17 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 return None
 
     def printsentcb(self, gline):
-        if gline.is_move and hasattr(self.gwindow, "set_current_gline"):
-            wx.CallAfter(self.gwindow.set_current_gline, gline)
-        if gline.is_move and hasattr(self.gviz, "set_current_gline"):
-            wx.CallAfter(self.gviz.set_current_gline, gline)
+        if gline.is_move:
+            if gline.z is not None:
+                layer = gline.z
+                if layer != self.curlayer:
+                    self.curlayer = layer
+                    wx.CallAfter(self.gviz.clearhilights)
+                    wx.CallAfter(self.gviz.setlayer, layer)
+            if hasattr(self.gwindow, "set_current_gline"):
+                wx.CallAfter(self.gwindow.set_current_gline, gline)
+            if hasattr(self.gviz, "set_current_gline"):
+                wx.CallAfter(self.gviz.set_current_gline, gline)
 
     def do_pront_extrude(self, l = ""):
         feed = self.settings.e_feedrate
