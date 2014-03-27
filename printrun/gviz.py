@@ -203,7 +203,7 @@ class Gviz(wx.Panel):
     def inject(self):
         #import pdb; pdb.set_trace()
         print "Inject code here..."
-        print "Layer " + str(self.layerindex + 1) + " - Z = " + str(self.layers[self.layerindex]) + " mm"
+        print "Layer " + str(self.layerindex + 1) + " - Z = " + str(self.get_currentz()) + " mm"
 
     def clearhilights(self):
         self.hilight.clear()
@@ -221,7 +221,8 @@ class Gviz(wx.Panel):
         self.pens = {}
         self.arcs = {}
         self.arcpens = {}
-        self.layers = []
+        self.layers = {}
+        self.layersz = []
         self.clearhilights()
         self.layerindex = 0
         self.showall = 0
@@ -229,7 +230,7 @@ class Gviz(wx.Panel):
         wx.CallAfter(self.Refresh)
 
     def get_currentz(self):
-        z = self.layers[self.layerindex]
+        z = self.layersz[self.layerindex]
         z = 0. if z is None else z
         return z
 
@@ -253,7 +254,7 @@ class Gviz(wx.Panel):
 
     def setlayer(self, layer):
         if layer in self.layers:
-            self.layerindex = self.layers.index(layer)
+            self.layerindex = self.layers[layer]
             self.dirty = 1
             self.showall = 0
             wx.CallAfter(self.Refresh)
@@ -453,9 +454,10 @@ class Gviz(wx.Panel):
                     self.arcpens[viz_layer].append(self.arcpen)
 
                 self.lastpos = target
-            # Only add layer.z to self.layers now to prevent the display of an
+            # Only add layer to self.layers now to prevent the display of an
             # unfinished layer
-            self.layers.append(layer.z)
+            self.layers[layer_idx] = viz_layer
+            self.layersz.append(layer.z)
             # Refresh display if more than 0.2s have passed
             if time.time() - start_time > 0.2:
                 start_time = time.time()
