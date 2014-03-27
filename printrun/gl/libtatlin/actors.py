@@ -315,6 +315,7 @@ class GcodeModel(Model):
         vertex_list = []
         index_list = []
         color_list = []
+        self.layer_idxs_map = {}
         self.layer_stops = [0]
         num_layers = len(model_data.all_layers)
 
@@ -435,6 +436,7 @@ class GcodeModel(Model):
 
             if has_movement:
                 self.layer_stops.append(len(count_print_indices) - 1)
+                self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
 
             if callback:
                 callback(layer_idx + 1, num_layers)
@@ -468,6 +470,7 @@ class GcodeModel(Model):
         for var in ["vertices", "colors", "travels", "indices",
                     "max_layers", "num_layers_to_draw", "printed_until",
                     "layer_stops", "dims", "only_current",
+                    "layer_idxs_map",
                     "count_travel_indices", "count_print_indices",
                     "count_print_vertices"]:
             setattr(copy, var, getattr(self, var))
@@ -648,6 +651,7 @@ class GcodeModelLight(Model):
 
         vertex_list = []
         color_list = []
+        self.layer_idxs_map = {}
         self.layer_stops = [0]
         num_layers = len(model_data.all_layers)
 
@@ -672,6 +676,7 @@ class GcodeModelLight(Model):
 
             if has_movement:
                 self.layer_stops.append(len(vertex_list) / 3)
+                self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
 
             if callback:
                 callback(layer_idx + 1, num_layers)
@@ -697,7 +702,8 @@ class GcodeModelLight(Model):
         copy = GcodeModelLight()
         for var in ["vertices", "colors", "max_layers",
                     "num_layers_to_draw", "printed_until",
-                    "layer_stops", "dims", "only_current"]:
+                    "layer_stops", "dims", "only_current",
+                    "layer_idxs_map"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False
