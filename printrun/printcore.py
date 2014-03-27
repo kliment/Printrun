@@ -112,7 +112,7 @@ class printcore():
     def logError(self, error):
         if self.errorcb:
             try: self.errorcb(error)
-            except: pass
+            except: traceback.print_exc()
         else:
             logging.error(error)
 
@@ -223,7 +223,7 @@ class printcore():
                 self.log.append(line)
                 if self.recvcb:
                     try: self.recvcb(line)
-                    except: pass
+                    except: traceback.print_exc()
                 if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except SelectError as e:
@@ -279,7 +279,7 @@ class printcore():
                    or line.startswith('ok') or "T:" in line:
                     if self.onlinecb:
                         try: self.onlinecb()
-                        except: pass
+                        except: traceback.print_exc()
                     self.online = True
                     return
 
@@ -300,7 +300,7 @@ class printcore():
             if line.startswith('ok') and "T:" in line and self.tempcb:
                 #callback for temp, status, whatever
                 try: self.tempcb(line)
-                except: pass
+                except: traceback.print_exc()
             elif line.startswith('Error'):
                 self.logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
@@ -395,7 +395,7 @@ class printcore():
         try:
             self.print_thread.join()
         except:
-            pass
+            traceback.print_exc()
 
         self.print_thread = None
 
@@ -578,7 +578,7 @@ class printcore():
                 logging.info("SENT: %s" % command)
             if self.sendcb:
                 try: self.sendcb(command, gline)
-                except: pass
+                except: traceback.print_exc()
             try:
                 self.printer.write(str(command + "\n"))
                 if self.printer_tcp:
