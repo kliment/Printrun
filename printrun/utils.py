@@ -96,13 +96,17 @@ def format_time(timestamp):
 def format_duration(delta):
     return str(datetime.timedelta(seconds = int(delta)))
 
-def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
+def prepare_command(command, replaces = None):
     command = shlex.split(command.replace("\\", "\\\\").encode())
-    if replaces is not None:
+    if replaces:
         replaces["$python"] = sys.executable
         for pattern, rep in replaces.items():
             command = [bit.replace(pattern, rep) for bit in command]
-        command = [bit.encode() for bit in command]
+    command = [bit.encode() for bit in command]
+    return command
+
+def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
+    command = prepare_command(command, replaces)
     if blocking:
         return subprocess.call(command)
     else:
