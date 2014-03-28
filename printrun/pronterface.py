@@ -1000,7 +1000,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def cbuttons_reload(self):
         allcbs = getattr(self, "custombuttons_widgets", [])
         for button in allcbs:
-            self.centersizer.Detach(button)
+            self.cbuttonssizer.Detach(button)
             button.Destroy()
         self.custombuttons_widgets = []
         custombuttons = self.custombuttons[:] + [None]
@@ -1028,10 +1028,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.Bind(wx.EVT_BUTTON, self.procbutton)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttons_widgets.append(b)
-            if type(self.centersizer) == wx.GridBagSizer:
-                self.centersizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
+            if type(self.cbuttonssizer) == wx.GridBagSizer:
+                self.cbuttonssizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
-                self.centersizer.Add(b, flag = wx.EXPAND)
+                self.cbuttonssizer.Add(b, flag = wx.EXPAND)
         self.centerpanel.Layout()
         self.centerpanel.GetContainingSizer().Layout()
 
@@ -1223,9 +1223,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 #if dst is None and self.panel.GetScreenRect().Contains(scrpos):
                 #    # try to check if it is after buttons at the end
                 #    tspos = self.panel.ClientToScreen(self.toolbarsizer.GetPosition())
-                #    bspos = self.panel.ClientToScreen(self.centersizer.GetPosition())
+                #    bspos = self.panel.ClientToScreen(self.cbuttonssizer.GetPosition())
                 #    tsrect = wx.Rect(*(tspos.Get()+self.toolbarsizer.GetSize().Get()))
-                #    bsrect = wx.Rect(*(bspos.Get()+self.centersizer.GetSize().Get()))
+                #    bsrect = wx.Rect(*(bspos.Get()+self.cbuttonssizer.GetSize().Get()))
                 #    lbrect = btns[-1].GetScreenRect()
                 #    p = scrpos.Get()
                 #    if len(btns)<4 and tsrect.Contains(scrpos):
