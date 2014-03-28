@@ -371,9 +371,10 @@ class printcore():
         return True
 
     def cancelprint(self):
+        self.pause()
         self.paused = False
         self.mainqueue = None
-        self.p.clear = True
+        self.clear = True
 
     # run a simple script if it exists, no multithreading
     def runSmallScript(self, filename):
