@@ -981,12 +981,12 @@ class pronsole(cmd.Cmd):
             self.log("\b\b\b\b\b100%.")
             self.log(_("Upload completed. %s should now be on the card.") % targetname)
             return
-        except Exception, e:
-            if not isinstance(e, KeyboardInterrupt):
+        except (KeyboardInterrupt, Exception) as e:
+            if isinstance(e, KeyboardInterrupt):
+                self.logError(_("...interrupted!"))
+            else:
                 self.logError(_("Something wrong happened while uploading:"))
                 traceback.print_exc(file = sys.stdout)
-            else:
-                self.logError(_("...interrupted!"))
             self.p.pause()
             self.p.send_now("M29 " + targetname)
             time.sleep(0.2)
