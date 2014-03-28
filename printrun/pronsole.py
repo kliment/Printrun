@@ -969,25 +969,27 @@ class pronsole(cmd.Cmd):
         try:
             sys.stdout.write(_("Progress: ") + "00.0%")
             sys.stdout.flush()
-            time.sleep(1)
             while self.p.printing:
-                time.sleep(1)
+                time.sleep(0.5)
                 sys.stdout.write("\b\b\b\b\b%04.1f%%" % (100 * float(self.p.queueindex) / len(self.p.mainqueue),))
                 sys.stdout.flush()
             self.p.send_now("M29 " + targetname)
-            self.sleep(0.2)
-            self.p.clear = 1
+            time.sleep(0.2)
+            self.p.clear = True
             self._do_ls(False)
             self.log("\b\b\b\b\b100%.")
             self.log(_("Upload completed. %s should now be on the card.") % targetname)
             return
-        except:
-            self.logError(_("...interrupted!"))
+        except Exception, e:
+            if not isinstance(e, KeyboardInterrupt):
+                self.logError(_("Something wrong happened while uploading:"))
+                traceback.print_exc(file = sys.stdout)
+            else:
+                self.logError(_("...interrupted!"))
             self.p.pause()
             self.p.send_now("M29 " + targetname)
             time.sleep(0.2)
-            self.p.clear = 1
-            self.p.startprint(None)
+            self.p.cancelprint()
             self.logError(_("A partial file named %s may have been written to the sd card.") % targetname)
 
     def complete_upload(self, text, line, begidx, endidx):

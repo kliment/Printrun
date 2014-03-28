@@ -361,7 +361,7 @@ class printcore():
         self.queueindex = startindex
         self.resendfrom = -1
         self._send("M110", -1, True)
-        if not gcode.lines:
+        if not gcode or not gcode.lines:
             return True
         self.clear = False
         resuming = (startindex != 0)
@@ -369,6 +369,11 @@ class printcore():
                                    kwargs = {"resuming": resuming})
         self.print_thread.start()
         return True
+
+    def cancelprint(self):
+        self.paused = False
+        self.mainqueue = None
+        self.p.clear = True
 
     # run a simple script if it exists, no multithreading
     def runSmallScript(self, filename):
