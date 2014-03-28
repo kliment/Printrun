@@ -907,6 +907,14 @@ class pronsole(cmd.Cmd):
     def help_disconnect(self):
         self.log("Disconnects from the printer")
 
+    def do_block_until_online(self, l):
+        while not self.p.online:
+            time.sleep(0.1)
+
+    def help_block_until_online(self, l):
+        self.log("Blocks until printer is online")
+        self.log("Warning: if something goes wrong, this can block pronsole forever")
+
     def do_load(self, filename):
         self._do_load(filename)
 
