@@ -75,7 +75,7 @@ class Graph(BufferedCanvas):
 
         self.window = None
 
-    def showwin(self, event = None):
+    def show_graph_window(self, event = None):
         if not self.window:
             self.window = GraphWindow(self.root, self)
             self.window.Show()

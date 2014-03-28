@@ -27,7 +27,7 @@ def make_autosize_button(*args):
     return make_button(*args, size = (-1, -1), style = wx.BU_EXACTFIT)
 
 def make_custom_button(root, parentpanel, i, style = 0):
-    btn = make_button(parentpanel, i.label, root.procbutton,
+    btn = make_button(parentpanel, i.label, root.process_button,
                       i.tooltip, style = style)
     btn.SetBackgroundColour(i.background)
     btn.SetForegroundColour("black")

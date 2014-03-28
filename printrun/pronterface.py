@@ -116,44 +116,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.app = app
         self.window_ready = False
         self.ui_ready = False
-        self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
-        self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
-        self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"), self.update_bed_viz)
-        self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
-        self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
-        self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"), self.reload_ui)
-        self.settings._add(ComboSetting("controlsmode", "Standard", ["Standard", "Mini"], _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
-        self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
-        self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("light3d", True, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "UI"))
-        self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "UI"))
-        self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
-        self.settings._add(HiddenSetting("last_window_width", size[0]))
-        self.settings._add(HiddenSetting("last_window_height", size[1]))
-        self.settings._add(HiddenSetting("last_window_maximized", False))
-        self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
-        self.settings._add(HiddenSetting("last_file_path", u""))
-        self.settings._add(HiddenSetting("last_temperature", 0.0))
-        self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"), self.update_gviz_params)
-        self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"), self.update_gviz_params)
-        self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
-        self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "Colors"), self.reload_ui)
-        self.settings._add(StringSetting("gcview_color_background", "#FAFAC7FF", _("3D view background color"), _("Color of the 3D view background"), "Colors"), self.update_gcview_colors)
-        self.settings._add(StringSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors)
-        self.settings._add(StringSetting("gcview_color_tool0", "#FF000099", _("3D view print moves color"), _("Color of print moves with tool 0 in 3D view"), "Colors"), self.update_gcview_colors)
-        self.settings._add(StringSetting("gcview_color_tool1", "#4F0CE599", _("3D view tool 1 moves color"), _("Color of print moves with tool 1 in 3D view"), "Colors"), self.update_gcview_colors)
-        self.settings._add(StringSetting("gcview_color_printed", "#33BF0099", _("3D view printed moves color"), _("Color of printed moves in 3D view"), "Colors"), self.update_gcview_colors)
-        self.settings._add(StringSetting("gcview_color_current", "#00E5FFCC", _("3D view current layer moves color"), _("Color of moves in current layer in 3D view"), "Colors"), self.update_gcview_colors)
-        self.settings._add(StringSetting("gcview_color_current_printed", "#196600CC", _("3D view printed current layer moves color"), _("Color of already printed moves from current layer in 3D view"), "Colors"), self.update_gcview_colors)
-        self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing most settings here will require restart to get effect"), group = "UI"))
-        recentfilessetting = StringSetting("recentfiles", "[]")
-        recentfilessetting.hidden = True
-        self.settings._add(recentfilessetting, self.update_recent_files)
+        self._add_settings(size)
 
         for field in dir(self.settings):
             if field.startswith("_gcview_color_") and not field.endswith("_cb"):
@@ -239,7 +202,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         except:
             pass
-        self.popmenu()
+        self.create_menu()
         self.update_recent_files("recentfiles", self.settings.recentfiles)
 
         self.reload_ui()
@@ -270,6 +233,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.do_load(self.filename)
         if self.settings.monitor:
             self.update_monitor()
+
+    ## --------------------------------------------------------------
+    ## Main interface handling
+    ## --------------------------------------------------------------
 
     def reset_ui(self):
         MainWindow.reset_ui(self)
@@ -327,126 +294,46 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.set("last_window_maximized", self.IsMaximized())
         event.Skip()
 
-    def add_cmdline_arguments(self, parser):
-        pronsole.pronsole.add_cmdline_arguments(self, parser)
-        parser.add_argument('-a', '--autoconnect', help = _("automatically try to connect to printer on startup"), action = "store_true")
+    def on_exit(self, event):
+        self.Close()
 
-    def process_cmdline_arguments(self, args):
-        pronsole.pronsole.process_cmdline_arguments(self, args)
-        self.autoconnect = args.autoconnect
+    def kill(self, e):
+        self.statuscheck = False
+        if self.status_thread:
+            self.status_thread.join()
+            self.status_thread = None
+        self.p.recvcb = None
+        self.p.disconnect()
+        if hasattr(self, "feedrates_changed"):
+            self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
+            self.save_in_rc("set z_feedrate", "set z_feedrate %d" % self.settings.z_feedrate)
+            self.save_in_rc("set e_feedrate", "set e_feedrate %d" % self.settings.e_feedrate)
+        if self.settings.last_extrusion != self.settings.default_extrusion:
+            self.save_in_rc("set last_extrusion", "set last_extrusion %d" % self.settings.last_extrusion)
+        if self.excluder:
+            self.excluder.close_window()
+        wx.CallAfter(self.gwindow.Destroy)
+        wx.CallAfter(self.Destroy)
 
-    def startcb(self, resuming = False):
-        pronsole.pronsole.startcb(self, resuming)
-        if self.settings.lockbox and self.settings.lockonstart:
-            wx.CallAfter(self.lock, force = True)
+    ## --------------------------------------------------------------
+    ## Main interface actions
+    ## --------------------------------------------------------------
 
-    def endcb(self):
-        pronsole.pronsole.endcb(self)
-        if self.p.queueindex == 0:
-            self.p.runSmallScript(self.endScript)
-            wx.CallAfter(self.pausebtn.Disable)
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-            wx.CallAfter(self.toolbarsizer.Layout)
-
-    def online(self):
-        print _("Printer is now online.")
-        wx.CallAfter(self.online_gui)
-
-    def online_gui(self):
-        self.connectbtn.SetLabel(_("Disconnect"))
-        self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
-        self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
-
-        if hasattr(self, "extrudersel"):
-            self.do_tool(self.extrudersel.GetValue())
-
-        self.gui_set_connected()
-
-        if self.filename:
-            self.printbtn.Enable()
-
-        wx.CallAfter(self.toolbarsizer.Layout)
-
-    def sentcb(self, line, gline):
-        if not gline:
-            pass
-        elif gline.command in ["M104", "M109"]:
-            gline_s = gcoder.S(gline)
-            if gline_s is not None:
-                temp = gline_s
-                if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
-                if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
-        elif gline.command in ["M140", "M190"]:
-            gline_s = gcoder.S(gline)
-            if gline_s is not None:
-                temp = gline_s
-                if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
-                if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
-        elif gline.command.startswith("T"):
-            tool = gline.command[1:]
-            if hasattr(self, "extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
-        self.sentlines.put_nowait(line)
-
-    def is_excluded_move(self, gline):
-        if not gline.is_move or not self.excluder or not self.excluder.rectangles:
-            return False
-        for (x0, y0, x1, y1) in self.excluder.rectangles:
-            if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
-                return True
-        return False
-
-    def preprintsendcb(self, gline, next_gline):
-        if not self.is_excluded_move(gline):
-            return gline
+    def do_monitor(self, l = ""):
+        if l.strip() == "":
+            self.set("monitor", not self.settings.monitor)
+        elif l.strip() == "off":
+            self.set("monitor", False)
         else:
-            if gline.z is not None:
-                if gline.relative:
-                    if self.excluder_z_abs is not None:
-                        self.excluder_z_abs += gline.z
-                    elif self.excluder_z_rel is not None:
-                        self.excluder_z_rel += gline.z
-                    else:
-                        self.excluder_z_rel = gline.z
-                else:
-                    self.excluder_z_rel = None
-                    self.excluder_z_abs = gline.z
-            if gline.e is not None and not gline.relative_e:
-                self.excluder_e = gline.e
-            # If next move won't be excluded, push the changes we have to do
-            if next_gline is not None and not self.is_excluded_move(next_gline):
-                if self.excluder_e is not None:
-                    self.p.send_now("G92 E%.5f" % self.excluder_e)
-                    self.excluder_e = None
-                if self.excluder_z_abs is not None:
-                    if gline.relative:
-                        self.p.send_now("G90")
-                    self.p.send_now("G1 Z%.5f" % self.excluder_z_abs)
-                    self.excluder_z_abs = None
-                    if gline.relative:
-                        self.p.send_now("G91")
-                if self.excluder_z_rel is not None:
-                    if not gline.relative:
-                        self.p.send_now("G91")
-                    self.p.send_now("G1 Z%.5f" % self.excluder_z_rel)
-                    self.excluder_z_rel = None
-                    if not gline.relative:
-                        self.p.send_now("G90")
-                return None
-
-    def printsentcb(self, gline):
-        if gline.is_move:
-            if hasattr(self.gwindow, "set_current_gline"):
-                wx.CallAfter(self.gwindow.set_current_gline, gline)
-            if hasattr(self.gviz, "set_current_gline"):
-                wx.CallAfter(self.gviz.set_current_gline, gline)
-
-    def layer_change_cb(self, newlayer):
-        pronsole.pronsole.layer_change_cb(self, newlayer)
-        layerz = self.fgcode.all_layers[newlayer].z
-        if layerz is not None:
-            self.curlayer = layerz
-        if self.settings.mainviz != "3D" or self.settings.trackcurrentlayer3d:
-            wx.CallAfter(self.gviz.setlayer, newlayer)
+            try:
+                self.monitor_interval = float(l)
+                self.set("monitor", self.monitor_interval > 0)
+            except:
+                print _("Invalid period given.")
+        if self.settings.monitor:
+            print _("Monitoring printer.")
+        else:
+            print _("Done monitoring.")
 
     def do_pront_extrude(self, l = ""):
         feed = self.settings.e_feedrate
@@ -455,46 +342,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def do_pront_reverse(self, l = ""):
         feed = self.settings.e_feedrate
         self.do_extrude_final(- self.edist.GetValue(), feed)
-
-    def setbedgui(self, f):
-        self.bsetpoint = f
-        if self.display_gauges: self.bedtgauge.SetTarget(int(f))
-        if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, int(f))
-        if f > 0:
-            wx.CallAfter(self.btemp.SetValue, str(f))
-            self.set("last_bed_temperature", str(f))
-            wx.CallAfter(self.setboff.SetBackgroundColour, None)
-            wx.CallAfter(self.setboff.SetForegroundColour, None)
-            wx.CallAfter(self.setbbtn.SetBackgroundColour, "#FFAA66")
-            wx.CallAfter(self.setbbtn.SetForegroundColour, "#660000")
-            wx.CallAfter(self.btemp.SetBackgroundColour, "#FFDABB")
-        else:
-            wx.CallAfter(self.setboff.SetBackgroundColour, "#0044CC")
-            wx.CallAfter(self.setboff.SetForegroundColour, "white")
-            wx.CallAfter(self.setbbtn.SetBackgroundColour, None)
-            wx.CallAfter(self.setbbtn.SetForegroundColour, None)
-            wx.CallAfter(self.btemp.SetBackgroundColour, "white")
-            wx.CallAfter(self.btemp.Refresh)
-
-    def sethotendgui(self, f):
-        self.hsetpoint = f
-        if self.display_gauges: self.hottgauge.SetTarget(int(f))
-        if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, int(f))
-        if f > 0:
-            wx.CallAfter(self.htemp.SetValue, str(f))
-            self.set("last_temperature", str(f))
-            wx.CallAfter(self.settoff.SetBackgroundColour, None)
-            wx.CallAfter(self.settoff.SetForegroundColour, None)
-            wx.CallAfter(self.settbtn.SetBackgroundColour, "#FFAA66")
-            wx.CallAfter(self.settbtn.SetForegroundColour, "#660000")
-            wx.CallAfter(self.htemp.SetBackgroundColour, "#FFDABB")
-        else:
-            wx.CallAfter(self.settoff.SetBackgroundColour, "#0044CC")
-            wx.CallAfter(self.settoff.SetForegroundColour, "white")
-            wx.CallAfter(self.settbtn.SetBackgroundColour, None)
-            wx.CallAfter(self.settbtn.SetForegroundColour, None)
-            wx.CallAfter(self.htemp.SetBackgroundColour, "white")
-            wx.CallAfter(self.htemp.Refresh)
 
     def do_settemp(self, l = ""):
         try:
@@ -551,281 +398,45 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except Exception, x:
             print _("You must enter a speed. (%s)") % (repr(x),)
 
-    def end_macro(self):
-        pronsole.pronsole.end_macro(self)
-        self.update_macros_menu()
-
-    def delete_macro(self, macro_name):
-        pronsole.pronsole.delete_macro(self, macro_name)
-        self.update_macros_menu()
-
-    def start_macro(self, macro_name, old_macro_definition = ""):
-        if not self.processing_rc:
-            def cb(definition):
-                if len(definition.strip()) == 0:
-                    if old_macro_definition != "":
-                        dialog = wx.MessageDialog(self, _("Do you want to erase the macro?"), style = wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
-                        if dialog.ShowModal() == wx.ID_YES:
-                            self.delete_macro(macro_name)
-                            return
-                    print _("Cancelled.")
-                    return
-                self.cur_macro_name = macro_name
-                self.cur_macro_def = definition
-                self.end_macro()
-            MacroEditor(macro_name, old_macro_definition, cb)
+    def setbedgui(self, f):
+        self.bsetpoint = f
+        if self.display_gauges: self.bedtgauge.SetTarget(int(f))
+        if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, int(f))
+        if f > 0:
+            wx.CallAfter(self.btemp.SetValue, str(f))
+            self.set("last_bed_temperature", str(f))
+            wx.CallAfter(self.setboff.SetBackgroundColour, None)
+            wx.CallAfter(self.setboff.SetForegroundColour, None)
+            wx.CallAfter(self.setbbtn.SetBackgroundColour, "#FFAA66")
+            wx.CallAfter(self.setbbtn.SetForegroundColour, "#660000")
+            wx.CallAfter(self.btemp.SetBackgroundColour, "#FFDABB")
         else:
-            pronsole.pronsole.start_macro(self, macro_name, old_macro_definition)
+            wx.CallAfter(self.setboff.SetBackgroundColour, "#0044CC")
+            wx.CallAfter(self.setboff.SetForegroundColour, "white")
+            wx.CallAfter(self.setbbtn.SetBackgroundColour, None)
+            wx.CallAfter(self.setbbtn.SetForegroundColour, None)
+            wx.CallAfter(self.btemp.SetBackgroundColour, "white")
+            wx.CallAfter(self.btemp.Refresh)
 
-    def catchprint(self, l):
-        if not self.IsFrozen():
-            wx.CallAfter(self.addtexttolog, l)
-
-    def project(self, event):
-        from printrun import projectlayer
-        projectlayer.SettingsFrame(self, self.p).Show()
-
-    def exclude(self, event):
-        if not self.fgcode:
-            wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
-            return
-        if not self.excluder:
-            self.excluder = Excluder()
-        self.excluder.pop_window(self.fgcode, bgcolor = self.settings.bgcolor,
-                                 build_dimensions = self.build_dimensions_list)
-
-    def popmenu(self):
-        self.menustrip = wx.MenuBar()
-        # File menu
-        m = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Opens file")))
-
-        self.filehistory = wx.FileHistory(maxFiles = 8, idBase = wx.ID_FILE1)
-        recent = wx.Menu()
-        self.filehistory.UseMenu(recent)
-        self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
-                  id = wx.ID_FILE1, id2 = wx.ID_FILE9)
-        m.AppendMenu(wx.ID_ANY, "&Recent Files", recent)
-        self.Bind(wx.EVT_MENU, self.clearOutput, m.Append(-1, _("Clear console"), _(" Clear output console")))
-        self.Bind(wx.EVT_MENU, self.OnExit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
-        self.menustrip.Append(m, _("&File"))
-
-        m = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
-        self.Bind(wx.EVT_MENU, self.plate, m.Append(-1, _("Plater"), _(" Compose 3D models into a single plate")))
-        self.Bind(wx.EVT_MENU, self.plate_gcode, m.Append(-1, _("G-Code Plater"), _(" Compose G-Codes into a single plate")))
-        self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
-        self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
-        self.menustrip.Append(m, _("&Tools"))
-
-        m = wx.Menu()
-        self.recoverbtn = m.Append(-1, _("Recover"), _(" Recover previous print after a disconnect (homes X, Y, restores Z and E status)"))
-        self.recoverbtn.Disable = lambda *a: self.recoverbtn.Enable(False)
-        self.Bind(wx.EVT_MENU, self.recover, self.recoverbtn)
-        self.menustrip.Append(m, _("&Advanced"))
-
-        if self.settings.slic3rintegration:
-            m = wx.Menu()
-            print_menu = wx.Menu()
-            filament_menu = wx.Menu()
-            printer_menu = wx.Menu()
-            m.AppendSubMenu(print_menu, _("Print &settings"))
-            m.AppendSubMenu(filament_menu, _("&Filament"))
-            m.AppendSubMenu(printer_menu, _("&Printer"))
-            menus = {"print": print_menu,
-                     "filament": filament_menu,
-                     "printer": printer_menu}
-            try:
-                self.load_slic3r_configs(menus)
-                self.menustrip.Append(m, _("&Slic3r"))
-            except IOError:
-                self.logError(_("Failed to load Slic3r configuration:") +
-                              "\n" + traceback.format_exc())
-
-        # Settings menu
-        m = wx.Menu()
-        self.macros_menu = wx.Menu()
-        m.AppendSubMenu(self.macros_menu, _("&Macros"))
-        self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
-        self.Bind(wx.EVT_MENU, lambda *e: PronterOptions(self), m.Append(-1, _("&Options"), _(" Options dialog")))
-
-        self.Bind(wx.EVT_MENU, lambda x: threading.Thread(target = lambda: self.do_skein("set")).start(), m.Append(-1, _("Slicing Settings"), _(" Adjust slicing settings")))
-
-        mItem = m.AppendCheckItem(-1, _("Debug G-code"),
-                                  _("Print all G-code sent to and received from the printer."))
-        m.Check(mItem.GetId(), self.p.loud)
-        self.Bind(wx.EVT_MENU, self.setloud, mItem)
-
-        #try:
-        #    from SkeinforgeQuickEditDialog import SkeinforgeQuickEditDialog
-        #    self.Bind(wx.EVT_MENU, lambda *e:SkeinforgeQuickEditDialog(self), m.Append(-1,_("SFACT Quick Settings"),_(" Quickly adjust SFACT settings for active profile")))
-        #except:
-        #    pass
-
-        self.menustrip.Append(m, _("&Settings"))
-        self.update_macros_menu()
-        self.SetMenuBar(self.menustrip)
-
-        m = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.about,
-                  m.Append(-1, _("&About Printrun"), _("Show about dialog")))
-        self.menustrip.Append(m, _("&Help"))
-
-    def about(self, event):
-
-        info = wx.AboutDialogInfo()
-
-        info.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
-        info.SetName('Printrun')
-        info.SetVersion(printcore.__version__)
-
-        description = _("\
-Printrun is a pure Python 3D printing (and other types of CNC) host software.")
-
-        info.SetDescription(description)
-        info.SetCopyright('(C) 2011 - 2013')
-        info.SetWebSite('https://github.com/kliment/Printrun')
-
-        licence = """\
-Printrun is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
-
-Printrun is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-Printrun. If not, see <http://www.gnu.org/licenses/>."""
-
-        info.SetLicence(licence)
-        info.AddDeveloper('Kliment Yanev')
-        info.AddDeveloper('Guillaume Seguin')
-
-        wx.AboutBox(info)
-
-    def load_slic3r_configs(self, menus):
-        # Hack to get correct path for Slic3r config
-        orig_appname = self.app.GetAppName()
-        self.app.SetAppName("Slic3r")
-        configpath = wx.StandardPaths.Get().GetUserDataDir()
-        self.app.SetAppName(orig_appname)
-        self.slic3r_configpath = configpath
-        configfile = os.path.join(configpath, "slic3r.ini")
-        config = self.read_slic3r_config(configfile)
-        self.slic3r_configs = {}
-        for cat in menus:
-            menu = menus[cat]
-            pattern = os.path.join(configpath, cat, "*.ini")
-            files = sorted(glob.glob(pattern))
-            try:
-                preset = config.get("presets", cat)
-                self.slic3r_configs[cat] = preset
-            except:
-                preset = None
-                self.slic3r_configs[cat] = None
-            for f in files:
-                name = os.path.splitext(os.path.basename(f))[0]
-                item = menu.Append(-1, name, f, wx.ITEM_RADIO)
-                item.Check(os.path.basename(f) == preset)
-                self.Bind(wx.EVT_MENU,
-                          lambda event, cat = cat, f = f:
-                          self.set_slic3r_config(configfile, cat, f), item)
-
-    def read_slic3r_config(self, configfile, parser = None):
-        import ConfigParser
-        parser = ConfigParser.RawConfigParser()
-
-        class add_header(object):
-            def __init__(self, f):
-                self.f = f
-                self.header = '[dummy]'
-
-            def readline(self):
-                if self.header:
-                    try: return self.header
-                    finally: self.header = None
-                else:
-                    return self.f.readline()
-        parser.readfp(add_header(open(configfile)), configfile)
-        return parser
-
-    def set_slic3r_config(self, configfile, cat, file):
-        self.slic3r_configs[cat] = file
-        if self.settings.slic3rupdate:
-            config = self.read_slic3r_config(configfile)
-            config.set("presets", cat, os.path.basename(file))
-            f = StringIO.StringIO()
-            config.write(f)
-            data = f.getvalue()
-            f.close()
-            data = data.replace("[dummy]\n", "")
-            with open(configfile, "w") as f:
-                f.write(data)
-
-    def doneediting(self, gcode):
-        open(self.filename, "w").write("\n".join(gcode))
-        wx.CallAfter(self.loadfile, None, self.filename)
-
-    def do_editgcode(self, e = None):
-        if self.filename is not None:
-            MacroEditor(self.filename, [line.raw for line in self.fgcode], self.doneediting, 1)
-
-    def new_macro(self, e = None):
-        dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))
-        panel = wx.Panel(dialog, -1)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        wx.StaticText(panel, -1, _("Macro name:"), (8, 14))
-        dialog.namectrl = wx.TextCtrl(panel, -1, '', (110, 8), size = (130, 24), style = wx.TE_PROCESS_ENTER)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        okb = wx.Button(dialog, wx.ID_OK, _("Ok"), size = (60, 24))
-        dialog.Bind(wx.EVT_TEXT_ENTER, lambda e: dialog.EndModal(wx.ID_OK), dialog.namectrl)
-        #dialog.Bind(wx.EVT_BUTTON, lambda e:self.new_macro_named(dialog, e), okb)
-        hbox.Add(okb)
-        hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel"), size = (60, 24)))
-        vbox.Add(panel)
-        vbox.Add(hbox, 1, wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, 10)
-        dialog.SetSizer(vbox)
-        dialog.Centre()
-        macro = ""
-        if dialog.ShowModal() == wx.ID_OK:
-            macro = dialog.namectrl.GetValue()
-            if macro != "":
-                wx.CallAfter(self.edit_macro, macro)
-        dialog.Destroy()
-        return macro
-
-    def edit_macro(self, macro):
-        if macro == "": return self.new_macro()
-        if macro in self.macros:
-            old_def = self.macros[macro]
-        elif len([c for c in macro.encode("ascii", "replace") if not c.isalnum() and c != "_"]):
-            print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
-            return
-        elif hasattr(self.__class__, "do_" + macro):
-            print _("Name '%s' is being used by built-in command") % macro
-            return
+    def sethotendgui(self, f):
+        self.hsetpoint = f
+        if self.display_gauges: self.hottgauge.SetTarget(int(f))
+        if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, int(f))
+        if f > 0:
+            wx.CallAfter(self.htemp.SetValue, str(f))
+            self.set("last_temperature", str(f))
+            wx.CallAfter(self.settoff.SetBackgroundColour, None)
+            wx.CallAfter(self.settoff.SetForegroundColour, None)
+            wx.CallAfter(self.settbtn.SetBackgroundColour, "#FFAA66")
+            wx.CallAfter(self.settbtn.SetForegroundColour, "#660000")
+            wx.CallAfter(self.htemp.SetBackgroundColour, "#FFDABB")
         else:
-            old_def = ""
-        self.start_macro(macro, old_def)
-        return macro
-
-    def update_macros_menu(self):
-        if not hasattr(self, "macros_menu"):
-            return  # too early, menu not yet built
-        try:
-            while True:
-                item = self.macros_menu.FindItemByPosition(1)
-                if item is None: break
-                self.macros_menu.DeleteItem(item)
-        except:
-            pass
-        for macro in self.macros.keys():
-            self.Bind(wx.EVT_MENU, lambda x, m = macro: self.start_macro(m, self.macros[m]), self.macros_menu.Append(-1, macro))
-
-    def OnExit(self, event):
-        self.Close()
+            wx.CallAfter(self.settoff.SetBackgroundColour, "#0044CC")
+            wx.CallAfter(self.settoff.SetForegroundColour, "white")
+            wx.CallAfter(self.settbtn.SetBackgroundColour, None)
+            wx.CallAfter(self.settbtn.SetForegroundColour, None)
+            wx.CallAfter(self.htemp.SetBackgroundColour, "white")
+            wx.CallAfter(self.htemp.Refresh)
 
     def rescanports(self, event = None):
         scanned = self.scanserial()
@@ -878,6 +489,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         print _("Plated %s") % name
         self.loadfile(None, name)
 
+    def do_editgcode(self, e = None):
+        if self.filename is not None:
+            MacroEditor(self.filename, [line.raw for line in self.fgcode], self.doneediting, 1)
+
+    def doneediting(self, gcode):
+        open(self.filename, "w").write("\n".join(gcode))
+        wx.CallAfter(self.loadfile, None, self.filename)
+
     def sdmenu(self, e):
         obj = e.GetEventObject()
         popupmenu = wx.Menu()
@@ -902,11 +521,308 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def tool_change(self, event):
         self.do_tool(self.extrudersel.GetValue())
 
-    def showwin(self, event):
+    def show_viz_window(self, event):
         if self.fgcode:
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
             self.gwindow.Raise()
+
+    def setfeeds(self, e):
+        self.feedrates_changed = True
+        try:
+            if self.efeedc is not None:
+                self.settings._set("e_feedrate", self.efeedc.GetValue())
+        except:
+            pass
+        try:
+            self.settings._set("z_feedrate", self.zfeedc.GetValue())
+        except:
+            pass
+        try:
+            self.settings._set("xy_feedrate", self.xyfeedc.GetValue())
+        except:
+            pass
+        try:
+            self.settings._set("last_extrusion", self.edist.GetValue())
+        except:
+            pass
+
+    def homeButtonClicked(self, axis):
+        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
+        self.zb.clearRepeat()
+        if axis == "x":
+            self.onecmd('home X')
+        elif axis == "y":  # upper-right
+            self.onecmd('home Y')
+        elif axis == "z":
+            self.onecmd('home Z')
+        elif axis == "xy":
+            self.onecmd('home XY')
+        elif axis == "all":
+            self.onecmd('home')
+        else:
+            return
+        self.p.send_now('M114')
+
+    def clamped_move_message(self):
+        print _("Manual move outside of the build volume prevented (see the \"Clamp manual moves\" option).")
+
+    def moveXY(self, x, y):
+        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
+        self.zb.clearRepeat()
+        if x != 0:
+            if self.settings.clamp_jogging:
+                new_x = self.current_pos[0] + x
+                if new_x < self.build_dimensions_list[3] or new_x > self.build_dimensions_list[0] + self.build_dimensions_list[3]:
+                    self.clamped_move_message()
+                    return
+            self.onecmd('move X %s' % x)
+        elif y != 0:
+            if self.settings.clamp_jogging:
+                new_y = self.current_pos[1] + y
+                if new_y < self.build_dimensions_list[4] or new_y > self.build_dimensions_list[1] + self.build_dimensions_list[4]:
+                    self.clamped_move_message()
+                    return
+            self.onecmd('move Y %s' % y)
+        else:
+            return
+        self.p.send_now('M114')
+
+    def moveZ(self, z):
+        if z != 0:
+            if self.settings.clamp_jogging:
+                new_z = self.current_pos[2] + z
+                if new_z < self.build_dimensions_list[5] or new_z > self.build_dimensions_list[2] + self.build_dimensions_list[5]:
+                    self.clamped_move_message()
+                    return
+            self.onecmd('move Z %s' % z)
+            self.p.send_now('M114')
+        # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
+        self.xyb.clearRepeat()
+
+    def spacebarAction(self):
+        self.zb.repeatLast()
+        self.xyb.repeatLast()
+
+    ## --------------------------------------------------------------
+    ## Console handling
+    ## --------------------------------------------------------------
+
+    def catchprint(self, l):
+        """Called by the Tee operator to write to the log box"""
+        if not self.IsFrozen():
+            wx.CallAfter(self.addtexttolog, l)
+
+    def addtexttolog(self, text):
+        try:
+            self.logbox.AppendText(text)
+            max_length = 20000
+            current_length = self.logbox.GetLastPosition()
+            if current_length > max_length:
+                self.logbox.Remove(0, current_length / 10)
+        except:
+            print _("Attempted to write invalid text to console, which could be due to an invalid baudrate")
+
+    def clear_log(self, e):
+        self.logbox.Clear()
+
+    def set_verbose_communications(self, e):
+        self.p.loud = e.IsChecked()
+
+    def parseusercmd(self, line):
+        if line.upper().startswith("M114"):
+            self.userm114 += 1
+        elif line.upper().startswith("M105"):
+            self.userm105 += 1
+
+    def sendline(self, e):
+        command = self.commandbox.GetValue()
+        if not len(command):
+            return
+        wx.CallAfter(self.addtexttolog, ">>> " + command + "\n")
+        self.parseusercmd(str(command))
+        self.onecmd(str(command))
+        self.commandbox.SetSelection(0, len(command))
+        self.commandbox.history.append(command)
+        self.commandbox.histindex = len(self.commandbox.history)
+
+    ## --------------------------------------------------------------
+    ## Main menu handling & actions
+    ## --------------------------------------------------------------
+
+    def create_menu(self):
+        """Create main menu"""
+        self.menustrip = wx.MenuBar()
+        # File menu
+        m = wx.Menu()
+        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Opens file")))
+
+        self.filehistory = wx.FileHistory(maxFiles = 8, idBase = wx.ID_FILE1)
+        recent = wx.Menu()
+        self.filehistory.UseMenu(recent)
+        self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
+                  id = wx.ID_FILE1, id2 = wx.ID_FILE9)
+        m.AppendMenu(wx.ID_ANY, "&Recent Files", recent)
+        self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console"), _(" Clear output console")))
+        self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
+        self.menustrip.Append(m, _("&File"))
+
+        m = wx.Menu()
+        self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
+        self.Bind(wx.EVT_MENU, self.plate, m.Append(-1, _("Plater"), _(" Compose 3D models into a single plate")))
+        self.Bind(wx.EVT_MENU, self.plate_gcode, m.Append(-1, _("G-Code Plater"), _(" Compose G-Codes into a single plate")))
+        self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
+        self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
+        self.menustrip.Append(m, _("&Tools"))
+
+        m = wx.Menu()
+        self.recoverbtn = m.Append(-1, _("Recover"), _(" Recover previous print after a disconnect (homes X, Y, restores Z and E status)"))
+        self.recoverbtn.Disable = lambda *a: self.recoverbtn.Enable(False)
+        self.Bind(wx.EVT_MENU, self.recover, self.recoverbtn)
+        self.menustrip.Append(m, _("&Advanced"))
+
+        if self.settings.slic3rintegration:
+            m = wx.Menu()
+            print_menu = wx.Menu()
+            filament_menu = wx.Menu()
+            printer_menu = wx.Menu()
+            m.AppendSubMenu(print_menu, _("Print &settings"))
+            m.AppendSubMenu(filament_menu, _("&Filament"))
+            m.AppendSubMenu(printer_menu, _("&Printer"))
+            menus = {"print": print_menu,
+                     "filament": filament_menu,
+                     "printer": printer_menu}
+            try:
+                self.load_slic3r_configs(menus)
+                self.menustrip.Append(m, _("&Slic3r"))
+            except IOError:
+                self.logError(_("Failed to load Slic3r configuration:") +
+                              "\n" + traceback.format_exc())
+
+        # Settings menu
+        m = wx.Menu()
+        self.macros_menu = wx.Menu()
+        m.AppendSubMenu(self.macros_menu, _("&Macros"))
+        self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
+        self.Bind(wx.EVT_MENU, lambda *e: PronterOptions(self), m.Append(-1, _("&Options"), _(" Options dialog")))
+
+        self.Bind(wx.EVT_MENU, lambda x: threading.Thread(target = lambda: self.do_skein("set")).start(), m.Append(-1, _("Slicing settings"), _(" Adjust slicing settings")))
+
+        mItem = m.AppendCheckItem(-1, _("Debug communications"),
+                                  _("Print all G-code sent to and received from the printer."))
+        m.Check(mItem.GetId(), self.p.loud)
+        self.Bind(wx.EVT_MENU, self.set_verbose_communications, mItem)
+
+        self.menustrip.Append(m, _("&Settings"))
+        self.update_macros_menu()
+        self.SetMenuBar(self.menustrip)
+
+        m = wx.Menu()
+        self.Bind(wx.EVT_MENU, self.about,
+                  m.Append(-1, _("&About Printrun"), _("Show about dialog")))
+        self.menustrip.Append(m, _("&Help"))
+
+    def project(self, event):
+        """Start Projector tool"""
+        from printrun import projectlayer
+        projectlayer.SettingsFrame(self, self.p).Show()
+
+    def exclude(self, event):
+        """Start part excluder tool"""
+        if not self.fgcode:
+            wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
+            return
+        if not self.excluder:
+            self.excluder = Excluder()
+        self.excluder.pop_window(self.fgcode, bgcolor = self.settings.bgcolor,
+                                 build_dimensions = self.build_dimensions_list)
+
+    def about(self, event):
+        """Show about dialog"""
+
+        info = wx.AboutDialogInfo()
+
+        info.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+        info.SetName('Printrun')
+        info.SetVersion(printcore.__version__)
+
+        description = _("\
+Printrun is a pure Python 3D printing (and other types of CNC) host software.")
+
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2011 - 2013')
+        info.SetWebSite('https://github.com/kliment/Printrun')
+
+        licence = """\
+Printrun is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+Printrun is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+Printrun. If not, see <http://www.gnu.org/licenses/>."""
+
+        info.SetLicence(licence)
+        info.AddDeveloper('Kliment Yanev')
+        info.AddDeveloper('Guillaume Seguin')
+
+        wx.AboutBox(info)
+
+    ## --------------------------------------------------------------
+    ## Settings & command line handling (including update callbacks)
+    ## --------------------------------------------------------------
+
+    def _add_settings(self, size):
+        self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
+        self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
+        self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"), self.update_bed_viz)
+        self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
+        self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
+        self.settings._add(ComboSetting("uimode", "Standard", ["Standard", "Compact", "Tabbed"], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization\nTabbed mode is a two-pages mode, where the first page shows controls and the second one shows visualization and log."), "UI"), self.reload_ui)
+        self.settings._add(ComboSetting("controlsmode", "Standard", ["Standard", "Mini"], _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
+        self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"))
+        self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
+        self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"), self.reload_ui)
+        self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "UI"), self.reload_ui)
+        self.settings._add(BooleanSetting("light3d", True, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "UI"))
+        self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "UI"))
+        self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"), self.reload_ui)
+        self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"), self.reload_ui)
+        self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"), self.reload_ui)
+        self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
+        self.settings._add(HiddenSetting("last_window_width", size[0]))
+        self.settings._add(HiddenSetting("last_window_height", size[1]))
+        self.settings._add(HiddenSetting("last_window_maximized", False))
+        self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
+        self.settings._add(HiddenSetting("last_file_path", u""))
+        self.settings._add(HiddenSetting("last_temperature", 0.0))
+        self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"), self.update_gviz_params)
+        self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"), self.update_gviz_params)
+        self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
+        self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "Colors"), self.reload_ui)
+        self.settings._add(StringSetting("gcview_color_background", "#FAFAC7FF", _("3D view background color"), _("Color of the 3D view background"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_tool0", "#FF000099", _("3D view print moves color"), _("Color of print moves with tool 0 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_tool1", "#4F0CE599", _("3D view tool 1 moves color"), _("Color of print moves with tool 1 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_printed", "#33BF0099", _("3D view printed moves color"), _("Color of printed moves in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_current", "#00E5FFCC", _("3D view current layer moves color"), _("Color of moves in current layer in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StringSetting("gcview_color_current_printed", "#196600CC", _("3D view printed current layer moves color"), _("Color of already printed moves from current layer in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing most settings here will require restart to get effect"), group = "UI"))
+        recentfilessetting = StringSetting("recentfiles", "[]")
+        recentfilessetting.hidden = True
+        self.settings._add(recentfilessetting, self.update_recent_files)
+
+    def add_cmdline_arguments(self, parser):
+        pronsole.pronsole.add_cmdline_arguments(self, parser)
+        parser.add_argument('-a', '--autoconnect', help = _("automatically try to connect to printer on startup"), action = "store_true")
+
+    def process_cmdline_arguments(self, args):
+        pronsole.pronsole.process_cmdline_arguments(self, args)
+        self.autoconnect = args.autoconnect
 
     def update_recent_files(self, param, value):
         if self.filehistory is None:
@@ -972,30 +888,750 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.update_bed_viz()
 
     def update_bed_viz(self, *args):
+        """Update bed visualization when size/type changed"""
         if hasattr(self, "gviz") and hasattr(self.gviz, "recreate_platform"):
             self.gviz.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
         if hasattr(self, "gwindow") and hasattr(self.gwindow, "recreate_platform"):
             self.gwindow.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
 
-    def setfeeds(self, e):
-        self.feedrates_changed = True
+    def update_monitor(self, *args):
+        if hasattr(self, "display_graph") and self.display_graph:
+            if self.settings.monitor:
+                wx.CallAfter(self.graph.StartPlotting, 1000)
+            else:
+                wx.CallAfter(self.graph.StopPlotting)
+
+    ## --------------------------------------------------------------
+    ## Statusbar handling
+    ## --------------------------------------------------------------
+
+    def statuschecker(self):
+        while self.statuscheck:
+            string = ""
+            fractioncomplete = 0.0
+            if self.sdprinting or self.uploading:
+                if self.uploading:
+                    fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
+                    string += _("SD upload: %04.2f%% |") % (100 * fractioncomplete,)
+                    string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
+                else:
+                    fractioncomplete = float(self.percentdone / 100.0)
+                    string += _("SD printing: %04.2f%% |") % (self.percentdone,)
+                if fractioncomplete > 0.0:
+                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+                    secondsestimate = secondselapsed / fractioncomplete
+                    secondsremain = secondsestimate - secondselapsed
+                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
+                                                                  format_duration(secondsestimate))
+                    string += _(" Z: %.3f mm") % self.curlayer
+            elif self.p.printing:
+                fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
+                string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
+                string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
+                if self.p.queueindex > 0:
+                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+                    secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
+                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
+                                                                  format_duration(secondsestimate))
+                    string += _(" Z: %.3f mm") % self.curlayer
+            wx.CallAfter(self.statusbar.SetStatusText, string)
+            wx.CallAfter(self.gviz.Refresh)
+            if self.p.online:
+                if self.p.writefailures >= 4:
+                    self.logError(_("Disconnecting after 4 failed writes."))
+                    self.status_thread = None
+                    self.disconnect()
+                    return
+            if self.settings.monitor and self.p.online:
+                if self.sdprinting:
+                    self.p.send_now("M27")
+                if self.m105_waitcycles % 10 == 0:
+                    self.p.send_now("M105")
+                self.m105_waitcycles += 1
+            cur_time = time.time()
+            wait_time = 0
+            while time.time() < cur_time + self.monitor_interval - 0.25:
+                if not self.statuscheck:
+                    break
+                time.sleep(0.25)
+                # Safeguard: if system time changes and goes back in the past,
+                # we could get stuck almost forever
+                wait_time += 0.25
+                if wait_time > self.monitor_interval - 0.25:
+                    break
+            # Always sleep at least a bit, if something goes wrong with the
+            # system time we'll avoid freezing the whole app this way
+            time.sleep(0.25)
+            try:
+                while not self.sentlines.empty():
+                    gc = self.sentlines.get_nowait()
+                    wx.CallAfter(self.gviz.addgcodehighlight, gc)
+                    self.sentlines.task_done()
+            except Queue.Empty:
+                pass
+        wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
+
+    ## --------------------------------------------------------------
+    ## Interface lock handling
+    ## --------------------------------------------------------------
+
+    def lock(self, event = None, force = None):
+        if force is not None:
+            self.locker.SetValue(force)
+        if self.locker.GetValue():
+            print _("Locking interface.")
+            for panel in self.panels:
+                panel.Disable()
+        else:
+            print _("Unlocking interface.")
+            for panel in self.panels:
+                panel.Enable()
+
+    ## --------------------------------------------------------------
+    ## Printer connection handling
+    ## --------------------------------------------------------------
+
+    def connect(self, event = None):
+        print _("Connecting...")
+        port = None
+        if self.serialport.GetValue():
+            port = str(self.serialport.GetValue())
+        else:
+            scanned = self.scanserial()
+            if scanned:
+                port = scanned[0]
+        baud = 115200
         try:
-            if self.efeedc is not None:
-                self.settings._set("e_feedrate", self.efeedc.GetValue())
+            baud = int(self.baud.GetValue())
         except:
-            pass
+            print _("Could not parse baud rate: ")
+            traceback.print_exc(file = sys.stdout)
+        if self.paused:
+            self.p.paused = 0
+            self.p.printing = 0
+            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.toolbarsizer.Layout)
+            self.paused = 0
+            if self.sdprinting:
+                self.p.send_now("M26 S0")
         try:
-            self.settings._set("z_feedrate", self.zfeedc.GetValue())
-        except:
-            pass
+            self.p.connect(port, baud)
+        except SerialException as e:
+            # Currently, there is no errno, but it should be there in the future
+            if e.errno == 2:
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
+            elif e.errno == 8:
+                self.logError(_("Error: You don't have permission to open %s.") % port)
+                self.logError(_("You might need to add yourself to the dialout group."))
+            else:
+                self.logError(traceback.format_exc())
+            # Kill the scope anyway
+            return
+        except OSError as e:
+            if e.errno == 2:
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
+            else:
+                self.logError(traceback.format_exc())
+            return
+        self.statuscheck = True
+        if port != self.settings.port:
+            self.set("port", port)
+        if baud != self.settings.baudrate:
+            self.set("baudrate", str(baud))
+        self.status_thread = threading.Thread(target = self.statuschecker)
+        self.status_thread.start()
+        if self.predisconnect_mainqueue:
+            self.recoverbtn.Enable()
+
+    def store_predisconnect_state(self):
+        self.predisconnect_mainqueue = self.p.mainqueue
+        self.predisconnect_queueindex = self.p.queueindex
+        self.predisconnect_layer = self.curlayer
+
+    def disconnect(self, event = None):
+        print _("Disconnected.")
+        if self.p.printing or self.p.paused or self.paused:
+            self.store_predisconnect_state()
+        self.p.disconnect()
+        self.statuscheck = False
+        if self.status_thread:
+            self.status_thread.join()
+            self.status_thread = None
+
+        wx.CallAfter(self.connectbtn.SetLabel, _("Connect"))
+        wx.CallAfter(self.connectbtn.SetToolTip, wx.ToolTip(_("Connect to the printer")))
+        wx.CallAfter(self.connectbtn.Bind, wx.EVT_BUTTON, self.connect)
+
+        wx.CallAfter(self.gui_set_disconnected)
+
+        if self.paused:
+            self.p.paused = 0
+            self.p.printing = 0
+            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            self.paused = 0
+            if self.sdprinting:
+                self.p.send_now("M26 S0")
+
+        # Relayout the toolbar to handle new buttons size
+        wx.CallAfter(self.toolbarsizer.Layout)
+
+    def reset(self, event):
+        print _("Reset.")
+        dlg = wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES | wx.NO)
+        if dlg.ShowModal() == wx.ID_YES:
+            self.p.reset()
+            self.sethotendgui(0)
+            self.setbedgui(0)
+            self.p.printing = 0
+            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            if self.paused:
+                self.p.paused = 0
+                wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+                self.paused = 0
+            wx.CallAfter(self.toolbarsizer.Layout)
+        dlg.Destroy()
+
+    ## --------------------------------------------------------------
+    ## Print/upload handling
+    ## --------------------------------------------------------------
+
+    def on_startprint(self):
+        wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+        wx.CallAfter(self.pausebtn.Enable)
+        wx.CallAfter(self.printbtn.SetLabel, _("Restart"))
+        wx.CallAfter(self.toolbarsizer.Layout)
+
+    def printfile(self, event):
+        self.extra_print_time = 0
+        if self.paused:
+            self.p.paused = 0
+            self.paused = 0
+            if self.sdprinting:
+                self.on_startprint()
+                self.p.send_now("M26 S0")
+                self.p.send_now("M24")
+                return
+
+        if not self.fgcode:
+            wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
+            return
+        if not self.p.online:
+            wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
+            return
+        self.on_startprint()
+        self.p.startprint(self.fgcode)
+
+    def sdprintfile(self, event):
+        self.on_startprint()
+        threading.Thread(target = self.getfiles).start()
+
+    def upload(self, event):
+        if not self.fgcode:
+            return
+        if not self.p.online:
+            return
+        dlg = wx.TextEntryDialog(self, ("Enter a target filename in 8.3 format:"), _("Pick SD filename"), dosify(self.filename))
+        if dlg.ShowModal() == wx.ID_OK:
+            self.p.send_now("M21")
+            self.p.send_now("M28 " + str(dlg.GetValue()))
+            self.recvlisteners.append(self.uploadtrigger)
+        dlg.Destroy()
+
+    def uploadtrigger(self, l):
+        if "Writing to file" in l:
+            self.uploading = True
+            self.p.startprint(self.fgcode)
+            self.p.endcb = self.endupload
+            self.recvlisteners.remove(self.uploadtrigger)
+        elif "open failed, File" in l:
+            self.recvlisteners.remove(self.uploadtrigger)
+
+    def endupload(self):
+        self.p.send_now("M29 ")
+        wx.CallAfter(self.statusbar.SetStatusText, _("File upload complete"))
+        time.sleep(0.5)
+        self.p.clear = True
+        self.uploading = False
+
+    def pause(self, event):
+        if not self.paused:
+            print _("Print paused at: %s") % format_time(time.time())
+            if self.sdprinting:
+                self.p.send_now("M25")
+            else:
+                if(not self.p.printing):
+                    #print "Not printing, cannot pause."
+                    return
+                self.p.pause()
+                self.p.runSmallScript(self.pauseScript)
+            self.paused = True
+            #self.p.runSmallScript(self.pauseScript)
+            self.extra_print_time += int(time.time() - self.starttime)
+            wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
+            wx.CallAfter(self.toolbarsizer.Layout)
+        else:
+            print _("Resuming.")
+            self.paused = False
+            if self.sdprinting:
+                self.p.send_now("M24")
+            else:
+                self.p.resume()
+            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+            wx.CallAfter(self.toolbarsizer.Layout)
+
+    def recover(self, event):
+        self.extra_print_time = 0
+        if not self.p.online:
+            wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
+            return
+        # Reset Z
+        self.p.send_now("G92 Z%f" % self.predisconnect_layer)
+        # Home X and Y
+        self.p.send_now("G28 X Y")
+        self.on_startprint()
+        self.p.startprint(self.predisconnect_mainqueue, self.p.queueindex)
+
+    ## --------------------------------------------------------------
+    ## File loading handling
+    ## --------------------------------------------------------------
+
+    def filesloaded(self):
+        dlg = wx.SingleChoiceDialog(self, _("Select the file to print"), _("Pick SD file"), self.sdfiles)
+        if(dlg.ShowModal() == wx.ID_OK):
+            target = dlg.GetStringSelection()
+            if len(target):
+                self.recvlisteners.append(self.waitforsdresponse)
+                self.p.send_now("M23 " + target.lower())
+        dlg.Destroy()
+        #print self.sdfiles
+
+    def getfiles(self):
+        if not self.p.online:
+            self.sdfiles = []
+            return
+        self.listing = 0
+        self.sdfiles = []
+        self.recvlisteners.append(self.listfiles)
+        self.p.send_now("M21")
+        self.p.send_now("M20")
+
+    def model_to_gcode_filename(self, filename):
+        suffix = "_export.gcode"
+        for ext in [".stl", ".obj"]:
+            filename = filename.replace(ext, suffix)
+            filename = filename.replace(ext.upper(), suffix)
+        return filename
+
+    def skein_func(self):
         try:
-            self.settings._set("xy_feedrate", self.xyfeedc.GetValue())
+            param = self.expandcommand(self.settings.slicecommand)
+            output_filename = self.model_to_gcode_filename(self.filename)
+            pararray = [i.replace("$s", self.filename).replace("$o", output_filename) for i in shlex.split(param.replace("\\", "\\\\"))]
+            if self.settings.slic3rintegration:
+                for cat, config in self.slic3r_configs.items():
+                    if config:
+                        fpath = os.path.join(self.slic3r_configpath, cat, config)
+                        pararray += ["--load", fpath]
+            print _("Slicing ") + " ".join(pararray)
+            self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
+            while True:
+                o = self.skeinp.stdout.read(1)
+                if o == '' and self.skeinp.poll() is not None: break
+                sys.stdout.write(o)
+            self.skeinp.wait()
+            self.stopsf = 1
         except:
-            pass
+            logging.error(_("Failed to execute slicing software: "))
+            self.stopsf = 1
+            traceback.print_exc(file = sys.stdout)
+
+    def skein_monitor(self):
+        while not self.stopsf:
+            try:
+                wx.CallAfter(self.statusbar.SetStatusText, _("Slicing..."))  # +self.cout.getvalue().split("\n")[-1])
+            except:
+                pass
+            time.sleep(0.1)
+        fn = self.filename
         try:
-            self.settings._set("last_extrusion", self.edist.GetValue())
+            self.filename = self.model_to_gcode_filename(self.filename)
+            self.load_gcode(self.filename)
+            if self.p.online:
+                wx.CallAfter(self.printbtn.Enable)
+
+            wx.CallAfter(self.statusbar.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
+            print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
+            wx.CallAfter(self.pausebtn.Disable)
+            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+
+            self.post_gcode_load()
         except:
+            self.filename = fn
+        wx.CallAfter(self.loadbtn.SetLabel, _("Load File"))
+        wx.CallAfter(self.toolbarsizer.Layout)
+        self.skeining = 0
+        self.skeinp = None
+
+    def skein(self, filename):
+        wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
+        wx.CallAfter(self.toolbarsizer.Layout)
+        print _("Slicing ") + filename
+        self.cout = StringIO.StringIO()
+        self.filename = filename
+        self.stopsf = 0
+        self.skeining = 1
+        threading.Thread(target = self.skein_func).start()
+        threading.Thread(target = self.skein_monitor).start()
+
+    def cmdline_filename_callback(self, filename):
+        # Do nothing when processing a filename from command line, as we'll
+        # handle it when everything has been prepared
+        self.filename = filename
+
+    def do_load(self, l):
+        if hasattr(self, 'skeining'):
+            self.loadfile(None, l)
+        else:
+            self._do_load(l)
+
+    def load_recent_file(self, event):
+        fileid = event.GetId() - wx.ID_FILE1
+        path = self.filehistory.GetHistoryFile(fileid)
+        self.loadfile(None, filename = path)
+
+    def loadfile(self, event, filename = None):
+        if self.skeining and self.skeinp is not None:
+            self.skeinp.terminate()
+            return
+        basedir = self.settings.last_file_path
+        if not os.path.exists(basedir):
+            basedir = "."
+            try:
+                basedir = os.path.split(self.filename)[0]
+            except:
+                pass
+        dlg = None
+        if filename is None:
+            dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+            dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
+        if filename or dlg.ShowModal() == wx.ID_OK:
+            if filename:
+                name = filename
+            else:
+                name = dlg.GetPath()
+                dlg.Destroy()
+            if not os.path.exists(name):
+                self.statusbar.SetStatusText(_("File not found!"))
+                return
+            path = os.path.split(name)[0]
+            if path != self.settings.last_file_path:
+                self.set("last_file_path", path)
+            try:
+                abspath = os.path.abspath(name)
+                recent_files = []
+                try:
+                    recent_files = json.loads(self.settings.recentfiles)
+                except:
+                    self.logError(_("Failed to load recent files list:") +
+                                  "\n" + traceback.format_exc())
+                if abspath in recent_files:
+                    recent_files.remove(abspath)
+                recent_files.insert(0, abspath)
+                if len(recent_files) > 5:
+                    recent_files = recent_files[:5]
+                self.set("recentfiles", json.dumps(recent_files))
+            except:
+                self.logError(_("Could not update recent files list:") +
+                              "\n" + traceback.format_exc())
+            if name.lower().endswith(".stl"):
+                self.skein(name)
+            elif name.lower().endswith(".obj"):
+                self.skein(name)
+            else:
+                self.filename = name
+                self.load_gcode(self.filename)
+                self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
+                print _("Loaded %s, %d lines") % (name, len(self.fgcode))
+                wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+                wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+                wx.CallAfter(self.pausebtn.Disable)
+                wx.CallAfter(self.recoverbtn.Disable)
+                if self.p.online:
+                    wx.CallAfter(self.printbtn.Enable)
+                wx.CallAfter(self.toolbarsizer.Layout)
+                self.post_gcode_load()
+        else:
+            dlg.Destroy()
+
+    def post_gcode_load(self, print_stats = True):
+        if print_stats:
+            self.output_gcode_stats()
+        threading.Thread(target = self.loadviz).start()
+
+    def output_gcode_stats(self):
+        gcode = self.fgcode
+        print gcode.filament_length, _("mm of filament used in this print")
+        print _("The print goes:")
+        print _("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width)
+        print _("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth)
+        print _("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height)
+        print _("Estimated duration: %s") % gcode.estimate_duration()
+
+    def loadviz(self):
+        gcode = self.fgcode
+        self.gviz.clear()
+        self.gwindow.p.clear()
+        self.gviz.addfile(gcode, True)
+        self.gwindow.p.addfile(gcode)
+        wx.CallAfter(self.gviz.Refresh)
+
+    ## --------------------------------------------------------------
+    ## Printcore callbacks
+    ## --------------------------------------------------------------
+
+    def startcb(self, resuming = False):
+        """Callback on print start"""
+        pronsole.pronsole.startcb(self, resuming)
+        if self.settings.lockbox and self.settings.lockonstart:
+            wx.CallAfter(self.lock, force = True)
+
+    def endcb(self):
+        """Callback on print end/pause"""
+        pronsole.pronsole.endcb(self)
+        if self.p.queueindex == 0:
+            self.p.runSmallScript(self.endScript)
+            wx.CallAfter(self.pausebtn.Disable)
+            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.toolbarsizer.Layout)
+
+    def online(self):
+        """Callback when printer goes online"""
+        print _("Printer is now online.")
+        wx.CallAfter(self.online_gui)
+
+    def online_gui(self):
+        """Callback when printer goes online (graphical bits)"""
+        self.connectbtn.SetLabel(_("Disconnect"))
+        self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
+        self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
+
+        if hasattr(self, "extrudersel"):
+            self.do_tool(self.extrudersel.GetValue())
+
+        self.gui_set_connected()
+
+        if self.filename:
+            self.printbtn.Enable()
+
+        wx.CallAfter(self.toolbarsizer.Layout)
+
+    def sentcb(self, line, gline):
+        """Callback when a printer gcode has been sent"""
+        if not gline:
             pass
+        elif gline.command in ["M104", "M109"]:
+            gline_s = gcoder.S(gline)
+            if gline_s is not None:
+                temp = gline_s
+                if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
+                if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
+        elif gline.command in ["M140", "M190"]:
+            gline_s = gcoder.S(gline)
+            if gline_s is not None:
+                temp = gline_s
+                if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
+                if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
+        elif gline.command.startswith("T"):
+            tool = gline.command[1:]
+            if hasattr(self, "extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
+        self.sentlines.put_nowait(line)
+
+    def is_excluded_move(self, gline):
+        """Check whether the given moves ends at a position specified as
+        excluded in the part excluder"""
+        if not gline.is_move or not self.excluder or not self.excluder.rectangles:
+            return False
+        for (x0, y0, x1, y1) in self.excluder.rectangles:
+            if x0 <= gline.current_x <= x1 and y0 <= gline.current_y <= y1:
+                return True
+        return False
+
+    def preprintsendcb(self, gline, next_gline):
+        """Callback when a printer gcode is about to be sent. We use it to
+        exclude moves defined by the part excluder tool"""
+        if not self.is_excluded_move(gline):
+            return gline
+        else:
+            if gline.z is not None:
+                if gline.relative:
+                    if self.excluder_z_abs is not None:
+                        self.excluder_z_abs += gline.z
+                    elif self.excluder_z_rel is not None:
+                        self.excluder_z_rel += gline.z
+                    else:
+                        self.excluder_z_rel = gline.z
+                else:
+                    self.excluder_z_rel = None
+                    self.excluder_z_abs = gline.z
+            if gline.e is not None and not gline.relative_e:
+                self.excluder_e = gline.e
+            # If next move won't be excluded, push the changes we have to do
+            if next_gline is not None and not self.is_excluded_move(next_gline):
+                if self.excluder_e is not None:
+                    self.p.send_now("G92 E%.5f" % self.excluder_e)
+                    self.excluder_e = None
+                if self.excluder_z_abs is not None:
+                    if gline.relative:
+                        self.p.send_now("G90")
+                    self.p.send_now("G1 Z%.5f" % self.excluder_z_abs)
+                    self.excluder_z_abs = None
+                    if gline.relative:
+                        self.p.send_now("G91")
+                if self.excluder_z_rel is not None:
+                    if not gline.relative:
+                        self.p.send_now("G91")
+                    self.p.send_now("G1 Z%.5f" % self.excluder_z_rel)
+                    self.excluder_z_rel = None
+                    if not gline.relative:
+                        self.p.send_now("G90")
+                return None
+
+    def printsentcb(self, gline):
+        """Callback when a print gcode has been sent"""
+        if gline.is_move:
+            if hasattr(self.gwindow, "set_current_gline"):
+                wx.CallAfter(self.gwindow.set_current_gline, gline)
+            if hasattr(self.gviz, "set_current_gline"):
+                wx.CallAfter(self.gviz.set_current_gline, gline)
+
+    def layer_change_cb(self, newlayer):
+        """Callback when the printed layer changed"""
+        pronsole.pronsole.layer_change_cb(self, newlayer)
+        layerz = self.fgcode.all_layers[newlayer].z
+        if layerz is not None:
+            self.curlayer = layerz
+        if self.settings.mainviz != "3D" or self.settings.trackcurrentlayer3d:
+            wx.CallAfter(self.gviz.setlayer, newlayer)
+
+    def update_tempdisplay(self):
+        try:
+            temps = parse_temperature_report(self.tempreport)
+            if "T0" in temps:
+                hotend_temp = float(temps["T0"][0])
+            else:
+                hotend_temp = float(temps["T"][0]) if "T" in temps else None
+            if hotend_temp is not None:
+                if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
+                if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
+                setpoint = None
+                if "T0" in temps and temps["T0"][1]: setpoint = float(temps["T0"][1])
+                elif temps["T"][1]: setpoint = float(temps["T"][1])
+                if setpoint is not None:
+                    if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, setpoint)
+                    if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, setpoint)
+            if "T1" in temps:
+                hotend_temp = float(temps["T1"][0])
+                if self.display_graph: wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
+                setpoint = temps["T1"][1]
+                if setpoint and self.display_graph:
+                    wx.CallAfter(self.graph.SetExtruder1TargetTemperature, float(setpoint))
+            bed_temp = float(temps["B"][0]) if "B" in temps else None
+            if bed_temp is not None:
+                if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
+                if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
+                setpoint = temps["B"][1]
+                if setpoint:
+                    setpoint = float(setpoint)
+                    if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
+                    if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
+        except:
+            traceback.print_exc()
+
+    def update_pos(self, l):
+        bits = gcoder.m114_exp.findall(l)
+        x = None
+        y = None
+        z = None
+        for bit in bits:
+            if not bit[0]: continue
+            if x is None and bit[0] == "X":
+                x = float(bit[1])
+            elif y is None and bit[0] == "Y":
+                y = float(bit[1])
+            elif z is None and bit[0] == "Z":
+                z = float(bit[1])
+        if x is not None: self.current_pos[0] = x
+        if y is not None: self.current_pos[1] = y
+        if z is not None: self.current_pos[2] = z
+
+    def recvcb(self, l):
+        isreport = False
+        if "ok C:" in l or "Count" in l \
+           or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
+            self.posreport = l
+            self.update_pos(l)
+            if self.userm114 > 0:
+                self.userm114 -= 1
+            else:
+                isreport = True
+        if "ok T:" in l or tempreading_exp.findall(l):
+            self.tempreport = l
+            wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
+            self.update_tempdisplay()
+            if self.userm105 > 0:
+                self.userm105 -= 1
+            else:
+                self.m105_waitcycles = 0
+                isreport = True
+        tstring = l.rstrip()
+        if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
+            wx.CallAfter(self.addtexttolog, tstring + "\n")
+        for listener in self.recvlisteners:
+            listener(l)
+
+    def listfiles(self, line, ignored = False):
+        if "Begin file list" in line:
+            self.listing = 1
+        elif "End file list" in line:
+            self.listing = 0
+            self.recvlisteners.remove(self.listfiles)
+            wx.CallAfter(self.filesloaded)
+        elif self.listing:
+            self.sdfiles.append(line.strip().lower())
+
+    def waitforsdresponse(self, l):
+        if "file.open failed" in l:
+            wx.CallAfter(self.statusbar.SetStatusText, _("Opening file failed."))
+            self.recvlisteners.remove(self.waitforsdresponse)
+            return
+        if "File opened" in l:
+            wx.CallAfter(self.statusbar.SetStatusText, l)
+        if "File selected" in l:
+            wx.CallAfter(self.statusbar.SetStatusText, _("Starting print"))
+            self.sdprinting = 1
+            self.p.send_now("M24")
+            self.startcb()
+            return
+        if "Done printing file" in l:
+            wx.CallAfter(self.statusbar.SetStatusText, l)
+            self.sdprinting = 0
+            self.recvlisteners.remove(self.waitforsdresponse)
+            self.endcb()
+            return
+        if "SD printing byte" in l:
+            #M27 handler
+            try:
+                resp = l.split()
+                vals = resp[-1].split("/")
+                self.percentdone = 100.0 * int(vals[0]) / int(vals[1])
+            except:
+                pass
+
+    ## --------------------------------------------------------------
+    ## Custom buttons handling
+    ## --------------------------------------------------------------
 
     def cbuttons_reload(self):
         allcbs = getattr(self, "custombuttons_widgets", [])
@@ -1025,7 +1661,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.custombutton = i
                 b.properties = btndef
             if btndef is not None:
-                b.Bind(wx.EVT_BUTTON, self.procbutton)
+                b.Bind(wx.EVT_BUTTON, self.process_button)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttons_widgets.append(b)
             if type(self.cbuttonssizer) == wx.GridBagSizer:
@@ -1283,70 +1919,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         else:
             e.Skip()
 
-    def homeButtonClicked(self, axis):
-        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
-        self.zb.clearRepeat()
-        if axis == "x":
-            self.onecmd('home X')
-        elif axis == "y":  # upper-right
-            self.onecmd('home Y')
-        elif axis == "z":
-            self.onecmd('home Z')
-        elif axis == "xy":
-            self.onecmd('home XY')
-        elif axis == "all":
-            self.onecmd('home')
-        else:
-            return
-        self.p.send_now('M114')
-
-    def clamped_move_message(self):
-        print _("Manual move outside of the build volume prevented (see the \"Clamp manual moves\" option).")
-
-    def moveXY(self, x, y):
-        # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
-        self.zb.clearRepeat()
-        if x != 0:
-            if self.settings.clamp_jogging:
-                new_x = self.current_pos[0] + x
-                if new_x < self.build_dimensions_list[3] or new_x > self.build_dimensions_list[0] + self.build_dimensions_list[3]:
-                    self.clamped_move_message()
-                    return
-            self.onecmd('move X %s' % x)
-        elif y != 0:
-            if self.settings.clamp_jogging:
-                new_y = self.current_pos[1] + y
-                if new_y < self.build_dimensions_list[4] or new_y > self.build_dimensions_list[1] + self.build_dimensions_list[4]:
-                    self.clamped_move_message()
-                    return
-            self.onecmd('move Y %s' % y)
-        else:
-            return
-        self.p.send_now('M114')
-
-    def moveZ(self, z):
-        if z != 0:
-            if self.settings.clamp_jogging:
-                new_z = self.current_pos[2] + z
-                if new_z < self.build_dimensions_list[5] or new_z > self.build_dimensions_list[2] + self.build_dimensions_list[5]:
-                    self.clamped_move_message()
-                    return
-            self.onecmd('move Z %s' % z)
-            self.p.send_now('M114')
-        # When user clicks on the Z control, the XY control no longer gets spacebar/repeat signals
-        self.xyb.clearRepeat()
-
-    def spacebarAction(self):
-        self.zb.repeatLast()
-        self.xyb.repeatLast()
-
-    def parseusercmd(self, line):
-        if line.upper().startswith("M114"):
-            self.userm114 += 1
-        elif line.upper().startswith("M105"):
-            self.userm105 += 1
-
-    def procbutton(self, e):
+    def process_button(self, e):
         try:
             if hasattr(e.GetEventObject(), "custombutton"):
                 if wx.GetKeyState(wx.WXK_CONTROL) or wx.GetKeyState(wx.WXK_ALT):
@@ -1361,654 +1934,153 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.cur_button = None
             raise
 
-    def kill(self, e):
-        self.statuscheck = False
-        if self.status_thread:
-            self.status_thread.join()
-            self.status_thread = None
-        self.p.recvcb = None
-        self.p.disconnect()
-        if hasattr(self, "feedrates_changed"):
-            self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
-            self.save_in_rc("set z_feedrate", "set z_feedrate %d" % self.settings.z_feedrate)
-            self.save_in_rc("set e_feedrate", "set e_feedrate %d" % self.settings.e_feedrate)
-        if self.settings.last_extrusion != self.settings.default_extrusion:
-            self.save_in_rc("set last_extrusion", "set last_extrusion %d" % self.settings.last_extrusion)
-        if self.excluder:
-            self.excluder.close_window()
-        wx.CallAfter(self.gwindow.Destroy)
-        wx.CallAfter(self.Destroy)
+    ## --------------------------------------------------------------
+    ## Macros handling
+    ## --------------------------------------------------------------
 
-    def do_monitor(self, l = ""):
-        if l.strip() == "":
-            self.set("monitor", not self.settings.monitor)
-        elif l.strip() == "off":
-            self.set("monitor", False)
-        else:
-            try:
-                self.monitor_interval = float(l)
-                self.set("monitor", self.monitor_interval > 0)
-            except:
-                print _("Invalid period given.")
-        if self.settings.monitor:
-            print _("Monitoring printer.")
-        else:
-            print _("Done monitoring.")
-
-    def update_monitor(self, *args):
-        if hasattr(self, "display_graph") and self.display_graph:
-            if self.settings.monitor:
-                wx.CallAfter(self.graph.StartPlotting, 1000)
-            else:
-                wx.CallAfter(self.graph.StopPlotting)
-
-    def addtexttolog(self, text):
-        try:
-            self.logbox.AppendText(text)
-            max_length = 20000
-            current_length = self.logbox.GetLastPosition()
-            if current_length > max_length:
-                self.logbox.Remove(0, current_length / 10)
-        except:
-            print _("Attempted to write invalid text to console, which could be due to an invalid baudrate")
-
-    def setloud(self, e):
-        self.p.loud = e.IsChecked()
-
-    def sendline(self, e):
-        command = self.commandbox.GetValue()
-        if not len(command):
-            return
-        wx.CallAfter(self.addtexttolog, ">>>" + command + "\n")
-        self.parseusercmd(str(command))
-        self.onecmd(str(command))
-        self.commandbox.SetSelection(0, len(command))
-        self.commandbox.history.append(command)
-        self.commandbox.histindex = len(self.commandbox.history)
-
-    def clearOutput(self, e):
-        self.logbox.Clear()
-
-    def update_tempdisplay(self):
-        try:
-            # FIXME : we don't use setpoints here, we should probably exploit them
-            temps = parse_temperature_report(self.tempreport)
-            if "T0" in temps:
-                hotend_temp = float(temps["T0"][0])
-            else:
-                hotend_temp = float(temps["T"][0]) if "T" in temps else None
-            if hotend_temp is not None:
-                if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
-                if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
-                setpoint = None
-                if "T0" in temps and temps["T0"][1]: setpoint = float(temps["T0"][1])
-                elif temps["T"][1]: setpoint = float(temps["T"][1])
-                if setpoint is not None:
-                    if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, setpoint)
-                    if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, setpoint)
-            if "T1" in temps:
-                hotend_temp = float(temps["T1"][0])
-                if self.display_graph: wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
-                setpoint = temps["T1"][1]
-                if setpoint and self.display_graph:
-                    wx.CallAfter(self.graph.SetExtruder1TargetTemperature, float(setpoint))
-            bed_temp = float(temps["B"][0]) if "B" in temps else None
-            if bed_temp is not None:
-                if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
-                if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
-                setpoint = temps["B"][1]
-                if setpoint:
-                    setpoint = float(setpoint)
-                    if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
-                    if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
-        except:
-            traceback.print_exc()
-
-    def update_pos(self, l):
-        bits = gcoder.m114_exp.findall(l)
-        x = None
-        y = None
-        z = None
-        for bit in bits:
-            if not bit[0]: continue
-            if x is None and bit[0] == "X":
-                x = float(bit[1])
-            elif y is None and bit[0] == "Y":
-                y = float(bit[1])
-            elif z is None and bit[0] == "Z":
-                z = float(bit[1])
-        if x is not None: self.current_pos[0] = x
-        if y is not None: self.current_pos[1] = y
-        if z is not None: self.current_pos[2] = z
-
-    def statuschecker(self):
-        while self.statuscheck:
-            string = ""
-            fractioncomplete = 0.0
-            if self.sdprinting or self.uploading:
-                if self.uploading:
-                    fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
-                    string += _("SD upload: %04.2f%% |") % (100 * fractioncomplete,)
-                    string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                else:
-                    fractioncomplete = float(self.percentdone / 100.0)
-                    string += _("SD printing: %04.2f%% |") % (self.percentdone,)
-                if fractioncomplete > 0.0:
-                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                    secondsestimate = secondselapsed / fractioncomplete
-                    secondsremain = secondsestimate - secondselapsed
-                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
-                                                                  format_duration(secondsestimate))
-                    string += _(" Z: %.3f mm") % self.curlayer
-            elif self.p.printing:
-                fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
-                string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
-                string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                if self.p.queueindex > 0:
-                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                    secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
-                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
-                                                                  format_duration(secondsestimate))
-                    string += _(" Z: %.3f mm") % self.curlayer
-            wx.CallAfter(self.statusbar.SetStatusText, string)
-            wx.CallAfter(self.gviz.Refresh)
-            if self.p.online:
-                if self.p.writefailures >= 4:
-                    self.logError(_("Disconnecting after 4 failed writes."))
-                    self.status_thread = None
-                    self.disconnect()
+    def start_macro(self, macro_name, old_macro_definition = ""):
+        if not self.processing_rc:
+            def cb(definition):
+                if len(definition.strip()) == 0:
+                    if old_macro_definition != "":
+                        dialog = wx.MessageDialog(self, _("Do you want to erase the macro?"), style = wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                        if dialog.ShowModal() == wx.ID_YES:
+                            self.delete_macro(macro_name)
+                            return
+                    print _("Cancelled.")
                     return
-            if self.settings.monitor and self.p.online:
-                if self.sdprinting:
-                    self.p.send_now("M27")
-                if self.m105_waitcycles % 10 == 0:
-                    self.p.send_now("M105")
-                self.m105_waitcycles += 1
-            cur_time = time.time()
-            wait_time = 0
-            while time.time() < cur_time + self.monitor_interval - 0.25:
-                if not self.statuscheck:
-                    break
-                time.sleep(0.25)
-                # Safeguard: if system time changes and goes back in the past,
-                # we could get stuck almost forever
-                wait_time += 0.25
-                if wait_time > self.monitor_interval - 0.25:
-                    break
-            # Always sleep at least a bit, if something goes wrong with the
-            # system time we'll avoid freezing the whole app this way
-            time.sleep(0.25)
-            try:
-                while not self.sentlines.empty():
-                    gc = self.sentlines.get_nowait()
-                    wx.CallAfter(self.gviz.addgcodehighlight, gc)
-                    self.sentlines.task_done()
-            except Queue.Empty:
-                pass
-        wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
+                self.cur_macro_name = macro_name
+                self.cur_macro_def = definition
+                self.end_macro()
+            MacroEditor(macro_name, old_macro_definition, cb)
+        else:
+            pronsole.pronsole.start_macro(self, macro_name, old_macro_definition)
 
-    def recvcb(self, l):
-        isreport = False
-        if "ok C:" in l or "Count" in l \
-           or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
-            self.posreport = l
-            self.update_pos(l)
-            if self.userm114 > 0:
-                self.userm114 -= 1
-            else:
-                isreport = True
-        if "ok T:" in l or tempreading_exp.findall(l):
-            self.tempreport = l
-            wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
-            self.update_tempdisplay()
-            if self.userm105 > 0:
-                self.userm105 -= 1
-            else:
-                self.m105_waitcycles = 0
-                isreport = True
-        tstring = l.rstrip()
-        if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
-            wx.CallAfter(self.addtexttolog, tstring + "\n")
-        for listener in self.recvlisteners:
-            listener(l)
+    def end_macro(self):
+        pronsole.pronsole.end_macro(self)
+        self.update_macros_menu()
 
-    def listfiles(self, line, ignored = False):
-        if "Begin file list" in line:
-            self.listing = 1
-        elif "End file list" in line:
-            self.listing = 0
-            self.recvlisteners.remove(self.listfiles)
-            wx.CallAfter(self.filesloaded)
-        elif self.listing:
-            self.sdfiles.append(line.strip().lower())
+    def delete_macro(self, macro_name):
+        pronsole.pronsole.delete_macro(self, macro_name)
+        self.update_macros_menu()
 
-    def waitforsdresponse(self, l):
-        if "file.open failed" in l:
-            wx.CallAfter(self.statusbar.SetStatusText, _("Opening file failed."))
-            self.recvlisteners.remove(self.waitforsdresponse)
+    def new_macro(self, e = None):
+        dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))
+        panel = wx.Panel(dialog, -1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        wx.StaticText(panel, -1, _("Macro name:"), (8, 14))
+        dialog.namectrl = wx.TextCtrl(panel, -1, '', (110, 8), size = (130, 24), style = wx.TE_PROCESS_ENTER)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        okb = wx.Button(dialog, wx.ID_OK, _("Ok"), size = (60, 24))
+        dialog.Bind(wx.EVT_TEXT_ENTER, lambda e: dialog.EndModal(wx.ID_OK), dialog.namectrl)
+        #dialog.Bind(wx.EVT_BUTTON, lambda e:self.new_macro_named(dialog, e), okb)
+        hbox.Add(okb)
+        hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel"), size = (60, 24)))
+        vbox.Add(panel)
+        vbox.Add(hbox, 1, wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, 10)
+        dialog.SetSizer(vbox)
+        dialog.Centre()
+        macro = ""
+        if dialog.ShowModal() == wx.ID_OK:
+            macro = dialog.namectrl.GetValue()
+            if macro != "":
+                wx.CallAfter(self.edit_macro, macro)
+        dialog.Destroy()
+        return macro
+
+    def edit_macro(self, macro):
+        if macro == "": return self.new_macro()
+        if macro in self.macros:
+            old_def = self.macros[macro]
+        elif len([c for c in macro.encode("ascii", "replace") if not c.isalnum() and c != "_"]):
+            print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
             return
-        if "File opened" in l:
-            wx.CallAfter(self.statusbar.SetStatusText, l)
-        if "File selected" in l:
-            wx.CallAfter(self.statusbar.SetStatusText, _("Starting print"))
-            self.sdprinting = 1
-            self.p.send_now("M24")
-            self.startcb()
+        elif hasattr(self.__class__, "do_" + macro):
+            print _("Name '%s' is being used by built-in command") % macro
             return
-        if "Done printing file" in l:
-            wx.CallAfter(self.statusbar.SetStatusText, l)
-            self.sdprinting = 0
-            self.recvlisteners.remove(self.waitforsdresponse)
-            self.endcb()
-            return
-        if "SD printing byte" in l:
-            #M27 handler
-            try:
-                resp = l.split()
-                vals = resp[-1].split("/")
-                self.percentdone = 100.0 * int(vals[0]) / int(vals[1])
-            except:
-                pass
+        else:
+            old_def = ""
+        self.start_macro(macro, old_def)
+        return macro
 
-    def filesloaded(self):
-        dlg = wx.SingleChoiceDialog(self, _("Select the file to print"), _("Pick SD file"), self.sdfiles)
-        if(dlg.ShowModal() == wx.ID_OK):
-            target = dlg.GetStringSelection()
-            if len(target):
-                self.recvlisteners.append(self.waitforsdresponse)
-                self.p.send_now("M23 " + target.lower())
-        dlg.Destroy()
-        #print self.sdfiles
-
-    def getfiles(self):
-        if not self.p.online:
-            self.sdfiles = []
-            return
-        self.listing = 0
-        self.sdfiles = []
-        self.recvlisteners.append(self.listfiles)
-        self.p.send_now("M21")
-        self.p.send_now("M20")
-
-    def model_to_gcode_filename(self, filename):
-        suffix = "_export.gcode"
-        for ext in [".stl", ".obj"]:
-            filename = filename.replace(ext, suffix)
-            filename = filename.replace(ext.upper(), suffix)
-        return filename
-
-    def skein_func(self):
+    def update_macros_menu(self):
+        if not hasattr(self, "macros_menu"):
+            return  # too early, menu not yet built
         try:
-            param = self.expandcommand(self.settings.slicecommand)
-            output_filename = self.model_to_gcode_filename(self.filename)
-            pararray = [i.replace("$s", self.filename).replace("$o", output_filename) for i in shlex.split(param.replace("\\", "\\\\"))]
-            if self.settings.slic3rintegration:
-                for cat, config in self.slic3r_configs.items():
-                    if config:
-                        fpath = os.path.join(self.slic3r_configpath, cat, config)
-                        pararray += ["--load", fpath]
-            print _("Slicing ") + " ".join(pararray)
-            self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
-                o = self.skeinp.stdout.read(1)
-                if o == '' and self.skeinp.poll() is not None: break
-                sys.stdout.write(o)
-            self.skeinp.wait()
-            self.stopsf = 1
+                item = self.macros_menu.FindItemByPosition(1)
+                if item is None: break
+                self.macros_menu.DeleteItem(item)
         except:
-            logging.error(_("Failed to execute slicing software: "))
-            self.stopsf = 1
-            traceback.print_exc(file = sys.stdout)
+            pass
+        for macro in self.macros.keys():
+            self.Bind(wx.EVT_MENU, lambda x, m = macro: self.start_macro(m, self.macros[m]), self.macros_menu.Append(-1, macro))
 
-    def skein_monitor(self):
-        while not self.stopsf:
+    ## --------------------------------------------------------------
+    ## Slic3r integration
+    ## --------------------------------------------------------------
+
+    def load_slic3r_configs(self, menus):
+        """List Slic3r configurations and create menu"""
+        # Hack to get correct path for Slic3r config
+        orig_appname = self.app.GetAppName()
+        self.app.SetAppName("Slic3r")
+        configpath = wx.StandardPaths.Get().GetUserDataDir()
+        self.app.SetAppName(orig_appname)
+        self.slic3r_configpath = configpath
+        configfile = os.path.join(configpath, "slic3r.ini")
+        config = self.read_slic3r_config(configfile)
+        self.slic3r_configs = {}
+        for cat in menus:
+            menu = menus[cat]
+            pattern = os.path.join(configpath, cat, "*.ini")
+            files = sorted(glob.glob(pattern))
             try:
-                wx.CallAfter(self.statusbar.SetStatusText, _("Slicing..."))  # +self.cout.getvalue().split("\n")[-1])
+                preset = config.get("presets", cat)
+                self.slic3r_configs[cat] = preset
             except:
-                pass
-            time.sleep(0.1)
-        fn = self.filename
-        try:
-            self.filename = self.model_to_gcode_filename(self.filename)
-            self.load_gcode(self.filename)
-            if self.p.online:
-                wx.CallAfter(self.printbtn.Enable)
+                preset = None
+                self.slic3r_configs[cat] = None
+            for f in files:
+                name = os.path.splitext(os.path.basename(f))[0]
+                item = menu.Append(-1, name, f, wx.ITEM_RADIO)
+                item.Check(os.path.basename(f) == preset)
+                self.Bind(wx.EVT_MENU,
+                          lambda event, cat = cat, f = f:
+                          self.set_slic3r_config(configfile, cat, f), item)
 
-            wx.CallAfter(self.statusbar.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
-            print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
-            wx.CallAfter(self.pausebtn.Disable)
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+    def read_slic3r_config(self, configfile, parser = None):
+        """Helper to read a Slic3r configuration file"""
+        import ConfigParser
+        parser = ConfigParser.RawConfigParser()
 
-            self.post_gcode_load()
-        except:
-            self.filename = fn
-        wx.CallAfter(self.loadbtn.SetLabel, _("Load File"))
-        wx.CallAfter(self.toolbarsizer.Layout)
-        self.skeining = 0
-        self.skeinp = None
+        class add_header(object):
+            def __init__(self, f):
+                self.f = f
+                self.header = '[dummy]'
 
-    def skein(self, filename):
-        wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
-        wx.CallAfter(self.toolbarsizer.Layout)
-        print _("Slicing ") + filename
-        self.cout = StringIO.StringIO()
-        self.filename = filename
-        self.stopsf = 0
-        self.skeining = 1
-        threading.Thread(target = self.skein_func).start()
-        threading.Thread(target = self.skein_monitor).start()
+            def readline(self):
+                if self.header:
+                    try: return self.header
+                    finally: self.header = None
+                else:
+                    return self.f.readline()
+        parser.readfp(add_header(open(configfile)), configfile)
+        return parser
 
-    def cmdline_filename_callback(self, filename):
-        # Do nothing when processing a filename from command line, as we'll
-        # handle it when everything has been prepared
-        self.filename = filename
-
-    def do_load(self, l):
-        if hasattr(self, 'skeining'):
-            self.loadfile(None, l)
-        else:
-            self._do_load(l)
-
-    def load_recent_file(self, event):
-        fileid = event.GetId() - wx.ID_FILE1
-        path = self.filehistory.GetHistoryFile(fileid)
-        self.loadfile(None, filename = path)
-
-    def loadfile(self, event, filename = None):
-        if self.skeining and self.skeinp is not None:
-            self.skeinp.terminate()
-            return
-        basedir = self.settings.last_file_path
-        if not os.path.exists(basedir):
-            basedir = "."
-            try:
-                basedir = os.path.split(self.filename)[0]
-            except:
-                pass
-        dlg = None
-        if filename is None:
-            dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-            dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
-        if filename or dlg.ShowModal() == wx.ID_OK:
-            if filename:
-                name = filename
-            else:
-                name = dlg.GetPath()
-                dlg.Destroy()
-            if not os.path.exists(name):
-                self.statusbar.SetStatusText(_("File not found!"))
-                return
-            path = os.path.split(name)[0]
-            if path != self.settings.last_file_path:
-                self.set("last_file_path", path)
-            try:
-                abspath = os.path.abspath(name)
-                recent_files = []
-                try:
-                    recent_files = json.loads(self.settings.recentfiles)
-                except:
-                    self.logError(_("Failed to load recent files list:") +
-                                  "\n" + traceback.format_exc())
-                if abspath in recent_files:
-                    recent_files.remove(abspath)
-                recent_files.insert(0, abspath)
-                if len(recent_files) > 5:
-                    recent_files = recent_files[:5]
-                self.set("recentfiles", json.dumps(recent_files))
-            except:
-                self.logError(_("Could not update recent files list:") +
-                              "\n" + traceback.format_exc())
-            if name.lower().endswith(".stl"):
-                self.skein(name)
-            elif name.lower().endswith(".obj"):
-                self.skein(name)
-            else:
-                self.filename = name
-                self.load_gcode(self.filename)
-                self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
-                print _("Loaded %s, %d lines") % (name, len(self.fgcode))
-                wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-                wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-                wx.CallAfter(self.pausebtn.Disable)
-                wx.CallAfter(self.recoverbtn.Disable)
-                if self.p.online:
-                    wx.CallAfter(self.printbtn.Enable)
-                wx.CallAfter(self.toolbarsizer.Layout)
-                self.post_gcode_load()
-        else:
-            dlg.Destroy()
-
-    def post_gcode_load(self, print_stats = True):
-        if print_stats:
-            self.output_gcode_stats()
-        threading.Thread(target = self.loadviz).start()
-
-    def output_gcode_stats(self):
-        gcode = self.fgcode
-        print gcode.filament_length, _("mm of filament used in this print")
-        print _("The print goes:")
-        print _("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width)
-        print _("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth)
-        print _("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height)
-        print _("Estimated duration: %s") % gcode.estimate_duration()
-
-    def loadviz(self):
-        gcode = self.fgcode
-        self.gviz.clear()
-        self.gwindow.p.clear()
-        self.gviz.addfile(gcode, True)
-        self.gwindow.p.addfile(gcode)
-        wx.CallAfter(self.gviz.Refresh)
-
-    def printfile(self, event):
-        self.extra_print_time = 0
-        if self.paused:
-            self.p.paused = 0
-            self.paused = 0
-            if self.sdprinting:
-                self.on_startprint()
-                self.p.send_now("M26 S0")
-                self.p.send_now("M24")
-                return
-
-        if not self.fgcode:
-            wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
-            return
-        if not self.p.online:
-            wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
-            return
-        self.on_startprint()
-        self.p.startprint(self.fgcode)
-
-    def on_startprint(self):
-        wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-        wx.CallAfter(self.pausebtn.Enable)
-        wx.CallAfter(self.printbtn.SetLabel, _("Restart"))
-        wx.CallAfter(self.toolbarsizer.Layout)
-
-    def endupload(self):
-        self.p.send_now("M29 ")
-        wx.CallAfter(self.statusbar.SetStatusText, _("File upload complete"))
-        time.sleep(0.5)
-        self.p.clear = True
-        self.uploading = False
-
-    def uploadtrigger(self, l):
-        if "Writing to file" in l:
-            self.uploading = True
-            self.p.startprint(self.fgcode)
-            self.p.endcb = self.endupload
-            self.recvlisteners.remove(self.uploadtrigger)
-        elif "open failed, File" in l:
-            self.recvlisteners.remove(self.uploadtrigger)
-
-    def upload(self, event):
-        if not self.fgcode:
-            return
-        if not self.p.online:
-            return
-        dlg = wx.TextEntryDialog(self, ("Enter a target filename in 8.3 format:"), _("Pick SD filename"), dosify(self.filename))
-        if dlg.ShowModal() == wx.ID_OK:
-            self.p.send_now("M21")
-            self.p.send_now("M28 " + str(dlg.GetValue()))
-            self.recvlisteners.append(self.uploadtrigger)
-        dlg.Destroy()
-
-    def pause(self, event):
-        if not self.paused:
-            print _("Print paused at: %s") % format_time(time.time())
-            if self.sdprinting:
-                self.p.send_now("M25")
-            else:
-                if(not self.p.printing):
-                    #print "Not printing, cannot pause."
-                    return
-                self.p.pause()
-                self.p.runSmallScript(self.pauseScript)
-            self.paused = True
-            #self.p.runSmallScript(self.pauseScript)
-            self.extra_print_time += int(time.time() - self.starttime)
-            wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
-            wx.CallAfter(self.toolbarsizer.Layout)
-        else:
-            print _("Resuming.")
-            self.paused = False
-            if self.sdprinting:
-                self.p.send_now("M24")
-            else:
-                self.p.resume()
-            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-            wx.CallAfter(self.toolbarsizer.Layout)
-
-    def sdprintfile(self, event):
-        self.on_startprint()
-        threading.Thread(target = self.getfiles).start()
-
-    def connect(self, event = None):
-        print _("Connecting...")
-        port = None
-        if self.serialport.GetValue():
-            port = str(self.serialport.GetValue())
-        else:
-            scanned = self.scanserial()
-            if scanned:
-                port = scanned[0]
-        baud = 115200
-        try:
-            baud = int(self.baud.GetValue())
-        except:
-            print _("Could not parse baud rate: ")
-            traceback.print_exc(file = sys.stdout)
-        if self.paused:
-            self.p.paused = 0
-            self.p.printing = 0
-            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-            wx.CallAfter(self.toolbarsizer.Layout)
-            self.paused = 0
-            if self.sdprinting:
-                self.p.send_now("M26 S0")
-        try:
-            self.p.connect(port, baud)
-        except SerialException as e:
-            # Currently, there is no errno, but it should be there in the future
-            if e.errno == 2:
-                self.logError(_("Error: You are trying to connect to a non-existing port."))
-            elif e.errno == 8:
-                self.logError(_("Error: You don't have permission to open %s.") % port)
-                self.logError(_("You might need to add yourself to the dialout group."))
-            else:
-                self.logError(traceback.format_exc())
-            # Kill the scope anyway
-            return
-        except OSError as e:
-            if e.errno == 2:
-                self.logError(_("Error: You are trying to connect to a non-existing port."))
-            else:
-                self.logError(traceback.format_exc())
-            return
-        self.statuscheck = True
-        if port != self.settings.port:
-            self.set("port", port)
-        if baud != self.settings.baudrate:
-            self.set("baudrate", str(baud))
-        self.status_thread = threading.Thread(target = self.statuschecker)
-        self.status_thread.start()
-        if self.predisconnect_mainqueue:
-            self.recoverbtn.Enable()
-
-    def recover(self, event):
-        self.extra_print_time = 0
-        if not self.p.online:
-            wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
-            return
-        # Reset Z
-        self.p.send_now("G92 Z%f" % self.predisconnect_layer)
-        # Home X and Y
-        self.p.send_now("G28 X Y")
-        self.on_startprint()
-        self.p.startprint(self.predisconnect_mainqueue, self.p.queueindex)
-
-    def store_predisconnect_state(self):
-        self.predisconnect_mainqueue = self.p.mainqueue
-        self.predisconnect_queueindex = self.p.queueindex
-        self.predisconnect_layer = self.curlayer
-
-    def disconnect(self, event = None):
-        print _("Disconnected.")
-        if self.p.printing or self.p.paused or self.paused:
-            self.store_predisconnect_state()
-        self.p.disconnect()
-        self.statuscheck = False
-        if self.status_thread:
-            self.status_thread.join()
-            self.status_thread = None
-
-        wx.CallAfter(self.connectbtn.SetLabel, _("Connect"))
-        wx.CallAfter(self.connectbtn.SetToolTip, wx.ToolTip(_("Connect to the printer")))
-        wx.CallAfter(self.connectbtn.Bind, wx.EVT_BUTTON, self.connect)
-
-        wx.CallAfter(self.gui_set_disconnected)
-
-        if self.paused:
-            self.p.paused = 0
-            self.p.printing = 0
-            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-            self.paused = 0
-            if self.sdprinting:
-                self.p.send_now("M26 S0")
-
-        # Relayout the toolbar to handle new buttons size
-        wx.CallAfter(self.toolbarsizer.Layout)
-
-    def reset(self, event):
-        print _("Reset.")
-        dlg = wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES | wx.NO)
-        if dlg.ShowModal() == wx.ID_YES:
-            self.p.reset()
-            self.sethotendgui(0)
-            self.setbedgui(0)
-            self.p.printing = 0
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-            if self.paused:
-                self.p.paused = 0
-                wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-                self.paused = 0
-            wx.CallAfter(self.toolbarsizer.Layout)
-        dlg.Destroy()
-
-    def lock(self, event = None, force = None):
-        if force is not None:
-            self.locker.SetValue(force)
-        if self.locker.GetValue():
-            print _("Locking interface.")
-            for panel in self.panels:
-                panel.Disable()
-        else:
-            print _("Unlocking interface.")
-            for panel in self.panels:
-                panel.Enable()
+    def set_slic3r_config(self, configfile, cat, file):
+        """Set new preset for a given category"""
+        self.slic3r_configs[cat] = file
+        if self.settings.slic3rupdate:
+            config = self.read_slic3r_config(configfile)
+            config.set("presets", cat, os.path.basename(file))
+            f = StringIO.StringIO()
+            config.write(f)
+            data = f.getvalue()
+            f.close()
+            data = data.replace("[dummy]\n", "")
+            with open(configfile, "w") as f:
+                f.write(data)
 
 class PronterApp(wx.App):
 

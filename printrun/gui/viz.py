@@ -50,7 +50,7 @@ class VizPane(wx.BoxSizer):
             try:
                 import printrun.gcview
                 root.gviz = printrun.gcview.GcodeViewMainWrapper(parentpanel, root.build_dimensions_list, root = root, circular = root.settings.circular_bed)
-                root.gviz.clickcb = root.showwin
+                root.gviz.clickcb = root.show_viz_window
             except:
                 use2dview = True
                 print "3D view mode requested, but we failed to initialize it."
@@ -64,7 +64,7 @@ class VizPane(wx.BoxSizer):
                                   bgcolor = root.settings.bgcolor)
             root.gviz.SetToolTip(wx.ToolTip(_("Click to examine / edit\n  layers of loaded file")))
             root.gviz.showall = 1
-            root.gviz.Bind(wx.EVT_LEFT_DOWN, root.showwin)
+            root.gviz.Bind(wx.EVT_LEFT_DOWN, root.show_viz_window)
         use3dview = root.settings.viz3d
         if use3dview:
             try:

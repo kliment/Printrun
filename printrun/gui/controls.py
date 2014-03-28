@@ -250,7 +250,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     if root.display_graph:
         root.graph = Graph(parentpanel, wx.ID_ANY, root)
         add("tempgraph", root.graph, flag = wx.EXPAND | wx.ALL, border = 5)
-        root.graph.Bind(wx.EVT_LEFT_DOWN, root.graph.showwin)
+        root.graph.Bind(wx.EVT_LEFT_DOWN, root.graph.show_graph_window)
 
     ## Extrusion controls
 
