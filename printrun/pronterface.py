@@ -177,9 +177,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.xy_feedrate = self.settings.xy_feedrate
         self.p.z_feedrate = self.settings.z_feedrate
 
-        #make printcore aware of me
-        self.p.pronterface = self
-
         self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict = {}
         try:
@@ -1390,6 +1387,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     ## --------------------------------------------------------------
     ## Printcore callbacks
     ## --------------------------------------------------------------
+
+    def process_host_command(self, command):
+        """Override host command handling"""
+        command = command.lstrip()
+        if command.startswith(";@pause"):
+            self.pause(None)
+        else:
+            pronsole.pronsole.process_host_command(self, command)
 
     def startcb(self, resuming = False):
         """Callback on print start"""

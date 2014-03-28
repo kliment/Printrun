@@ -445,6 +445,7 @@ class pronsole(cmd.Cmd):
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
         self.p.layerchangecb = self.layer_change_cb
+        self.p.process_host_command = self.process_host_command
         self.recvlisteners = []
         self.in_macro = False
         self.p.onlinecb = self.online
@@ -1635,6 +1636,14 @@ class pronsole(cmd.Cmd):
 
     def help_off(self):
         self.log(_("Turns off everything on the printer"))
+
+    def process_host_command(self, command):
+        """Override host command handling"""
+        command = command.lstrip()
+        if command.startswith(";@"):
+            command = command[2:]
+            self.log(_("G-Code calling host command \"%s\"") % command)
+            self.onecmd(command)
 
     def add_cmdline_arguments(self, parser):
         parser.add_argument('-c', '--conf', '--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
