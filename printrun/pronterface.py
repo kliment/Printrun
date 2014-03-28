@@ -36,7 +36,8 @@ from . import printcore
 
 from .utils import install_locale, setup_logging, \
     iconfile, configfile, format_time, format_duration, \
-    hexcolor_to_float, parse_temperature_report
+    hexcolor_to_float, parse_temperature_report, \
+    prepare_command
 install_locale('pronterface')
 
 try:
@@ -1223,9 +1224,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def skein_func(self):
         try:
-            param = self.expandcommand(self.settings.slicecommand)
             output_filename = self.model_to_gcode_filename(self.filename)
-            pararray = [i.replace("$s", self.filename).replace("$o", output_filename) for i in shlex.split(param.replace("\\", "\\\\"))]
+            pararray = prepare_command(self.settings.slicecommand,
+                                       {"$s": self.filename, "$o": output_filename})
             if self.settings.slic3rintegration:
                 for cat, config in self.slic3r_configs.items():
                     if config:
