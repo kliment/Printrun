@@ -102,14 +102,6 @@ class GcodeViewPanel(wxGLPanel):
         platformy0 = -self.build_dimensions[4] - self.parent.platform.depth / 2
         glTranslatef(platformx0, platformy0, 0)
 
-        light_z = max(self.parent.platform.width, self.parent.platform.depth)
-        glLightfv(GL_LIGHT0, GL_POSITION, vec(0,
-                                              self.parent.platform.depth / 2,
-                                              light_z, 0))
-        glLightfv(GL_LIGHT1, GL_POSITION, vec(self.parent.platform.width,
-                                              self.parent.platform.depth / 2,
-                                              light_z, 0))
-
         for obj in self.parent.objects:
             if not obj.model \
                or not obj.model.loaded \

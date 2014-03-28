@@ -23,14 +23,19 @@ import logging
 
 from ctypes import sizeof
 
+from pyglet.gl import *
 from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
     GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
-    GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, glRectf, \
+    GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, \
     glBegin, glEnd, GL_LINES, glEnable, glDisable, glGetFloatv, \
     GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, GLuint, \
     glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
-    glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY
+    glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
+    GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
+    GL_DIFFUSE, GL_AMBIENT, GL_LIGHTING, GL_LIGHT0, glLightfv, \
+    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
+    GL_LIGHT1, GL_LIGHT2, GL_POSITION, GL_SPOT_EXPONENT, glShadeModel, GL_SMOOTH
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from printrun.utils import install_locale
@@ -507,13 +512,42 @@ class GcodeModel(Model):
         glTranslatef(self.offset_x, self.offset_y, 0)
         glEnableClientState(GL_VERTEX_ARRAY)
 
+        glDisable(GL_LIGHTING)
+        glEnable(GL_RESCALE_NORMAL)
+        glShadeModel(GL_SMOOTH)
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
+        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1)
+        glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.2, 0.2, 0.2, 1.0))
+        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0, 0, 0, 0))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0, 0, 0, 0))
+        glEnable(GL_LIGHT1)
+        glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
+        glLightfv(GL_LIGHT1, GL_SPECULAR, vec(1., 1., 1., 1.))
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.72, 0.72, 0.72, 1))
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
+        glLightfv(GL_LIGHT1, GL_SPOT_EXPONENT, vec(1., 1., 1., 1.))
+        glEnable(GL_LIGHT2)
+        glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
+        glLightfv(GL_LIGHT2, GL_SPECULAR, vec(1., 1., 1., 1.))
+        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
+        glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 2, 0))
+
         has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
         self._display_travels(has_vbo)
 
         glEnableClientState(GL_COLOR_ARRAY)
+        glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
+        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
 
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
         self._display_movements(has_vbo)
 
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHT1)
+        glDisable(GL_LIGHT2)
+        glDisable(GL_LIGHTING)
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
 
@@ -599,11 +633,6 @@ class GcodeModel(Model):
         if layer_selected:
             glDisableClientState(GL_COLOR_ARRAY)
 
-            # Backup & increase line width
-            orig_linewidth = (GLfloat)()
-            glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
-            glLineWidth(2.0)
-
             glColor4f(*self.color_current_printed)
 
             if cur_end > end_prev_layer:
@@ -613,9 +642,6 @@ class GcodeModel(Model):
 
             if end > cur_end:
                 self._draw_elements(cur_end + 1, end)
-
-            # Restore line width
-            glLineWidth(orig_linewidth)
 
             glEnableClientState(GL_COLOR_ARRAY)
 
