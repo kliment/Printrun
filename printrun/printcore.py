@@ -107,7 +107,6 @@ class printcore():
             self.connect(port, baud)
         self.xy_feedrate = None
         self.z_feedrate = None
-        self.pronterface = None
 
     def logError(self, error):
         if self.errorcb:
@@ -496,14 +495,11 @@ class printcore():
             self.print_thread = None
             self._start_sender()
 
-    #now only "pause" is implemented as host command
-    def processHostCommand(self, command):
+    def process_host_command(self, command):
+        """only ;@pause command is implemented as a host command in printcore, but hosts are free to reimplement this method"""
         command = command.lstrip()
         if command.startswith(";@pause"):
-            if self.pronterface is not None:
-                self.pronterface.pause(None)
-            else:
-                self.pause()
+            self.pause()
 
     def _sendnext(self):
         if not self.printer:
@@ -546,7 +542,7 @@ class printcore():
                 return
             tline = gline.raw
             if tline.lstrip().startswith(";@"):  # check for host command
-                self.processHostCommand(tline)
+                self.process_host_command(tline)
                 self.queueindex += 1
                 self.clear = True
                 return
