@@ -400,6 +400,11 @@ class printcore():
         # might be calling it from the thread itself
         try:
             self.print_thread.join()
+        except RuntimeError, e:
+            if e.message == "cannot join current thread":
+                pass
+            else:
+                traceback.print_exc()
         except:
             traceback.print_exc()
 
