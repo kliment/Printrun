@@ -1780,3 +1780,11 @@ class pronsole(cmd.Cmd):
             command = command[2:]
             self.log(_("G-Code calling host command \"%s\"") % command)
             self.onecmd(command)
+
+    def do_run_gcode_script(self, l):
+        p = run_command(l, {"%s": str(self.filename)}, stdout = subprocess.PIPE)
+        for line in p.stdout.readlines():
+            self.onecmd(line.strip())
+
+    def help_run_gcode_script(self):
+        self.log(_("Runs a custom script which output gcode which will in turn be executed. Current gcode filename can be given using %s token."))
