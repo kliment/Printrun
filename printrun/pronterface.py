@@ -346,6 +346,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.p.runSmallScript(self.endScript)
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.toolbarsizer.Layout)
 
     def online(self):
         print _("Printer is now online.")
@@ -363,6 +364,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         if self.filename:
             self.printbtn.Enable()
+
+        wx.CallAfter(self.toolbarsizer.Layout)
 
     def sentcb(self, line, gline):
         if not gline:
@@ -1180,8 +1183,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     #self.newbuttonbutton.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
                     #self.newbuttonbutton.SetForegroundColour("black")
                     #self.newbuttonbutton.SetSize(obj.GetSize())
-                    #if self.uppersizer.GetItem(self.newbuttonbutton) is not None:
-                    #    self.uppersizer.SetItemMinSize(self.newbuttonbutton, obj.GetSize())
+                    #if self.toolbarsizer.GetItem(self.newbuttonbutton) is not None:
+                    #    self.toolbarsizer.SetItemMinSize(self.newbuttonbutton, obj.GetSize())
                     #    self.mainsizer.Layout()
                     for b in self.custombuttons_widgets:
                         #if b.IsFrozen(): b.Thaw()
@@ -1191,8 +1194,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                             b.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
                             b.SetForegroundColour("black")
                             b.SetSize(obj.GetSize())
-                            if self.uppersizer.GetItem(b) is not None:
-                                self.uppersizer.SetItemMinSize(b, obj.GetSize())
+                            if self.toolbarsizer.GetItem(b) is not None:
+                                self.toolbarsizer.SetItemMinSize(b, obj.GetSize())
                                 self.mainsizer.Layout()
                         #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.dragging = wx.Button(self.panel, -1, obj.GetLabel(), style = wx.BU_EXACTFIT)
@@ -1219,9 +1222,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         break
                 #if dst is None and self.panel.GetScreenRect().Contains(scrpos):
                 #    # try to check if it is after buttons at the end
-                #    tspos = self.panel.ClientToScreen(self.uppersizer.GetPosition())
+                #    tspos = self.panel.ClientToScreen(self.toolbarsizer.GetPosition())
                 #    bspos = self.panel.ClientToScreen(self.centersizer.GetPosition())
-                #    tsrect = wx.Rect(*(tspos.Get()+self.uppersizer.GetSize().Get()))
+                #    tsrect = wx.Rect(*(tspos.Get()+self.toolbarsizer.GetSize().Get()))
                 #    bsrect = wx.Rect(*(bspos.Get()+self.centersizer.GetSize().Get()))
                 #    lbrect = btns[-1].GetScreenRect()
                 #    p = scrpos.Get()
@@ -1680,11 +1683,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         except:
             self.filename = fn
         wx.CallAfter(self.loadbtn.SetLabel, _("Load File"))
+        wx.CallAfter(self.toolbarsizer.Layout)
         self.skeining = 0
         self.skeinp = None
 
     def skein(self, filename):
         wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
+        wx.CallAfter(self.toolbarsizer.Layout)
         print _("Slicing ") + filename
         self.cout = StringIO.StringIO()
         self.filename = filename
@@ -1768,6 +1773,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 wx.CallAfter(self.recoverbtn.Disable)
                 if self.p.online:
                     wx.CallAfter(self.printbtn.Enable)
+                wx.CallAfter(self.toolbarsizer.Layout)
                 self.post_gcode_load()
         else:
             dlg.Destroy()
@@ -1818,6 +1824,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
         wx.CallAfter(self.pausebtn.Enable)
         wx.CallAfter(self.printbtn.SetLabel, _("Restart"))
+        wx.CallAfter(self.toolbarsizer.Layout)
 
     def endupload(self):
         self.p.send_now("M29 ")
@@ -1862,6 +1869,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             #self.p.runSmallScript(self.pauseScript)
             self.extra_print_time += int(time.time() - self.starttime)
             wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
+            wx.CallAfter(self.toolbarsizer.Layout)
         else:
             print _("Resuming.")
             self.paused = False
@@ -1870,6 +1878,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             else:
                 self.p.resume()
             wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+            wx.CallAfter(self.toolbarsizer.Layout)
 
     def sdprintfile(self, event):
         self.on_startprint()
@@ -1895,6 +1904,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.p.printing = 0
             wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.toolbarsizer.Layout)
             self.paused = 0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
@@ -1969,6 +1979,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if self.sdprinting:
                 self.p.send_now("M26 S0")
 
+        # Relayout the toolbar to handle new buttons size
+        wx.CallAfter(self.toolbarsizer.Layout)
+
     def reset(self, event):
         print _("Reset.")
         dlg = wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES | wx.NO)
@@ -1982,6 +1995,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.p.paused = 0
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 self.paused = 0
+            wx.CallAfter(self.toolbarsizer.Layout)
         dlg.Destroy()
 
     def lock(self, event = None, force = None):

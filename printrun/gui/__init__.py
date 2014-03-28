@@ -122,8 +122,8 @@ class MainWindow(wx.Frame):
         self.mainsizer_page1 = wx.BoxSizer(wx.VERTICAL)
         page1panel1 = self.newPanel(page1panel)
         page1panel2 = self.newPanel(page1panel)
-        self.uppersizer = MainToolbar(self, page1panel1, use_wrapsizer = True)
-        page1panel1.SetSizer(self.uppersizer)
+        self.toolbarsizer = MainToolbar(self, page1panel1, use_wrapsizer = True)
+        page1panel1.SetSizer(self.toolbarsizer)
         self.mainsizer_page1.Add(page1panel1, 0, wx.EXPAND)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
         page1panel2.SetSizer(self.lowersizer)
@@ -183,9 +183,9 @@ class MainWindow(wx.Frame):
         self.mainsizer = wx.BoxSizer(wx.VERTICAL)
         self.lowersizer = wx.BoxSizer(wx.HORIZONTAL)
         upperpanel = self.newPanel(self.panel, False)
-        self.uppersizer = MainToolbar(self, upperpanel)
+        self.toolbarsizer = MainToolbar(self, upperpanel)
         lowerpanel = self.newPanel(self.panel)
-        upperpanel.SetSizer(self.uppersizer)
+        upperpanel.SetSizer(self.toolbarsizer)
         lowerpanel.SetSizer(self.lowersizer)
         leftpanel = self.newPanel(lowerpanel)
         left_pane = LeftPaneToggleable(self, leftpanel, self.lowersizer)
@@ -243,7 +243,7 @@ class MainWindow(wx.Frame):
         minsize = [0, 0]
         minsize[0] = self.lowersizer.GetMinSize()[0]  # lower pane
         minsize[1] = max(viz_pane.GetMinSize()[1], controls_sizer.GetMinSize()[1])
-        minsize[1] += self.uppersizer.GetMinSize()[1]  # toolbar height
+        minsize[1] += self.toolbarsizer.GetMinSize()[1]  # toolbar height
         displaysize = wx.DisplaySize()
         minsize[0] = min(minsize[0], displaysize[0])
         minsize[1] = min(minsize[1], displaysize[1])
