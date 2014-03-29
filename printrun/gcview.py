@@ -258,7 +258,29 @@ class GCObject(object):
         self.scale = [1.0, 1.0, 1.0]
         self.model = model
 
-class GcodeViewMainWrapper(object):
+class GcodeViewLoader(object):
+
+    def addfile_perlayer(self, gcode = None, showall = False):
+        self.model = create_model(self.root.settings.light3d
+                                  if self.root else False)
+        if self.root:
+            set_model_colors(self.model, self.root)
+        if gcode:
+            generator = self.model.load_data(gcode)
+            generator_output = generator.next()
+            while generator_output is not None:
+                yield generator_output
+                generator_output = generator.next()
+        self.objects[-1].model = self.model
+        wx.CallAfter(self.Refresh)
+        yield None
+
+    def addfile(self, gcode = None, showall = False):
+        generator = self.addfile_perlayer(gcode, showall)
+        while generator.next() is not None:
+            continue
+
+class GcodeViewMainWrapper(GcodeViewLoader):
 
     def __init__(self, parent, build_dimensions, root, circular):
         self.root = root
@@ -299,29 +321,19 @@ class GcodeViewMainWrapper(object):
             self.parent.model.num_layers_to_draw = viz_layer
             wx.CallAfter(self.Refresh)
 
-    def addfile(self, gcode = None, showall = False):
-        self.model = create_model(self.root.settings.light3d
-                                  if self.root else False)
-        if self.root:
-            set_model_colors(self.model, self.root)
-        if gcode:
-            self.model.load_data(gcode)
-        self.objects[-1].model = self.model
-        wx.CallAfter(self.Refresh)
-
     def clear(self):
         self.model = None
         self.objects[-1].model = None
         wx.CallAfter(self.Refresh)
 
-class GcodeViewFrame(GvizBaseFrame):
+class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
     '''A simple class for using OpenGL with wxPython.'''
 
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
                  style = wx.DEFAULT_FRAME_STYLE, root = None, circular = False):
-        super(GcodeViewFrame, self).__init__(parent, ID, title,
-                                             pos, size, style)
+        GvizBaseFrame.__init__(self, parent, ID, title,
+                               pos, size, style)
         self.root = root
 
         panel, vbox = self.create_base_ui()
@@ -375,14 +387,9 @@ class GcodeViewFrame(GvizBaseFrame):
     def addfile(self, gcode = None):
         if self.clonefrom:
             self.model = self.clonefrom[-1].model.copy()
+            self.objects[-1].model = self.model
         else:
-            self.model = create_model(self.root.settings.light3d
-                                      if self.root else False)
-            if self.root:
-                set_model_colors(self.model, self.root)
-            if gcode:
-                self.model.load_data(gcode)
-        self.objects[-1].model = self.model
+            GcodeViewLoader.addfile(self, gcode)
         self.layerslider.SetRange(1, self.model.max_layers + 1)
         self.layerslider.SetValue(self.model.max_layers + 1)
         wx.CallAfter(self.Refresh)

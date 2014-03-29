@@ -384,14 +384,24 @@ class Gviz(wx.Panel):
         if self.paint_overlay:
             self.paint_overlay(dc)
 
-    def addfile(self, gcode, showall = False):
+    def addfile_perlayer(self, gcode, showall = False):
         self.clear()
         self.showall = showall
-        self.add_parsed_gcodes(gcode)
+        generator = self.add_parsed_gcodes(gcode)
+        generator_output = generator.next()
+        while generator_output is not None:
+            yield generator_output
+            generator_output = generator.next()
         max_layers = len(self.layers)
         if hasattr(self.parent, "layerslider"):
             self.parent.layerslider.SetRange(0, max_layers - 1)
             self.parent.layerslider.SetValue(0)
+        yield None
+
+    def addfile(self, gcode = None, showall = False):
+        generator = self.addfile_perlayer(gcode, showall)
+        while generator.next() is not None:
+            continue
 
     def _get_movement(self, start_pos, gline):
         """Takes a start position and a gcode, and returns a 3-uple containing
@@ -445,6 +455,8 @@ class Gviz(wx.Panel):
                     has_move = True
                     break
             if not has_move:
+                yield layer_idx
+                layer_idx += 1
                 continue
             viz_layer = len(self.layers)
             self.lines[viz_layer] = []
@@ -476,10 +488,12 @@ class Gviz(wx.Panel):
                 self.dirty = 1
                 wx.CallAfter(self.Refresh)
 
+            yield layer_idx
             layer_idx += 1
 
         self.dirty = 1
         wx.CallAfter(self.Refresh)
+        yield None
 
     def addgcodehighlight(self, gcode = "M105"):
         gcode = gcode.split("*")[0]

@@ -448,6 +448,7 @@ class GcodeModel(Model):
             if callback:
                 callback(layer_idx + 1, num_layers)
 
+            yield layer_idx
             layer_idx += 1
 
         self.count_travel_indices = count_travel_indices
@@ -473,6 +474,7 @@ class GcodeModel(Model):
 
         logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
         logging.debug(_('Vertex count: %d') % ((len(self.vertices) + len(self.travels)) / 3))
+        yield None
 
     def copy(self):
         copy = GcodeModel()
@@ -713,6 +715,7 @@ class GcodeModelLight(Model):
             if callback:
                 callback(layer_idx + 1, num_layers)
 
+            yield layer_idx
             layer_idx += 1
 
         self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
@@ -731,6 +734,7 @@ class GcodeModelLight(Model):
 
         logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
         logging.debug(_('Vertex count: %d') % (len(self.vertices) / 3))
+        yield None
 
     def copy(self):
         copy = GcodeModelLight()
