@@ -184,10 +184,6 @@ class GCode(object):
             self.home_x, self.home_y, self.home_z = home_pos
     home_pos = property(_get_home_pos, _set_home_pos)
 
-    def _get_all_zs(self):
-        return set((layer.z for layer in self.all_layers if layer.z is not None))
-    all_zs = property(_get_all_zs)
-
     def _get_layers_count(self):
         return len(self.all_zs)
     layers_count = property(_get_layers_count)
@@ -207,6 +203,7 @@ class GCode(object):
             self.append_layer_id = 0
             self.append_layer = Layer([])
             self.all_layers = [self.append_layer]
+            self.all_zs = set()
             self.layers = {}
             self.layer_idxs = array('I', [])
             self.line_idxs = array('I', [])
@@ -254,6 +251,7 @@ class GCode(object):
         # Initialize layers
         if build_layers:
             all_layers = self.all_layers = []
+            all_zs = self.all_zs = set()
             layer_idxs = self.layer_idxs = []
             line_idxs = self.line_idxs = []
 
@@ -265,6 +263,7 @@ class GCode(object):
             prev_base_z = (None, None)
             cur_z = None
             cur_lines = []
+            cur_layer_has_extrusion = False
 
         for line in lines:
             ## Parse line
@@ -367,6 +366,8 @@ class GCode(object):
                         else:
                             cur_z = line.z
 
+                cur_layer_has_extrusion |= line.extruding
+
                 # FIXME: the logic behind this code seems to work, but it might be
                 # broken
                 if cur_z != prev_z:
@@ -388,7 +389,10 @@ class GCode(object):
 
                     if base_z != prev_base_z:
                         all_layers.append(Layer(cur_lines, base_z))
+                        if cur_layer_has_extrusion and prev_z not in all_zs:
+                            all_zs.add(prev_z)
                         cur_lines = []
+                        cur_layer_has_extrusion = False
                         layer_id += 1
                         layer_line = 0
                         last_layer_z = base_z
@@ -426,6 +430,8 @@ class GCode(object):
         if build_layers:
             if cur_lines:
                 all_layers.append(Layer(cur_lines, prev_z))
+                if cur_layer_has_extrusion and prev_z not in all_zs:
+                    all_zs.add(prev_z)
 
             self.append_layer_id = len(all_layers)
             self.append_layer = Layer([])
