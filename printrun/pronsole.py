@@ -330,6 +330,7 @@ class Settings(object):
         self._add(HiddenSetting("pause_between_prints", True))
         self._add(HiddenSetting("default_extrusion", 5.0))
         self._add(HiddenSetting("last_extrusion", 5.0))
+        self._add(HiddenSetting("total_filament_used", 0.0))
 
     _settings = []
 
@@ -1391,8 +1392,12 @@ class pronsole(cmd.Cmd):
             traceback.print_exc(file = sys.stdout)
         if self.p.queueindex == 0:
             print_duration = int(time.time() - self.starttime + self.extra_print_time)
-            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
-                                                                             "duration": format_duration(print_duration)}
+            self.log(_("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
+                                                                                "duration": format_duration(print_duration)})
+
+            # Update total filament length used
+            new_total = self.settings.total_filament_used + self.fgcode.filament_length
+            self.set("total_filament_used", new_total)
 
             if not self.settings.final_command:
                 return
