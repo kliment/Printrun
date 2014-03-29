@@ -1114,6 +1114,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.p.startprint(self.fgcode)
 
     def sdprintfile(self, event):
+        self.extra_print_time = 0
         self.on_startprint()
         threading.Thread(target = self.getfiles).start()
 
