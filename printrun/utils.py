@@ -108,9 +108,15 @@ def prepare_command(command, replaces = None):
 def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
     command = prepare_command(command, replaces)
     if blocking:
-        return subprocess.call(command)
+        return subprocess.call(command, stderr = stderr, stdout = stdout)
     else:
         return subprocess.Popen(command, stderr = stderr, stdout = stdout)
+
+def get_command_output(command, replaces):
+    p = run_command(command, replaces,
+                    stdout = subprocess.PIPE, stderr = subprocess.STDOUT,
+                    blocking = False)
+    return p.stdout.read()
 
 class RemainingTimeEstimator(object):
 

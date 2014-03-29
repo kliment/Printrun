@@ -29,7 +29,7 @@ import traceback
 import re
 
 from . import printcore
-from .utils import install_locale, run_command, \
+from .utils import install_locale, run_command, get_command_output, \
     format_time, format_duration, RemainingTimeEstimator, \
     get_home_pos, parse_build_dimensions, parse_temperature_report
 install_locale('pronterface')
@@ -568,10 +568,10 @@ class pronsole(cmd.Cmd):
         logging.error(msg)
         if not self.settings.error_command:
             return
-        run_command(self.settings.error_command,
-                    {"$m": msg},
-                    stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
-                    blocking = False)
+        output = get_command_output(self.settings.error_command, {"$m": msg})
+        if output:
+            self.log("Error command output:")
+            self.log(output.rstrip())
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
@@ -1392,11 +1392,12 @@ class pronsole(cmd.Cmd):
 
             if not self.settings.final_command:
                 return
-            run_command(self.settings.final_command,
-                        {"$s": str(self.filename),
-                         "$t": format_duration(print_duration)},
-                        stderr = subprocess.STDOUT, stdout = subprocess.PIPE,
-                        blocking = False)
+            output = get_command_output(self.settings.final_command,
+                                        {"$s": str(self.filename),
+                                         "$t": format_duration(print_duration)})
+            if output:
+                self.log("Final command output:")
+                self.log(output.rstrip())
 
     def recvcb(self, l):
         if tempreading_exp.findall(l):
