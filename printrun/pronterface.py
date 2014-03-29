@@ -1370,9 +1370,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         return gcode
 
     def post_gcode_load(self, print_stats = True):
-        #print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
+        print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
         self.viz_last_layer = None
-        return
         if print_stats:
             self.output_gcode_stats()
 
