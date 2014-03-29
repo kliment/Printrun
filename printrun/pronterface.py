@@ -24,7 +24,6 @@ import threading
 import traceback
 import cStringIO as StringIO
 import subprocess
-import shlex
 import glob
 import logging
 
