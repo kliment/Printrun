@@ -747,7 +747,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 Printrun is a pure Python 3D printing (and other types of CNC) host software.")
 
         info.SetDescription(description)
-        info.SetCopyright('(C) 2011 - 2013')
+        info.SetCopyright('(C) 2011 - 2014')
         info.SetWebSite('https://github.com/kliment/Printrun')
 
         licence = """\
