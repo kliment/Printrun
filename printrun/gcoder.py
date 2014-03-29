@@ -116,6 +116,8 @@ class GCode(object):
     current_z = 0
     # For E this is the absolute position from machine start
     current_e = 0
+    total_e = 0
+    max_e = 0
     # Current feedrate
     current_f = 0
     # Offset: current offset between the machine origin and the machine current
@@ -190,16 +192,16 @@ class GCode(object):
         return len(self.all_zs)
     layers_count = property(_get_layers_count)
 
-    def __init__(self, data = None, home_pos = None):
+    def __init__(self, data = None, home_pos = None, layer_callback = None):
         self.home_pos = home_pos
         if data:
             self.lines = [Line(l2) for l2 in
                           (l.strip() for l in data)
                           if l2]
-            self._preprocess_lines()
-            self.filament_length = self._preprocess_extrusion()
-            self._create_layers()
-            self._preprocess_layers()
+            self._preprocess(build_layers = True,
+                             layer_callback = layer_callback)
+            self.filament_length = self.max_e
+            self._compute_bounding_box()
         else:
             self.lines = []
             self.append_layer_id = 0
@@ -220,8 +222,7 @@ class GCode(object):
         if not command:
             return
         gline = Line(command)
-        self._preprocess_lines([gline])
-        self._preprocess_extrusion([gline])
+        self._preprocess([gline])
         if store:
             self.lines.append(gline)
             self.append_layer.append(gline)
@@ -229,7 +230,8 @@ class GCode(object):
             self.line_idxs.append(len(self.append_layer))
         return gline
 
-    def _preprocess_lines(self, lines = None):
+    def _preprocess(self, lines = None, build_layers = False,
+                    layer_callback = None):
         """Checks for imperial/relativeness settings and tool changes"""
         if not lines:
             lines = self.lines
@@ -244,78 +246,166 @@ class GCode(object):
         offset_y = self.offset_y
         offset_z = self.offset_z
 
+        current_e = self.current_e
+        offset_e = self.offset_e
+        total_e = self.total_e
+        max_e = self.max_e
+
+        # Initialize layers
+        if build_layers:
+            all_layers = self.all_layers = []
+            layer_idxs = self.layer_idxs = []
+            line_idxs = self.line_idxs = []
+
+            layer_id = 0
+            layer_line = 0
+
+            last_layer_z = None
+            prev_z = None
+            prev_base_z = (None, None)
+            cur_z = None
+            cur_lines = []
+
         for line in lines:
+            ## Parse line
             split_raw = split(line)
-            if not line.command:
-                continue
+            if line.command:
+                # Update properties
+                if line.is_move:
+                    line.relative = relative
+                    line.relative_e = relative_e
+                    line.current_tool = current_tool
+                elif line.command == "G20":
+                    imperial = True
+                elif line.command == "G21":
+                    imperial = False
+                elif line.command == "G90":
+                    relative = False
+                    relative_e = False
+                elif line.command == "G91":
+                    relative = True
+                    relative_e = True
+                elif line.command == "M82":
+                    relative_e = False
+                elif line.command == "M83":
+                    relative_e = True
+                elif line.command[0] == "T":
+                    current_tool = int(line.command[1:])
 
-            # Update properties
-            if line.is_move:
-                line.relative = relative
-                line.relative_e = relative_e
-                line.current_tool = current_tool
-            elif line.command == "G20":
-                imperial = True
-            elif line.command == "G21":
-                imperial = False
-            elif line.command == "G90":
-                relative = False
-                relative_e = False
-            elif line.command == "G91":
-                relative = True
-                relative_e = True
-            elif line.command == "M82":
-                relative_e = False
-            elif line.command == "M83":
-                relative_e = True
-            elif line.command[0] == "T":
-                current_tool = int(line.command[1:])
+                if line.command[0] == "G":
+                    parse_coordinates(line, split_raw, imperial)
 
-            if line.command[0] == "G":
-                parse_coordinates(line, split_raw, imperial)
+                # Compute current position
+                if line.is_move:
+                    x = line.x
+                    y = line.y
+                    z = line.z
 
-            # Compute current position
-            if line.is_move:
-                x = line.x
-                y = line.y
-                z = line.z
+                    if line.f is not None:
+                        self.current_f = line.f
 
-                if line.f is not None:
-                    self.current_f = line.f
+                    if line.relative:
+                        x = current_x + (x or 0)
+                        y = current_y + (y or 0)
+                        z = current_z + (z or 0)
+                    else:
+                        if x is not None: x = x + offset_x
+                        if y is not None: y = y + offset_y
+                        if z is not None: z = z + offset_z
 
-                if line.relative:
-                    x = current_x + (x or 0)
-                    y = current_y + (y or 0)
-                    z = current_z + (z or 0)
-                else:
-                    if x is not None: x = x + offset_x
-                    if y is not None: y = y + offset_y
-                    if z is not None: z = z + offset_z
+                    if x is not None: current_x = x
+                    if y is not None: current_y = y
+                    if z is not None: current_z = z
 
-                if x is not None: current_x = x
-                if y is not None: current_y = y
-                if z is not None: current_z = z
+                elif line.command == "G28":
+                    home_all = not any([line.x, line.y, line.z])
+                    if home_all or line.x is not None:
+                        offset_x = 0
+                        current_x = self.home_x
+                    if home_all or line.y is not None:
+                        offset_y = 0
+                        current_y = self.home_y
+                    if home_all or line.z is not None:
+                        offset_z = 0
+                        current_z = self.home_z
 
-            elif line.command == "G28":
-                home_all = not any([line.x, line.y, line.z])
-                if home_all or line.x is not None:
-                    offset_x = 0
-                    current_x = self.home_x
-                if home_all or line.y is not None:
-                    offset_y = 0
-                    current_y = self.home_y
-                if home_all or line.z is not None:
-                    offset_z = 0
-                    current_z = self.home_z
+                elif line.command == "G92":
+                    if line.x is not None: offset_x = current_x - line.x
+                    if line.y is not None: offset_y = current_y - line.y
+                    if line.z is not None: offset_z = current_z - line.z
 
-            elif line.command == "G92":
-                if line.x is not None: offset_x = current_x - line.x
-                if line.y is not None: offset_y = current_y - line.y
-                if line.z is not None: offset_z = current_z - line.z
+                line.current_x = current_x
+                line.current_y = current_y
+                line.current_z = current_z
 
-            line.current_x = current_x
-            line.current_y = current_y
-            line.current_z = current_z
+                ## Process extrusion
+                if line.e is not None:
+                    if line.is_move:
+                        if line.relative_e:
+                            line.extruding = line.e > 0
+                            total_e += line.e
+                            current_e += line.e
+                        else:
+                            new_e = line.e + offset_e
+                            line.extruding = new_e > current_e
+                            total_e += new_e - current_e
+                            current_e = new_e
+                        max_e = max(max_e, total_e)
+                    elif line.command == "G92":
+                        offset_e = current_e - line.e
+
+                ## Create layers
+                if not build_layers:
+                    continue
+                # FIXME : looks like this needs to be tested with "lift Z on move"
+                if line.command == "G92" and line.z is not None:
+                    cur_z = line.z
+                elif line.is_move:
+                    if line.z is not None:
+                        if line.relative and cur_z is not None:
+                            cur_z += line.z
+                        else:
+                            cur_z = line.z
+
+                # FIXME: the logic behind this code seems to work, but it might be
+                # broken
+                if cur_z != prev_z:
+                    if prev_z is not None and last_layer_z is not None:
+                        offset = self.est_layer_height if self.est_layer_height else 0.01
+                        if abs(prev_z - last_layer_z) < offset:
+                            if self.est_layer_height is None:
+                                zs = sorted([l.z for l in all_layers if l.z is not None])
+                                heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
+                                heights = [height for height in heights if height]
+                                if len(heights) >= 2: self.est_layer_height = heights[1]
+                                elif heights: self.est_layer_height = heights[0]
+                                else: self.est_layer_height = 0.1
+                            base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
+                        else:
+                            base_z = round(prev_z, 2)
+                    else:
+                        base_z = prev_z
+
+                    if base_z != prev_base_z:
+                        all_layers.append(Layer(cur_lines, base_z))
+                        cur_lines = []
+                        layer_id += 1
+                        layer_line = 0
+                        last_layer_z = base_z
+                        if layer_callback is not None:
+                            layer_callback(self, len(all_layers) - 1)
+
+                    prev_base_z = base_z
+
+            if build_layers:
+                cur_lines.append(line)
+                layer_idxs.append(layer_id)
+                line_idxs.append(layer_line)
+                layer_line += 1
+                prev_z = cur_z
+            ### Loop done
+
+        # Store current status
         self.imperial = imperial
         self.relative = relative
         self.relative_e = relative_e
@@ -327,131 +417,26 @@ class GCode(object):
         self.offset_y = offset_y
         self.offset_z = offset_z
 
-    def _preprocess_extrusion(self, lines = None):
-        if not lines:
-            lines = self.lines
-
-        current_e = self.current_e
-        offset_e = self.offset_e
-        total_e = 0
-        max_e = 0
-
-        for line in lines:
-            if line.e is None:
-                continue
-            if line.is_move:
-                if line.relative_e:
-                    line.extruding = line.e > 0
-                    total_e += line.e
-                    current_e += line.e
-                else:
-                    new_e = line.e + offset_e
-                    line.extruding = new_e > current_e
-                    total_e += new_e - current_e
-                    current_e = new_e
-                max_e = max(max_e, total_e)
-            elif line.command == "G92":
-                offset_e = current_e - line.e
-
         self.current_e = current_e
         self.offset_e = offset_e
-        return max_e
+        self.max_e = max_e
+        self.total_e = total_e
 
-    # FIXME : looks like this needs to be tested with list Z on move
-    def _create_layers(self):
-        layers = {}
-        all_layers = []
-        layer_idxs = []
-        line_idxs = []
+        # Finalize layers
+        if build_layers:
+            if cur_lines:
+                all_layers.append(Layer(cur_lines, prev_z))
 
-        layer_id = 0
-        layer_line = 0
-
-        last_layer_z = None
-        prev_z = None
-        prev_base_z = (None, None)
-        cur_z = None
-        cur_lines = []
-        for line in self.lines:
-            if line.command == "G92" and line.z is not None:
-                cur_z = line.z
-            elif line.is_move:
-                if line.z is not None:
-                    if line.relative and cur_z is not None:
-                        cur_z += line.z
-                    else:
-                        cur_z = line.z
-
-            # FIXME: the logic behind this code seems to work, but it might be
-            # broken
-            if cur_z != prev_z:
-                if prev_z is not None and last_layer_z is not None:
-                    offset = self.est_layer_height if self.est_layer_height else 0.01
-                    if abs(prev_z - last_layer_z) < offset:
-                        if self.est_layer_height is None:
-                            zs = sorted([l.z for l in all_layers if l.z is not None])
-                            heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
-                            heights = [height for height in heights if height]
-                            if len(heights) >= 2: self.est_layer_height = heights[1]
-                            elif heights: self.est_layer_height = heights[0]
-                            else: self.est_layer_height = 0.1
-                        base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
-                    else:
-                        base_z = round(prev_z, 2)
-                else:
-                    base_z = prev_z
-
-                if base_z != prev_base_z:
-                    all_layers.append(Layer(cur_lines, base_z))
-                    old_lines = layers.get(base_z, [])
-                    old_lines += cur_lines
-                    layers[base_z] = old_lines
-                    cur_lines = []
-                    layer_id += 1
-                    layer_line = 0
-                    last_layer_z = base_z
-
-                prev_base_z = base_z
-
-            cur_lines.append(line)
-            layer_idxs.append(layer_id)
-            line_idxs.append(layer_line)
-            layer_line += 1
-            prev_z = cur_z
-
-        if cur_lines:
-            all_layers.append(Layer(cur_lines, prev_z))
-            old_lines = layers.get(prev_z, [])
-            old_lines += cur_lines
-            layers[prev_z] = old_lines
-
-        for zindex in layers.keys():
-            cur_lines = layers[zindex]
-            has_movement = False
-            for l in layers[zindex]:
-                if l.is_move and l.e is not None:
-                    has_movement = True
-                    break
-            if has_movement:
-                layers[zindex] = Layer(cur_lines, zindex)
-            else:
-                del layers[zindex]
-
-        self.append_layer_id = len(all_layers)
-        self.append_layer = Layer([])
-        all_layers.append(self.append_layer)
-        self.all_layers = all_layers
-        self.layers = layers
-        self.layer_idxs = array('I', layer_idxs)
-        self.line_idxs = array('I', line_idxs)
+            self.append_layer_id = len(all_layers)
+            self.append_layer = Layer([])
+            all_layers.append(self.append_layer)
+            self.layer_idxs = array('I', layer_idxs)
+            self.line_idxs = array('I', line_idxs)
 
     def idxs(self, i):
         return self.layer_idxs[i], self.line_idxs[i]
 
-    def num_layers(self):
-        return len(self.layers)
-
-    def _preprocess_layers(self):
+    def _compute_bounding_box(self):
         xmin = float("inf")
         ymin = float("inf")
         zmin = 0
