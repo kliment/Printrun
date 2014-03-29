@@ -329,7 +329,9 @@ class GcodeModel(Model):
         prev_move_y = None
 
         prev_pos = (0, 0, 0)
-        for layer_idx, layer in enumerate(model_data.all_layers):
+        layer_idx = 0
+        while layer_idx < len(model_data.all_layers):
+            layer = model_data.all_layers[layer_idx]
             has_movement = False
             for gline_idx, gline in enumerate(layer):
                 if not gline.is_move:
@@ -445,6 +447,8 @@ class GcodeModel(Model):
 
             if callback:
                 callback(layer_idx + 1, num_layers)
+
+            layer_idx += 1
 
         self.count_travel_indices = count_travel_indices
         self.count_print_indices = count_print_indices
@@ -682,7 +686,9 @@ class GcodeModelLight(Model):
         num_layers = len(model_data.all_layers)
 
         prev_pos = (0, 0, 0)
-        for layer_idx, layer in enumerate(model_data.all_layers):
+        layer_idx = 0
+        while layer_idx < len(model_data.all_layers):
+            layer = model_data.all_layers[layer_idx]
             has_movement = False
             for gline in layer:
                 if not gline.is_move:
@@ -706,6 +712,8 @@ class GcodeModelLight(Model):
 
             if callback:
                 callback(layer_idx + 1, num_layers)
+
+            layer_idx += 1
 
         self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
                                        count = len(vertex_list))
