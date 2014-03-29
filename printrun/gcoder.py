@@ -182,6 +182,14 @@ class GCode(object):
             self.home_x, self.home_y, self.home_z = home_pos
     home_pos = property(_get_home_pos, _set_home_pos)
 
+    def _get_all_zs(self):
+        return set((layer.z for layer in self.all_layers if layer.z is not None))
+    all_zs = property(_get_all_zs)
+
+    def _get_layers_count(self):
+        return len(self.all_zs)
+    layers_count = property(_get_layers_count)
+
     def __init__(self, data = None, home_pos = None):
         self.home_pos = home_pos
         if data:
@@ -478,7 +486,7 @@ class GCode(object):
 
     def estimate_duration(self):
         if self.duration is not None:
-            return self.duration
+            return self.layers_count, self.duration
         lastx = lasty = lastz = laste = lastf = 0.0
         lastdx = 0
         lastdy = 0
@@ -569,7 +577,7 @@ class GCode(object):
 
         totaltime = datetime.timedelta(seconds = int(totalduration))
         self.duration = totaltime
-        return "%d layers, %s" % (len(self.layers), str(totaltime))
+        return self.layers_count, str(totaltime)
 
 def main():
     if len(sys.argv) < 2:
@@ -587,8 +595,8 @@ def main():
     zdims = (gcode.zmin, gcode.zmax, gcode.height)
     print "\tZ: %0.02f - %0.02f (%0.02f)" % zdims
     print "Filament used: %0.02fmm" % gcode.filament_length
-    print "Number of layers: %d" % gcode.num_layers()
-    print "Estimated duration: %s" % gcode.estimate_duration()
+    print "Number of layers: %d" % gcode.layers_count
+    print "Estimated duration: %s" % gcode.estimate_duration()[1]
 
 if __name__ == '__main__':
     main()
