@@ -309,10 +309,6 @@ class GcodeModel(Model):
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
-        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
-                     (model_data.ymin, model_data.ymax, model_data.depth),
-                     (model_data.zmin, model_data.zmax, model_data.height))
-
         count_travel_indices = [0]
         count_print_indices = [0]
         count_print_vertices = [0]
@@ -322,7 +318,6 @@ class GcodeModel(Model):
         color_list = []
         self.layer_idxs_map = {}
         self.layer_stops = [0]
-        num_layers = len(model_data.all_layers)
 
         prev_is_extruding = False
         prev_move_x = None
@@ -446,10 +441,14 @@ class GcodeModel(Model):
                 self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
 
             if callback:
-                callback(layer_idx + 1, num_layers)
+                callback(layer_idx + 1)
 
             yield layer_idx
             layer_idx += 1
+
+        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
+                     (model_data.ymin, model_data.ymax, model_data.depth),
+                     (model_data.zmin, model_data.zmax, model_data.height))
 
         self.count_travel_indices = count_travel_indices
         self.count_print_indices = count_print_indices
@@ -677,15 +676,10 @@ class GcodeModelLight(Model):
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
-        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
-                     (model_data.ymin, model_data.ymax, model_data.depth),
-                     (model_data.zmin, model_data.zmax, model_data.height))
-
         vertex_list = []
         color_list = []
         self.layer_idxs_map = {}
         self.layer_stops = [0]
-        num_layers = len(model_data.all_layers)
 
         prev_pos = (0, 0, 0)
         layer_idx = 0
@@ -713,10 +707,14 @@ class GcodeModelLight(Model):
                 self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
 
             if callback:
-                callback(layer_idx + 1, num_layers)
+                callback(layer_idx + 1)
 
             yield layer_idx
             layer_idx += 1
+
+        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
+                     (model_data.ymin, model_data.ymax, model_data.depth),
+                     (model_data.zmin, model_data.zmax, model_data.height))
 
         self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
                                        count = len(vertex_list))
