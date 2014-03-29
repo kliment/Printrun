@@ -1368,7 +1368,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         print _("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width)
         print _("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth)
         print _("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height)
-        print _("Estimated duration: %s") % gcode.estimate_duration()
+        print _("Estimated duration: %d layers, %s") % gcode.estimate_duration()
 
     def loadviz(self):
         gcode = self.fgcode
