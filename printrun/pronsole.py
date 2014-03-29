@@ -1104,10 +1104,14 @@ class pronsole(cmd.Cmd):
         self.log(_("Loaded %s, %d lines.") % (filename, len(self.fgcode)))
         self.log(_("Estimated duration: %d layers, %s") % self.fgcode.estimate_duration())
 
-    def load_gcode(self, filename, layer_callback = None):
-        self.fgcode = gcoder.GCode(open(filename, "rU"),
-                                   get_home_pos(self.build_dimensions_list),
-                                   layer_callback = layer_callback)
+    def load_gcode(self, filename, layer_callback = None, gcode = None):
+        if gcode is None:
+            self.fgcode = gcoder.GCode(deferred = True)
+        else:
+            self.fgcode = gcode
+        self.fgcode.prepare(open(filename, "rU"),
+                            get_home_pos(self.build_dimensions_list),
+                            layer_callback = layer_callback)
         self.fgcode.estimate_duration()
         self.filename = filename
 

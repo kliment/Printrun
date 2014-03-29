@@ -1248,12 +1248,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         fn = self.filename
         try:
             self.filename = self.model_to_gcode_filename(self.filename)
-            self.load_gcode(self.filename, layer_callback = self.layer_ready_cb)
+            gcode = self.pre_gcode_load()
+            self.load_gcode(self.filename,
+                            layer_callback = self.layer_ready_cb,
+                            gcode = gcode)
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)
 
             wx.CallAfter(self.statusbar.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
-            print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
@@ -1342,9 +1344,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.skein(name)
             else:
                 self.filename = name
-                self.load_gcode(self.filename, layer_callback = self.layer_ready_cb)
+                gcode = self.pre_gcode_load()
+                self.load_gcode(self.filename,
+                                layer_callback = self.layer_ready_cb,
+                                gcode = gcode)
                 self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
-                print _("Loaded %s, %d lines") % (name, len(self.fgcode))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
                 wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
                 wx.CallAfter(self.pausebtn.Disable)
@@ -1357,13 +1361,20 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             dlg.Destroy()
 
     def layer_ready_cb(self, gcode, layer):
-        print gcode, layer
-        print gcode.all_layers[layer].z
+        self.viz_last_layer = layer
+
+    def pre_gcode_load(self):
+        gcode = gcoder.GCode(deferred = True)
+        self.viz_last_layer = -1
+        threading.Thread(target = self.loadviz, args = (gcode,)).start()
+        return gcode
 
     def post_gcode_load(self, print_stats = True):
+        #print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
+        self.viz_last_layer = None
+        return
         if print_stats:
             self.output_gcode_stats()
-        threading.Thread(target = self.loadviz).start()
 
     def output_gcode_stats(self):
         gcode = self.fgcode
@@ -1374,13 +1385,37 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         print _("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height)
         print _("Estimated duration: %d layers, %s") % gcode.estimate_duration()
 
-    def loadviz(self):
-        gcode = self.fgcode
+    def loadviz(self, gcode):
         self.gviz.clear()
         self.gwindow.p.clear()
-        self.gviz.addfile(gcode, True)
-        self.gwindow.p.addfile(gcode)
+        generator = self.gviz.addfile_perlayer(gcode, True)
+        next_layer = 0
+        # Progressive loading of visualization
+        # We load layers up to the last one which has been processed in GCoder
+        # (self.viz_last_layer)
+        # Once the GCode has been entirely loaded, this variable becomes None,
+        # indicating that we can do the last generator call to finish the
+        # loading of the visualization, which will itself return None.
+        # During preloading we verify that the layer we added is the one we
+        # expected through the assert call.
+        while True:
+            max_layer = self.viz_last_layer
+            if max_layer is None:
+                break
+            while next_layer <= max_layer:
+                assert(generator.next() == next_layer)
+                next_layer += 1
+            time.sleep(0.1)
+        generator_output = generator.next()
+        while generator_output is not None:
+            assert(generator_output in (None, next_layer))
+            next_layer += 1
+            generator_output = generator.next()
         wx.CallAfter(self.gviz.Refresh)
+        # Load external window sequentially now that everything is ready.
+        # We can't really do any better as the 3D viewer might clone the
+        # finalized model from the main visualization
+        self.gwindow.p.addfile(gcode)
 
     ## --------------------------------------------------------------
     ## Printcore callbacks
