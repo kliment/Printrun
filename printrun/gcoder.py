@@ -188,7 +188,12 @@ class GCode(object):
         return len(self.all_zs)
     layers_count = property(_get_layers_count)
 
-    def __init__(self, data = None, home_pos = None, layer_callback = None):
+    def __init__(self, data = None, home_pos = None,
+                 layer_callback = None, deferred = False):
+        if not deferred:
+            self.prepare(data, home_pos, layer_callback)
+
+    def prepare(self, data = None, home_pos = None, layer_callback = None):
         self.home_pos = home_pos
         if data:
             self.lines = [Line(l2) for l2 in
