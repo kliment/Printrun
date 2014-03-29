@@ -743,8 +743,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         info.SetName('Printrun')
         info.SetVersion(printcore.__version__)
 
-        description = _("\
-Printrun is a pure Python 3D printing (and other types of CNC) host software.")
+        description = _("Printrun is a pure Python 3D printing"
+                        " (and other types of CNC) host software.")
+
+        description += "\n\n" + \
+                       _("%.02fmm of filament have been extruded during prints") \
+                       % self.settings.total_filament_used
 
         info.SetDescription(description)
         info.SetCopyright('(C) 2011 - 2014')
