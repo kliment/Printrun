@@ -436,7 +436,9 @@ class Gviz(wx.Panel):
     def add_parsed_gcodes(self, gcode):
         start_time = time.time()
 
-        for layer_idx, layer in enumerate(gcode.all_layers):
+        layer_idx = 0
+        while layer_idx < len(gcode.all_layers):
+            layer = gcode.all_layers[layer_idx]
             has_move = False
             for gline in layer:
                 if gline.is_move:
@@ -467,11 +469,15 @@ class Gviz(wx.Panel):
             # unfinished layer
             self.layers[layer_idx] = viz_layer
             self.layersz.append(layer.z)
+
             # Refresh display if more than 0.2s have passed
             if time.time() - start_time > 0.2:
                 start_time = time.time()
                 self.dirty = 1
                 wx.CallAfter(self.Refresh)
+
+            layer_idx += 1
+
         self.dirty = 1
         wx.CallAfter(self.Refresh)
 

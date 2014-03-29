@@ -1248,7 +1248,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         fn = self.filename
         try:
             self.filename = self.model_to_gcode_filename(self.filename)
-            self.load_gcode(self.filename)
+            self.load_gcode(self.filename, layer_callback = self.layer_ready_cb)
             if self.p.online:
                 wx.CallAfter(self.printbtn.Enable)
 
@@ -1342,7 +1342,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.skein(name)
             else:
                 self.filename = name
-                self.load_gcode(self.filename)
+                self.load_gcode(self.filename, layer_callback = self.layer_ready_cb)
                 self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
                 print _("Loaded %s, %d lines") % (name, len(self.fgcode))
                 wx.CallAfter(self.printbtn.SetLabel, _("Print"))
@@ -1355,6 +1355,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.post_gcode_load()
         else:
             dlg.Destroy()
+
+    def layer_ready_cb(self, gcode, layer):
+        print gcode, layer
+        print gcode.all_layers[layer].z
 
     def post_gcode_load(self, print_stats = True):
         if print_stats:
