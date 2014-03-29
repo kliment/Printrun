@@ -470,9 +470,10 @@ class GCode(object):
                 if line.current_y is not None:
                     ymin = min(ymin, line.current_y)
                     ymax = max(ymax, line.current_y)
-                if line.current_z is not None:
-                    zmin = min(zmin, line.current_z)
-                    zmax = max(zmax, line.current_z)
+
+        all_zs = self.all_zs
+        zmin = min(all_zs)
+        zmax = max(all_zs)
 
         self.xmin = xmin if not math.isinf(xmin) else 0
         self.xmax = xmax if not math.isinf(xmax) else 0
