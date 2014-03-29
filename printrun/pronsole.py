@@ -295,11 +295,12 @@ class Settings(object):
     #def _bedtemperature_alias(self): return {"pla":60, "abs":110, "off":0}
     def _baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
 
-    def __init__(self):
+    def __init__(self, root):
         # defaults here.
         # the initial value determines the type
         self._add(StringSetting("port", "", _("Serial port"), _("Port used to communicate with printer")))
         self._add(ComboSetting("baudrate", 115200, self._baudrate_list(), _("Baud rate"), _("Communications Speed")))
+        self._add(BooleanSetting("tcp_streaming_mode", False, _("TCP streaming mode"), _("When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands. This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
         self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"))
         self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (deg C)"), "Printer"))
         self._add(SpinSetting("temperature_abs", 230, 0, 400, _("Extruder temperature for ABS"), _("Extruder temp for ABS (deg C)"), "Printer"))
@@ -463,7 +464,7 @@ class pronsole(cmd.Cmd):
         self.rc_loaded = False
         self.processing_rc = False
         self.processing_args = False
-        self.settings = Settings()
+        self.settings = Settings(self)
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"), self.update_build_dimensions)
         self.settings._port_list = self.scanserial
         self.settings._temperature_abs_cb = self.set_temp_preset
@@ -960,6 +961,9 @@ class pronsole(cmd.Cmd):
     def update_build_dimensions(self, param, value):
         self.build_dimensions_list = parse_build_dimensions(value)
         self.p.analyzer.home_pos = get_home_pos(self.build_dimensions_list)
+
+    def update_tcp_streaming_mode(self, param, value):
+        self.p.tcp_streaming_mode = self.settings.tcp_streaming_mode
 
     ## --------------------------------------------------------------
     ## Command line options handling

@@ -96,6 +96,7 @@ class printcore():
         self.endcb = None  # impl ()
         self.onlinecb = None  # impl ()
         self.loud = False  # emit sent and received lines to terminal
+        self.tcp_streaming_mode = False
         self.greetings = ['start', 'Grbl ']
         self.wait = 0  # default wait period for send(), send_now()
         self.read_thread = None
@@ -506,8 +507,9 @@ class printcore():
             return
         while self.printer and self.printing and not self.clear:
             time.sleep(0.001)
-        # Only wait for oks when using serial connections
-        if not self.printer_tcp:
+        # Only wait for oks when using serial connections or when not using tcp
+        # in streaming mode
+        if not self.printer_tcp or not self.tcp_streaming_mode:
             self.clear = False
         if not (self.printing and self.printer and self.online):
             self.clear = True
