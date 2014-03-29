@@ -468,7 +468,7 @@ class GCode(object):
                     ymax = max(ymax, line.current_y)
 
         all_zs = self.all_zs
-        zmin = min(all_zs)
+        zmin = min(zmin, min(all_zs))
         zmax = max(all_zs)
 
         self.xmin = xmin if not math.isinf(xmin) else 0
