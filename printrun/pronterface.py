@@ -909,29 +909,18 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def statuschecker(self):
         while self.statuscheck:
             string = ""
-            fractioncomplete = 0.0
-            if self.sdprinting or self.uploading:
-                if self.uploading:
-                    fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
-                    string += _("SD upload: %04.2f%% |") % (100 * fractioncomplete,)
+            if self.sdprinting or self.uploading or self.p.printing:
+                secondsremain, secondsestimate, progress = self.get_eta()
+                if self.sdprinting or self.uploading:
+                    if self.uploading:
+                        string += _("SD upload: %04.2f%% |") % (100 * progress,)
+                        string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
+                    else:
+                        string += _("SD printing: %04.2f%% |") % (self.percentdone,)
+                elif self.p.printing:
+                    string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
                     string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                else:
-                    fractioncomplete = float(self.percentdone / 100.0)
-                    string += _("SD printing: %04.2f%% |") % (self.percentdone,)
-                if fractioncomplete > 0.0:
-                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                    secondsestimate = secondselapsed / fractioncomplete
-                    secondsremain = secondsestimate - secondselapsed
-                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
-                                                                  format_duration(secondsestimate))
-                    string += _(" Z: %.3f mm") % self.curlayer
-            elif self.p.printing:
-                fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
-                string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
-                string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                if self.p.queueindex > 0:
-                    secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-                    secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
+                if progress > 0:
                     string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
                                                                   format_duration(secondsestimate))
                     string += _(" Z: %.3f mm") % self.curlayer

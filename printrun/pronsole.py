@@ -1430,12 +1430,28 @@ class pronsole(cmd.Cmd):
             secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
             self.compute_eta.update_layer(newlayer, secondselapsed)
 
+    def get_eta(self):
+        if self.sdprinting or self.uploading:
+            if self.uploading:
+                fractioncomplete = float(self.p.queueindex) / len(self.p.mainqueue)
+            else:
+                fractioncomplete = float(self.percentdone / 100.0)
+            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+            # Prevent division by zero
+            secondsestimate = secondselapsed / max(fractioncomplete, 0.000001)
+            secondsremain = secondsestimate - secondselapsed
+            progress = fractioncomplete
+        else:
+            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
+            secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
+            progress = self.p.queueindex
+        return secondsremain, secondsestimate, progress
+
     def do_eta(self, l):
         if not self.p.printing:
             self.logError(_("Printer is not currently printing. No ETA available."))
         else:
-            secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
-            secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
+            secondsremain, secondsestimate, progress = self.get_eta()
             eta = _("Est: %s of %s remaining") % (format_duration(secondsremain),
                                                   format_duration(secondsestimate))
             self.log(eta.strip())
