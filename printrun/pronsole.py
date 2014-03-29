@@ -1377,7 +1377,10 @@ class pronsole(cmd.Cmd):
             print _("Print resumed at: %s") % format_time(self.starttime)
         else:
             print _("Print started at: %s") % format_time(self.starttime)
-            self.compute_eta = RemainingTimeEstimator(self.fgcode)
+            if not self.sdprinting:
+                self.compute_eta = RemainingTimeEstimator(self.fgcode)
+            else:
+                self.compute_eta = None
         try:
             powerset_print_start(reason = "Preventing sleep during print")
         except:
