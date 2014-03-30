@@ -1326,7 +1326,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                               "\n" + traceback.format_exc())
             if name.lower().endswith(".stl") or name.lower().endswith(".obj"):
                 self.slice(name)
-                self.slice(name)
             else:
                 self.load_gcode_async(name)
         else:
