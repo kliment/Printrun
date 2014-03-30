@@ -314,6 +314,7 @@ class GcodeModel(Model):
         count_print_vertices = [0]
         travel_vertex_list = []
         vertex_list = []
+        normal_list = []
         index_list = []
         color_list = []
         self.layer_idxs_map = {}
@@ -360,6 +361,7 @@ class GcodeModel(Model):
 
                     new_indices = []
                     new_vertices = []
+                    new_normals = []
                     if prev_is_extruding:
                         # Store previous vertices indices
                         prev_id = len(vertex_list) / 3 - 4
@@ -380,10 +382,14 @@ class GcodeModel(Model):
                         p2x = prev_pos[0] + path_halfwidth * avg_move_normal_x
                         p1y = prev_pos[1] - path_halfwidth * avg_move_normal_y
                         p2y = prev_pos[1] + path_halfwidth * avg_move_normal_y
-                        new_vertices.extend((p1x, p1y, prev_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] + path_halfheight))
+                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                        new_vertices.extend((p1x, p1y, prev_pos[2]))
+                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, prev_pos[2]))
+                        new_normals.extend((0, 0, 1))
+                        new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                        new_normals.extend((0, 0, -1))
+                        new_normals.extend((move_normal_x, move_normal_y, 0))
                         first = len(vertex_list) / 3
                         # Link to previous
                         new_indices += triangulate_box(prev_id, prev_id + 1,
@@ -396,10 +402,14 @@ class GcodeModel(Model):
                         p2x = prev_pos[0] + path_halfwidth * move_normal_x
                         p1y = prev_pos[1] - path_halfwidth * move_normal_y
                         p2y = prev_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.extend((p1x, p1y, prev_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] + path_halfheight))
+                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                        new_vertices.extend((p1x, p1y, prev_pos[2]))
+                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, prev_pos[2]))
+                        new_normals.extend((0, 0, 1))
+                        new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                        new_normals.extend((0, 0, -1))
+                        new_normals.extend((move_normal_x, move_normal_y, 0))
                         first = len(vertex_list) / 3
                         new_indices = triangulate_rectangle(first, first + 1,
                                                             first + 2, first + 3)
@@ -410,10 +420,14 @@ class GcodeModel(Model):
                         p2x = current_pos[0] + path_halfwidth * move_normal_x
                         p1y = current_pos[1] - path_halfwidth * move_normal_y
                         p2y = current_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.extend((p1x, p1y, current_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, current_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, current_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, current_pos[2] + path_halfheight))
+                        new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] + path_halfheight))
+                        new_vertices.extend((p1x, p1y, current_pos[2]))
+                        new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] - path_halfheight))
+                        new_vertices.extend((p2x, p2y, current_pos[2]))
+                        new_normals.extend((0, 0, 1))
+                        new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                        new_normals.extend((0, 0, -1))
+                        new_normals.extend((move_normal_x, move_normal_y, 0))
                         end_first = len(vertex_list) / 3 + len(new_vertices) / 3 - 4
                         new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
                                                              end_first + 1, end_first)
@@ -424,6 +438,7 @@ class GcodeModel(Model):
 
                     index_list += new_indices
                     vertex_list += new_vertices
+                    normal_list += new_normals
                     color_list += list(gline_color) * (len(new_vertices) / 3)
 
                     prev_is_extruding = True
@@ -457,6 +472,8 @@ class GcodeModel(Model):
                                       count = len(travel_vertex_list))
         self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
                                        count = len(vertex_list))
+        self.normals = numpy.fromiter(normal_list, dtype = GLfloat,
+                                      count = len(normal_list))
         self.indices = numpy.fromiter(index_list, dtype = GLuint,
                                       count = len(index_list))
         self.colors = numpy.fromiter(color_list, dtype = GLfloat,
@@ -509,13 +526,15 @@ class GcodeModel(Model):
         self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
                                       target = GL_ELEMENT_ARRAY_BUFFER)
         self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
+        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
+        self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
         self.initialized = True
 
     def display(self, mode_2d=False):
         glPushMatrix()
         glTranslatef(self.offset_x, self.offset_y, 0)
         glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_NORMAL_ARRAY)
 
         has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
         self._display_travels(has_vbo)
@@ -533,6 +552,7 @@ class GcodeModel(Model):
 
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
+        glDisableClientState(GL_NORMAL_ARRAY)
 
         glPopMatrix()
 
@@ -580,6 +600,12 @@ class GcodeModel(Model):
             glColorPointer(4, GL_FLOAT, 0, None)
         else:
             glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
+
+        self.vertex_normal_buffer.bind()
+        if has_vbo:
+            glNormalPointer(GL_FLOAT, 0, None)
+        else:
+            glNormalPointer(GL_FLOAT, 0, self.vertex_normal_buffer.ptr)
 
         self.index_buffer.bind()
 
@@ -635,6 +661,7 @@ class GcodeModel(Model):
 
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
+        self.vertex_normal_buffer.unbind()
 
 class GcodeModelLight(Model):
     """
