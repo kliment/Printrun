@@ -185,7 +185,7 @@ class wxGLPanel(wx.Panel):
         glLoadIdentity()
         self.setup_lights()
         if self.orthographic:
-            ratio = factor * float(min(self.width, self.height)) / self.dist
+            ratio = factor * float(max(self.width, self.height)) / self.dist
             self.zoom_factor = 1.0
             glScalef(ratio, ratio, 1)
 
