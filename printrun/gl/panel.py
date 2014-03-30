@@ -26,6 +26,7 @@ pyglet.options['debug_gl'] = True
 from pyglet.gl import *
 from pyglet import gl
 from .trackball import trackball, mulquat, build_rotmatrix
+from .libtatlin.actors import vec
 
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
@@ -153,9 +154,31 @@ class wxGLPanel(wx.Panel):
             self.pygletcontext.set_current()
             self.update_object_resize()
 
+    def setup_lights(self):
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
+        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1)
+        glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.2, 0.2, 0.2, 1.0))
+        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0, 0, 0, 0))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0, 0, 0, 0))
+        glEnable(GL_LIGHT1)
+        glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
+        glLightfv(GL_LIGHT1, GL_SPECULAR, vec(1., 1., 1., 1.))
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.72, 0.72, 0.72, 1))
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
+        glLightfv(GL_LIGHT1, GL_SPOT_EXPONENT, vec(1., 1., 1., 1.))
+        glEnable(GL_LIGHT2)
+        glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
+        glLightfv(GL_LIGHT2, GL_SPECULAR, vec(1., 1., 1., 1.))
+        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
+        glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 2, 0))
+        glEnable(GL_RESCALE_NORMAL)
+        glShadeModel(GL_SMOOTH)
+
     def reset_mview(self, factor):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+        self.setup_lights()
         if self.orthographic:
             ratio = factor * float(min(self.width, self.height)) / self.dist
             self.zoom_factor = 1.0

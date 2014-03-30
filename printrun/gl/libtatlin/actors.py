@@ -517,30 +517,10 @@ class GcodeModel(Model):
         glTranslatef(self.offset_x, self.offset_y, 0)
         glEnableClientState(GL_VERTEX_ARRAY)
 
-        glDisable(GL_LIGHTING)
-        glEnable(GL_RESCALE_NORMAL)
-        glShadeModel(GL_SMOOTH)
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT0)
-        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1)
-        glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.2, 0.2, 0.2, 1.0))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0, 0, 0, 0))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0, 0, 0, 0))
-        glEnable(GL_LIGHT1)
-        glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
-        glLightfv(GL_LIGHT1, GL_SPECULAR, vec(1., 1., 1., 1.))
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.72, 0.72, 0.72, 1))
-        glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
-        glLightfv(GL_LIGHT1, GL_SPOT_EXPONENT, vec(1., 1., 1., 1.))
-        glEnable(GL_LIGHT2)
-        glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
-        glLightfv(GL_LIGHT2, GL_SPECULAR, vec(1., 1., 1., 1.))
-        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
-        glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 2, 0))
-
         has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
         self._display_travels(has_vbo)
 
+        glEnable(GL_LIGHTING)
         glEnableClientState(GL_COLOR_ARRAY)
         glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
@@ -549,10 +529,8 @@ class GcodeModel(Model):
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
         self._display_movements(has_vbo)
 
-        glDisable(GL_LIGHT0)
-        glDisable(GL_LIGHT1)
-        glDisable(GL_LIGHT2)
         glDisable(GL_LIGHTING)
+
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
 
