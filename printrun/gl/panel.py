@@ -35,7 +35,8 @@ class wxGLPanel(wx.Panel):
     color_background = (0.98, 0.98, 0.78, 1)
 
     def __init__(self, parent, id, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize, style = 0):
+                 size = wx.DefaultSize, style = 0,
+                 antialias_samples = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
         super(wxGLPanel, self).__init__(parent, id, pos, size, style)
@@ -45,6 +46,10 @@ class wxGLPanel(wx.Panel):
         attribList = (glcanvas.WX_GL_RGBA,  # RGBA
                       glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
+
+        if antialias_samples > 0:
+            attribList += (glcanvas.WX_GL_SAMPLE_BUFFERS, 1,
+                           glcanvas.WX_GL_SAMPLES, antialias_samples)
 
         self.width = None
         self.height = None

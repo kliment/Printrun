@@ -49,9 +49,11 @@ def set_model_colors(model, root):
 class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent, id = wx.ID_ANY,
-                 build_dimensions = None, realparent = None):
+                 build_dimensions = None, realparent = None,
+                 antialias_samples = 0):
         super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition,
-                                             wx.DefaultSize, 0)
+                                             wx.DefaultSize, 0,
+                                             antialias_samples = antialias_samples)
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
         self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
@@ -282,10 +284,11 @@ class GcodeViewLoader(object):
 
 class GcodeViewMainWrapper(GcodeViewLoader):
 
-    def __init__(self, parent, build_dimensions, root, circular):
+    def __init__(self, parent, build_dimensions, root, circular, antialias_samples):
         self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
-                                      build_dimensions = build_dimensions)
+                                      build_dimensions = build_dimensions,
+                                      antialias_samples = antialias_samples)
         self.glpanel.SetMinSize((150, 150))
         if self.root and hasattr(self.root, "gcview_color_background"):
             self.glpanel.color_background = self.root.gcview_color_background
@@ -331,7 +334,8 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
 
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
-                 style = wx.DEFAULT_FRAME_STYLE, root = None, circular = False):
+                 style = wx.DEFAULT_FRAME_STYLE, root = None, circular = False,
+                 antialias_samples = 0):
         GvizBaseFrame.__init__(self, parent, ID, title,
                                pos, size, style)
         self.root = root
@@ -355,7 +359,8 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.toolbar.Realize()
         self.glpanel = GcodeViewPanel(panel,
                                       build_dimensions = build_dimensions,
-                                      realparent = self)
+                                      realparent = self,
+                                      antialias_samples = antialias_samples)
         vbox.Add(self.glpanel, 1, flag = wx.EXPAND)
 
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
