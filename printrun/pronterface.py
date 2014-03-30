@@ -139,7 +139,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.m105_waitcycles = 0
         self.fgcode = None
         self.excluder = None
-        self.skeinp = None
+        self.slicep = None
         self.monitor_interval = 3
         self.current_pos = [0, 0, 0]
         self.paused = False
@@ -210,7 +210,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         self.t = Tee(self.catchprint)
         self.stdout = sys.stdout
-        self.skeining = 0
+        self.slicing = 0
         self.mini = False
         self.p.sendcb = self.sentcb
         self.p.preprintsendcb = self.preprintsendcb
@@ -703,7 +703,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.new_macro, self.macros_menu.Append(-1, _("<&New...>")))
         self.Bind(wx.EVT_MENU, lambda *e: PronterOptions(self), m.Append(-1, _("&Options"), _(" Options dialog")))
 
-        self.Bind(wx.EVT_MENU, lambda x: threading.Thread(target = lambda: self.do_skein("set")).start(), m.Append(-1, _("Slicing settings"), _(" Adjust slicing settings")))
+        self.Bind(wx.EVT_MENU, lambda x: threading.Thread(target = lambda: self.do_slice("set")).start(), m.Append(-1, _("Slicing settings"), _(" Adjust slicing settings")))
 
         mItem = m.AppendCheckItem(-1, _("Debug communications"),
                                   _("Print all G-code sent to and received from the printer."))
@@ -1215,7 +1215,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             filename = filename.replace(ext.upper(), suffix)
         return filename
 
-    def skein_func(self):
+    def slice_func(self):
         try:
             output_filename = self.model_to_gcode_filename(self.filename)
             pararray = prepare_command(self.settings.slicecommand,
@@ -1226,19 +1226,19 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         fpath = os.path.join(self.slic3r_configpath, cat, config)
                         pararray += ["--load", fpath]
             print _("Slicing ") + " ".join(pararray)
-            self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
+            self.slicep = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
-                o = self.skeinp.stdout.read(1)
-                if o == '' and self.skeinp.poll() is not None: break
+                o = self.slicep.stdout.read(1)
+                if o == '' and self.slicep.poll() is not None: break
                 sys.stdout.write(o)
-            self.skeinp.wait()
+            self.slicep.wait()
             self.stopsf = 1
         except:
             logging.error(_("Failed to execute slicing software: "))
             self.stopsf = 1
             traceback.print_exc(file = sys.stdout)
 
-    def skein_monitor(self):
+    def slice_monitor(self):
         while not self.stopsf:
             try:
                 wx.CallAfter(self.statusbar.SetStatusText, _("Slicing..."))  # +self.cout.getvalue().split("\n")[-1])
@@ -1250,19 +1250,19 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.load_gcode_async(self.model_to_gcode_filename(self.filename))
         except:
             self.filename = fn
-        self.skeining = 0
-        self.skeinp = None
+        self.slicing = 0
+        self.slicep = None
 
-    def skein(self, filename):
+    def slice(self, filename):
         wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
         wx.CallAfter(self.toolbarsizer.Layout)
         print _("Slicing ") + filename
         self.cout = StringIO.StringIO()
         self.filename = filename
         self.stopsf = 0
-        self.skeining = 1
-        threading.Thread(target = self.skein_func).start()
-        threading.Thread(target = self.skein_monitor).start()
+        self.slicing = 1
+        threading.Thread(target = self.slice_func).start()
+        threading.Thread(target = self.slice_monitor).start()
 
     def cmdline_filename_callback(self, filename):
         # Do nothing when processing a filename from command line, as we'll
@@ -1270,7 +1270,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.filename = filename
 
     def do_load(self, l):
-        if hasattr(self, 'skeining'):
+        if hasattr(self, 'slicing'):
             self.loadfile(None, l)
         else:
             self._do_load(l)
@@ -1281,8 +1281,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.loadfile(None, filename = path)
 
     def loadfile(self, event, filename = None):
-        if self.skeining and self.skeinp is not None:
-            self.skeinp.terminate()
+        if self.slicing and self.slicep is not None:
+            self.slicep.terminate()
             return
         basedir = self.settings.last_file_path
         if not os.path.exists(basedir):
@@ -1325,8 +1325,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.logError(_("Could not update recent files list:") +
                               "\n" + traceback.format_exc())
             if name.lower().endswith(".stl") or name.lower().endswith(".obj"):
-                self.skein(name)
-                self.skein(name)
+                self.slice(name)
+                self.slice(name)
             else:
                 self.load_gcode_async(name)
         else:

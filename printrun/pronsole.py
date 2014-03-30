@@ -1128,7 +1128,7 @@ class pronsole(cmd.Cmd):
     def help_load(self):
         self.log("Loads a gcode file (with tab-completion)")
 
-    def do_skein(self, l):
+    def do_slice(self, l):
         l = l.split()
         if len(l) == 0:
             self.logError(_("No file name given."))
@@ -1160,7 +1160,7 @@ class pronsole(cmd.Cmd):
         except Exception, e:
             self.logError(_("Slicing failed: %s") % e)
 
-    def complete_skein(self, text, line, begidx, endidx):
+    def complete_slice(self, text, line, begidx, endidx):
         s = line.split()
         if len(s) > 2:
             return []
@@ -1170,11 +1170,11 @@ class pronsole(cmd.Cmd):
             else:
                 return glob.glob("*/") + glob.glob("*.stl")
 
-    def help_skein(self):
+    def help_slice(self):
         self.log(_("Creates a gcode file from an stl model using the slicer (with tab-completion)"))
-        self.log(_("skein filename.stl - create gcode file"))
-        self.log(_("skein filename.stl view - create gcode file and view using skeiniso"))
-        self.log(_("skein set - adjust slicer settings"))
+        self.log(_("slice filename.stl - create gcode file"))
+        self.log(_("slice filename.stl view - create gcode file and view using skeiniso (if using skeinforge)"))
+        self.log(_("slice set - adjust slicer settings"))
 
     ## --------------------------------------------------------------
     ## Print/upload handling
