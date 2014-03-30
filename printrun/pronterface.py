@@ -1335,6 +1335,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         gcode = self.pre_gcode_load()
         threading.Thread(target = self.load_gcode_async_thread, args = (gcode,)).start()
 
+    # FIXME: this thread and the loadviz one are not tracked at all
     def load_gcode_async_thread(self, gcode):
         self.load_gcode(self.filename,
                         layer_callback = self.layer_ready_cb,
@@ -1343,12 +1344,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def layer_ready_cb(self, gcode, layer):
         self.viz_last_layer = layer
+        if time.time() - self.viz_last_yield > 0.8:
+            time.sleep(0.2)
+            self.viz_last_yield = time.time()
 
     def start_viz_thread(self, gcode = None):
         threading.Thread(target = self.loadviz, args = (gcode,)).start()
 
     def pre_gcode_load(self):
         gcode = gcoder.GCode(deferred = True)
+        self.viz_last_yield = 0
         self.viz_last_layer = -1
         self.start_viz_thread(gcode)
         return gcode
