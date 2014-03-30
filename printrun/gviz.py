@@ -338,7 +338,7 @@ class Gviz(wx.Panel):
                 dc.DrawRectangle(width - 14, (1.0 - (1.0 * (self.layerindex + 1)) / len(self.layers)) * height, 13, height - 1)
 
         if self.showall:
-            for i, _ in enumerate(self.layers):
+            for i in range(len(self.layersz)):
                 self._drawlines(dc, self.lines[i], self.pens[i])
                 self._drawarcs(dc, self.arcs[i], self.arcpens[i])
             return
