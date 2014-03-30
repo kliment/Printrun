@@ -216,6 +216,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.t = Tee(self.catchprint)
         self.stdout = sys.stdout
         self.slicing = False
+        self.loading_gcode = False
+        self.loading_gcode_message = ""
         self.mini = False
         self.p.sendcb = self.sentcb
         self.p.preprintsendcb = self.preprintsendcb
@@ -931,6 +933,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
                                                                   format_duration(secondsestimate))
                     string += _(" Z: %.3f mm") % self.curlayer
+            elif self.loading_gcode:
+                string = self.loading_gcode_message
             wx.CallAfter(self.statusbar.SetStatusText, string)
             wx.CallAfter(self.gviz.Refresh)
             if self.p.online:
@@ -1359,11 +1363,15 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if time.time() - self.viz_last_yield > 0.8:
             time.sleep(0.2)
             self.viz_last_yield = time.time()
+            self.loading_gcode_message = _("Loading %s: %d layers loaded (%d lines)") % (self.filename, layer + 1, len(gcode))
+            wx.CallAfter(self.statusbar.SetStatusText, self.loading_gcode_message)
 
     def start_viz_thread(self, gcode = None):
         threading.Thread(target = self.loadviz, args = (gcode,)).start()
 
     def pre_gcode_load(self):
+        self.loading_gcode = True
+        self.loading_gcode_message = _("Loading %s") % self.filename
         gcode = gcoder.GCode(deferred = True)
         self.viz_last_yield = 0
         self.viz_last_layer = -1
@@ -1372,6 +1380,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def post_gcode_load(self, print_stats = True):
         # Must be called in wx.CallAfter for safety
+        self.loading_gcode = False
         message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
         self.log(message)
         self.statusbar.SetStatusText(message)
