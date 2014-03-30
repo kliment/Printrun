@@ -1373,7 +1373,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def output_gcode_stats(self):
         gcode = self.fgcode
-        print gcode.filament_length, _("mm of filament used in this print")
+        print _("%.2fmm of filament used in this print") % gcode.filament_length
         print _("The print goes:")
         print _("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width)
         print _("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth)
