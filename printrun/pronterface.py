@@ -1247,23 +1247,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             time.sleep(0.1)
         fn = self.filename
         try:
-            self.filename = self.model_to_gcode_filename(self.filename)
-            gcode = self.pre_gcode_load()
-            self.load_gcode(self.filename,
-                            layer_callback = self.layer_ready_cb,
-                            gcode = gcode)
-            if self.p.online:
-                wx.CallAfter(self.printbtn.Enable)
-
-            wx.CallAfter(self.statusbar.SetStatusText, _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),))
-            wx.CallAfter(self.pausebtn.Disable)
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-
-            self.post_gcode_load()
+            self.load_gcode_async(self.model_to_gcode_filename(self.filename))
         except:
             self.filename = fn
-        wx.CallAfter(self.loadbtn.SetLabel, _("Load File"))
-        wx.CallAfter(self.toolbarsizer.Layout)
         self.skeining = 0
         self.skeinp = None
 
@@ -1338,27 +1324,24 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             except:
                 self.logError(_("Could not update recent files list:") +
                               "\n" + traceback.format_exc())
-            if name.lower().endswith(".stl"):
+            if name.lower().endswith(".stl") or name.lower().endswith(".obj"):
                 self.skein(name)
-            elif name.lower().endswith(".obj"):
                 self.skein(name)
             else:
-                self.filename = name
-                gcode = self.pre_gcode_load()
-                self.load_gcode(self.filename,
-                                layer_callback = self.layer_ready_cb,
-                                gcode = gcode)
-                self.statusbar.SetStatusText(_("Loaded %s, %d lines") % (name, len(self.fgcode)))
-                wx.CallAfter(self.printbtn.SetLabel, _("Print"))
-                wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-                wx.CallAfter(self.pausebtn.Disable)
-                wx.CallAfter(self.recoverbtn.Disable)
-                if self.p.online:
-                    wx.CallAfter(self.printbtn.Enable)
-                wx.CallAfter(self.toolbarsizer.Layout)
-                self.post_gcode_load()
+                self.load_gcode_async(name)
         else:
             dlg.Destroy()
+
+    def load_gcode_async(self, filename):
+        self.filename = filename
+        gcode = self.pre_gcode_load()
+        threading.Thread(target = self.load_gcode_async_thread, args = (gcode,)).start()
+
+    def load_gcode_async_thread(self, gcode):
+        self.load_gcode(self.filename,
+                        layer_callback = self.layer_ready_cb,
+                        gcode = gcode)
+        wx.CallAfter(self.post_gcode_load)
 
     def layer_ready_cb(self, gcode, layer):
         self.viz_last_layer = layer
@@ -1373,7 +1356,18 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         return gcode
 
     def post_gcode_load(self, print_stats = True):
-        print _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
+        # Must be called in wx.CallAfter for safety
+        message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
+        self.log(message)
+        self.statusbar.SetStatusText(message)
+        self.loadbtn.SetLabel(_("Load File"))
+        self.printbtn.SetLabel(_("Print"))
+        self.pausebtn.SetLabel(_("Pause"))
+        self.pausebtn.Disable()
+        self.recoverbtn.Disable()
+        if self.p.online:
+            self.printbtn.Enable()
+        self.toolbarsizer.Layout()
         self.viz_last_layer = None
         if print_stats:
             self.output_gcode_stats()
