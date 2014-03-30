@@ -54,6 +54,11 @@ layerindex = 0
 if os.name == "nt":
     winsize = (800, 530)
 
+pronterface_quitting = False
+
+class PronterfaceQuitException(Exception):
+    pass
+
 from printrun.gui import MainWindow
 from printrun.excluder import Excluder
 from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
@@ -295,6 +300,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Close()
 
     def kill(self, e):
+        global pronterface_quitting
+        pronterface_quitting = True
         self.statuscheck = False
         if self.status_thread:
             self.status_thread.join()
@@ -1337,12 +1344,18 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     # FIXME: this thread and the loadviz one are not tracked at all
     def load_gcode_async_thread(self, gcode):
-        self.load_gcode(self.filename,
-                        layer_callback = self.layer_ready_cb,
-                        gcode = gcode)
+        try:
+            self.load_gcode(self.filename,
+                            layer_callback = self.layer_ready_cb,
+                            gcode = gcode)
+        except PronterfaceQuitException:
+            return
         wx.CallAfter(self.post_gcode_load)
 
     def layer_ready_cb(self, gcode, layer):
+        global pronterface_quitting
+        if pronterface_quitting:
+            raise PronterfaceQuitException
         self.viz_last_layer = layer
         if time.time() - self.viz_last_yield > 0.8:
             time.sleep(0.2)
@@ -1399,6 +1412,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             # During preloading we verify that the layer we added is the one we
             # expected through the assert call.
             while True:
+                global pronterface_quitting
+                if pronterface_quitting:
+                    return
                 max_layer = self.viz_last_layer
                 if max_layer is None:
                     break
