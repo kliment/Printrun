@@ -265,7 +265,7 @@ class GcodeViewLoader(object):
                                   if self.root else False)
         if self.root:
             set_model_colors(self.model, self.root)
-        if gcode:
+        if gcode is not None:
             generator = self.model.load_data(gcode)
             generator_output = generator.next()
             while generator_output is not None:
