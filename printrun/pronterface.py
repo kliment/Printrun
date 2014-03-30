@@ -326,11 +326,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.monitor_interval = float(l)
                 self.set("monitor", self.monitor_interval > 0)
             except:
-                print _("Invalid period given.")
+                self.log(_("Invalid period given."))
         if self.settings.monitor:
-            print _("Monitoring printer.")
+            self.log(_("Monitoring printer."))
         else:
-            print _("Done monitoring.")
+            self.log(_("Done monitoring."))
 
     def do_pront_extrude(self, l = ""):
         feed = self.settings.e_feedrate
@@ -351,14 +351,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M104 S" + l)
-                    print _("Setting hotend temperature to %f degrees Celsius.") % f
+                    self.log(_("Setting hotend temperature to %f degrees Celsius.") % f)
                     self.sethotendgui(f)
                 else:
-                    print _("Printer is not online.")
+                    self.logError(_("Printer is not online."))
             else:
-                print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
+                self.logError(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
         except Exception, x:
-            print _("You must enter a temperature. (%s)") % (repr(x),)
+            self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_bedtemp(self, l = ""):
         try:
@@ -371,14 +371,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M140 S" + l)
-                    print _("Setting bed temperature to %f degrees Celsius.") % f
+                    self.log(_("Setting bed temperature to %f degrees Celsius.") % f)
                     self.setbedgui(f)
                 else:
-                    print _("Printer is not online.")
+                    self.logError(_("Printer is not online."))
             else:
-                print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
+                self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
         except Exception, x:
-            print _("You must enter a temperature. (%s)") % (repr(x),)
+            self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_setspeed(self, l = ""):
         try:
@@ -389,11 +389,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             speed = int(l)
             if self.p.online:
                 self.p.send_now("M220 S" + l)
-                print _("Setting print speed factor to %d%%.") % speed
+                self.log(_("Setting print speed factor to %d%%.") % speed)
             else:
-                print _("Printer is not online.")
+                self.logError(_("Printer is not online."))
         except Exception, x:
-            print _("You must enter a speed. (%s)") % (repr(x),)
+            self.logError(_("You must enter a speed. (%s)") % (repr(x),))
 
     def setbedgui(self, f):
         self.bsetpoint = f
@@ -467,7 +467,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def plate(self, e):
         from . import plater
-        print _("Plate function activated")
+        self.log(_("Plate function activated"))
         plater.StlPlater(size = (800, 580), callback = self.platecb,
                          parent = self,
                          build_dimensions = self.build_dimensions_list,
@@ -476,14 +476,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def plate_gcode(self, e):
         from . import gcodeplater as plater
-        print _("G-Code plate function activated")
+        self.log(_("G-Code plate function activated"))
         plater.GcodePlater(size = (800, 580), callback = self.platecb,
                            parent = self,
                            build_dimensions = self.build_dimensions_list,
                            circular_platform = self.settings.circular_bed).Show()
 
     def platecb(self, name):
-        print _("Plated %s") % name
+        self.log(_("Plated %s") % name)
         self.loadfile(None, name)
 
     def do_editgcode(self, e = None):
@@ -562,7 +562,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.send_now('M114')
 
     def clamped_move_message(self):
-        print _("Manual move outside of the build volume prevented (see the \"Clamp manual moves\" option).")
+        self.log(_("Manual move outside of the build volume prevented (see the \"Clamp manual moves\" option)."))
 
     def moveXY(self, x, y):
         # When user clicks on the XY control, the Z control no longer gets spacebar/repeat signals
@@ -618,7 +618,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if current_length > max_length:
                 self.logbox.Remove(0, current_length / 10)
         except:
-            print _("Attempted to write invalid text to console, which could be due to an invalid baudrate")
+            self.log(_("Attempted to write invalid text to console, which could be due to an invalid baudrate"))
 
     def clear_log(self, e):
         self.logbox.Clear()
@@ -969,11 +969,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if force is not None:
             self.locker.SetValue(force)
         if self.locker.GetValue():
-            print _("Locking interface.")
+            self.log(_("Locking interface."))
             for panel in self.panels:
                 panel.Disable()
         else:
-            print _("Unlocking interface.")
+            self.log(_("Unlocking interface."))
             for panel in self.panels:
                 panel.Enable()
 
@@ -982,7 +982,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     ## --------------------------------------------------------------
 
     def connect(self, event = None):
-        print _("Connecting...")
+        self.log(_("Connecting..."))
         port = None
         if self.serialport.GetValue():
             port = str(self.serialport.GetValue())
@@ -994,7 +994,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         try:
             baud = int(self.baud.GetValue())
         except:
-            print _("Could not parse baud rate: ")
+            self.logError(_("Could not parse baud rate: "))
             traceback.print_exc(file = sys.stdout)
         if self.paused:
             self.p.paused = 0
@@ -1040,7 +1040,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.predisconnect_layer = self.curlayer
 
     def disconnect(self, event = None):
-        print _("Disconnected.")
+        self.log(_("Disconnected."))
         if self.p.printing or self.p.paused or self.paused:
             self.store_predisconnect_state()
         self.p.disconnect()
@@ -1068,7 +1068,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         wx.CallAfter(self.toolbarsizer.Layout)
 
     def reset(self, event):
-        print _("Reset.")
+        self.log(_("Reset."))
         dlg = wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES | wx.NO)
         if dlg.ShowModal() == wx.ID_YES:
             self.p.reset()
@@ -1148,12 +1148,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def pause(self, event):
         if not self.paused:
-            print _("Print paused at: %s") % format_time(time.time())
+            self.log(_("Print paused at: %s") % format_time(time.time()))
             if self.sdprinting:
                 self.p.send_now("M25")
             else:
-                if(not self.p.printing):
-                    #print "Not printing, cannot pause."
+                if not self.p.printing:
                     return
                 self.p.pause()
                 self.p.runSmallScript(self.pauseScript)
@@ -1163,7 +1162,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
             wx.CallAfter(self.toolbarsizer.Layout)
         else:
-            print _("Resuming.")
+            self.log(_("Resuming."))
             self.paused = False
             if self.sdprinting:
                 self.p.send_now("M24")
@@ -1225,7 +1224,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     if config:
                         fpath = os.path.join(self.slic3r_configpath, cat, config)
                         pararray += ["--load", fpath]
-            print _("Slicing ") + " ".join(pararray)
+            self.log(_("Running ") + " ".join(pararray))
             self.slicep = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
             while True:
                 o = self.slicep.stdout.read(1)
@@ -1256,7 +1255,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def slice(self, filename):
         wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
         wx.CallAfter(self.toolbarsizer.Layout)
-        print _("Slicing ") + filename
+        self.log(_("Slicing ") + filename)
         self.cout = StringIO.StringIO()
         self.filename = filename
         self.stopsf = 0
@@ -1373,12 +1372,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def output_gcode_stats(self):
         gcode = self.fgcode
-        print _("%.2fmm of filament used in this print") % gcode.filament_length
-        print _("The print goes:")
-        print _("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width)
-        print _("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth)
-        print _("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height)
-        print _("Estimated duration: %d layers, %s") % gcode.estimate_duration()
+        self.log(_("%.2fmm of filament used in this print") % gcode.filament_length)
+        self.log(_("The print goes:"))
+        self.log(_("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width))
+        self.log(_("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth))
+        self.log(_("- from %.2f mm to %.2f mm in Z and is %.2f mm high") % (gcode.zmin, gcode.zmax, gcode.height))
+        self.log(_("Estimated duration: %d layers, %s") % gcode.estimate_duration())
 
     def loadviz(self, gcode = None):
         self.gviz.clear()
@@ -1447,7 +1446,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def online(self):
         """Callback when printer goes online"""
-        print _("Printer is now online.")
+        self.log(_("Printer is now online."))
         wx.CallAfter(self.online_gui)
 
     def online_gui(self):
@@ -1711,7 +1710,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.centerpanel.GetContainingSizer().Layout()
 
     def help_button(self):
-        print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
+        self.log(_('Defines custom button. Usage: button <num> "title" [/c "colour"] command'))
 
     def do_button(self, argstr):
         def nextarg(rest):
@@ -1733,7 +1732,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             pass
         command = argstr.strip()
         if num < 0 or num >= 64:
-            print _("Custom button number should be between 0 and 63")
+            self.log(_("Custom button number should be between 0 and 63"))
             return
         while num >= len(self.custombuttons):
             self.custombuttons.append(None)
@@ -1969,7 +1968,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.onecmd(command)
             self.cur_button = None
         except:
-            print _("event object missing")
+            self.log(_("Failed to handle button"))
             self.cur_button = None
             raise
 
@@ -1986,7 +1985,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         if dialog.ShowModal() == wx.ID_YES:
                             self.delete_macro(macro_name)
                             return
-                    print _("Cancelled.")
+                    self.log(_("Cancelled."))
                     return
                 self.cur_macro_name = macro_name
                 self.cur_macro_def = definition
@@ -2032,10 +2031,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if macro in self.macros:
             old_def = self.macros[macro]
         elif len([c for c in macro.encode("ascii", "replace") if not c.isalnum() and c != "_"]):
-            print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
+            self.log(_("Macro name may contain only ASCII alphanumeric symbols and underscores"))
             return
         elif hasattr(self.__class__, "do_" + macro):
-            print _("Name '%s' is being used by built-in command") % macro
+            self.log(_("Name '%s' is being used by built-in command") % macro)
             return
         else:
             old_def = ""
