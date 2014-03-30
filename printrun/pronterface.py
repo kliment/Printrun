@@ -215,7 +215,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         self.t = Tee(self.catchprint)
         self.stdout = sys.stdout
-        self.slicing = 0
+        self.slicing = False
         self.mini = False
         self.p.sendcb = self.sentcb
         self.p.preprintsendcb = self.preprintsendcb
@@ -1256,7 +1256,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.load_gcode_async(self.model_to_gcode_filename(self.filename))
         except:
             self.filename = fn
-        self.slicing = 0
+        self.slicing = False
         self.slicep = None
 
     def slice(self, filename):
@@ -1266,7 +1266,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.cout = StringIO.StringIO()
         self.filename = filename
         self.stopsf = 0
-        self.slicing = 1
+        self.slicing = True
         threading.Thread(target = self.slice_func).start()
         threading.Thread(target = self.slice_monitor).start()
 
