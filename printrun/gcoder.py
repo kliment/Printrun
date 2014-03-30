@@ -371,7 +371,8 @@ class GCode(object):
                         else:
                             cur_z = line.z
 
-                cur_layer_has_extrusion |= line.extruding
+                if line.e is not None and line.is_move:
+                    cur_layer_has_extrusion |= line.extruding
 
                 # FIXME: the logic behind this code seems to work, but it might be
                 # broken
