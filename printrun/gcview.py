@@ -263,6 +263,7 @@ class GcodeViewLoader(object):
     def addfile_perlayer(self, gcode = None, showall = False):
         self.model = create_model(self.root.settings.light3d
                                   if self.root else False)
+        self.objects[-1].model = self.model
         if self.root:
             set_model_colors(self.model, self.root)
         if gcode is not None:
@@ -271,7 +272,6 @@ class GcodeViewLoader(object):
             while generator_output is not None:
                 yield generator_output
                 generator_output = generator.next()
-        self.objects[-1].model = self.model
         wx.CallAfter(self.Refresh)
         yield None
 
