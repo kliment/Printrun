@@ -103,7 +103,7 @@ class GvizWindow(GvizBaseFrame):
         self.p.layerindex = self.layerslider.GetValue()
         z = self.p.get_currentz()
         self.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
-        self.p.dirty = 1
+        self.p.dirty = True
         wx.CallAfter(self.p.Refresh)
 
     def resetview(self, event):
@@ -122,7 +122,7 @@ class GvizWindow(GvizBaseFrame):
                 self.basetrans = self.p.translate
             self.p.translate = [self.basetrans[0] + (e[0] - self.initpos[0]),
                                 self.basetrans[1] + (e[1] - self.initpos[1])]
-            self.p.dirty = 1
+            self.p.dirty = True
             wx.CallAfter(self.p.Refresh)
         else:
             event.Skip()
@@ -163,7 +163,7 @@ class Gviz(wx.Panel):
 
     def _set_showall(self, showall):
         if showall != self._showall:
-            self.dirty = 1
+            self.dirty = True
             self._showall = showall
     showall = property(_get_showall, _set_showall)
 
@@ -226,7 +226,9 @@ class Gviz(wx.Panel):
         self.clearhilights()
         self.layerindex = 0
         self.showall = 0
-        self.dirty = 1
+        self.dirty = True
+        self.partial = False
+        self.painted_layers = set()
         wx.CallAfter(self.Refresh)
 
     def get_currentz(self):
@@ -239,7 +241,7 @@ class Gviz(wx.Panel):
             self.layerindex += 1
             z = self.get_currentz()
             self.parent.SetStatusText(_("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, z), 0)
-            self.dirty = 1
+            self.dirty = True
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
 
@@ -248,7 +250,7 @@ class Gviz(wx.Panel):
             self.layerindex -= 1
             z = self.get_currentz()
             self.parent.SetStatusText(_("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, z), 0)
-            self.dirty = 1
+            self.dirty = True
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
 
@@ -256,7 +258,7 @@ class Gviz(wx.Panel):
         if layer in self.layers:
             self.clearhilights()
             self.layerindex = self.layers[layer]
-            self.dirty = 1
+            self.dirty = True
             self.showall = 0
             wx.CallAfter(self.Refresh)
 
@@ -282,7 +284,7 @@ class Gviz(wx.Panel):
         penwidth = max(1.0, self.filament_width * ((self.scale[0] + self.scale[1]) / 2.0))
         for pen in self.penslist:
             pen.SetWidth(penwidth)
-        self.dirty = 1
+        self.dirty = True
         wx.CallAfter(self.Refresh)
 
     def _line_scaler(self, x):
@@ -339,8 +341,10 @@ class Gviz(wx.Panel):
 
         if self.showall:
             for i in range(len(self.layersz)):
+                self.painted_layers.add(i)
                 self._drawlines(dc, self.lines[i], self.pens[i])
                 self._drawarcs(dc, self.arcs[i], self.arcpens[i])
+            dc.SelectObject(wx.NullBitmap)
             return
 
         if self.layerindex < len(self.layers) and self.layerindex in self.lines:
@@ -356,6 +360,16 @@ class Gviz(wx.Panel):
         self.paint_hilights(dc)
 
         dc.SelectObject(wx.NullBitmap)
+
+    def repaint_partial(self):
+        if self.showall:
+            dc = wx.MemoryDC()
+            dc.SelectObject(self.blitmap)
+            for i in set(range(len(self.layersz))).difference(self.painted_layers):
+                self.painted_layers.add(i)
+                self._drawlines(dc, self.lines[i], self.pens[i])
+                self._drawarcs(dc, self.arcs[i], self.arcpens[i])
+            dc.SelectObject(wx.NullBitmap)
 
     def paint_hilights(self, dc = None):
         if self.hilightqueue.empty() and self.hilightarcsqueue.empty():
@@ -374,8 +388,12 @@ class Gviz(wx.Panel):
 
     def paint(self, event):
         if self.dirty:
-            self.dirty = 0
+            self.dirty = False
+            self.partial = False
             self.repaint_everything()
+        elif self.partial:
+            self.partial = False
+            self.repaint_partial()
         self.paint_hilights()
         dc = wx.PaintDC(self)
         dc.SetBackground(wx.Brush(self.bgcolor))
@@ -485,13 +503,13 @@ class Gviz(wx.Panel):
             # Refresh display if more than 0.2s have passed
             if time.time() - start_time > 0.2:
                 start_time = time.time()
-                self.dirty = 1
+                self.partial = True
                 wx.CallAfter(self.Refresh)
 
             yield layer_idx
             layer_idx += 1
 
-        self.dirty = 1
+        self.dirty = True
         wx.CallAfter(self.Refresh)
         yield None
 
