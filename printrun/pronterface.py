@@ -1342,7 +1342,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         gcode = self.pre_gcode_load()
         threading.Thread(target = self.load_gcode_async_thread, args = (gcode,)).start()
 
-    # FIXME: this thread and the loadviz one are not tracked at all
     def load_gcode_async_thread(self, gcode):
         try:
             self.load_gcode(self.filename,
