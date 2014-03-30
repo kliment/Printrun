@@ -676,14 +676,21 @@ class GcodeModelLight(Model):
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
-        vertex_list = []
-        color_list = []
         self.layer_idxs_map = {}
         self.layer_stops = [0]
 
         prev_pos = (0, 0, 0)
         layer_idx = 0
+        vertices = self.vertices = numpy.zeros(len(model_data) * 6, dtype = GLfloat)
+        vertex_k = 0
+        colors = self.colors = numpy.zeros(len(model_data) * 8, dtype = GLfloat)
+        color_k = 0
+        self.printed_until = -1
+        self.only_current = False
         while layer_idx < len(model_data.all_layers):
+            if len(model_data) * 6 != vertices.size:
+                self.vertices.resize(len(model_data) * 6, refcheck = False)
+                self.colors.resize(len(model_data) * 8, refcheck = False)
             layer = model_data.all_layers[layer_idx]
             has_movement = False
             for gline in layer:
@@ -692,19 +699,36 @@ class GcodeModelLight(Model):
                 if gline.x is None and gline.y is None and gline.z is None:
                     continue
                 has_movement = True
-                vertex_list.extend(prev_pos)
+                vertices[vertex_k] = prev_pos[0]
+                vertices[vertex_k + 1] = prev_pos[1]
+                vertices[vertex_k + 2] = prev_pos[2]
                 current_pos = (gline.current_x, gline.current_y, gline.current_z)
-                vertex_list.extend(current_pos)
+                vertices[vertex_k + 3] = current_pos[0]
+                vertices[vertex_k + 4] = current_pos[1]
+                vertices[vertex_k + 5] = current_pos[2]
+                vertex_k += 6
 
                 vertex_color = self.movement_color(gline)
-                color_list.extend(vertex_color + vertex_color)
+                colors[color_k] = vertex_color[0]
+                colors[color_k + 1] = vertex_color[1]
+                colors[color_k + 2] = vertex_color[2]
+                colors[color_k + 3] = vertex_color[3]
+                colors[color_k + 4] = vertex_color[0]
+                colors[color_k + 5] = vertex_color[1]
+                colors[color_k + 6] = vertex_color[2]
+                colors[color_k + 7] = vertex_color[3]
+                color_k += 8
 
                 prev_pos = current_pos
-                gline.gcview_end_vertex = len(vertex_list) / 3
+                gline.gcview_end_vertex = vertex_k / 3
 
             if has_movement:
-                self.layer_stops.append(len(vertex_list) / 3)
+                self.layer_stops.append(vertex_k / 3)
                 self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
+                self.max_layers = len(self.layer_stops) - 1
+                self.num_layers_to_draw = self.max_layers + 1
+                self.initialized = False
+                self.loaded = True
 
             if callback:
                 callback(layer_idx + 1)
@@ -716,15 +740,10 @@ class GcodeModelLight(Model):
                      (model_data.ymin, model_data.ymax, model_data.depth),
                      (model_data.zmin, model_data.zmax, model_data.height))
 
-        self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
-                                       count = len(vertex_list))
-        self.colors = numpy.fromiter(color_list, dtype = GLfloat,
-                                     count = len(color_list))
-
+        self.vertices.resize(vertex_k, refcheck = False)
+        self.colors.resize(color_k, refcheck = False)
         self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers + 1
-        self.printed_until = -1
-        self.only_current = False
         self.initialized = False
         self.loaded = True
 
