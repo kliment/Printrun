@@ -494,7 +494,7 @@ class GcodeModel(Model):
 
     def copy(self):
         copy = GcodeModel()
-        for var in ["vertices", "colors", "travels", "indices",
+        for var in ["vertices", "colors", "travels", "indices", "normals",
                     "max_layers", "num_layers_to_draw", "printed_until",
                     "layer_stops", "dims", "only_current",
                     "layer_idxs_map",
