@@ -23,9 +23,21 @@ from wx import glcanvas
 import pyglet
 pyglet.options['debug_gl'] = True
 
-from pyglet.gl import *
+from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
+    GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_POSITION, GL_DIFFUSE, \
+    GL_AMBIENT, GL_SPECULAR, GL_COLOR_MATERIAL, \
+    glShadeModel, GL_SMOOTH, GL_NORMALIZE, \
+    GL_BLEND, glBlendFunc, glClear, glClearColor, \
+    glClearDepth, GL_COLOR_BUFFER_BIT, GL_CULL_FACE, \
+    GL_DEPTH_BUFFER_BIT, glDepthFunc, GL_DEPTH_TEST, \
+    GLdouble, glGetDoublev, glGetIntegerv, GLint, \
+    GL_LEQUAL, glLoadIdentity, glMatrixMode, GL_MODELVIEW, \
+    GL_MODELVIEW_MATRIX, GL_ONE_MINUS_SRC_ALPHA, glOrtho, \
+    GL_PROJECTION, GL_PROJECTION_MATRIX, glScalef, \
+    GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
+    glViewport, GL_VIEWPORT
 from pyglet import gl
-from .trackball import trackball, mulquat, build_rotmatrix
+from .trackball import trackball, mulquat
 from .libtatlin.actors import vec
 
 class wxGLPanel(wx.Panel):
@@ -101,19 +113,19 @@ class wxGLPanel(wx.Panel):
         # call the super method
         super(wxGLPanel, self).Destroy()
 
-    #==========================================================================
+    # ==========================================================================
     # GLFrame OpenGL Event Handlers
-    #==========================================================================
+    # ==========================================================================
     def OnInitGL(self, call_reshape = True):
         '''Initialize OpenGL for use in the window.'''
         if self.GLinitialized:
             return
         self.GLinitialized = True
-        #create a pyglet context for this panel
+        # create a pyglet context for this panel
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
-        #normal gl init
+        # normal gl init
         glClearColor(*self.color_background)
         glClearDepth(1.0)                # set depth value to 1
         glDepthFunc(GL_LEQUAL)
@@ -194,9 +206,9 @@ class wxGLPanel(wx.Panel):
         self.draw_objects()
         self.canvas.SwapBuffers()
 
-    #==========================================================================
+    # ==========================================================================
     # To be implemented by a sub class
-    #==========================================================================
+    # ==========================================================================
     def create_objects(self):
         '''create opengl objects when opengl is initialized'''
         pass
@@ -209,15 +221,15 @@ class wxGLPanel(wx.Panel):
         '''called in the middle of ondraw after the buffer has been cleared'''
         pass
 
-    #==========================================================================
+    # ==========================================================================
     # Utils
-    #==========================================================================
+    # ==========================================================================
     def mouse_to_3d(self, x, y, z = 1.0):
         x = float(x)
         y = self.height - float(y)
         # The following could work if we were not initially scaling to zoom on
         # the bed
-        #if self.orthographic:
+        # if self.orthographic:
         #    return (x - self.width / 2, y - self.height / 2, 0)
         pmat = (GLdouble * 16)()
         mvmat = (GLdouble * 16)()

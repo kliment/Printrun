@@ -23,7 +23,6 @@ import logging
 
 from ctypes import sizeof
 
-from pyglet.gl import *
 from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
     GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
@@ -33,9 +32,7 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
     glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
     GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
-    GL_DIFFUSE, GL_AMBIENT, GL_LIGHTING, GL_LIGHT0, glLightfv, \
-    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
-    GL_LIGHT1, GL_LIGHT2, GL_POSITION, GL_SPOT_EXPONENT, glShadeModel, GL_SMOOTH
+    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from printrun.utils import install_locale
