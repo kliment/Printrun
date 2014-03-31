@@ -619,7 +619,7 @@ class GcodeModel(Model):
 
         glDisableClientState(GL_COLOR_ARRAY)
 
-        glColor4f(*self.color_printed)
+        glColor3f(*self.color_printed[:-1])
 
         # Draw printed stuff until end or end_prev_layer
         cur_end = min(self.printed_until, end)
@@ -642,12 +642,12 @@ class GcodeModel(Model):
         if layer_selected:
             glDisableClientState(GL_COLOR_ARRAY)
 
-            glColor4f(*self.color_current_printed)
+            glColor3f(*self.color_current_printed[:-1])
 
             if cur_end > end_prev_layer:
                 self._draw_elements(end_prev_layer + 1, cur_end)
 
-            glColor4f(*self.color_current)
+            glColor3f(*self.color_current[:-1])
 
             if end > cur_end:
                 self._draw_elements(cur_end + 1, end)
