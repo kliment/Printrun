@@ -62,15 +62,14 @@ def imagefile(filename):
         return os.path.join("images", filename)
 
 def lookup_file(filename, prefixes):
+    local_candidate = os.path.join(os.path.dirname(sys.argv[0]), filename)
+    if os.path.exists(local_candidate):
+        return local_candidate
     for prefix in prefixes:
         candidate = os.path.join(prefix, filename)
         if os.path.exists(candidate):
             return candidate
-    local_candidate = os.path.join(os.path.dirname(sys.argv[0]), filename)
-    if os.path.exists(local_candidate):
-        return local_candidate
-    else:
-        return filename
+    return filename
 
 def pixmapfile(filename):
     return lookup_file(filename, ['/usr/local/share/pixmaps',
