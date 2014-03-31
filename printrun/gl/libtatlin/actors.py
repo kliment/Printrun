@@ -32,7 +32,8 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
     glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
     GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
-    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS
+    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
+    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from printrun.utils import install_locale
