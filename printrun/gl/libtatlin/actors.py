@@ -439,7 +439,7 @@ class GcodeModel(Model):
                     index_list += new_indices
                     vertex_list += new_vertices
                     normal_list += new_normals
-                    color_list += list(gline_color) * (len(new_vertices) / 3)
+                    color_list += list(gline_color)[:-1] * (len(new_vertices) / 3)
 
                     prev_is_extruding = True
                     prev_move_x = delta_x
@@ -597,9 +597,9 @@ class GcodeModel(Model):
 
         self.vertex_color_buffer.bind()
         if has_vbo:
-            glColorPointer(4, GL_FLOAT, 0, None)
+            glColorPointer(3, GL_FLOAT, 0, None)
         else:
-            glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
+            glColorPointer(3, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
 
         self.vertex_normal_buffer.bind()
         if has_vbo:
