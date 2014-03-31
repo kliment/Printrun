@@ -16,11 +16,11 @@
 import platform
 import traceback
 
-if platform.system == "Darwin":
+if platform.system() == "Darwin":
     from .osx import inhibit_sleep_osx, deinhibit_sleep_osx
     inhibit_sleep = inhibit_sleep_osx
     deinhibit_sleep = deinhibit_sleep_osx
-elif platform.system == "Windows":
+elif platform.system() == "Windows":
     import ctypes
     ES_CONTINUOUS = 0x80000000
     ES_SYSTEM_REQUIRED = 0x00000001
