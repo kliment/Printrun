@@ -846,7 +846,7 @@ class pronsole(cmd.Cmd):
             if not self.processing_rc and not self.processing_args:
                 self.save_in_rc("set " + var, "set %s %s" % (var, value))
         except AttributeError:
-            logging.warning("Unknown variable '%s'" % var)
+            logging.debug("Unknown variable '%s'" % var)
         except ValueError, ve:
             self.logError("Bad value for variable '%s', expecting %s (%s)" % (var, repr(t)[1:-1], ve.args[0]))
 
