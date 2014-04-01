@@ -40,7 +40,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
 
     if standalone_mode:
         gauges_base_line = base_line + 10
-    elif mini_mode:
+    elif mini_mode and root.display_graph:
         gauges_base_line = base_line + 6
     else:
         gauges_base_line = base_line + 5
