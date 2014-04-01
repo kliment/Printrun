@@ -107,8 +107,7 @@ class Excluder(object):
     def pop_window(self, gcode, *args, **kwargs):
         if not self.window:
             self.window = ExcluderWindow(self, *args, **kwargs)
-            self.window.p.addfile(gcode)
-            self.window.p.layerup()
+            self.window.p.addfile(gcode, True)
             self.window.Bind(wx.EVT_CLOSE, self.close_window)
             self.window.Show()
         else:
