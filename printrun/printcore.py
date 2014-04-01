@@ -277,10 +277,10 @@ class printcore():
                 else: empty_lines = 0
                 if line.startswith(tuple(self.greetings)) \
                    or line.startswith('ok') or "T:" in line:
+                    self.online = True
                     if self.onlinecb:
                         try: self.onlinecb()
                         except: traceback.print_exc()
-                    self.online = True
                     return
 
     def _listen(self):
