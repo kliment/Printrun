@@ -971,11 +971,15 @@ class pronsole(cmd.Cmd):
     #  --------------------------------------------------------------
 
     def add_cmdline_arguments(self, parser):
+        parser.add_argument('-v', '--verbose', help = _("increase verbosity"), action = "store_true")
         parser.add_argument('-c', '--conf', '--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
         parser.add_argument('-e', '--execute', help = _("executes command after configuration/.pronsolerc is loaded ; macros/settings from these commands are not autosaved"), action = "append", default = [])
         parser.add_argument('filename', nargs='?', help = _("file to load"))
 
     def process_cmdline_arguments(self, args):
+        if args.verbose:
+            logger = logging.getLogger()
+            logger.setLevel(logging.DEBUG)
         for config in args.conf:
             self.load_rc(config)
         if not self.rc_loaded:
