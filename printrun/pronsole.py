@@ -479,7 +479,7 @@ class pronsole(cmd.Cmd):
         self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
                            "fallback": "%(bold)sPC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
-                           "online": "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
+                           "online": "%(bold)sT:%(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -601,9 +601,9 @@ class pronsole(cmd.Cmd):
                 progress = 0.0
             specials["progress"] = str(progress)
             if self.p.printing or self.sdprinting:
-                specials["progress_fancy"] = str(progress) + "%"
+                specials["progress_fancy"] = " " + str(progress) + "%"
             else:
-                specials["progress_fancy"] = "?%"
+                specials["progress_fancy"] = ""
             specials["bold"] = "\033[01m"
             specials["normal"] = "\033[00m"
             return promptstr % specials
