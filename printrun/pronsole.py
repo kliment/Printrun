@@ -480,7 +480,7 @@ class pronsole(cmd.Cmd):
         self.extra_print_time = 0
         self.silent = False
         self.commandprefixes = 'MGT$'
-        self.promptstrs = {"offline": "%(bold)suninitialized>%(normal)s ",
+        self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
                            "fallback": "%(bold)sPC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
                            "online": "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
