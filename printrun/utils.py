@@ -185,6 +185,18 @@ def hexcolor_to_float(color, components):
     return tuple(round(float(int(color[i:i + ndigits], 16)) / div, 2)
                  for i in range(0, numel, ndigits))
 
+def check_rgb_color(color):
+    if len(color[1:]) % 3 != 0:
+        ex = ValueError(_("Color must be specified as #RGB"))
+        ex.from_validator = True
+        raise ex
+
+def check_rgba_color(color):
+    if len(color[1:]) % 4 != 0:
+        ex = ValueError(_("Color must be specified as #RGBA"))
+        ex.from_validator = True
+        raise ex
+
 tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)")
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
