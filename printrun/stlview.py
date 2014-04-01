@@ -109,6 +109,7 @@ class StlViewPanel(wxGLPanel):
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
         glEnable(GL_LIGHT1)
+        glDisable(GL_LIGHT2)
 
         glLightfv(GL_LIGHT0, GL_POSITION, vec(.5, .5, 1, 0))
         glLightfv(GL_LIGHT0, GL_SPECULAR, vec(.5, .5, 1, 1))
