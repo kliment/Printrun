@@ -47,7 +47,6 @@ except:
 
 from printrun.gui.widgets import SpecialButton, MacroEditor, \
     PronterOptions, ButtonEdit
-from serial import SerialException
 
 winsize = (800, 500)
 layerindex = 0
@@ -1017,24 +1016,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.paused = 0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
-        try:
-            self.p.connect(port, baud)
-        except SerialException as e:
-            # Currently, there is no errno, but it should be there in the future
-            if e.errno == 2:
-                self.logError(_("Error: You are trying to connect to a non-existing port."))
-            elif e.errno == 8:
-                self.logError(_("Error: You don't have permission to open %s.") % port)
-                self.logError(_("You might need to add yourself to the dialout group."))
-            else:
-                self.logError(traceback.format_exc())
-            # Kill the scope anyway
-            return
-        except OSError as e:
-            if e.errno == 2:
-                self.logError(_("Error: You are trying to connect to a non-existing port."))
-            else:
-                self.logError(traceback.format_exc())
+        if not self.connect_to_printer(port, baud):
             return
         self.statuscheck = True
         if port != self.settings.port:

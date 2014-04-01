@@ -28,6 +28,8 @@ import logging
 import traceback
 import re
 
+from serial import SerialException
+
 from . import printcore
 from .utils import install_locale, run_command, get_command_output, \
     format_time, format_duration, RemainingTimeEstimator, \
@@ -1006,6 +1008,28 @@ class pronsole(cmd.Cmd):
     #  Printer connection handling
     #  --------------------------------------------------------------
 
+    def connect_to_printer(self, port, baud):
+        try:
+            self.p.connect(port, baud)
+            return True
+        except SerialException as e:
+            # Currently, there is no errno, but it should be there in the future
+            if e.errno == 2:
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
+            elif e.errno == 8:
+                self.logError(_("Error: You don't have permission to open %s.") % port)
+                self.logError(_("You might need to add yourself to the dialout group."))
+            else:
+                self.logError(traceback.format_exc())
+            # Kill the scope anyway
+            return False
+        except OSError as e:
+            if e.errno == 2:
+                self.logError(_("Error: You are trying to connect to a non-existing port."))
+            else:
+                self.logError(traceback.format_exc())
+            return False
+
     def do_connect(self, l):
         a = l.split()
         p = self.scanserial()
@@ -1031,7 +1055,7 @@ class pronsole(cmd.Cmd):
         if baud != self.settings.baudrate:
             self.settings.baudrate = baud
             self.save_in_rc("set baudrate", "set baudrate %d" % baud)
-        self.p.connect(port, baud)
+        self.connect_to_printer(port, baud)
 
     def help_connect(self):
         self.log("Connect to printer")
