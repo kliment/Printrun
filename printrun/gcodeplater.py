@@ -59,7 +59,10 @@ class GcodePlater(Plater):
         gcode = gcoder.GCode(open(filename, "rU"),
                              get_home_pos(self.build_dimensions))
         model = actors.GcodeModel()
-        model.load_data(gcode)
+        generator = model.load_data(gcode)
+        generator_output = generator.next()
+        while generator_output is not None:
+            generator_output = generator.next()
         obj = gcview.GCObject(model)
         obj.gcode = gcode
         obj.dims = [gcode.xmin, gcode.xmax,
