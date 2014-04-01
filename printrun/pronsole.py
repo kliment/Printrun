@@ -1096,7 +1096,7 @@ class pronsole(cmd.Cmd):
         if not filename:
             self.logError("No file name given.")
             return
-        self.logError("Loading file: " + filename)
+        self.log("Loading file: " + filename)
         if not os.path.exists(filename):
             self.logError("File not found!")
             return
