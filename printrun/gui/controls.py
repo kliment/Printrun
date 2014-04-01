@@ -45,7 +45,10 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     else:
         gauges_base_line = base_line + 5
     tempdisp_line = gauges_base_line + (2 if root.display_gauges else 0)
-    e_base_line = base_line + 3 if mini_mode else base_line + 2
+    if mini_mode and root.display_graph:
+        e_base_line = base_line + 3
+    else:
+        e_base_line = base_line + 2
 
     pos_mapping = {
         "htemp_label": (base_line + 0, 0),
