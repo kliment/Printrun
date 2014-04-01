@@ -1165,7 +1165,7 @@ class pronsole(cmd.Cmd):
         if l[0] == "set":
             settings = 1
         else:
-            self.log(_("Skeining file: %s") % l[0])
+            self.log(_("Slicing file: %s") % l[0])
             if not(os.path.exists(l[0])):
                 self.logError(_("File not found!"))
                 return
@@ -1176,7 +1176,6 @@ class pronsole(cmd.Cmd):
                 run_command(command, blocking = True)
             else:
                 command = self.settings.slicecommand
-                self.log(_("Slicing: ") % command)
                 stl_name = l[0]
                 gcode_name = stl_name.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")
                 run_command(command,
