@@ -238,9 +238,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.settings.monitor:
             self.update_monitor()
 
-    ## --------------------------------------------------------------
-    ## Main interface handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Main interface handling
+    #  --------------------------------------------------------------
 
     def reset_ui(self):
         MainWindow.reset_ui(self)
@@ -321,9 +321,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.gwindow.Destroy)
         wx.CallAfter(self.Destroy)
 
-    ## --------------------------------------------------------------
-    ## Main interface actions
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Main interface actions
+    #  --------------------------------------------------------------
 
     def do_monitor(self, l = ""):
         if l.strip() == "":
@@ -610,9 +610,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.zb.repeatLast()
         self.xyb.repeatLast()
 
-    ## --------------------------------------------------------------
-    ## Console handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Console handling
+    #  --------------------------------------------------------------
 
     def catchprint(self, l):
         """Called by the Tee operator to write to the log box"""
@@ -652,9 +652,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.commandbox.history.append(command)
         self.commandbox.histindex = len(self.commandbox.history)
 
-    ## --------------------------------------------------------------
-    ## Main menu handling & actions
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Main menu handling & actions
+    #  --------------------------------------------------------------
 
     def create_menu(self):
         """Create main menu"""
@@ -782,9 +782,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
         wx.AboutBox(info)
 
-    ## --------------------------------------------------------------
-    ## Settings & command line handling (including update callbacks)
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Settings & command line handling (including update callbacks)
+    #  --------------------------------------------------------------
 
     def _add_settings(self, size):
         self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
@@ -912,9 +912,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             else:
                 wx.CallAfter(self.graph.StopPlotting)
 
-    ## --------------------------------------------------------------
-    ## Statusbar handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Statusbar handling
+    #  --------------------------------------------------------------
 
     def statuschecker(self):
         while self.statuscheck:
@@ -973,9 +973,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 pass
         wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
 
-    ## --------------------------------------------------------------
-    ## Interface lock handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Interface lock handling
+    #  --------------------------------------------------------------
 
     def lock(self, event = None, force = None):
         if force is not None:
@@ -989,9 +989,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             for panel in self.panels:
                 panel.Enable()
 
-    ## --------------------------------------------------------------
-    ## Printer connection handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Printer connection handling
+    #  --------------------------------------------------------------
 
     def connect(self, event = None):
         self.log(_("Connecting..."))
@@ -1095,9 +1095,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             wx.CallAfter(self.toolbarsizer.Layout)
         dlg.Destroy()
 
-    ## --------------------------------------------------------------
-    ## Print/upload handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Print/upload handling
+    #  --------------------------------------------------------------
 
     def on_startprint(self):
         wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
@@ -1195,9 +1195,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.on_startprint()
         self.p.startprint(self.predisconnect_mainqueue, self.p.queueindex)
 
-    ## --------------------------------------------------------------
-    ## File loading handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  File loading handling
+    #  --------------------------------------------------------------
 
     def filesloaded(self):
         dlg = wx.SingleChoiceDialog(self, _("Select the file to print"), _("Pick SD file"), self.sdfiles)
@@ -1447,9 +1447,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         # finalized model from the main visualization
         self.gwindow.p.addfile(gcode)
 
-    ## --------------------------------------------------------------
-    ## Printcore callbacks
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Printcore callbacks
+    #  --------------------------------------------------------------
 
     def process_host_command(self, command):
         """Override host command handling"""
@@ -1697,9 +1697,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             except:
                 pass
 
-    ## --------------------------------------------------------------
-    ## Custom buttons handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Custom buttons handling
+    #  --------------------------------------------------------------
 
     def cbuttons_reload(self):
         allcbs = getattr(self, "custombuttons_widgets", [])
@@ -2002,9 +2002,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.cur_button = None
             raise
 
-    ## --------------------------------------------------------------
-    ## Macros handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Macros handling
+    #  --------------------------------------------------------------
 
     def start_macro(self, macro_name, old_macro_definition = ""):
         if not self.processing_rc:
@@ -2084,9 +2084,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         for macro in self.macros.keys():
             self.Bind(wx.EVT_MENU, lambda x, m = macro: self.start_macro(m, self.macros[m]), self.macros_menu.Append(-1, macro))
 
-    ## --------------------------------------------------------------
-    ## Slic3r integration
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Slic3r integration
+    #  --------------------------------------------------------------
 
     def load_slic3r_configs(self, menus):
         """List Slic3r configurations and create menu"""

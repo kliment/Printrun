@@ -483,9 +483,9 @@ class pronsole(cmd.Cmd):
                            "macro": "%(bold)s..>%(normal)s ",
                            "online": "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
 
-    ## --------------------------------------------------------------
-    ## General console handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  General console handling
+    #  --------------------------------------------------------------
 
     def postloop(self):
         self.p.disconnect()
@@ -696,9 +696,9 @@ class pronsole(cmd.Cmd):
     def help_exit(self):
         self.log(_("Disconnects from the printer and exits the program."))
 
-    ## --------------------------------------------------------------
-    ## Macro handling
-    ## --------------------------------------------------------------
+    # --------------------------------------------------------------
+    # Macro handling
+    # --------------------------------------------------------------
 
     def complete_macro(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
@@ -835,9 +835,9 @@ class pronsole(cmd.Cmd):
         else:
             self.logError("Macro '" + macro_name + "' is not defined")
 
-    ## --------------------------------------------------------------
-    ## Configuration handling
-    ## --------------------------------------------------------------
+    # --------------------------------------------------------------
+    # Configuration handling
+    # --------------------------------------------------------------
 
     def set(self, var, str):
         try:
@@ -955,9 +955,9 @@ class pronsole(cmd.Cmd):
         finally:
             del rci, rco
 
-    ## --------------------------------------------------------------
-    ## Configuration update callbacks
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Configuration update callbacks
+    #  --------------------------------------------------------------
 
     def update_build_dimensions(self, param, value):
         self.build_dimensions_list = parse_build_dimensions(value)
@@ -966,9 +966,9 @@ class pronsole(cmd.Cmd):
     def update_tcp_streaming_mode(self, param, value):
         self.p.tcp_streaming_mode = self.settings.tcp_streaming_mode
 
-    ## --------------------------------------------------------------
-    ## Command line options handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Command line options handling
+    #  --------------------------------------------------------------
 
     def add_cmdline_arguments(self, parser):
         parser.add_argument('-c', '--conf', '--config', help = _("load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"), action = "append", default = [])
@@ -998,9 +998,9 @@ class pronsole(cmd.Cmd):
         args = parser.parse_args(args = args)
         self.process_cmdline_arguments(args)
 
-    ## --------------------------------------------------------------
-    ## Printer connection handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Printer connection handling
+    #  --------------------------------------------------------------
 
     def do_connect(self, l):
         a = l.split()
@@ -1085,9 +1085,9 @@ class pronsole(cmd.Cmd):
         self.log("Blocks until printer is online")
         self.log("Warning: if something goes wrong, this can block pronsole forever")
 
-    ## --------------------------------------------------------------
-    ## File loading handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  File loading handling
+    #  --------------------------------------------------------------
 
     def do_load(self, filename):
         self._do_load(filename)
@@ -1176,9 +1176,9 @@ class pronsole(cmd.Cmd):
         self.log(_("slice filename.stl view - create gcode file and view using skeiniso (if using skeinforge)"))
         self.log(_("slice set - adjust slicer settings"))
 
-    ## --------------------------------------------------------------
-    ## Print/upload handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Print/upload handling
+    #  --------------------------------------------------------------
 
     def do_upload(self, l):
         names = l.split()
@@ -1372,9 +1372,9 @@ class pronsole(cmd.Cmd):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.sdfiles if i.startswith(text)]
 
-    ## --------------------------------------------------------------
-    ## Printcore callbacks
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Printcore callbacks
+    #  --------------------------------------------------------------
 
     def startcb(self, resuming = False):
         self.starttime = time.time()
@@ -1464,9 +1464,9 @@ class pronsole(cmd.Cmd):
     def help_eta(self):
         self.log(_("Displays estimated remaining print time."))
 
-    ## --------------------------------------------------------------
-    ## Temperature handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Temperature handling
+    #  --------------------------------------------------------------
 
     def set_temp_preset(self, key, value):
         if not key.startswith("bed"):
@@ -1600,9 +1600,9 @@ class pronsole(cmd.Cmd):
         self.log(_("monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"))
         self.log(_("monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"))
 
-    ## --------------------------------------------------------------
-    ## Manual printer controls
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Manual printer controls
+    #  --------------------------------------------------------------
 
     def do_tool(self, l):
         tool = None
@@ -1803,9 +1803,9 @@ class pronsole(cmd.Cmd):
     def help_off(self):
         self.log(_("Turns off everything on the printer"))
 
-    ## --------------------------------------------------------------
-    ## Host commands handling
-    ## --------------------------------------------------------------
+    #  --------------------------------------------------------------
+    #  Host commands handling
+    #  --------------------------------------------------------------
 
     def process_host_command(self, command):
         """Override host command handling"""
