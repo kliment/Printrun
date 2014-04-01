@@ -349,10 +349,17 @@ class Settings(object):
             return object.__getattribute__(self, name)
         return getattr(self, "_" + name).value
 
-    def _add(self, setting, callback = None):
+    def _add(self, setting, callback = None, validate = None,
+             alias = None, autocomplete_list = None):
         setattr(self, setting.name, setting)
         if callback:
             setattr(self, "_" + setting.name + "_cb", callback)
+        if validate:
+            setattr(self, "_" + setting.name + "_validate", validate)
+        if alias:
+            setattr(self, "_" + setting.name + "_alias", alias)
+        if autocomplete_list:
+            setattr(self, "_" + setting.name + "_list", autocomplete_list)
 
     def _set(self, key, value):
         try:
