@@ -852,9 +852,12 @@ class pronsole(cmd.Cmd):
             if not self.processing_rc and not self.processing_args:
                 self.save_in_rc("set " + var, "set %s %s" % (var, value))
         except AttributeError:
-            logging.debug("Unknown variable '%s'" % var)
+            logging.debug(_("Unknown variable '%s'") % var)
         except ValueError, ve:
-            self.logError("Bad value for variable '%s', expecting %s (%s)" % (var, repr(t)[1:-1], ve.args[0]))
+            if hasattr(ve, "from_validator"):
+                self.logError(_("Bad value %s for variable '%s': %s") % (str, var, ve.args[0]))
+            else:
+                self.logError(_("Bad value for variable '%s', expecting %s (%s)") % (var, repr(t)[1:-1], ve.args[0]))
 
     def do_set(self, argl):
         args = argl.split(None, 1)
