@@ -291,13 +291,13 @@ class BuildDimensionsSetting(wxSetting):
         self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
 
 class Settings(object):
-    def _baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
+    def __baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
 
     def __init__(self, root):
         # defaults here.
         # the initial value determines the type
         self._add(StringSetting("port", "", _("Serial port"), _("Port used to communicate with printer")))
-        self._add(ComboSetting("baudrate", 115200, self._baudrate_list(), _("Baud rate"), _("Communications Speed")))
+        self._add(ComboSetting("baudrate", 115200, self.__baudrate_list(), _("Baud rate"), _("Communications Speed")))
         self._add(BooleanSetting("tcp_streaming_mode", False, _("TCP streaming mode"), _("When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands. This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
         self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"))
         self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (deg C)"), "Printer"))
@@ -353,23 +353,23 @@ class Settings(object):
              alias = None, autocomplete_list = None):
         setattr(self, setting.name, setting)
         if callback:
-            setattr(self, "_" + setting.name + "_cb", callback)
+            setattr(self, "__" + setting.name + "_cb", callback)
         if validate:
-            setattr(self, "_" + setting.name + "_validate", validate)
+            setattr(self, "__" + setting.name + "_validate", validate)
         if alias:
-            setattr(self, "_" + setting.name + "_alias", alias)
+            setattr(self, "__" + setting.name + "_alias", alias)
         if autocomplete_list:
-            setattr(self, "_" + setting.name + "_list", autocomplete_list)
+            setattr(self, "__" + setting.name + "_list", autocomplete_list)
 
     def _set(self, key, value):
         try:
-            value = getattr(self, "_%s_alias" % key)()[value]
+            value = getattr(self, "__%s_alias" % key)()[value]
         except KeyError:
             pass
         except AttributeError:
             pass
         try:
-            getattr(self, "_%s_validate" % key)(value)
+            getattr(self, "__%s_validate" % key)(value)
         except AttributeError:
             pass
         t = type(getattr(self, key))
@@ -378,7 +378,7 @@ class Settings(object):
         try:
             cb = None
             try:
-                cb = getattr(self, "_%s_cb" % key)
+                cb = getattr(self, "__%s_cb" % key)
             except AttributeError:
                 pass
             if cb is not None: cb(key, value)
@@ -389,11 +389,11 @@ class Settings(object):
 
     def _tabcomplete(self, key):
         try:
-            return getattr(self, "_%s_list" % key)()
+            return getattr(self, "__%s_list" % key)()
         except AttributeError:
             pass
         try:
-            return getattr(self, "_%s_alias" % key)().keys()
+            return getattr(self, "__%s_alias" % key)().keys()
         except AttributeError:
             pass
         return []
