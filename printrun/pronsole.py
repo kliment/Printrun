@@ -291,10 +291,6 @@ class BuildDimensionsSetting(wxSetting):
         self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
 
 class Settings(object):
-    #def _temperature_alias(self): return {"pla":210, "abs":230, "off":0}
-    #def _temperature_validate(self, v):
-    #    if v < 0: raise ValueError("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
-    #def _bedtemperature_alias(self): return {"pla":60, "abs":110, "off":0}
     def _baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
 
     def __init__(self, root):
@@ -587,7 +583,7 @@ class pronsole(cmd.Cmd):
             promptstr = self.promptstrs["online"]
         else:
             promptstr = self.promptstrs["fallback"]
-        if not "%" in promptstr:
+        if "%" not in promptstr:
             return promptstr
         else:
             specials = {}
@@ -948,9 +944,9 @@ class pronsole(cmd.Cmd):
             if rci is not None:
                 rci.close()
             rco.close()
-            #if definition != "":
+            # if definition != "":
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
-            #else:
+            # else:
             #    self.log("Removed '"+key+"' from '"+self.rc_filename+"'")
         except Exception, e:
             self.logError("Saving failed for ", key + ":", str(e))
@@ -1349,7 +1345,7 @@ class pronsole(cmd.Cmd):
             self.log(_("Starting print"))
             self.p.send_now("M24")
             self.sdprinting = 1
-            #self.recvlisteners.remove(self.waitforsdresponse)
+            # self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "Done printing file" in l:
             self.log(l)
@@ -1357,7 +1353,7 @@ class pronsole(cmd.Cmd):
             self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "SD printing byte" in l:
-            #M27 handler
+            # M27 handler
             try:
                 resp = l.split()
                 vals = resp[-1].split("/")
@@ -1606,7 +1602,6 @@ class pronsole(cmd.Cmd):
                 if self.sdprinting:
                     self.p.send_now("M27")
                 time.sleep(interval)
-                #print (self.tempreadings.replace("\r", "").replace("T", "Hotend").replace("B", "Bed").replace("\n", "").replace("ok ", ""))
                 if self.p.printing:
                     preface = _("Print progress: ")
                     progress = 100 * float(self.p.queueindex) / len(self.p.mainqueue)

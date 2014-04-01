@@ -68,13 +68,16 @@ class printcore():
         self.baud = None
         self.port = None
         self.analyzer = gcoder.GCode()
-        self.printer = None  # Serial instance connected to the printer,
-                             # should be None when disconnected
-        self.clear = 0  # clear to send, enabled after responses
-        self.online = False  # The printer has responded to the initial command
-                             # and is active
-        self.printing = False  # is a print currently running, true if printing
-                               # , false if paused
+        # Serial instance connected to the printer, should be None when
+        # disconnected
+        self.printer = None
+        # clear to send, enabled after responses
+        # FIXME: should probably be changed to a sliding window approach
+        self.clear = 0
+        # The printer has responded to the initial command and is active
+        self.online = False
+        # is a print currently running, true if printing, false if paused
+        self.printing = False
         self.mainqueue = None
         self.priqueue = Queue(0)
         self.queueindex = 0
@@ -298,7 +301,7 @@ class printcore():
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
             if line.startswith('ok') and "T:" in line and self.tempcb:
-                #callback for temp, status, whatever
+                # callback for temp, status, whatever
                 try: self.tempcb(line)
                 except: traceback.print_exc()
             elif line.startswith('Error'):
@@ -313,7 +316,6 @@ class printcore():
                     try:
                         toresend = int(linewords.pop(0))
                         self.resendfrom = toresend
-                        #print str(toresend)
                         break
                     except:
                         pass
@@ -473,7 +475,7 @@ class printcore():
         self._stop_sender()
         try:
             if self.startcb:
-                #callback for printing started
+                # callback for printing started
                 try: self.startcb(resuming)
                 except:
                     self.logError(_("Print start callback failed with:") +
@@ -484,7 +486,7 @@ class printcore():
             self.log.clear()
             self.sent = []
             if self.endcb:
-                #callback for printing done
+                # callback for printing done
                 try: self.endcb()
                 except:
                     self.logError(_("Print end callback failed with:") +
