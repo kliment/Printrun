@@ -107,7 +107,7 @@ def prepare_command(command, replaces = None):
 def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
     command = prepare_command(command, replaces)
     if blocking:
-        return subprocess.call(command, stderr = stderr, stdout = stdout)
+        return subprocess.call(command)
     else:
         return subprocess.Popen(command, stderr = stderr, stdout = stdout)
 
