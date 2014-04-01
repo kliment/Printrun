@@ -455,6 +455,7 @@ class pronsole(cmd.Cmd):
         self.sdfiles = []
         self.paused = False
         self.sdprinting = 0
+        self.uploading = 0  # Unused, just for pronterface generalization
         self.temps = {"pla": "185", "abs": "230", "off": "0"}
         self.bedtemps = {"pla": "60", "abs": "110", "off": "0"}
         self.percentdone = 0
