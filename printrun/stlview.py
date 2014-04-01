@@ -57,6 +57,8 @@ class stlview(object):
 
 class StlViewPanel(wxGLPanel):
 
+    do_lights = False
+
     def __init__(self, parent, size, id = wx.ID_ANY,
                  build_dimensions = None, circular = False):
         super(StlViewPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0)
@@ -109,7 +111,6 @@ class StlViewPanel(wxGLPanel):
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
         glEnable(GL_LIGHT1)
-        glDisable(GL_LIGHT2)
 
         glLightfv(GL_LIGHT0, GL_POSITION, vec(.5, .5, 1, 0))
         glLightfv(GL_LIGHT0, GL_SPECULAR, vec(.5, .5, 1, 1))
@@ -117,6 +118,7 @@ class StlViewPanel(wxGLPanel):
         glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 0, .5, 0))
         glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, vec(1, 1, 1, 1))
+        glShadeModel(GL_SMOOTH)
 
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(1, 1, 1, 1))

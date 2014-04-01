@@ -45,6 +45,7 @@ class wxGLPanel(wx.Panel):
 
     orthographic = True
     color_background = (0.98, 0.98, 0.78, 1)
+    do_lights = True
 
     def __init__(self, parent, id, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0,
@@ -172,6 +173,8 @@ class wxGLPanel(wx.Panel):
             self.update_object_resize()
 
     def setup_lights(self):
+        if not self.do_lights:
+            return
         glEnable(GL_LIGHTING)
         glDisable(GL_LIGHT0)
         glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.4, 0.4, 0.4, 1.0))
