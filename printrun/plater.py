@@ -214,12 +214,13 @@ class StlPlater(Plater):
 
     def __init__(self, filenames = [], size = (800, 580), callback = None,
                  parent = None, build_dimensions = None, circular_platform = False,
-                 simarrange_path = None):
+                 simarrange_path = None, antialias_samples = 0):
         super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         if glview:
             viewer = stlview.StlViewPanel(self, (580, 580),
                                           build_dimensions = self.build_dimensions,
-                                          circular = circular_platform)
+                                          circular = circular_platform,
+                                          antialias_samples = antialias_samples)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
         self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
