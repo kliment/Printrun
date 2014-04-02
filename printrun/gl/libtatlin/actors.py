@@ -562,7 +562,8 @@ class GcodeModel(Model):
         glEnableClientState(GL_NORMAL_ARRAY)
 
         has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
-        self._display_travels(has_vbo)
+        if self.display_travels:
+            self._display_travels(has_vbo)
 
         glEnable(GL_LIGHTING)
         glEnableClientState(GL_COLOR_ARRAY)
