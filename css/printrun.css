@@ -137,6 +137,7 @@ h2 {
 
 .container.home {
     margin-bottom: 30px;
+    width: 960px;
 }
 
 .home .row .col-md-4, .home .row .col-md-8 {
