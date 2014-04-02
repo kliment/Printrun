@@ -559,13 +559,13 @@ class GcodeModel(Model):
         glPushMatrix()
         glTranslatef(self.offset_x, self.offset_y, 0)
         glEnableClientState(GL_VERTEX_ARRAY)
-        glEnableClientState(GL_NORMAL_ARRAY)
 
         has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
         if self.display_travels:
             self._display_travels(has_vbo)
 
         glEnable(GL_LIGHTING)
+        glEnableClientState(GL_NORMAL_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
         glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
