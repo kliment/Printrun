@@ -170,6 +170,7 @@ h2 {
         margin-right: 10px;
         padding-left: 0;
         padding-right: 0;
+        float: left;
     }
 
     .home .row .col-md-8 {
