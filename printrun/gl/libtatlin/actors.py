@@ -716,6 +716,7 @@ class GcodeModelLight(Model):
     color_current = (0, 0.9, 1.0, 0.8)
     color_current_printed = (0.1, 0.4, 0, 0.8)
 
+    buffers_created = False
     use_vbos = True
     loaded = False
 
@@ -834,8 +835,12 @@ class GcodeModelLight(Model):
         with self.lock:
             self.layers_loaded = self.max_layers
             self.initialized = True
+            if self.buffers_created:
+                self.vertex_buffer.delete()
+                self.vertex_color_buffer.delete()
             self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
             self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
+            self.buffers_created = True
 
     def display(self, mode_2d=False):
         with self.lock:
