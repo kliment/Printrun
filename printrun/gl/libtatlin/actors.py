@@ -301,6 +301,8 @@ class GcodeModel(Model):
     color_current = (0, 0.9, 1.0, 1.0)
     color_current_printed = (0.1, 0.4, 0, 1.0)
 
+    display_travels = True
+
     use_vbos = True
     loaded = False
 
