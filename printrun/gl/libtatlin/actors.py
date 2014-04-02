@@ -306,6 +306,9 @@ class GcodeModel(Model):
     use_vbos = True
     loaded = False
 
+    path_halfwidth = 0.2
+    path_halfheight = 0.2
+
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
@@ -378,8 +381,9 @@ class GcodeModel(Model):
                     move_normal_x = - delta_y / norm
                     move_normal_y = delta_x / norm
 
-                    path_halfwidth = 0.2
-                    path_halfheight = 0.12
+                    # FIXME: compute these dynamically
+                    path_halfwidth = self.path_halfwidth * 1.2
+                    path_halfheight = self.path_halfheight * 1.2
 
                     new_indices = []
                     new_vertices = []
