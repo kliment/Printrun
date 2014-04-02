@@ -584,10 +584,7 @@ class GcodeModel(Model):
 
     def _display_travels(self, has_vbo):
         self.travel_buffer.bind()
-        if has_vbo:
-            glVertexPointer(3, GL_FLOAT, 0, None)
-        else:
-            glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
+        glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
 
         # TODO: show current layer travels in a different color
         end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
@@ -616,22 +613,13 @@ class GcodeModel(Model):
 
     def _display_movements(self, has_vbo):
         self.vertex_buffer.bind()
-        if has_vbo:
-            glVertexPointer(3, GL_FLOAT, 0, None)
-        else:
-            glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
+        glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
 
         self.vertex_color_buffer.bind()
-        if has_vbo:
-            glColorPointer(3, GL_FLOAT, 0, None)
-        else:
-            glColorPointer(3, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
+        glColorPointer(3, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
 
         self.vertex_normal_buffer.bind()
-        if has_vbo:
-            glNormalPointer(GL_FLOAT, 0, None)
-        else:
-            glNormalPointer(GL_FLOAT, 0, self.vertex_normal_buffer.ptr)
+        glNormalPointer(GL_FLOAT, 0, self.vertex_normal_buffer.ptr)
 
         self.index_buffer.bind()
 
