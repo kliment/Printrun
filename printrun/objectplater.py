@@ -226,7 +226,7 @@ class Plater(wx.Frame):
         i = self.l.GetSelection()
         if i != -1:
             m = self.models[self.l.GetString(i)]
-            m.offsets[2] = -1.0 * min(m.facetsminz)[0]
+            m.offsets[2] = -m.dims[4]
             self.Refresh()
 
     def delete(self, event):
