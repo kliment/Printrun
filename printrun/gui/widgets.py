@@ -139,7 +139,7 @@ class PronterOptionsDialog(wx.Dialog):
         all_settings = pronterface.settings._all_settings()
         group_list = []
         groups = {}
-        for group in ["Printer", "UI", "External"]:
+        for group in ["Printer", "UI", "3D", "Colors", "External"]:
             group_list.append(group)
             groups[group] = []
         for setting in all_settings:
