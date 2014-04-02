@@ -157,9 +157,8 @@ class Plater(wx.Frame):
                 width = abs(self.models[i].dims[0] - self.models[i].dims[1])
                 height = abs(self.models[i].dims[2] - self.models[i].dims[3])
                 p.add_rect(width, height, data = i)
-            # FIXME: probably wrong, not taking offsets into account
-            centerx = self.build_dimensions[0] / 2
-            centery = self.build_dimensions[1] / 2
+            centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]
+            centery = self.build_dimensions[1] / 2 + self.build_dimensions[4]
             rects = p.pack(padding = separation,
                            center = packer.Vector2(centerx, centery))
             for rect in rects:
