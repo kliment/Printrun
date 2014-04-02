@@ -303,6 +303,7 @@ class GcodeModel(Model):
 
     display_travels = True
 
+    buffers_created = False
     use_vbos = True
     loaded = False
 
@@ -512,8 +513,8 @@ class GcodeModel(Model):
 
         self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers + 1
-        self.initialized = False
         self.loaded = True
+        self.initialized = False
 
         t_end = time.time()
 
@@ -551,13 +552,21 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
+        self.layers_loaded = self.max_layers
+        self.initialized = True
+        if self.buffers_created:
+            self.travel_buffer.delete()
+            self.index_buffer.delete()
+            self.vertex_buffer.delete()
+            self.vertex_color_buffer.delete()
+            self.vertex_normal_buffer.delete()
         self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
         self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
                                       target = GL_ELEMENT_ARRAY_BUFFER)
         self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
         self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
         self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
-        self.initialized = True
+        self.buffers_created = True
 
     def display(self, mode_2d=False):
         glPushMatrix()
@@ -590,12 +599,14 @@ class GcodeModel(Model):
         self.travel_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
 
+        # Prevent race condition by using the number of currently loaded layers
+        max_layers = self.layers_loaded
         # TODO: show current layer travels in a different color
-        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        end = self.layer_stops[min(self.num_layers_to_draw, max_layers)]
         end_index = self.count_travel_indices[end]
         glColor4f(*self.color_travel)
         if self.only_current:
-            if self.num_layers_to_draw < self.max_layers:
+            if self.num_layers_to_draw < max_layers:
                 end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
                 start_index = self.count_travel_indices[end_prev_layer + 1]
                 glDrawArrays(GL_LINES, start_index, end_index - start_index + 1)
@@ -627,13 +638,16 @@ class GcodeModel(Model):
 
         self.index_buffer.bind()
 
+        # Prevent race condition by using the number of currently loaded layers
+        max_layers = self.layers_loaded
+
         start = 1
-        layer_selected = self.num_layers_to_draw <= self.max_layers
+        layer_selected = self.num_layers_to_draw <= max_layers
         if layer_selected:
             end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
         else:
             end_prev_layer = 0
-        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        end = self.layer_stops[min(self.num_layers_to_draw, max_layers)]
 
         glDisableClientState(GL_COLOR_ARRAY)
 
