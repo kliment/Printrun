@@ -346,6 +346,13 @@ h2 {
     }
 }
 
+@media (max-width: 768px) {
+    .carousel-caption {
+        width: 600px;
+        margin-left: -300px;
+    }
+}
+
 /* MAIN
 -------------------------------------------------- */
 
