@@ -575,7 +575,7 @@ class SettingsFrame(wx.Frame):
     def load_file(self, event):
         dlg = wx.FileDialog(self, ("Open file to print"), style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard(("Slic3r or Skeinforge svg files (;*.svg;*.SVG;);3DLP Zip (;*.3dlp.zip;)"))
-        if(dlg.ShowModal() == wx.ID_OK):
+        if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
             if not(os.path.exists(name)):
                 self.status.SetStatusText(("File not found!"))

@@ -266,7 +266,7 @@ class Plater(wx.Frame):
     def export(self, event):
         dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
         dlg.SetWildcard(self.save_wildcard)
-        if(dlg.ShowModal() == wx.ID_OK):
+        if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
             self.export_to(name)
         dlg.Destroy()

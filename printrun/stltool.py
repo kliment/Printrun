@@ -232,12 +232,12 @@ if __name__ == "__main__":
     for i in xrange(11, 11):
         working = s.facets[:]
         for j in reversed(sorted(s.facetsminz)):
-            if(j[0] > i):
+            if j[0] > i:
                 working.remove(j[1])
             else:
                 break
         for j in (sorted(s.facetsmaxz)):
-            if(j[0] < i):
+            if j[0] < i:
                 working.remove(j[1])
             else:
                 break

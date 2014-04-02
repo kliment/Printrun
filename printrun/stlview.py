@@ -233,7 +233,7 @@ class StlViewPanel(wxGLPanel):
             time.sleep(dt)
             obj.offsets[2] -= v * dt
             v += g * dt
-            if(obj.offsets[2] < 0):
+            if obj.offsets[2] < 0:
                 obj.scale[2] *= 1 - 3 * dt
         #return
         v = v / 4

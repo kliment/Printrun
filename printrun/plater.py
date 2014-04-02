@@ -94,7 +94,7 @@ class showstl(wx.Window):
 
     def move(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
-            if(self.initpos is not None):
+            if self.initpos is not None:
                 currentpos = event.GetPositionTuple()
                 delta = (0.5 * (currentpos[0] - self.initpos[0]),
                          -0.5 * (currentpos[1] - self.initpos[1])

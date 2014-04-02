@@ -711,7 +711,7 @@ class pronsole(cmd.Cmd):
     def complete_macro(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.macros.keys() if i.startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
+        elif len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " "):
             return [i for i in ["/D", "/S"] + self.completenames(text) if i.startswith(text)]
         else:
             return []
@@ -883,7 +883,7 @@ class pronsole(cmd.Cmd):
     def complete_set(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in dir(self.settings) if not i.startswith("_") and i.startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
+        elif len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " "):
             return [i for i in self.settings._tabcomplete(line.split()[1]) if i.startswith(text)]
         else:
             return []
@@ -1071,7 +1071,7 @@ class pronsole(cmd.Cmd):
         self.log("connect <port> <baudrate>")
         self.log("If port and baudrate are not specified, connects to first detected port at 115200bps")
         ports = self.scanserial()
-        if(len(ports)):
+        if ports:
             self.log("Available ports: ", " ".join(ports))
         else:
             self.log("No serial ports were automatically found.")
@@ -1079,7 +1079,7 @@ class pronsole(cmd.Cmd):
     def complete_connect(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.scanserial() if i.startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
+        elif len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " "):
             return [i for i in ["2400", "9600", "19200", "38400", "57600", "115200"] if i.startswith(text)]
         else:
             return []
@@ -1658,7 +1658,7 @@ class pronsole(cmd.Cmd):
         self.log(_("Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."))
 
     def do_move(self, l):
-        if(len(l.split()) < 2):
+        if len(l.split()) < 2:
             self.logError(_("No move specified."))
             return
         if self.p.printing:
@@ -1668,16 +1668,16 @@ class pronsole(cmd.Cmd):
             self.logError(_("Printer is not online. Unable to move."))
             return
         l = l.split()
-        if(l[0].lower() == "x"):
+        if l[0].lower() == "x":
             feed = self.settings.xy_feedrate
             axis = "X"
-        elif(l[0].lower() == "y"):
+        elif l[0].lower() == "y":
             feed = self.settings.xy_feedrate
             axis = "Y"
-        elif(l[0].lower() == "z"):
+        elif l[0].lower() == "z":
             feed = self.settings.z_feedrate
             axis = "Z"
-        elif(l[0].lower() == "e"):
+        elif l[0].lower() == "e":
             feed = self.settings.e_feedrate
             axis = "E"
         else:
@@ -1706,7 +1706,7 @@ class pronsole(cmd.Cmd):
     def complete_move(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in ["X ", "Y ", "Z ", "E "] if i.lower().startswith(text)]
-        elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " ")):
+        elif len(line.split()) == 3 or (len(line.split()) == 2 and line[-1] == " "):
             base = line.split()[-1]
             rlen = 0
             if base.startswith("-"):

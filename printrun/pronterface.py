@@ -1200,7 +1200,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def filesloaded(self):
         dlg = wx.SingleChoiceDialog(self, _("Select the file to print"), _("Pick SD file"), self.sdfiles)
-        if(dlg.ShowModal() == wx.ID_OK):
+        if dlg.ShowModal() == wx.ID_OK:
             target = dlg.GetStringSelection()
             if len(target):
                 self.recvlisteners.append(self.waitforsdresponse)
