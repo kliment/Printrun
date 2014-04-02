@@ -18,7 +18,7 @@
 import sys
 import wx
 
-from printrun.plater import StlPlater
+from printrun.stlplater import StlPlater
 
 if __name__ == '__main__':
     app = wx.App(False)

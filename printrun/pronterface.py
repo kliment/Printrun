@@ -478,7 +478,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             e.Skip()
 
     def plate(self, e):
-        from . import plater
+        from . import stlplater as plater
         self.log(_("Plate function activated"))
         plater.StlPlater(size = (800, 580), callback = self.platecb,
                          parent = self,
