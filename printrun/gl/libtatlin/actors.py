@@ -507,11 +507,11 @@ class GcodeModel(Model):
             yield layer_idx
             layer_idx += 1
 
-        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
-                     (model_data.ymin, model_data.ymax, model_data.depth),
-                     (model_data.zmin, model_data.zmax, model_data.height))
-
         with self.lock:
+            self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
+                         (model_data.ymin, model_data.ymax, model_data.depth),
+                         (model_data.zmin, model_data.zmax, model_data.height))
+
             self.travels.resize(travel_vertex_k, refcheck = False)
             self.vertices.resize(vertex_k, refcheck = False)
             self.colors.resize(color_k, refcheck = False)
@@ -735,48 +735,49 @@ class GcodeModelLight(Model):
         self.printed_until = -1
         self.only_current = False
         while layer_idx < len(model_data.all_layers):
-            nlines = len(model_data)
-            if nlines * 6 != vertices.size:
-                self.vertices.resize(nlines * 6, refcheck = False)
-                self.colors.resize(nlines * 8, refcheck = False)
-            layer = model_data.all_layers[layer_idx]
-            has_movement = False
-            for gline in layer:
-                if not gline.is_move:
-                    continue
-                if gline.x is None and gline.y is None and gline.z is None:
-                    continue
-                has_movement = True
-                vertices[vertex_k] = prev_pos[0]
-                vertices[vertex_k + 1] = prev_pos[1]
-                vertices[vertex_k + 2] = prev_pos[2]
-                current_pos = (gline.current_x, gline.current_y, gline.current_z)
-                vertices[vertex_k + 3] = current_pos[0]
-                vertices[vertex_k + 4] = current_pos[1]
-                vertices[vertex_k + 5] = current_pos[2]
-                vertex_k += 6
+            with self.lock:
+                nlines = len(model_data)
+                if nlines * 6 != vertices.size:
+                    self.vertices.resize(nlines * 6, refcheck = False)
+                    self.colors.resize(nlines * 8, refcheck = False)
+                layer = model_data.all_layers[layer_idx]
+                has_movement = False
+                for gline in layer:
+                    if not gline.is_move:
+                        continue
+                    if gline.x is None and gline.y is None and gline.z is None:
+                        continue
+                    has_movement = True
+                    vertices[vertex_k] = prev_pos[0]
+                    vertices[vertex_k + 1] = prev_pos[1]
+                    vertices[vertex_k + 2] = prev_pos[2]
+                    current_pos = (gline.current_x, gline.current_y, gline.current_z)
+                    vertices[vertex_k + 3] = current_pos[0]
+                    vertices[vertex_k + 4] = current_pos[1]
+                    vertices[vertex_k + 5] = current_pos[2]
+                    vertex_k += 6
 
-                vertex_color = self.movement_color(gline)
-                colors[color_k] = vertex_color[0]
-                colors[color_k + 1] = vertex_color[1]
-                colors[color_k + 2] = vertex_color[2]
-                colors[color_k + 3] = vertex_color[3]
-                colors[color_k + 4] = vertex_color[0]
-                colors[color_k + 5] = vertex_color[1]
-                colors[color_k + 6] = vertex_color[2]
-                colors[color_k + 7] = vertex_color[3]
-                color_k += 8
+                    vertex_color = self.movement_color(gline)
+                    colors[color_k] = vertex_color[0]
+                    colors[color_k + 1] = vertex_color[1]
+                    colors[color_k + 2] = vertex_color[2]
+                    colors[color_k + 3] = vertex_color[3]
+                    colors[color_k + 4] = vertex_color[0]
+                    colors[color_k + 5] = vertex_color[1]
+                    colors[color_k + 6] = vertex_color[2]
+                    colors[color_k + 7] = vertex_color[3]
+                    color_k += 8
 
-                prev_pos = current_pos
-                gline.gcview_end_vertex = vertex_k / 3
+                    prev_pos = current_pos
+                    gline.gcview_end_vertex = vertex_k / 3
 
-            if has_movement:
-                self.layer_stops.append(vertex_k / 3)
-                self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
-                self.max_layers = len(self.layer_stops) - 1
-                self.num_layers_to_draw = self.max_layers + 1
-                self.initialized = False
-                self.loaded = True
+                if has_movement:
+                    self.layer_stops.append(vertex_k / 3)
+                    self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
+                    self.max_layers = len(self.layer_stops) - 1
+                    self.num_layers_to_draw = self.max_layers + 1
+                    self.initialized = False
+                    self.loaded = True
 
             if callback:
                 callback(layer_idx + 1)
@@ -784,16 +785,17 @@ class GcodeModelLight(Model):
             yield layer_idx
             layer_idx += 1
 
-        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
-                     (model_data.ymin, model_data.ymax, model_data.depth),
-                     (model_data.zmin, model_data.zmax, model_data.height))
+        with self.lock:
+            self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
+                         (model_data.ymin, model_data.ymax, model_data.depth),
+                         (model_data.zmin, model_data.zmax, model_data.height))
 
-        self.vertices.resize(vertex_k, refcheck = False)
-        self.colors.resize(color_k, refcheck = False)
-        self.max_layers = len(self.layer_stops) - 1
-        self.num_layers_to_draw = self.max_layers + 1
-        self.initialized = False
-        self.loaded = True
+            self.vertices.resize(vertex_k, refcheck = False)
+            self.colors.resize(color_k, refcheck = False)
+            self.max_layers = len(self.layer_stops) - 1
+            self.num_layers_to_draw = self.max_layers + 1
+            self.initialized = False
+            self.loaded = True
 
         t_end = time.time()
 
@@ -829,21 +831,24 @@ class GcodeModelLight(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
-        self.initialized = True
+        with self.lock:
+            self.layers_loaded = self.max_layers
+            self.initialized = True
+            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
+            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
 
     def display(self, mode_2d=False):
-        glPushMatrix()
-        glTranslatef(self.offset_x, self.offset_y, 0)
-        glEnableClientState(GL_VERTEX_ARRAY)
-        glEnableClientState(GL_COLOR_ARRAY)
+        with self.lock:
+            glPushMatrix()
+            glTranslatef(self.offset_x, self.offset_y, 0)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
 
-        self._display_movements(mode_2d)
+            self._display_movements(mode_2d)
 
-        glDisableClientState(GL_COLOR_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY)
-        glPopMatrix()
+            glDisableClientState(GL_COLOR_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glPopMatrix()
 
     def _display_movements(self, mode_2d=False):
         self.vertex_buffer.bind()
@@ -859,12 +864,15 @@ class GcodeModelLight(Model):
         else:
             glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
 
+        # Prevent race condition by using the number of currently loaded layers
+        max_layers = self.layers_loaded
+
         start = 0
-        if self.num_layers_to_draw <= self.max_layers:
+        if self.num_layers_to_draw <= max_layers:
             end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
         else:
             end_prev_layer = -1
-        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        end = self.layer_stops[min(self.num_layers_to_draw, max_layers)]
 
         glDisableClientState(GL_COLOR_ARRAY)
 
