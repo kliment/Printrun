@@ -217,7 +217,9 @@ class Plater(wx.Frame):
         i = self.l.GetSelection()
         if i != -1:
             m = self.models[self.l.GetString(i)]
-            m.offsets = [100, 100, m.offsets[2]]
+            centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]
+            centery = self.build_dimensions[1] / 2 + self.build_dimensions[4]
+            m.offsets = [centerx, centery, m.offsets[2]]
             self.Refresh()
 
     def snap(self, event):
