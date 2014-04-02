@@ -20,6 +20,7 @@ import time
 import numpy
 import math
 import logging
+import threading
 
 from ctypes import sizeof
 
@@ -221,9 +222,13 @@ class Model(object):
 
     axis_letter_map = dict([(v, k) for k, v in letter_axis_map.items()])
 
+    lock = None
+
     def __init__(self, offset_x=0, offset_y=0):
         self.offset_x = offset_x
         self.offset_y = offset_y
+
+        self.lock = threading.Lock()
 
         self.init_model_attributes()
 
@@ -341,159 +346,160 @@ class GcodeModel(Model):
         self.only_current = False
 
         while layer_idx < len(model_data.all_layers):
-            nlines = len(model_data)
-            if nlines * 12 != vertices.size:
-                self.travels.resize(nlines * 6, refcheck = False)
-                self.vertices.resize(nlines * 12, refcheck = False)
-                self.colors.resize(nlines * 12, refcheck = False)
-                self.normals.resize(nlines * 12, refcheck = False)
-                self.indices.resize(nlines * 24, refcheck = False)
-            layer = model_data.all_layers[layer_idx]
-            has_movement = False
-            for gline_idx, gline in enumerate(layer):
-                if not gline.is_move:
-                    continue
-                if gline.x is None and gline.y is None and gline.z is None:
-                    continue
-                has_movement = True
-                current_pos = (gline.current_x, gline.current_y, gline.current_z)
-                if not gline.extruding:
-                    travel_vertices[travel_vertex_k] = prev_pos[0]
-                    travel_vertices[travel_vertex_k + 1] = prev_pos[1]
-                    travel_vertices[travel_vertex_k + 2] = prev_pos[2]
-                    travel_vertices[travel_vertex_k + 3] = current_pos[0]
-                    travel_vertices[travel_vertex_k + 4] = current_pos[1]
-                    travel_vertices[travel_vertex_k + 5] = current_pos[2]
-                    travel_vertex_k += 6
-                    prev_is_extruding = False
-                else:
-                    gline_color = self.movement_color(gline)
-
-                    next_move = get_next_move(model_data, layer_idx, gline_idx)
-                    next_is_extruding = (next_move.extruding
-                                         if next_move is not None else False)
-
-                    delta_x = current_pos[0] - prev_pos[0]
-                    delta_y = current_pos[1] - prev_pos[1]
-                    norm = delta_x * delta_x + delta_y * delta_y
-                    if norm == 0:  # Don't draw anything if this move is Z+E only
+            with self.lock:
+                nlines = len(model_data)
+                if nlines * 12 != vertices.size:
+                    self.travels.resize(nlines * 6, refcheck = False)
+                    self.vertices.resize(nlines * 12, refcheck = False)
+                    self.colors.resize(nlines * 12, refcheck = False)
+                    self.normals.resize(nlines * 12, refcheck = False)
+                    self.indices.resize(nlines * 24, refcheck = False)
+                layer = model_data.all_layers[layer_idx]
+                has_movement = False
+                for gline_idx, gline in enumerate(layer):
+                    if not gline.is_move:
                         continue
-                    norm = math.sqrt(norm)
-                    move_normal_x = - delta_y / norm
-                    move_normal_y = delta_x / norm
-
-                    # FIXME: compute these dynamically
-                    path_halfwidth = self.path_halfwidth * 1.2
-                    path_halfheight = self.path_halfheight * 1.2
-
-                    new_indices = []
-                    new_vertices = []
-                    new_normals = []
-                    if prev_is_extruding:
-                        # Store previous vertices indices
-                        prev_id = vertex_k / 3 - 4
-                        # Average directions
-                        avg_move_x = delta_x + prev_move_x
-                        avg_move_y = delta_y + prev_move_y
-                        norm = avg_move_x * avg_move_x + avg_move_y * avg_move_y
-                        # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
-                        if norm == 0:
-                            avg_move_normal_x = move_normal_x
-                            avg_move_normal_y = move_normal_y
-                        else:
-                            norm = math.sqrt(norm)
-                            avg_move_normal_x = - avg_move_y / norm
-                            avg_move_normal_y = avg_move_x / norm
-                        # Compute vertices
-                        p1x = prev_pos[0] - path_halfwidth * avg_move_normal_x
-                        p2x = prev_pos[0] + path_halfwidth * avg_move_normal_x
-                        p1y = prev_pos[1] - path_halfwidth * avg_move_normal_y
-                        p2y = prev_pos[1] + path_halfwidth * avg_move_normal_y
-                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, prev_pos[2]))
-                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2]))
-                        new_normals.extend((0, 0, 1))
-                        new_normals.extend((-move_normal_x, -move_normal_y, 0))
-                        new_normals.extend((0, 0, -1))
-                        new_normals.extend((move_normal_x, move_normal_y, 0))
-                        first = vertex_k / 3
-                        # Link to previous
-                        new_indices += triangulate_box(prev_id, prev_id + 1,
-                                                       prev_id + 2, prev_id + 3,
-                                                       first, first + 1,
-                                                       first + 2, first + 3)
+                    if gline.x is None and gline.y is None and gline.z is None:
+                        continue
+                    has_movement = True
+                    current_pos = (gline.current_x, gline.current_y, gline.current_z)
+                    if not gline.extruding:
+                        travel_vertices[travel_vertex_k] = prev_pos[0]
+                        travel_vertices[travel_vertex_k + 1] = prev_pos[1]
+                        travel_vertices[travel_vertex_k + 2] = prev_pos[2]
+                        travel_vertices[travel_vertex_k + 3] = current_pos[0]
+                        travel_vertices[travel_vertex_k + 4] = current_pos[1]
+                        travel_vertices[travel_vertex_k + 5] = current_pos[2]
+                        travel_vertex_k += 6
+                        prev_is_extruding = False
                     else:
-                        # Compute vertices normal to the current move and cap it
-                        p1x = prev_pos[0] - path_halfwidth * move_normal_x
-                        p2x = prev_pos[0] + path_halfwidth * move_normal_x
-                        p1y = prev_pos[1] - path_halfwidth * move_normal_y
-                        p2y = prev_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, prev_pos[2]))
-                        new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2]))
-                        new_normals.extend((0, 0, 1))
-                        new_normals.extend((-move_normal_x, -move_normal_y, 0))
-                        new_normals.extend((0, 0, -1))
-                        new_normals.extend((move_normal_x, move_normal_y, 0))
-                        first = vertex_k / 3
-                        new_indices = triangulate_rectangle(first, first + 1,
-                                                            first + 2, first + 3)
+                        gline_color = self.movement_color(gline)
 
-                    if not next_is_extruding:
-                        # Compute caps and link everything
-                        p1x = current_pos[0] - path_halfwidth * move_normal_x
-                        p2x = current_pos[0] + path_halfwidth * move_normal_x
-                        p1y = current_pos[1] - path_halfwidth * move_normal_y
-                        p2y = current_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, current_pos[2]))
-                        new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, current_pos[2]))
-                        new_normals.extend((0, 0, 1))
-                        new_normals.extend((-move_normal_x, -move_normal_y, 0))
-                        new_normals.extend((0, 0, -1))
-                        new_normals.extend((move_normal_x, move_normal_y, 0))
-                        end_first = vertex_k / 3 + len(new_vertices) / 3 - 4
-                        new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
-                                                             end_first + 1, end_first)
-                        new_indices += triangulate_box(first, first + 1,
-                                                       first + 2, first + 3,
-                                                       end_first, end_first + 1,
-                                                       end_first + 2, end_first + 3)
+                        next_move = get_next_move(model_data, layer_idx, gline_idx)
+                        next_is_extruding = (next_move.extruding
+                                             if next_move is not None else False)
 
-                    for new_i, item in enumerate(new_indices):
-                        indices[index_k + new_i] = item
-                    index_k += len(new_indices)
-                    for new_i, item in enumerate(new_vertices):
-                        vertices[vertex_k + new_i] = item
-                    vertex_k += len(new_vertices)
-                    for new_i, item in enumerate(new_normals):
-                        normals[normal_k + new_i] = item
-                    normal_k += len(new_normals)
-                    new_colors = list(gline_color)[:-1] * (len(new_vertices) / 3)
-                    for new_i, item in enumerate(new_colors):
-                        colors[color_k + new_i] = item
-                    color_k += len(new_colors)
+                        delta_x = current_pos[0] - prev_pos[0]
+                        delta_y = current_pos[1] - prev_pos[1]
+                        norm = delta_x * delta_x + delta_y * delta_y
+                        if norm == 0:  # Don't draw anything if this move is Z+E only
+                            continue
+                        norm = math.sqrt(norm)
+                        move_normal_x = - delta_y / norm
+                        move_normal_y = delta_x / norm
 
-                    prev_is_extruding = True
-                    prev_move_x = delta_x
-                    prev_move_y = delta_y
+                        # FIXME: compute these dynamically
+                        path_halfwidth = self.path_halfwidth * 1.2
+                        path_halfheight = self.path_halfheight * 1.2
 
-                prev_pos = current_pos
-                count_travel_indices.append(travel_vertex_k / 3)
-                count_print_indices.append(index_k)
-                count_print_vertices.append(vertex_k / 3)
-                gline.gcview_end_vertex = len(count_print_indices) - 1
+                        new_indices = []
+                        new_vertices = []
+                        new_normals = []
+                        if prev_is_extruding:
+                            # Store previous vertices indices
+                            prev_id = vertex_k / 3 - 4
+                            # Average directions
+                            avg_move_x = delta_x + prev_move_x
+                            avg_move_y = delta_y + prev_move_y
+                            norm = avg_move_x * avg_move_x + avg_move_y * avg_move_y
+                            # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
+                            if norm == 0:
+                                avg_move_normal_x = move_normal_x
+                                avg_move_normal_y = move_normal_y
+                            else:
+                                norm = math.sqrt(norm)
+                                avg_move_normal_x = - avg_move_y / norm
+                                avg_move_normal_y = avg_move_x / norm
+                            # Compute vertices
+                            p1x = prev_pos[0] - path_halfwidth * avg_move_normal_x
+                            p2x = prev_pos[0] + path_halfwidth * avg_move_normal_x
+                            p1y = prev_pos[1] - path_halfwidth * avg_move_normal_y
+                            p2y = prev_pos[1] + path_halfwidth * avg_move_normal_y
+                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                            new_vertices.extend((p1x, p1y, prev_pos[2]))
+                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                            new_vertices.extend((p2x, p2y, prev_pos[2]))
+                            new_normals.extend((0, 0, 1))
+                            new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                            new_normals.extend((0, 0, -1))
+                            new_normals.extend((move_normal_x, move_normal_y, 0))
+                            first = vertex_k / 3
+                            # Link to previous
+                            new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                           prev_id + 2, prev_id + 3,
+                                                           first, first + 1,
+                                                           first + 2, first + 3)
+                        else:
+                            # Compute vertices normal to the current move and cap it
+                            p1x = prev_pos[0] - path_halfwidth * move_normal_x
+                            p2x = prev_pos[0] + path_halfwidth * move_normal_x
+                            p1y = prev_pos[1] - path_halfwidth * move_normal_y
+                            p2y = prev_pos[1] + path_halfwidth * move_normal_y
+                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                            new_vertices.extend((p1x, p1y, prev_pos[2]))
+                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                            new_vertices.extend((p2x, p2y, prev_pos[2]))
+                            new_normals.extend((0, 0, 1))
+                            new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                            new_normals.extend((0, 0, -1))
+                            new_normals.extend((move_normal_x, move_normal_y, 0))
+                            first = vertex_k / 3
+                            new_indices = triangulate_rectangle(first, first + 1,
+                                                                first + 2, first + 3)
 
-            if has_movement:
-                self.layer_stops.append(len(count_print_indices) - 1)
-                self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
-                self.max_layers = len(self.layer_stops) - 1
-                self.num_layers_to_draw = self.max_layers + 1
-                self.initialized = False
-                self.loaded = True
+                        if not next_is_extruding:
+                            # Compute caps and link everything
+                            p1x = current_pos[0] - path_halfwidth * move_normal_x
+                            p2x = current_pos[0] + path_halfwidth * move_normal_x
+                            p1y = current_pos[1] - path_halfwidth * move_normal_y
+                            p2y = current_pos[1] + path_halfwidth * move_normal_y
+                            new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] + path_halfheight))
+                            new_vertices.extend((p1x, p1y, current_pos[2]))
+                            new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] - path_halfheight))
+                            new_vertices.extend((p2x, p2y, current_pos[2]))
+                            new_normals.extend((0, 0, 1))
+                            new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                            new_normals.extend((0, 0, -1))
+                            new_normals.extend((move_normal_x, move_normal_y, 0))
+                            end_first = vertex_k / 3 + len(new_vertices) / 3 - 4
+                            new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
+                                                                 end_first + 1, end_first)
+                            new_indices += triangulate_box(first, first + 1,
+                                                           first + 2, first + 3,
+                                                           end_first, end_first + 1,
+                                                           end_first + 2, end_first + 3)
+
+                        for new_i, item in enumerate(new_indices):
+                            indices[index_k + new_i] = item
+                        index_k += len(new_indices)
+                        for new_i, item in enumerate(new_vertices):
+                            vertices[vertex_k + new_i] = item
+                        vertex_k += len(new_vertices)
+                        for new_i, item in enumerate(new_normals):
+                            normals[normal_k + new_i] = item
+                        normal_k += len(new_normals)
+                        new_colors = list(gline_color)[:-1] * (len(new_vertices) / 3)
+                        for new_i, item in enumerate(new_colors):
+                            colors[color_k + new_i] = item
+                        color_k += len(new_colors)
+
+                        prev_is_extruding = True
+                        prev_move_x = delta_x
+                        prev_move_y = delta_y
+
+                    prev_pos = current_pos
+                    count_travel_indices.append(travel_vertex_k / 3)
+                    count_print_indices.append(index_k)
+                    count_print_vertices.append(vertex_k / 3)
+                    gline.gcview_end_vertex = len(count_print_indices) - 1
+
+                if has_movement:
+                    self.layer_stops.append(len(count_print_indices) - 1)
+                    self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
+                    self.max_layers = len(self.layer_stops) - 1
+                    self.num_layers_to_draw = self.max_layers + 1
+                    self.initialized = False
+                    self.loaded = True
 
             if callback:
                 callback(layer_idx + 1)
@@ -505,16 +511,17 @@ class GcodeModel(Model):
                      (model_data.ymin, model_data.ymax, model_data.depth),
                      (model_data.zmin, model_data.zmax, model_data.height))
 
-        self.travels.resize(travel_vertex_k, refcheck = False)
-        self.vertices.resize(vertex_k, refcheck = False)
-        self.colors.resize(color_k, refcheck = False)
-        self.normals.resize(normal_k, refcheck = False)
-        self.indices.resize(index_k, refcheck = False)
+        with self.lock:
+            self.travels.resize(travel_vertex_k, refcheck = False)
+            self.vertices.resize(vertex_k, refcheck = False)
+            self.colors.resize(color_k, refcheck = False)
+            self.normals.resize(normal_k, refcheck = False)
+            self.indices.resize(index_k, refcheck = False)
 
-        self.max_layers = len(self.layer_stops) - 1
-        self.num_layers_to_draw = self.max_layers + 1
-        self.loaded = True
-        self.initialized = False
+            self.max_layers = len(self.layer_stops) - 1
+            self.num_layers_to_draw = self.max_layers + 1
+            self.loaded = True
+            self.initialized = False
 
         t_end = time.time()
 
@@ -552,48 +559,50 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.layers_loaded = self.max_layers
-        self.initialized = True
-        if self.buffers_created:
-            self.travel_buffer.delete()
-            self.index_buffer.delete()
-            self.vertex_buffer.delete()
-            self.vertex_color_buffer.delete()
-            self.vertex_normal_buffer.delete()
-        self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
-        self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
-                                      target = GL_ELEMENT_ARRAY_BUFFER)
-        self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
-        self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
-        self.buffers_created = True
+        with self.lock:
+            self.layers_loaded = self.max_layers
+            self.initialized = True
+            if self.buffers_created:
+                self.travel_buffer.delete()
+                self.index_buffer.delete()
+                self.vertex_buffer.delete()
+                self.vertex_color_buffer.delete()
+                self.vertex_normal_buffer.delete()
+            self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
+            self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
+                                          target = GL_ELEMENT_ARRAY_BUFFER)
+            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
+            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
+            self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
+            self.buffers_created = True
 
     def display(self, mode_2d=False):
-        glPushMatrix()
-        glTranslatef(self.offset_x, self.offset_y, 0)
-        glEnableClientState(GL_VERTEX_ARRAY)
+        with self.lock:
+            glPushMatrix()
+            glTranslatef(self.offset_x, self.offset_y, 0)
+            glEnableClientState(GL_VERTEX_ARRAY)
 
-        has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
-        if self.display_travels:
-            self._display_travels(has_vbo)
+            has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
+            if self.display_travels:
+                self._display_travels(has_vbo)
 
-        glEnable(GL_LIGHTING)
-        glEnableClientState(GL_NORMAL_ARRAY)
-        glEnableClientState(GL_COLOR_ARRAY)
-        glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
+            glEnable(GL_LIGHTING)
+            glEnableClientState(GL_NORMAL_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
+            glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
+            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
 
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-        self._display_movements(has_vbo)
+            glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+            self._display_movements(has_vbo)
 
-        glDisable(GL_LIGHTING)
+            glDisable(GL_LIGHTING)
 
-        glDisableClientState(GL_COLOR_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY)
-        glDisableClientState(GL_NORMAL_ARRAY)
+            glDisableClientState(GL_COLOR_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glDisableClientState(GL_NORMAL_ARRAY)
 
-        glPopMatrix()
+            glPopMatrix()
 
     def _display_travels(self, has_vbo):
         self.travel_buffer.bind()
