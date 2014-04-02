@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="shortcut icon" href="">
+
+        <title>Printrun: Pure Python 3d printing host software</title>
+
+        <!-- Bootstrap core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Custom styles for this template -->
+        <link href='http://fonts.googleapis.com/css?family=Allerta%7CRaleway' rel='stylesheet' type='text/css'>
+        <link href="css/printrun.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+        <a href="https://github.com/kliment/Printrun"><img style="position: absolute; top: 0; left: 0; border: 0; z-index: 2000;" src="images/github-forkme.png" alt="Fork me on GitHub"></a>
+        <header>
+        <div class="navbar navbar-static-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#"><img src="images/printrun.png" alt="Printrun" /></a>
+                </div>
+                <div class="navbar-collapse collapse">
+                    <ul  class="nav navbar-nav">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#download">Download</a></li>
+                        <li><a href="#docs">Docs</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        </header>
+
+        <div id="main" class="separator bg-blue"></div>
+
+{{ content }}
+    
+        <div class="footer">
+            <p>Printrun is free, open-source software. Dedicated to #reprap @ irc.freenode.net.<br />
+            Printrun is licensed under the GNU General Public License, version 2</p>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script type="text/javascript">
+            $(function() {
+              $('a[href*=#]:not([href=#]):not([href=#carousel])').click(function() {
+                if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+                  var target = $(this.hash);
+                  target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+                  if (target.length) {
+                    $('html,body').animate({
+                      scrollTop: target.offset().top
+                    }, 500);
+                    return false;
+                  }
+                }
+              });
+            });
+        </script>
+    </body>
+</html>
