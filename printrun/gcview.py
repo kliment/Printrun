@@ -126,8 +126,8 @@ class GcodeViewPanel(wxGLPanel):
                 continue
             glPushMatrix()
             glTranslatef(*(obj.offsets))
-            glTranslatef(*(obj.centeroffset))
             glRotatef(obj.rot, 0.0, 0.0, 1.0)
+            glTranslatef(*(obj.centeroffset))
             glScalef(*obj.scale)
 
             obj.model.display()
