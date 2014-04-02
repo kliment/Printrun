@@ -20,6 +20,7 @@ import glob
 import os
 import time
 import sys
+import shutil
 import subprocess
 import codecs
 import argparse
@@ -932,10 +933,9 @@ class pronsole(cmd.Cmd):
         try:
             written = False
             if os.path.exists(self.rc_filename):
-                import shutil
                 shutil.copy(self.rc_filename, self.rc_filename + "~bak")
                 rci = codecs.open(self.rc_filename + "~bak", "r", "utf-8")
-            rco = codecs.open(self.rc_filename, "w", "utf-8")
+            rco = codecs.open(self.rc_filename + "~new", "w", "utf-8")
             if rci is not None:
                 overwriting = False
                 for rc_cmd in rci:
@@ -956,6 +956,7 @@ class pronsole(cmd.Cmd):
             if rci is not None:
                 rci.close()
             rco.close()
+            shutil.move(self.rc_filename + "~new", self.rc_filename)
             # if definition != "":
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
             # else:
