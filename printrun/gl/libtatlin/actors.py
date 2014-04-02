@@ -315,6 +315,11 @@ class GcodeModel(Model):
     path_halfwidth = 0.2
     path_halfheight = 0.2
 
+    def set_path_size(self, path_halfwidth, path_halfheight):
+        with self.lock:
+            self.path_halfwidth = path_halfwidth
+            self.path_halfheight = path_halfheight
+
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
@@ -534,9 +539,9 @@ class GcodeModel(Model):
         for var in ["vertices", "colors", "travels", "indices", "normals",
                     "max_layers", "num_layers_to_draw", "printed_until",
                     "layer_stops", "dims", "only_current",
-                    "layer_idxs_map",
-                    "count_travel_indices", "count_print_indices",
-                    "count_print_vertices"]:
+                    "layer_idxs_map", "count_travel_indices",
+                    "count_print_indices", "count_print_vertices",
+                    "path_halfwidth", "path_halfheight"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False

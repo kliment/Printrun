@@ -271,6 +271,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.createGui(self.settings.uimode == "Compact",
                            self.settings.controlsmode == "Mini")
 
+        # Set gcview parameters here as they don't get set when viewers are
+        # created
+        self.update_gcview_params()
+
         # Finalize
         if self.online:
             self.gui_set_connected()
@@ -799,9 +803,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
         self.settings._add(ComboSetting("mainviz", "2D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("light3d", True, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "UI"), self.reload_ui)
-        self.settings._add(ComboSetting("antialias3dsamples", "0", ["0", "2", "4", "8"], _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "UI"))
+        self.settings._add(BooleanSetting("light3d", True, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "3D"), self.reload_ui)
+        self.settings._add(ComboSetting("antialias3dsamples", "0", ["0", "2", "4", "8"], _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "3D"), self.reload_ui)
+        self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "3D"))
+        self.settings._add(FloatSpinSetting("gcview_path_width", 0.4, 0.01, 2, 0.05, _("Extrusion width for 3D viewer"), _("Width of printed path in 3D viewer"), "3D"), self.update_gcview_params)
+        self.settings._add(FloatSpinSetting("gcview_path_height", 0.3, 0.01, 2, 0.05, _("Layer height for 3D viewer"), _("Height of printed path in 3D viewer"), "3D"), self.update_gcview_params)
         self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"), self.reload_ui)
@@ -812,7 +818,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", u""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
-        self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"), self.update_gviz_params)
+        self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, 0.1, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "UI"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "UI"), self.update_gviz_params)
         self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "Colors"), self.reload_ui, validate = check_rgb_color)
@@ -905,6 +911,15 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.gviz.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
         if hasattr(self, "gwindow") and hasattr(self.gwindow, "recreate_platform"):
             self.gwindow.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
+
+    def update_gcview_params(self, *args):
+        need_reload = False
+        if hasattr(self, "gviz") and hasattr(self.gviz, "set_gcview_params"):
+            need_reload |= self.gviz.set_gcview_params(self.settings.gcview_path_width, self.settings.gcview_path_height)
+        if hasattr(self, "gwindow") and hasattr(self.gwindow, "set_gcview_params"):
+            need_reload |= self.gwindow.set_gcview_params(self.settings.gcview_path_width, self.settings.gcview_path_height)
+        if need_reload:
+            self.start_viz_thread()
 
     def update_monitor(self, *args):
         if hasattr(self, "display_graph") and self.display_graph:

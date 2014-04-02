@@ -177,10 +177,11 @@ class ComboSetting(wxSetting):
 
 class SpinSetting(wxSetting):
 
-    def __init__(self, name, default, min, max, label = None, help = None, group = None):
+    def __init__(self, name, default, min, max, increment = 0.1, label = None, help = None, group = None):
         super(SpinSetting, self).__init__(name, default, label, help, group)
         self.min = min
         self.max = max
+        self.increment = increment
 
     def get_specific_widget(self, parent):
         import wx
@@ -192,7 +193,7 @@ class FloatSpinSetting(SpinSetting):
 
     def get_specific_widget(self, parent):
         from wx.lib.agw.floatspin import FloatSpin
-        self.widget = FloatSpin(parent, -1, value = self.value, min_val = self.min, max_val = self.max, digits = 2)
+        self.widget = FloatSpin(parent, -1, value = self.value, min_val = self.min, max_val = self.max, increment = self.increment, digits = 2)
         return self.widget
 
 class BooleanSetting(wxSetting):

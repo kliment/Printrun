@@ -46,6 +46,21 @@ def set_model_colors(model, root):
             if hasattr(root, root_fieldname):
                 setattr(model, field, getattr(root, root_fieldname))
 
+def recreate_platform(self, build_dimensions, circular):
+    self.platform = actors.Platform(build_dimensions, circular = circular)
+    self.objects[0].model = self.platform
+    wx.CallAfter(self.Refresh)
+
+def set_gcview_params(self, path_width, path_height):
+    self.path_halfwidth = path_width / 2
+    self.path_halfheight = path_height / 2
+    has_changed = False
+    for obj in self.objects[1:]:
+        if isinstance(obj.model, actors.GcodeModel):
+            obj.model.set_path_size(self.path_halfwidth, self.path_halfheight)
+            has_changed = True
+    return has_changed
+
 class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent, id = wx.ID_ANY,
@@ -262,9 +277,14 @@ class GCObject(object):
 
 class GcodeViewLoader(object):
 
+    path_halfwidth = 0.2
+    path_halfheight = 0.15
+
     def addfile_perlayer(self, gcode = None, showall = False):
         self.model = create_model(self.root.settings.light3d
                                   if self.root else False)
+        if isinstance(self.model, actors.GcodeModel):
+            self.model.set_path_size(self.path_halfwidth, self.path_halfheight)
         self.objects[-1].model = self.model
         if self.root:
             set_model_colors(self.model, self.root)
@@ -281,6 +301,9 @@ class GcodeViewLoader(object):
         generator = self.addfile_perlayer(gcode, showall)
         while generator.next() is not None:
             continue
+
+    def set_gcview_params(self, path_width, path_height):
+        return set_gcview_params(self, path_width, path_height)
 
 class GcodeViewMainWrapper(GcodeViewLoader):
 
@@ -311,9 +334,7 @@ class GcodeViewMainWrapper(GcodeViewLoader):
                 self.refresh_timer.Start()
 
     def recreate_platform(self, build_dimensions, circular):
-        self.platform = actors.Platform(build_dimensions, circular = circular)
-        self.objects[0].model = self.platform
-        wx.CallAfter(self.Refresh)
+        return recreate_platform(self, build_dimensions, circular)
 
     def addgcodehighlight(self, *a):
         pass
@@ -385,9 +406,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
                 self.refresh_timer.Start()
 
     def recreate_platform(self, build_dimensions, circular):
-        self.platform = actors.Platform(build_dimensions, circular = circular)
-        self.objects[0].model = self.platform
-        wx.CallAfter(self.Refresh)
+        return recreate_platform(self, build_dimensions, circular)
 
     def addfile(self, gcode = None):
         if self.clonefrom:
