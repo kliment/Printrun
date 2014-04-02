@@ -163,9 +163,14 @@ class wxGLPanel(wx.Panel):
             self.reset_mview(0.9)
             self.mview_initialized = True
         elif oldwidth is not None and oldheight is not None:
-            factor = min(self.width / oldwidth, self.height / oldheight)
+            wratio = self.width / oldwidth
+            hratio = self.height / oldheight
+
+            factor = min(wratio * self.zoomed_width, hratio * self.zoomed_height)
             x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
             self.zoom(factor, (x, y))
+            self.zoomed_width *= wratio / factor
+            self.zoomed_height *= hratio / factor
 
         # Wrap text to the width of the window
         if self.GLinitialized:
@@ -200,6 +205,8 @@ class wxGLPanel(wx.Panel):
         if self.orthographic:
             ratio = factor * float(max(self.width, self.height)) / self.dist
             self.zoom_factor = 1.0
+            self.zoomed_width = 1.0
+            self.zoomed_height = 1.0
             glScalef(ratio, ratio, 1)
 
     def OnDraw(self, *args, **kwargs):
