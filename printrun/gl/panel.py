@@ -183,6 +183,7 @@ class wxGLPanel(wx.Panel):
         glEnable(GL_LIGHT1)
         glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
         glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.2, 0.2, 0.2, 1.0))
+        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
         glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
         glEnable(GL_LIGHT2)
         glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
