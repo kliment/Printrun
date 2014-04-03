@@ -165,12 +165,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         # consequences.
         # -- Okai, it seems it breaks things like update_gviz_params ><
         os.putenv("UBUNTU_MENUPROXY", "0")
-        style = wx.DEFAULT_FRAME_STYLE
+        size = (self.settings.last_window_width, self.settings.last_window_height)
+        MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
         if self.settings.last_window_maximized:
-            style |= wx.MAXIMIZE
-        MainWindow.__init__(self, None, title = _("Pronterface"),
-                            size = size, style = style)
-        self.SetClientSize(size)
+            self.Maximize()
         self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
@@ -304,7 +302,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if evtsz[0] < area[2] - 20 or evtsz[1] < area[3] - 20:
                 self.set("last_window_maximized", False)
         if not maximized and not self.IsIconized():
-            size = self.GetClientSize()
+            size = self.GetSize()
             self.set("last_window_width", size[0])
             self.set("last_window_height", size[1])
         event.Skip()
