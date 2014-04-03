@@ -294,12 +294,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             size = self.GetClientSize()
             self.set("last_window_width", size[0])
             self.set("last_window_height", size[1])
-        self.settings.last_window_maximized = self.IsMaximized()
         event.Skip()
 
     def on_maximize(self, event):
-        self.set("last_window_maximized", self.IsMaximized())
-        event.Skip()
+        self.on_resize(event)
 
     def on_exit(self, event):
         self.Close()
