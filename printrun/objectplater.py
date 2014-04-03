@@ -239,7 +239,8 @@ class Plater(wx.Frame):
 
     def add_model(self, name, model):
         newname = os.path.split(name.lower())[1]
-        newname = unicode(newname, "utf-8")
+        if not isinstance(newname, unicode):
+            newname = unicode(newname, "utf-8")
         c = 1
         while newname in self.models:
             newname = os.path.split(name.lower())[1]
