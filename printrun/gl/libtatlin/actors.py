@@ -275,6 +275,24 @@ class Model(object):
     def height(self):
         return self.bounding_box.height
 
+    def movement_color(self, move):
+        """
+        Return the color to use for particular type of movement.
+        """
+        if move.extruding:
+            if move.current_tool == 0:
+                return self.color_tool0
+            elif move.current_tool == 1:
+                return self.color_tool1
+            elif move.current_tool == 2:
+                return self.color_tool2
+            elif move.current_tool == 3:
+                return self.color_tool3
+            else:
+                return self.color_tool4
+
+        return self.color_travel
+
 def movement_angle(src, dst, precision=0):
     x = dst[0] - src[0]
     y = dst[1] - src[1]
@@ -550,18 +568,6 @@ class GcodeModel(Model):
         copy.initialized = False
         return copy
 
-    def movement_color(self, move):
-        """
-        Return the color to use for particular type of movement.
-        """
-        if move.extruding:
-            if move.current_tool == 0:
-                return self.color_tool0
-            else:
-                return self.color_tool1
-
-        return self.color_travel
-
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
@@ -825,18 +831,6 @@ class GcodeModelLight(Model):
         copy.loaded = True
         copy.initialized = False
         return copy
-
-    def movement_color(self, move):
-        """
-        Return the color to use for particular type of movement.
-        """
-        if move.extruding:
-            if move.current_tool == 0:
-                return self.color_tool0
-            else:
-                return self.color_tool1
-
-        return self.color_travel
 
     # ------------------------------------------------------------------------
     # DRAWING
