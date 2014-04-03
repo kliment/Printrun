@@ -325,7 +325,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.Destroy)
 
     def _get_bgcolor(self):
-        if self.settings.bgcolor:
+        if self.settings.bgcolor != "auto":
             return self.settings.bgcolor
         else:
             return wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
