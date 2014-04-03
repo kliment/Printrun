@@ -333,6 +333,8 @@ class GcodeModel(Model):
     use_vbos = True
     loaded = False
 
+    gcode = None
+
     path_halfwidth = 0.2
     path_halfheight = 0.2
 
@@ -343,6 +345,7 @@ class GcodeModel(Model):
 
     def load_data(self, model_data, callback=None):
         t_start = time.time()
+        self.gcode = model_data
 
         self.count_travel_indices = count_travel_indices = [0]
         self.count_print_indices = count_print_indices = [0]
@@ -741,8 +744,11 @@ class GcodeModelLight(Model):
     use_vbos = True
     loaded = False
 
+    gcode = None
+
     def load_data(self, model_data, callback=None):
         t_start = time.time()
+        self.gcode = model_data
 
         self.layer_idxs_map = {}
         self.layer_stops = [0]

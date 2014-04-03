@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import wx
 
 from . import gcoder
@@ -36,6 +35,11 @@ def create_model(light):
         return actors.GcodeModelLight()
     else:
         return actors.GcodeModel()
+
+def gcode_dims(g):
+    return ((g.xmin, g.xmax, g.width),
+            (g.ymin, g.ymax, g.depth),
+            (g.zmin, g.zmax, g.height))
 
 def set_model_colors(model, root):
     for field in dir(model):
@@ -212,7 +216,7 @@ class GcodeViewPanel(wxGLPanel):
         if not self.parent.model or not self.parent.model.loaded:
             return
         self.canvas.SetCurrent(self.context)
-        dims = self.parent.model.dims
+        dims = gcode_dims(self.parent.model.gcode)
         self.reset_mview(1.0)
         center_x = (dims[0][0] + dims[0][1]) / 2
         center_y = (dims[1][0] + dims[1][1]) / 2
