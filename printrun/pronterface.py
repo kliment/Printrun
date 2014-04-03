@@ -511,7 +511,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_editgcode(self, e = None):
         if self.filename is not None:
-            MacroEditor(self.filename, [line.raw for line in self.fgcode], self.doneediting, 1)
+            MacroEditor(self.filename, [line.raw for line in self.fgcode], self.doneediting, True)
 
     def doneediting(self, gcode):
         open(self.filename, "w").write("\n".join(gcode))
