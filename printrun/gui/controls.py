@@ -213,9 +213,9 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     ## Temperature gauges
 
     if root.display_gauges:
-        root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300)
+        root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300, bgcolor = root.bgcolor)
         add("htemp_gauge", root.hottgauge, flag = wx.EXPAND)
-        root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed:"), maxval = 150)
+        root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed:"), maxval = 150, bgcolor = root.bgcolor)
         add("btemp_gauge", root.bedtgauge, flag = wx.EXPAND)
 
         def hotendgauge_scroll_setpoint(e):

@@ -246,10 +246,12 @@ class ButtonEdit(wx.Dialog):
 class TempGauge(wx.Panel):
 
     def __init__(self, parent, size = (200, 22), title = "",
-                 maxval = 240, gaugeColour = None):
+                 maxval = 240, gaugeColour = None, bgcolor = "#FFFFFF"):
         wx.Panel.__init__(self, parent, -1, size = size)
         self.Bind(wx.EVT_PAINT, self.paint)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+        self.bgcolor = wx.Colour()
+        self.bgcolor.SetFromName(bgcolor)
         self.width, self.height = size
         self.title = title
         self.max = maxval
@@ -288,11 +290,11 @@ class TempGauge(wx.Panel):
         self.recalc()
         x0, y0, x1, y1, xE, yE = 1, 1, self.ypt + 1, 1, self.width + 1 - 2, 20
         dc = wx.PaintDC(self)
-        dc.SetBackground(wx.Brush((255, 255, 255)))
+        dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
         gauge1, gauge2 = wx.Colour(255, 255, 210), (self.gaugeColour or wx.Colour(234, 82, 0))
-        shadow1, shadow2 = wx.Colour(110, 110, 110), wx.Colour(255, 255, 255)
+        shadow1, shadow2 = wx.Colour(110, 110, 110), self.bgcolor
         gc = wx.GraphicsContext.Create(dc)
         # draw shadow first
         # corners
