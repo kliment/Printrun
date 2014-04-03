@@ -168,7 +168,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         style = wx.DEFAULT_FRAME_STYLE
         if self.settings.last_window_maximized:
             style |= wx.MAXIMIZE
-        MainWindow.__init__(self, None, title = _("Pronterface"), style = style)
+        MainWindow.__init__(self, None, title = _("Pronterface"),
+                            size = size, style = style)
         self.SetClientSize(size)
         self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
         self.Bind(wx.EVT_SIZE, self.on_resize)
