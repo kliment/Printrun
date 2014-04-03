@@ -181,7 +181,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.xy_feedrate = self.settings.xy_feedrate
         self.p.z_feedrate = self.settings.z_feedrate
 
-        self.panel.SetBackgroundColour(self.settings.bgcolor)
+        self.panel.SetBackgroundColour(self.bgcolor)
         customdict = {}
         try:
             execfile(configfile("custombtn.txt"), customdict)
@@ -323,6 +323,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.excluder.close_window()
         wx.CallAfter(self.gwindow.Destroy)
         wx.CallAfter(self.Destroy)
+
+    def _get_bgcolor(self):
+        if self.settings.bgcolor:
+            return self.settings.bgcolor
+        else:
+            return wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
+    bgcolor = property(_get_bgcolor)
 
     #  --------------------------------------------------------------
     #  Main interface actions
@@ -745,7 +752,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             return
         if not self.excluder:
             self.excluder = Excluder()
-        self.excluder.pop_window(self.fgcode, bgcolor = self.settings.bgcolor,
+        self.excluder.pop_window(self.fgcode, bgcolor = self.bgcolor,
                                  build_dimensions = self.build_dimensions_list)
 
     def about(self, event):

@@ -124,14 +124,14 @@ class MainWindow(wx.Frame):
 
     def newPanel(self, parent, add_to_list = True):
         panel = wx.Panel(parent)
-        panel.SetBackgroundColour(self.settings.bgcolor)
+        panel.SetBackgroundColour(self.bgcolor)
         if add_to_list: self.panels.append(panel)
         return panel
 
     def createTabbedGui(self):
         self.notesizer = wx.BoxSizer(wx.VERTICAL)
         self.notebook = wx.Notebook(self.panel)
-        self.notebook.SetBackgroundColour(self.settings.bgcolor)
+        self.notebook.SetBackgroundColour(self.bgcolor)
         page1panel = self.newPanel(self.notebook)
         page2panel = self.newPanel(self.notebook)
         self.mainsizer_page1 = wx.BoxSizer(wx.VERTICAL)

@@ -28,9 +28,9 @@ class XYZControlsSizer(wx.GridBagSizer):
     def __init__(self, root, parentpanel = None):
         super(XYZControlsSizer, self).__init__()
         if not parentpanel: parentpanel = root.panel
-        root.xyb = XYButtons(parentpanel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.settings.bgcolor, zcallback=root.moveZ)
+        root.xyb = XYButtons(parentpanel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.bgcolor, zcallback=root.moveZ)
         self.Add(root.xyb, pos = (0, 1), flag = wx.ALIGN_CENTER)
-        root.zb = ZButtons(parentpanel, root.moveZ, root.settings.bgcolor)
+        root.zb = ZButtons(parentpanel, root.moveZ, root.bgcolor)
         self.Add(root.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
         wx.CallAfter(root.xyb.SetFocus)
 
@@ -391,10 +391,10 @@ class ControlsSizer(wx.GridBagSizer):
 
     def make_mini(self, root, parentpanel):
         root.xyb = XYButtonsMini(parentpanel, root.moveXY, root.homeButtonClicked,
-                                 root.spacebarAction, root.settings.bgcolor,
+                                 root.spacebarAction, root.bgcolor,
                                  zcallback = root.moveZ)
         self.Add(root.xyb, pos = (1, 0), span = (1, 4), flag = wx.ALIGN_CENTER)
-        root.zb = ZButtonsMini(parentpanel, root.moveZ, root.settings.bgcolor)
+        root.zb = ZButtonsMini(parentpanel, root.moveZ, root.bgcolor)
         self.Add(root.zb, pos = (0, 4), span = (2, 1), flag = wx.ALIGN_CENTER)
         wx.CallAfter(root.xyb.SetFocus)
 

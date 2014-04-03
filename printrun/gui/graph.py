@@ -305,7 +305,7 @@ class Graph(BufferedCanvas):
         if self.window: self.window.graph.StopPlotting()
 
     def draw(self, dc, w, h):
-        dc.SetBackground(wx.Brush(self.root.settings.bgcolor))
+        dc.SetBackground(wx.Brush(self.root.bgcolor))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         self.width = w
