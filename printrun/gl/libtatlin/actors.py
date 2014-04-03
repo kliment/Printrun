@@ -359,7 +359,7 @@ class GcodeModel(Model):
         # to store coordinates/colors/normals.
         # Nicely enough we have 3 per kind of thing for all kinds.
         coordspervertex = 3
-        verticesperline = 4
+        verticesperline = 8
         coordsperline = coordspervertex * verticesperline
         coords_count = lambda nlines: nlines * coordsperline
 
@@ -372,7 +372,7 @@ class GcodeModel(Model):
         trianglesperbox = trianglesperface * facesperbox
         verticespertriangle = 3
         indicesperbox = verticespertriangle * trianglesperbox
-        boxperline = 1
+        boxperline = 2
         indicesperline = indicesperbox * boxperline
         indices_count = lambda nlines: nlines * indicesperline
 
@@ -412,6 +412,8 @@ class GcodeModel(Model):
                 ntravelcoords = travel_coords_count(nlines)
                 ncoords = coords_count(nlines)
                 nindices = indices_count(nlines)
+                # TODO: only reallocate memory if needed
+                # compute ncoords(nlines-lines_processed)+vertex_k
                 if ncoords != vertices.size:
                     self.travels.resize(ntravelcoords, refcheck = False)
                     self.vertices.resize(ncoords, refcheck = False)
@@ -475,33 +477,70 @@ class GcodeModel(Model):
                                 avg_move_normal_y /= norm
                             delta_angle = move_angle - prev_move_angle
                             delta_angle = (delta_angle + twopi) % twopi
-                            fact = math.cos(delta_angle / 2)
-                            fact = max(0.3, abs(fact))
-                            # TODO: Handle cases where the above would create a "peak"
-                            # at the intersection by adding an extra set of vertices
-                            # and facets
+                            fact = abs(math.cos(delta_angle / 2))
+                            # If move is turning too much, avoid creating a big peak
+                            # by adding an intermediate box
                             if fact < 0.5:
-                                pass
-                            hw = path_halfwidth / fact
-                            # Compute vertices
-                            p1x = prev_pos[0] - hw * avg_move_normal_x
-                            p2x = prev_pos[0] + hw * avg_move_normal_x
-                            p1y = prev_pos[1] - hw * avg_move_normal_y
-                            p2y = prev_pos[1] + hw * avg_move_normal_y
-                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
-                            new_vertices.extend((p1x, p1y, prev_pos[2]))
-                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
-                            new_vertices.extend((p2x, p2y, prev_pos[2]))
-                            new_normals.extend((0, 0, 1))
-                            new_normals.extend((-avg_move_normal_x, -avg_move_normal_y, 0))
-                            new_normals.extend((0, 0, -1))
-                            new_normals.extend((avg_move_normal_x, avg_move_normal_y, 0))
-                            first = vertex_k / 3
-                            # Link to previous
-                            new_indices += triangulate_box(prev_id, prev_id + 1,
-                                                           prev_id + 2, prev_id + 3,
-                                                           first, first + 1,
-                                                           first + 2, first + 3)
+                                # FIXME: It looks like there's some heavy code duplication here...
+                                hw = path_halfwidth
+                                p1x = prev_pos[0] - hw * prev_move_normal_x
+                                p2x = prev_pos[0] + hw * prev_move_normal_x
+                                p1y = prev_pos[1] - hw * prev_move_normal_y
+                                p2y = prev_pos[1] + hw * prev_move_normal_y
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                                new_vertices.extend((p1x, p1y, prev_pos[2]))
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                                new_vertices.extend((p2x, p2y, prev_pos[2]))
+                                new_normals.extend((0, 0, 1))
+                                new_normals.extend((-prev_move_normal_x, -prev_move_normal_y, 0))
+                                new_normals.extend((0, 0, -1))
+                                new_normals.extend((prev_move_normal_x, prev_move_normal_y, 0))
+                                first = vertex_k / 3
+                                # Link to previous
+                                new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                               prev_id + 2, prev_id + 3,
+                                                               first, first + 1,
+                                                               first + 2, first + 3)
+                                p1x = prev_pos[0] - hw * move_normal_x
+                                p2x = prev_pos[0] + hw * move_normal_x
+                                p1y = prev_pos[1] - hw * move_normal_y
+                                p2y = prev_pos[1] + hw * move_normal_y
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                                new_vertices.extend((p1x, p1y, prev_pos[2]))
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                                new_vertices.extend((p2x, p2y, prev_pos[2]))
+                                new_normals.extend((0, 0, 1))
+                                new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                                new_normals.extend((0, 0, -1))
+                                new_normals.extend((move_normal_x, move_normal_y, 0))
+                                prev_id += 4
+                                first += 4
+                                # Link to previous
+                                new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                               prev_id + 2, prev_id + 3,
+                                                               first, first + 1,
+                                                               first + 2, first + 3)
+                            else:
+                                hw = path_halfwidth / fact
+                                # Compute vertices
+                                p1x = prev_pos[0] - hw * avg_move_normal_x
+                                p2x = prev_pos[0] + hw * avg_move_normal_x
+                                p1y = prev_pos[1] - hw * avg_move_normal_y
+                                p2y = prev_pos[1] + hw * avg_move_normal_y
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                                new_vertices.extend((p1x, p1y, prev_pos[2]))
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                                new_vertices.extend((p2x, p2y, prev_pos[2]))
+                                new_normals.extend((0, 0, 1))
+                                new_normals.extend((-avg_move_normal_x, -avg_move_normal_y, 0))
+                                new_normals.extend((0, 0, -1))
+                                new_normals.extend((avg_move_normal_x, avg_move_normal_y, 0))
+                                first = vertex_k / 3
+                                # Link to previous
+                                new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                               prev_id + 2, prev_id + 3,
+                                                               first, first + 1,
+                                                               first + 2, first + 3)
                         else:
                             # Compute vertices normal to the current move and cap it
                             p1x = prev_pos[0] - path_halfwidth * move_normal_x
