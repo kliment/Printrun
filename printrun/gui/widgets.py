@@ -118,7 +118,7 @@ class MacroEditor(wx.Dialog):
 
 SETTINGS_GROUPS = {"Printer": _("Printer settings"),
                    "UI": _("User interface"),
-                   "3D": _("3D Viewer"),
+                   "Viewer": _("Viewer"),
                    "Colors": _("Colors"),
                    "External": _("External commands")}
 
@@ -134,7 +134,7 @@ class PronterOptionsDialog(wx.Dialog):
         all_settings = pronterface.settings._all_settings()
         group_list = []
         groups = {}
-        for group in ["Printer", "UI", "3D", "Colors", "External"]:
+        for group in ["Printer", "UI", "Viewer", "Colors", "External"]:
             group_list.append(group)
             groups[group] = []
         for setting in all_settings:
@@ -146,18 +146,29 @@ class PronterOptionsDialog(wx.Dialog):
             grouppanel = wx.Panel(notebook, -1)
             notebook.AddPage(grouppanel, SETTINGS_GROUPS[group])
             settings = groups[group]
-            grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = 8, vgap = 2)
-            grid.SetFlexibleDirection(wx.BOTH)
-            grid.AddGrowableCol(1)
-            grid.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+            grid = wx.GridBagSizer(hgap = 8, vgap = 2)
+            current_row = 0
             for setting in settings:
+                if setting.name.startswith("separator_"):
+                    sep = wx.StaticLine(grouppanel, size = (-1, 5), style = wx.LI_HORIZONTAL)
+                    grid.Add(sep, pos = (current_row, 0), span = (1, 2),
+                             border = 3, flag = wx.ALIGN_CENTER | wx.ALL | wx.EXPAND)
+                    current_row += 1
                 label, widget = setting.get_label(grouppanel), setting.get_widget(grouppanel)
-                grid.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.ALIGN_RIGHT)
-                grid.Add(widget, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.EXPAND)
+                if setting.name.startswith("separator_"):
+                    font = label.GetFont()
+                    font.SetWeight(wx.BOLD)
+                    label.SetFont(font)
+                grid.Add(label, pos = (current_row, 0),
+                         flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+                grid.Add(widget, pos = (current_row, 1),
+                         flag = wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
                 if hasattr(label, "set_default"):
                     label.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
                     if hasattr(widget, "Bind"):
                         widget.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
+                current_row += 1
+            grid.AddGrowableCol(1)
             grouppanel.SetSizer(grid)
         sbox.Add(notebook, 1, wx.EXPAND)
         panel.SetSizer(sbox)

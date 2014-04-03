@@ -178,7 +178,7 @@ class ComboSetting(wxSetting):
 
 class SpinSetting(wxSetting):
 
-    def __init__(self, name, default, min, max, increment = 0.1, label = None, help = None, group = None):
+    def __init__(self, name, default, min, max, label = None, help = None, group = None, increment = 0.1):
         super(SpinSetting, self).__init__(name, default, label, help, group)
         self.min = min
         self.max = max
