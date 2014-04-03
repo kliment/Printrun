@@ -17,7 +17,8 @@ from Queue import Queue
 from collections import deque
 import wx
 import time
-from printrun import gcoder
+from . import gcoder
+from .injectgcode import injector
 
 from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
@@ -42,6 +43,8 @@ class GvizBaseFrame(wx.Frame):
         self.toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
         self.toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
         self.toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"), longHelp = '')
+        self.toolbar.AddSeparator()
+        self.toolbar.AddLabelTool(6, " " + _("Inject G-Code"), wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
 
         vbox.Add(self.toolbar, 0, border = 5)
 
@@ -71,8 +74,6 @@ class GvizWindow(GvizBaseFrame):
 
         self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
 
-        self.toolbar.AddSeparator()
-        # self.toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Insert Code at start of this layer"), '')
         self.toolbar.Realize()
         vbox.Add(self.p, 1, wx.EXPAND)
 
@@ -82,7 +83,7 @@ class GvizWindow(GvizBaseFrame):
         self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
-        # self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 6)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.inject(), id = 6)
 
         self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
@@ -201,9 +202,8 @@ class Gviz(wx.Panel):
         self.paint_overlay = None
 
     def inject(self):
-        # import pdb; pdb.set_trace()
-        print "Inject code here..."
-        print "Layer " + str(self.layerindex + 1) + " - Z = " + str(self.get_currentz()) + " mm"
+        layer = self.layers.index(self.layerindex)
+        injector(self.gcode, self.layerindex, layer)
 
     def clearhilights(self):
         self.hilight.clear()
@@ -214,6 +214,7 @@ class Gviz(wx.Panel):
             self.hilightarcsqueue.get_nowait()
 
     def clear(self):
+        self.gcode = None
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
         self.hilightpos = self.lastpos[:]
         self.gcoder = gcoder.GCode([], get_home_pos(self.build_dimensions))
@@ -408,6 +409,7 @@ class Gviz(wx.Panel):
 
     def addfile_perlayer(self, gcode, showall = False):
         self.clear()
+        self.gcode = gcode
         self.showall = showall
         generator = self.add_parsed_gcodes(gcode)
         generator_output = generator.next()

@@ -219,6 +219,34 @@ class GCode(object):
     def __iter__(self):
         return self.lines.__iter__()
 
+    def prepend_to_layer(self, commands, layer_idx):
+        # Prepend commands in reverse order
+        commands = [c.strip() for c in commands[::-1] if c.strip()]
+        layer = self.all_layers[layer_idx]
+        # Find start index to append lines
+        # and end index to append new indices
+        start_index = self.layer_idxs.index(layer_idx)
+        for i in range(start_index, len(self.layer_idxs)):
+            if self.layer_idxs[i] != layer_idx:
+                end_index = i
+                break
+        else:
+            end_index = i + 1
+        end_line = self.line_idxs[end_index - 1]
+        for i, command in enumerate(commands):
+            gline = Line(command)
+            # Split to get command
+            split(gline)
+            # Force is_move to False
+            gline.is_move = False
+            # Insert gline at beginning of layer
+            layer.insert(0, gline)
+            # Insert gline at beginning of list
+            self.lines.insert(start_index, gline)
+            # Update indices arrays & global gcodes list
+            self.layer_idxs.insert(end_index + i, layer_idx)
+            self.line_idxs.insert(end_index + i, end_line + i + 1)
+
     def append(self, command, store = True):
         command = command.strip()
         if not command:
