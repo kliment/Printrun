@@ -350,16 +350,45 @@ class GcodeModel(Model):
         self.count_travel_indices = count_travel_indices = [0]
         self.count_print_indices = count_print_indices = [0]
         self.count_print_vertices = count_print_vertices = [0]
+
+        # Some trivial computations, but that's mostly for documentation :)
+        # Not like 10 multiplications are going to cost much time vs what's
+        # about to happen :)
+
+        # Max number of values which can be generated per gline
+        # to store coordinates/colors/normals.
+        # Nicely enough we have 3 per kind of thing for all kinds.
+        coordspervertex = 3
+        verticesperline = 4
+        coordsperline = coordspervertex * verticesperline
+        coords_count = lambda nlines: nlines * coordsperline
+
+        travelverticesperline = 2
+        travelcoordsperline = coordspervertex * travelverticesperline
+        travel_coords_count = lambda nlines: nlines * travelcoordsperline
+
+        trianglesperface = 2
+        facesperbox = 4
+        trianglesperbox = trianglesperface * facesperbox
+        verticespertriangle = 3
+        indicesperbox = verticespertriangle * trianglesperbox
+        boxperline = 1
+        indicesperline = indicesperbox * boxperline
+        indices_count = lambda nlines: nlines * indicesperline
+
         nlines = len(model_data)
-        travel_vertices = self.travels = numpy.zeros(nlines * 6, dtype = GLfloat)
+        ntravelcoords = travel_coords_count(nlines)
+        ncoords = coords_count(nlines)
+        nindices = indices_count(nlines)
+        travel_vertices = self.travels = numpy.zeros(ntravelcoords, dtype = GLfloat)
         travel_vertex_k = 0
-        vertices = self.vertices = numpy.zeros(nlines * 12, dtype = GLfloat)
+        vertices = self.vertices = numpy.zeros(ncoords, dtype = GLfloat)
         vertex_k = 0
-        colors = self.colors = numpy.zeros(nlines * 12, dtype = GLfloat)
+        colors = self.colors = numpy.zeros(ncoords, dtype = GLfloat)
         color_k = 0
-        normals = self.normals = numpy.zeros(nlines * 12, dtype = GLfloat)
+        normals = self.normals = numpy.zeros(ncoords, dtype = GLfloat)
         normal_k = 0
-        indices = self.indices = numpy.zeros(nlines * 24, dtype = GLuint)
+        indices = self.indices = numpy.zeros(nindices, dtype = GLuint)
         index_k = 0
         self.layer_idxs_map = {}
         self.layer_stops = [0]
@@ -380,12 +409,15 @@ class GcodeModel(Model):
         while layer_idx < len(model_data.all_layers):
             with self.lock:
                 nlines = len(model_data)
+                ntravelcoords = travel_coords_count(nlines)
+                ncoords = coords_count(nlines)
+                nindices = indices_count(nlines)
                 if nlines * 12 != vertices.size:
-                    self.travels.resize(nlines * 6, refcheck = False)
-                    self.vertices.resize(nlines * 12, refcheck = False)
-                    self.colors.resize(nlines * 12, refcheck = False)
-                    self.normals.resize(nlines * 12, refcheck = False)
-                    self.indices.resize(nlines * 24, refcheck = False)
+                    self.travels.resize(ntravelcoords, refcheck = False)
+                    self.vertices.resize(ncoords, refcheck = False)
+                    self.colors.resize(ncoords, refcheck = False)
+                    self.normals.resize(ncoords, refcheck = False)
+                    self.indices.resize(nindices, refcheck = False)
                 layer = model_data.all_layers[layer_idx]
                 has_movement = False
                 for gline_idx, gline in enumerate(layer):
