@@ -15,6 +15,7 @@
 
 import platform
 import traceback
+import os
 
 if platform.system() == "Darwin":
     from .osx import inhibit_sleep_osx, deinhibit_sleep_osx
@@ -60,19 +61,18 @@ else:
 try:
     import psutil
 
-    def set_nice(p, nice):
+    def set_nice(nice):
+        p = psutil.Process(os.getpid())
         if callable(p.nice):
             p.nice(nice)
         else:
             p.nice = nice
 
     def set_priority():
-        p = psutil.Process()
-        set_nice(p, 10 if platform.system() != "Windows" else psutil.HIGH_PRIORITY_CLASS)
+        set_nice(10 if platform.system() != "Windows" else psutil.HIGH_PRIORITY_CLASS)
 
     def reset_priority():
-        p = psutil.Process()
-        set_nice(p, 0 if platform.system() != "Windows" else psutil.NORMAL_PRIORITY_CLASS)
+        set_nice(0 if platform.system() != "Windows" else psutil.NORMAL_PRIORITY_CLASS)
 
     def powerset_print_start(reason):
         set_priority()
