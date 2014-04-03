@@ -406,15 +406,18 @@ class GcodeModel(Model):
 
         twopi = 2 * math.pi
 
+        processed_lines = 0
+
         while layer_idx < len(model_data.all_layers):
             with self.lock:
                 nlines = len(model_data)
-                ntravelcoords = travel_coords_count(nlines)
-                ncoords = coords_count(nlines)
-                nindices = indices_count(nlines)
-                # TODO: only reallocate memory if needed
-                # compute ncoords(nlines-lines_processed)+vertex_k
-                if ncoords != vertices.size:
+                remaining_lines = nlines - processed_lines
+                # Only reallocate memory which might be needed, not memory
+                # for everything
+                ntravelcoords = coords_count(remaining_lines) + travel_vertex_k
+                ncoords = coords_count(remaining_lines) + vertex_k
+                nindices = indices_count(remaining_lines) + index_k
+                if ncoords > vertices.size:
                     self.travels.resize(ntravelcoords, refcheck = False)
                     self.vertices.resize(ncoords, refcheck = False)
                     self.colors.resize(ncoords, refcheck = False)
@@ -613,6 +616,8 @@ class GcodeModel(Model):
                     self.num_layers_to_draw = self.max_layers + 1
                     self.initialized = False
                     self.loaded = True
+
+            processed_lines += len(layer)
 
             if callback:
                 callback(layer_idx + 1)
