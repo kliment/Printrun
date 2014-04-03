@@ -295,7 +295,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         maximized = self.IsMaximized()
         self.set("last_window_maximized", maximized)
         if not maximized and not self.IsIconized():
-            size = self.GetClientSize()
+            size = self.GetSize()
             self.set("last_window_width", size[0])
             self.set("last_window_height", size[1])
 
