@@ -22,11 +22,9 @@ from . import gcoder
 from .gl.panel import wxGLPanel
 from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
-from .gl.libtatlin.actors import vec
 
 from pyglet.gl import glPushMatrix, glPopMatrix, \
     glTranslatef, glRotatef, glScalef, glMultMatrixd
-from pyglet.gl import *
 
 from .gviz import GvizBaseFrame
 

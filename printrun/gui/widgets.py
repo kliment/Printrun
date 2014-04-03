@@ -31,7 +31,6 @@ class MacroEditor(wx.Dialog):
         self.panel = wx.Panel(self, -1)
         titlesizer = wx.BoxSizer(wx.HORIZONTAL)
         self.titletext = wx.StaticText(self.panel, -1, "              _")  # title%macro_name)
-        #title.SetFont(wx.Font(11, wx.NORMAL, wx.NORMAL, wx.BOLD))
         titlesizer.Add(self.titletext, 1)
         self.findb = wx.Button(self.panel, -1, _("Find"), style = wx.BU_EXACTFIT)  # New button for "Find" (Jezmy)
         self.findb.Bind(wx.EVT_BUTTON, self.find)
@@ -66,11 +65,8 @@ class MacroEditor(wx.Dialog):
         somecode = self.e.GetValue()
         position = somecode.find(FindValue, self.e.GetInsertionPoint())
         if position == -1:
-         #   ShowMessage(self,-1,  "Not found!")
             self.titletext.SetLabel(_("Not Found!"))
         else:
-        # self.title.SetValue("Position : "+str(position))
-
             self.titletext.SetLabel(str(position))
 
             # ananswer = wx.MessageBox(str(numLines)+" Lines detected in file\n"+str(position), "OK")
@@ -101,7 +97,6 @@ class MacroEditor(wx.Dialog):
             self.indent_chars = "  "
         unindented = ""
         lines = re.split(r"(?:\r\n?|\n)", text)
-        #print lines
         if len(lines) <= 1:
             return text
         for line in lines:
@@ -293,7 +288,8 @@ class TempGauge(wx.Panel):
         dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
-        gauge1, gauge2 = wx.Colour(255, 255, 210), (self.gaugeColour or wx.Colour(234, 82, 0))
+        # gauge1, gauge2 = wx.Colour(255, 255, 210), (self.gaugeColour or wx.Colour(234, 82, 0))
+        gauge1 = wx.Colour(255, 255, 210)
         shadow1, shadow2 = wx.Colour(110, 110, 110), self.bgcolor
         gc = wx.GraphicsContext.Create(dc)
         # draw shadow first
@@ -319,8 +315,8 @@ class TempGauge(wx.Panel):
         w1 = y0 + 9 - width / 2
         w2 = w1 + width
         value = x0 + max(10, min(self.width + 1 - 2, int(self.value * self.scale)))
-        #gc.SetBrush(gc.CreateLinearGradientBrush(x0, y0 + 3, x0, y0 + 15, gauge1, gauge2))
-        #gc.SetBrush(gc.CreateLinearGradientBrush(0, 3, 0, 15, wx.Colour(255, 255, 255), wx.Colour(255, 90, 32)))
+        # gc.SetBrush(gc.CreateLinearGradientBrush(x0, y0 + 3, x0, y0 + 15, gauge1, gauge2))
+        # gc.SetBrush(gc.CreateLinearGradientBrush(0, 3, 0, 15, wx.Colour(255, 255, 255), wx.Colour(255, 90, 32)))
         gc.SetBrush(gc.CreateLinearGradientBrush(x0, y0 + 3, x0, y0 + 15, gauge1, self.interpolatedColour(value, x0, x1, xE, cold, medium, hot)))
         val_path = gc.CreatePath()
         val_path.MoveToPoint(x0, w1)
@@ -328,7 +324,7 @@ class TempGauge(wx.Panel):
         val_path.AddLineToPoint(value + 2, w1 + width / 4)
         val_path.AddLineToPoint(value + 2, w2 - width / 4)
         val_path.AddLineToPoint(value, w2)
-        #val_path.AddLineToPoint(value-4, 10)
+        # val_path.AddLineToPoint(value-4, 10)
         val_path.AddLineToPoint(x0, w2)
         gc.DrawPath(val_path)
         # draw setpoint markers
@@ -344,8 +340,8 @@ class TempGauge(wx.Panel):
         gc.DrawPath(setp_path)
         # draw readout
         text = u"T\u00B0 %u/%u" % (self.value, self.setpoint)
-        #gc.SetFont(gc.CreateFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD), wx.WHITE))
-        #gc.DrawText(text, 29,-2)
+        # gc.SetFont(gc.CreateFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD), wx.WHITE))
+        # gc.DrawText(text, 29,-2)
         gc.SetFont(gc.CreateFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD), wx.WHITE))
         gc.DrawText(self.title, x0 + 19, y0 + 4)
         gc.DrawText(text, x0 + 119, y0 + 4)

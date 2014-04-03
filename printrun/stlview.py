@@ -21,11 +21,17 @@ import time
 import pyglet
 pyglet.options['debug_gl'] = True
 
-from pyglet.gl import *
+from pyglet.gl import GL_AMBIENT_AND_DIFFUSE, glBegin, glClearColor, \
+    glColor3f, GL_CULL_FACE, GL_DEPTH_TEST, GL_DIFFUSE, GL_EMISSION, \
+    glEnable, glEnd, GL_FILL, GLfloat, GL_FRONT_AND_BACK, GL_LIGHT0, \
+    GL_LIGHT1, glLightfv, GL_LIGHTING, GL_LINE, glMaterialf, glMaterialfv, \
+    glMultMatrixd, glNormal3f, glPolygonMode, glPopMatrix, GL_POSITION, \
+    glPushMatrix, glRotatef, glScalef, glShadeModel, GL_SHININESS, \
+    GL_SMOOTH, GL_SPECULAR, glTranslatef, GL_TRIANGLES, glVertex3f
 from pyglet import gl
 
 from .gl.panel import wxGLPanel
-from .gl.trackball import trackball, mulquat, build_rotmatrix
+from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
 
 def vec(*args):
@@ -44,7 +50,7 @@ class stlview(object):
 
         # Create a list of triangle indices.
         indices = range(3 * len(facets))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
-        #print indices[:10]
+        # print indices[:10]
         self.vertex_list = batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -87,25 +93,25 @@ class StlViewPanel(wxGLPanel):
         self.mview_initialized = False
         super(StlViewPanel, self).OnReshape()
 
-    #==========================================================================
+    # ==========================================================================
     # GLFrame OpenGL Event Handlers
-    #==========================================================================
+    # ==========================================================================
     def OnInitGL(self, call_reshape = True):
         '''Initialize OpenGL for use in the window.'''
         if self.GLinitialized:
             return
         self.GLinitialized = True
-        #create a pyglet context for this panel
+        # create a pyglet context for this panel
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
-        #normal gl init
+        # normal gl init
         glClearColor(0, 0, 0, 1)
         glColor3f(1, 0, 0)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
         # Uncomment this line for a wireframe view
-        #glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         # Simple light setup.  On Windows GL_LIGHT0 is enabled by default,
         # but this is not the case on Linux or Mac, so remember to always
@@ -202,22 +208,22 @@ class StlViewPanel(wxGLPanel):
         if event.ControlDown():
             step = 1
             angle = 1
-        #h
+        # h
         if keycode == 72:
             self.parent.move_shape((-step, 0))
-        #l
+        # l
         if keycode == 76:
             self.parent.move_shape((step, 0))
-        #j
+        # j
         if keycode == 75:
             self.parent.move_shape((0, step))
-        #k
+        # k
         if keycode == 74:
             self.parent.move_shape((0, -step))
-        #[
+        # [
         if keycode == 91:
             self.parent.rotate_shape(-angle)
-        #]
+        # ]
         if keycode == 93:
             self.parent.rotate_shape(angle)
         event.Skip()
@@ -235,7 +241,7 @@ class StlViewPanel(wxGLPanel):
             v += g * dt
             if obj.offsets[2] < 0:
                 obj.scale[2] *= 1 - 3 * dt
-        #return
+        # return
         v = v / 4
         while obj.offsets[2] < basepos:
             time.sleep(dt)
@@ -256,8 +262,8 @@ class StlViewPanel(wxGLPanel):
         stlview(m.facets, batch = batch)
         m.batch = batch
         m.animoffset = 300
-        #print m
-        #threading.Thread(target = self.anim, args = (m, )).start()
+        # print m
+        # threading.Thread(target = self.anim, args = (m, )).start()
         wx.CallAfter(self.Refresh)
 
     def update_object_resize(self):

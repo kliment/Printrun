@@ -73,9 +73,9 @@ class BufferedCanvas(wx.Panel):
             pass  # the sauce, please
         self.Bind(wx.EVT_ERASE_BACKGROUND, disable_event)
 
-    ##
-    ## General methods
-    ##
+    #
+    # General methods
+    #
 
     def draw(self, dc, w, h):
         """
@@ -97,9 +97,9 @@ class BufferedCanvas(wx.Panel):
             height = 1
         return (width, height)
 
-    ##
-    ## Event handlers
-    ##
+    #
+    # Event handlers
+    #
 
     def onPaint(self, event):
         # Blit the front buffer to the screen

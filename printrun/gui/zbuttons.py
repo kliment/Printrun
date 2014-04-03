@@ -124,9 +124,9 @@ class ZButtons(BufferedCanvas):
             gc.SetBrush(wx.Brush(self.bgcolormask))
             gc.DrawRectangle(0, 0, w, h)
 
-    ## ------ ##
-    ## Events ##
-    ## ------ ##
+    # ------ #
+    # Events #
+    # ------ #
 
     def OnMotion(self, event):
         if not self.enabled:

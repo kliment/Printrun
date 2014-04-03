@@ -122,8 +122,8 @@ if sys.argv[1] in("install", "uninstall") and len(prefix):
 
 target_images_path = "share/pronterface/images/"
 data_files = [('share/pixmaps/', ['pronterface.png', 'plater.png', 'pronsole.png']),
-              ('share/applications', ['pronterface.desktop','pronsole.desktop','plater.desktop']),
-              ('share/appdata', ['pronterface.appdata.xml','pronsole.appdata.xml','plater.appdata.xml'])]
+              ('share/applications', ['pronterface.desktop', 'pronsole.desktop', 'plater.desktop']),
+              ('share/appdata', ['pronterface.appdata.xml', 'pronsole.appdata.xml', 'plater.appdata.xml'])]
 
 for basedir, subdirs, files in os.walk("images"):
     images = []

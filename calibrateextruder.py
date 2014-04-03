@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-#Interactive RepRap e axis calibration program
-#(C) Nathan Zadoks 2011
+# Interactive RepRap e axis calibration program
+# (C) Nathan Zadoks 2011
 
 s = 300  # Extrusion speed (mm/min)
 n = 100  # Default length to extrude
@@ -95,7 +95,7 @@ def gettemp(p):
 if not os.path.exists(port):
     port = 0
 
-#Parse options
+# Parse options
 help = u"""
 %s [ -l DISTANCE ] [ -s STEPS ] [ -t TEMP ] [ -p PORT ]
         -l      --length        Length of filament to extrude for each calibration step (default: %d mm)
@@ -126,7 +126,7 @@ for o, a in opts:
     elif o in ('-p', '--port'):
         port = a
 
-#Show initial parameters
+# Show initial parameters
 print "Initial parameters"
 print "Steps per mm:    %3d steps" % k
 print "Length extruded: %3d mm" % n
@@ -135,7 +135,7 @@ print "Serial port:     %s" % (port if port else 'auto')
 
 p = None
 try:
-    #Connect to printer
+    # Connect to printer
     w("Connecting to printer..")
     try:
         p = printcore(port, 115200)
@@ -149,7 +149,7 @@ try:
 
     heatup(p, temp)
 
-    #Calibration loop
+    # Calibration loop
     while n != m:
         heatup(p, temp, True)
         p.send_now("G92 E0")  # Reset e axis

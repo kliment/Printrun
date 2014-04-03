@@ -281,9 +281,9 @@ class XYButtons(BufferedCanvas):
         # for idx, kpos in self.label_overlay_positions.items():
         #    dc.DrawCircle(kpos[0], kpos[1], kpos[2])
 
-    ## ------ ##
-    ## Events ##
-    ## ------ ##
+    # ------ #
+    # Events #
+    # ------ #
     def OnTopLevelKey(self, evt):
         # Let user press escape on any control, and return focus here
         if evt.GetKeyCode() == wx.WXK_ESCAPE:

@@ -271,7 +271,7 @@ class GCode(object):
             cur_layer_has_extrusion = False
 
         for line in lines:
-            ## Parse line
+            # # Parse line
             split_raw = split(line)
             if line.command:
                 # Update properties
@@ -342,7 +342,7 @@ class GCode(object):
                 line.current_y = current_y
                 line.current_z = current_z
 
-                ## Process extrusion
+                # # Process extrusion
                 if line.e is not None:
                     if line.is_move:
                         if line.relative_e:
@@ -358,7 +358,7 @@ class GCode(object):
                     elif line.command == "G92":
                         offset_e = current_e - line.e
 
-                ## Create layers
+                # # Create layers
                 if not build_layers:
                     continue
                 # FIXME : looks like this needs to be tested with "lift Z on move"
@@ -413,7 +413,7 @@ class GCode(object):
                 line_idxs.append(layer_line)
                 layer_line += 1
                 prev_z = cur_z
-            ### Loop done
+            # ## Loop done
 
         # Store current status
         self.imperial = imperial
@@ -494,7 +494,7 @@ class GCode(object):
         totalduration = 0.0
         acceleration = 2000.0  # mm/s^2
         layerbeginduration = 0.0
-        #TODO:
+        # TODO:
         # get device caps from firmware: max speed, acceleration/axis
         # (including extruder)
         # calculate the maximum move duration accounting for above ;)

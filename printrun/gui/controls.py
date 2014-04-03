@@ -123,7 +123,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
             container = self
         container.Add(widget, *args, **kwargs)
 
-    ## Hotend & bed temperatures
+    # Hotend & bed temperatures #
 
     # Hotend temp
     add("htemp_label", wx.StaticText(parentpanel, -1, _("Heat:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
@@ -168,8 +168,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     root.btemp.SetValue(str(root.settings.last_bed_temperature))
     root.htemp.SetValue(str(root.settings.last_temperature))
 
-    ## added for an error where only the bed would get (pla) or (abs).
-    #This ensures, if last temp is a default pla or abs, it will be marked so.
+    # added for an error where only the bed would get (pla) or (abs).
+    # This ensures, if last temp is a default pla or abs, it will be marked so.
     # if it is not, then a (user) remark is added. This denotes a manual entry
 
     for i in btemp_choices:
@@ -184,7 +184,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     if '(' not in root.htemp.Value:
         root.htemp.SetValue(root.htemp.Value + ' (user)')
 
-    ## Speed control
+    # Speed control #
     speedpanel = root.newPanel(parentpanel)
     speedsizer = wx.BoxSizer(wx.HORIZONTAL)
     speedsizer.Add(wx.StaticText(speedpanel, -1, _("Print speed:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
@@ -210,7 +210,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         root.speed_label.SetLabel(_("%d%%") % value)
     root.speed_slider.Bind(wx.EVT_SCROLL, speedslider_scroll)
 
-    ## Temperature gauges
+    # Temperature gauges #
 
     if root.display_gauges:
         root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300, bgcolor = root.bgcolor)
@@ -234,7 +234,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
         root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
 
-    ## Temperature (M105) feedback display
+    # Temperature (M105) feedback display #
     root.tempdisp = wx.StaticText(parentpanel, -1, "", style = wx.ST_NO_AUTORESIZE)
 
     def on_tempdisp_size(evt):
@@ -248,14 +248,14 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     root.tempdisp.SetLabel = tempdisp_setlabel
     add("tempdisp", root.tempdisp, flag = wx.EXPAND)
 
-    ## Temperature graph
+    # Temperature graph #
 
     if root.display_graph:
         root.graph = Graph(parentpanel, wx.ID_ANY, root)
         add("tempgraph", root.graph, flag = wx.EXPAND | wx.ALL, border = 5)
         root.graph.Bind(wx.EVT_LEFT_DOWN, root.graph.show_graph_window)
 
-    ## Extrusion controls
+    # Extrusion controls #
 
     # Extrusion settings
     esettingspanel = root.newPanel(parentpanel)

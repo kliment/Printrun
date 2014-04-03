@@ -127,28 +127,28 @@ class showstl(wx.Window):
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
         keycode = event.GetKeyCode()
-        #print keycode
+        # print keycode
         step = 5
         angle = 18
         if event.ControlDown():
             step = 1
             angle = 1
-        #h
+        # h
         if keycode == 72:
             self.move_shape((-step, 0))
-        #l
+        # l
         if keycode == 76:
             self.move_shape((step, 0))
-        #j
+        # j
         if keycode == 75:
             self.move_shape((0, step))
-        #k
+        # k
         if keycode == 74:
             self.move_shape((0, -step))
-        #[
+        # [
         if keycode == 91:
             self.rotate_shape(-angle)
-        #]
+        # ]
         if keycode == 93:
             self.rotate_shape(angle)
         event.Skip()
@@ -297,7 +297,7 @@ class StlPlater(Plater):
                     self.s.drawmodel(newmodel, 2)
                     break
             else:
-                #Filter out the path, just show the STL filename.
+                # Filter out the path, just show the STL filename.
                 self.load_stl_into_model(name, name)
         self.Refresh()
 
@@ -402,4 +402,4 @@ class StlPlater(Plater):
                         del models[name]
                         break
         if p.wait() != 0:
-            raise RuntimeError, _("simarrange failed")
+            raise RuntimeError(_("simarrange failed"))

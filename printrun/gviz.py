@@ -72,7 +72,7 @@ class GvizWindow(GvizBaseFrame):
         self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
 
         self.toolbar.AddSeparator()
-        #self.toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Insert Code at start of this layer"), '')
+        # self.toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Insert Code at start of this layer"), '')
         self.toolbar.Realize()
         vbox.Add(self.p, 1, wx.EXPAND)
 
@@ -82,7 +82,7 @@ class GvizWindow(GvizBaseFrame):
         self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
-        #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 6)
+        # self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 6)
 
         self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
@@ -201,7 +201,7 @@ class Gviz(wx.Panel):
         self.paint_overlay = None
 
     def inject(self):
-        #import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         print "Inject code here..."
         print "Layer " + str(self.layerindex + 1) + " - Z = " + str(self.get_currentz()) + " mm"
 

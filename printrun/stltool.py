@@ -39,14 +39,14 @@ I = [
 
 def transpose(matrix):
     return zip(*matrix)
-    #return [[v[i] for v in matrix] for i in xrange(len(matrix[0]))]
+    # return [[v[i] for v in matrix] for i in xrange(len(matrix[0]))]
 
 def multmatrix(vector, matrix):
     return map(sum, transpose(map(lambda x: [x[0] * p for p in x[1]], zip(vector, transpose(matrix)))))
 
 def applymatrix(facet, matrix = I):
-    #return facet
-    #return [map(lambda x:-1.0*x, multmatrix(facet[0]+[1], matrix)[:3]), map(lambda x:multmatrix(x+[1], matrix)[:3], facet[1])]
+    # return facet
+    # return [map(lambda x:-1.0*x, multmatrix(facet[0]+[1], matrix)[:3]), map(lambda x:multmatrix(x+[1], matrix)[:3], facet[1])]
     return genfacet(map(lambda x: multmatrix(x + [1], matrix)[:3], facet[1]))
 
 f = [[0, 0, 0], [[-3.022642, 0.642482, -9.510565], [-3.022642, 0.642482, -9.510565], [-3.022642, 0.642482, -9.510565]]]
@@ -70,7 +70,7 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = 1):
             for j in i[1]:
                 l += j[:]
             l += [0]
-            #print len(l)
+            # print len(l)
             buf += facetformat.pack(*l)
         f.write(buf)
         f.close()
@@ -204,7 +204,7 @@ class stl(object):
         if l.startswith("solid"):
             self.insolid = 1
             self.name = l[6:]
-            #print self.name
+            # print self.name
 
         elif l.startswith("endsolid"):
             self.insolid = 0
@@ -244,4 +244,4 @@ if __name__ == "__main__":
 
         print i, len(working)
     emitstl("../../Downloads/frame-vertex-neo-foot-x4-a.stl", s.facets, "emitted_object")
-#stl("../prusamendel/stl/mendelplate.stl")
+# stl("../prusamendel/stl/mendelplate.stl")

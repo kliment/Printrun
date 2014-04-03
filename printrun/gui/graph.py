@@ -67,8 +67,8 @@ class Graph(BufferedCanvas):
         if self.rescaley:
             self._ybounds = Graph._YBounds(self)
 
-        #If rescaley is set then ybars gives merely an estimate
-        #Note that "bars" actually indicate the number of internal+external gridlines.
+        # If rescaley is set then ybars gives merely an estimate
+        # Note that "bars" actually indicate the number of internal+external gridlines.
         self.ybars = 5
         self.xbars = 7  # One bar per 10 second
         self.xsteps = 60  # Covering 1 minute in the graph
@@ -99,22 +99,22 @@ class Graph(BufferedCanvas):
         self.Refresh()
 
     def drawgrid(self, dc, gc):
-        #cold, medium, hot = wx.Colour(0, 167, 223),\
-        #                    wx.Colour(239, 233, 119),\
-        #                    wx.Colour(210, 50.100)
-        #col1 = wx.Colour(255, 0, 0, 255)
-        #col2 = wx.Colour(255, 255, 255, 128)
+        # cold, medium, hot = wx.Colour(0, 167, 223),\
+        #                     wx.Colour(239, 233, 119),\
+        #                     wx.Colour(210, 50.100)
+        # col1 = wx.Colour(255, 0, 0, 255)
+        # col2 = wx.Colour(255, 255, 255, 128)
 
-        #b = gc.CreateLinearGradientBrush(0, 0, w, h, col1, col2)
+        # b = gc.CreateLinearGradientBrush(0, 0, w, h, col1, col2)
 
         gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
 
-        #gc.SetBrush(wx.Brush(wx.Colour(245, 245, 255, 52)))
+        # gc.SetBrush(wx.Brush(wx.Colour(245, 245, 255, 52)))
 
-        #gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0, 0, 255))))
+        # gc.SetBrush(gc.CreateBrush(wx.Brush(wx.Colour(0, 0, 0, 255))))
         gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 255), 1))
 
-        #gc.DrawLines(wx.Point(0, 0), wx.Point(50, 10))
+        # gc.DrawLines(wx.Point(0, 0), wx.Point(50, 10))
 
         font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD)
         gc.SetFont(font, wx.Colour(23, 44, 44))
@@ -134,7 +134,7 @@ class Graph(BufferedCanvas):
         firstbar = int(ceil(self.minyvalue / spacing))  # in degrees
         dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
         for y in range(firstbar, firstbar + ybars + 1):
-            #y_pos = y*(float(self.height)/self.ybars)
+            # y_pos = y*(float(self.height)/self.ybars)
             degrees = y * spacing
             y_pos = self._y_pos(degrees)
             dc.DrawLine(0, y_pos, self.width, y_pos)
@@ -148,15 +148,15 @@ class Graph(BufferedCanvas):
                         self.width / 2 - (font.GetPointSize() * 3),
                         self.height / 2 - (font.GetPointSize() * 1))
 
-        #dc.DrawCircle(50, 50, 1)
+        # dc.DrawCircle(50, 50, 1)
 
-        #gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
-        #gc.DrawLines([[20, 30], [10, 53]])
-        #dc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
+        # gc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
+        # gc.DrawLines([[20, 30], [10, 53]])
+        # dc.SetPen(wx.Pen(wx.Colour(255, 0, 0, 0), 1))
 
     def _y_pos(self, temperature):
         """Converts a temperature, in degrees, to a pixel position"""
-        #fraction of the screen from the bottom
+        # fraction of the screen from the bottom
         frac = (float(temperature - self.minyvalue)
                 / (self.maxyvalue - self.minyvalue))
         return int((1.0 - frac) * (self.height - 1))
@@ -168,7 +168,7 @@ class Graph(BufferedCanvas):
         log_yspan = log10(yspan / self.ybars)
         exponent = int(floor(log_yspan))
 
-        #calculate boundary points between allowed spacings
+        # calculate boundary points between allowed spacings
         log1_25 = log10(2) + log10(1) + log10(2.5) - log10(1 + 2.5)
         log25_5 = log10(2) + log10(2.5) + log10(5) - log10(2.5 + 5)
         log5_10 = log10(2) + log10(5) + log10(10) - log10(5 + 10)
@@ -205,7 +205,7 @@ class Graph(BufferedCanvas):
 
         if len(text) > 0:
             font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD)
-            #font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+            # font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
             if self.timer.IsRunning() is False:
                 gc.SetFont(font, wx.Colour(128, 128, 128))
             else:
@@ -337,7 +337,7 @@ class Graph(BufferedCanvas):
 
             # Frequency to rescale the graph
             self.update_freq = 10
-            #number of updates since last full refresh
+            # number of updates since last full refresh
             self._last_update = self.update_freq
 
         def update(self, forceUpdate=False):
@@ -418,7 +418,7 @@ class Graph(BufferedCanvas):
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
 
-            #We have to rescale, so add padding
+            # We have to rescale, so add padding
             bufratio = self.buffer / (1.0 - self.buffer)
             if miny < self.graph.minyvalue:
                 padding = (self.graph.maxyvalue - miny) * bufratio

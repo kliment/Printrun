@@ -177,7 +177,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.display_graph = self.settings.tempgraph
         self.display_gauges = self.settings.tempgauges
 
-        #set feedrates in printcore for pause/resume
+        # set feedrates in printcore for pause/resume
         self.p.xy_feedrate = self.settings.xy_feedrate
         self.p.z_feedrate = self.settings.z_feedrate
 
@@ -361,7 +361,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_settemp(self, l = ""):
         try:
-            if not l.__class__ in (str, unicode) or not len(l):
+            if l.__class__ not in (str, unicode) or not len(l):
                 l = str(self.htemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.temps.keys():
@@ -381,7 +381,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_bedtemp(self, l = ""):
         try:
-            if not l.__class__ in (str, unicode) or not len(l):
+            if l.__class__ not in (str, unicode) or not len(l):
                 l = str(self.btemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.bedtemps.keys():
@@ -401,7 +401,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_setspeed(self, l = ""):
         try:
-            if not l.__class__ in (str, unicode) or not len(l):
+            if l.__class__ not in (str, unicode) or not len(l):
                 l = str(self.speed_slider.GetValue())
             else:
                 l = l.lower()
@@ -1175,7 +1175,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.p.pause()
                 self.p.runSmallScript(self.pauseScript)
             self.paused = True
-            #self.p.runSmallScript(self.pauseScript)
+            # self.p.runSmallScript(self.pauseScript)
             self.extra_print_time += int(time.time() - self.starttime)
             wx.CallAfter(self.pausebtn.SetLabel, _("Resume"))
             wx.CallAfter(self.toolbarsizer.Layout)
@@ -1213,7 +1213,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.recvlisteners.append(self.waitforsdresponse)
                 self.p.send_now("M23 " + target.lower())
         dlg.Destroy()
-        #print self.sdfiles
+        # print self.sdfiles
 
     def getfiles(self):
         if not self.p.online:
@@ -1695,7 +1695,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.endcb()
             return
         if "SD printing byte" in l:
-            #M27 handler
+            # M27 handler
             try:
                 resp = l.split()
                 vals = resp[-1].split("/")
@@ -1718,7 +1718,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if btndef is None:
                 if i == len(custombuttons) - 1:
                     self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
-                    #b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+                    # b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
@@ -1755,7 +1755,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 return rest[1:].split('"', 1)
             else:
                 return rest.split(None, 1)
-        #try:
+        # try:
         num, argstr = nextarg(argstr)
         num = int(num)
         title, argstr = nextarg(argstr)
@@ -1777,7 +1777,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.custombuttons[num].background = colour
         if not self.processing_rc:
             self.cbuttons_reload()
-        #except Exception, x:
+        # except Exception, x:
         #    print "Bad syntax for button definition, see 'help button'"
         #    print x
 
@@ -1788,7 +1788,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         elif bdef.background:
             colour = bdef.background
             if type(colour) not in (str, unicode):
-                #print type(colour), map(type, colour)
+                # print type(colour), map(type, colour)
                 if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
                     colour = map(lambda x: x % 256, colour)
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1807,7 +1807,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if button.properties.background:
                 colour = button.properties.background
                 if type(colour) not in (str, unicode):
-                    #print type(colour)
+                    # print type(colour)
                     if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
                         colour = map(lambda x: x % 256, colour)
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1846,7 +1846,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.custombuttons[n], self.custombuttons[n + 1] = self.custombuttons[n + 1], self.custombuttons[n]
         self.cbutton_save(n, self.custombuttons[n])
         self.cbutton_save(n + 1, self.custombuttons[n + 1])
-        #if self.custombuttons[-1] is None:
+        # if self.custombuttons[-1] is None:
         #    del self.custombuttons[-1]
         wx.CallAfter(self.cbuttons_reload)
 
@@ -1889,15 +1889,15 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if not hasattr(self, "dragging"):
                 # init dragging of the custom button
                 if hasattr(obj, "custombutton") and obj.properties is not None:
-                    #self.newbuttonbutton.SetLabel("")
-                    #self.newbuttonbutton.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-                    #self.newbuttonbutton.SetForegroundColour("black")
-                    #self.newbuttonbutton.SetSize(obj.GetSize())
-                    #if self.toolbarsizer.GetItem(self.newbuttonbutton) is not None:
+                    # self.newbuttonbutton.SetLabel("")
+                    # self.newbuttonbutton.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+                    # self.newbuttonbutton.SetForegroundColour("black")
+                    # self.newbuttonbutton.SetSize(obj.GetSize())
+                    # if self.toolbarsizer.GetItem(self.newbuttonbutton) is not None:
                     #    self.toolbarsizer.SetItemMinSize(self.newbuttonbutton, obj.GetSize())
                     #    self.mainsizer.Layout()
                     for b in self.custombuttons_widgets:
-                        #if b.IsFrozen(): b.Thaw()
+                        # if b.IsFrozen(): b.Thaw()
                         if b.properties is None:
                             b.Enable()
                             b.SetLabel("")
@@ -1930,7 +1930,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     if b.GetScreenRect().Contains(scrpos):
                         dst = b
                         break
-                #if dst is None and self.panel.GetScreenRect().Contains(scrpos):
+                # if dst is None and self.panel.GetScreenRect().Contains(scrpos):
                 #    # try to check if it is after buttons at the end
                 #    tspos = self.panel.ClientToScreen(self.toolbarsizer.GetPosition())
                 #    bspos = self.panel.ClientToScreen(self.cbuttonssizer.GetPosition())
@@ -2047,7 +2047,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         okb = wx.Button(dialog, wx.ID_OK, _("Ok"), size = (60, 24))
         dialog.Bind(wx.EVT_TEXT_ENTER, lambda e: dialog.EndModal(wx.ID_OK), dialog.namectrl)
-        #dialog.Bind(wx.EVT_BUTTON, lambda e:self.new_macro_named(dialog, e), okb)
+        # dialog.Bind(wx.EVT_BUTTON, lambda e:self.new_macro_named(dialog, e), okb)
         hbox.Add(okb)
         hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel"), size = (60, 24)))
         vbox.Add(panel)
