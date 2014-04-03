@@ -301,7 +301,10 @@ class GcodeModel(Model):
 
     color_travel = (0.6, 0.6, 0.6, 0.6)
     color_tool0 = (1.0, 0.0, 0.0, 1.0)
-    color_tool1 = (0.31, 0.05, 0.9, 1.0)
+    color_tool1 = (0.67, 0.05, 0.9, 1.0)
+    color_tool2 = (1.0, 0.8, 0., 1.0)
+    color_tool3 = (1.0, 0., 0.62, 1.0)
+    color_tool4 = (0., 1.0, 0.58, 1.0)
     color_printed = (0.2, 0.75, 0, 1.0)
     color_current = (0, 0.9, 1.0, 1.0)
     color_current_printed = (0.1, 0.4, 0, 1.0)
@@ -716,7 +719,10 @@ class GcodeModelLight(Model):
 
     color_travel = (0.6, 0.6, 0.6, 0.6)
     color_tool0 = (1.0, 0.0, 0.0, 0.6)
-    color_tool1 = (0.31, 0.05, 0.9, 0.6)
+    color_tool1 = (0.67, 0.05, 0.9, 0.6)
+    color_tool2 = (1.0, 0.8, 0., 0.6)
+    color_tool3 = (1.0, 0., 0.62, 0.6)
+    color_tool4 = (0., 1.0, 0.58, 0.6)
     color_printed = (0.2, 0.75, 0, 0.6)
     color_current = (0, 0.9, 1.0, 0.8)
     color_current_printed = (0.1, 0.4, 0, 0.8)
