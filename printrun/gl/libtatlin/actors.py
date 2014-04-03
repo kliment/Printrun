@@ -364,12 +364,15 @@ class GcodeModel(Model):
         prev_is_extruding = False
         prev_move_x = None
         prev_move_y = None
+        prev_move_angle = None
 
         prev_pos = (0, 0, 0)
         layer_idx = 0
 
         self.printed_until = 0
         self.only_current = False
+
+        twopi = 2 * math.pi
 
         while layer_idx < len(model_data.all_layers):
             with self.lock:
@@ -413,6 +416,7 @@ class GcodeModel(Model):
                         norm = math.sqrt(norm)
                         move_normal_x = - delta_y / norm
                         move_normal_y = delta_x / norm
+                        move_angle = math.atan2(delta_y, -delta_x)
 
                         # FIXME: compute these dynamically
                         path_halfwidth = self.path_halfwidth * 1.2
@@ -425,22 +429,21 @@ class GcodeModel(Model):
                             # Store previous vertices indices
                             prev_id = vertex_k / 3 - 4
                             # Average directions
-                            avg_move_x = delta_x + prev_move_x
-                            avg_move_y = delta_y + prev_move_y
-                            norm = avg_move_x * avg_move_x + avg_move_y * avg_move_y
-                            # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
-                            if norm == 0:
-                                avg_move_normal_x = move_normal_x
-                                avg_move_normal_y = move_normal_y
-                            else:
-                                norm = math.sqrt(norm)
-                                avg_move_normal_x = - avg_move_y / norm
-                                avg_move_normal_y = avg_move_x / norm
+                            avg_angle = (move_angle + prev_move_angle) / 2
+                            delta_angle = move_angle - prev_move_angle
+                            delta_angle = (delta_angle + twopi) % twopi
+                            avg_move_x = math.cos(avg_angle)
+                            avg_move_y = math.sin(avg_angle)
+                            avg_move_normal_x = -avg_move_y
+                            avg_move_normal_y = -avg_move_x
+                            fact = math.cos(delta_angle / 2)
+                            fact = max(0.3, abs(fact))
+                            hw = path_halfwidth / fact
                             # Compute vertices
-                            p1x = prev_pos[0] - path_halfwidth * avg_move_normal_x
-                            p2x = prev_pos[0] + path_halfwidth * avg_move_normal_x
-                            p1y = prev_pos[1] - path_halfwidth * avg_move_normal_y
-                            p2y = prev_pos[1] + path_halfwidth * avg_move_normal_y
+                            p1x = prev_pos[0] - hw * avg_move_normal_x
+                            p2x = prev_pos[0] + hw * avg_move_normal_x
+                            p1y = prev_pos[1] - hw * avg_move_normal_y
+                            p2y = prev_pos[1] + hw * avg_move_normal_y
                             new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
                             new_vertices.extend((p1x, p1y, prev_pos[2]))
                             new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
@@ -512,6 +515,7 @@ class GcodeModel(Model):
                         prev_is_extruding = True
                         prev_move_x = delta_x
                         prev_move_y = delta_y
+                        prev_move_angle = move_angle
 
                     prev_pos = current_pos
                     count_travel_indices.append(travel_vertex_k / 3)
