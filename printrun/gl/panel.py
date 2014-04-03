@@ -203,11 +203,13 @@ class wxGLPanel(wx.Panel):
         glLoadIdentity()
         self.setup_lights()
         if self.orthographic:
-            ratio = factor * float(min(self.width, self.height)) / self.dist
+            wratio = self.width / self.dist
+            hratio = self.height / self.dist
+            minratio = float(min(wratio, hratio))
             self.zoom_factor = 1.0
-            self.zoomed_width = 1.0
-            self.zoomed_height = 1.0
-            glScalef(ratio, ratio, 1)
+            self.zoomed_width = wratio / minratio
+            self.zoomed_height = hratio / minratio
+            glScalef(factor * minratio, factor * minratio, 1)
 
     def OnDraw(self, *args, **kwargs):
         """Draw the window."""
