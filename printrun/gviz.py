@@ -268,7 +268,10 @@ class Gviz(wx.Panel):
 
     def resize(self, event):
         old_basescale = self.basescale
-        self.size = self.GetClientSizeTuple()
+        width, height = self.GetClientSizeTuple()
+        if width < 1 or height < 1:
+            return
+        self.size = (width, height)
         self.update_basescale()
         zoomratio = float(self.basescale[0]) / old_basescale[0]
         wx.CallLater(200, self.zoom, 0, 0, zoomratio)
@@ -385,6 +388,7 @@ class Gviz(wx.Panel):
         while not self.hilightarcsqueue.empty():
             hlarcs.append(self.hilightarcsqueue.get_nowait())
         self._drawarcs(dc, hlarcs, self.hlpen)
+        dc.SelectObject(wx.NullBitmap)
 
     def paint(self, event):
         if self.dirty:
