@@ -418,8 +418,8 @@ class Status:
         if "T0" in temps: hotend_temp = float(temps["T0"][0])
         elif "T" in temps: hotend_temp = float(temps["T"][0])
         else: hotend_temp = None
-        if temps["T"][1]: hotend_setpoint = float(temps["T"][1])
-        elif temps["T0"][1]: hotend_setpoint = float(temps["T0"][1])
+        if "T0" in temps and temps["T0"][1] is not None: hotend_setpoint = float(temps["T0"][1])
+        elif "T" in temps and temps["T"][1] is not None: hotend_setpoint = float(temps["T"][1])
         else: hotend_setpoint = None
         if hotend_temp is not None:
             self.extruder_temp = hotend_temp
