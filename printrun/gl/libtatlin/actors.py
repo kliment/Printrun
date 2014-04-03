@@ -412,7 +412,7 @@ class GcodeModel(Model):
                 ntravelcoords = travel_coords_count(nlines)
                 ncoords = coords_count(nlines)
                 nindices = indices_count(nlines)
-                if nlines * 12 != vertices.size:
+                if ncoords != vertices.size:
                     self.travels.resize(ntravelcoords, refcheck = False)
                     self.vertices.resize(ncoords, refcheck = False)
                     self.colors.resize(ncoords, refcheck = False)
