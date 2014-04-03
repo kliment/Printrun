@@ -25,7 +25,7 @@ def SetUpIOFramework():
     framework = ctypes.cdll.LoadLibrary(
         '/System/Library/Frameworks/IOKit.framework/IOKit')
 
-  # declare parameters as described in IOPMLib.h
+    # declare parameters as described in IOPMLib.h
     framework.IOPMAssertionCreateWithName.argtypes = [
         ctypes.c_void_p,  # CFStringRef
         ctypes.c_uint32,  # IOPMAssertionLevel
