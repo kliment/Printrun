@@ -441,6 +441,11 @@ class GcodeModel(Model):
                             avg_move_normal_y = -avg_move_x
                             fact = math.cos(delta_angle / 2)
                             fact = max(0.3, abs(fact))
+                            # TODO: Handle cases where the above would create a "peak"
+                            # at the intersection by adding an extra set of vertices
+                            # and facets
+                            if fact < 0.5:
+                                pass
                             hw = path_halfwidth / fact
                             # Compute vertices
                             p1x = prev_pos[0] - hw * avg_move_normal_x
