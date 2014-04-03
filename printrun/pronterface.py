@@ -288,24 +288,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Thaw()
 
     def on_resize(self, event):
+        wx.CallAfter(self.on_resize_real)
+        event.Skip()
+
+    def on_resize_real(self):
         maximized = self.IsMaximized()
         self.set("last_window_maximized", maximized)
-        # FIXME: Hack ! it seems IsMaximized() is not always up to date when
-        # getting this event during unmaximization, so let's compare the window
-        # size to the available screensize. Yes, it's horrible.
-        if maximized:
-            evtsz = event.GetSize()
-            display = wx.Display(wx.Display.GetFromWindow(self))
-            area = display.GetClientArea()
-            # Ugly ! add some extra -20 padding to ensure we are not missing
-            # something
-            if evtsz[0] < area[2] - 20 or evtsz[1] < area[3] - 20:
-                self.set("last_window_maximized", False)
         if not maximized and not self.IsIconized():
-            size = self.GetSize()
+            size = self.GetClientSize()
             self.set("last_window_width", size[0])
             self.set("last_window_height", size[1])
-        event.Skip()
 
     def on_maximize(self, event):
         self.set("last_window_maximized", self.IsMaximized())
