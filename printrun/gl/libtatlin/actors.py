@@ -365,8 +365,8 @@ class GcodeModel(Model):
         self.layer_stops = [0]
 
         prev_is_extruding = False
-        prev_move_x = None
-        prev_move_y = None
+        prev_move_normal_x = None
+        prev_move_normal_y = None
         prev_move_angle = None
 
         prev_pos = (0, 0, 0)
@@ -419,7 +419,7 @@ class GcodeModel(Model):
                         norm = math.sqrt(norm)
                         move_normal_x = - delta_y / norm
                         move_normal_y = delta_x / norm
-                        move_angle = math.atan2(delta_y, -delta_x)
+                        move_angle = math.atan2(delta_y, delta_x)
 
                         # FIXME: compute these dynamically
                         path_halfwidth = self.path_halfwidth * 1.2
@@ -431,14 +431,18 @@ class GcodeModel(Model):
                         if prev_is_extruding:
                             # Store previous vertices indices
                             prev_id = vertex_k / 3 - 4
-                            # Average directions
-                            avg_angle = (move_angle + prev_move_angle) / 2
+                            avg_move_normal_x = (prev_move_normal_x + move_normal_x) / 2
+                            avg_move_normal_y = (prev_move_normal_y + move_normal_y) / 2
+                            norm = avg_move_normal_x * avg_move_normal_x + avg_move_normal_y * avg_move_normal_y
+                            if norm == 0:
+                                avg_move_normal_x = move_normal_x
+                                avg_move_normal_y = move_normal_y
+                            else:
+                                norm = math.sqrt(norm)
+                                avg_move_normal_x /= norm
+                                avg_move_normal_y /= norm
                             delta_angle = move_angle - prev_move_angle
                             delta_angle = (delta_angle + twopi) % twopi
-                            avg_move_x = math.cos(avg_angle)
-                            avg_move_y = math.sin(avg_angle)
-                            avg_move_normal_x = -avg_move_y
-                            avg_move_normal_y = -avg_move_x
                             fact = math.cos(delta_angle / 2)
                             fact = max(0.3, abs(fact))
                             # TODO: Handle cases where the above would create a "peak"
@@ -457,9 +461,9 @@ class GcodeModel(Model):
                             new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
                             new_vertices.extend((p2x, p2y, prev_pos[2]))
                             new_normals.extend((0, 0, 1))
-                            new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                            new_normals.extend((-avg_move_normal_x, -avg_move_normal_y, 0))
                             new_normals.extend((0, 0, -1))
-                            new_normals.extend((move_normal_x, move_normal_y, 0))
+                            new_normals.extend((avg_move_normal_x, avg_move_normal_y, 0))
                             first = vertex_k / 3
                             # Link to previous
                             new_indices += triangulate_box(prev_id, prev_id + 1,
@@ -521,8 +525,8 @@ class GcodeModel(Model):
                         color_k += len(new_colors)
 
                         prev_is_extruding = True
-                        prev_move_x = delta_x
-                        prev_move_y = delta_y
+                        prev_move_normal_x = move_normal_x
+                        prev_move_normal_y = move_normal_y
                         prev_move_angle = move_angle
 
                     prev_pos = current_pos
