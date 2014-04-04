@@ -143,13 +143,8 @@ class StlViewPanel(wxGLPanel):
             self.parent.filenames = None
 
     def double(self, event):
-        p = event.GetPositionTuple()
-        sz = self.GetClientSize()
-        v = map(lambda m, w, b: b * m / w, p, sz, self.build_dimensions[0:2])
-        v[1] = self.build_dimensions[1] - v[1]
-        v += [300]
-        print "Double-click at " + str(v) + " in "
-        print self
+        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
+            self.parent.clickcb(event)
 
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
