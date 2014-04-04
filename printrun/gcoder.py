@@ -106,6 +106,8 @@ class Layer(list):
 
 class GCode(object):
 
+    line_class = Line
+
     lines = None
     layers = None
     all_layers = None
@@ -208,13 +210,12 @@ class GCode(object):
     def prepare(self, data = None, home_pos = None, layer_callback = None):
         self.home_pos = home_pos
         if data:
-            self.lines = [Line(l2) for l2 in
+            line_class = self.line_class
+            self.lines = [line_class(l2) for l2 in
                           (l.strip() for l in data)
                           if l2]
             self._preprocess(build_layers = True,
                              layer_callback = layer_callback)
-            self.filament_length = self.max_e
-            self._compute_bounding_box()
         else:
             self.lines = []
             self.append_layer_id = 0
@@ -318,13 +319,43 @@ class GCode(object):
         offset_y = self.offset_y
         offset_z = self.offset_z
 
+        # Extrusion computation
         current_e = self.current_e
         offset_e = self.offset_e
         total_e = self.total_e
         max_e = self.max_e
 
-        # Initialize layers
+        # Initialize layers and other global computations
         if build_layers:
+            # Bounding box computation
+            xmin = float("inf")
+            ymin = float("inf")
+            zmin = 0
+            xmax = float("-inf")
+            ymax = float("-inf")
+            zmax = float("-inf")
+            # Also compute extrusion-only values
+            xmin_e = float("inf")
+            ymin_e = float("inf")
+            xmax_e = float("-inf")
+            ymax_e = float("-inf")
+
+            # Duration estimation
+            # TODO:
+            # get device caps from firmware: max speed, acceleration/axis
+            # (including extruder)
+            # calculate the maximum move duration accounting for above ;)
+            lastx = lasty = lastz = laste = lastf = 0.0
+            lastdx = 0
+            lastdy = 0
+            x = y = e = f = 0.0
+            currenttravel = 0.0
+            moveduration = 0.0
+            totalduration = 0.0
+            acceleration = 2000.0  # mm/s^2
+            layerbeginduration = 0.0
+
+            # Initialize layers
             all_layers = self.all_layers = []
             all_zs = self.all_zs = set()
             layer_idxs = self.layer_idxs = []
@@ -340,8 +371,13 @@ class GCode(object):
             cur_lines = []
             cur_layer_has_extrusion = False
 
-        for line in lines:
+        for true_line in lines:
             # # Parse line
+            # Use a heavy copy of the light line to preprocess
+            if self.line_class != Line:
+                line = Line(true_line.raw)
+            else:
+                line = true_line
             split_raw = split(line)
             if line.command:
                 # Update properties
@@ -428,532 +464,143 @@ class GCode(object):
                     elif line.command == "G92":
                         offset_e = current_e - line.e
 
-                # # Create layers
-                if not build_layers:
-                    continue
-                # FIXME : looks like this needs to be tested with "lift Z on move"
-                if line.command == "G92" and line.z is not None:
-                    cur_z = line.z
-                elif line.is_move:
-                    if line.z is not None:
-                        if line.relative and cur_z is not None:
-                            cur_z += line.z
-                        else:
-                            cur_z = line.z
-
-                if line.e is not None and line.is_move:
-                    cur_layer_has_extrusion |= line.extruding
-
-                # FIXME: the logic behind this code seems to work, but it might be
-                # broken
-                if cur_z != prev_z:
-                    if prev_z is not None and last_layer_z is not None:
-                        offset = self.est_layer_height if self.est_layer_height else 0.01
-                        if abs(prev_z - last_layer_z) < offset:
-                            if self.est_layer_height is None:
-                                zs = sorted([l.z for l in all_layers if l.z is not None])
-                                heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
-                                heights = [height for height in heights if height]
-                                if len(heights) >= 2: self.est_layer_height = heights[1]
-                                elif heights: self.est_layer_height = heights[0]
-                                else: self.est_layer_height = 0.1
-                            base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
-                        else:
-                            base_z = round(prev_z, 2)
-                    else:
-                        base_z = prev_z
-
-                    if base_z != prev_base_z:
-                        all_layers.append(Layer(cur_lines, base_z))
-                        if cur_layer_has_extrusion and prev_z not in all_zs:
-                            all_zs.add(prev_z)
-                        cur_lines = []
-                        cur_layer_has_extrusion = False
-                        layer_id += 1
-                        layer_line = 0
-                        last_layer_z = base_z
-                        if layer_callback is not None:
-                            layer_callback(self, len(all_layers) - 1)
-
-                    prev_base_z = base_z
-
-            if build_layers:
-                cur_lines.append(line)
-                layer_idxs.append(layer_id)
-                line_idxs.append(layer_line)
-                layer_line += 1
-                prev_z = cur_z
-            # ## Loop done
-
-        # Store current status
-        self.imperial = imperial
-        self.relative = relative
-        self.relative_e = relative_e
-        self.current_tool = current_tool
-        self.current_x = current_x
-        self.current_y = current_y
-        self.current_z = current_z
-        self.offset_x = offset_x
-        self.offset_y = offset_y
-        self.offset_z = offset_z
-
-        self.current_e = current_e
-        self.offset_e = offset_e
-        self.max_e = max_e
-        self.total_e = total_e
-
-        # Finalize layers
-        if build_layers:
-            if cur_lines:
-                all_layers.append(Layer(cur_lines, prev_z))
-                if cur_layer_has_extrusion and prev_z not in all_zs:
-                    all_zs.add(prev_z)
-
-            self.append_layer_id = len(all_layers)
-            self.append_layer = Layer([])
-            all_layers.append(self.append_layer)
-            self.layer_idxs = array('I', layer_idxs)
-            self.line_idxs = array('I', line_idxs)
-
-    def idxs(self, i):
-        return self.layer_idxs[i], self.line_idxs[i]
-
-    def _compute_bounding_box(self):
-        xmin = float("inf")
-        ymin = float("inf")
-        zmin = 0
-        xmax = float("-inf")
-        ymax = float("-inf")
-        zmax = float("-inf")
-
-        # Count moves without extrusion if filament length is lower than 0
-        count_noe = self.filament_length <= 0
-
-        for line in self.lines:
-            if line.is_move and (line.extruding or count_noe):
-                if line.current_x is not None:
-                    xmin = min(xmin, line.current_x)
-                    xmax = max(xmax, line.current_x)
-                if line.current_y is not None:
-                    ymin = min(ymin, line.current_y)
-                    ymax = max(ymax, line.current_y)
-
-        all_zs = self.all_zs.union(set([zmin])).difference(set([None]))
-        zmin = min(all_zs)
-        zmax = max(all_zs)
-
-        self.xmin = xmin if not math.isinf(xmin) else 0
-        self.xmax = xmax if not math.isinf(xmax) else 0
-        self.ymin = ymin if not math.isinf(ymin) else 0
-        self.ymax = ymax if not math.isinf(ymax) else 0
-        self.zmin = zmin if not math.isinf(zmin) else 0
-        self.zmax = zmax if not math.isinf(zmax) else 0
-        self.width = self.xmax - self.xmin
-        self.depth = self.ymax - self.ymin
-        self.height = self.zmax - self.zmin
-
-    def estimate_duration(self):
-        if self.duration is not None:
-            return self.layers_count, self.duration
-        lastx = lasty = lastz = laste = lastf = 0.0
-        lastdx = 0
-        lastdy = 0
-        x = y = e = f = 0.0
-        currenttravel = 0.0
-        moveduration = 0.0
-        totalduration = 0.0
-        acceleration = 2000.0  # mm/s^2
-        layerbeginduration = 0.0
-        # TODO:
-        # get device caps from firmware: max speed, acceleration/axis
-        # (including extruder)
-        # calculate the maximum move duration accounting for above ;)
-        for layer in self.all_layers:
-            for line in layer:
-                if line.command not in ["G1", "G0", "G4"]:
-                    continue
-                if line.command == "G4":
-                    moveduration = P(line)
-                    if not moveduration:
-                        continue
-                    else:
-                        moveduration /= 1000.0
-                        totalduration += moveduration
-                else:
-                    x = line.x if line.x is not None else lastx
-                    y = line.y if line.y is not None else lasty
-                    z = line.z if line.z is not None else lastz
-                    e = line.e if line.e is not None else laste
-                    # mm/s vs mm/m => divide by 60
-                    f = line.f / 60.0 if line.f is not None else lastf
-
-                    # given last feedrate and current feedrate calculate the
-                    # distance needed to achieve current feedrate.
-                    # if travel is longer than req'd distance, then subtract
-                    # distance to achieve full speed, and add the time it took
-                    # to get there.
-                    # then calculate the time taken to complete the remaining
-                    # distance
-
-                    # FIXME: this code has been proven to be super wrong when 2
-                    # subsquent moves are in opposite directions, as requested
-                    # speed is constant but printer has to fully decellerate
-                    # and reaccelerate
-                    # The following code tries to fix it by forcing a full
-                    # reacceleration if this move is in the opposite direction
-                    # of the previous one
-                    dx = x - lastx
-                    dy = y - lasty
-                    if dx * lastdx + dy * lastdy <= 0:
-                        lastf = 0
-
-                    currenttravel = math.hypot(dx, dy)
-                    if currenttravel == 0:
-                        if line.z is not None:
-                            currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
-                        elif line.e is not None:
-                            currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
-                    # Feedrate hasn't changed, no acceleration/decceleration planned
-                    if f == lastf:
-                        moveduration = currenttravel / f if f != 0 else 0.
-                    else:
-                        # FIXME: review this better
-                        # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
-                        # shouldn't we instead look at three consecutive moves ?
-                        distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
-                        if distance <= currenttravel and lastf + f != 0 and f != 0:
-                            moveduration = 2 * distance / (lastf + f)  # This is distance / mean(lastf, f)
-                            moveduration += (currenttravel - distance) / f
-                        else:
-                            moveduration = 2 * currenttravel / (lastf + f)  # This is currenttravel / mean(lastf, f)
-                            # FIXME: probably a little bit optimistic, but probably a much better estimate than the previous one:
-                            # moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
-
-                    lastdx = dx
-                    lastdy = dy
-
-                    totalduration += moveduration
-
-                    lastx = x
-                    lasty = y
-                    lastz = z
-                    laste = e
-                    lastf = f
-
-            layer.duration = totalduration - layerbeginduration
-            layerbeginduration = totalduration
-
-        totaltime = datetime.timedelta(seconds = int(totalduration))
-        self.duration = totaltime
-        return self.layers_count, str(totaltime)
-
-# FIXME: heavy code duplication :(
-# Once this works well, we should be able to remove duplication by
-# 1) specifying the Line class to use as a class property
-# 2) reuse the LightGCode all-in-1 function preparation code
-# 3) do the line copy at the beginning of the prepare loop if needed
-# 4) compute extents with and without extrusion
-class LightGCode(GCode):
-
-    def prepare(self, data = None, home_pos = None, layer_callback = None):
-        self.home_pos = home_pos
-        if data:
-            self.lines = [LightLine(l2) for l2 in
-                          (l.strip() for l in data)
-                          if l2]
-            self._preprocess(build_layers = True,
-                             layer_callback = layer_callback)
-            self.filament_length = self.max_e
-            self._compute_bounding_box()
-        else:
-            self.lines = []
-            self.append_layer_id = 0
-            self.append_layer = Layer([])
-            self.all_layers = [self.append_layer]
-            self.all_zs = set()
-            self.layers = {}
-            self.layer_idxs = array('I', [])
-            self.line_idxs = array('I', [])
-
-    def _preprocess(self, lines = None, build_layers = False,
-                    layer_callback = None):
-        """Checks for imperial/relativeness settings and tool changes"""
-        if not lines:
-            lines = self.lines
-        imperial = self.imperial
-        relative = self.relative
-        relative_e = self.relative_e
-        current_tool = self.current_tool
-        current_x = self.current_x
-        current_y = self.current_y
-        current_z = self.current_z
-        offset_x = self.offset_x
-        offset_y = self.offset_y
-        offset_z = self.offset_z
-
-        # Extrusion computation
-        current_e = self.current_e
-        offset_e = self.offset_e
-        total_e = self.total_e
-        max_e = self.max_e
-
-        # Bounding box computation
-        xmin = float("inf")
-        ymin = float("inf")
-        zmin = 0
-        xmax = float("-inf")
-        ymax = float("-inf")
-        zmax = float("-inf")
-
-        # Duration estimation
-        # TODO:
-        # get device caps from firmware: max speed, acceleration/axis
-        # (including extruder)
-        # calculate the maximum move duration accounting for above ;)
-        lastx = lasty = lastz = laste = lastf = 0.0
-        lastdx = 0
-        lastdy = 0
-        x = y = e = f = 0.0
-        currenttravel = 0.0
-        moveduration = 0.0
-        totalduration = 0.0
-        acceleration = 2000.0  # mm/s^2
-        layerbeginduration = 0.0
-
-        # Initialize layers
-        if build_layers:
-            all_layers = self.all_layers = []
-            all_zs = self.all_zs = set()
-            layer_idxs = self.layer_idxs = []
-            line_idxs = self.line_idxs = []
-
-            layer_id = 0
-            layer_line = 0
-
-            last_layer_z = None
-            prev_z = None
-            prev_base_z = (None, None)
-            cur_z = None
-            cur_lines = []
-            cur_layer_has_extrusion = False
-
-        for light_line in lines:
-            # # Parse line
-            # Use a heavy copy of the light line to preprocess
-            line = Line(light_line.raw)
-            split_raw = split(line)
-            if line.command:
-                # Update properties
-                if line.command == "G20":
-                    imperial = True
-                elif line.command == "G21":
-                    imperial = False
-                elif line.command == "G90":
-                    relative = False
-                    relative_e = False
-                elif line.command == "G91":
-                    relative = True
-                    relative_e = True
-                elif line.command == "M82":
-                    relative_e = False
-                elif line.command == "M83":
-                    relative_e = True
-                elif line.command[0] == "T":
-                    current_tool = int(line.command[1:])
-
-                if line.command[0] == "G":
-                    parse_coordinates(line, split_raw, imperial)
-
-                # Compute current position
-                if line.is_move:
-                    x = line.x
-                    y = line.y
-                    z = line.z
-
-                    if line.f is not None:
-                        self.current_f = line.f
-
-                    if line.relative:
-                        x = current_x + (x or 0)
-                        y = current_y + (y or 0)
-                        z = current_z + (z or 0)
-                    else:
-                        if x is not None: x = x + offset_x
-                        if y is not None: y = y + offset_y
-                        if z is not None: z = z + offset_z
-
-                    if x is not None: current_x = x
-                    if y is not None: current_y = y
-                    if z is not None: current_z = z
-
-                elif line.command == "G28":
-                    home_all = not any([line.x, line.y, line.z])
-                    if home_all or line.x is not None:
-                        offset_x = 0
-                        current_x = self.home_x
-                    if home_all or line.y is not None:
-                        offset_y = 0
-                        current_y = self.home_y
-                    if home_all or line.z is not None:
-                        offset_z = 0
-                        current_z = self.home_z
-
-                elif line.command == "G92":
-                    if line.x is not None: offset_x = current_x - line.x
-                    if line.y is not None: offset_y = current_y - line.y
-                    if line.z is not None: offset_z = current_z - line.z
-
-                line.current_x = current_x
-                line.current_y = current_y
-                line.current_z = current_z
-
-                # # Process extrusion
-                if line.e is not None:
+                # # Create layers and perform global computations
+                if build_layers:
+                    # Update bounding box
                     if line.is_move:
-                        if line.relative_e:
-                            line.extruding = line.e > 0
-                            total_e += line.e
-                            current_e += line.e
+                        if line.extruding:
+                            if line.current_x is not None:
+                                xmin_e = min(xmin_e, line.current_x)
+                                xmax_e = max(xmax_e, line.current_x)
+                            if line.current_y is not None:
+                                ymin_e = min(ymin_e, line.current_y)
+                                ymax_e = max(ymax_e, line.current_y)
+                        if line.current_x is not None:
+                            xmin = min(xmin, line.current_x)
+                            xmax = max(xmax, line.current_x)
+                        if line.current_y is not None:
+                            ymin = min(ymin, line.current_y)
+                            ymax = max(ymax, line.current_y)
+
+                    # Compute duration
+                    if line.command in ["G1", "G0", "G4"]:
+                        if line.command == "G4":
+                            moveduration = P(line)
+                            if moveduration:
+                                moveduration /= 1000.0
+                                totalduration += moveduration
                         else:
-                            new_e = line.e + offset_e
-                            line.extruding = new_e > current_e
-                            total_e += new_e - current_e
-                            current_e = new_e
-                        max_e = max(max_e, total_e)
-                    elif line.command == "G92":
-                        offset_e = current_e - line.e
+                            x = line.x if line.x is not None else lastx
+                            y = line.y if line.y is not None else lasty
+                            z = line.z if line.z is not None else lastz
+                            e = line.e if line.e is not None else laste
+                            # mm/s vs mm/m => divide by 60
+                            f = line.f / 60.0 if line.f is not None else lastf
 
-                # Update bounding box
-                if line.is_move and line.extruding:
-                    if line.current_x is not None:
-                        xmin = min(xmin, line.current_x)
-                        xmax = max(xmax, line.current_x)
-                    if line.current_y is not None:
-                        ymin = min(ymin, line.current_y)
-                        ymax = max(ymax, line.current_y)
+                            # given last feedrate and current feedrate calculate the
+                            # distance needed to achieve current feedrate.
+                            # if travel is longer than req'd distance, then subtract
+                            # distance to achieve full speed, and add the time it took
+                            # to get there.
+                            # then calculate the time taken to complete the remaining
+                            # distance
 
-                # Compute duration
-                if line.command in ["G1", "G0", "G4"]:
-                    if line.command == "G4":
-                        moveduration = P(line)
-                        if moveduration:
-                            moveduration /= 1000.0
-                            totalduration += moveduration
-                    else:
-                        x = line.x if line.x is not None else lastx
-                        y = line.y if line.y is not None else lasty
-                        z = line.z if line.z is not None else lastz
-                        e = line.e if line.e is not None else laste
-                        # mm/s vs mm/m => divide by 60
-                        f = line.f / 60.0 if line.f is not None else lastf
+                            # FIXME: this code has been proven to be super wrong when 2
+                            # subsquent moves are in opposite directions, as requested
+                            # speed is constant but printer has to fully decellerate
+                            # and reaccelerate
+                            # The following code tries to fix it by forcing a full
+                            # reacceleration if this move is in the opposite direction
+                            # of the previous one
+                            dx = x - lastx
+                            dy = y - lasty
+                            if dx * lastdx + dy * lastdy <= 0:
+                                lastf = 0
 
-                        # given last feedrate and current feedrate calculate the
-                        # distance needed to achieve current feedrate.
-                        # if travel is longer than req'd distance, then subtract
-                        # distance to achieve full speed, and add the time it took
-                        # to get there.
-                        # then calculate the time taken to complete the remaining
-                        # distance
-
-                        # FIXME: this code has been proven to be super wrong when 2
-                        # subsquent moves are in opposite directions, as requested
-                        # speed is constant but printer has to fully decellerate
-                        # and reaccelerate
-                        # The following code tries to fix it by forcing a full
-                        # reacceleration if this move is in the opposite direction
-                        # of the previous one
-                        dx = x - lastx
-                        dy = y - lasty
-                        if dx * lastdx + dy * lastdy <= 0:
-                            lastf = 0
-
-                        currenttravel = math.hypot(dx, dy)
-                        if currenttravel == 0:
-                            if line.z is not None:
-                                currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
-                            elif line.e is not None:
-                                currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
-                        # Feedrate hasn't changed, no acceleration/decceleration planned
-                        if f == lastf:
-                            moveduration = currenttravel / f if f != 0 else 0.
-                        else:
-                            # FIXME: review this better
-                            # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
-                            # shouldn't we instead look at three consecutive moves ?
-                            distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
-                            if distance <= currenttravel and lastf + f != 0 and f != 0:
-                                moveduration = 2 * distance / (lastf + f)  # This is distance / mean(lastf, f)
-                                moveduration += (currenttravel - distance) / f
+                            currenttravel = math.hypot(dx, dy)
+                            if currenttravel == 0:
+                                if line.z is not None:
+                                    currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
+                                elif line.e is not None:
+                                    currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
+                            # Feedrate hasn't changed, no acceleration/decceleration planned
+                            if f == lastf:
+                                moveduration = currenttravel / f if f != 0 else 0.
                             else:
-                                moveduration = 2 * currenttravel / (lastf + f)  # This is currenttravel / mean(lastf, f)
-                                # FIXME: probably a little bit optimistic, but probably a much better estimate than the previous one:
-                                # moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
+                                # FIXME: review this better
+                                # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
+                                # shouldn't we instead look at three consecutive moves ?
+                                distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
+                                if distance <= currenttravel and lastf + f != 0 and f != 0:
+                                    moveduration = 2 * distance / (lastf + f)  # This is distance / mean(lastf, f)
+                                    moveduration += (currenttravel - distance) / f
+                                else:
+                                    moveduration = 2 * currenttravel / (lastf + f)  # This is currenttravel / mean(lastf, f)
+                                    # FIXME: probably a little bit optimistic, but probably a much better estimate than the previous one:
+                                    # moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
 
-                        lastdx = dx
-                        lastdy = dy
+                            lastdx = dx
+                            lastdy = dy
 
-                        totalduration += moveduration
+                            totalduration += moveduration
 
-                        lastx = x
-                        lasty = y
-                        lastz = z
-                        laste = e
-                        lastf = f
+                            lastx = x
+                            lasty = y
+                            lastz = z
+                            laste = e
+                            lastf = f
 
-                # # Create layers
-                if not build_layers:
-                    continue
-                # FIXME : looks like this needs to be tested with "lift Z on move"
-                if line.command == "G92" and line.z is not None:
-                    cur_z = line.z
-                elif line.is_move:
-                    if line.z is not None:
-                        if line.relative and cur_z is not None:
-                            cur_z += line.z
+                    # FIXME : looks like this needs to be tested with "lift Z on move"
+                    if line.command == "G92" and line.z is not None:
+                        cur_z = line.z
+                    elif line.is_move:
+                        if line.z is not None:
+                            if line.relative and cur_z is not None:
+                                cur_z += line.z
+                            else:
+                                cur_z = line.z
+
+                    if line.e is not None and line.is_move:
+                        cur_layer_has_extrusion |= line.extruding
+
+                    # FIXME: the logic behind this code seems to work, but it might be
+                    # broken
+                    if cur_z != prev_z:
+                        if prev_z is not None and last_layer_z is not None:
+                            offset = self.est_layer_height if self.est_layer_height else 0.01
+                            if abs(prev_z - last_layer_z) < offset:
+                                if self.est_layer_height is None:
+                                    zs = sorted([l.z for l in all_layers if l.z is not None])
+                                    heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
+                                    heights = [height for height in heights if height]
+                                    if len(heights) >= 2: self.est_layer_height = heights[1]
+                                    elif heights: self.est_layer_height = heights[0]
+                                    else: self.est_layer_height = 0.1
+                                base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
+                            else:
+                                base_z = round(prev_z, 2)
                         else:
-                            cur_z = line.z
+                            base_z = prev_z
 
-                if line.e is not None and line.is_move:
-                    cur_layer_has_extrusion |= line.extruding
+                        if base_z != prev_base_z:
+                            new_layer = Layer(cur_lines, base_z)
+                            new_layer.duration = totalduration - layerbeginduration
+                            layerbeginduration = totalduration
+                            all_layers.append(new_layer)
+                            if cur_layer_has_extrusion and prev_z not in all_zs:
+                                all_zs.add(prev_z)
+                            cur_lines = []
+                            cur_layer_has_extrusion = False
+                            layer_id += 1
+                            layer_line = 0
+                            last_layer_z = base_z
+                            if layer_callback is not None:
+                                layer_callback(self, len(all_layers) - 1)
 
-                # FIXME: the logic behind this code seems to work, but it might be
-                # broken
-                if cur_z != prev_z:
-                    if prev_z is not None and last_layer_z is not None:
-                        offset = self.est_layer_height if self.est_layer_height else 0.01
-                        if abs(prev_z - last_layer_z) < offset:
-                            if self.est_layer_height is None:
-                                zs = sorted([l.z for l in all_layers if l.z is not None])
-                                heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
-                                heights = [height for height in heights if height]
-                                if len(heights) >= 2: self.est_layer_height = heights[1]
-                                elif heights: self.est_layer_height = heights[0]
-                                else: self.est_layer_height = 0.1
-                            base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
-                        else:
-                            base_z = round(prev_z, 2)
-                    else:
-                        base_z = prev_z
-
-                    if base_z != prev_base_z:
-                        new_layer = Layer(cur_lines, base_z)
-                        new_layer.duration = totalduration - layerbeginduration
-                        layerbeginduration = totalduration
-                        all_layers.append(new_layer)
-                        if cur_layer_has_extrusion and prev_z not in all_zs:
-                            all_zs.add(prev_z)
-                        cur_lines = []
-                        cur_layer_has_extrusion = False
-                        layer_id += 1
-                        layer_line = 0
-                        last_layer_z = base_z
-                        if layer_callback is not None:
-                            layer_callback(self, len(all_layers) - 1)
-
-                    prev_base_z = base_z
+                        prev_base_z = base_z
 
             if build_layers:
-                cur_lines.append(light_line)
+                cur_lines.append(true_line)
                 layer_idxs.append(layer_id)
                 line_idxs.append(layer_line)
                 layer_line += 1
@@ -993,30 +640,41 @@ class LightGCode(GCode):
             self.layer_idxs = array('I', layer_idxs)
             self.line_idxs = array('I', line_idxs)
 
-        # Compute bounding box
-        all_zs = self.all_zs.union(set([zmin])).difference(set([None]))
-        zmin = min(all_zs)
-        zmax = max(all_zs)
+            # Compute bounding box
+            all_zs = self.all_zs.union(set([zmin])).difference(set([None]))
+            zmin = min(all_zs)
+            zmax = max(all_zs)
 
-        self.xmin = xmin if not math.isinf(xmin) else 0
-        self.xmax = xmax if not math.isinf(xmax) else 0
-        self.ymin = ymin if not math.isinf(ymin) else 0
-        self.ymax = ymax if not math.isinf(ymax) else 0
-        self.zmin = zmin if not math.isinf(zmin) else 0
-        self.zmax = zmax if not math.isinf(zmax) else 0
-        self.width = self.xmax - self.xmin
-        self.depth = self.ymax - self.ymin
-        self.height = self.zmax - self.zmin
+            self.filament_length = self.max_e
 
-        # Finalize duration
-        totaltime = datetime.timedelta(seconds = int(totalduration))
-        self.duration = totaltime
+            if self.filament_length > 0:
+                self.xmin = xmin_e if not math.isinf(xmin_e) else 0
+                self.xmax = xmax_e if not math.isinf(xmax_e) else 0
+                self.ymin = ymin_e if not math.isinf(ymin_e) else 0
+                self.ymax = ymax_e if not math.isinf(ymax_e) else 0
+            else:
+                self.xmin = xmin if not math.isinf(xmin) else 0
+                self.xmax = xmax if not math.isinf(xmax) else 0
+                self.ymin = ymin if not math.isinf(ymin) else 0
+                self.ymax = ymax if not math.isinf(ymax) else 0
+            self.zmin = zmin if not math.isinf(zmin) else 0
+            self.zmax = zmax if not math.isinf(zmax) else 0
+            self.width = self.xmax - self.xmin
+            self.depth = self.ymax - self.ymin
+            self.height = self.zmax - self.zmin
+
+            # Finalize duration
+            totaltime = datetime.timedelta(seconds = int(totalduration))
+            self.duration = totaltime
 
     def idxs(self, i):
         return self.layer_idxs[i], self.line_idxs[i]
 
     def estimate_duration(self):
         return self.layers_count, self.duration
+
+class LightGCode(GCode):
+    line_class = LightLine
 
 def main():
     if len(sys.argv) < 2:
