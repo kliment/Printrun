@@ -21,7 +21,7 @@ from . import gcoder
 from .gl.panel import wxGLPanel
 from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
-from .injectgcode import injector
+from .injectgcode import injector, injector_edit
 
 from pyglet.gl import glPushMatrix, glPopMatrix, \
     glTranslatef, glRotatef, glScalef, glMultMatrixd
@@ -94,6 +94,14 @@ class GcodeViewPanel(wxGLPanel):
             injector(self.parent.model.gcode, l, filtered[0])
         else:
             print _("Invalid layer for injection")
+
+    def editlayer(self):
+        l = self.parent.model.num_layers_to_draw
+        filtered = [k for k, v in self.parent.model.layer_idxs_map.iteritems() if v == l]
+        if filtered:
+            injector_edit(self.parent.model.gcode, l, filtered[0])
+        else:
+            print _("Invalid layer for edition")
 
     def setlayercb(self, layer):
         pass
@@ -385,7 +393,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.objects = [GCObject(self.platform), GCObject(None)]
 
         fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        self.toolbar.InsertLabelTool(6, 6, " " + _("Fit to plate"), fit_image,
+        self.toolbar.InsertLabelTool(6, 8, " " + _("Fit to plate"), fit_image,
                                      shortHelp = _("Fit to plate [F]"),
                                      longHelp = '')
         self.toolbar.Realize()
@@ -400,8 +408,9 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerup(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 5)
-        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 7)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 8)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.inject(), id = 6)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.editlayer(), id = 7)
 
     def process_slider(self, event):
         new_layer = self.layerslider.GetValue()

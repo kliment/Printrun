@@ -18,7 +18,7 @@ from collections import deque
 import wx
 import time
 from . import gcoder
-from .injectgcode import injector
+from .injectgcode import injector, injector_edit
 
 from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
@@ -44,7 +44,8 @@ class GvizBaseFrame(wx.Frame):
         self.toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
         self.toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"), longHelp = '')
         self.toolbar.AddSeparator()
-        self.toolbar.AddLabelTool(6, " " + _("Inject G-Code"), wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
+        self.toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelpString = _("Inject G-Code"), longHelpString = _("Insert code at the beginning of this layer"))
+        self.toolbar.AddSimpleTool(7, wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelpString = _("Edit layer"), longHelpString = _("Edit the G-Code of this layer"))
 
         vbox.Add(self.toolbar, 0, border = 5)
 
@@ -84,6 +85,7 @@ class GvizWindow(GvizBaseFrame):
         self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 4)
         self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.inject(), id = 6)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.editlayer(), id = 7)
 
         self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
@@ -204,6 +206,10 @@ class Gviz(wx.Panel):
     def inject(self):
         layer = self.layers.index(self.layerindex)
         injector(self.gcode, self.layerindex, layer)
+
+    def editlayer(self):
+        layer = self.layers.index(self.layerindex)
+        injector_edit(self.gcode, self.layerindex, layer)
 
     def clearhilights(self):
         self.hilight.clear()

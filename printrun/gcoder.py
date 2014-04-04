@@ -248,6 +248,35 @@ class GCode(object):
             self.line_idxs.insert(end_index + i, end_line + i + 1)
         return commands[::-1]
 
+    def rewrite_layer(self, commands, layer_idx):
+        # Prepend commands in reverse order
+        commands = [c.strip() for c in commands[::-1] if c.strip()]
+        layer = self.all_layers[layer_idx]
+        # Find start index to append lines
+        # and end index to append new indices
+        start_index = self.layer_idxs.index(layer_idx)
+        for i in range(start_index, len(self.layer_idxs)):
+            if self.layer_idxs[i] != layer_idx:
+                end_index = i
+                break
+        else:
+            end_index = i + 1
+        self.layer_idxs = self.layer_idxs[:start_index] + array('I', len(commands) * [layer_idx]) + self.layer_idxs[end_index:]
+        self.line_idxs = self.line_idxs[:start_index] + array('I', range(len(commands))) + self.line_idxs[end_index:]
+        del self.lines[start_index:end_index]
+        del layer[:]
+        for i, command in enumerate(commands):
+            gline = Line(command)
+            # Split to get command
+            split(gline)
+            # Force is_move to False
+            gline.is_move = False
+            # Insert gline at beginning of layer
+            layer.insert(0, gline)
+            # Insert gline at beginning of list
+            self.lines.insert(start_index, gline)
+        return commands[::-1]
+
     def append(self, command, store = True):
         command = command.strip()
         if not command:
