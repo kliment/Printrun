@@ -56,7 +56,7 @@ if __name__ == '__main__':
     p.loud = loud
     time.sleep(2)
     gcode = [i.strip() for i in open(filename)]
-    gcode = gcoder.GCode(gcode)
+    gcode = gcoder.LightGCode(gcode)
     p.startprint(gcode)
 
     try:
