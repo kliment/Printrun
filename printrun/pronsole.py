@@ -470,6 +470,7 @@ class pronsole(cmd.Cmd):
         self.percentdone = 0
         self.tempreadings = ""
         self.macros = {}
+        self.history_file = "~/.pronsole-history"
         self.rc_loaded = False
         self.processing_rc = False
         self.processing_args = False
@@ -521,6 +522,9 @@ class pronsole(cmd.Cmd):
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
                 readline.parse_and_bind(self.completekey + ": complete")
+                history = os.path.expanduser(self.history_file)
+                if os.path.exists(history):
+                    readline.read_history_file(history)
             except ImportError:
                 pass
         try:
@@ -559,6 +563,7 @@ class pronsole(cmd.Cmd):
                 try:
                     import readline
                     readline.set_completer(self.old_completer)
+                    readline.write_history_file(history)
                 except ImportError:
                     pass
 
