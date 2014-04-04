@@ -325,6 +325,50 @@ Some useful methods:
         !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
     !self.project - invoke Projector
 
+## USING HOST COMMANDS
+
+Pronsole and the console interface in Pronterface accept a number of commands
+which you can either use directly or inside your G-Code. To run a host command
+from inside a G-Code, simply prefix it with `;@`.
+
+List of available commands:
+
+- `pause`: pauses the print until the user resumes it
+- `run_script scriptname [arg1 ...]`: runs a custom script or program on the
+  host computer. This can for instance be used to produce a sound to warn the
+  user (e.g. `run_script beep -r 2` on machines were the `beep` util is
+  available), or to send an email or text message at the end of a print. The $s
+  token can be used in the arguments to get the current gcode file name
+- `run_gcode_script scripname [arg1 ...]`: same as `run_script`, except that
+  all lines displayed by the script will be interpreted in turn (so that G-Code
+  lines will be immediately sent to the printer)
+- `shell pythoncommand`: run a python command (can also be achieved by doing
+  `!pythoncommand`)
+- `set option value`: sets the value of an option, e.g. `set mainviz 3D`
+- `connect`
+- `block_until_online`: wait for the printer to be online. For instance you can
+  do `python pronsole.py -e "connect" -e "block_until_online" -e "upload
+  object.gcode"` to start pronsole, connect for the printer, wait for it to be
+  online to start uploading the `object.gcode` file.
+- `disconnect`
+- `load gcodefile`
+- `upload gcodefile target.g`: upload `gcodefile` to `target.g` on the SD card
+- `slice stlfile`: slice `stlfile` and load the produced G-Code
+- `print`: print the currently loaded file
+- `sdprint target.g`: start a SD print
+- `ls`: list files on SD card
+- `eta`: display remaining print time
+- `gettemp`: get current printer temperatures
+- `settemp`: set hotend target temperature
+- `bedtemp`: set bed target temperature
+- `monitor`: monitor printer progress during a print
+- `tool K`: switch to tool K
+- `move xK`: move along `x` axis (works with other axes too)
+- `extrude length [speed]`
+- `reverse length [speed]`
+- `home [axis]`
+- `off`: turns off fans, motors, extruder, heatbed, power supply
+- `exit`
 
 # LICENSE
 
