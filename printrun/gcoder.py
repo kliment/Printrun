@@ -76,12 +76,14 @@ def P(line):
 
 def split(line):
     split_raw = gcode_exp.findall(line.raw.lower())
+    if split_raw and split_raw[0][0] == "n":
+        del split_raw[0]
     if not split_raw:
         line.command = line.raw
         line.is_move = False
         logging.warning("raw G-Code line \"%s\" could not be parsed" % line.raw)
         return [line.raw]
-    command = split_raw[0] if split_raw[0][0] != "n" else split_raw[1]
+    command = split_raw[0]
     line.command = command[0].upper() + command[1]
     line.is_move = line.command in move_gcodes
     return split_raw
