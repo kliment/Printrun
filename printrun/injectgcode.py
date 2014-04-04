@@ -15,12 +15,16 @@
 
 from .gui.widgets import MacroEditor
 
+from .utils import install_locale
+install_locale('pronterface')
+
 def injector(gcode, viz_layer, layer_idx):
-    cb = lambda toadd: inject(gcode, layer_idx, toadd)
+    cb = lambda toadd: inject(gcode, viz_layer, layer_idx, toadd)
     z = gcode.all_layers[layer_idx].z
     z = z if z is not None else 0
     MacroEditor(_("Inject G-Code at layer %d (Z = %.03f)") % (viz_layer, z), "", cb, True)
 
-def inject(gcode, layer_idx, toadd):
-    # TODO: save modifier gcode after injection ?
-    gcode.prepend_to_layer(toadd, layer_idx)
+def inject(gcode, viz_layer, layer_idx, toadd):
+    # TODO: save modified gcode after injection ?
+    nlines = len(gcode.prepend_to_layer(toadd, layer_idx))
+    print _("Successfully injected %d lines at beginning of layer %d") % (nlines, viz_layer)

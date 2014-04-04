@@ -246,6 +246,7 @@ class GCode(object):
             # Update indices arrays & global gcodes list
             self.layer_idxs.insert(end_index + i, layer_idx)
             self.line_idxs.insert(end_index + i, end_line + i + 1)
+        return commands[::-1]
 
     def append(self, command, store = True):
         command = command.strip()
