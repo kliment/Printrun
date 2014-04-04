@@ -551,8 +551,9 @@ class printcore():
                 self.clear = True
                 return
 
-            tline = tline.split(";")[0]
-            if len(tline) > 0:
+            # Strip comments
+            tline = gcoder.gcode_strip_comment_exp.sub("", tline)
+            if tline:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
                 if self.printsendcb:
