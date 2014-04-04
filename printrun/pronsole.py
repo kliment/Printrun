@@ -1143,7 +1143,7 @@ class pronsole(cmd.Cmd):
 
     def load_gcode(self, filename, layer_callback = None, gcode = None):
         if gcode is None:
-            self.fgcode = gcoder.GCode(deferred = True)
+            self.fgcode = gcoder.LightGCode(deferred = True)
         else:
             self.fgcode = gcode
         self.fgcode.prepare(open(filename, "rU"),
