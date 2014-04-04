@@ -89,6 +89,35 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = 1):
 
 
 class stl(object):
+
+    _dims = None
+
+    def _get_dims(self):
+        if self._dims is None:
+            minx = float("inf")
+            miny = float("inf")
+            minz = float("inf")
+            maxx = float("-inf")
+            maxy = float("-inf")
+            maxz = float("-inf")
+            for normal, facet in self.facets:
+                for vert in facet:
+                    if vert[0] < minx:
+                        minx = vert[0]
+                    if vert[1] < miny:
+                        miny = vert[1]
+                    if vert[2] < minz:
+                        minz = vert[2]
+                    if vert[0] > maxx:
+                        maxx = vert[0]
+                    if vert[1] > maxy:
+                        maxy = vert[1]
+                    if vert[2] > maxz:
+                        maxz = vert[2]
+            self._dims = [minx, maxx, miny, maxy, minz, maxz]
+        return self._dims
+    dims = property(_get_dims)
+
     def __init__(self, filename = None):
         self.facet = [[0, 0, 0], [[0, 0, 0], [0, 0, 0], [0, 0, 0]]]
         self.facets = []
@@ -145,7 +174,6 @@ class stl(object):
         return self.transform(matrix)
 
     def rotate(self, v = [0, 0, 0]):
-        import math
         z = v[2]
         matrix1 = [[math.cos(math.radians(z)), -math.sin(math.radians(z)), 0, 0],
                    [math.sin(math.radians(z)), math.cos(math.radians(z)), 0, 0],

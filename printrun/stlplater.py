@@ -307,27 +307,6 @@ class StlPlater(Plater):
         model.rot = rotation
         model.scale = list(scale)
         model.filename = name
-        minx = float("inf")
-        miny = float("inf")
-        minz = float("inf")
-        maxx = float("-inf")
-        maxy = float("-inf")
-        maxz = float("-inf")
-        for i in model.facets:
-            for j in i[1]:
-                if j[0] < minx:
-                    minx = j[0]
-                if j[1] < miny:
-                    miny = j[1]
-                if j[2] < minz:
-                    minz = j[2]
-                if j[0] > maxx:
-                    maxx = j[0]
-                if j[1] > maxy:
-                    maxy = j[1]
-                if j[2] > maxz:
-                    maxz = j[2]
-        model.dims = [minx, maxx, miny, maxy, minz, maxz]
         self.add_model(name, model)
         model.centeroffset = [-(model.dims[1] + model.dims[0]) / 2,
                               -(model.dims[3] + model.dims[2]) / 2,
