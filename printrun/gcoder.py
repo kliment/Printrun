@@ -683,6 +683,7 @@ def main():
         return
 
     print "Line object size:", sys.getsizeof(Line("G0 X0"))
+    print "Light line object size:", sys.getsizeof(LightLine("G0 X0"))
     gcode = GCode(open(sys.argv[1], "rU"))
 
     print "Dimensions:"
