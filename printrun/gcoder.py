@@ -636,6 +636,7 @@ class GCode(object):
 
             self.append_layer_id = len(all_layers)
             self.append_layer = Layer([])
+            self.append_layer.duration = 0
             all_layers.append(self.append_layer)
             self.layer_idxs = array('I', layer_idxs)
             self.line_idxs = array('I', line_idxs)
