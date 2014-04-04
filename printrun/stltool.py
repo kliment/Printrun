@@ -17,8 +17,19 @@ import sys
 import struct
 import math
 
+def vec(v2, v1):
+    return [v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]]
+
+def dot(v1, v2):
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
+
+def mul(v, f):
+    return [f * v[0], f * v[1], f * v[2]]
+
 def cross(v1, v2):
-    return [v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]]
+    return [v1[1] * v2[2] - v1[2] * v2[1],
+            v1[2] * v2[0] - v1[0] * v2[2],
+            v1[0] * v2[1] - v1[1] * v2[0]]
 
 def genfacet(v):
     veca = [v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2]]
@@ -164,6 +175,27 @@ class stl(object):
                 self.facetsmaxz.append((max(map(lambda x: x[2], facet[1])), facet))
             f.close()
             return
+
+    def rebase(self, facet_i):
+        normal, facet = self.facets[facet_i]
+        u1 = vec(facet[1], facet[0])
+        v2 = vec(facet[2], facet[0])
+        n1 = dot(u1, u1)
+        e1 = mul(u1, 1. / math.sqrt(n1))
+        u2 = vec(v2, mul(u1, dot(v2, u1) / n1))
+        e2 = mul(u2, 1. / math.sqrt(dot(u2, u2)))
+        e3 = cross(e1, e2)
+        matrix = [[e1[0], e2[0], e3[0], 0],
+                  [e1[1], e2[1], e3[1], 0],
+                  [e1[2], e2[2], e3[2], 0],
+                  [0, 0, 0, 1]]
+        newmodel = self.transform(matrix)
+        # If object ends up being mostly below ground plane,
+        # rotate it around Y axis
+        avgz = (newmodel.dims[4] + newmodel.dims[5]) / 2
+        if avgz < 0:
+            newmodel = newmodel.rotate([0, 180, 0])
+        return newmodel
 
     def translate(self, v = [0, 0, 0]):
         matrix = [[1, 0, 0, v[0]],
