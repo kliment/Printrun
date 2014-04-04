@@ -412,11 +412,26 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.inject(), id = 6)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.editlayer(), id = 7)
 
+    def setlayercb(self, layer):
+        self.layerslider.SetValue(layer)
+        self.update_status("")
+
+    def update_status(self, extra):
+        layer = self.model.num_layers_to_draw
+        filtered = [k for k, v in self.model.layer_idxs_map.iteritems() if v == layer]
+        if filtered:
+            z = filtered[0]
+            message = _("Layer %d -%s Z = %.03f mm") % (layer + 1, extra, z)
+        else:
+            message = _("Entire object")
+        wx.CallAfter(self.SetStatusText, message, 0)
+
     def process_slider(self, event):
         new_layer = self.layerslider.GetValue()
         new_layer = min(self.model.max_layers + 1, new_layer)
         new_layer = max(1, new_layer)
         self.model.num_layers_to_draw = new_layer
+        self.update_status("")
         wx.CallAfter(self.Refresh)
 
     def set_current_gline(self, gline):
