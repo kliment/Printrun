@@ -306,6 +306,13 @@ class StlPlater(Plater):
         self.s.prepare_model(cut, 2)
         self.models[name] = cut
         self.cutconfirmbutton.Disable()
+        self.cutting = False
+        self.cutting_axis = None
+        self.cutting_dist = None
+        self.cutting_direction = None
+        for child in self.cutsizer.GetChildren():
+            child = child.GetWindow()
+            child.SetValue(False)
 
     def clickcb(self, event, single = False):
         if not isinstance(self.s, stlview.StlViewPanel):
