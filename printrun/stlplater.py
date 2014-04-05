@@ -63,7 +63,7 @@ class showstl(wx.Window):
         self.initpos = None
         self.prevsel = -1
 
-    def drawmodel(self, m, scale):
+    def prepare_model(self, m, scale):
         m.bitmap = wx.EmptyBitmap(800, 800, 32)
         dc = wx.MemoryDC()
         dc.SelectObject(m.bitmap)
@@ -226,6 +226,43 @@ class StlPlater(Plater):
         self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
         self.set_viewer(viewer)
 
+    def clickcb(self, event):
+        if not isinstance(self.s, stlview.StlViewPanel):
+            return
+        x, y = event.GetPosition()
+        ray_near, ray_far = self.s.mouse_to_ray(x, y, local_transform = True)
+        best_match = None
+        best_facet = None
+        best_dist = float("inf")
+        # TODO: speedup search by first checking if ray is in bounding box
+        # of the given model
+        for key, model in self.models.iteritems():
+            transformed = model
+            if any(model.centeroffset):
+                transformed = transformed.translate(model.centeroffset)
+            if model.rot:
+                transformed = transformed.rotate([0, 0, model.rot])
+            if any(model.offsets):
+                transformed = transformed.translate(model.offsets)
+            facet, facet_dist = transformed.intersect(ray_near, ray_far)
+            if facet is not None and facet_dist < best_dist:
+                best_match = key
+                best_facet = facet
+                best_dist = facet_dist
+        if best_match is not None:
+            model = self.models[best_match]
+            newmodel = model.rebase(best_facet)
+            newmodel.offsets = model.offsets
+            newmodel.rot = 0
+            newmodel.scale = model.scale
+            newmodel.filename = model.filename
+            newmodel.centeroffset = [-(newmodel.dims[1] + newmodel.dims[0]) / 2,
+                                     -(newmodel.dims[3] + newmodel.dims[2]) / 2,
+                                     0]
+            self.s.prepare_model(newmodel, 2)
+            self.models[best_match] = newmodel
+            wx.CallAfter(self.Refresh)
+
     def done(self, event, cb):
         try:
             os.mkdir("tempstl")
@@ -294,12 +331,12 @@ class StlPlater(Plater):
                     newmodel.rot = model.rot
                     newmodel.scale = list(model.scale)
                     self.add_model(name, newmodel)
-                    self.s.drawmodel(newmodel, 2)
+                    self.s.prepare_model(newmodel, 2)
                     break
             else:
                 # Filter out the path, just show the STL filename.
                 self.load_stl_into_model(name, name)
-        self.Refresh()
+        wx.CallAfter(self.Refresh)
 
     def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
         model = stltool.stl(path)
@@ -311,7 +348,7 @@ class StlPlater(Plater):
         model.centeroffset = [-(model.dims[1] + model.dims[0]) / 2,
                               -(model.dims[3] + model.dims[2]) / 2,
                               0]
-        self.s.drawmodel(model, 2)
+        self.s.prepare_model(model, 2)
 
     def export_to(self, name):
         with open(name.replace(".", "_") + ".scad", "w") as sf:

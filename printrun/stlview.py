@@ -253,12 +253,11 @@ class StlViewPanel(wxGLPanel):
         self.initialized = 1
         wx.CallAfter(self.Refresh)
 
-    def drawmodel(self, m, n):
+    def prepare_model(self, m, scale):
         batch = pyglet.graphics.Batch()
         stlview(m.facets, batch = batch)
         m.batch = batch
-        m.animoffset = 300
-        # print m
+        # m.animoffset = 300
         # threading.Thread(target = self.anim, args = (m, )).start()
         wx.CallAfter(self.Refresh)
 

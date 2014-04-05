@@ -20,6 +20,9 @@ import math
 import numpy
 import numpy.linalg
 
+def normalize(v):
+    return v / numpy.linalg.norm(v)
+
 def genfacet(v):
     veca = v[1] - v[0]
     vecb = v[2] - v[1]
@@ -154,6 +157,38 @@ class stl(object):
             f.close()
             return
 
+    def intersect(self, ray_far, ray_near):
+        ray_near = numpy.array(ray_near)
+        ray_far = numpy.array(ray_far)
+        ray_dir = normalize(ray_far - ray_near)
+        best_facet = None
+        best_dist = float("inf")
+        eps = 0.000001
+        for facet_i, (normal, (v1, v2, v3)) in enumerate(self.facets):
+            edge1 = v2 - v1
+            edge2 = v3 - v1
+            pvec = numpy.cross(ray_dir, edge2)
+            det = edge1.dot(pvec)
+            if abs(det) < eps:
+                continue
+            inv_det = 1. / det
+            tvec = ray_near - v1
+            u = tvec.dot(pvec) * inv_det
+            if u < 0. or u > 1.:
+                continue
+            qvec = numpy.cross(tvec, edge1)
+            v = ray_dir.dot(qvec) * inv_det
+            if v < 0. or u + v > 1.:
+                continue
+
+            t = edge2.dot(qvec) * inv_det
+            if t < eps:
+                continue
+            if t < best_dist:
+                best_facet = facet_i
+                best_dist = t
+        return best_facet, best_dist
+
     def rebase(self, facet_i):
         normal, facet = self.facets[facet_i]
         u1 = facet[1] - facet[0]
@@ -163,17 +198,21 @@ class stl(object):
         u2 = v2 - u1 * v2.dot(u1) / n1
         e2 = u2 / numpy.linalg.norm(u2)
         e3 = numpy.cross(e1, e2)
+        # Ensure Z direction if opposed to the normal
+        if normal.dot(e3) > 0:
+            e2 = - e2
+            e3 = - e3
         matrix = [[e1[0], e2[0], e3[0], 0],
                   [e1[1], e2[1], e3[1], 0],
                   [e1[2], e2[2], e3[2], 0],
                   [0, 0, 0, 1]]
         matrix = numpy.array(matrix)
+        # Inverse change of basis matrix
+        matrix = numpy.linalg.inv(matrix)
+        # Set first vertex of facet as origin
+        neworig = matrix.dot(homogeneous(facet[0]))
+        matrix[:3, 3] = -neworig[:3]
         newmodel = self.transform(matrix)
-        # If object ends up being mostly below ground plane,
-        # rotate it around Y axis
-        avgz = (newmodel.dims[4] + newmodel.dims[5]) / 2
-        if avgz < 0:
-            newmodel = newmodel.rotate([0, 180, 0])
         return newmodel
 
     def translate(self, v = [0, 0, 0]):
