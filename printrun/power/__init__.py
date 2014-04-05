@@ -36,29 +36,29 @@ else:
     import dbus
 
     try:
+        inhibit_sleep_handler = None
         bus = dbus.SessionBus()
+        try:
+            # GNOME uses the right object path, try it first
+            service_name = "org.freedesktop.ScreenSaver"
+            proxy = bus.get_object(service_name,
+                                   "/org/freedesktop/ScreenSaver")
+            inhibit_sleep_handler = dbus.Interface(proxy, service_name)
+        except dbus.DBusException:
+            # KDE uses /ScreenSaver object path, let's try it as well
+            proxy = bus.get_object(service_name,
+                                   "/ScreenSaver")
+            inhibit_sleep_handler = dbus.Interface(proxy, service_name)
 
         def inhibit_sleep(reason):
-            if inhibit_sleep.handler is None:
-                bus = dbus.SessionBus()
-                try:
-                    # GNOME uses the right object path, try it first
-                    service_name = "org.freedesktop.ScreenSaver"
-                    proxy = bus.get_object(service_name,
-                                           "/org/freedesktop/ScreenSaver")
-                    inhibit_sleep.handler = dbus.Interface(proxy, service_name)
-                except dbus.DBusException:
-                    # KDE uses /ScreenSaver object path, let's try it as well
-                    proxy = bus.get_object(service_name,
-                                           "/ScreenSaver")
-                    inhibit_sleep.handler = dbus.Interface(proxy, service_name)
-            inhibit_sleep.token = inhibit_sleep.handler.Inhibit("printrun", reason)
-        inhibit_sleep.handler = None
+            global inhibit_sleep_handler
+            inhibit_sleep.token = inhibit_sleep_handler.Inhibit("printrun", reason)
 
         def deinhibit_sleep():
-            if inhibit_sleep.handler is None:
+            global inhibit_sleep_handler
+            if inhibit_sleep_handler is None:
                 return
-            inhibit_sleep.handler.UnInhibit(inhibit_sleep.token)
+            inhibit_sleep_handler.UnInhibit(inhibit_sleep.token)
             inhibit_sleep.token = None
     except dbus.DBusException, e:
         print "dbus unavailable:", e.message
