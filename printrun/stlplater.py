@@ -225,6 +225,8 @@ class StlPlater(Plater):
                  parent = None, build_dimensions = None, circular_platform = False,
                  simarrange_path = None, antialias_samples = 0):
         super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
+        self.cutting = False
+        self.cutting_axis = None
         if glview:
             viewer = stlview.StlViewPanel(self, (580, 580),
                                           build_dimensions = self.build_dimensions,

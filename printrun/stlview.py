@@ -318,6 +318,53 @@ class StlViewPanel(wxGLPanel):
             model.batch.draw()
             glPopMatrix()
         glPopMatrix()
+
+        # Draw cutting plane
+        if self.parent.cutting:
+            # FIXME: make this a proper Actor
+            axis = self.parent.cutting_axis
+            dist, plane_width, plane_height = self.get_cutting_plane(axis)
+            if dist is not None:
+                glPushMatrix()
+                if axis == "x":
+                    glRotatef(90, 0, 1, 0)
+                    glRotatef(90, 0, 0, 1)
+                    glTranslatef(0, 0, dist)
+                elif axis == "y":
+                    glRotatef(90, 1, 0, 0)
+                    glTranslatef(0, 0, -dist)
+                elif axis == "z":
+                    glTranslatef(0, 0, dist)
+                glDisable(GL_CULL_FACE)
+                glBegin(GL_TRIANGLES)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.9, 0.15, 0.3))
+                glNormal3f(0, 0, 1)
+                glVertex3f(plane_width, plane_height, 0)
+                glVertex3f(0, plane_height, 0)
+                glVertex3f(0, 0, 0)
+                glVertex3f(plane_width, 0, 0)
+                glVertex3f(plane_width, plane_height, 0)
+                glVertex3f(0, 0, 0)
+                glEnd()
+                glEnable(GL_CULL_FACE)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                glEnable(GL_LINE_SMOOTH)
+                orig_linewidth = (GLfloat)()
+                glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
+                glLineWidth(4.0)
+                glBegin(GL_LINE_LOOP)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.8, 0.15, 1))
+                glNormal3f(0, 0, 1)
+                glVertex3f(0, 0, 0)
+                glVertex3f(0, plane_height, 0)
+                glVertex3f(plane_width, plane_height, 0)
+                glVertex3f(plane_width, 0, 0)
+                glEnd()
+                glLineWidth(orig_linewidth)
+                glDisable(GL_LINE_SMOOTH)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                glPopMatrix()
+
         glPopMatrix()
 
     # ==========================================================================
@@ -337,6 +384,61 @@ class StlViewPanel(wxGLPanel):
         else:
             glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         return mvmat
+
+    def get_cutting_plane(self, cutting_axis):
+        ref_sizes = {"x": self.platform.width,
+                     "y": self.platform.depth,
+                     "z": self.platform.height,
+                     }
+        ref_planes = {"x": (0, 0, 1),
+                      "y": (0, 0, 1),
+                      "z": (0, 1, 0)
+                      }
+        ref_offsets = {"x": 0,
+                       "y": 0,
+                       "z": - self.platform.depth / 2
+                       }
+        translate_axis = {"x": 0,
+                          "y": 1,
+                          "z": 2
+                          }
+        fallback_ref_planes = {"x": (0, 1, 0),
+                               "y": (1, 0, 0),
+                               "z": (1, 0, 0)
+                               }
+        fallback_ref_offsets = {"x": - self.platform.height / 2,
+                                "y": - self.platform.width / 2,
+                                "z": - self.platform.width / 2,
+                                }
+        cutting_plane_sizes = {"x": (self.platform.depth, self.platform.height),
+                               "y": (self.platform.width, self.platform.height),
+                               "z": (self.platform.width, self.platform.depth)}
+        ref_size = ref_sizes[cutting_axis]
+        ref_plane = ref_planes[cutting_axis]
+        ref_offset = ref_offsets[cutting_axis]
+        plane_width, plane_height = cutting_plane_sizes[cutting_axis]
+        inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
+                                    plane_normal = ref_plane,
+                                    plane_offset = ref_offset,
+                                    local_transform = False)
+        max_size = max((self.platform.width,
+                        self.platform.depth,
+                        self.platform.height))
+        dist = None
+        if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
+            dist = inter[translate_axis[cutting_axis]]
+        if dist is None or dist < -0.5 * ref_size or dist > 1.5 * ref_size:
+            ref_plane = fallback_ref_planes[cutting_axis]
+            ref_offset = fallback_ref_offsets[cutting_axis]
+            inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
+                                        plane_normal = ref_plane,
+                                        plane_offset = ref_offset,
+                                        local_transform = False)
+            if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
+                dist = inter[translate_axis[cutting_axis]]
+        if dist is not None:
+            dist = min(1.5 * ref_size, max(-0.5 * ref_size, dist))
+        return dist, plane_width, plane_height
 
 def main():
     app = wx.App(redirect = False)
