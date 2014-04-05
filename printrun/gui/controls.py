@@ -73,14 +73,14 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "htemp_label": (1, 2),
         "htemp_off": (1, 1),
         "htemp_val": (1, 1),
-        "htemp_set": (1, 1),
+        "htemp_set": (1, 1 if root.display_graph else 2),
         "btemp_label": (1, 2),
         "btemp_off": (1, 1),
         "btemp_val": (1, 1),
-        "btemp_set": (1, 1),
-        "ebuttons": (1, 5),
-        "esettings": (1, 5),
-        "speedcontrol": (1, 5),
+        "btemp_set": (1, 1 if root.display_graph else 2),
+        "ebuttons": (1, 5 if root.display_graph else 6),
+        "esettings": (1, 5 if root.display_graph else 6),
+        "speedcontrol": (1, 5 if root.display_graph else 6),
         "htemp_gauge": (1, 5 if mini_mode else 6),
         "btemp_gauge": (1, 5 if mini_mode else 6),
         "tempdisp": (1, 5 if mini_mode else 6),
@@ -143,7 +143,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     add("htemp_val", root.htemp)
     root.settbtn = make_button(parentpanel, _("Set"), root.do_settemp, _("Switch Hotend On"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.settbtn)
-    add("htemp_set", root.settbtn)
+    add("htemp_set", root.settbtn, flag = wx.EXPAND)
 
     # Bed temp
     add("btemp_label", wx.StaticText(parentpanel, -1, _("Bed:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
@@ -163,7 +163,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
 
     root.setbbtn = make_button(parentpanel, _("Set"), root.do_bedtemp, _("Switch Heated Bed On"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.setbbtn)
-    add("btemp_set", root.setbbtn)
+    add("btemp_set", root.setbbtn, flag = wx.EXPAND)
 
     root.btemp.SetValue(str(root.settings.last_bed_temperature))
     root.htemp.SetValue(str(root.settings.last_temperature))
@@ -260,12 +260,13 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     # Extrusion settings
     esettingspanel = root.newPanel(parentpanel)
     esettingssizer = wx.GridBagSizer()
+    esettingssizer.SetEmptyCellSize((0, 0))
     root.edist = FloatSpin(esettingspanel, -1, value = root.settings.last_extrusion, min_val = 0, max_val = 1000, size = (70, -1), digits = 1)
     root.edist.SetBackgroundColour((225, 200, 200))
     root.edist.SetForegroundColour("black")
     root.edist.Bind(wx.EVT_SPINCTRL, root.setfeeds)
     root.edist.Bind(wx.EVT_TEXT, root.setfeeds)
-    add("edist_label", wx.StaticText(esettingspanel, -1, _("Length:")), container = esettingssizer, flag = wx.ALIGN_CENTER | wx.LEFT if mini_mode else wx.ALIGN_LEFT, border = 5)
+    add("edist_label", wx.StaticText(esettingspanel, -1, _("Length:")), container = esettingssizer, flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.RIGHT | wx.LEFT, border = 5)
     add("edist_val", root.edist, container = esettingssizer, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
     unit_label = _("mm") if mini_mode else _("mm @")
     add("edist_unit", wx.StaticText(esettingspanel, -1, unit_label), container = esettingssizer, flag = wx.ALIGN_CENTER | wx.RIGHT, border = 5)
@@ -283,7 +284,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     else:
         root.efeedc = None
     esettingspanel.SetSizer(esettingssizer)
-    add("esettings", esettingspanel)
+    add("esettings", esettingspanel, flag = wx.ALIGN_LEFT)
 
     if not standalone_mode:
         ebuttonspanel = root.newPanel(parentpanel)
