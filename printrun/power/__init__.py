@@ -96,7 +96,7 @@ except ImportError:
     print "psutil unavailable, could not import power utils:"
     traceback.print_exc()
 
-    def powerset_print_start():
+    def powerset_print_start(reason):
         pass
 
     def powerset_print_stop():
