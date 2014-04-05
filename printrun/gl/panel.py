@@ -19,6 +19,8 @@ from threading import Lock
 import logging
 import sys
 import traceback
+import numpy
+import numpy.linalg
 
 import wx
 from wx import glcanvas
@@ -289,6 +291,22 @@ class wxGLPanel(wx.Panel):
         gluUnProject(x, y, 0., mvmat, pmat, viewport, px, py, pz)
         ray_near = (px.value, py.value, pz.value)
         return ray_near, ray_far
+
+    def mouse_to_plane(self, x, y, plane_normal, plane_offset, local_transform = False):
+        # Ray/plane intersection
+        ray_near, ray_far = self.mouse_to_ray(x, y, local_transform)
+        ray_near = numpy.array(ray_near)
+        ray_far = numpy.array(ray_far)
+        ray_dir = ray_far - ray_near
+        ray_dir = ray_dir / numpy.linalg.norm(ray_dir)
+        plane_normal = numpy.array(plane_normal)
+        q = ray_dir.dot(plane_normal)
+        if q == 0:
+            return None
+        t = - (ray_near.dot(plane_normal) + plane_offset) / q
+        if t < 0:
+            return None
+        return ray_near + t * ray_dir
 
     def zoom(self, factor, to = None):
         glMatrixMode(GL_MODELVIEW)

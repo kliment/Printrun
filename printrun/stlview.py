@@ -18,6 +18,7 @@
 import wx
 import time
 
+import numpy
 import pyglet
 pyglet.options['debug_gl'] = True
 
@@ -28,7 +29,9 @@ from pyglet.gl import GL_AMBIENT_AND_DIFFUSE, glBegin, glClearColor, \
     glMultMatrixd, glNormal3f, glPolygonMode, glPopMatrix, GL_POSITION, \
     glPushMatrix, glRotatef, glScalef, glShadeModel, GL_SHININESS, \
     GL_SMOOTH, GL_SPECULAR, glTranslatef, GL_TRIANGLES, glVertex3f, \
-    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble
+    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble, glClearDepth, glDepthFunc, \
+    GL_LEQUAL, GL_BLEND, glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, \
+    GL_LINE_LOOP, glGetFloatv, GL_LINE_WIDTH, glLineWidth, glDisable, GL_LINE_SMOOTH
 from pyglet import gl
 
 from .gl.panel import wxGLPanel
@@ -110,7 +113,11 @@ class StlViewPanel(wxGLPanel):
         glClearColor(0, 0, 0, 1)
         glColor3f(1, 0, 0)
         glEnable(GL_DEPTH_TEST)
+        glClearDepth(1.0)
+        glDepthFunc(GL_LEQUAL)
         glEnable(GL_CULL_FACE)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         # Uncomment this line for a wireframe view
         # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
@@ -278,26 +285,29 @@ class StlViewPanel(wxGLPanel):
         # Draw platform
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         self.platform.draw()
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         # Draw mouse
-        glPushMatrix()
-        x, y, z = self.mouse_to_3d(self.mousepos[0], self.mousepos[1], 0.9)
-        glTranslatef(x, y, z)
-        glBegin(GL_TRIANGLES)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(1, 0, 0, 1))
-        glNormal3f(0, 0, 1)
-        glVertex3f(2, 2, 0)
-        glVertex3f(-2, 2, 0)
-        glVertex3f(-2, -2, 0)
-        glVertex3f(2, -2, 0)
-        glVertex3f(2, 2, 0)
-        glVertex3f(-2, -2, 0)
-        glEnd()
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.3, 0.7, 0.5, 1))
-        glPopMatrix()
-        glPushMatrix()
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
+                                    plane_normal = (0, 0, 1), plane_offset = 0,
+                                    local_transform = False)
+        if inter is not None:
+            glPushMatrix()
+            glTranslatef(inter[0], inter[1], inter[2])
+            glBegin(GL_TRIANGLES)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(1, 0, 0, 1))
+            glNormal3f(0, 0, 1)
+            glVertex3f(2, 2, 0)
+            glVertex3f(-2, 2, 0)
+            glVertex3f(-2, -2, 0)
+            glVertex3f(2, -2, 0)
+            glVertex3f(2, 2, 0)
+            glVertex3f(-2, -2, 0)
+            glEnd()
+            glPopMatrix()
 
         # Draw objects
+        glPushMatrix()
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.3, 0.7, 0.5, 1))
         for i in self.parent.models:
             model = self.parent.models[i]
             glPushMatrix()
