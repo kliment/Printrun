@@ -234,13 +234,14 @@ class StlPlater(Plater):
                                           circular = circular_platform,
                                           antialias_samples = antialias_samples)
             # Cutting tool
+            nrows = self.menusizer.GetRows()
             self.menusizer.Add(wx.StaticText(self.menupanel, -1, _("Cut along:")),
-                               pos = (6, 0), span = (1, 1), flag = wx.ALIGN_CENTER)
+                               pos = (nrows, 0), span = (1, 1), flag = wx.ALIGN_CENTER)
             cutconfirmbutton = wx.Button(self.menupanel, label = _("Confirm cut"))
             cutconfirmbutton.Bind(wx.EVT_BUTTON, self.cut_confirm)
             cutconfirmbutton.Disable()
             self.cutconfirmbutton = cutconfirmbutton
-            self.menusizer.Add(cutconfirmbutton, pos = (6, 1), span = (1, 1), flag = wx.EXPAND)
+            self.menusizer.Add(cutconfirmbutton, pos = (nrows, 1), span = (1, 1), flag = wx.EXPAND)
             cutpanel = wx.Panel(self.menupanel, -1)
             cutsizer = self.cutsizer = wx.BoxSizer(wx.HORIZONTAL)
             cutpanel.SetSizer(cutsizer)
@@ -262,7 +263,7 @@ class StlPlater(Plater):
             cutzminusbutton = wx.ToggleButton(cutpanel, label = _("<Z"), style = wx.BU_EXACTFIT)
             cutzminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "z", -1))
             cutsizer.Add(cutzminusbutton, 1, flag = wx.EXPAND)
-            self.menusizer.Add(cutpanel, pos = (7, 0), span = (1, 2), flag = wx.EXPAND)
+            self.menusizer.Add(cutpanel, pos = (nrows + 1, 0), span = (1, 2), flag = wx.EXPAND)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
         self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
