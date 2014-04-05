@@ -284,9 +284,9 @@ class wxGLPanel(wx.Panel):
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         mvmat = self.get_modelview_mat(local_transform)
-        gluUnProject(x, y, 0, mvmat, pmat, viewport, px, py, pz)
+        gluUnProject(x, y, 1, mvmat, pmat, viewport, px, py, pz)
         ray_far = (px.value, py.value, pz.value)
-        gluUnProject(x, y, 1., mvmat, pmat, viewport, px, py, pz)
+        gluUnProject(x, y, 0., mvmat, pmat, viewport, px, py, pz)
         ray_near = (px.value, py.value, pz.value)
         return ray_near, ray_far
 

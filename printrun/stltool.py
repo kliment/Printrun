@@ -146,7 +146,7 @@ class stl(object):
             f.close()
             return
 
-    def intersect(self, ray_far, ray_near):
+    def intersect(self, ray_near, ray_far):
         """
         Möller–Trumbore intersection algorithm in pure python
         Based on http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
