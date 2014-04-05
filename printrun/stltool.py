@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -158,6 +160,10 @@ class stl(object):
             return
 
     def intersect(self, ray_far, ray_near):
+        """
+        Möller–Trumbore intersection algorithm in pure python
+        Based on http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+        """
         ray_near = numpy.array(ray_near)
         ray_far = numpy.array(ray_far)
         ray_dir = normalize(ray_far - ray_near)
@@ -215,15 +221,18 @@ class stl(object):
         newmodel = self.transform(matrix)
         return newmodel
 
-    def translate(self, v = [0, 0, 0]):
+    def translation_matrix(self, v):
         matrix = [[1, 0, 0, v[0]],
                   [0, 1, 0, v[1]],
                   [0, 0, 1, v[2]],
                   [0, 0, 0, 1]
                   ]
-        return self.transform(numpy.array(matrix))
+        return numpy.array(matrix)
 
-    def rotate(self, v = [0, 0, 0]):
+    def translate(self, v = [0, 0, 0]):
+        return self.transform(self.translation_matrix(v))
+
+    def rotation_matrix(self, v):
         z = v[2]
         matrix1 = [[math.cos(math.radians(z)), -math.sin(math.radians(z)), 0, 0],
                    [math.sin(math.radians(z)), math.cos(math.radians(z)), 0, 0],
@@ -245,15 +254,21 @@ class stl(object):
                    [0, 0, 0, 1]
                    ]
         matrix3 = numpy.array(matrix3)
-        return self.transform(matrix1).transform(matrix2).transform(matrix3)
+        return matrix3.dot(matrix2.dot(matrix1))
 
-    def scale(self, v = [0, 0, 0]):
+    def rotate(self, v = [0, 0, 0]):
+        return self.transform(self.rotation_matrix(v))
+
+    def scale_matrix(self, v):
         matrix = [[v[0], 0, 0, 0],
                   [0, v[1], 0, 0],
                   [0, 0, v[2], 0],
                   [0, 0, 0, 1]
                   ]
-        return self.transform(numpy.array(matrix))
+        return numpy.array(matrix)
+
+    def scale(self, v = [0, 0, 0]):
+        return self.transform(self.scale_matrix(v))
 
     def transform(self, m = I):
         s = stl()

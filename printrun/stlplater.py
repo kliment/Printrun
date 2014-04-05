@@ -48,6 +48,15 @@ if "-nogl" not in sys.argv:
 def evalme(s):
     return eval(s[s.find("(") + 1:s.find(")")])
 
+def transformation_matrix(model):
+    matrix = stltool.I
+    if any(model.centeroffset):
+        matrix = model.translation_matrix(model.centeroffset).dot(matrix)
+    if model.rot:
+        matrix = model.rotation_matrix([0, 0, model.rot]).dot(matrix)
+    if any(model.offsets):
+        matrix = model.translation_matrix(model.offsets).dot(matrix)
+    return matrix
 
 class showstl(wx.Window):
     def __init__(self, parent, size, pos):
@@ -237,13 +246,7 @@ class StlPlater(Plater):
         # TODO: speedup search by first checking if ray is in bounding box
         # of the given model
         for key, model in self.models.iteritems():
-            transformed = model
-            if any(model.centeroffset):
-                transformed = transformed.translate(model.centeroffset)
-            if model.rot:
-                transformed = transformed.rotate([0, 0, model.rot])
-            if any(model.offsets):
-                transformed = transformed.translate(model.offsets)
+            transformed = model.transform(transformation_matrix(model))
             facet, facet_dist = transformed.intersect(ray_near, ray_far)
             if facet is not None and facet_dist < best_dist:
                 best_match = key
@@ -355,7 +358,6 @@ class StlPlater(Plater):
             facets = []
             for model in self.models.values():
                 r = model.rot
-                rot = [0, 0, r] if r else None
                 o = model.offsets
                 co = model.centeroffset
                 sf.write("translate([%s, %s, %s])"
@@ -365,12 +367,7 @@ class StlPlater(Plater):
                                                 r,
                                                 co[0], co[1], co[2],
                                                 model.filename))
-                if any(co):
-                    model = model.translate(co)
-                if rot:
-                    model = model.rotate(rot)
-                if any(o):
-                    model = model.translate(o)
+                model = model.transform(transformation_matrix(model))
                 facets += model.facets
             stltool.emitstl(name, facets, "plater_export")
             print _("Wrote plate to %s") % name
