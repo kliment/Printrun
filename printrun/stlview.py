@@ -27,7 +27,8 @@ from pyglet.gl import GL_AMBIENT_AND_DIFFUSE, glBegin, glClearColor, \
     GL_LIGHT1, glLightfv, GL_LIGHTING, GL_LINE, glMaterialf, glMaterialfv, \
     glMultMatrixd, glNormal3f, glPolygonMode, glPopMatrix, GL_POSITION, \
     glPushMatrix, glRotatef, glScalef, glShadeModel, GL_SHININESS, \
-    GL_SMOOTH, GL_SPECULAR, glTranslatef, GL_TRIANGLES, glVertex3f
+    GL_SMOOTH, GL_SPECULAR, glTranslatef, GL_TRIANGLES, glVertex3f, \
+    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble
 from pyglet import gl
 
 from .gl.panel import wxGLPanel
@@ -180,7 +181,7 @@ class StlViewPanel(wxGLPanel):
         delta = event.GetWheelRotation()
         factor = 1.05
         x, y = event.GetPositionTuple()
-        x, y, _ = self.mouse_to_3d(x, y)
+        x, y, _ = self.mouse_to_3d(x, y, local_transform = True)
         if delta > 0:
             self.zoom(factor, (x, y))
         else:
@@ -309,6 +310,24 @@ class StlViewPanel(wxGLPanel):
             glPopMatrix()
         glPopMatrix()
         glPopMatrix()
+
+    # ==========================================================================
+    # Utils
+    # ==========================================================================
+    def get_modelview_mat(self, local_transform):
+        mvmat = (GLdouble * 16)()
+        if local_transform:
+            glPushMatrix()
+            # Rotate according to trackball
+            glTranslatef(0, 0, -self.dist)
+            glMultMatrixd(build_rotmatrix(self.basequat))  # Rotate according to trackball
+            glTranslatef(- self.build_dimensions[3] - self.platform.width / 2,
+                         - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+            glPopMatrix()
+        else:
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        return mvmat
 
 def main():
     app = wx.App(redirect = False)

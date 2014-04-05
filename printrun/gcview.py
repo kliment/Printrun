@@ -24,7 +24,8 @@ from .gl.libtatlin import actors
 from .injectgcode import injector, injector_edit
 
 from pyglet.gl import glPushMatrix, glPopMatrix, \
-    glTranslatef, glRotatef, glScalef, glMultMatrixd
+    glTranslatef, glRotatef, glScalef, glMultMatrixd, \
+    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble
 
 from .gviz import GvizBaseFrame
 
@@ -152,6 +153,25 @@ class GcodeViewPanel(wxGLPanel):
             obj.model.display()
             glPopMatrix()
         glPopMatrix()
+
+    # ==========================================================================
+    # Utils
+    # ==========================================================================
+    def get_modelview_mat(self, local_transform):
+        mvmat = (GLdouble * 16)()
+        if local_transform:
+            glPushMatrix()
+            # Rotate according to trackball
+            glMultMatrixd(build_rotmatrix(self.basequat))
+            # Move origin to bottom left of platform
+            platformx0 = -self.build_dimensions[3] - self.parent.platform.width / 2
+            platformy0 = -self.build_dimensions[4] - self.parent.platform.depth / 2
+            glTranslatef(platformx0, platformy0, 0)
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+            glPopMatrix()
+        else:
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        return mvmat
 
     def double(self, event):
         if hasattr(self.parent, "clickcb") and self.parent.clickcb:
