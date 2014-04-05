@@ -38,9 +38,9 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_MODELVIEW_MATRIX, GL_ONE_MINUS_SRC_ALPHA, glOrtho, \
     GL_PROJECTION, GL_PROJECTION_MATRIX, glScalef, \
     GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
-    glViewport, GL_VIEWPORT
+    glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, glMultMatrixd
 from pyglet import gl
-from .trackball import trackball, mulquat
+from .trackball import trackball, mulquat, build_rotmatrix
 from .libtatlin.actors import vec
 
 class wxGLPanel(wx.Panel):
@@ -248,7 +248,19 @@ class wxGLPanel(wx.Panel):
     # ==========================================================================
     # Utils
     # ==========================================================================
-    def mouse_to_3d(self, x, y, z = 1.0):
+    def get_modelview_mat(self, mult_rot):
+        mvmat = (GLdouble * 16)()
+        if mult_rot:
+            glPushMatrix()
+            # Rotate according to trackball
+            glMultMatrixd(build_rotmatrix(self.basequat))
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+            glPopMatrix()
+        else:
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        return mvmat
+
+    def mouse_to_3d(self, x, y, z = 1.0, mult_rot = False):
         x = float(x)
         y = self.height - float(y)
         # The following could work if we were not initially scaling to zoom on
@@ -256,7 +268,7 @@ class wxGLPanel(wx.Panel):
         # if self.orthographic:
         #    return (x - self.width / 2, y - self.height / 2, 0)
         pmat = (GLdouble * 16)()
-        mvmat = (GLdouble * 16)()
+        mvmat = self.get_modelview_mat(mult_rot)
         viewport = (GLint * 4)()
         px = (GLdouble)()
         py = (GLdouble)()
@@ -266,6 +278,24 @@ class wxGLPanel(wx.Panel):
         glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         gluUnProject(x, y, z, mvmat, pmat, viewport, px, py, pz)
         return (px.value, py.value, pz.value)
+
+    def mouse_to_ray(self, x, y, mult_rot = False):
+        x = float(x)
+        y = self.height - float(y)
+        pmat = (GLdouble * 16)()
+        mvmat = (GLdouble * 16)()
+        viewport = (GLint * 4)()
+        px = (GLdouble)()
+        py = (GLdouble)()
+        pz = (GLdouble)()
+        glGetIntegerv(GL_VIEWPORT, viewport)
+        glGetDoublev(GL_PROJECTION_MATRIX, pmat)
+        mvmat = self.get_modelview_mat(mult_rot)
+        gluUnProject(x, y, 0, mvmat, pmat, viewport, px, py, pz)
+        ray_far = (px.value, py.value, pz.value)
+        gluUnProject(x, y, 1., mvmat, pmat, viewport, px, py, pz)
+        ray_near = (px.value, py.value, pz.value)
+        return ray_near, ray_far
 
     def zoom(self, factor, to = None):
         glMatrixMode(GL_MODELVIEW)
