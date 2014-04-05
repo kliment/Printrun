@@ -17,48 +17,26 @@ import sys
 import struct
 import math
 
-def vec(v2, v1):
-    return [v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]]
-
-def dot(v1, v2):
-    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
-
-def mul(v, f):
-    return [f * v[0], f * v[1], f * v[2]]
-
-def cross(v1, v2):
-    return [v1[1] * v2[2] - v1[2] * v2[1],
-            v1[2] * v2[0] - v1[0] * v2[2],
-            v1[0] * v2[1] - v1[1] * v2[0]]
+import numpy
+import numpy.linalg
 
 def genfacet(v):
-    veca = [v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2]]
-    vecb = [v[2][0] - v[1][0], v[2][1] - v[1][1], v[2][2] - v[1][2]]
-    vecx = cross(veca, vecb)
-    vlen = math.sqrt(sum(map(lambda x: x * x, vecx)))
+    veca = v[1] - v[0]
+    vecb = v[2] - v[1]
+    vecx = numpy.cross(veca, vecb)
+    vlen = numpy.linalg.norm(vecx)
     if vlen == 0:
         vlen = 1
-    normal = map(lambda x: x / vlen, vecx)
-    return [normal, v]
+    normal = vecx / vlen
+    return (normal, v)
 
-I = [
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, 1, 0],
-    [0, 0, 0, 1]
-]
+I = numpy.identity(4)
 
-def transpose(matrix):
-    return zip(*matrix)
-    # return [[v[i] for v in matrix] for i in xrange(len(matrix[0]))]
-
-def multmatrix(vector, matrix):
-    return map(sum, transpose(map(lambda x: [x[0] * p for p in x[1]], zip(vector, transpose(matrix)))))
+def homogeneous(v, w = 1):
+    return numpy.append(v, w)
 
 def applymatrix(facet, matrix = I):
-    # return facet
-    # return [map(lambda x:-1.0*x, multmatrix(facet[0]+[1], matrix)[:3]), map(lambda x:multmatrix(x+[1], matrix)[:3], facet[1])]
-    return genfacet(map(lambda x: multmatrix(x + [1], matrix)[:3], facet[1]))
+    return genfacet(map(lambda x: matrix.dot(homogeneous(x))[:3], facet[1]))
 
 f = [[0, 0, 0], [[-3.022642, 0.642482, -9.510565], [-3.022642, 0.642482, -9.510565], [-3.022642, 0.642482, -9.510565]]]
 m = [
@@ -130,7 +108,7 @@ class stl(object):
     dims = property(_get_dims)
 
     def __init__(self, filename = None):
-        self.facet = [[0, 0, 0], [[0, 0, 0], [0, 0, 0], [0, 0, 0]]]
+        self.facet = (numpy.zeros(3), (numpy.zeros(3), numpy.zeros(3), numpy.zeros(3)))
         self.facets = []
         self.facetsminz = []
         self.facetsmaxz = []
@@ -178,17 +156,18 @@ class stl(object):
 
     def rebase(self, facet_i):
         normal, facet = self.facets[facet_i]
-        u1 = vec(facet[1], facet[0])
-        v2 = vec(facet[2], facet[0])
-        n1 = dot(u1, u1)
-        e1 = mul(u1, 1. / math.sqrt(n1))
-        u2 = vec(v2, mul(u1, dot(v2, u1) / n1))
-        e2 = mul(u2, 1. / math.sqrt(dot(u2, u2)))
-        e3 = cross(e1, e2)
+        u1 = facet[1] - facet[0]
+        v2 = facet[2] - facet[0]
+        n1 = u1.dot(u1)
+        e1 = u1 / math.sqrt(n1)
+        u2 = v2 - u1 * v2.dot(u1) / n1
+        e2 = u2 / numpy.linalg.norm(u2)
+        e3 = numpy.cross(e1, e2)
         matrix = [[e1[0], e2[0], e3[0], 0],
                   [e1[1], e2[1], e3[1], 0],
                   [e1[2], e2[2], e3[2], 0],
                   [0, 0, 0, 1]]
+        matrix = numpy.array(matrix)
         newmodel = self.transform(matrix)
         # If object ends up being mostly below ground plane,
         # rotate it around Y axis
@@ -203,7 +182,7 @@ class stl(object):
                   [0, 0, 1, v[2]],
                   [0, 0, 0, 1]
                   ]
-        return self.transform(matrix)
+        return self.transform(numpy.array(matrix))
 
     def rotate(self, v = [0, 0, 0]):
         z = v[2]
@@ -212,18 +191,21 @@ class stl(object):
                    [0, 0, 1, 0],
                    [0, 0, 0, 1]
                    ]
+        matrix1 = numpy.array(matrix1)
         y = v[0]
         matrix2 = [[1, 0, 0, 0],
                    [0, math.cos(math.radians(y)), -math.sin(math.radians(y)), 0],
                    [0, math.sin(math.radians(y)), math.cos(math.radians(y)), 0],
                    [0, 0, 0, 1]
                    ]
+        matrix2 = numpy.array(matrix2)
         x = v[1]
         matrix3 = [[math.cos(math.radians(x)), 0, -math.sin(math.radians(x)), 0],
                    [0, 1, 0, 0],
                    [math.sin(math.radians(x)), 0, math.cos(math.radians(x)), 0],
                    [0, 0, 0, 1]
                    ]
+        matrix3 = numpy.array(matrix3)
         return self.transform(matrix1).transform(matrix2).transform(matrix3)
 
     def scale(self, v = [0, 0, 0]):
@@ -232,7 +214,7 @@ class stl(object):
                   [0, 0, v[2], 0],
                   [0, 0, 0, 1]
                   ]
-        return self.transform(matrix)
+        return self.transform(numpy.array(matrix))
 
     def transform(self, m = I):
         s = stl()
@@ -271,19 +253,19 @@ class stl(object):
             return 0
         elif l.startswith("facet normal"):
             l = l.replace(", ", ".")
-            self.infacet = 11
+            self.infacet = 1
             self.facetloc = 0
-            self.facet = [[0, 0, 0], [[0, 0, 0], [0, 0, 0], [0, 0, 0]]]
-            self.facet[0] = map(float, l.split()[2:])
+            normal = numpy.array(map(float, l.split()[2:]))
+            self.facet = (normal, (numpy.zeros(3), numpy.zeros(3), numpy.zeros(3)))
         elif l.startswith("endfacet"):
             self.infacet = 0
-            self.facets += [self.facet]
+            self.facets.append(self.facet)
             facet = self.facet
             self.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
             self.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
         elif l.startswith("vertex"):
             l = l.replace(", ", ".")
-            self.facet[1][self.facetloc] = map(float, l.split()[1:])
+            self.facet[1][self.facetloc][:] = numpy.array(map(float, l.split()[1:]))
             self.facetloc += 1
         return 1
 
