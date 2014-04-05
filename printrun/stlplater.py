@@ -314,30 +314,29 @@ class StlPlater(Plater):
         self.s.drawmodel(model, 2)
 
     def export_to(self, name):
-        sf = open(name.replace(".", "_") + ".scad", "w")
-        facets = []
-        for model in self.models.values():
-            r = model.rot
-            rot = [0, 0, r] if r else None
-            o = model.offsets
-            co = model.centeroffset
-            sf.write("translate([%s, %s, %s])"
-                     "rotate([0, 0, %s])"
-                     "translate([%s, %s, %s])"
-                     "import(\"%s\");\n" % (o[0], o[1], o[2],
-                                            r,
-                                            co[0], co[1], co[2],
-                                            model.filename))
-            if any(co):
-                model = model.translate(co)
-            if rot:
-                model = model.rotate(rot)
-            if any(o):
-                model = model.translate(o)
-            facets += model.facets
-        sf.close()
-        stltool.emitstl(name, facets, "plater_export")
-        print _("Wrote plate to %s") % name
+        with open(name.replace(".", "_") + ".scad", "w") as sf:
+            facets = []
+            for model in self.models.values():
+                r = model.rot
+                rot = [0, 0, r] if r else None
+                o = model.offsets
+                co = model.centeroffset
+                sf.write("translate([%s, %s, %s])"
+                         "rotate([0, 0, %s])"
+                         "translate([%s, %s, %s])"
+                         "import(\"%s\");\n" % (o[0], o[1], o[2],
+                                                r,
+                                                co[0], co[1], co[2],
+                                                model.filename))
+                if any(co):
+                    model = model.translate(co)
+                if rot:
+                    model = model.rotate(rot)
+                if any(o):
+                    model = model.translate(o)
+                facets += model.facets
+            stltool.emitstl(name, facets, "plater_export")
+            print _("Wrote plate to %s") % name
 
     def autoplate(self, event = None):
         try:
