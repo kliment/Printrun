@@ -43,14 +43,6 @@ def homogeneous(v, w = 1):
 def applymatrix(facet, matrix = I):
     return genfacet(map(lambda x: matrix.dot(homogeneous(x))[:3], facet[1]))
 
-f = [[0, 0, 0], [[-3.022642, 0.642482, -9.510565], [-3.022642, 0.642482, -9.510565], [-3.022642, 0.642482, -9.510565]]]
-m = [
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, 1, 1],
-    [0, 0, 0, 1]
-]
-
 def emitstl(filename, facets = [], objname = "stltool_export", binary = 1):
     if filename is None:
         return
