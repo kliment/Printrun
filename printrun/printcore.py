@@ -357,10 +357,10 @@ class printcore():
         """
         if self.printing or not self.online or not self.printer:
             return False
-        self.printing = True
-        self.mainqueue = gcode
-        self.lineno = 0
         self.queueindex = startindex
+        self.mainqueue = gcode
+        self.printing = True
+        self.lineno = 0
         self.resendfrom = -1
         self._send("M110", -1, True)
         if not gcode or not gcode.lines:
