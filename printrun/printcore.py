@@ -552,7 +552,7 @@ class printcore():
                 return
 
             # Strip comments
-            tline = gcoder.gcode_strip_comment_exp.sub("", tline)
+            tline = gcoder.gcode_strip_comment_exp.sub("", tline).strip()
             if tline:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
