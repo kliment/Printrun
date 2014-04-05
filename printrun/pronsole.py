@@ -185,8 +185,8 @@ class SpinSetting(wxSetting):
         self.increment = increment
 
     def get_specific_widget(self, parent):
-        import wx
-        self.widget = wx.SpinCtrl(parent, -1, min = self.min, max = self.max)
+        from wx.lib.agw.floatspin import FloatSpin
+        self.widget = FloatSpin(parent, -1, min_val = self.min, max_val = self.max, digits = 0)
         self.widget.SetValue(self.value)
         return self.widget
 
