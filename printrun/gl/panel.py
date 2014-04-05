@@ -65,7 +65,7 @@ class wxGLPanel(wx.Panel):
                       glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
                       glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
 
-        if antialias_samples > 0:
+        if antialias_samples > 0 and hasattr(glcanvas, "WX_GL_SAMPLE_BUFFERS"):
             attribList += (glcanvas.WX_GL_SAMPLE_BUFFERS, 1,
                            glcanvas.WX_GL_SAMPLES, antialias_samples)
 
