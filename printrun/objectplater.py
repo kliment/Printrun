@@ -36,8 +36,8 @@ class Plater(wx.Frame):
         self.filenames = filenames
         self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        panel = wx.Panel(self, -1)
-        sizer = wx.GridBagSizer()
+        panel = self.menupanel = wx.Panel(self, -1)
+        sizer = self.menusizer = wx.GridBagSizer()
         self.l = wx.ListBox(panel)
         sizer.Add(self.l, pos = (1, 0), span = (1, 2), flag = wx.EXPAND)
         sizer.AddGrowableRow(1, 1)

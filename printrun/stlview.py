@@ -77,9 +77,9 @@ class StlViewPanel(wxGLPanel):
         self.batches = []
         self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
-        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
-        self.initialized = 1
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
+        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
+        self.initialized = True
         self.parent = parent
         self.initpos = None
         if build_dimensions:
@@ -150,14 +150,14 @@ class StlViewPanel(wxGLPanel):
                 self.parent.loadcb()
             self.parent.filenames = None
 
-    def double(self, event):
+    def double_click(self, event):
         if hasattr(self.parent, "clickcb") and self.parent.clickcb:
             self.parent.clickcb(event)
 
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
-        self.initialized = 0
+        self.initialized = False
 
     def move(self, event):
         """react to mouse actions:
@@ -323,7 +323,8 @@ class StlViewPanel(wxGLPanel):
         if self.parent.cutting:
             # FIXME: make this a proper Actor
             axis = self.parent.cutting_axis
-            dist, plane_width, plane_height = self.get_cutting_plane(axis)
+            fixed_dist = self.parent.cutting_dist
+            dist, plane_width, plane_height = self.get_cutting_plane(axis, fixed_dist)
             if dist is not None:
                 glPushMatrix()
                 if axis == "x":
@@ -338,7 +339,7 @@ class StlViewPanel(wxGLPanel):
                 glDisable(GL_CULL_FACE)
                 glBegin(GL_TRIANGLES)
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.9, 0.15, 0.3))
-                glNormal3f(0, 0, 1)
+                glNormal3f(0, 0, self.parent.cutting_direction)
                 glVertex3f(plane_width, plane_height, 0)
                 glVertex3f(0, plane_height, 0)
                 glVertex3f(0, 0, 0)
@@ -354,7 +355,6 @@ class StlViewPanel(wxGLPanel):
                 glLineWidth(4.0)
                 glBegin(GL_LINE_LOOP)
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.8, 0.15, 1))
-                glNormal3f(0, 0, 1)
                 glVertex3f(0, 0, 0)
                 glVertex3f(0, plane_height, 0)
                 glVertex3f(plane_width, plane_height, 0)
@@ -385,7 +385,13 @@ class StlViewPanel(wxGLPanel):
             glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         return mvmat
 
-    def get_cutting_plane(self, cutting_axis):
+    def get_cutting_plane(self, cutting_axis, fixed_dist, local_transform = False):
+        cutting_plane_sizes = {"x": (self.platform.depth, self.platform.height),
+                               "y": (self.platform.width, self.platform.height),
+                               "z": (self.platform.width, self.platform.depth)}
+        plane_width, plane_height = cutting_plane_sizes[cutting_axis]
+        if fixed_dist is not None:
+            return fixed_dist, plane_width, plane_height
         ref_sizes = {"x": self.platform.width,
                      "y": self.platform.depth,
                      "z": self.platform.height,
@@ -410,17 +416,13 @@ class StlViewPanel(wxGLPanel):
                                 "y": - self.platform.width / 2,
                                 "z": - self.platform.width / 2,
                                 }
-        cutting_plane_sizes = {"x": (self.platform.depth, self.platform.height),
-                               "y": (self.platform.width, self.platform.height),
-                               "z": (self.platform.width, self.platform.depth)}
         ref_size = ref_sizes[cutting_axis]
         ref_plane = ref_planes[cutting_axis]
         ref_offset = ref_offsets[cutting_axis]
-        plane_width, plane_height = cutting_plane_sizes[cutting_axis]
         inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                     plane_normal = ref_plane,
                                     plane_offset = ref_offset,
-                                    local_transform = False)
+                                    local_transform = local_transform)
         max_size = max((self.platform.width,
                         self.platform.depth,
                         self.platform.height))

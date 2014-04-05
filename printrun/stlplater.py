@@ -227,19 +227,88 @@ class StlPlater(Plater):
         super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
         self.cutting = False
         self.cutting_axis = None
+        self.cutting_dist = None
         if glview:
             viewer = stlview.StlViewPanel(self, (580, 580),
                                           build_dimensions = self.build_dimensions,
                                           circular = circular_platform,
                                           antialias_samples = antialias_samples)
+            # Cutting tool
+            self.menusizer.Add(wx.StaticText(self.menupanel, -1, _("Cut along:")),
+                               pos = (6, 0), span = (1, 1), flag = wx.ALIGN_CENTER)
+            cutconfirmbutton = wx.Button(self.menupanel, label = _("Confirm cut"))
+            cutconfirmbutton.Bind(wx.EVT_BUTTON, self.cut_confirm)
+            cutconfirmbutton.Disable()
+            self.cutconfirmbutton = cutconfirmbutton
+            self.menusizer.Add(cutconfirmbutton, pos = (6, 1), span = (1, 1), flag = wx.EXPAND)
+            cutpanel = wx.Panel(self.menupanel, -1)
+            cutsizer = self.cutsizer = wx.BoxSizer(wx.HORIZONTAL)
+            cutpanel.SetSizer(cutsizer)
+            cutxplusbutton = wx.ToggleButton(cutpanel, label = _(">X"), style = wx.BU_EXACTFIT)
+            cutxplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "x", 1))
+            cutsizer.Add(cutxplusbutton, 1, flag = wx.EXPAND)
+            cutzplusbutton = wx.ToggleButton(cutpanel, label = _(">Y"), style = wx.BU_EXACTFIT)
+            cutzplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", 1))
+            cutsizer.Add(cutzplusbutton, 1, flag = wx.EXPAND)
+            cutzplusbutton = wx.ToggleButton(cutpanel, label = _(">Z"), style = wx.BU_EXACTFIT)
+            cutzplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "z", 1))
+            cutsizer.Add(cutzplusbutton, 1, flag = wx.EXPAND)
+            cutxminusbutton = wx.ToggleButton(cutpanel, label = _("<X"), style = wx.BU_EXACTFIT)
+            cutxminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "x", -1))
+            cutsizer.Add(cutxminusbutton, 1, flag = wx.EXPAND)
+            cutzminusbutton = wx.ToggleButton(cutpanel, label = _("<Y"), style = wx.BU_EXACTFIT)
+            cutzminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", -1))
+            cutsizer.Add(cutzminusbutton, 1, flag = wx.EXPAND)
+            cutzminusbutton = wx.ToggleButton(cutpanel, label = _("<Z"), style = wx.BU_EXACTFIT)
+            cutzminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "z", -1))
+            cutsizer.Add(cutzminusbutton, 1, flag = wx.EXPAND)
+            self.menusizer.Add(cutpanel, pos = (7, 0), span = (1, 2), flag = wx.EXPAND)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
         self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
         self.set_viewer(viewer)
 
-    def clickcb(self, event):
+    def start_cutting_tool(self, event, axis, direction):
+        toggle = event.GetEventObject()
+        if toggle.GetValue():
+            # Disable the other toggles
+            for child in self.cutsizer.GetChildren():
+                child = child.GetWindow()
+                if child != toggle:
+                    child.SetValue(False)
+            self.cutting = True
+            self.cutting_axis = axis
+            self.cutting_dist = None
+            self.cutting_direction = direction
+        else:
+            self.cutting = False
+            self.cutting_axis = None
+            self.cutting_dist = None
+            self.cutting_direction = None
+
+    def cut_confirm(self, event):
+        name = self.l.GetSelection()
+        name = self.l.GetString(name)
+        model = self.models[name]
+        print "Cutting", name, self.cutting_axis, self.cutting_direction, self.cutting_dist, model
+        self.cutconfirmbutton.Disable()
+
+    def clickcb(self, event, single = False):
         if not isinstance(self.s, stlview.StlViewPanel):
             return
+        if self.cutting:
+            self.clickcb_cut(event)
+        else:
+            self.clickcb_rebase(event)
+
+    def clickcb_cut(self, event):
+        axis = self.cutting_axis
+        self.cutting_dist, _, _ = self.s.get_cutting_plane(axis, None,
+                                                           local_transform = True)
+        if self.cutting_dist is not None:
+            self.cutconfirmbutton.Enable()
+
+    def clickcb_rebase(self, event):
         x, y = event.GetPosition()
         ray_near, ray_far = self.s.mouse_to_ray(x, y, local_transform = True)
         best_match = None
