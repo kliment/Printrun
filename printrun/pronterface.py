@@ -115,6 +115,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.excluder_z_rel = None
     fgcode = property(_get_fgcode, _set_fgcode)
 
+    def _get_display_graph(self):
+        return self.settings.tempgraph
+    display_graph = property(_get_display_graph)
+
+    def _get_display_gauges(self):
+        return self.settings.tempgauges
+    display_gauges = property(_get_display_gauges)
+
     def __init__(self, app, filename = None, size = winsize):
         pronsole.pronsole.__init__(self)
         self.app = app
@@ -173,9 +181,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.window_ready = True
-
-        self.display_graph = self.settings.tempgraph
-        self.display_gauges = self.settings.tempgauges
 
         # set feedrates in printcore for pause/resume
         self.p.xy_feedrate = self.settings.xy_feedrate
@@ -936,7 +941,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.start_viz_thread()
 
     def update_monitor(self, *args):
-        if hasattr(self, "display_graph") and self.display_graph:
+        if hasattr(self, "graph") and self.display_graph:
             if self.settings.monitor:
                 wx.CallAfter(self.graph.StartPlotting, 1000)
             else:
