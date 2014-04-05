@@ -31,7 +31,8 @@ from pyglet.gl import GL_AMBIENT_AND_DIFFUSE, glBegin, glClearColor, \
     GL_SMOOTH, GL_SPECULAR, glTranslatef, GL_TRIANGLES, glVertex3f, \
     glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble, glClearDepth, glDepthFunc, \
     GL_LEQUAL, GL_BLEND, glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, \
-    GL_LINE_LOOP, glGetFloatv, GL_LINE_WIDTH, glLineWidth, glDisable, GL_LINE_SMOOTH
+    GL_LINE_LOOP, glGetFloatv, GL_LINE_WIDTH, glLineWidth, glDisable, \
+    GL_LINE_SMOOTH, glColorMaterial
 from pyglet import gl
 
 from .gl.panel import wxGLPanel
@@ -86,7 +87,7 @@ class StlViewPanel(wxGLPanel):
             self.build_dimensions = build_dimensions
         else:
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
-        self.platform = actors.Platform(self.build_dimensions, light = True,
+        self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
@@ -284,7 +285,9 @@ class StlViewPanel(wxGLPanel):
                      - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
         # Draw platform
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDisable(GL_LIGHTING)
         self.platform.draw()
+        glEnable(GL_LIGHTING)
         # Draw mouse
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
@@ -306,6 +309,7 @@ class StlViewPanel(wxGLPanel):
             glPopMatrix()
 
         # Draw objects
+        glDisable(GL_CULL_FACE)
         glPushMatrix()
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.3, 0.7, 0.5, 1))
         for i in self.parent.models:
@@ -318,6 +322,7 @@ class StlViewPanel(wxGLPanel):
             model.batch.draw()
             glPopMatrix()
         glPopMatrix()
+        glEnable(GL_CULL_FACE)
 
         # Draw cutting plane
         if self.parent.cutting:
