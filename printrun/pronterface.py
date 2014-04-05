@@ -277,6 +277,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                            self.settings.controlsmode == "Mini")
 
         if hasattr(self, "splitterwindow"):
+            self.splitterwindow.SetSashPosition(self.settings.last_sash_position)
 
             def splitter_resize(event):
                 self.splitterwindow.UpdateSize()
