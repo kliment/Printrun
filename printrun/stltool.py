@@ -244,6 +244,31 @@ class stl(object):
         newmodel = self.transform(matrix)
         return newmodel
 
+    def cut(self, axis, direction, dist):
+        s = stl()
+        s.facets = []
+        f = min if direction == 1 else max
+        for _, facet in self.facets:
+            minval = f([vertex[axis] for vertex in facet])
+            if direction * minval > direction * dist:
+                continue
+            vertices = []
+            for vertex in facet:
+                vertex = numpy.copy(vertex)
+                if direction * (vertex[axis] - dist) > 0:
+                    vertex[axis] = dist
+                vertices.append(vertex)
+            s.facets.append(genfacet(vertices))
+        s.insolid = 0
+        s.infacet = 0
+        s.inloop = 0
+        s.facetloc = 0
+        s.name = self.name
+        for facet in s.facets:
+            s.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
+            s.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
+        return s
+
     def translation_matrix(self, v):
         matrix = [[1, 0, 0, v[0]],
                   [0, 1, 0, v[1]],

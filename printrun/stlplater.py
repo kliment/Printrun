@@ -290,7 +290,20 @@ class StlPlater(Plater):
         name = self.l.GetSelection()
         name = self.l.GetString(name)
         model = self.models[name]
-        print "Cutting", name, self.cutting_axis, self.cutting_direction, self.cutting_dist, model
+        transformation = transformation_matrix(model)
+        transformed = model.transform(transformation)
+        print _("Cutting %s alongside %s axis") % (name, self.cutting_axis)
+        axes = ["x", "y", "z"]
+        cut = transformed.cut(axes.index(self.cutting_axis),
+                              self.cutting_direction,
+                              self.cutting_dist)
+        cut.offsets = [0, 0, 0]
+        cut.rot = 0
+        cut.scale = model.scale
+        cut.filename = model.filename
+        cut.centeroffset = [0, 0, 0]
+        self.s.prepare_model(cut, 2)
+        self.models[name] = cut
         self.cutconfirmbutton.Disable()
 
     def clickcb(self, event, single = False):
