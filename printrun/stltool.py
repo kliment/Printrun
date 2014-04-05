@@ -55,32 +55,28 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = 1):
     if filename is None:
         return
     if binary:
-        f = open(filename, "wb")
-        buf = "".join(["\0"] * 80)
-        buf += struct.pack("<I", len(facets))
-        facetformat = struct.Struct("<ffffffffffffH")
-        for i in facets:
-            l = list(i[0][:])
-            for j in i[1]:
-                l += j[:]
-            l += [0]
-            # print len(l)
-            buf += facetformat.pack(*l)
-        f.write(buf)
-        f.close()
-        return
-
-    f = open(filename, "w")
-    f.write("solid " + objname + "\n")
-    for i in facets:
-        f.write("  facet normal " + " ".join(map(str, i[0])) + "\n   outer loop\n")
-        for j in i[1]:
-            f.write("    vertex " + " ".join(map(str, j)) + "\n")
-        f.write("   endloop" + "\n")
-        f.write("  endfacet" + "\n")
-    f.write("endsolid " + objname + "\n")
-    f.close()
-
+        with open(filename, "wb") as f:
+            buf = "".join(["\0"] * 80)
+            buf += struct.pack("<I", len(facets))
+            facetformat = struct.Struct("<ffffffffffffH")
+            for i in facets:
+                l = list(i[0][:])
+                for j in i[1]:
+                    l += j[:]
+                l += [0]
+                # print len(l)
+                buf += facetformat.pack(*l)
+            f.write(buf)
+    else:
+        with open(filename, "w") as f:
+            f.write("solid " + objname + "\n")
+            for i in facets:
+                f.write("  facet normal " + " ".join(map(str, i[0])) + "\n   outer loop\n")
+                for j in i[1]:
+                    f.write("    vertex " + " ".join(map(str, j)) + "\n")
+                f.write("   endloop" + "\n")
+                f.write("  endfacet" + "\n")
+            f.write("endsolid " + objname + "\n")
 
 class stl(object):
 
