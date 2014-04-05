@@ -43,6 +43,56 @@ def homogeneous(v, w = 1):
 def applymatrix(facet, matrix = I):
     return genfacet(map(lambda x: matrix.dot(homogeneous(x))[:3], facet[1]))
 
+def ray_triangle_intersection(ray_near, ray_dir, (v1, v2, v3)):
+    """
+    Möller–Trumbore intersection algorithm in pure python
+    Based on http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+    """
+    eps = 0.000001
+    edge1 = v2 - v1
+    edge2 = v3 - v1
+    pvec = numpy.cross(ray_dir, edge2)
+    det = edge1.dot(pvec)
+    if abs(det) < eps:
+        return False, None
+    inv_det = 1. / det
+    tvec = ray_near - v1
+    u = tvec.dot(pvec) * inv_det
+    if u < 0. or u > 1.:
+        return False, None
+    qvec = numpy.cross(tvec, edge1)
+    v = ray_dir.dot(qvec) * inv_det
+    if v < 0. or u + v > 1.:
+        return False, None
+
+    t = edge2.dot(qvec) * inv_det
+    if t < eps:
+        return False, None
+
+    return True, t
+
+def ray_rectangle_intersection(ray_near, ray_dir, p0, p1, p2, p3):
+    match1, _ = ray_triangle_intersection(ray_near, ray_dir, (p0, p1, p2))
+    match2, _ = ray_triangle_intersection(ray_near, ray_dir, (p0, p2, p3))
+    return match1 or match2
+
+def ray_box_intersection(ray_near, ray_dir, p0, p1):
+    x0, y0, z0 = p0[:]
+    x1, y1, z1 = p1[:]
+    rectangles = [((x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0)),
+                  ((x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)),
+                  ((x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1)),
+                  ((x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)),
+                  ((x0, y0, z0), (x0, y1, z0), (x0, y1, z1), (x0, y0, z1)),
+                  ((x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)),
+                  ]
+    rectangles = [(numpy.array(p) for p in rect)
+                  for rect in rectangles]
+    for rect in rectangles:
+        if ray_rectangle_intersection(ray_near, ray_dir, *rect):
+            return True
+    return False
+
 def emitstl(filename, facets = [], objname = "stltool_export", binary = True):
     if filename is None:
         return
@@ -146,40 +196,26 @@ class stl(object):
             f.close()
             return
 
+    def intersect_box(self, ray_near, ray_far):
+        ray_near = numpy.array(ray_near)
+        ray_far = numpy.array(ray_far)
+        ray_dir = normalize(ray_far - ray_near)
+        x0, x1, y0, y1, z0, z1 = self.dims
+        p0 = numpy.array([x0, y0, z0])
+        p1 = numpy.array([x1, y1, z1])
+        return ray_box_intersection(ray_near, ray_dir, p0, p1)
+
     def intersect(self, ray_near, ray_far):
-        """
-        Möller–Trumbore intersection algorithm in pure python
-        Based on http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-        """
         ray_near = numpy.array(ray_near)
         ray_far = numpy.array(ray_far)
         ray_dir = normalize(ray_far - ray_near)
         best_facet = None
         best_dist = float("inf")
-        eps = 0.000001
-        for facet_i, (normal, (v1, v2, v3)) in enumerate(self.facets):
-            edge1 = v2 - v1
-            edge2 = v3 - v1
-            pvec = numpy.cross(ray_dir, edge2)
-            det = edge1.dot(pvec)
-            if abs(det) < eps:
-                continue
-            inv_det = 1. / det
-            tvec = ray_near - v1
-            u = tvec.dot(pvec) * inv_det
-            if u < 0. or u > 1.:
-                continue
-            qvec = numpy.cross(tvec, edge1)
-            v = ray_dir.dot(qvec) * inv_det
-            if v < 0. or u + v > 1.:
-                continue
-
-            t = edge2.dot(qvec) * inv_det
-            if t < eps:
-                continue
-            if t < best_dist:
+        for facet_i, (normal, facet) in enumerate(self.facets):
+            match, dist = ray_triangle_intersection(ray_near, ray_dir, facet)
+            if match and dist < best_dist:
                 best_facet = facet_i
-                best_dist = t
+                best_dist = dist
         return best_facet, best_dist
 
     def rebase(self, facet_i):

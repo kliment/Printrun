@@ -243,16 +243,19 @@ class StlPlater(Plater):
         best_match = None
         best_facet = None
         best_dist = float("inf")
-        # TODO: speedup search by first checking if ray is in bounding box
-        # of the given model
         for key, model in self.models.iteritems():
-            transformed = model.transform(transformation_matrix(model))
+            transformation = transformation_matrix(model)
+            transformed = model.transform(transformation)
+            if not transformed.intersect_box(ray_near, ray_far):
+                print "Skipping %s for rebase search" % key
+                continue
             facet, facet_dist = transformed.intersect(ray_near, ray_far)
             if facet is not None and facet_dist < best_dist:
                 best_match = key
                 best_facet = facet
                 best_dist = facet_dist
         if best_match is not None:
+            print "Rebasing %s" % best_match
             model = self.models[best_match]
             newmodel = model.rebase(best_facet)
             newmodel.offsets = model.offsets
