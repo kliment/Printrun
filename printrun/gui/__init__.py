@@ -166,7 +166,8 @@ class MainWindow(wx.Frame):
         page2panel2.SetSizer(page2sizer2)
         self.splitterwindow.SetMinimumPaneSize(1)
         self.splitterwindow.SetSashGravity(0.5)
-        self.splitterwindow.SplitVertically(page2panel1, page2panel2, 0)
+        self.splitterwindow.SplitVertically(page2panel1, page2panel2,
+                                            self.settings.last_sash_position)
         self.mainsizer.Add(self.splitterwindow, 1, wx.EXPAND)
         page1panel.SetSizer(self.mainsizer_page1)
         page2panel.SetSizer(self.mainsizer)
@@ -223,7 +224,8 @@ class MainWindow(wx.Frame):
             rightsizer.Add(self.splitterwindow, 1, wx.EXPAND)
             vizpanel = self.newPanel(self.splitterwindow)
             logpanel = self.newPanel(self.splitterwindow)
-            self.splitterwindow.SplitVertically(vizpanel, logpanel, 0)
+            self.splitterwindow.SplitVertically(vizpanel, logpanel,
+                                                self.settings.last_sash_position)
             self.splitterwindow.shrinked = False
         else:
             vizpanel = self.newPanel(lowerpanel)

@@ -276,6 +276,16 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.createGui(self.settings.uimode == "Compact",
                            self.settings.controlsmode == "Mini")
 
+        if hasattr(self, "splitterwindow"):
+
+            def splitter_resize(event):
+                self.splitterwindow.UpdateSize()
+            self.splitterwindow.Bind(wx.EVT_SIZE, splitter_resize)
+
+            def sash_position_changed(event):
+                self.set("last_sash_position", self.splitterwindow.GetSashPosition())
+            self.splitterwindow.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, sash_position_changed)
+
         # Set gcview parameters here as they don't get set when viewers are
         # created
         self.update_gcview_params()
@@ -830,6 +840,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(HiddenSetting("last_window_width", size[0]))
         self.settings._add(HiddenSetting("last_window_height", size[1]))
         self.settings._add(HiddenSetting("last_window_maximized", False))
+        self.settings._add(HiddenSetting("last_sash_position", -1))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", u""))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
