@@ -51,12 +51,11 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = 1):
             buf = "".join(["\0"] * 80)
             buf += struct.pack("<I", len(facets))
             facetformat = struct.Struct("<ffffffffffffH")
-            for i in facets:
-                l = list(i[0][:])
-                for j in i[1]:
-                    l += j[:]
-                l += [0]
-                # print len(l)
+            for facet in facets:
+                l = list(facet[0][:])
+                for vertex in facet[1]:
+                    l += list(vertex[:])
+                l.append(0)
                 buf += facetformat.pack(*l)
             f.write(buf)
     else:
