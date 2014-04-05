@@ -16,6 +16,9 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 from threading import Lock
+import logging
+import sys
+import traceback
 
 import wx
 from wx import glcanvas
@@ -77,6 +80,8 @@ class wxGLPanel(wx.Panel):
         self.basequat = [0, 0, 0, 1]
         self.zoom_factor = 1.0
 
+        self.gl_broken = False
+
         # bind events
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
         self.canvas.Bind(wx.EVT_SIZE, self.processSizeEvent)
@@ -104,8 +109,14 @@ class wxGLPanel(wx.Panel):
         '''Process the drawing event.'''
         self.canvas.SetCurrent(self.context)
 
-        self.OnInitGL()
-        self.OnDraw()
+        if not self.gl_broken:
+            try:
+                self.OnInitGL()
+                self.OnDraw()
+            except pyglet.gl.lib.GLException:
+                self.gl_broken = True
+                logging.error(_("OpenGL failed, disabling it:"))
+                traceback.print_exc(file = sys.stdout)
         event.Skip()
 
     def Destroy(self):
