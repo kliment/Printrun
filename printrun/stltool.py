@@ -43,7 +43,7 @@ def homogeneous(v, w = 1):
 def applymatrix(facet, matrix = I):
     return genfacet(map(lambda x: matrix.dot(homogeneous(x))[:3], facet[1]))
 
-def emitstl(filename, facets = [], objname = "stltool_export", binary = 1):
+def emitstl(filename, facets = [], objname = "stltool_export", binary = True):
     if filename is None:
         return
     if binary:
