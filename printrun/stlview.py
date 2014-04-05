@@ -32,7 +32,7 @@ from pyglet.gl import GL_AMBIENT_AND_DIFFUSE, glBegin, glClearColor, \
     glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble, glClearDepth, glDepthFunc, \
     GL_LEQUAL, GL_BLEND, glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, \
     GL_LINE_LOOP, glGetFloatv, GL_LINE_WIDTH, glLineWidth, glDisable, \
-    GL_LINE_SMOOTH, glColorMaterial
+    GL_LINE_SMOOTH
 from pyglet import gl
 
 from .gl.panel import wxGLPanel
