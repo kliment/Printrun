@@ -169,7 +169,9 @@ class Platform(object):
         glPopMatrix()
 
     def display(self, mode_2d=False):
-        glCallList(self.display_list)
+        # FIXME: using the list sometimes results in graphical corruptions
+        # glCallList(self.display_list)
+        self.draw()
 
 class PrintHead(object):
     def __init__(self):
