@@ -284,6 +284,7 @@ h2 {
 }
 /* Since positioning the image, we need to help out the caption */
 .carousel-caption {
+    position: relative;
     z-index: 10;
     width: 768px;
     margin-left: 0px;
