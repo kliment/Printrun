@@ -286,11 +286,11 @@ h2 {
 .carousel-caption {
     position: relative;
     z-index: 10;
-    width: 768px;
+    width: 580px;
     margin-left: 0px;
     margin-right: auto;
     padding-bottom: 10px;
-    left: 0px;
+    left: -50px;
     right: auto;
 }
 
