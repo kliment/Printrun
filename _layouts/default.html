@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="">
         <meta name="author" content="">
-        <link rel="shortcut icon" href="">
+        <link rel="shortcut icon" href="images/favicon.png">
 
         <title>Printrun: Pure Python 3d printing host software</title>
 
@@ -40,10 +40,10 @@
                 </div>
                 <div class="navbar-collapse collapse">
                     <ul  class="nav navbar-nav">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#download">Download</a></li>
-                        <li><a href="#docs">Docs</a></li>
-                        <li><a href="#about">About</a></li>
+                        <li><a href="index.html#features">Features</a></li>
+                        <li><a href="index.html#download">Download</a></li>
+                        <li><a href="index.html#docs">Docs</a></li>
+                        <li><a href="index.html#about">About</a></li>
                     </ul>
                 </div>
             </div>
@@ -61,7 +61,7 @@
         <script src="js/bootstrap.min.js"></script>
         <script type="text/javascript">
             $(function() {
-              $('a[href*=#]:not([href=#]):not([href=#carousel])').click(function() {
+              $('a[href*="index.html#"]:not([href="index.html#"])').click(function() {
                 if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
                   var target = $(this.hash);
                   target = target.length ? target : $('[name=' + this.hash.slice(1) +']');

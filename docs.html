@@ -10,3 +10,10 @@ layout: default
                 If all else fails, please <a href="https://github.com/kliment/Printrun/issues">open an issue on GitHub</a>.</p>
             </div>
         </div>
+        <div class="main">
+            <div id="docs" class="separator bg-pink"></div>
+            <div class="container content">
+                {% capture md %}{% include docs.md %}{% endcapture %}
+                {{ md | markdownify }}
+            </div>
+        </div>

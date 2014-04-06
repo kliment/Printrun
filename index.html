@@ -177,6 +177,9 @@ layout: default
                 <p>Printrun can be used on many platforms, and is regularly tested on several Linux distributions, on Windows and on OSX.<br />
                 Compilation and installation instructions for Linux are available in <a href="https://github.com/kliment/Printrun/blob/master/README.md">README.md</a>.
                 </p>
+                <h3>Latest release:</h3>
+                {% capture md %}{% include NEWS.md %}{% endcapture %}
+                {{ md | markdownify }}
             </div>
         </div>
 
