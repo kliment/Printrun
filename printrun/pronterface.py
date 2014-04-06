@@ -841,6 +841,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
+        self.settings._add(BooleanSetting("refreshwhenloading", True, _("Update UI during G-Code load"), _("Regularly update visualization during the load of a G-Code file"), "UI"))
         self.settings._add(HiddenSetting("last_window_width", size[0]))
         self.settings._add(HiddenSetting("last_window_height", size[1]))
         self.settings._add(HiddenSetting("last_window_maximized", False))
@@ -1393,11 +1394,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         global pronterface_quitting
         if pronterface_quitting:
             raise PronterfaceQuitException
+        if not self.settings.refreshwhenloading:
+            return
         self.viz_last_layer = layer
-        if time.time() - self.viz_last_yield > 0.8:
+        if time.time() - self.viz_last_yield > 1.0:
             time.sleep(0.2)
-            self.viz_last_yield = time.time()
             self.loading_gcode_message = _("Loading %s: %d layers loaded (%d lines)") % (self.filename, layer + 1, len(gcode))
+            self.viz_last_yield = time.time()
             wx.CallAfter(self.statusbar.SetStatusText, self.loading_gcode_message)
 
     def start_viz_thread(self, gcode = None):
