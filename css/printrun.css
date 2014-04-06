@@ -236,15 +236,15 @@ h2 {
 }
 
 .homebox .front {
-    -webkit-transform: perspective(3200px) rotateY(0deg);
-    transform: perspective(3200px) rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+    transform: rotateY(0deg);
 }
 
 
 .homebox .back {
     text-align: justify;
-    -webkit-transform: perspective(3200px) rotateY(-179.9deg);
-    transform: perspective(3200px) rotateY(-179.9deg);
+    -webkit-transform: rotateY(-179.9deg);
+    transform: rotateY(-179.9deg);
 }
 
 .homebox .back div {
@@ -258,13 +258,13 @@ h2 {
 }
 
 .homebox:hover .front, .homebox:focus .front {
-    -webkit-transform: perspective(3200px) rotateY(179.9deg);
-    transform: perspective(3200px) rotateY(179.9deg);
+    -webkit-transform: rotateY(179.9deg);
+    transform: rotateY(179.9deg);
 }
 
 .homebox:hover .back, .homebox:focus .back {
-    -webkit-transform: perspective(3200px) rotateY(0deg);
-    transform: perspective(3200px) rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+    transform: rotateY(0deg);
 }
 
 .homebox-large>div {
