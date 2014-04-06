@@ -301,7 +301,8 @@ h2 {
     -webkit-border-radius: 30px;
     -moz-border-radius: 30px;
     border-radius: 30px;
-    margin-bottom: -5px;
+    margin-bottom: -30px;
+    margin-top: 1px;
 }
 
 .carousel-caption div a.caption-link {
