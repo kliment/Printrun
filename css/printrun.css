@@ -231,8 +231,8 @@ h2 {
     width: 100%;
     height: 370px;
     position: absolute;
-    -webkit-transition: all 0.2s ease;
-    transition: all 0.2s ease;
+    -webkit-transition: all 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .homebox .front {
@@ -268,7 +268,11 @@ h2 {
 }
 
 .homebox-large>div {
-    background-color: #729fcf;
+    background-color: #457BB4;
+}
+
+.homebox-large>div p {
+    margin: 0;
 }
 
 /* CAROUSEL
