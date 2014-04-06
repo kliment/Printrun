@@ -691,14 +691,17 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.menustrip = wx.MenuBar()
         # File menu
         m = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Opens file")))
+        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Open file")))
+        self.savebtn = m.Append(-1, _("&Save..."), _(" Save file"))
+        self.savebtn.Enable(False)
+        self.Bind(wx.EVT_MENU, self.savefile, self.savebtn)
 
         self.filehistory = wx.FileHistory(maxFiles = 8, idBase = wx.ID_FILE1)
         recent = wx.Menu()
         self.filehistory.UseMenu(recent)
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
-        m.AppendMenu(wx.ID_ANY, "&Recent Files", recent)
+        m.AppendMenu(wx.ID_ANY, _("&Recent Files"), recent)
         self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console"), _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
@@ -1415,6 +1418,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
         self.log(message)
         self.statusbar.SetStatusText(message)
+        self.savebtn.Enable(True)
         self.loadbtn.SetLabel(_("Load File"))
         self.printbtn.SetLabel(_("Print"))
         self.pausebtn.SetLabel(_("Pause"))
@@ -1476,6 +1480,26 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         # We can't really do any better as the 3D viewer might clone the
         # finalized model from the main visualization
         self.gwindow.p.addfile(gcode)
+
+    #  --------------------------------------------------------------
+    #  File saving handling
+    #  --------------------------------------------------------------
+
+    def savefile(self, event):
+        basedir = self.settings.last_file_path
+        if not os.path.exists(basedir):
+            basedir = "."
+            try:
+                basedir = os.path.split(self.filename)[0]
+            except:
+                pass
+        dlg = wx.FileDialog(self, _("Save as"), basedir, style = wx.FD_SAVE)
+        dlg.SetWildcard(_("GCODE files (*.gcode;*.gco;*.g)|*.gcode;*.gco;*.g|All Files (*.*)|*.*"))
+        if dlg.ShowModal() == wx.ID_OK:
+            name = dlg.GetPath()
+            open(name, "w").write("\n".join((line.raw for line in self.fgcode)))
+            self.log(_("G-Code succesfully saved to %s") % name)
+        dlg.Destroy()
 
     #  --------------------------------------------------------------
     #  Printcore callbacks
