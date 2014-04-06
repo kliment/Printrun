@@ -329,6 +329,9 @@ class GCode(object):
         total_e = self.total_e
         max_e = self.max_e
 
+        # Store this one out of the build_layers scope for efficiency
+        cur_layer_has_extrusion = False
+
         # Initialize layers and other global computations
         if build_layers:
             # Bounding box computation
@@ -373,15 +376,15 @@ class GCode(object):
             prev_base_z = (None, None)
             cur_z = None
             cur_lines = []
-            cur_layer_has_extrusion = False
 
+        if self.line_class != Line:
+            get_line = lambda l: Line(l.raw)
+        else:
+            get_line = lambda l: l
         for true_line in lines:
             # # Parse line
             # Use a heavy copy of the light line to preprocess
-            if self.line_class != Line:
-                line = Line(true_line.raw)
-            else:
-                line = true_line
+            line = get_line(true_line)
             split_raw = split(line)
             if line.command:
                 # Update properties
@@ -465,6 +468,7 @@ class GCode(object):
                             total_e += new_e - current_e
                             current_e = new_e
                         max_e = max(max_e, total_e)
+                        cur_layer_has_extrusion |= line.extruding
                     elif line.command == "G92":
                         offset_e = current_e - line.e
 
@@ -479,12 +483,13 @@ class GCode(object):
                             if line.current_y is not None:
                                 ymin_e = min(ymin_e, line.current_y)
                                 ymax_e = max(ymax_e, line.current_y)
-                        if line.current_x is not None:
-                            xmin = min(xmin, line.current_x)
-                            xmax = max(xmax, line.current_x)
-                        if line.current_y is not None:
-                            ymin = min(ymin, line.current_y)
-                            ymax = max(ymax, line.current_y)
+                        if max_e <= 0:
+                            if line.current_x is not None:
+                                xmin = min(xmin, line.current_x)
+                                xmax = max(xmax, line.current_x)
+                            if line.current_y is not None:
+                                ymin = min(ymin, line.current_y)
+                                ymax = max(ymax, line.current_y)
 
                     # Compute duration
                     if line.command in ["G1", "G0", "G4"]:
@@ -555,17 +560,14 @@ class GCode(object):
                             lastf = f
 
                     # FIXME : looks like this needs to be tested with "lift Z on move"
-                    if line.command == "G92" and line.z is not None:
-                        cur_z = line.z
-                    elif line.is_move:
-                        if line.z is not None:
+                    if line.z is not None:
+                        if line.command == "G92":
+                            cur_z = line.z
+                        elif line.is_move:
                             if line.relative and cur_z is not None:
                                 cur_z += line.z
                             else:
                                 cur_z = line.z
-
-                    if line.e is not None and line.is_move:
-                        cur_layer_has_extrusion |= line.extruding
 
                     # FIXME: the logic behind this code seems to work, but it might be
                     # broken
