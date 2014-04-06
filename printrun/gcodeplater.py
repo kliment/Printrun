@@ -90,7 +90,8 @@ class GcodePlater(Plater):
         gcode = gcoder.GCode(open(filename, "rU"),
                              get_home_pos(self.build_dimensions))
         model = actors.GcodeModel()
-        model.display_travels = False
+        if gcode.filament_length > 0:
+            model.display_travels = False
         generator = model.load_data(gcode)
         generator_output = generator.next()
         while generator_output is not None:
