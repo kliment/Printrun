@@ -1430,14 +1430,14 @@ class pronsole(cmd.Cmd):
         try:
             powerset_print_start(reason = "Preventing sleep during print")
         except:
-            logging.error(_("Failed to inhibit sleep:"))
+            logging.error(_("Failed to set power settings:"))
             traceback.print_exc(file = sys.stdout)
 
     def endcb(self):
         try:
             powerset_print_stop()
         except:
-            logging.error(_("Failed to uninhibit sleep:"))
+            logging.error(_("Failed to set power settings:"))
             traceback.print_exc(file = sys.stdout)
         if self.p.queueindex == 0:
             print_duration = int(time.time() - self.starttime + self.extra_print_time)

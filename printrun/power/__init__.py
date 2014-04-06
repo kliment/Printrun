@@ -15,6 +15,7 @@
 
 import platform
 import traceback
+import logging
 import os
 
 if platform.system() == "Darwin":
@@ -37,6 +38,7 @@ else:
 
     try:
         inhibit_sleep_handler = None
+        inhibit_sleep_token = None
         bus = dbus.SessionBus()
         try:
             # GNOME uses the right object path, try it first
@@ -44,24 +46,29 @@ else:
             proxy = bus.get_object(service_name,
                                    "/org/freedesktop/ScreenSaver")
             inhibit_sleep_handler = dbus.Interface(proxy, service_name)
+            # Do a test run
+            token = inhibit_sleep_handler.Inhibit("printrun", "test")
+            inhibit_sleep_handler.UnInhibit(token)
         except dbus.DBusException:
             # KDE uses /ScreenSaver object path, let's try it as well
             proxy = bus.get_object(service_name,
                                    "/ScreenSaver")
             inhibit_sleep_handler = dbus.Interface(proxy, service_name)
+            token = inhibit_sleep_handler.Inhibit("printrun", "test")
+            inhibit_sleep_handler.UnInhibit(token)
 
         def inhibit_sleep(reason):
-            global inhibit_sleep_handler
-            inhibit_sleep.token = inhibit_sleep_handler.Inhibit("printrun", reason)
+            global inhibit_sleep_handler, inhibit_sleep_token
+            inhibit_sleep_token = inhibit_sleep_handler.Inhibit("printrun", reason)
 
         def deinhibit_sleep():
-            global inhibit_sleep_handler
-            if inhibit_sleep_handler is None:
+            global inhibit_sleep_handler, inhibit_sleep_token
+            if inhibit_sleep_handler is None or inhibit_sleep_token is None:
                 return
-            inhibit_sleep_handler.UnInhibit(inhibit_sleep.token)
-            inhibit_sleep.token = None
+            inhibit_sleep_handler.UnInhibit(inhibit_sleep_token)
+            inhibit_sleep_token = None
     except dbus.DBusException, e:
-        print "dbus unavailable:", e.message
+        logging.warning("Could not setup DBus for sleep inhibition: %s" % e)
 
         def inhibit_sleep(reason):
             return
