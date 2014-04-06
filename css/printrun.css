@@ -132,7 +132,7 @@ h2 {
     .navbar .nav li a:hover {
         color: #111;
         border-bottom: 5px solid #87cfff;
-        padding-bottom: 10px;
+        padding-bottom: 6px;
         background-color: transparent;
     }
 }
