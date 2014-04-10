@@ -1651,8 +1651,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
                 setpoint = None
-                if "T0" in temps and temps["T0"][1] is not None: setpoint = float(temps["T0"][1])
-                elif temps["T"][1] is not None: setpoint = float(temps["T"][1])
+                if "T0" in temps and temps["T0"][1]: setpoint = float(temps["T0"][1])
+                elif temps["T"][1]: setpoint = float(temps["T"][1])
                 if setpoint is not None:
                     if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, setpoint)
                     if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, setpoint)
