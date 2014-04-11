@@ -1643,10 +1643,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def update_tempdisplay(self):
         try:
             temps = parse_temperature_report(self.tempreport)
-            if "T0" in temps:
+            if "T0" in temps and temps["T0"][0]:
                 hotend_temp = float(temps["T0"][0])
+            elif "T" in temps and temps["T"][0]:
+                hotend_temp = float(temps["T"][0])
             else:
-                hotend_temp = float(temps["T"][0]) if "T" in temps else None
+                hotend_temp = None
             if hotend_temp is not None:
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
@@ -1662,7 +1664,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 setpoint = temps["T1"][1]
                 if setpoint and self.display_graph:
                     wx.CallAfter(self.graph.SetExtruder1TargetTemperature, float(setpoint))
-            bed_temp = float(temps["B"][0]) if "B" in temps else None
+            bed_temp = float(temps["B"][0]) if "B" in temps and temps["B"][0] else None
             if bed_temp is not None:
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
