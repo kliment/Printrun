@@ -252,7 +252,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     def tempdisp_setlabel(label):
         wx.StaticText.SetLabel(root.tempdisp, label)
         root.tempdisp.Wrap(root.tempdisp.GetSize().width)
-        root.tempdisp.SetSize(root.tempdisp.GetBestSize())
+        root.tempdisp.SetSize((-1, root.tempdisp.GetBestSize().height))
     root.tempdisp.SetLabel = tempdisp_setlabel
     add("tempdisp", root.tempdisp, flag = wx.EXPAND)
 
