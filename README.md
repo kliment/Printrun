@@ -23,7 +23,23 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
-1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
+1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1 python-dbus python-psutil git`
+
+Clone the repository
+
+`git clone https://github.com/kliment/Printrun.git`
+
+and you can start using Printrun from the Printrun directory created by the git clone command.
+
+### Chrome OS 
+
+You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install dependencies with the line given above for Ubuntu/Debian, and obtain the source via git clone.
+
+By default you have no access to the serial port under Chrome OS crouton, so you cannot connect to your 3D printer. Add yourself to the serial group within the linux environment to fix this
+
+`sudo usermod -G serial -a <username>` 
+
+where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer. 
 
 ### Fedora
 
