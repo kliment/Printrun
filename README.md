@@ -35,11 +35,11 @@ and you can start using Printrun from the Printrun directory created by the git 
 
 You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install dependencies with the line given above for Ubuntu/Debian, and obtain the source via git clone.
 
-By default you have no access to the serial port under Chrome OS, so you cannot connect to your 3D printer. Add yourself to the serial group to fix this
+By default you have no access to the serial port under Chrome OS crouton, so you cannot connect to your 3D printer. Add yourself to the serial group within the linux environment to fix this
 
 `sudo usermod -G serial -a <username>` 
 
-where <username> should be your username. Log out and in to make this group change active and allow communication with your printer. 
+where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer. 
 
 ### Fedora
 
