@@ -1690,7 +1690,7 @@ class pronsole(cmd.Cmd):
         except:
             pass
         self.p.send_now("G91")
-        self.p.send_now("G1 " + axis + str(l[1]) + " F" + str(feed))
+        self.p.send_now("G0 " + axis + str(l[1]) + " F" + str(feed))
         self.p.send_now("G90")
 
     def help_move(self):
