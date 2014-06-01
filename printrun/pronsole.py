@@ -1616,7 +1616,7 @@ class pronsole(cmd.Cmd):
                     preface = _("Print progress: ")
                     progress = 100 * float(self.p.queueindex) / len(self.p.mainqueue)
                 elif self.sdprinting:
-                    preface = _("Print progress: ")
+                    preface = _("SD print progress: ")
                     progress = self.percentdone
                 prev_msg = preface + "%.1f%%" % progress
                 if self.silent is False:
