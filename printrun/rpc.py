@@ -1,6 +1,8 @@
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from threading import Thread
 
+from .utils import parse_temperature_report
+
 RPC_PORT = 7978
 
 class ProntRPC(object):
@@ -9,7 +11,9 @@ class ProntRPC(object):
 
     def __init__(self, pronsole, port = RPC_PORT):
         self.pronsole = pronsole
-        self.server = SimpleXMLRPCServer(("localhost", port), allow_none = True)
+        self.server = SimpleXMLRPCServer(("localhost", port),
+                                         allow_none = True,
+                                         logRequests = False)
         self.server.register_function(self.get_status, 'status')
         self.thread = Thread(target = self.run_server)
         self.thread.start()
@@ -31,7 +35,12 @@ class ProntRPC(object):
             eta = self.get_eta()
         else:
             eta = None
+        if self.pronsole.tempreadings:
+            temps = parse_temperature_report(self.pronsole.tempreadings)
+        else:
+            temps = None
         return {"filename": self.pronsole.filename,
                 "progress": progress,
                 "eta": eta,
+                "temps": temps,
                 }
