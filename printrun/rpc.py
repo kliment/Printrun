@@ -9,7 +9,7 @@ class ProntRPC(object):
 
     def __init__(self, pronsole, port = RPC_PORT):
         self.pronsole = pronsole
-        self.server = SimpleXMLRPCServer(("localhost", port))
+        self.server = SimpleXMLRPCServer(("localhost", port), allow_none = True)
         self.server.register_function(self.get_status, 'status')
         self.thread = Thread(target = self.run_server)
         self.thread.start()
@@ -26,11 +26,11 @@ class ProntRPC(object):
             progress = 100 * float(self.pronsole.p.queueindex) / len(self.pronsole.p.mainqueue)
         elif self.pronsole.sdprinting:
             progress = self.percentdone
-        else: progress = -1
+        else: progress = None
         if self.pronsole.p.printing or self.pronsole.sdprinting:
             eta = self.get_eta()
         else:
-            eta = -1
+            eta = None
         return {"filename": self.pronsole.filename,
                 "progress": progress,
                 "eta": eta,
