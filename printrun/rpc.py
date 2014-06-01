@@ -17,16 +17,20 @@ class ProntRPC(object):
     def run_server(self):
         self.server.serve_forever()
 
+    def shutdown(self):
+        self.server.shutdown()
+        self.thread.join()
+
     def get_status(self):
         if self.pronsole.p.printing:
             progress = 100 * float(self.pronsole.p.queueindex) / len(self.pronsole.p.mainqueue)
         elif self.pronsole.sdprinting:
             progress = self.percentdone
-        else: progress = None
+        else: progress = -1
         if self.pronsole.p.printing or self.pronsole.sdprinting:
             eta = self.get_eta()
         else:
-            eta = None
+            eta = -1
         return {"filename": self.pronsole.filename,
                 "progress": progress,
                 "eta": eta,

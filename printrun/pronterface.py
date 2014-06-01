@@ -325,6 +325,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Close()
 
     def kill(self, e):
+        pronsole.pronsole.kill(self)
         global pronterface_quitting
         pronterface_quitting = True
         self.statuscheck = False

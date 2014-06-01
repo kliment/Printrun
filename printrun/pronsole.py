@@ -462,6 +462,7 @@ class pronsole(cmd.Cmd):
         self.p.onlinecb = self.online
         self.p.errorcb = self.logError
         self.fgcode = None
+        self.rpc_server = None
         self.listing = 0
         self.sdfiles = []
         self.paused = False
@@ -484,6 +485,8 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_abs_cb = self.set_temp_preset
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.update_build_dimensions(None, self.settings.build_dimensions)
+        self.update_tcp_streaming_mode(None, self.settings.tcp_streaming_mode)
+        self.update_rpc_server(None, self.settings.rpc_server)
         self.monitoring = 0
         self.starttime = 0
         self.extra_print_time = 0
@@ -634,6 +637,10 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M105")
         self.prompt = self.promptf()
         return stop
+
+    def kill(self):
+        if self.rpc_server is not None:
+            self.rpc_server.shutdown()
 
     def write_prompt(self):
         sys.stdout.write(self.promptf())
@@ -977,8 +984,13 @@ class pronsole(cmd.Cmd):
         self.p.tcp_streaming_mode = self.settings.tcp_streaming_mode
 
     def update_rpc_server(self, param, value):
-        if value and self.rpc_server is not None:
-            self.rpc_server = ProntRPC(self)
+        if value:
+            if self.rpc_server is None:
+                self.rpc_server = ProntRPC(self)
+        else:
+            if self.rpc_server is not None:
+                self.rpc_server.shutdown()
+                self.rpc_server = None
 
     #  --------------------------------------------------------------
     #  Command line options handling
