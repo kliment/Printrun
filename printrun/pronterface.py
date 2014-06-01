@@ -145,7 +145,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.status_thread = None
         self.capture_skip = {}
         self.capture_skip_newline = False
-        self.tempreport = ""
+        self.tempreadings = ""
         self.userm114 = 0
         self.userm105 = 0
         self.m105_waitcycles = 0
@@ -1645,7 +1645,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def update_tempdisplay(self):
         try:
-            temps = parse_temperature_report(self.tempreport)
+            temps = parse_temperature_report(self.tempreadings)
             if "T0" in temps and temps["T0"][0]:
                 hotend_temp = float(temps["T0"][0])
             elif "T" in temps and temps["T"][0]:
@@ -1707,8 +1707,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             else:
                 isreport = True
         if "ok T:" in l or tempreading_exp.findall(l):
-            self.tempreport = l
-            wx.CallAfter(self.tempdisp.SetLabel, self.tempreport.strip().replace("ok ", ""))
+            self.tempreadings = l
+            wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
             self.update_tempdisplay()
             if self.userm105 > 0:
                 self.userm105 -= 1
