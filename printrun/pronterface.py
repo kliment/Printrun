@@ -300,6 +300,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.panel.Layout()
             if self.fgcode:
                 self.start_viz_thread()
+            if self.settings.monitor:
+                self.update_monitor()
         self.ui_ready = True
         self.Thaw()
 
