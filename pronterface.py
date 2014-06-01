@@ -18,7 +18,10 @@
 import sys
 
 try:
+    import wxversion
+    wxversion.select("3.0")
     import wx  # NOQA
+    print wx.__version__
 except:
     print("wxPython is not installed. This program requires wxPython to run.")
     if sys.version_info.major >= 3:

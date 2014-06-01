@@ -38,6 +38,7 @@ from .utils import install_locale, run_command, get_command_output, \
 install_locale('pronterface')
 from printrun.power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
+from .rpc import ProntRPC
 
 from functools import wraps
 
@@ -301,6 +302,7 @@ class Settings(object):
         self._add(StringSetting("port", "", _("Serial port"), _("Port used to communicate with printer")))
         self._add(ComboSetting("baudrate", 115200, self.__baudrate_list(), _("Baud rate"), _("Communications Speed")))
         self._add(BooleanSetting("tcp_streaming_mode", False, _("TCP streaming mode"), _("When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands. This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
+        self._add(BooleanSetting("rpc_server", True, _("RPC server"), _("Enable RPC server to allow remotely querying print status")), root.update_rpc_server)
         self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"))
         self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (deg C)"), "Printer"))
         self._add(SpinSetting("temperature_abs", 230, 0, 400, _("Extruder temperature for ABS"), _("Extruder temp for ABS (deg C)"), "Printer"))
@@ -973,6 +975,10 @@ class pronsole(cmd.Cmd):
 
     def update_tcp_streaming_mode(self, param, value):
         self.p.tcp_streaming_mode = self.settings.tcp_streaming_mode
+
+    def update_rpc_server(self, param, value):
+        if value and self.rpc_server is not None:
+            self.rpc_server = ProntRPC(self)
 
     #  --------------------------------------------------------------
     #  Command line options handling
