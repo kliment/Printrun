@@ -108,6 +108,8 @@ class pronsole(cmd.Cmd):
         self.status = Status()
         self.dynamic_temp = False
         self.compute_eta = None
+        self.statuscheck = False
+        self.status_thread = None
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
         self.p.startcb = self.startcb
@@ -301,6 +303,10 @@ class pronsole(cmd.Cmd):
         return stop
 
     def kill(self):
+        self.statuscheck = False
+        if self.status_thread:
+            self.status_thread.join()
+            self.status_thread = None
         if self.rpc_server is not None:
             self.rpc_server.shutdown()
 
@@ -698,7 +704,6 @@ class pronsole(cmd.Cmd):
     def connect_to_printer(self, port, baud):
         try:
             self.p.connect(port, baud)
-            return True
         except SerialException as e:
             # Currently, there is no errno, but it should be there in the future
             if e.errno == 2:
@@ -716,6 +721,10 @@ class pronsole(cmd.Cmd):
             else:
                 self.logError(traceback.format_exc())
             return False
+        self.statuscheck = True
+        self.status_thread = threading.Thread(target = self.statuschecker)
+        self.status_thread.start()
+        return True
 
     def do_connect(self, l):
         a = l.split()
@@ -799,6 +808,42 @@ class pronsole(cmd.Cmd):
     def help_block_until_online(self, l):
         self.log("Blocks until printer is online")
         self.log("Warning: if something goes wrong, this can block pronsole forever")
+
+    #  --------------------------------------------------------------
+    #  Printer status monitoring
+    #  --------------------------------------------------------------
+
+    def statuschecker_inner(self, do_monitoring = True):
+        if self.p.online:
+            if self.p.writefailures >= 4:
+                self.logError(_("Disconnecting after 4 failed writes."))
+                self.status_thread = None
+                self.disconnect()
+                return
+            if do_monitoring:
+                if self.sdprinting:
+                    self.p.send_now("M27")
+                if self.m105_waitcycles % 10 == 0:
+                    self.p.send_now("M105")
+                self.m105_waitcycles += 1
+        cur_time = time.time()
+        wait_time = 0
+        while time.time() < cur_time + self.monitor_interval - 0.25:
+            if not self.statuscheck:
+                break
+            time.sleep(0.25)
+            # Safeguard: if system time changes and goes back in the past,
+            # we could get stuck almost forever
+            wait_time += 0.25
+            if wait_time > self.monitor_interval - 0.25:
+                break
+        # Always sleep at least a bit, if something goes wrong with the
+        # system time we'll avoid freezing the whole app this way
+        time.sleep(0.25)
+
+    def statuschecker(self):
+        while self.statuscheck:
+            self.statuschecker_inner()
 
     #  --------------------------------------------------------------
     #  File loading handling

@@ -140,8 +140,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         self.filename = filename
 
-        self.statuscheck = False
-        self.status_thread = None
         self.capture_skip = {}
         self.capture_skip_newline = False
         self.fgcode = None
@@ -322,10 +320,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         pronsole.pronsole.kill(self)
         global pronterface_quitting
         pronterface_quitting = True
-        self.statuscheck = False
-        if self.status_thread:
-            self.status_thread.join()
-            self.status_thread = None
         self.p.recvcb = None
         self.p.disconnect()
         if hasattr(self, "feedrates_changed"):
@@ -964,61 +958,40 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     #  Statusbar handling
     #  --------------------------------------------------------------
 
+    def statuschecker_inner(self):
+        status_string = ""
+        if self.sdprinting or self.uploading or self.p.printing:
+            secondsremain, secondsestimate, progress = self.get_eta()
+            if self.sdprinting or self.uploading:
+                if self.uploading:
+                    status_string += _("SD upload: %04.2f%% |") % (100 * progress,)
+                    status_string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
+                else:
+                    status_string += _("SD printing: %04.2f%% |") % (self.percentdone,)
+            elif self.p.printing:
+                status_string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
+                status_string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
+            if progress > 0:
+                status_string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
+                                                              format_duration(secondsestimate))
+                status_string += _(" Z: %.3f mm") % self.curlayer
+        elif self.loading_gcode:
+            status_string = self.loading_gcode_message
+        wx.CallAfter(self.statusbar.SetStatusText, status_string)
+        wx.CallAfter(self.gviz.Refresh)
+        # Call pronsole's statuschecker inner loop function to handle
+        # temperature monitoring and status loop sleep
+        pronsole.pronsole.statuschecker_inner(self, self.settings.monitor)
+        try:
+            while not self.sentlines.empty():
+                gc = self.sentlines.get_nowait()
+                wx.CallAfter(self.gviz.addgcodehighlight, gc)
+                self.sentlines.task_done()
+        except Queue.Empty:
+            pass
+
     def statuschecker(self):
-        while self.statuscheck:
-            string = ""
-            if self.sdprinting or self.uploading or self.p.printing:
-                secondsremain, secondsestimate, progress = self.get_eta()
-                if self.sdprinting or self.uploading:
-                    if self.uploading:
-                        string += _("SD upload: %04.2f%% |") % (100 * progress,)
-                        string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                    else:
-                        string += _("SD printing: %04.2f%% |") % (self.percentdone,)
-                elif self.p.printing:
-                    string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
-                    string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                if progress > 0:
-                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
-                                                                  format_duration(secondsestimate))
-                    string += _(" Z: %.3f mm") % self.curlayer
-            elif self.loading_gcode:
-                string = self.loading_gcode_message
-            wx.CallAfter(self.statusbar.SetStatusText, string)
-            wx.CallAfter(self.gviz.Refresh)
-            if self.p.online:
-                if self.p.writefailures >= 4:
-                    self.logError(_("Disconnecting after 4 failed writes."))
-                    self.status_thread = None
-                    self.disconnect()
-                    return
-            if self.settings.monitor and self.p.online:
-                if self.sdprinting:
-                    self.p.send_now("M27")
-                if self.m105_waitcycles % 10 == 0:
-                    self.p.send_now("M105")
-                self.m105_waitcycles += 1
-            cur_time = time.time()
-            wait_time = 0
-            while time.time() < cur_time + self.monitor_interval - 0.25:
-                if not self.statuscheck:
-                    break
-                time.sleep(0.25)
-                # Safeguard: if system time changes and goes back in the past,
-                # we could get stuck almost forever
-                wait_time += 0.25
-                if wait_time > self.monitor_interval - 0.25:
-                    break
-            # Always sleep at least a bit, if something goes wrong with the
-            # system time we'll avoid freezing the whole app this way
-            time.sleep(0.25)
-            try:
-                while not self.sentlines.empty():
-                    gc = self.sentlines.get_nowait()
-                    wx.CallAfter(self.gviz.addgcodehighlight, gc)
-                    self.sentlines.task_done()
-            except Queue.Empty:
-                pass
+        pronsole.pronsole.statuschecker(self)
         wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
 
     #  --------------------------------------------------------------
@@ -1067,13 +1040,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.p.send_now("M26 S0")
         if not self.connect_to_printer(port, baud):
             return
-        self.statuscheck = True
         if port != self.settings.port:
             self.set("port", port)
         if baud != self.settings.baudrate:
             self.set("baudrate", str(baud))
-        self.status_thread = threading.Thread(target = self.statuschecker)
-        self.status_thread.start()
         if self.predisconnect_mainqueue:
             self.recoverbtn.Enable()
 
