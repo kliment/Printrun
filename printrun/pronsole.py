@@ -1203,6 +1203,8 @@ class pronsole(cmd.Cmd):
         if report_type == REPORT_TEMP:
             self.status.update_tempreading(l)
         tstring = l.rstrip()
+        for listener in self.recvlisteners:
+            listener(l)
         if tstring != "ok" and not self.sdlisting \
           and not self.monitoring and report_type == REPORT_NONE:
             if tstring[:5] == "echo:":
@@ -1210,8 +1212,6 @@ class pronsole(cmd.Cmd):
             if self.silent is False: print "\r" + tstring.ljust(15)
             sys.stdout.write(self.promptf())
             sys.stdout.flush()
-        for listener in self.recvlisteners:
-            listener(l)
 
     def layer_change_cb(self, newlayer):
         layerz = self.fgcode.all_layers[newlayer].z
