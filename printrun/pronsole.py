@@ -1201,7 +1201,8 @@ class pronsole(cmd.Cmd):
         if report_type == REPORT_TEMP:
             self.status.update_tempreading(l)
         tstring = l.rstrip()
-        if tstring != "ok" and not self.listing and not self.monitoring:
+        if tstring != "ok" and not self.listing \
+          and not self.monitoring and report_type == REPORT_NONE:
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()
             if self.silent is False: print "\r" + tstring.ljust(15)
