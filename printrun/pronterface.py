@@ -33,7 +33,7 @@ except ImportError: import json
 from . import pronsole
 from . import printcore
 
-from .utils import install_locale, setup_logging, \
+from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
     prepare_command, check_rgb_color, check_rgba_color
@@ -45,8 +45,7 @@ except:
     logging.error(_("WX is not installed. This program requires WX to run."))
     raise
 
-from printrun.gui.widgets import SpecialButton, MacroEditor, \
-    PronterOptions, ButtonEdit
+from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit
 
 winsize = (800, 500)
 layerindex = 0
@@ -58,9 +57,10 @@ pronterface_quitting = False
 class PronterfaceQuitException(Exception):
     pass
 
-from printrun.gui import MainWindow
-from printrun.excluder import Excluder
-from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
+from .gui import MainWindow
+from .excluder import Excluder
+from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
+    FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
 
 tempreading_exp = re.compile("(^T:| T:)")
