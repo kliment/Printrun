@@ -56,14 +56,13 @@ class ExcluderWindow(gviz.GvizWindow):
             wx.CallAfter(self.p.Refresh)
         elif event.Dragging() and event.LeftIsDown():
             x, y = event.GetPositionTuple()
-            if not hasattr(self, "basetrans"):
+            if not self.initpos:
                 self.basetrans = self.p.translate
             x = (x - self.basetrans[0]) / self.p.scale[0]
             y = (y - self.basetrans[1]) / self.p.scale[1]
             x, y = self.real_to_gcode(x, y)
             if not self.initpos:
                 self.initpos = (x, y)
-                self.basetrans = self.p.translate
                 self.parent.rectangles.append((0, 0, 0, 0))
             else:
                 pos = (x, y)
