@@ -126,7 +126,8 @@ class pronsole(cmd.Cmd):
         self.filename = None
         self.rpc_server = None
         self.curlayer = 0
-        self.listing = 0
+        self.sdlisting = 0
+        self.sdlisting_echo = 0
         self.sdfiles = []
         self.paused = False
         self.sdprinting = 0
@@ -1045,23 +1046,24 @@ class pronsole(cmd.Cmd):
     def help_resume(self):
         self.log(_("Resumes a paused print."))
 
-    def listfiles(self, line, echo = False):
+    def listfiles(self, line):
         if "Begin file list" in line:
-            self.listing = 1
+            self.sdlisting = 1
         elif "End file list" in line:
-            self.listing = 0
+            self.sdlisting = 0
             self.recvlisteners.remove(self.listfiles)
-            if echo:
+            if self.sdlisting_echo:
                 self.log(_("Files on SD card:"))
                 self.log("\n".join(self.sdfiles))
-        elif self.listing:
+        elif self.sdlisting:
             self.sdfiles.append(line.strip().lower())
 
     def _do_ls(self, echo):
         # FIXME: this was 2, but I think it should rather be 0 as in do_upload
-        self.listing = 0
+        self.sdlisting = 0
+        self.sdlisting_echo = echo
         self.sdfiles = []
-        self.recvlisteners.append(lambda l: self.listfiles(l, echo))
+        self.recvlisteners.append(self.listfiles)
         self.p.send_now("M20")
 
     def do_ls(self, l):
@@ -1201,7 +1203,7 @@ class pronsole(cmd.Cmd):
         if report_type == REPORT_TEMP:
             self.status.update_tempreading(l)
         tstring = l.rstrip()
-        if tstring != "ok" and not self.listing \
+        if tstring != "ok" and not self.sdlisting \
           and not self.monitoring and report_type == REPORT_NONE:
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()

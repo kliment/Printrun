@@ -1213,7 +1213,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if not self.p.online:
             self.sdfiles = []
             return
-        self.listing = 0
+        self.sdlisting = 0
         self.sdfiles = []
         self.recvlisteners.append(self.listfiles)
         self.p.send_now("M21")
@@ -1672,12 +1672,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def listfiles(self, line, ignored = False):
         if "Begin file list" in line:
-            self.listing = 1
+            self.sdlisting = 1
         elif "End file list" in line:
-            self.listing = 0
+            self.sdlisting = 0
             self.recvlisteners.remove(self.listfiles)
             wx.CallAfter(self.filesloaded)
-        elif self.listing:
+        elif self.sdlisting:
             self.sdfiles.append(line.strip().lower())
 
     def waitforsdresponse(self, l):
