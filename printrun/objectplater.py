@@ -198,7 +198,9 @@ class Plater(wx.Frame):
                     print _("Bed full, sorry sir :(")
                     self.Refresh()
                     return
-            centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
+            centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]
+            centery = self.build_dimensions[1] / 2 + self.build_dimensions[4]
+            centreoffset = [centerx - max[0] / 2, centery - max[1] / 2]
             for i in self.models:
                 self.models[i].offsets[0] += centreoffset[0]
                 self.models[i].offsets[1] += centreoffset[1]

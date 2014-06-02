@@ -350,7 +350,7 @@ class StlPlater(Plater):
             print "Rebasing %s" % best_match
             model = self.models[best_match]
             newmodel = model.rebase(best_facet)
-            newmodel.offsets = model.offsets
+            newmodel.offsets = list(model.offsets)
             newmodel.rot = 0
             newmodel.scale = model.scale
             newmodel.filename = model.filename
@@ -436,8 +436,10 @@ class StlPlater(Plater):
                 self.load_stl_into_model(name, name)
         wx.CallAfter(self.Refresh)
 
-    def load_stl_into_model(self, path, name, offset = [0, 0, 0], rotation = 0, scale = [1.0, 1.0, 1.0]):
+    def load_stl_into_model(self, path, name, offset = None, rotation = 0, scale = [1.0, 1.0, 1.0]):
         model = stltool.stl(path)
+        if offset is None:
+            offset = [self.build_dimensions[3], self.build_dimensions[4], 0]
         model.offsets = list(offset)
         model.rot = rotation
         model.scale = list(scale)
@@ -503,8 +505,8 @@ class StlPlater(Plater):
                 for name, model in models.items():
                     # FIXME: not sure this is going to work superwell with utf8
                     if model.filename == filename:
-                        model.offsets[0] = x
-                        model.offsets[1] = y
+                        model.offsets[0] = x + self.build_dimensions[3]
+                        model.offsets[1] = y + self.build_dimensions[4]
                         model.rot = rot
                         del models[name]
                         break

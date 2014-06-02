@@ -97,6 +97,7 @@ class GcodePlater(Plater):
         while generator_output is not None:
             generator_output = generator.next()
         obj = gcview.GCObject(model)
+        obj.offsets = [self.build_dimensions[3], self.build_dimensions[4], 0]
         obj.gcode = gcode
         obj.dims = [gcode.xmin, gcode.xmax,
                     gcode.ymin, gcode.ymax,
