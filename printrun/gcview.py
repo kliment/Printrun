@@ -440,8 +440,9 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         layer = self.model.num_layers_to_draw
         filtered = [k for k, v in self.model.layer_idxs_map.iteritems() if v == layer]
         if filtered:
-            z = filtered[0]
-            message = _("Layer %d -%s Z = %.03f mm") % (layer + 1, extra, z)
+            true_layer = filtered[0]
+            z = self.model.gcode.all_layers[true_layer].z
+            message = _("Layer %d -%s Z = %.03f mm") % (layer, extra, z)
         else:
             message = _("Entire object")
         wx.CallAfter(self.SetStatusText, message, 0)
@@ -472,6 +473,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
             GcodeViewLoader.addfile(self, gcode)
         self.layerslider.SetRange(1, self.model.max_layers + 1)
         self.layerslider.SetValue(self.model.max_layers + 1)
+        wx.CallAfter(self.SetStatusText, _("Entire object"), 0)
         wx.CallAfter(self.Refresh)
 
     def clear(self):
