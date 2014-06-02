@@ -32,7 +32,7 @@ class ProntRPC(object):
             progress = self.percentdone
         else: progress = None
         if self.pronsole.p.printing or self.pronsole.sdprinting:
-            eta = self.get_eta()
+            eta = self.pronsole.get_eta()
         else:
             eta = None
         if self.pronsole.tempreadings:
