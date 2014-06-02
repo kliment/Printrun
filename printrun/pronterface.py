@@ -62,6 +62,7 @@ from .excluder import Excluder
 from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
     FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
+from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP
 
 tempreading_exp = re.compile("(^T:| T:)")
 
@@ -145,10 +146,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.status_thread = None
         self.capture_skip = {}
         self.capture_skip_newline = False
-        self.tempreadings = ""
-        self.userm114 = 0
-        self.userm105 = 0
-        self.m105_waitcycles = 0
         self.fgcode = None
         self.excluder = None
         self.slicep = None
@@ -1675,8 +1672,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         except:
             traceback.print_exc()
 
-    def update_pos(self, l):
-        bits = gcoder.m114_exp.findall(l)
+    def update_pos(self):
+        bits = gcoder.m114_exp.findall(self.posreport)
         x = None
         y = None
         z = None
@@ -1693,24 +1690,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if z is not None: self.current_pos[2] = z
 
     def recvcb(self, l):
-        isreport = False
-        if "ok C:" in l or "Count" in l \
-           or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
-            self.posreport = l
-            self.update_pos(l)
-            if self.userm114 > 0:
-                self.userm114 -= 1
-            else:
-                isreport = True
-        if "ok T:" in l or tempreading_exp.findall(l):
-            self.tempreadings = l
+        report_type = self.recvcb_report(l)
+        isreport = report_type != REPORT_NONE
+        if report_type == REPORT_POS:
+            self.update_pos()
+        elif report_type == REPORT_TEMP:
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
             self.update_tempdisplay()
-            if self.userm105 > 0:
-                self.userm105 -= 1
-            else:
-                self.m105_waitcycles = 0
-                isreport = True
         tstring = l.rstrip()
         if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
             wx.CallAfter(self.addtexttolog, tstring + "\n")

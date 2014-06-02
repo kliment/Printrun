@@ -58,6 +58,10 @@ except:
 
 tempreading_exp = re.compile("(^T:| T:)")
 
+REPORT_NONE = 0
+REPORT_POS = 1
+REPORT_TEMP = 2
+
 class Status(object):
 
     def __init__(self):
@@ -125,7 +129,11 @@ class pronsole(cmd.Cmd):
         self.temps = {"pla": "185", "abs": "230", "off": "0"}
         self.bedtemps = {"pla": "60", "abs": "110", "off": "0"}
         self.percentdone = 0
+        self.posreport = ""
         self.tempreadings = ""
+        self.userm114 = 0
+        self.userm105 = 0
+        self.m105_waitcycles = 0
         self.macros = {}
         self.history_file = "~/.pronsole-history"
         self.rc_loaded = False
@@ -1122,9 +1130,27 @@ class pronsole(cmd.Cmd):
                 self.log("Final command output:")
                 self.log(output.rstrip())
 
-    def recvcb(self, l):
-        if tempreading_exp.findall(l):
+    def recvcb_report(self, l):
+        isreport = REPORT_NONE
+        if "ok C:" in l or "Count" in l \
+           or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
+            self.posreport = l
+            if self.userm114 > 0:
+                self.userm114 -= 1
+            else:
+                isreport = REPORT_POS
+        if "ok T:" in l or tempreading_exp.findall(l):
             self.tempreadings = l
+            if self.userm105 > 0:
+                self.userm105 -= 1
+            else:
+                self.m105_waitcycles = 0
+                isreport = REPORT_TEMP
+        return isreport
+
+    def recvcb(self, l):
+        report_type = self.recvcb_report(l)
+        if report_type == REPORT_TEMP:
             self.status.update_tempreading(l)
         tstring = l.rstrip()
         if tstring != "ok" and not self.listing and not self.monitoring:
