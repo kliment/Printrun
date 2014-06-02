@@ -407,7 +407,7 @@ class Settings(object):
     def _all_settings(self):
         return self._settings
 
-class Status:
+class Status(object):
 
     def __init__(self):
         self.extruder_temp = 0
