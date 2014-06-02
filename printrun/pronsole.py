@@ -464,6 +464,7 @@ class pronsole(cmd.Cmd):
         self.p.onlinecb = self.online
         self.p.errorcb = self.logError
         self.fgcode = None
+        self.filename = None
         self.rpc_server = None
         self.curlayer = 0
         self.listing = 0
