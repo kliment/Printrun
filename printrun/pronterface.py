@@ -145,7 +145,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.fgcode = None
         self.excluder = None
         self.slicep = None
-        self.monitor_interval = 3
         self.current_pos = [0, 0, 0]
         self.paused = False
         self.uploading = False

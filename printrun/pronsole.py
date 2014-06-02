@@ -19,6 +19,7 @@ import cmd
 import glob
 import os
 import time
+import threading
 import sys
 import shutil
 import subprocess
@@ -110,6 +111,7 @@ class pronsole(cmd.Cmd):
         self.compute_eta = None
         self.statuscheck = False
         self.status_thread = None
+        self.monitor_interval = 3
         self.p = printcore.printcore()
         self.p.recvcb = self.recvcb
         self.p.startcb = self.startcb
