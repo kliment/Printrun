@@ -39,8 +39,10 @@ class ProntRPC(object):
             temps = parse_temperature_report(self.pronsole.tempreadings)
         else:
             temps = None
+        z = self.pronsole.curlayer
         return {"filename": self.pronsole.filename,
                 "progress": progress,
                 "eta": eta,
                 "temps": temps,
+                "z": z,
                 }

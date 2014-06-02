@@ -228,7 +228,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.printsendcb = self.printsentcb
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
-        self.curlayer = 0
         self.cur_button = None
         self.predisconnect_mainqueue = None
         self.predisconnect_queueindex = None
@@ -1637,9 +1636,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def layer_change_cb(self, newlayer):
         """Callback when the printed layer changed"""
         pronsole.pronsole.layer_change_cb(self, newlayer)
-        layerz = self.fgcode.all_layers[newlayer].z
-        if layerz is not None:
-            self.curlayer = layerz
         if self.settings.mainviz != "3D" or self.settings.trackcurrentlayer3d:
             wx.CallAfter(self.gviz.setlayer, newlayer)
 

@@ -465,6 +465,7 @@ class pronsole(cmd.Cmd):
         self.p.errorcb = self.logError
         self.fgcode = None
         self.rpc_server = None
+        self.curlayer = 0
         self.listing = 0
         self.sdfiles = []
         self.paused = False
@@ -1484,6 +1485,9 @@ class pronsole(cmd.Cmd):
             listener(l)
 
     def layer_change_cb(self, newlayer):
+        layerz = self.fgcode.all_layers[newlayer].z
+        if layerz is not None:
+            self.curlayer = layerz
         if self.compute_eta:
             secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
             self.compute_eta.update_layer(newlayer, secondselapsed)
