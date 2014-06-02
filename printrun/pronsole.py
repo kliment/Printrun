@@ -1499,10 +1499,12 @@ class pronsole(cmd.Cmd):
             secondsestimate = secondselapsed / max(fractioncomplete, 0.000001)
             secondsremain = secondsestimate - secondselapsed
             progress = fractioncomplete
-        else:
+        elif self.compute_eta is not None:
             secondselapsed = int(time.time() - self.starttime + self.extra_print_time)
             secondsremain, secondsestimate = self.compute_eta(self.p.queueindex, secondselapsed)
             progress = self.p.queueindex
+        else:
+            secondsremain, secondsestimate, progress = 1, 1, 0
         return secondsremain, secondsestimate, progress
 
     def do_eta(self, l):
