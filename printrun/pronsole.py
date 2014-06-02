@@ -189,6 +189,8 @@ class SpinSetting(wxSetting):
         from wx.lib.agw.floatspin import FloatSpin
         self.widget = FloatSpin(parent, -1, min_val = self.min, max_val = self.max, digits = 0)
         self.widget.SetValue(self.value)
+        orig = self.widget.GetValue
+        self.widget.GetValue = lambda: int(orig())
         return self.widget
 
 class FloatSpinSetting(SpinSetting):
