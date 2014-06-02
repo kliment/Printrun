@@ -64,8 +64,6 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP
 
-tempreading_exp = re.compile("(^T:| T:)")
-
 class Tee(object):
     def __init__(self, target):
         self.stdout = sys.stdout
