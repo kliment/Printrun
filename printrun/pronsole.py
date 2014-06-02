@@ -708,6 +708,7 @@ class pronsole(cmd.Cmd):
                 return
         self.log(_("Exiting program. Goodbye!"))
         self.p.disconnect()
+        self.kill()
         sys.exit()
 
     def help_exit(self):
