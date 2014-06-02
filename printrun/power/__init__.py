@@ -87,7 +87,7 @@ try:
             p.nice = nice
 
     def set_priority():
-        set_nice(10 if platform.system() != "Windows" else psutil.HIGH_PRIORITY_CLASS)
+        set_nice(-20 if platform.system() != "Windows" else psutil.HIGH_PRIORITY_CLASS)
 
     def reset_priority():
         set_nice(0 if platform.system() != "Windows" else psutil.NORMAL_PRIORITY_CLASS)
