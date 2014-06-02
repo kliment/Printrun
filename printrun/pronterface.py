@@ -33,7 +33,7 @@ except ImportError: import json
 from . import pronsole
 from . import printcore
 
-from .utils import install_locale, setup_logging, \
+from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
     prepare_command, check_rgb_color, check_rgba_color
@@ -45,8 +45,7 @@ except:
     logging.error(_("WX is not installed. This program requires WX to run."))
     raise
 
-from printrun.gui.widgets import SpecialButton, MacroEditor, \
-    PronterOptions, ButtonEdit
+from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit
 
 winsize = (800, 500)
 layerindex = 0
@@ -58,12 +57,12 @@ pronterface_quitting = False
 class PronterfaceQuitException(Exception):
     pass
 
-from printrun.gui import MainWindow
-from printrun.excluder import Excluder
-from pronsole import dosify, wxSetting, HiddenSetting, StringSetting, SpinSetting, FloatSpinSetting, BooleanSetting, StaticTextSetting
+from .gui import MainWindow
+from .excluder import Excluder
+from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
+    FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
-
-tempreading_exp = re.compile("(^T:| T:)")
+from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP
 
 class Tee(object):
     def __init__(self, target):
@@ -141,14 +140,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         self.filename = filename
 
-        self.statuscheck = False
-        self.status_thread = None
         self.capture_skip = {}
         self.capture_skip_newline = False
-        self.tempreadings = ""
-        self.userm114 = 0
-        self.userm105 = 0
-        self.m105_waitcycles = 0
         self.fgcode = None
         self.excluder = None
         self.slicep = None
@@ -327,10 +320,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         pronsole.pronsole.kill(self)
         global pronterface_quitting
         pronterface_quitting = True
-        self.statuscheck = False
-        if self.status_thread:
-            self.status_thread.join()
-            self.status_thread = None
         self.p.recvcb = None
         self.p.disconnect()
         if hasattr(self, "feedrates_changed"):
@@ -969,61 +958,40 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     #  Statusbar handling
     #  --------------------------------------------------------------
 
+    def statuschecker_inner(self):
+        status_string = ""
+        if self.sdprinting or self.uploading or self.p.printing:
+            secondsremain, secondsestimate, progress = self.get_eta()
+            if self.sdprinting or self.uploading:
+                if self.uploading:
+                    status_string += _("SD upload: %04.2f%% |") % (100 * progress,)
+                    status_string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
+                else:
+                    status_string += _("SD printing: %04.2f%% |") % (self.percentdone,)
+            elif self.p.printing:
+                status_string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
+                status_string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
+            if progress > 0:
+                status_string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
+                                                              format_duration(secondsestimate))
+                status_string += _(" Z: %.3f mm") % self.curlayer
+        elif self.loading_gcode:
+            status_string = self.loading_gcode_message
+        wx.CallAfter(self.statusbar.SetStatusText, status_string)
+        wx.CallAfter(self.gviz.Refresh)
+        # Call pronsole's statuschecker inner loop function to handle
+        # temperature monitoring and status loop sleep
+        pronsole.pronsole.statuschecker_inner(self, self.settings.monitor)
+        try:
+            while not self.sentlines.empty():
+                gc = self.sentlines.get_nowait()
+                wx.CallAfter(self.gviz.addgcodehighlight, gc)
+                self.sentlines.task_done()
+        except Queue.Empty:
+            pass
+
     def statuschecker(self):
-        while self.statuscheck:
-            string = ""
-            if self.sdprinting or self.uploading or self.p.printing:
-                secondsremain, secondsestimate, progress = self.get_eta()
-                if self.sdprinting or self.uploading:
-                    if self.uploading:
-                        string += _("SD upload: %04.2f%% |") % (100 * progress,)
-                        string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                    else:
-                        string += _("SD printing: %04.2f%% |") % (self.percentdone,)
-                elif self.p.printing:
-                    string += _("Printing: %04.2f%% |") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),)
-                    string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
-                if progress > 0:
-                    string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
-                                                                  format_duration(secondsestimate))
-                    string += _(" Z: %.3f mm") % self.curlayer
-            elif self.loading_gcode:
-                string = self.loading_gcode_message
-            wx.CallAfter(self.statusbar.SetStatusText, string)
-            wx.CallAfter(self.gviz.Refresh)
-            if self.p.online:
-                if self.p.writefailures >= 4:
-                    self.logError(_("Disconnecting after 4 failed writes."))
-                    self.status_thread = None
-                    self.disconnect()
-                    return
-            if self.settings.monitor and self.p.online:
-                if self.sdprinting:
-                    self.p.send_now("M27")
-                if self.m105_waitcycles % 10 == 0:
-                    self.p.send_now("M105")
-                self.m105_waitcycles += 1
-            cur_time = time.time()
-            wait_time = 0
-            while time.time() < cur_time + self.monitor_interval - 0.25:
-                if not self.statuscheck:
-                    break
-                time.sleep(0.25)
-                # Safeguard: if system time changes and goes back in the past,
-                # we could get stuck almost forever
-                wait_time += 0.25
-                if wait_time > self.monitor_interval - 0.25:
-                    break
-            # Always sleep at least a bit, if something goes wrong with the
-            # system time we'll avoid freezing the whole app this way
-            time.sleep(0.25)
-            try:
-                while not self.sentlines.empty():
-                    gc = self.sentlines.get_nowait()
-                    wx.CallAfter(self.gviz.addgcodehighlight, gc)
-                    self.sentlines.task_done()
-            except Queue.Empty:
-                pass
+        pronsole.pronsole.statuschecker(self)
         wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
 
     #  --------------------------------------------------------------
@@ -1072,13 +1040,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.p.send_now("M26 S0")
         if not self.connect_to_printer(port, baud):
             return
-        self.statuscheck = True
         if port != self.settings.port:
             self.set("port", port)
         if baud != self.settings.baudrate:
             self.set("baudrate", str(baud))
-        self.status_thread = threading.Thread(target = self.statuschecker)
-        self.status_thread.start()
         if self.predisconnect_mainqueue:
             self.recoverbtn.Enable()
 
@@ -1675,8 +1640,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         except:
             traceback.print_exc()
 
-    def update_pos(self, l):
-        bits = gcoder.m114_exp.findall(l)
+    def update_pos(self):
+        bits = gcoder.m114_exp.findall(self.posreport)
         x = None
         y = None
         z = None
@@ -1693,24 +1658,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if z is not None: self.current_pos[2] = z
 
     def recvcb(self, l):
-        isreport = False
-        if "ok C:" in l or "Count" in l \
-           or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
-            self.posreport = l
-            self.update_pos(l)
-            if self.userm114 > 0:
-                self.userm114 -= 1
-            else:
-                isreport = True
-        if "ok T:" in l or tempreading_exp.findall(l):
-            self.tempreadings = l
+        report_type = self.recvcb_report(l)
+        isreport = report_type != REPORT_NONE
+        if report_type == REPORT_POS:
+            self.update_pos()
+        elif report_type == REPORT_TEMP:
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
             self.update_tempdisplay()
-            if self.userm105 > 0:
-                self.userm105 -= 1
-            else:
-                self.m105_waitcycles = 0
-                isreport = True
         tstring = l.rstrip()
         if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
             wx.CallAfter(self.addtexttolog, tstring + "\n")

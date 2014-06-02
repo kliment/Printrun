@@ -117,6 +117,9 @@ def get_command_output(command, replaces):
                     blocking = False)
     return p.stdout.read()
 
+def dosify(name):
+    return os.path.split(name)[1].split(".")[0][:8] + ".g"
+
 class RemainingTimeEstimator(object):
 
     drift = None
