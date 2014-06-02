@@ -79,6 +79,11 @@ else:
 try:
     import psutil
 
+    if platform.system() != "Windows":
+        p = psutil.Process(os.getpid())
+        nice_limit, _ = p.rlimit(psutil.RLIMIT_NICE)
+        high_priority_nice = 20 - nice_limit
+
     def set_nice(nice):
         p = psutil.Process(os.getpid())
         if callable(p.nice):
@@ -87,10 +92,18 @@ try:
             p.nice = nice
 
     def set_priority():
-        set_nice(-20 if platform.system() != "Windows" else psutil.HIGH_PRIORITY_CLASS)
+        if platform.system() == "Windows":
+            set_nice(psutil.HIGH_PRIORITY_CLASS)
+        else:
+            if high_priority_nice < 0:
+                set_nice(high_priority_nice)
 
     def reset_priority():
-        set_nice(0 if platform.system() != "Windows" else psutil.NORMAL_PRIORITY_CLASS)
+        if platform.system() == "Windows":
+            set_nice(psutil.NORMAL_PRIORITY_CLASS)
+        else:
+            if high_priority_nice < 0:
+                set_nice(0)
 
     def powerset_print_start(reason):
         set_priority()
