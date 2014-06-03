@@ -137,7 +137,7 @@ class RemainingTimeEstimator(object):
 
     def update_layer(self, layer, printtime):
         self.previous_layers_estimate += self.current_layer_estimate
-        if self.previous_layers_estimate > 0 and printtime > 0:
+        if self.previous_layers_estimate > 1. and printtime > 1.:
             self.drift = printtime / self.previous_layers_estimate
         self.current_layer_estimate = self.gcode.all_layers[layer].duration
         self.current_layer_lines = len(self.gcode.all_layers[layer])
