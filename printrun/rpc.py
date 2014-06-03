@@ -1,7 +1,25 @@
+# This file is part of the Printrun suite.
+#
+# Printrun is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Printrun is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
+
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from threading import Thread
+import socket
+import logging
 
-from .utils import parse_temperature_report
+from .utils import install_locale, parse_temperature_report
+install_locale('pronterface')
 
 RPC_PORT = 7978
 
@@ -11,9 +29,21 @@ class ProntRPC(object):
 
     def __init__(self, pronsole, port = RPC_PORT):
         self.pronsole = pronsole
-        self.server = SimpleXMLRPCServer(("localhost", port),
-                                         allow_none = True,
-                                         logRequests = False)
+        used_port = port
+        while True:
+            try:
+                self.server = SimpleXMLRPCServer(("localhost", used_port),
+                                                 allow_none = True,
+                                                 logRequests = False)
+                if used_port != port:
+                    logging.warning(_("RPC server bound on non-default port %d") % used_port)
+                break
+            except socket.error as e:
+                if e.errno == 98:
+                    used_port += 1
+                    continue
+                else:
+                    raise
         self.server.register_function(self.get_status, 'status')
         self.thread = Thread(target = self.run_server)
         self.thread.start()
