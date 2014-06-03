@@ -492,72 +492,71 @@ class GCode(object):
                                 ymax = max(ymax, line.current_y)
 
                     # Compute duration
-                    if line.command in ["G1", "G0", "G4"]:
-                        if line.command == "G4":
-                            moveduration = P(line)
-                            if moveduration:
-                                moveduration /= 1000.0
-                                totalduration += moveduration
+                    if line.command == "G0" or line.command == "G1":
+                        x = line.x if line.x is not None else lastx
+                        y = line.y if line.y is not None else lasty
+                        z = line.z if line.z is not None else lastz
+                        e = line.e if line.e is not None else laste
+                        # mm/s vs mm/m => divide by 60
+                        f = line.f / 60.0 if line.f is not None else lastf
+
+                        # given last feedrate and current feedrate calculate the
+                        # distance needed to achieve current feedrate.
+                        # if travel is longer than req'd distance, then subtract
+                        # distance to achieve full speed, and add the time it took
+                        # to get there.
+                        # then calculate the time taken to complete the remaining
+                        # distance
+
+                        # FIXME: this code has been proven to be super wrong when 2
+                        # subsquent moves are in opposite directions, as requested
+                        # speed is constant but printer has to fully decellerate
+                        # and reaccelerate
+                        # The following code tries to fix it by forcing a full
+                        # reacceleration if this move is in the opposite direction
+                        # of the previous one
+                        dx = x - lastx
+                        dy = y - lasty
+                        if dx * lastdx + dy * lastdy <= 0:
+                            lastf = 0
+
+                        currenttravel = math.hypot(dx, dy)
+                        if currenttravel == 0:
+                            if line.z is not None:
+                                currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
+                            elif line.e is not None:
+                                currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
+                        # Feedrate hasn't changed, no acceleration/decceleration planned
+                        if f == lastf:
+                            moveduration = currenttravel / f if f != 0 else 0.
                         else:
-                            x = line.x if line.x is not None else lastx
-                            y = line.y if line.y is not None else lasty
-                            z = line.z if line.z is not None else lastz
-                            e = line.e if line.e is not None else laste
-                            # mm/s vs mm/m => divide by 60
-                            f = line.f / 60.0 if line.f is not None else lastf
-
-                            # given last feedrate and current feedrate calculate the
-                            # distance needed to achieve current feedrate.
-                            # if travel is longer than req'd distance, then subtract
-                            # distance to achieve full speed, and add the time it took
-                            # to get there.
-                            # then calculate the time taken to complete the remaining
-                            # distance
-
-                            # FIXME: this code has been proven to be super wrong when 2
-                            # subsquent moves are in opposite directions, as requested
-                            # speed is constant but printer has to fully decellerate
-                            # and reaccelerate
-                            # The following code tries to fix it by forcing a full
-                            # reacceleration if this move is in the opposite direction
-                            # of the previous one
-                            dx = x - lastx
-                            dy = y - lasty
-                            if dx * lastdx + dy * lastdy <= 0:
-                                lastf = 0
-
-                            currenttravel = math.hypot(dx, dy)
-                            if currenttravel == 0:
-                                if line.z is not None:
-                                    currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
-                                elif line.e is not None:
-                                    currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
-                            # Feedrate hasn't changed, no acceleration/decceleration planned
-                            if f == lastf:
-                                moveduration = currenttravel / f if f != 0 else 0.
+                            # FIXME: review this better
+                            # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
+                            # shouldn't we instead look at three consecutive moves ?
+                            distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
+                            if distance <= currenttravel and lastf + f != 0 and f != 0:
+                                moveduration = 2 * distance / (lastf + f)  # This is distance / mean(lastf, f)
+                                moveduration += (currenttravel - distance) / f
                             else:
-                                # FIXME: review this better
-                                # this looks wrong : there's little chance that the feedrate we'll decelerate to is the previous feedrate
-                                # shouldn't we instead look at three consecutive moves ?
-                                distance = 2 * abs(((lastf + f) * (f - lastf) * 0.5) / acceleration)  # multiply by 2 because we have to accelerate and decelerate
-                                if distance <= currenttravel and lastf + f != 0 and f != 0:
-                                    moveduration = 2 * distance / (lastf + f)  # This is distance / mean(lastf, f)
-                                    moveduration += (currenttravel - distance) / f
-                                else:
-                                    moveduration = 2 * currenttravel / (lastf + f)  # This is currenttravel / mean(lastf, f)
-                                    # FIXME: probably a little bit optimistic, but probably a much better estimate than the previous one:
-                                    # moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
+                                moveduration = 2 * currenttravel / (lastf + f)  # This is currenttravel / mean(lastf, f)
+                                # FIXME: probably a little bit optimistic, but probably a much better estimate than the previous one:
+                                # moveduration = math.sqrt(2 * distance / acceleration) # probably buggy : not taking actual travel into account
 
-                            lastdx = dx
-                            lastdy = dy
+                        lastdx = dx
+                        lastdy = dy
 
+                        totalduration += moveduration
+
+                        lastx = x
+                        lasty = y
+                        lastz = z
+                        laste = e
+                        lastf = f
+                    elif line.command == "G4":
+                        moveduration = P(line)
+                        if moveduration:
+                            moveduration /= 1000.0
                             totalduration += moveduration
-
-                            lastx = x
-                            lasty = y
-                            lastz = z
-                            laste = e
-                            lastf = f
 
                     # FIXME : looks like this needs to be tested with "lift Z on move"
                     if line.z is not None:
