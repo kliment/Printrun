@@ -13,7 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+import traceback
+
 from functools import wraps
+
+from .utils import parse_build_dimensions
 
 def setting_add_tooltip(func):
     @wraps(func)
