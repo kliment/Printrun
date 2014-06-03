@@ -81,7 +81,10 @@ try:
 
     if platform.system() != "Windows":
         p = psutil.Process(os.getpid())
-        nice_limit, _ = p.rlimit(psutil.RLIMIT_NICE)
+        if hasattr(p, "rlimit"):
+            nice_limit, _ = p.rlimit(psutil.RLIMIT_NICE)
+        else:
+            nice_limit, _ = p.get_rlimit(psutil.RLIMIT_NICE)
         high_priority_nice = 20 - nice_limit
 
     def set_nice(nice):
