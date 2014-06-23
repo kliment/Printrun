@@ -10,7 +10,7 @@ The pronterface.py now uses gettext for the messages it generates.
 The corresponding pronterface.pot file is at locale/pronterface.pot
 and was generated using 
 
-  pygettext -o locale/pronterface.pot pronterface.py printrun/pronterface_widgets.py
+  pygettext -o locale/pronterface.pot *.py printrun/*.py printrun/*/*.py
 
 followed by minor edits to the generated header.
 

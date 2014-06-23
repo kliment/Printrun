@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from printrun.printrun_utils import install_locale, iconfile
+from .utils import install_locale, iconfile
 install_locale('plater')
 
 import os
@@ -34,10 +34,10 @@ class Plater(wx.Frame):
     def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
         super(Plater, self).__init__(parent, title = _("Plate building tool"), size = size)
         self.filenames = filenames
-        self.SetIcon(wx.Icon(iconfile("plater.ico"), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        panel = wx.Panel(self, -1)
-        sizer = wx.GridBagSizer()
+        panel = self.menupanel = wx.Panel(self, -1)
+        sizer = self.menusizer = wx.GridBagSizer()
         self.l = wx.ListBox(panel)
         sizer.Add(self.l, pos = (1, 0), span = (1, 2), flag = wx.EXPAND)
         sizer.AddGrowableRow(1, 1)
@@ -157,9 +157,8 @@ class Plater(wx.Frame):
                 width = abs(self.models[i].dims[0] - self.models[i].dims[1])
                 height = abs(self.models[i].dims[2] - self.models[i].dims[3])
                 p.add_rect(width, height, data = i)
-            # FIXME: probably wrong, not taking offsets into account
-            centerx = self.build_dimensions[0] / 2
-            centery = self.build_dimensions[1] / 2
+            centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]
+            centery = self.build_dimensions[1] / 2 + self.build_dimensions[4]
             rects = p.pack(padding = separation,
                            center = packer.Vector2(centerx, centery))
             for rect in rects:
@@ -199,7 +198,9 @@ class Plater(wx.Frame):
                     print _("Bed full, sorry sir :(")
                     self.Refresh()
                     return
-            centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
+            centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]
+            centery = self.build_dimensions[1] / 2 + self.build_dimensions[4]
+            centreoffset = [centerx - max[0] / 2, centery - max[1] / 2]
             for i in self.models:
                 self.models[i].offsets[0] += centreoffset[0]
                 self.models[i].offsets[1] += centreoffset[1]
@@ -218,14 +219,16 @@ class Plater(wx.Frame):
         i = self.l.GetSelection()
         if i != -1:
             m = self.models[self.l.GetString(i)]
-            m.offsets = [100, 100, m.offsets[2]]
+            centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]
+            centery = self.build_dimensions[1] / 2 + self.build_dimensions[4]
+            m.offsets = [centerx, centery, m.offsets[2]]
             self.Refresh()
 
     def snap(self, event):
         i = self.l.GetSelection()
         if i != -1:
             m = self.models[self.l.GetString(i)]
-            m.offsets[2] = -1.0 * min(m.facetsminz)[0]
+            m.offsets[2] = -m.dims[4]
             self.Refresh()
 
     def delete(self, event):
@@ -238,6 +241,8 @@ class Plater(wx.Frame):
 
     def add_model(self, name, model):
         newname = os.path.split(name.lower())[1]
+        if not isinstance(newname, unicode):
+            newname = unicode(newname, "utf-8")
         c = 1
         while newname in self.models:
             newname = os.path.split(name.lower())[1]
@@ -266,7 +271,7 @@ class Plater(wx.Frame):
     def export(self, event):
         dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
         dlg.SetWildcard(self.save_wildcard)
-        if(dlg.ShowModal() == wx.ID_OK):
+        if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
             self.export_to(name)
         dlg.Destroy()

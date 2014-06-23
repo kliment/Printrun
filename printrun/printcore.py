@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "2014.01.26"
+__version__ = "2014.04.06"
 
 from serial import Serial, SerialException
 from select import error as SelectError
@@ -34,7 +34,7 @@ import re
 from functools import wraps
 from collections import deque
 from printrun import gcoder
-from printrun.printrun_utils import install_locale, decode_utf8, setup_logging
+from .utils import install_locale, decode_utf8, setup_logging
 install_locale('pronterface')
 
 setup_logging(sys.stderr)
@@ -68,13 +68,16 @@ class printcore():
         self.baud = None
         self.port = None
         self.analyzer = gcoder.GCode()
-        self.printer = None  # Serial instance connected to the printer,
-                             # should be None when disconnected
-        self.clear = 0  # clear to send, enabled after responses
-        self.online = False  # The printer has responded to the initial command
-                             # and is active
-        self.printing = False  # is a print currently running, true if printing
-                               # , false if paused
+        # Serial instance connected to the printer, should be None when
+        # disconnected
+        self.printer = None
+        # clear to send, enabled after responses
+        # FIXME: should probably be changed to a sliding window approach
+        self.clear = 0
+        # The printer has responded to the initial command and is active
+        self.online = False
+        # is a print currently running, true if printing, false if paused
+        self.printing = False
         self.mainqueue = None
         self.priqueue = Queue(0)
         self.queueindex = 0
@@ -96,6 +99,7 @@ class printcore():
         self.endcb = None  # impl ()
         self.onlinecb = None  # impl ()
         self.loud = False  # emit sent and received lines to terminal
+        self.tcp_streaming_mode = False
         self.greetings = ['start', 'Grbl ']
         self.wait = 0  # default wait period for send(), send_now()
         self.read_thread = None
@@ -107,12 +111,11 @@ class printcore():
             self.connect(port, baud)
         self.xy_feedrate = None
         self.z_feedrate = None
-        self.pronterface = None
 
     def logError(self, error):
         if self.errorcb:
             try: self.errorcb(error)
-            except: pass
+            except: traceback.print_exc()
         else:
             logging.error(error)
 
@@ -223,7 +226,7 @@ class printcore():
                 self.log.append(line)
                 if self.recvcb:
                     try: self.recvcb(line)
-                    except: pass
+                    except: traceback.print_exc()
                 if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except SelectError as e:
@@ -277,10 +280,10 @@ class printcore():
                 else: empty_lines = 0
                 if line.startswith(tuple(self.greetings)) \
                    or line.startswith('ok') or "T:" in line:
+                    self.online = True
                     if self.onlinecb:
                         try: self.onlinecb()
-                        except: pass
-                    self.online = True
+                        except: traceback.print_exc()
                     return
 
     def _listen(self):
@@ -298,9 +301,9 @@ class printcore():
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
             if line.startswith('ok') and "T:" in line and self.tempcb:
-                #callback for temp, status, whatever
+                # callback for temp, status, whatever
                 try: self.tempcb(line)
-                except: pass
+                except: traceback.print_exc()
             elif line.startswith('Error'):
                 self.logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
@@ -313,7 +316,6 @@ class printcore():
                     try:
                         toresend = int(linewords.pop(0))
                         self.resendfrom = toresend
-                        #print str(toresend)
                         break
                     except:
                         pass
@@ -355,13 +357,13 @@ class printcore():
         """
         if self.printing or not self.online or not self.printer:
             return False
-        self.printing = True
-        self.mainqueue = gcode
-        self.lineno = 0
         self.queueindex = startindex
+        self.mainqueue = gcode
+        self.printing = True
+        self.lineno = 0
         self.resendfrom = -1
         self._send("M110", -1, True)
-        if not gcode.lines:
+        if not gcode or not gcode.lines:
             return True
         self.clear = False
         resuming = (startindex != 0)
@@ -369,6 +371,12 @@ class printcore():
                                    kwargs = {"resuming": resuming})
         self.print_thread.start()
         return True
+
+    def cancelprint(self):
+        self.pause()
+        self.paused = False
+        self.mainqueue = None
+        self.clear = True
 
     # run a simple script if it exists, no multithreading
     def runSmallScript(self, filename):
@@ -394,8 +402,13 @@ class printcore():
         # might be calling it from the thread itself
         try:
             self.print_thread.join()
+        except RuntimeError, e:
+            if e.message == "cannot join current thread":
+                pass
+            else:
+                traceback.print_exc()
         except:
-            pass
+            traceback.print_exc()
 
         self.print_thread = None
 
@@ -462,7 +475,7 @@ class printcore():
         self._stop_sender()
         try:
             if self.startcb:
-                #callback for printing started
+                # callback for printing started
                 try: self.startcb(resuming)
                 except:
                     self.logError(_("Print start callback failed with:") +
@@ -473,7 +486,7 @@ class printcore():
             self.log.clear()
             self.sent = []
             if self.endcb:
-                #callback for printing done
+                # callback for printing done
                 try: self.endcb()
                 except:
                     self.logError(_("Print end callback failed with:") +
@@ -485,22 +498,20 @@ class printcore():
             self.print_thread = None
             self._start_sender()
 
-    #now only "pause" is implemented as host command
-    def processHostCommand(self, command):
+    def process_host_command(self, command):
+        """only ;@pause command is implemented as a host command in printcore, but hosts are free to reimplement this method"""
         command = command.lstrip()
         if command.startswith(";@pause"):
-            if self.pronterface is not None:
-                self.pronterface.pause(None)
-            else:
-                self.pause()
+            self.pause()
 
     def _sendnext(self):
         if not self.printer:
             return
         while self.printer and self.printing and not self.clear:
             time.sleep(0.001)
-        # Only wait for oks when using serial connections
-        if not self.printer_tcp:
+        # Only wait for oks when using serial connections or when not using tcp
+        # in streaming mode
+        if not self.printer_tcp or not self.tcp_streaming_mode:
             self.clear = False
         if not (self.printing and self.printer and self.online):
             self.clear = True
@@ -535,13 +546,14 @@ class printcore():
                 return
             tline = gline.raw
             if tline.lstrip().startswith(";@"):  # check for host command
-                self.processHostCommand(tline)
+                self.process_host_command(tline)
                 self.queueindex += 1
                 self.clear = True
                 return
 
-            tline = tline.split(";")[0]
-            if len(tline) > 0:
+            # Strip comments
+            tline = gcoder.gcode_strip_comment_exp.sub("", tline).strip()
+            if tline:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
                 if self.printsendcb:
@@ -578,7 +590,7 @@ class printcore():
                 logging.info("SENT: %s" % command)
             if self.sendcb:
                 try: self.sendcb(command, gline)
-                except: pass
+                except: traceback.print_exc()
             try:
                 self.printer.write(str(command + "\n"))
                 if self.printer_tcp:

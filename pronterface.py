@@ -18,7 +18,7 @@
 import sys
 
 try:
-    import wx
+    import wx  # NOQA
 except:
     print("wxPython is not installed. This program requires wxPython to run.")
     if sys.version_info.major >= 3:

@@ -1,21 +1,21 @@
-## Imported from python-rectangle-packer commit 32fce1aaba
-## https://github.com/maxretter/python-rectangle-packer
-##
-## Python Rectangle Packer - Packs rectangles around a central point
-## Copyright (C) 2013 Max Retter
-##
-## This program is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Imported from python-rectangle-packer commit 32fce1aaba
+# https://github.com/maxretter/python-rectangle-packer
+#
+# Python Rectangle Packer - Packs rectangles around a central point
+# Copyright (C) 2013 Max Retter
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
 
@@ -67,7 +67,7 @@ class Rect(object):
         self.height = height
         self.data = data
 
-        ## upper left
+        # upper left
         self.position = Vector2()
 
     def half(self):
@@ -130,13 +130,13 @@ class PointList(object):
             index = i + 1
 
             segs.append(LineSegment(
-                Vector2(self.points[index-1][0], self.points[index-1][1]),
+                Vector2(self.points[index - 1][0], self.points[index - 1][1]),
                 Vector2(self.points[index][0], self.points[index][1])
             ))
 
         segs.append(LineSegment(
-                Vector2(self.points[-1][0], self.points[-1][1]),
-                Vector2(self.points[0][0], self.points[0][1]),
+            Vector2(self.points[-1][0], self.points[-1][1]),
+            Vector2(self.points[0][0], self.points[0][1]),
         ))
 
         return segs
@@ -158,17 +158,17 @@ class LineSegment(object):
 
         seg_mag = segment_vector.magnitude()
 
-        ## project point_vector on segment_vector
+        # project point_vector on segment_vector
         projection = segment_vector.dot_product(point_vector)
 
-        ## scalar value used to interpolate new point along segment_vector
+        # scalar value used to interpolate new point along segment_vector
         scalar = projection / seg_mag ** 2
 
-        ## clamp on [0,1]
+        # clamp on [0,1]
         scalar = 1.0 if scalar > 1.0 else scalar
         scalar = 0.0 if scalar < 0.0 else scalar
 
-        ## interpolate scalar along segment and add start point back in
+        # interpolate scalar along segment and add start point back in
         return self.start.add(segment_vector.unit().scale(scalar * seg_mag))
 
     def closest_distance_to_point(self, point):
@@ -185,46 +185,46 @@ class Packer(object):
         self._rects.append(Rect(width, height, data))
 
     def pack(self, padding=0, center=Vector2()):
-        ## init everything
+        # init everything
         placed_rects = []
         sorted_rects = sorted(self._rects, key=lambda rect: -rect.area())
-        ## double padding due to halfing later on
+        # double padding due to halfing later on
         padding *= 2
-        
+
         for rect in sorted_rects:
 
             if not placed_rects:
-                ## first rect, right on target.
+                # first rect, right on target.
                 rect.set_center(center)
 
             else:
-                ## Expand each rectangle based on new rect size and padding
-                ## get a list of points
-                ## build a polygon
+                # Expand each rectangle based on new rect size and padding
+                # get a list of points
+                # build a polygon
                 point_lists = [
                     pr.expand(rect.width + padding, rect.height + padding).point_list().polygon()
                     for pr in placed_rects
                 ]
 
-                ## take the union of all the polygons (relies on + operator override)
-                ## the [0] at the end returns the first "contour", which is the only one we need
+                # take the union of all the polygons (relies on + operator override)
+                # the [0] at the end returns the first "contour", which is the only one we need
                 bounding_points = PointList(sum(
                     point_lists[1:],
                     point_lists[0]
                 )[0])
 
-                ## find the closest segment
+                # find the closest segment
                 closest_segments = sorted(
                     bounding_points.segments(),
                     key=lambda segment: segment.closest_distance_to_point(center)
                 )
 
-                ## get the closest point
+                # get the closest point
                 place_point = closest_segments[0].closest_point_to_point(center)
 
-                ## set the rect position
+                # set the rect position
                 rect.set_center(place_point)
-            
+
             placed_rects.append(rect)
 
         return placed_rects

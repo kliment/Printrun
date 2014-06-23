@@ -20,20 +20,24 @@ import time
 import numpy
 import math
 import logging
+import threading
 
 from ctypes import sizeof
 
 from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
     GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
-    GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, glRectf, \
+    GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, \
     glBegin, glEnd, GL_LINES, glEnable, glDisable, glGetFloatv, \
     GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, GLuint, \
     glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
-    glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY
+    glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
+    GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
+    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
+    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
-from printrun.printrun_utils import install_locale
+from printrun.utils import install_locale
 install_locale('pronterface')
 
 def vec(*args):
@@ -165,7 +169,9 @@ class Platform(object):
         glPopMatrix()
 
     def display(self, mode_2d=False):
-        glCallList(self.display_list)
+        # FIXME: using the list sometimes results in graphical corruptions
+        # glCallList(self.display_list)
+        self.draw()
 
 class PrintHead(object):
     def __init__(self):
@@ -218,9 +224,13 @@ class Model(object):
 
     axis_letter_map = dict([(v, k) for k, v in letter_axis_map.items()])
 
+    lock = None
+
     def __init__(self, offset_x=0, offset_y=0):
         self.offset_x = offset_x
         self.offset_y = offset_y
+
+        self.lock = threading.Lock()
 
         self.init_model_attributes()
 
@@ -267,6 +277,24 @@ class Model(object):
     def height(self):
         return self.bounding_box.height
 
+    def movement_color(self, move):
+        """
+        Return the color to use for particular type of movement.
+        """
+        if move.extruding:
+            if move.current_tool == 0:
+                return self.color_tool0
+            elif move.current_tool == 1:
+                return self.color_tool1
+            elif move.current_tool == 2:
+                return self.color_tool2
+            elif move.current_tool == 3:
+                return self.color_tool3
+            else:
+                return self.color_tool4
+
+        return self.color_travel
+
 def movement_angle(src, dst, precision=0):
     x = dst[0] - src[0]
     y = dst[1] - src[1]
@@ -293,240 +321,410 @@ class GcodeModel(Model):
 
     color_travel = (0.6, 0.6, 0.6, 0.6)
     color_tool0 = (1.0, 0.0, 0.0, 1.0)
-    color_tool1 = (0.31, 0.05, 0.9, 1.0)
+    color_tool1 = (0.67, 0.05, 0.9, 1.0)
+    color_tool2 = (1.0, 0.8, 0., 1.0)
+    color_tool3 = (1.0, 0., 0.62, 1.0)
+    color_tool4 = (0., 1.0, 0.58, 1.0)
     color_printed = (0.2, 0.75, 0, 1.0)
     color_current = (0, 0.9, 1.0, 1.0)
     color_current_printed = (0.1, 0.4, 0, 1.0)
 
+    display_travels = True
+
+    buffers_created = False
     use_vbos = True
     loaded = False
 
+    gcode = None
+
+    path_halfwidth = 0.2
+    path_halfheight = 0.2
+
+    def set_path_size(self, path_halfwidth, path_halfheight):
+        with self.lock:
+            self.path_halfwidth = path_halfwidth
+            self.path_halfheight = path_halfheight
+
     def load_data(self, model_data, callback=None):
         t_start = time.time()
+        self.gcode = model_data
 
-        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
-                     (model_data.ymin, model_data.ymax, model_data.depth),
-                     (model_data.zmin, model_data.zmax, model_data.height))
+        self.count_travel_indices = count_travel_indices = [0]
+        self.count_print_indices = count_print_indices = [0]
+        self.count_print_vertices = count_print_vertices = [0]
 
-        count_travel_indices = [0]
-        count_print_indices = [0]
-        count_print_vertices = [0]
-        travel_vertex_list = []
-        vertex_list = []
-        index_list = []
-        color_list = []
+        # Some trivial computations, but that's mostly for documentation :)
+        # Not like 10 multiplications are going to cost much time vs what's
+        # about to happen :)
+
+        # Max number of values which can be generated per gline
+        # to store coordinates/colors/normals.
+        # Nicely enough we have 3 per kind of thing for all kinds.
+        coordspervertex = 3
+        verticesperline = 8
+        coordsperline = coordspervertex * verticesperline
+        coords_count = lambda nlines: nlines * coordsperline
+
+        travelverticesperline = 2
+        travelcoordsperline = coordspervertex * travelverticesperline
+        travel_coords_count = lambda nlines: nlines * travelcoordsperline
+
+        trianglesperface = 2
+        facesperbox = 4
+        trianglesperbox = trianglesperface * facesperbox
+        verticespertriangle = 3
+        indicesperbox = verticespertriangle * trianglesperbox
+        boxperline = 2
+        indicesperline = indicesperbox * boxperline
+        indices_count = lambda nlines: nlines * indicesperline
+
+        nlines = len(model_data)
+        ntravelcoords = travel_coords_count(nlines)
+        ncoords = coords_count(nlines)
+        nindices = indices_count(nlines)
+        travel_vertices = self.travels = numpy.zeros(ntravelcoords, dtype = GLfloat)
+        travel_vertex_k = 0
+        vertices = self.vertices = numpy.zeros(ncoords, dtype = GLfloat)
+        vertex_k = 0
+        colors = self.colors = numpy.zeros(ncoords, dtype = GLfloat)
+        color_k = 0
+        normals = self.normals = numpy.zeros(ncoords, dtype = GLfloat)
+        normal_k = 0
+        indices = self.indices = numpy.zeros(nindices, dtype = GLuint)
+        index_k = 0
+        self.layer_idxs_map = {}
         self.layer_stops = [0]
-        num_layers = len(model_data.all_layers)
 
         prev_is_extruding = False
-        prev_move_x = None
-        prev_move_y = None
+        prev_move_normal_x = None
+        prev_move_normal_y = None
+        prev_move_angle = None
 
         prev_pos = (0, 0, 0)
-        for layer_idx, layer in enumerate(model_data.all_layers):
-            has_movement = False
-            for gline_idx, gline in enumerate(layer):
-                if not gline.is_move:
-                    continue
-                if gline.x is None and gline.y is None and gline.z is None:
-                    continue
-                has_movement = True
-                current_pos = (gline.current_x, gline.current_y, gline.current_z)
-                if not gline.extruding:
-                    travel_vertex_list.extend(prev_pos)
-                    travel_vertex_list.extend(current_pos)
-                    prev_is_extruding = False
-                else:
-                    gline_color = self.movement_color(gline)
+        layer_idx = 0
 
-                    next_move = get_next_move(model_data, layer_idx, gline_idx)
-                    next_is_extruding = (next_move.extruding
-                                         if next_move is not None else False)
-
-                    delta_x = current_pos[0] - prev_pos[0]
-                    delta_y = current_pos[1] - prev_pos[1]
-                    norm = delta_x * delta_x + delta_y * delta_y
-                    if norm == 0:  # Don't draw anything if this move is Z+E only
-                        continue
-                    norm = math.sqrt(norm)
-                    move_normal_x = - delta_y / norm
-                    move_normal_y = delta_x / norm
-
-                    path_halfwidth = 0.2
-                    path_halfheight = 0.12
-
-                    new_indices = []
-                    new_vertices = []
-                    if prev_is_extruding:
-                        # Store previous vertices indices
-                        prev_id = len(vertex_list) / 3 - 4
-                        # Average directions
-                        avg_move_x = delta_x + prev_move_x
-                        avg_move_y = delta_y + prev_move_y
-                        norm = avg_move_x * avg_move_x + avg_move_y * avg_move_y
-                        # FIXME: handle norm == 0 or when paths go back (add an extra cap ?)
-                        if norm == 0:
-                            avg_move_normal_x = move_normal_x
-                            avg_move_normal_y = move_normal_y
-                        else:
-                            norm = math.sqrt(norm)
-                            avg_move_normal_x = - avg_move_y / norm
-                            avg_move_normal_y = avg_move_x / norm
-                        # Compute vertices
-                        p1x = prev_pos[0] - path_halfwidth * avg_move_normal_x
-                        p2x = prev_pos[0] + path_halfwidth * avg_move_normal_x
-                        p1y = prev_pos[1] - path_halfwidth * avg_move_normal_y
-                        p2y = prev_pos[1] + path_halfwidth * avg_move_normal_y
-                        new_vertices.extend((p1x, p1y, prev_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] + path_halfheight))
-                        first = len(vertex_list) / 3
-                        # Link to previous
-                        new_indices += triangulate_box(prev_id, prev_id + 1,
-                                                       prev_id + 2, prev_id + 3,
-                                                       first, first + 1,
-                                                       first + 2, first + 3)
-                    else:
-                        # Compute vertices normal to the current move and cap it
-                        p1x = prev_pos[0] - path_halfwidth * move_normal_x
-                        p2x = prev_pos[0] + path_halfwidth * move_normal_x
-                        p1y = prev_pos[1] - path_halfwidth * move_normal_y
-                        p2y = prev_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.extend((p1x, p1y, prev_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, prev_pos[2] + path_halfheight))
-                        first = len(vertex_list) / 3
-                        new_indices = triangulate_rectangle(first, first + 1,
-                                                            first + 2, first + 3)
-
-                    if not next_is_extruding:
-                        # Compute caps and link everything
-                        p1x = current_pos[0] - path_halfwidth * move_normal_x
-                        p2x = current_pos[0] + path_halfwidth * move_normal_x
-                        p1y = current_pos[1] - path_halfwidth * move_normal_y
-                        p2y = current_pos[1] + path_halfwidth * move_normal_y
-                        new_vertices.extend((p1x, p1y, current_pos[2] + path_halfheight))
-                        new_vertices.extend((p1x, p1y, current_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, current_pos[2] - path_halfheight))
-                        new_vertices.extend((p2x, p2y, current_pos[2] + path_halfheight))
-                        end_first = len(vertex_list) / 3 + len(new_vertices) / 3 - 4
-                        new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
-                                                             end_first + 1, end_first)
-                        new_indices += triangulate_box(first, first + 1,
-                                                       first + 2, first + 3,
-                                                       end_first, end_first + 1,
-                                                       end_first + 2, end_first + 3)
-
-                    index_list += new_indices
-                    vertex_list += new_vertices
-                    color_list += list(gline_color) * (len(new_vertices) / 3)
-
-                    prev_is_extruding = True
-                    prev_move_x = delta_x
-                    prev_move_y = delta_y
-
-                prev_pos = current_pos
-                count_travel_indices.append(len(travel_vertex_list) / 3)
-                count_print_indices.append(len(index_list))
-                count_print_vertices.append(len(vertex_list) / 3)
-                gline.gcview_end_vertex = len(count_print_indices) - 1
-
-            if has_movement:
-                self.layer_stops.append(len(count_print_indices) - 1)
-
-            if callback:
-                callback(layer_idx + 1, num_layers)
-
-        self.count_travel_indices = count_travel_indices
-        self.count_print_indices = count_print_indices
-        self.count_print_vertices = count_print_vertices
-        self.travels = numpy.fromiter(travel_vertex_list, dtype = GLfloat,
-                                      count = len(travel_vertex_list))
-        self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
-                                       count = len(vertex_list))
-        self.indices = numpy.fromiter(index_list, dtype = GLuint,
-                                      count = len(index_list))
-        self.colors = numpy.fromiter(color_list, dtype = GLfloat,
-                                     count = len(color_list))
-
-        self.max_layers = len(self.layer_stops) - 1
-        self.num_layers_to_draw = self.max_layers + 1
         self.printed_until = 0
         self.only_current = False
-        self.initialized = False
-        self.loaded = True
+
+        twopi = 2 * math.pi
+
+        processed_lines = 0
+
+        while layer_idx < len(model_data.all_layers):
+            with self.lock:
+                nlines = len(model_data)
+                remaining_lines = nlines - processed_lines
+                # Only reallocate memory which might be needed, not memory
+                # for everything
+                ntravelcoords = coords_count(remaining_lines) + travel_vertex_k
+                ncoords = coords_count(remaining_lines) + vertex_k
+                nindices = indices_count(remaining_lines) + index_k
+                if ncoords > vertices.size:
+                    self.travels.resize(ntravelcoords, refcheck = False)
+                    self.vertices.resize(ncoords, refcheck = False)
+                    self.colors.resize(ncoords, refcheck = False)
+                    self.normals.resize(ncoords, refcheck = False)
+                    self.indices.resize(nindices, refcheck = False)
+                layer = model_data.all_layers[layer_idx]
+                has_movement = False
+                for gline_idx, gline in enumerate(layer):
+                    if not gline.is_move:
+                        continue
+                    if gline.x is None and gline.y is None and gline.z is None:
+                        continue
+                    has_movement = True
+                    current_pos = (gline.current_x, gline.current_y, gline.current_z)
+                    if not gline.extruding:
+                        travel_vertices[travel_vertex_k] = prev_pos[0]
+                        travel_vertices[travel_vertex_k + 1] = prev_pos[1]
+                        travel_vertices[travel_vertex_k + 2] = prev_pos[2]
+                        travel_vertices[travel_vertex_k + 3] = current_pos[0]
+                        travel_vertices[travel_vertex_k + 4] = current_pos[1]
+                        travel_vertices[travel_vertex_k + 5] = current_pos[2]
+                        travel_vertex_k += 6
+                        prev_is_extruding = False
+                    else:
+                        gline_color = self.movement_color(gline)
+
+                        next_move = get_next_move(model_data, layer_idx, gline_idx)
+                        next_is_extruding = (next_move.extruding
+                                             if next_move is not None else False)
+
+                        delta_x = current_pos[0] - prev_pos[0]
+                        delta_y = current_pos[1] - prev_pos[1]
+                        norm = delta_x * delta_x + delta_y * delta_y
+                        if norm == 0:  # Don't draw anything if this move is Z+E only
+                            continue
+                        norm = math.sqrt(norm)
+                        move_normal_x = - delta_y / norm
+                        move_normal_y = delta_x / norm
+                        move_angle = math.atan2(delta_y, delta_x)
+
+                        # FIXME: compute these dynamically
+                        path_halfwidth = self.path_halfwidth * 1.2
+                        path_halfheight = self.path_halfheight * 1.2
+
+                        new_indices = []
+                        new_vertices = []
+                        new_normals = []
+                        if prev_is_extruding:
+                            # Store previous vertices indices
+                            prev_id = vertex_k / 3 - 4
+                            avg_move_normal_x = (prev_move_normal_x + move_normal_x) / 2
+                            avg_move_normal_y = (prev_move_normal_y + move_normal_y) / 2
+                            norm = avg_move_normal_x * avg_move_normal_x + avg_move_normal_y * avg_move_normal_y
+                            if norm == 0:
+                                avg_move_normal_x = move_normal_x
+                                avg_move_normal_y = move_normal_y
+                            else:
+                                norm = math.sqrt(norm)
+                                avg_move_normal_x /= norm
+                                avg_move_normal_y /= norm
+                            delta_angle = move_angle - prev_move_angle
+                            delta_angle = (delta_angle + twopi) % twopi
+                            fact = abs(math.cos(delta_angle / 2))
+                            # If move is turning too much, avoid creating a big peak
+                            # by adding an intermediate box
+                            if fact < 0.5:
+                                # FIXME: It looks like there's some heavy code duplication here...
+                                hw = path_halfwidth
+                                p1x = prev_pos[0] - hw * prev_move_normal_x
+                                p2x = prev_pos[0] + hw * prev_move_normal_x
+                                p1y = prev_pos[1] - hw * prev_move_normal_y
+                                p2y = prev_pos[1] + hw * prev_move_normal_y
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                                new_vertices.extend((p1x, p1y, prev_pos[2]))
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                                new_vertices.extend((p2x, p2y, prev_pos[2]))
+                                new_normals.extend((0, 0, 1))
+                                new_normals.extend((-prev_move_normal_x, -prev_move_normal_y, 0))
+                                new_normals.extend((0, 0, -1))
+                                new_normals.extend((prev_move_normal_x, prev_move_normal_y, 0))
+                                first = vertex_k / 3
+                                # Link to previous
+                                new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                               prev_id + 2, prev_id + 3,
+                                                               first, first + 1,
+                                                               first + 2, first + 3)
+                                p1x = prev_pos[0] - hw * move_normal_x
+                                p2x = prev_pos[0] + hw * move_normal_x
+                                p1y = prev_pos[1] - hw * move_normal_y
+                                p2y = prev_pos[1] + hw * move_normal_y
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                                new_vertices.extend((p1x, p1y, prev_pos[2]))
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                                new_vertices.extend((p2x, p2y, prev_pos[2]))
+                                new_normals.extend((0, 0, 1))
+                                new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                                new_normals.extend((0, 0, -1))
+                                new_normals.extend((move_normal_x, move_normal_y, 0))
+                                prev_id += 4
+                                first += 4
+                                # Link to previous
+                                new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                               prev_id + 2, prev_id + 3,
+                                                               first, first + 1,
+                                                               first + 2, first + 3)
+                            else:
+                                hw = path_halfwidth / fact
+                                # Compute vertices
+                                p1x = prev_pos[0] - hw * avg_move_normal_x
+                                p2x = prev_pos[0] + hw * avg_move_normal_x
+                                p1y = prev_pos[1] - hw * avg_move_normal_y
+                                p2y = prev_pos[1] + hw * avg_move_normal_y
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                                new_vertices.extend((p1x, p1y, prev_pos[2]))
+                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                                new_vertices.extend((p2x, p2y, prev_pos[2]))
+                                new_normals.extend((0, 0, 1))
+                                new_normals.extend((-avg_move_normal_x, -avg_move_normal_y, 0))
+                                new_normals.extend((0, 0, -1))
+                                new_normals.extend((avg_move_normal_x, avg_move_normal_y, 0))
+                                first = vertex_k / 3
+                                # Link to previous
+                                new_indices += triangulate_box(prev_id, prev_id + 1,
+                                                               prev_id + 2, prev_id + 3,
+                                                               first, first + 1,
+                                                               first + 2, first + 3)
+                        else:
+                            # Compute vertices normal to the current move and cap it
+                            p1x = prev_pos[0] - path_halfwidth * move_normal_x
+                            p2x = prev_pos[0] + path_halfwidth * move_normal_x
+                            p1y = prev_pos[1] - path_halfwidth * move_normal_y
+                            p2y = prev_pos[1] + path_halfwidth * move_normal_y
+                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
+                            new_vertices.extend((p1x, p1y, prev_pos[2]))
+                            new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
+                            new_vertices.extend((p2x, p2y, prev_pos[2]))
+                            new_normals.extend((0, 0, 1))
+                            new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                            new_normals.extend((0, 0, -1))
+                            new_normals.extend((move_normal_x, move_normal_y, 0))
+                            first = vertex_k / 3
+                            new_indices = triangulate_rectangle(first, first + 1,
+                                                                first + 2, first + 3)
+
+                        if not next_is_extruding:
+                            # Compute caps and link everything
+                            p1x = current_pos[0] - path_halfwidth * move_normal_x
+                            p2x = current_pos[0] + path_halfwidth * move_normal_x
+                            p1y = current_pos[1] - path_halfwidth * move_normal_y
+                            p2y = current_pos[1] + path_halfwidth * move_normal_y
+                            new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] + path_halfheight))
+                            new_vertices.extend((p1x, p1y, current_pos[2]))
+                            new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] - path_halfheight))
+                            new_vertices.extend((p2x, p2y, current_pos[2]))
+                            new_normals.extend((0, 0, 1))
+                            new_normals.extend((-move_normal_x, -move_normal_y, 0))
+                            new_normals.extend((0, 0, -1))
+                            new_normals.extend((move_normal_x, move_normal_y, 0))
+                            end_first = vertex_k / 3 + len(new_vertices) / 3 - 4
+                            new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
+                                                                 end_first + 1, end_first)
+                            new_indices += triangulate_box(first, first + 1,
+                                                           first + 2, first + 3,
+                                                           end_first, end_first + 1,
+                                                           end_first + 2, end_first + 3)
+
+                        for new_i, item in enumerate(new_indices):
+                            indices[index_k + new_i] = item
+                        index_k += len(new_indices)
+                        for new_i, item in enumerate(new_vertices):
+                            vertices[vertex_k + new_i] = item
+                        vertex_k += len(new_vertices)
+                        for new_i, item in enumerate(new_normals):
+                            normals[normal_k + new_i] = item
+                        normal_k += len(new_normals)
+                        new_colors = list(gline_color)[:-1] * (len(new_vertices) / 3)
+                        for new_i, item in enumerate(new_colors):
+                            colors[color_k + new_i] = item
+                        color_k += len(new_colors)
+
+                        prev_is_extruding = True
+                        prev_move_normal_x = move_normal_x
+                        prev_move_normal_y = move_normal_y
+                        prev_move_angle = move_angle
+
+                    prev_pos = current_pos
+                    count_travel_indices.append(travel_vertex_k / 3)
+                    count_print_indices.append(index_k)
+                    count_print_vertices.append(vertex_k / 3)
+                    gline.gcview_end_vertex = len(count_print_indices) - 1
+
+                if has_movement:
+                    self.layer_stops.append(len(count_print_indices) - 1)
+                    self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
+                    self.max_layers = len(self.layer_stops) - 1
+                    self.num_layers_to_draw = self.max_layers + 1
+                    self.initialized = False
+                    self.loaded = True
+
+            processed_lines += len(layer)
+
+            if callback:
+                callback(layer_idx + 1)
+
+            yield layer_idx
+            layer_idx += 1
+
+        with self.lock:
+            self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
+                         (model_data.ymin, model_data.ymax, model_data.depth),
+                         (model_data.zmin, model_data.zmax, model_data.height))
+
+            self.travels.resize(travel_vertex_k, refcheck = False)
+            self.vertices.resize(vertex_k, refcheck = False)
+            self.colors.resize(color_k, refcheck = False)
+            self.normals.resize(normal_k, refcheck = False)
+            self.indices.resize(index_k, refcheck = False)
+
+            self.max_layers = len(self.layer_stops) - 1
+            self.num_layers_to_draw = self.max_layers + 1
+            self.loaded = True
+            self.initialized = False
 
         t_end = time.time()
 
         logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
         logging.debug(_('Vertex count: %d') % ((len(self.vertices) + len(self.travels)) / 3))
+        yield None
 
     def copy(self):
         copy = GcodeModel()
-        for var in ["vertices", "colors", "travels", "indices",
+        for var in ["vertices", "colors", "travels", "indices", "normals",
                     "max_layers", "num_layers_to_draw", "printed_until",
-                    "layer_stops", "dims", "only_current"]:
+                    "layer_stops", "dims", "only_current",
+                    "layer_idxs_map", "count_travel_indices",
+                    "count_print_indices", "count_print_vertices",
+                    "path_halfwidth", "path_halfheight",
+                    "gcode"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False
         return copy
-
-    def movement_color(self, move):
-        """
-        Return the color to use for particular type of movement.
-        """
-        if move.extruding:
-            if move.current_tool == 0:
-                return self.color_tool0
-            else:
-                return self.color_tool1
-
-        return self.color_travel
 
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
-        self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
-                                      target = GL_ELEMENT_ARRAY_BUFFER)
-        self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
-        self.initialized = True
+        with self.lock:
+            self.layers_loaded = self.max_layers
+            self.initialized = True
+            if self.buffers_created:
+                self.travel_buffer.delete()
+                self.index_buffer.delete()
+                self.vertex_buffer.delete()
+                self.vertex_color_buffer.delete()
+                self.vertex_normal_buffer.delete()
+            self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
+            self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
+                                          target = GL_ELEMENT_ARRAY_BUFFER)
+            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
+            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
+            self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
+            self.buffers_created = True
 
     def display(self, mode_2d=False):
-        glPushMatrix()
-        glTranslatef(self.offset_x, self.offset_y, 0)
-        glEnableClientState(GL_VERTEX_ARRAY)
+        with self.lock:
+            glPushMatrix()
+            glTranslatef(self.offset_x, self.offset_y, 0)
+            glEnableClientState(GL_VERTEX_ARRAY)
 
-        has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
-        self._display_travels(has_vbo)
+            has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
+            if self.display_travels:
+                self._display_travels(has_vbo)
 
-        glEnableClientState(GL_COLOR_ARRAY)
+            glEnable(GL_LIGHTING)
+            glEnableClientState(GL_NORMAL_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
+            glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
+            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
 
-        self._display_movements(has_vbo)
+            glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+            self._display_movements(has_vbo)
 
-        glDisableClientState(GL_COLOR_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY)
+            glDisable(GL_LIGHTING)
 
-        glPopMatrix()
+            glDisableClientState(GL_COLOR_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glDisableClientState(GL_NORMAL_ARRAY)
+
+            glPopMatrix()
 
     def _display_travels(self, has_vbo):
         self.travel_buffer.bind()
-        if has_vbo:
-            glVertexPointer(3, GL_FLOAT, 0, None)
-        else:
-            glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
+        glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
 
+        # Prevent race condition by using the number of currently loaded layers
+        max_layers = self.layers_loaded
         # TODO: show current layer travels in a different color
-        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        end = self.layer_stops[min(self.num_layers_to_draw, max_layers)]
         end_index = self.count_travel_indices[end]
         glColor4f(*self.color_travel)
         if self.only_current:
-            if self.num_layers_to_draw < self.max_layers:
+            if self.num_layers_to_draw < max_layers:
                 end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
                 start_index = self.count_travel_indices[end_prev_layer + 1]
                 glDrawArrays(GL_LINES, start_index, end_index - start_index + 1)
@@ -536,6 +734,9 @@ class GcodeModel(Model):
         self.travel_buffer.unbind()
 
     def _draw_elements(self, start, end, draw_type = GL_TRIANGLES):
+        # Don't attempt printing empty layer
+        if self.count_print_indices[end] == self.count_print_indices[start - 1]:
+            return
         glDrawRangeElements(draw_type,
                             self.count_print_vertices[start - 1],
                             self.count_print_vertices[end] - 1,
@@ -545,30 +746,30 @@ class GcodeModel(Model):
 
     def _display_movements(self, has_vbo):
         self.vertex_buffer.bind()
-        if has_vbo:
-            glVertexPointer(3, GL_FLOAT, 0, None)
-        else:
-            glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
+        glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
 
         self.vertex_color_buffer.bind()
-        if has_vbo:
-            glColorPointer(4, GL_FLOAT, 0, None)
-        else:
-            glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
+        glColorPointer(3, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
+
+        self.vertex_normal_buffer.bind()
+        glNormalPointer(GL_FLOAT, 0, self.vertex_normal_buffer.ptr)
 
         self.index_buffer.bind()
 
+        # Prevent race condition by using the number of currently loaded layers
+        max_layers = self.layers_loaded
+
         start = 1
-        layer_selected = self.num_layers_to_draw <= self.max_layers
+        layer_selected = self.num_layers_to_draw <= max_layers
         if layer_selected:
             end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
         else:
             end_prev_layer = 0
-        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        end = self.layer_stops[min(self.num_layers_to_draw, max_layers)]
 
         glDisableClientState(GL_COLOR_ARRAY)
 
-        glColor4f(*self.color_printed)
+        glColor3f(*self.color_printed[:-1])
 
         # Draw printed stuff until end or end_prev_layer
         cur_end = min(self.printed_until, end)
@@ -591,23 +792,15 @@ class GcodeModel(Model):
         if layer_selected:
             glDisableClientState(GL_COLOR_ARRAY)
 
-            # Backup & increase line width
-            orig_linewidth = (GLfloat)()
-            glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
-            glLineWidth(2.0)
-
-            glColor4f(*self.color_current_printed)
+            glColor3f(*self.color_current_printed[:-1])
 
             if cur_end > end_prev_layer:
                 self._draw_elements(end_prev_layer + 1, cur_end)
 
-            glColor4f(*self.color_current)
+            glColor3f(*self.color_current[:-1])
 
             if end > cur_end:
                 self._draw_elements(cur_end + 1, end)
-
-            # Restore line width
-            glLineWidth(orig_linewidth)
 
             glEnableClientState(GL_COLOR_ARRAY)
 
@@ -618,6 +811,7 @@ class GcodeModel(Model):
 
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
+        self.vertex_normal_buffer.unbind()
 
 class GcodeModelLight(Model):
     """
@@ -626,110 +820,143 @@ class GcodeModelLight(Model):
 
     color_travel = (0.6, 0.6, 0.6, 0.6)
     color_tool0 = (1.0, 0.0, 0.0, 0.6)
-    color_tool1 = (0.31, 0.05, 0.9, 0.6)
+    color_tool1 = (0.67, 0.05, 0.9, 0.6)
+    color_tool2 = (1.0, 0.8, 0., 0.6)
+    color_tool3 = (1.0, 0., 0.62, 0.6)
+    color_tool4 = (0., 1.0, 0.58, 0.6)
     color_printed = (0.2, 0.75, 0, 0.6)
     color_current = (0, 0.9, 1.0, 0.8)
     color_current_printed = (0.1, 0.4, 0, 0.8)
 
+    buffers_created = False
     use_vbos = True
     loaded = False
 
+    gcode = None
+
     def load_data(self, model_data, callback=None):
         t_start = time.time()
+        self.gcode = model_data
 
-        self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
-                     (model_data.ymin, model_data.ymax, model_data.depth),
-                     (model_data.zmin, model_data.zmax, model_data.height))
-
-        vertex_list = []
-        color_list = []
+        self.layer_idxs_map = {}
         self.layer_stops = [0]
-        num_layers = len(model_data.all_layers)
 
         prev_pos = (0, 0, 0)
-        for layer_idx, layer in enumerate(model_data.all_layers):
-            has_movement = False
-            for gline in layer:
-                if not gline.is_move:
-                    continue
-                if gline.x is None and gline.y is None and gline.z is None:
-                    continue
-                has_movement = True
-                vertex_list.extend(prev_pos)
-                current_pos = (gline.current_x, gline.current_y, gline.current_z)
-                vertex_list.extend(current_pos)
-
-                vertex_color = self.movement_color(gline)
-                color_list.extend(vertex_color + vertex_color)
-
-                prev_pos = current_pos
-                gline.gcview_end_vertex = len(vertex_list) / 3
-
-            if has_movement:
-                self.layer_stops.append(len(vertex_list) / 3)
-
-            if callback:
-                callback(layer_idx + 1, num_layers)
-
-        self.vertices = numpy.fromiter(vertex_list, dtype = GLfloat,
-                                       count = len(vertex_list))
-        self.colors = numpy.fromiter(color_list, dtype = GLfloat,
-                                     count = len(color_list))
-
-        self.max_layers = len(self.layer_stops) - 1
-        self.num_layers_to_draw = self.max_layers + 1
+        layer_idx = 0
+        nlines = len(model_data)
+        vertices = self.vertices = numpy.zeros(nlines * 6, dtype = GLfloat)
+        vertex_k = 0
+        colors = self.colors = numpy.zeros(nlines * 8, dtype = GLfloat)
+        color_k = 0
         self.printed_until = -1
         self.only_current = False
-        self.initialized = False
-        self.loaded = True
+        while layer_idx < len(model_data.all_layers):
+            with self.lock:
+                nlines = len(model_data)
+                if nlines * 6 != vertices.size:
+                    self.vertices.resize(nlines * 6, refcheck = False)
+                    self.colors.resize(nlines * 8, refcheck = False)
+                layer = model_data.all_layers[layer_idx]
+                has_movement = False
+                for gline in layer:
+                    if not gline.is_move:
+                        continue
+                    if gline.x is None and gline.y is None and gline.z is None:
+                        continue
+                    has_movement = True
+                    vertices[vertex_k] = prev_pos[0]
+                    vertices[vertex_k + 1] = prev_pos[1]
+                    vertices[vertex_k + 2] = prev_pos[2]
+                    current_pos = (gline.current_x, gline.current_y, gline.current_z)
+                    vertices[vertex_k + 3] = current_pos[0]
+                    vertices[vertex_k + 4] = current_pos[1]
+                    vertices[vertex_k + 5] = current_pos[2]
+                    vertex_k += 6
+
+                    vertex_color = self.movement_color(gline)
+                    colors[color_k] = vertex_color[0]
+                    colors[color_k + 1] = vertex_color[1]
+                    colors[color_k + 2] = vertex_color[2]
+                    colors[color_k + 3] = vertex_color[3]
+                    colors[color_k + 4] = vertex_color[0]
+                    colors[color_k + 5] = vertex_color[1]
+                    colors[color_k + 6] = vertex_color[2]
+                    colors[color_k + 7] = vertex_color[3]
+                    color_k += 8
+
+                    prev_pos = current_pos
+                    gline.gcview_end_vertex = vertex_k / 3
+
+                if has_movement:
+                    self.layer_stops.append(vertex_k / 3)
+                    self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
+                    self.max_layers = len(self.layer_stops) - 1
+                    self.num_layers_to_draw = self.max_layers + 1
+                    self.initialized = False
+                    self.loaded = True
+
+            if callback:
+                callback(layer_idx + 1)
+
+            yield layer_idx
+            layer_idx += 1
+
+        with self.lock:
+            self.dims = ((model_data.xmin, model_data.xmax, model_data.width),
+                         (model_data.ymin, model_data.ymax, model_data.depth),
+                         (model_data.zmin, model_data.zmax, model_data.height))
+
+            self.vertices.resize(vertex_k, refcheck = False)
+            self.colors.resize(color_k, refcheck = False)
+            self.max_layers = len(self.layer_stops) - 1
+            self.num_layers_to_draw = self.max_layers + 1
+            self.initialized = False
+            self.loaded = True
 
         t_end = time.time()
 
-        logging.log(logging.INFO, _('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
-        logging.log(logging.INFO, _('Vertex count: %d') % (len(self.vertices) / 3))
+        logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
+        logging.debug(_('Vertex count: %d') % (len(self.vertices) / 3))
+        yield None
 
     def copy(self):
         copy = GcodeModelLight()
         for var in ["vertices", "colors", "max_layers",
                     "num_layers_to_draw", "printed_until",
-                    "layer_stops", "dims", "only_current"]:
+                    "layer_stops", "dims", "only_current",
+                    "layer_idxs_map", "gcode"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
         copy.initialized = False
         return copy
-
-    def movement_color(self, move):
-        """
-        Return the color to use for particular type of movement.
-        """
-        if move.extruding:
-            if move.current_tool == 0:
-                return self.color_tool0
-            else:
-                return self.color_tool1
-
-        return self.color_travel
 
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-        self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
-        self.initialized = True
+        with self.lock:
+            self.layers_loaded = self.max_layers
+            self.initialized = True
+            if self.buffers_created:
+                self.vertex_buffer.delete()
+                self.vertex_color_buffer.delete()
+            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
+            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
+            self.buffers_created = True
 
     def display(self, mode_2d=False):
-        glPushMatrix()
-        glTranslatef(self.offset_x, self.offset_y, 0)
-        glEnableClientState(GL_VERTEX_ARRAY)
-        glEnableClientState(GL_COLOR_ARRAY)
+        with self.lock:
+            glPushMatrix()
+            glTranslatef(self.offset_x, self.offset_y, 0)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
 
-        self._display_movements(mode_2d)
+            self._display_movements(mode_2d)
 
-        glDisableClientState(GL_COLOR_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY)
-        glPopMatrix()
+            glDisableClientState(GL_COLOR_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glPopMatrix()
 
     def _display_movements(self, mode_2d=False):
         self.vertex_buffer.bind()
@@ -745,12 +972,15 @@ class GcodeModelLight(Model):
         else:
             glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
 
+        # Prevent race condition by using the number of currently loaded layers
+        max_layers = self.layers_loaded
+
         start = 0
-        if self.num_layers_to_draw <= self.max_layers:
+        if self.num_layers_to_draw <= max_layers:
             end_prev_layer = self.layer_stops[self.num_layers_to_draw - 1]
         else:
             end_prev_layer = -1
-        end = self.layer_stops[min(self.num_layers_to_draw, self.max_layers)]
+        end = self.layer_stops[min(self.num_layers_to_draw, max_layers)]
 
         glDisableClientState(GL_COLOR_ARRAY)
 

@@ -56,7 +56,7 @@ if __name__ == '__main__':
     p.loud = loud
     time.sleep(2)
     gcode = [i.strip() for i in open(filename)]
-    gcode = gcoder.GCode(gcode)
+    gcode = gcoder.LightGCode(gcode)
     p.startprint(gcode)
 
     try:
@@ -67,9 +67,8 @@ if __name__ == '__main__':
         while p.printing:
             time.sleep(1)
             if statusreport:
-                sys.stdout.write("Progress: %02.1f%%\r"
-                                 % (100 * float(p.queueindex)
-                                    / len(p.mainqueue),))
+                progress = 100 * float(p.queueindex) / len(p.mainqueue)
+                sys.stdout.write("Progress: %02.1f%%\r" % progress)
                 sys.stdout.flush()
         p.disconnect()
         sys.exit(0)

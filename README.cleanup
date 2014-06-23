@@ -28,7 +28,7 @@ Obviously this is not a perfect solution, it WILL break the code. Juste check th
 Flake8 checking:
 Flake8 can be used to check the coding style of the project.
 The current source code (as of July 23rd 2013) has been checked using the following command:
-    flake8 . --statistics --count --ignore=E251,E701,E302,E501 --exclude=.svn,CVS,.bzr,.hg,.git,__pycache__,prontserve.py,./printrun/server,projectlayer.py,./printrun/cairosvg
+    flake8 . --statistics --count --ignore=E251,E701,E302,E501 --exclude=.svn,CVS,.bzr,.hg,.git,__pycache__,./printrun/cairosvg
 This call ignores 4 kind of errors (E501: line being greater than 80 chars,
 E701: multiple statements on one line (usually this is if ...: ...), E302:
 wrong number of blank lines between functions, E251: unexpected spaces around

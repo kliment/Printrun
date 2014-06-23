@@ -18,14 +18,25 @@
 import wx
 import time
 
+import numpy
 import pyglet
 pyglet.options['debug_gl'] = True
 
-from pyglet.gl import *
+from pyglet.gl import GL_AMBIENT_AND_DIFFUSE, glBegin, glClearColor, \
+    glColor3f, GL_CULL_FACE, GL_DEPTH_TEST, GL_DIFFUSE, GL_EMISSION, \
+    glEnable, glEnd, GL_FILL, GLfloat, GL_FRONT_AND_BACK, GL_LIGHT0, \
+    GL_LIGHT1, glLightfv, GL_LIGHTING, GL_LINE, glMaterialf, glMaterialfv, \
+    glMultMatrixd, glNormal3f, glPolygonMode, glPopMatrix, GL_POSITION, \
+    glPushMatrix, glRotatef, glScalef, glShadeModel, GL_SHININESS, \
+    GL_SMOOTH, GL_SPECULAR, glTranslatef, GL_TRIANGLES, glVertex3f, \
+    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble, glClearDepth, glDepthFunc, \
+    GL_LEQUAL, GL_BLEND, glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, \
+    GL_LINE_LOOP, glGetFloatv, GL_LINE_WIDTH, glLineWidth, glDisable, \
+    GL_LINE_SMOOTH
 from pyglet import gl
 
 from .gl.panel import wxGLPanel
-from .gl.trackball import trackball, mulquat, build_rotmatrix
+from .gl.trackball import build_rotmatrix
 from .gl.libtatlin import actors
 
 def vec(*args):
@@ -44,7 +55,7 @@ class stlview(object):
 
         # Create a list of triangle indices.
         indices = range(3 * len(facets))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
-        #print indices[:10]
+        # print indices[:10]
         self.vertex_list = batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -57,22 +68,26 @@ class stlview(object):
 
 class StlViewPanel(wxGLPanel):
 
+    do_lights = False
+
     def __init__(self, parent, size, id = wx.ID_ANY,
-                 build_dimensions = None, circular = False):
-        super(StlViewPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0)
+                 build_dimensions = None, circular = False,
+                 antialias_samples = 0):
+        super(StlViewPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0,
+                                           antialias_samples = antialias_samples)
         self.batches = []
         self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
-        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
-        self.initialized = 1
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
+        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
+        self.initialized = True
         self.parent = parent
         self.initpos = None
         if build_dimensions:
             self.build_dimensions = build_dimensions
         else:
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
-        self.platform = actors.Platform(self.build_dimensions, light = True,
+        self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
@@ -83,25 +98,29 @@ class StlViewPanel(wxGLPanel):
         self.mview_initialized = False
         super(StlViewPanel, self).OnReshape()
 
-    #==========================================================================
+    # ==========================================================================
     # GLFrame OpenGL Event Handlers
-    #==========================================================================
+    # ==========================================================================
     def OnInitGL(self, call_reshape = True):
         '''Initialize OpenGL for use in the window.'''
         if self.GLinitialized:
             return
         self.GLinitialized = True
-        #create a pyglet context for this panel
+        # create a pyglet context for this panel
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
-        #normal gl init
+        # normal gl init
         glClearColor(0, 0, 0, 1)
         glColor3f(1, 0, 0)
         glEnable(GL_DEPTH_TEST)
+        glClearDepth(1.0)
+        glDepthFunc(GL_LEQUAL)
         glEnable(GL_CULL_FACE)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         # Uncomment this line for a wireframe view
-        #glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         # Simple light setup.  On Windows GL_LIGHT0 is enabled by default,
         # but this is not the case on Linux or Mac, so remember to always
@@ -116,6 +135,7 @@ class StlViewPanel(wxGLPanel):
         glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 0, .5, 0))
         glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, vec(1, 1, 1, 1))
+        glShadeModel(GL_SMOOTH)
 
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(1, 1, 1, 1))
@@ -131,19 +151,14 @@ class StlViewPanel(wxGLPanel):
                 self.parent.loadcb()
             self.parent.filenames = None
 
-    def double(self, event):
-        p = event.GetPositionTuple()
-        sz = self.GetClientSize()
-        v = map(lambda m, w, b: b * m / w, p, sz, self.build_dimensions[0:2])
-        v[1] = self.build_dimensions[1] - v[1]
-        v += [300]
-        print "Double-click at " + str(v) + " in "
-        print self
+    def double_click(self, event):
+        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
+            self.parent.clickcb(event)
 
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
-        self.initialized = 0
+        self.initialized = False
 
     def move(self, event):
         """react to mouse actions:
@@ -174,7 +189,7 @@ class StlViewPanel(wxGLPanel):
         delta = event.GetWheelRotation()
         factor = 1.05
         x, y = event.GetPositionTuple()
-        x, y, _ = self.mouse_to_3d(x, y)
+        x, y, _ = self.mouse_to_3d(x, y, local_transform = True)
         if delta > 0:
             self.zoom(factor, (x, y))
         else:
@@ -197,22 +212,22 @@ class StlViewPanel(wxGLPanel):
         if event.ControlDown():
             step = 1
             angle = 1
-        #h
+        # h
         if keycode == 72:
             self.parent.move_shape((-step, 0))
-        #l
+        # l
         if keycode == 76:
             self.parent.move_shape((step, 0))
-        #j
+        # j
         if keycode == 75:
             self.parent.move_shape((0, step))
-        #k
+        # k
         if keycode == 74:
             self.parent.move_shape((0, -step))
-        #[
+        # [
         if keycode == 91:
             self.parent.rotate_shape(-angle)
-        #]
+        # ]
         if keycode == 93:
             self.parent.rotate_shape(angle)
         event.Skip()
@@ -228,9 +243,9 @@ class StlViewPanel(wxGLPanel):
             time.sleep(dt)
             obj.offsets[2] -= v * dt
             v += g * dt
-            if(obj.offsets[2] < 0):
+            if obj.offsets[2] < 0:
                 obj.scale[2] *= 1 - 3 * dt
-        #return
+        # return
         v = v / 4
         while obj.offsets[2] < basepos:
             time.sleep(dt)
@@ -246,13 +261,12 @@ class StlViewPanel(wxGLPanel):
         self.initialized = 1
         wx.CallAfter(self.Refresh)
 
-    def drawmodel(self, m, n):
+    def prepare_model(self, m, scale):
         batch = pyglet.graphics.Batch()
         stlview(m.facets, batch = batch)
         m.batch = batch
-        m.animoffset = 300
-        #print m
-        #threading.Thread(target = self.anim, args = (m, )).start()
+        # m.animoffset = 300
+        # threading.Thread(target = self.anim, args = (m, )).start()
         wx.CallAfter(self.Refresh)
 
     def update_object_resize(self):
@@ -271,27 +285,33 @@ class StlViewPanel(wxGLPanel):
                      - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
         # Draw platform
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDisable(GL_LIGHTING)
         self.platform.draw()
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glEnable(GL_LIGHTING)
         # Draw mouse
-        glPushMatrix()
-        x, y, z = self.mouse_to_3d(self.mousepos[0], self.mousepos[1], 0.9)
-        glTranslatef(x, y, z)
-        glBegin(GL_TRIANGLES)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(1, 0, 0, 1))
-        glNormal3f(0, 0, 1)
-        glVertex3f(2, 2, 0)
-        glVertex3f(-2, 2, 0)
-        glVertex3f(-2, -2, 0)
-        glVertex3f(2, -2, 0)
-        glVertex3f(2, 2, 0)
-        glVertex3f(-2, -2, 0)
-        glEnd()
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.3, 0.7, 0.5, 1))
-        glPopMatrix()
-        glPushMatrix()
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
+                                    plane_normal = (0, 0, 1), plane_offset = 0,
+                                    local_transform = False)
+        if inter is not None:
+            glPushMatrix()
+            glTranslatef(inter[0], inter[1], inter[2])
+            glBegin(GL_TRIANGLES)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(1, 0, 0, 1))
+            glNormal3f(0, 0, 1)
+            glVertex3f(2, 2, 0)
+            glVertex3f(-2, 2, 0)
+            glVertex3f(-2, -2, 0)
+            glVertex3f(2, -2, 0)
+            glVertex3f(2, 2, 0)
+            glVertex3f(-2, -2, 0)
+            glEnd()
+            glPopMatrix()
 
         # Draw objects
+        glDisable(GL_CULL_FACE)
+        glPushMatrix()
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.3, 0.7, 0.5, 1))
         for i in self.parent.models:
             model = self.parent.models[i]
             glPushMatrix()
@@ -302,7 +322,130 @@ class StlViewPanel(wxGLPanel):
             model.batch.draw()
             glPopMatrix()
         glPopMatrix()
+        glEnable(GL_CULL_FACE)
+
+        # Draw cutting plane
+        if self.parent.cutting:
+            # FIXME: make this a proper Actor
+            axis = self.parent.cutting_axis
+            fixed_dist = self.parent.cutting_dist
+            dist, plane_width, plane_height = self.get_cutting_plane(axis, fixed_dist)
+            if dist is not None:
+                glPushMatrix()
+                if axis == "x":
+                    glRotatef(90, 0, 1, 0)
+                    glRotatef(90, 0, 0, 1)
+                    glTranslatef(0, 0, dist)
+                elif axis == "y":
+                    glRotatef(90, 1, 0, 0)
+                    glTranslatef(0, 0, -dist)
+                elif axis == "z":
+                    glTranslatef(0, 0, dist)
+                glDisable(GL_CULL_FACE)
+                glBegin(GL_TRIANGLES)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.9, 0.15, 0.3))
+                glNormal3f(0, 0, self.parent.cutting_direction)
+                glVertex3f(plane_width, plane_height, 0)
+                glVertex3f(0, plane_height, 0)
+                glVertex3f(0, 0, 0)
+                glVertex3f(plane_width, 0, 0)
+                glVertex3f(plane_width, plane_height, 0)
+                glVertex3f(0, 0, 0)
+                glEnd()
+                glEnable(GL_CULL_FACE)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                glEnable(GL_LINE_SMOOTH)
+                orig_linewidth = (GLfloat)()
+                glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
+                glLineWidth(4.0)
+                glBegin(GL_LINE_LOOP)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.8, 0.15, 1))
+                glVertex3f(0, 0, 0)
+                glVertex3f(0, plane_height, 0)
+                glVertex3f(plane_width, plane_height, 0)
+                glVertex3f(plane_width, 0, 0)
+                glEnd()
+                glLineWidth(orig_linewidth)
+                glDisable(GL_LINE_SMOOTH)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                glPopMatrix()
+
         glPopMatrix()
+
+    # ==========================================================================
+    # Utils
+    # ==========================================================================
+    def get_modelview_mat(self, local_transform):
+        mvmat = (GLdouble * 16)()
+        if local_transform:
+            glPushMatrix()
+            # Rotate according to trackball
+            glTranslatef(0, 0, -self.dist)
+            glMultMatrixd(build_rotmatrix(self.basequat))  # Rotate according to trackball
+            glTranslatef(- self.build_dimensions[3] - self.platform.width / 2,
+                         - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+            glPopMatrix()
+        else:
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        return mvmat
+
+    def get_cutting_plane(self, cutting_axis, fixed_dist, local_transform = False):
+        cutting_plane_sizes = {"x": (self.platform.depth, self.platform.height),
+                               "y": (self.platform.width, self.platform.height),
+                               "z": (self.platform.width, self.platform.depth)}
+        plane_width, plane_height = cutting_plane_sizes[cutting_axis]
+        if fixed_dist is not None:
+            return fixed_dist, plane_width, plane_height
+        ref_sizes = {"x": self.platform.width,
+                     "y": self.platform.depth,
+                     "z": self.platform.height,
+                     }
+        ref_planes = {"x": (0, 0, 1),
+                      "y": (0, 0, 1),
+                      "z": (0, 1, 0)
+                      }
+        ref_offsets = {"x": 0,
+                       "y": 0,
+                       "z": - self.platform.depth / 2
+                       }
+        translate_axis = {"x": 0,
+                          "y": 1,
+                          "z": 2
+                          }
+        fallback_ref_planes = {"x": (0, 1, 0),
+                               "y": (1, 0, 0),
+                               "z": (1, 0, 0)
+                               }
+        fallback_ref_offsets = {"x": - self.platform.height / 2,
+                                "y": - self.platform.width / 2,
+                                "z": - self.platform.width / 2,
+                                }
+        ref_size = ref_sizes[cutting_axis]
+        ref_plane = ref_planes[cutting_axis]
+        ref_offset = ref_offsets[cutting_axis]
+        inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
+                                    plane_normal = ref_plane,
+                                    plane_offset = ref_offset,
+                                    local_transform = local_transform)
+        max_size = max((self.platform.width,
+                        self.platform.depth,
+                        self.platform.height))
+        dist = None
+        if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
+            dist = inter[translate_axis[cutting_axis]]
+        if dist is None or dist < -0.5 * ref_size or dist > 1.5 * ref_size:
+            ref_plane = fallback_ref_planes[cutting_axis]
+            ref_offset = fallback_ref_offsets[cutting_axis]
+            inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
+                                        plane_normal = ref_plane,
+                                        plane_offset = ref_offset,
+                                        local_transform = False)
+            if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
+                dist = inter[translate_axis[cutting_axis]]
+        if dist is not None:
+            dist = min(1.5 * ref_size, max(-0.5 * ref_size, dist))
+        return dist, plane_width, plane_height
 
 def main():
     app = wx.App(redirect = False)

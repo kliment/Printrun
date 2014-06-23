@@ -16,7 +16,7 @@
 import wx
 from printrun import gviz
 
-from printrun_utils import imagefile, install_locale
+from .utils import imagefile, install_locale
 install_locale('pronterface')
 
 class ExcluderWindow(gviz.GvizWindow):
@@ -56,14 +56,13 @@ class ExcluderWindow(gviz.GvizWindow):
             wx.CallAfter(self.p.Refresh)
         elif event.Dragging() and event.LeftIsDown():
             x, y = event.GetPositionTuple()
-            if not hasattr(self, "basetrans"):
+            if not self.initpos:
                 self.basetrans = self.p.translate
             x = (x - self.basetrans[0]) / self.p.scale[0]
             y = (y - self.basetrans[1]) / self.p.scale[1]
             x, y = self.real_to_gcode(x, y)
             if not self.initpos:
                 self.initpos = (x, y)
-                self.basetrans = self.p.translate
                 self.parent.rectangles.append((0, 0, 0, 0))
             else:
                 pos = (x, y)
@@ -107,8 +106,7 @@ class Excluder(object):
     def pop_window(self, gcode, *args, **kwargs):
         if not self.window:
             self.window = ExcluderWindow(self, *args, **kwargs)
-            self.window.p.addfile(gcode)
-            self.window.p.layerup()
+            self.window.p.addfile(gcode, True)
             self.window.Bind(wx.EVT_CLOSE, self.close_window)
             self.window.Show()
         else:

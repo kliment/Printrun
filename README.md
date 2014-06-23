@@ -14,21 +14,32 @@ If you want the newest, shiniest features, you can run Printrun from source usin
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
-*Note:* Prontserve is not currently included in the windows binary.
-
 ## Mac OS X
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
-
-*Note:* Prontserve is not currently included in the OSX binary.
 
 ## Linux
 ### Ubuntu/Debian
 
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
-1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
-2. `pip install -r requirements_prontserve.txt`
+1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1 python-dbus python-psutil git`
+
+Clone the repository
+
+`git clone https://github.com/kliment/Printrun.git`
+
+and you can start using Printrun from the Printrun directory created by the git clone command.
+
+### Chrome OS 
+
+You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install dependencies with the line given above for Ubuntu/Debian, and obtain the source via git clone.
+
+By default you have no access to the serial port under Chrome OS crouton, so you cannot connect to your 3D printer. Add yourself to the serial group within the linux environment to fix this
+
+`sudo usermod -G serial -a <username>` 
+
+where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer. 
 
 ### Fedora
 
@@ -48,12 +59,6 @@ You can also run Printrun directly from source, if the packages are too old for 
 
 Optional: `sudo yum install skeinforge simarrange`
 
-To enable Prontserve you need to also install something along the following 
-lines. Unforunately this has yet to be tested on a real Fedora system:
-
-1. `sudo yum install avahi avahi-python`
-2. `pip install -r requirements_prontserve.txt`
-
 ### Archlinux
 
 Packages are available in AUR. Just run
@@ -61,8 +66,6 @@ Packages are available in AUR. Just run
 `yaourt printrun`
 
 and enjoy the `pronterface`, `pronsole`, ... commands directly.
-
-*Note:* Prontserve is not currently included in the arch package.
 
 ## RUNNING FROM SOURCE
 
@@ -155,13 +158,6 @@ The command box recognizes all pronsole commands, but has no tabcompletion.
 
 If you want to load stl files, you need to install a slicing program such as Slic3r and add its path to the settings.
 See the Slic3r readme for more details on integration.
-
-
-## USING PRONTSERVE
-
-Prontserve runs a server for remotely monitoring and controlling your 3D printer over your network.
-
-To start the server you can run `./prontserve.py` in the directory you git cloned printrun too. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
 
 
 ## USING PRONSOLE
@@ -345,6 +341,50 @@ Some useful methods:
         !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
     !self.project - invoke Projector
 
+## USING HOST COMMANDS
+
+Pronsole and the console interface in Pronterface accept a number of commands
+which you can either use directly or inside your G-Code. To run a host command
+from inside a G-Code, simply prefix it with `;@`.
+
+List of available commands:
+
+- `pause`: pauses the print until the user resumes it
+- `run_script scriptname [arg1 ...]`: runs a custom script or program on the
+  host computer. This can for instance be used to produce a sound to warn the
+  user (e.g. `run_script beep -r 2` on machines were the `beep` util is
+  available), or to send an email or text message at the end of a print. The $s
+  token can be used in the arguments to get the current gcode file name
+- `run_gcode_script scripname [arg1 ...]`: same as `run_script`, except that
+  all lines displayed by the script will be interpreted in turn (so that G-Code
+  lines will be immediately sent to the printer)
+- `shell pythoncommand`: run a python command (can also be achieved by doing
+  `!pythoncommand`)
+- `set option value`: sets the value of an option, e.g. `set mainviz 3D`
+- `connect`
+- `block_until_online`: wait for the printer to be online. For instance you can
+  do `python pronsole.py -e "connect" -e "block_until_online" -e "upload
+  object.gcode"` to start pronsole, connect for the printer, wait for it to be
+  online to start uploading the `object.gcode` file.
+- `disconnect`
+- `load gcodefile`
+- `upload gcodefile target.g`: upload `gcodefile` to `target.g` on the SD card
+- `slice stlfile`: slice `stlfile` and load the produced G-Code
+- `print`: print the currently loaded file
+- `sdprint target.g`: start a SD print
+- `ls`: list files on SD card
+- `eta`: display remaining print time
+- `gettemp`: get current printer temperatures
+- `settemp`: set hotend target temperature
+- `bedtemp`: set bed target temperature
+- `monitor`: monitor printer progress during a print
+- `tool K`: switch to tool K
+- `move xK`: move along `x` axis (works with other axes too)
+- `extrude length [speed]`
+- `reverse length [speed]`
+- `home [axis]`
+- `off`: turns off fans, motors, extruder, heatbed, power supply
+- `exit`
 
 # LICENSE
 

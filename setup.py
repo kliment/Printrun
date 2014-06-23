@@ -121,9 +121,9 @@ if sys.argv[1] in("install", "uninstall") and len(prefix):
     sys.argv += ["--prefix", prefix]
 
 target_images_path = "share/pronterface/images/"
-data_files = [('share/pixmaps/', ['P-face.ico', 'plater.ico', 'pronsole.ico']),
-              ('share/applications', ['pronterface.desktop','pronsole.desktop','plater.desktop']),
-              ('share/appdata', ['pronterface.appdata.xml','pronsole.appdata.xml','plater.appdata.xml'])]
+data_files = [('share/pixmaps/', ['pronterface.png', 'plater.png', 'pronsole.png']),
+              ('share/applications', ['pronterface.desktop', 'pronsole.desktop', 'plater.desktop']),
+              ('share/appdata', ['pronterface.appdata.xml', 'pronsole.appdata.xml', 'plater.appdata.xml'])]
 
 for basedir, subdirs, files in os.walk("images"):
     images = []
@@ -161,8 +161,8 @@ setup(name = "Printrun",
       url = "http://github.com/kliment/Printrun/",
       license = "GPLv3",
       data_files = data_files,
-      packages = ["printrun", "printrun.gl", "printrun.gl.libtatlin"],
-      scripts = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py", "prontserve.py"],
+      packages = ["printrun", "printrun.gl", "printrun.gl.libtatlin", "printrun.gui", "printrun.power"],
+      scripts = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
       cmdclass = cmdclass,
       ext_modules = extensions,
       )

@@ -17,12 +17,14 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-from printrun.printrun_utils import install_locale, get_home_pos
+from .utils import install_locale, get_home_pos
 install_locale('pronterface')
 
 import wx
 import sys
 import types
+import re
+import math
 
 from printrun import gcview
 from printrun import gcoder
@@ -38,14 +40,43 @@ def gcoder_write(self, f, line, store = False):
     f.write(line)
     self.append(line, store = store)
 
+rewrite_exp = re.compile("(%s)" % "|".join(["X([-+]?[0-9]*\.?[0-9]*)",
+                                            "Y([-+]?[0-9]*\.?[0-9]*)"]))
+
+def rewrite_gline(centeroffset, gline, cosr, sinr):
+    if gline.is_move and (gline.x is not None or gline.y is not None):
+        if gline.relative:
+            xc = yc = 0
+            cox = coy = 0
+            if gline.x is not None:
+                xc = gline.x
+            if gline.y is not None:
+                yc = gline.y
+        else:
+            xc = gline.current_x + centeroffset[0]
+            yc = gline.current_y + centeroffset[1]
+            cox = centeroffset[0]
+            coy = centeroffset[1]
+        new_x = "X%.04f" % (xc * cosr - yc * sinr - cox)
+        new_y = "Y%.04f" % (xc * sinr + yc * cosr - coy)
+        new = {"X": new_x, "Y": new_y}
+        new_line = rewrite_exp.sub(lambda ax: new[ax.group()[0]], gline.raw)
+        new_line = new_line.split(";")[0]
+        if gline.x is None: new_line += " " + new_x
+        if gline.y is None: new_line += " " + new_y
+        return new_line
+    else:
+        return gline.raw
+
 class GcodePlater(Plater):
 
     load_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
     save_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
 
-    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None, circular_platform = False):
+    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None, circular_platform = False, antialias_samples = 0):
         super(GcodePlater, self).__init__(filenames, size, callback, parent, build_dimensions)
-        viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions)
+        viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
+                                       antialias_samples = antialias_samples)
         self.set_viewer(viewer)
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular_platform)
@@ -59,8 +90,14 @@ class GcodePlater(Plater):
         gcode = gcoder.GCode(open(filename, "rU"),
                              get_home_pos(self.build_dimensions))
         model = actors.GcodeModel()
-        model.load_data(gcode)
+        if gcode.filament_length > 0:
+            model.display_travels = False
+        generator = model.load_data(gcode)
+        generator_output = generator.next()
+        while generator_output is not None:
+            generator_output = generator.next()
         obj = gcview.GCObject(model)
+        obj.offsets = [self.build_dimensions[3], self.build_dimensions[4], 0]
         obj.gcode = gcode
         obj.dims = [gcode.xmin, gcode.xmax,
                     gcode.ymin, gcode.ymax,
@@ -95,7 +132,9 @@ class GcodePlater(Plater):
         models.sort(key = lambda x: x.dims[-1])
         alllayers = []
         for (model_i, model) in enumerate(models):
-            alllayers += [(layer.z, model_i, layer_i)
+            def add_offset(layer):
+                return layer.z + model.offsets[2] if layer.z is not None else layer.z
+            alllayers += [(add_offset(layer), model_i, layer_i)
                           for (layer_i, layer) in enumerate(model.gcode.all_layers) if layer]
         alllayers.sort()
         laste = [0] * len(models)
@@ -107,10 +146,7 @@ class GcodePlater(Plater):
             for (layer_z, model_i, layer_i) in alllayers:
                 model = models[model_i]
                 layer = model.gcode.all_layers[layer_i]
-                r = model.rot  # no rotation support for now
-                if r != 0 and layer_i == 0:
-                    print _("Warning: no rotation support for now, "
-                            "object won't be correctly rotated")
+                r = math.radians(model.rot)
                 o = model.offsets
                 co = model.centeroffset
                 offset_pos = last_real_position if last_real_position is not None else (0, 0, 0)
@@ -132,7 +168,10 @@ class GcodePlater(Plater):
                 analyzer.write("G92 E%.5f\n" % laste[model_i])
                 for l in layer:
                     if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
-                        analyzer.write(l.raw + "\n")
+                        if r == 0:
+                            analyzer.write(l.raw + "\n")
+                        else:
+                            analyzer.write(rewrite_gline(co, l, math.cos(r), math.sin(r)) + "\n")
                 # Find the current real position & E
                 last_real_position = analyzer.current_pos
                 laste[model_i] = analyzer.current_e
@@ -147,10 +186,7 @@ class GcodePlater(Plater):
         models.sort(key = lambda x: x.dims[-1])
         with open(name, "w") as f:
             for model_i, model in enumerate(models):
-                r = model.rot  # no rotation support for now
-                if r != 0:
-                    print _("Warning: no rotation support for now, "
-                            "object won't be correctly rotated")
+                r = math.radians(model.rot)
                 o = model.offsets
                 co = model.centeroffset
                 offset_pos = last_real_position if last_real_position is not None else (0, 0, 0)
@@ -166,7 +202,10 @@ class GcodePlater(Plater):
                 f.write("G1 X%.5f Y%.5f" % (-co[0], -co[1]))
                 for l in model.gcode:
                     if l.command != "G28" and (l.command != "G92" or extrusion_only(l)):
-                        f.write(l.raw + "\n")
+                        if r == 0:
+                            f.write(l.raw + "\n")
+                        else:
+                            f.write(rewrite_gline(co, l, math.cos(r), math.sin(r)) + "\n")
                 # Find the current real position
                 for i in xrange(len(model.gcode) - 1, -1, -1):
                     gline = model.gcode.lines[i]
