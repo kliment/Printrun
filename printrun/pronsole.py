@@ -1150,6 +1150,14 @@ class pronsole(cmd.Cmd):
                 self.compute_eta = RemainingTimeEstimator(self.fgcode)
             else:
                 self.compute_eta = None
+
+            if self.settings.start_command:
+                output = get_command_output(self.settings.start_command,
+                                            {"$s": str(self.filename),
+                                             "$t": format_time(time.time())})
+                if output:
+                    self.log("Start command output:")
+                    self.log(output.rstrip())
         try:
             powerset_print_start(reason = "Preventing sleep during print")
         except:
