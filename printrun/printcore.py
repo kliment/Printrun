@@ -17,7 +17,7 @@
 
 __version__ = "2014.08.01"
 
-from serial import Serial, SerialException
+from serial import Serial, SerialException, PARITY_ODD, PARITY_NONE
 from select import error as SelectError
 from threading import Thread, Lock
 from Queue import Queue, Empty as QueueEmpty
@@ -189,7 +189,11 @@ class printcore():
                 try:
                     self.printer = Serial(port = self.port,
                                           baudrate = self.baud,
-                                          timeout = 0.25)
+                                          timeout = 0.25,
+                                          parity = PARITY_ODD)
+                    self.printer.close()
+                    self.printer.parity = PARITY_NONE
+                    self.printer.open()
                 except SerialException as e:
                     self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
                                   "\n" + _("Serial error: %s") % e)
