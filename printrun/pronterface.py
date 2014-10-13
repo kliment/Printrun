@@ -142,6 +142,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         self.capture_skip = {}
         self.capture_skip_newline = False
+        self.userm114 = 0
+        self.userm105 = 0
+        self.m105_waitcycles = 0
+
         self.fgcode = None
         self.excluder = None
         self.slicep = None
@@ -151,7 +155,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.sentlines = Queue.Queue(0)
         self.cpbuttons = {
             "motorsoff": SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), _("Switch all motors off")),
-            "extrude": SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), _("Advance extruder by set length")),
+            "checktemp": SpecialButton(_("Check Temp"), ("M105"), (225, 200, 200), _("Check current hotend temperature")),
+			"extrude": SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), _("Advance extruder by set length")),
             "reverse": SpecialButton(_("Reverse"), ("pront_reverse"), (225, 200, 200), _("Reverse extruder by set length")),
         }
         self.custombuttons = []
@@ -169,7 +174,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
         if self.settings.last_window_maximized:
             self.Maximize()
-        self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+        self.SetIcon(wx.Icon(iconfile("pronterface.ico"), wx.BITMAP_TYPE_ICO))
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.window_ready = True
@@ -771,7 +776,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         info = wx.AboutDialogInfo()
 
-        info.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+        info.SetIcon(wx.Icon(iconfile("pronterface.ico"), wx.BITMAP_TYPE_ICO))
         info.SetName('Printrun')
         info.SetVersion(printcore.__version__)
 
@@ -1657,13 +1662,23 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if z is not None: self.current_pos[2] = z
 
     def recvcb(self, l):
+        isreport = False
         report_type = self.recvcb_report(l)
-        isreport = report_type != REPORT_NONE
+        #isreport = report_type != REPORT_NONE
         if report_type == REPORT_POS:
             self.update_pos()
-        elif report_type == REPORT_TEMP:
+            if self.userm114 > 0:
+                self.userm114 -= 1
+            else:
+                isreport = True
+        if report_type == REPORT_TEMP:
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
             self.update_tempdisplay()
+            if self.userm105 > 0:
+                self.userm105 -= 1
+            else:
+                self.m105_waitcycles = 0
+                isreport = True
         tstring = l.rstrip()
         if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
             wx.CallAfter(self.addtexttolog, tstring + "\n")

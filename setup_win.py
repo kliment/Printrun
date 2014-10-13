@@ -1,4 +1,5 @@
 from distutils.core import setup
+import py2exe
 
 setup(windows = [{"script": "pronterface.py", "icon_resources": [(1, "P-face.ico")]},
                  {"script": "plater.py", "icon_resources": [(1, "plater.ico")]},

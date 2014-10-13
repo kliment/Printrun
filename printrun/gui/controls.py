@@ -67,6 +67,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "tempdisp": (tempdisp_line, 0),
         "extrude": (3, 0),
         "reverse": (3, 2),
+        "checktemp": (3, 4),
     }
 
     span_mapping = {
@@ -85,7 +86,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "btemp_gauge": (1, 5 if mini_mode else 6),
         "tempdisp": (1, 5 if mini_mode else 6),
         "extrude": (1, 2),
-        "reverse": (1, 3),
+        "reverse": (1, 2),
+        "checktemp": (1, 1),
     }
 
     if standalone_mode:
@@ -330,7 +332,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
                 ebuttonssizer.Add(etool_label, flag = wx.ALIGN_CENTER)
                 ebuttonssizer.Add(root.extrudersel)
 
-        for key in ["extrude", "reverse"]:
+        for key in ["extrude", "reverse", "checktemp"]:
             desc = root.cpbuttons[key]
             btn = make_custom_button(root, ebuttonspanel, desc,
                                      style = wx.BU_EXACTFIT)
@@ -363,12 +365,14 @@ class ControlsSizer(wx.GridBagSizer):
         self.extra_buttons = {}
         pos_mapping = {"extrude": (4, 0),
                        "reverse": (4, 2),
+                       "checktemp": (4, 3),
                        }
         span_mapping = {"extrude": (1, 2),
                         "reverse": (1, 3),
+                        "checktemp": (1, 1),
                         }
         for key, desc in root.cpbuttons.items():
-            if not standalone_mode and key in ["extrude", "reverse"]:
+            if not standalone_mode and key in ["extrude", "reverse", "checktemp"]:
                 continue
             panel = lltspanel if key == "motorsoff" else parentpanel
             btn = make_custom_button(root, panel, desc)
