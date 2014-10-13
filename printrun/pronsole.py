@@ -137,9 +137,6 @@ class pronsole(cmd.Cmd):
         self.percentdone = 0
         self.posreport = ""
         self.tempreadings = ""
-        self.userm114 = 0
-        self.userm105 = 0
-        self.m105_waitcycles = 0
         self.macros = {}
         self.history_file = "~/.pronsole-history"
         self.rc_loaded = False
@@ -1193,17 +1190,10 @@ class pronsole(cmd.Cmd):
         if "ok C:" in l or "Count" in l \
            or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
             self.posreport = l
-            if self.userm114 > 0:
-                self.userm114 -= 1
-            else:
-                isreport = REPORT_POS
+            isreport = REPORT_POS
         if "ok T:" in l or tempreading_exp.findall(l):
             self.tempreadings = l
-            if self.userm105 > 0:
-                self.userm105 -= 1
-            else:
-                self.m105_waitcycles = 0
-                isreport = REPORT_TEMP
+            isreport = REPORT_TEMP
         return isreport
 
     def recvcb(self, l):
