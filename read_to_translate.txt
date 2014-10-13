@@ -1,0 +1,3 @@
+c:\python27\Tools\i18n\pygettext.py -o locale/pronterface.pot *.py printrun/*.py printrun/*/*.py
+
+c:\python27\Tools\i18n\msgfmt.py -o pronterface.mo pronterface.po
