@@ -62,6 +62,7 @@ tempreading_exp = re.compile("(^T:| T:)")
 REPORT_NONE = 0
 REPORT_POS = 1
 REPORT_TEMP = 2
+REPORT_MANUAL = 4
 
 class Status(object):
 
@@ -327,8 +328,12 @@ class pronsole(cmd.Cmd):
     def help_gcodes(self):
         self.log("Gcodes are passed through to the printer as they are")
 
-    def parseusercmd(self, line):
-        pass
+    def precmd(self, line):
+        if line.upper().startswith("M114"):
+            self.userm114 += 1
+        elif line.upper().startswith("M105"):
+            self.userm105 += 1
+        return line
 
     def help_shell(self):
         self.log("Executes a python command. Example:")
@@ -439,7 +444,7 @@ class pronsole(cmd.Cmd):
             return ws + ls[1:] + "\n"  # python mode
         else:
             ls = ls.replace('"', '\\"')  # need to escape double quotes
-            ret = ws + 'self.parseusercmd("' + ls + '".format(*arg))\n'  # parametric command mode
+            ret = ws + 'self.precmd("' + ls + '".format(*arg))\n'  # parametric command mode
             return ret + ws + 'self.onecmd("' + ls + '".format(*arg))\n'
 
     def compile_macro(self, macro_name, macro_def):
@@ -1196,24 +1201,26 @@ class pronsole(cmd.Cmd):
             isreport = REPORT_POS
             if self.userm114 > 0:
                 self.userm114 -= 1
+                isreport |= REPORT_MANUAL
         if "ok T:" in l or tempreading_exp.findall(l):
             self.tempreadings = l
             isreport = REPORT_TEMP
             if self.userm105 > 0:
                 self.userm105 -= 1
+                isreport |= REPORT_MANUAL
             else:
                 self.m105_waitcycles = 0
         return isreport
 
     def recvcb(self, l):
         report_type = self.recvcb_report(l)
-        if report_type == REPORT_TEMP:
+        if report_type & REPORT_TEMP:
             self.status.update_tempreading(l)
         tstring = l.rstrip()
         for listener in self.recvlisteners:
             listener(l)
         if tstring != "ok" and not self.sdlisting \
-           and not self.monitoring and report_type == REPORT_NONE:
+           and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()
             if self.silent is False: print "\r" + tstring.ljust(15)

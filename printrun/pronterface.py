@@ -655,19 +655,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def set_verbose_communications(self, e):
         self.p.loud = e.IsChecked()
 
-    def parseusercmd(self, line):
-        if line.upper().startswith("M114"):
-            self.userm114 += 1
-        elif line.upper().startswith("M105"):
-            self.userm105 += 1
-
     def sendline(self, e):
         command = self.commandbox.GetValue()
         if not len(command):
             return
         wx.CallAfter(self.addtexttolog, ">>> " + command + "\n")
-        self.parseusercmd(str(command))
-        self.onecmd(str(command))
+        line = self.precmd(str(command))
+        self.onecmd(line)
         self.commandbox.SetSelection(0, len(command))
         self.commandbox.history.append(command)
         self.commandbox.histindex = len(self.commandbox.history)
@@ -2005,7 +1999,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     return self.editbutton(e)
                 self.cur_button = e.GetEventObject().custombutton
             command = e.GetEventObject().properties.command
-            self.parseusercmd(command)
+            command = self.precmd(command)
             self.onecmd(command)
             self.cur_button = None
         except:
