@@ -1193,17 +1193,16 @@ class pronsole(cmd.Cmd):
         if "ok C:" in l or "Count" in l \
            or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
             self.posreport = l
+            isreport = REPORT_POS
             if self.userm114 > 0:
                 self.userm114 -= 1
-            else:
-                isreport = REPORT_POS
         if "ok T:" in l or tempreading_exp.findall(l):
             self.tempreadings = l
+            isreport = REPORT_TEMP
             if self.userm105 > 0:
                 self.userm105 -= 1
             else:
                 self.m105_waitcycles = 0
-                isreport = REPORT_TEMP
         return isreport
 
     def recvcb(self, l):
@@ -1214,7 +1213,7 @@ class pronsole(cmd.Cmd):
         for listener in self.recvlisteners:
             listener(l)
         if tstring != "ok" and not self.sdlisting \
-          and not self.monitoring and report_type == REPORT_NONE:
+           and not self.monitoring and report_type == REPORT_NONE:
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()
             if self.silent is False: print "\r" + tstring.ljust(15)
