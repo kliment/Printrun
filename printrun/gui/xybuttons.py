@@ -407,7 +407,7 @@ class XYButtonsMini(XYButtons):
         0: "x",
         1: "z",
         2: "y",
-        3: "xy",
+        3: "center",
     }
 
     def bind_events(self):

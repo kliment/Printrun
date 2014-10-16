@@ -587,7 +587,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         elif axis == "center":
             center_x = self.build_dimensions_list[0] / 2 + self.build_dimensions_list[3]
             center_y = self.build_dimensions_list[1] / 2 + self.build_dimensions_list[4]
-            self.onecmd('G0 X%d Y%d' % (center_x, center_y))
+            feed = self.settings.xy_feedrate
+            self.onecmd('G0 X%s Y%s F%s' % (center_x, center_y, feed))
         else:
             return
         self.p.send_now('M114')
@@ -611,7 +612,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if new_y < self.build_dimensions_list[4] or new_y > self.build_dimensions_list[1] + self.build_dimensions_list[4]:
                     self.clamped_move_message()
                     return
-            self.onecmd('move Y %s' % y)
         else:
             return
         self.p.send_now('M114')
