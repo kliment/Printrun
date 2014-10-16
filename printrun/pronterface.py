@@ -582,10 +582,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.onecmd('home Y')
         elif axis == "z":
             self.onecmd('home Z')
-        elif axis == "xy":
-            self.onecmd('home XY')
         elif axis == "all":
             self.onecmd('home')
+        elif axis == "center":
+            center_x = self.build_dimensions_list[0] / 2 + self.build_dimensions_list[3]
+            center_y = self.build_dimensions_list[1] / 2 + self.build_dimensions_list[4]
+            self.onecmd('G0 X%d Y%d' % (center_x, center_y))
         else:
             return
         self.p.send_now('M114')
