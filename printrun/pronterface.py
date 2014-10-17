@@ -612,6 +612,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if new_y < self.build_dimensions_list[4] or new_y > self.build_dimensions_list[1] + self.build_dimensions_list[4]:
                     self.clamped_move_message()
                     return
+            self.onecmd('move Y %s' % y)
         else:
             return
         self.p.send_now('M114')
