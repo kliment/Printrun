@@ -18,6 +18,7 @@
 
 import time
 import numpy
+import array
 import math
 import logging
 import threading
@@ -637,6 +638,11 @@ class GcodeModel(Model):
             self.colors.resize(color_k, refcheck = False)
             self.normals.resize(normal_k, refcheck = False)
             self.indices.resize(index_k, refcheck = False)
+
+            self.layer_stops = array.array('L', self.layer_stops)
+            self.count_travel_indices = array.array('L', count_travel_indices)
+            self.count_print_indices = array.array('L', count_print_indices)
+            self.count_print_vertices = array.array('L', count_print_vertices)
 
             self.max_layers = len(self.layer_stops) - 1
             self.num_layers_to_draw = self.max_layers + 1
