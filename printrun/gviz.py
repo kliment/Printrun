@@ -15,6 +15,7 @@
 
 from Queue import Queue
 from collections import deque
+import numpy
 import wx
 import time
 from . import gcoder
@@ -506,6 +507,11 @@ class Gviz(wx.Panel):
                     self.arcpens[viz_layer].append(self.arcpen)
 
                 self.lastpos = target
+            # Transform into a numpy array for memory efficiency
+            self.lines[viz_layer] = numpy.asarray(self.lines[viz_layer])
+            self.pens[viz_layer] = numpy.asarray(self.pens[viz_layer])
+            self.arcs[viz_layer] = numpy.asarray(self.arcs[viz_layer])
+            self.arcpens[viz_layer] = numpy.asarray(self.arcpens[viz_layer])
             # Only add layer to self.layers now to prevent the display of an
             # unfinished layer
             self.layers[layer_idx] = viz_layer
