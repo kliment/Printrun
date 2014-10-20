@@ -95,6 +95,12 @@ Printrun default G-Code parser is quite memory hungry, but we also provide a muc
 
     python setup.py build_ext --inplace
 
+The warning message
+
+    WARNING:root:Memory-efficient GCoder implementation unavailable: No module named gcoder_line
+
+means that this optimized G-Code parser hasn't been compiled. To get rid of it and benefit from the better implementation, please install Cython and run the command above.
+
 ### Windows
 
 Download the following, and install in this order:
