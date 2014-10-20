@@ -194,6 +194,17 @@ sender, or the following code example:
     p.resume()
     p.disconnect()
 
+## RPC SERVER
+
+```pronterface``` and ```pronsole``` start a RPC server, which runs by default
+on localhost port 7978, which provides print progress information.
+Here is a sample Python script querying the print status:
+
+    import xmlrpclib
+
+    rpc = xmlrpclib.ServerProxy('http://localhost:7978')
+    print rpc.status()
+
 ## CONFIGURATION
 
 ### Build dimensions
