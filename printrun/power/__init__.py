@@ -80,9 +80,23 @@ try:
 
     if platform.system() != "Windows":
         import resource
-        rlimit_nice = 13 if not hasattr(psutil, "RLIMIT_NICE") else psutil.RLIMIT_NICE
-        nice_limit, _ = resource.getrlimit(rlimit_nice)
-        high_priority_nice = 20 - nice_limit
+        if hasattr(psutil, "RLIMIT_NICE"):
+            nice_limit, _ = resource.getrlimit(psutil.RLIMIT_NICE)
+            high_priority_nice = 20 - nice_limit
+        else:
+            high_priority_nice = 0
+            # RLIMIT_NICE is not available (probably OSX), let's probe
+            # Try setting niceness to -20 .. -1
+            p = psutil.Process(os.getpid())
+            orig_nice = p.get_nice()
+            for i in range(-20, 0):
+                try:
+                    p.set_nice(i)
+                    high_priority_nice = i
+                    break
+                except psutil.AccessDenied, e:
+                    pass
+            p.set_nice(orig_nice)
 
     def set_nice(nice):
         p = psutil.Process(os.getpid())
