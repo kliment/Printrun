@@ -202,7 +202,7 @@ class GcodeViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def layerup(self):
-        if not self.parent.model:
+        if not hasattr(self.parent, "model") or not self.parent.model:
             return
         max_layers = self.parent.model.max_layers
         current_layer = self.parent.model.num_layers_to_draw
@@ -215,7 +215,7 @@ class GcodeViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def layerdown(self):
-        if not self.parent.model:
+        if not hasattr(self.parent, "model") or not self.parent.model:
             return
         current_layer = self.parent.model.num_layers_to_draw
         new_layer = max(1, current_layer - 1)
