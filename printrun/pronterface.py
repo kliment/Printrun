@@ -587,7 +587,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             center_x = self.build_dimensions_list[0] / 2 + self.build_dimensions_list[3]
             center_y = self.build_dimensions_list[1] / 2 + self.build_dimensions_list[4]
             feed = self.settings.xy_feedrate
-            self.onecmd('G0 X%s Y%s F%s' % (center_x, center_y, feed))
+            self.onecmd('G1 X%s Y%s F%s' % (center_x, center_y, feed))
         else:
             return
         self.p.send_now('M114')
