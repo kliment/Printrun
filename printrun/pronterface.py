@@ -1341,6 +1341,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def load_gcode_async(self, filename):
         self.filename = filename
         gcode = self.pre_gcode_load()
+        self.log(_("Loading file: %s") % filename)
         threading.Thread(target = self.load_gcode_async_thread, args = (gcode,)).start()
 
     def load_gcode_async_thread(self, gcode):
