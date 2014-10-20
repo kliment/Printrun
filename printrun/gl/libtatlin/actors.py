@@ -689,6 +689,12 @@ class GcodeModel(Model):
             self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
             self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
             self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
+            # Tentative memory optimization: delete numpy arrays after creating VBOs
+            self.travels = None
+            self.indices = None
+            self.vertices = None
+            self.colors = None
+            self.normals = None
             self.buffers_created = True
 
     def display(self, mode_2d=False):
@@ -949,6 +955,9 @@ class GcodeModelLight(Model):
                 self.vertex_color_buffer.delete()
             self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
             self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
+            # Tentative memory optimization: delete numpy arrays after creating VBOs
+            self.vertices = None
+            self.colors = None
             self.buffers_created = True
 
     def display(self, mode_2d=False):
