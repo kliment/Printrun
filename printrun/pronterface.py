@@ -17,7 +17,6 @@
 
 import os
 import Queue
-import re
 import sys
 import time
 import threading
@@ -969,7 +968,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 status_string += _(" Line# %d of %d lines |") % (self.p.queueindex, len(self.p.mainqueue))
             if progress > 0:
                 status_string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
-                                                              format_duration(secondsestimate))
+                                                                     format_duration(secondsestimate))
                 status_string += _(" Z: %.3f mm") % self.curlayer
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
