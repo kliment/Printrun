@@ -1371,7 +1371,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def pre_gcode_load(self):
         self.loading_gcode = True
-        self.loading_gcode_message = _("Loading %s") % self.filename
+        self.loading_gcode_message = _("Loading %s...") % self.filename
         gcode = gcoder.GCode(deferred = True)
         self.viz_last_yield = 0
         self.viz_last_layer = -1
