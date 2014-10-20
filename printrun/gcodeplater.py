@@ -28,10 +28,11 @@ import types
 import re
 import math
 
-from printrun import gcview
 from printrun import gcoder
 from printrun.objectplater import Plater
 from printrun.gl.libtatlin import actors
+import printrun.gui.viz  # NOQA
+from printrun import gcview
 
 def extrusion_only(gline):
     return gline.e is not None \
