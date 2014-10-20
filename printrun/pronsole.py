@@ -155,7 +155,6 @@ class pronsole(cmd.Cmd):
         self.settings._bedtemp_pla_cb = self.set_temp_preset
         self.update_build_dimensions(None, self.settings.build_dimensions)
         self.update_tcp_streaming_mode(None, self.settings.tcp_streaming_mode)
-        self.update_rpc_server(None, self.settings.rpc_server)
         self.monitoring = 0
         self.starttime = 0
         self.extra_print_time = 0
@@ -692,6 +691,7 @@ class pronsole(cmd.Cmd):
         for command in args.execute:
             self.onecmd(command)
         self.processing_args = False
+        self.update_rpc_server(None, self.settings.rpc_server)
         if args.filename:
             filename = args.filename.decode(locale.getpreferredencoding())
             self.cmdline_filename_callback(filename)
