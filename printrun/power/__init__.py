@@ -34,9 +34,8 @@ elif platform.system() == "Windows":
     def deinhibit_sleep():
         ctypes.windll.kernel32.SetThreadExecutionState(ctypes.c_int(ES_CONTINUOUS))
 else:
-    import dbus
-
     try:
+        import dbus
         inhibit_sleep_handler = None
         inhibit_sleep_token = None
         bus = dbus.SessionBus()
