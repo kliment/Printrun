@@ -194,6 +194,24 @@ sender, or the following code example:
     p.resume()
     p.disconnect()
 
+## PLATERS
+
+Printrun provides two platers: a STL plater (```plater.py```) and a G-Code plater (```gcodeplater.py```).
+
+## 3D VIEWER CONTROLS
+
+When the 3D viewer is enabled, the controls are the following:
+- Mousewheel: zoom (Control reduces the zoom change steps)
+- Shift+mousewheel: explore layers (in print gcode view ; Control key makes layer change by increments of 10 instead of 1) or rotate object (in platers)
+- Left-click dragging: rotate view
+- Right-click dragging: pan view
+- Shift + left-click dragging: move object (in platers)
+- Page up/down keys: zoom (Control reduces the zoom change steps)
+- Up/down keys: explore layers
+- R key: reset view
+- F key: fit view to display entire print
+- C key: toggle "display current layer only" mode (in print gcode view)
+
 ## RPC SERVER
 
 ```pronterface``` and ```pronsole``` start a RPC server, which runs by default
