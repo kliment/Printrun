@@ -226,6 +226,8 @@ class GcodeViewPanel(wxGLPanel):
     def handle_wheel(self, event):
         delta = event.GetWheelRotation()
         factor = 1.05
+        if event.ControlDown():
+            factor = 1.02
         if hasattr(self.parent, "model") and event.ShiftDown():
             if not self.parent.model:
                 return
