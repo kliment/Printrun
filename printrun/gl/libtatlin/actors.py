@@ -335,6 +335,7 @@ class GcodeModel(Model):
     buffers_created = False
     use_vbos = True
     loaded = False
+    fully_loaded = False
 
     gcode = None
 
@@ -648,6 +649,8 @@ class GcodeModel(Model):
             self.num_layers_to_draw = self.max_layers + 1
             self.loaded = True
             self.initialized = False
+            self.loaded = True
+            self.fully_loaded = True
 
         t_end = time.time()
 
@@ -666,6 +669,7 @@ class GcodeModel(Model):
                     "gcode"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
+        copy.fully_loaded = True
         copy.initialized = False
         return copy
 
@@ -689,12 +693,13 @@ class GcodeModel(Model):
             self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
             self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
             self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
-            # Tentative memory optimization: delete numpy arrays after creating VBOs
-            self.travels = None
-            self.indices = None
-            self.vertices = None
-            self.colors = None
-            self.normals = None
+            if self.fully_loaded:
+                # Delete numpy arrays after creating VBOs after full load
+                self.travels = None
+                self.indices = None
+                self.vertices = None
+                self.colors = None
+                self.normals = None
             self.buffers_created = True
 
     def display(self, mode_2d=False):
@@ -843,6 +848,7 @@ class GcodeModelLight(Model):
     buffers_created = False
     use_vbos = True
     loaded = False
+    fully_loaded = False
 
     gcode = None
 
@@ -924,6 +930,7 @@ class GcodeModelLight(Model):
             self.num_layers_to_draw = self.max_layers + 1
             self.initialized = False
             self.loaded = True
+            self.fully_loaded = True
 
         t_end = time.time()
 
@@ -939,6 +946,7 @@ class GcodeModelLight(Model):
                     "layer_idxs_map", "gcode"]:
             setattr(copy, var, getattr(self, var))
         copy.loaded = True
+        copy.fully_loaded = True
         copy.initialized = False
         return copy
 
@@ -955,9 +963,10 @@ class GcodeModelLight(Model):
                 self.vertex_color_buffer.delete()
             self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
             self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
-            # Tentative memory optimization: delete numpy arrays after creating VBOs
-            self.vertices = None
-            self.colors = None
+            if self.fully_loaded:
+                # Delete numpy arrays after creating VBOs after full load
+                self.vertices = None
+                self.colors = None
             self.buffers_created = True
 
     def display(self, mode_2d=False):
