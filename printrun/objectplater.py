@@ -93,7 +93,7 @@ class Plater(wx.Frame):
                 if self.initpos is None:
                     self.initpos = event.GetPositionTuple()
                 else:
-                    if not event.ShiftDown():
+                    if event.ShiftDown():
                         p1 = self.initpos
                         p2 = event.GetPositionTuple()
                         x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
@@ -106,7 +106,7 @@ class Plater(wx.Frame):
         # Patch handle_wheel on the fly
         if hasattr(viewer, "handle_wheel"):
             def handle_wheel(self, event, orig_handler):
-                if not event.ShiftDown():
+                if event.ShiftDown():
                     delta = event.GetWheelRotation()
                     angle = 10
                     if delta > 0:
