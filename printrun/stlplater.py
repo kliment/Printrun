@@ -362,10 +362,8 @@ class StlPlater(Plater):
             wx.CallAfter(self.Refresh)
 
     def done(self, event, cb):
-        try:
+        if not os.path.exists("tempstl"):
             os.mkdir("tempstl")
-        except:
-            pass
         name = "tempstl/" + str(int(time.time()) % 10000) + ".stl"
         self.export_to(name)
         if cb is not None:

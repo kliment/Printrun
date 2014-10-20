@@ -22,6 +22,8 @@ install_locale('pronterface')
 
 import wx
 import sys
+import os
+import time
 import types
 import re
 import math
@@ -107,6 +109,15 @@ class GcodePlater(Plater):
                             0]
         self.add_model(filename, obj)
         wx.CallAfter(self.Refresh)
+
+    def done(self, event, cb):
+        if not os.path.exists("tempgcode"):
+            os.mkdir("tempgcode")
+        name = "tempgcode/" + str(int(time.time()) % 10000) + ".gcode"
+        self.export_to(name)
+        if cb is not None:
+            cb(name)
+        self.Destroy()
 
     # What's hard in there ?
     # 1) [x] finding the order in which the objects are printed
