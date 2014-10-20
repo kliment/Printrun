@@ -223,7 +223,6 @@ class Gviz(wx.Panel):
         self.gcode = None
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
         self.hilightpos = self.lastpos[:]
-        self.gcoder = gcoder.GCode([], get_home_pos(self.build_dimensions))
         self.lines = {}
         self.pens = {}
         self.arcs = {}
@@ -525,14 +524,7 @@ class Gviz(wx.Panel):
         wx.CallAfter(self.Refresh)
         yield None
 
-    def addgcodehighlight(self, gcode = "M105"):
-        gcode = gcode.split("*")[0]
-        gcode = gcode.split(";")[0]
-        gcode = gcode.lower().strip()
-        if not gcode:
-            return
-        gline = self.gcoder.append(gcode, store = False)
-
+    def addgcodehighlight(self, gline):
         if gline.command not in ["G0", "G1", "G2", "G3"]:
             return
 

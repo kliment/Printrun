@@ -148,7 +148,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.current_pos = [0, 0, 0]
         self.paused = False
         self.uploading = False
-        self.sentlines = Queue.Queue(0)
+        self.sentglines = Queue.Queue(0)
         self.cpbuttons = {
             "motorsoff": SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), _("Switch all motors off")),
             "extrude": SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), _("Advance extruder by set length")),
@@ -979,10 +979,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         # temperature monitoring and status loop sleep
         pronsole.pronsole.statuschecker_inner(self, self.settings.monitor)
         try:
-            while not self.sentlines.empty():
-                gc = self.sentlines.get_nowait()
+            while not self.sentglines.empty():
+                gc = self.sentglines.get_nowait()
                 wx.CallAfter(self.gviz.addgcodehighlight, gc)
-                self.sentlines.task_done()
+                self.sentglines.task_done()
         except Queue.Empty:
             pass
 
@@ -1534,7 +1534,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         elif gline.command.startswith("T"):
             tool = gline.command[1:]
             if hasattr(self, "extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
-        self.sentlines.put_nowait(line)
+        if gline.is_move:
+            self.sentglines.put_nowait(gline)
 
     def is_excluded_move(self, gline):
         """Check whether the given moves ends at a position specified as
