@@ -508,9 +508,9 @@ class Gviz(wx.Panel):
 
                 self.lastpos = target
             # Transform into a numpy array for memory efficiency
-            self.lines[viz_layer] = numpy.asarray(self.lines[viz_layer])
+            self.lines[viz_layer] = numpy.asarray(self.lines[viz_layer], dtype = numpy.float32)
             self.pens[viz_layer] = numpy.asarray(self.pens[viz_layer])
-            self.arcs[viz_layer] = numpy.asarray(self.arcs[viz_layer])
+            self.arcs[viz_layer] = numpy.asarray(self.arcs[viz_layer], dtype = numpy.float32)
             self.arcpens[viz_layer] = numpy.asarray(self.arcpens[viz_layer])
             # Only add layer to self.layers now to prevent the display of an
             # unfinished layer
