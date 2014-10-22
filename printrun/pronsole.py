@@ -249,7 +249,8 @@ class pronsole(cmd.Cmd):
         return False
 
     def log(self, *msg):
-        print u"".join(unicode(i) for i in msg)
+        msg = u"".join(unicode(i) for i in msg)
+        logging.info(msg)
 
     def logError(self, *msg):
         msg = u"".join(unicode(i) for i in msg)

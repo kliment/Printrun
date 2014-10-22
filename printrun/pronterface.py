@@ -63,12 +63,20 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP
 
-class Tee(object):
-    def __init__(self, target):
-        self.stdout = sys.stdout
-        sys.stdout = self
-        setup_logging(sys.stdout)
-        self.target = target
+class ConsoleOutputHandler(object):
+    """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
+    When no file path is specified, we also redirect stdout to ourself to catch print messages and al."""
+
+    def __init__(self, target, log_path):
+        if log_path:
+            self.stdout = None
+            setup_logging(self, log_path)
+            self.target = target
+        else:
+            self.stdout = sys.stdout
+            sys.stdout = self
+            setup_logging(sys.stdout)
+            self.target = target
 
     def __del__(self):
         sys.stdout = self.stdout
@@ -78,14 +86,16 @@ class Tee(object):
             self.target(data)
         except:
             pass
-        try:
-            data = data.encode("utf-8")
-        except:
-            pass
-        self.stdout.write(data)
+        if self.stdout:
+            try:
+                data = data.encode("utf-8")
+            except:
+                pass
+            self.stdout.write(data)
 
     def flush(self):
-        self.stdout.flush()
+        if self.stdout:
+            self.stdout.flush()
 
 class ComboSetting(wxSetting):
 
@@ -208,7 +218,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetStatusText(_("Not connected to printer."))
 
-        self.t = Tee(self.catchprint)
+        self.t = ConsoleOutputHandler(self.catchprint, self.settings.log_path)
         self.stdout = sys.stdout
         self.slicing = False
         self.loading_gcode = False
@@ -806,6 +816,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     #  --------------------------------------------------------------
 
     def _add_settings(self, size):
+        self.settings._add(StringSetting("log_path", "", _("Log path"), _("Path to the log file. An empty path will log to the console."), "UI"))
         self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
         self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"), self.update_bed_viz)

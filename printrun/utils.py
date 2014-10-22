@@ -34,13 +34,32 @@ def install_locale(domain):
     else:
         gettext.install(domain, './locale', unicode = 1)
 
-def setup_logging(out):
+class LogFormatter(logging.Formatter):
+    def __init__(self, format_default, format_info):
+        super(LogFormatter, self).__init__(format_info)
+        self.format_default = format_default
+        self.format_info = format_info
+
+    def format(self, record):
+        if record.levelno == logging.INFO:
+            self._fmt = self.format_info
+        else:
+            self._fmt = self.format_default
+        return super(LogFormatter, self).format(record)
+
+def setup_logging(out, filepath = None):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+    formatter = LogFormatter("[%(levelname)s] %(message)s", "%(message)s")
     logger.handlers = []
     logging_handler = logging.StreamHandler(out)
-    logging_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+    logging_handler.setFormatter(formatter)
     logger.addHandler(logging_handler)
+    if filepath is not None:
+        formatter = LogFormatter("%(asctime)s - [%(levelname)s] %(message)s", "%(asctime)s - %(message)s")
+        logging_handler = logging.FileHandler(filepath)
+        logging_handler.setFormatter(formatter)
+        logger.addHandler(logging_handler)
 
 def iconfile(filename):
     if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
