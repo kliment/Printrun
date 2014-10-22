@@ -35,7 +35,8 @@ from serial import SerialException
 from . import printcore
 from .utils import install_locale, run_command, get_command_output, \
     format_time, format_duration, RemainingTimeEstimator, \
-    get_home_pos, parse_build_dimensions, parse_temperature_report
+    get_home_pos, parse_build_dimensions, parse_temperature_report, \
+    setup_logging
 install_locale('pronterface')
 from .settings import Settings, BuildDimensionsSetting
 from .power import powerset_print_start, powerset_print_stop
@@ -706,6 +707,7 @@ class pronsole(cmd.Cmd):
         args = [arg for arg in args if not arg.startswith("-psn")]
         args = parser.parse_args(args = args)
         self.process_cmdline_arguments(args)
+        setup_logging(sys.stdout, self.settings.log_path)
 
     #  --------------------------------------------------------------
     #  Printer connection handling
