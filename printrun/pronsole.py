@@ -553,8 +553,10 @@ class pronsole(cmd.Cmd):
                 self.log("%s = %s" % (k, str(getattr(self.settings, k))))
             return
         if len(args) < 2:
+            # Try getting the default value of the setting to check whether it
+            # actually exists
             try:
-                self.log("%s = %s" % (args[0], getattr(self.settings, args[0])))
+                getattr(self.settings, args[0])
             except AttributeError:
                 logging.warning("Unknown variable '%s'" % args[0])
             return
