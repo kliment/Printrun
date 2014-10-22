@@ -18,6 +18,7 @@
 import sys
 import struct
 import math
+import logging
 
 import numpy
 import numpy.linalg
@@ -170,7 +171,7 @@ class stl(object):
                 if not self.parseline(line):
                     return
         else:
-            print "Not an ascii stl solid - attempting to parse as binary"
+            logging.warning("Not an ascii stl solid - attempting to parse as binary")
             f = open(filename, "rb")
             buf = f.read(84)
             while len(buf) < 84:
@@ -348,8 +349,6 @@ class stl(object):
         if l.startswith("solid"):
             self.insolid = 1
             self.name = l[6:]
-            # print self.name
-
         elif l.startswith("endsolid"):
             self.insolid = 0
             return 0

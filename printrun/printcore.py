@@ -263,7 +263,7 @@ class printcore():
         while not self.online and self._listen_can_continue():
             self._send("M105")
             if self.writefailures >= 4:
-                print _("Aborting connection attempt after 4 failed writes.")
+                logging.error(_("Aborting connection attempt after 4 failed writes."))
                 return
             empty_lines = 0
             while self._listen_can_continue():

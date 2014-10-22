@@ -27,6 +27,7 @@ import time
 import types
 import re
 import math
+import logging
 
 from printrun import gcoder
 from printrun.objectplater import Plater
@@ -189,7 +190,7 @@ class GcodePlater(Plater):
                 laste[model_i] = analyzer.current_e
                 lastrelative[model_i] = analyzer.relative
                 lasttool[model_i] = analyzer.current_tool
-        print _("Exported merged G-Codes to %s") % name
+        logging.info(_("Exported merged G-Codes to %s") % name)
 
     def export_sequential(self, name):
         models = self.models.values()
@@ -226,7 +227,7 @@ class GcodePlater(Plater):
                                               - trans[1] + gline.current_y,
                                               - trans[2] + gline.current_z)
                         break
-        print _("Exported merged G-Codes to %s") % name
+        logging.info(_("Exported merged G-Codes to %s") % name)
 
 if __name__ == '__main__':
     app = wx.App(False)

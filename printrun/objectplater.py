@@ -18,6 +18,7 @@
 from .utils import install_locale, iconfile
 install_locale('plater')
 
+import logging
 import os
 import types
 import wx
@@ -148,7 +149,7 @@ class Plater(wx.Frame):
         model.rot += angle
 
     def autoplate(self, event = None):
-        print _("Autoplating")
+        logging.info(_("Autoplating"))
         separation = 2
         try:
             from printrun import packer
@@ -195,7 +196,7 @@ class Plater(wx.Frame):
                     max[1] = cursor[1] + x
                 cursor[0] += x + separation
                 if (cursor[1] + y) >= bedsize[1]:
-                    print _("Bed full, sorry sir :(")
+                    logging.info(_("Bed full, sorry sir :("))
                     self.Refresh()
                     return
             centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]

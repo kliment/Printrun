@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from .gui.widgets import MacroEditor
 
 from .utils import install_locale
@@ -35,9 +37,9 @@ def injector_edit(gcode, viz_layer, layer_idx):
 def inject(gcode, viz_layer, layer_idx, toadd):
     # TODO: save modified gcode after injection ?
     nlines = len(gcode.prepend_to_layer(toadd, layer_idx))
-    print _("Successfully injected %d lines at beginning of layer %d") % (nlines, viz_layer)
+    logging.info(_("Successfully injected %d lines at beginning of layer %d") % (nlines, viz_layer))
 
 def rewritelayer(gcode, viz_layer, layer_idx, toadd):
     # TODO: save modified gcode after edit ?
     nlines = len(gcode.rewrite_layer(toadd, layer_idx))
-    print _("Successfully edited layer %d (which now contains %d lines)") % (viz_layer, nlines)
+    logging.info(_("Successfully edited layer %d (which now contains %d lines)") % (viz_layer, nlines))

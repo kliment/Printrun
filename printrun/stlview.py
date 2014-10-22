@@ -55,7 +55,6 @@ class stlview(object):
 
         # Create a list of triangle indices.
         indices = range(3 * len(facets))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
-        # print indices[:10]
         self.vertex_list = batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -206,7 +205,6 @@ class StlViewPanel(wxGLPanel):
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
         keycode = event.GetKeyCode()
-        print keycode
         step = 5
         angle = 18
         if event.ControlDown():

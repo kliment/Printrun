@@ -13,10 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 try:
     import wx
 except:
-    print _("WX is not installed. This program requires WX to run.")
+    logging.error(_("WX is not installed. This program requires WX to run."))
     raise
 
 from printrun.utils import install_locale

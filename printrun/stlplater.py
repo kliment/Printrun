@@ -137,7 +137,6 @@ class showstl(wx.Window):
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
         keycode = event.GetKeyCode()
-        # print keycode
         step = 5
         angle = 18
         if event.ControlDown():
@@ -294,7 +293,7 @@ class StlPlater(Plater):
         model = self.models[name]
         transformation = transformation_matrix(model)
         transformed = model.transform(transformation)
-        print _("Cutting %s alongside %s axis") % (name, self.cutting_axis)
+        logging.info(_("Cutting %s alongside %s axis") % (name, self.cutting_axis))
         axes = ["x", "y", "z"]
         cut = transformed.cut(axes.index(self.cutting_axis),
                               self.cutting_direction,
@@ -340,7 +339,7 @@ class StlPlater(Plater):
             transformation = transformation_matrix(model)
             transformed = model.transform(transformation)
             if not transformed.intersect_box(ray_near, ray_far):
-                print "Skipping %s for rebase search" % key
+                logging.debug("Skipping %s for rebase search" % key)
                 continue
             facet, facet_dist = transformed.intersect(ray_near, ray_far)
             if facet is not None and facet_dist < best_dist:
@@ -348,7 +347,7 @@ class StlPlater(Plater):
                 best_facet = facet
                 best_dist = facet_dist
         if best_match is not None:
-            print "Rebasing %s" % best_match
+            logging.info("Rebasing %s" % best_match)
             model = self.models[best_match]
             newmodel = model.rebase(best_facet)
             newmodel.offsets = list(model.offsets)
@@ -422,7 +421,7 @@ class StlPlater(Plater):
 
     def load_stl(self, name):
         if not os.path.exists(name):
-            print _("Couldn't load non-existing file %s") % name
+            logging.error(_("Couldn't load non-existing file %s") % name)
             return
         path = os.path.split(name)[0]
         self.basedir = path
@@ -472,7 +471,7 @@ class StlPlater(Plater):
                 model = model.transform(transformation_matrix(model))
                 facets += model.facets
             stltool.emitstl(name, facets, "plater_export")
-            print _("Wrote plate to %s") % name
+            logging.info(_("Wrote plate to %s") % name)
 
     def autoplate(self, event = None):
         try:
@@ -484,7 +483,7 @@ class StlPlater(Plater):
             super(StlPlater, self).autoplate()
 
     def autoplate_simarrange(self):
-        print _("Autoplating using simarrange")
+        logging.info(_("Autoplating using simarrange"))
         models = dict(self.models)
         files = [model.filename for model in models.values()]
         command = [self.simarrange_path, "--dryrun",
@@ -499,7 +498,7 @@ class StlPlater(Plater):
             if "Generating plate" in line:
                 plateid = int(line.split()[-1])
                 if plateid > 0:
-                    print _("Plate full, please remove some objects")
+                    logging.error(_("Plate full, please remove some objects"))
                     break
             if "File:" in line:
                 bits = pos_regexp.match(line).groups()

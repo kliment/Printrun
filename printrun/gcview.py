@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import wx
 
 from . import gcoder
@@ -94,7 +95,7 @@ class GcodeViewPanel(wxGLPanel):
         if filtered:
             injector(self.parent.model.gcode, l, filtered[0])
         else:
-            print _("Invalid layer for injection")
+            logging.error(_("Invalid layer for injection"))
 
     def editlayer(self):
         l = self.parent.model.num_layers_to_draw
@@ -102,7 +103,7 @@ class GcodeViewPanel(wxGLPanel):
         if filtered:
             injector_edit(self.parent.model.gcode, l, filtered[0])
         else:
-            print _("Invalid layer for edition")
+            logging.error(_("Invalid layer for edition"))
 
     def setlayercb(self, layer):
         pass
