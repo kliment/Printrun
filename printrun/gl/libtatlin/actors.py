@@ -826,6 +826,7 @@ class GcodeModel(Model):
         if not layer_selected and end >= start:
             self._draw_elements(start, end)
 
+        self.index_buffer.unbind()
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
         self.vertex_normal_buffer.unbind()
