@@ -1213,7 +1213,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.recvlisteners.append(self.waitforsdresponse)
                 self.p.send_now("M23 " + target.lower())
         dlg.Destroy()
-        # print self.sdfiles
 
     def getfiles(self):
         if not self.p.online:
@@ -1732,7 +1731,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if btndef is None:
                 if i == len(custombuttons) - 1:
                     self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
-                    # b.SetFont(wx.Font(12, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
@@ -1791,9 +1789,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.custombuttons[num].background = colour
         if not self.processing_rc:
             self.cbuttons_reload()
-        # except Exception, x:
-        #    print "Bad syntax for button definition, see 'help button'"
-        #    print x
 
     def cbutton_save(self, n, bdef, new_n = None):
         if new_n is None: new_n = n
@@ -1802,7 +1797,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         elif bdef.background:
             colour = bdef.background
             if type(colour) not in (str, unicode):
-                # print type(colour), map(type, colour)
                 if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
                     colour = map(lambda x: x % 256, colour)
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1821,7 +1815,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if button.properties.background:
                 colour = button.properties.background
                 if type(colour) not in (str, unicode):
-                    # print type(colour)
                     if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
                         colour = map(lambda x: x % 256, colour)
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1860,8 +1853,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.custombuttons[n], self.custombuttons[n + 1] = self.custombuttons[n + 1], self.custombuttons[n]
         self.cbutton_save(n, self.custombuttons[n])
         self.cbutton_save(n + 1, self.custombuttons[n + 1])
-        # if self.custombuttons[-1] is None:
-        #    del self.custombuttons[-1]
         wx.CallAfter(self.cbuttons_reload)
 
     def editbutton(self, e):
@@ -1903,15 +1894,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if not hasattr(self, "dragging"):
                 # init dragging of the custom button
                 if hasattr(obj, "custombutton") and obj.properties is not None:
-                    # self.newbuttonbutton.SetLabel("")
-                    # self.newbuttonbutton.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-                    # self.newbuttonbutton.SetForegroundColour("black")
-                    # self.newbuttonbutton.SetSize(obj.GetSize())
-                    # if self.toolbarsizer.GetItem(self.newbuttonbutton) is not None:
-                    #    self.toolbarsizer.SetItemMinSize(self.newbuttonbutton, obj.GetSize())
-                    #    self.mainsizer.Layout()
                     for b in self.custombuttons_widgets:
-                        # if b.IsFrozen(): b.Thaw()
                         if b.properties is None:
                             b.Enable()
                             b.SetLabel("")
@@ -1921,7 +1904,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                             if self.toolbarsizer.GetItem(b) is not None:
                                 self.toolbarsizer.SetItemMinSize(b, obj.GetSize())
                                 self.mainsizer.Layout()
-                        #    b.SetStyle(wx.ALIGN_CENTRE+wx.ST_NO_AUTORESIZE+wx.SIMPLE_BORDER)
                     self.dragging = wx.Button(self.panel, -1, obj.GetLabel(), style = wx.BU_EXACTFIT)
                     self.dragging.SetBackgroundColour(obj.GetBackgroundColour())
                     self.dragging.SetForegroundColour(obj.GetForegroundColour())
@@ -1944,22 +1926,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     if b.GetScreenRect().Contains(scrpos):
                         dst = b
                         break
-                # if dst is None and self.panel.GetScreenRect().Contains(scrpos):
-                #    # try to check if it is after buttons at the end
-                #    tspos = self.panel.ClientToScreen(self.toolbarsizer.GetPosition())
-                #    bspos = self.panel.ClientToScreen(self.cbuttonssizer.GetPosition())
-                #    tsrect = wx.Rect(*(tspos.Get()+self.toolbarsizer.GetSize().Get()))
-                #    bsrect = wx.Rect(*(bspos.Get()+self.cbuttonssizer.GetSize().Get()))
-                #    lbrect = btns[-1].GetScreenRect()
-                #    p = scrpos.Get()
-                #    if len(btns)<4 and tsrect.Contains(scrpos):
-                #        if lbrect.GetRight() < p[0]:
-                #            print "Right of last button on upper cb sizer"
-                #    if bsrect.Contains(scrpos):
-                #        if lbrect.GetBottom() < p[1]:
-                #            print "Below last button on lower cb sizer"
-                #        if lbrect.GetRight() < p[0] and lbrect.GetTop() <= p[1] and lbrect.GetBottom() >= p[1]:
-                #            print "Right to last button on lower cb sizer"
                 if dst is not self.last_drag_dest:
                     if self.last_drag_dest is not None:
                         self.last_drag_dest.SetBackgroundColour(self.last_drag_dest.s_bgc)
@@ -2061,7 +2027,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         okb = wx.Button(dialog, wx.ID_OK, _("Ok"), size = (60, 24))
         dialog.Bind(wx.EVT_TEXT_ENTER, lambda e: dialog.EndModal(wx.ID_OK), dialog.namectrl)
-        # dialog.Bind(wx.EVT_BUTTON, lambda e:self.new_macro_named(dialog, e), okb)
         hbox.Add(okb)
         hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel"), size = (60, 24)))
         vbox.Add(panel)
