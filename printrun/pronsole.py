@@ -215,10 +215,10 @@ class pronsole(cmd.Cmd):
                         try:
                             line = raw_input(self.prompt)
                         except EOFError:
-                            print ""
+                            self.log("")
                             self.do_exit("")
                         except KeyboardInterrupt:
-                            print ""
+                            self.log("")
                             line = ""
                     else:
                         self.stdout.write(self.prompt)
