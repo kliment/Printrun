@@ -912,7 +912,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 grid[item - 1] = value
                 value = tuple(grid)
             except:
-                traceback.print_exc()
+                self.logError(traceback.format_exc())
         if hasattr(self.gviz, trueparam):
             self.apply_gviz_params(self.gviz, trueparam, value)
         if hasattr(self.gwindow, "p") and hasattr(self.gwindow.p, trueparam):
@@ -1032,8 +1032,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         try:
             baud = int(self.baud.GetValue())
         except:
-            self.logError(_("Could not parse baud rate: "))
-            traceback.print_exc(file = sys.stdout)
+            self.logError(_("Could not parse baud rate: ")
+                          + "\n" + traceback.format_exc())
         if self.paused:
             self.p.paused = 0
             self.p.printing = 0
@@ -1251,9 +1251,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.slicep.wait()
             self.stopsf = 1
         except:
-            logging.error(_("Failed to execute slicing software: "))
+            self.logError(_("Failed to execute slicing software: ")
+                          + "\n" + traceback.format_exc())
             self.stopsf = 1
-            traceback.print_exc(file = sys.stdout)
 
     def slice_monitor(self):
         while not self.stopsf:
@@ -1646,7 +1646,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
                     if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
         except:
-            traceback.print_exc()
+            self.logError(traceback.format_exc())
 
     def update_pos(self):
         bits = gcoder.m114_exp.findall(self.posreport)

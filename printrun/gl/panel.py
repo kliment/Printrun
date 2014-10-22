@@ -17,7 +17,6 @@
 
 from threading import Lock
 import logging
-import sys
 import traceback
 import numpy
 import numpy.linalg
@@ -117,8 +116,8 @@ class wxGLPanel(wx.Panel):
                 self.OnDraw()
             except pyglet.gl.lib.GLException:
                 self.gl_broken = True
-                logging.error(_("OpenGL failed, disabling it:"))
-                traceback.print_exc(file = sys.stdout)
+                logging.error(_("OpenGL failed, disabling it:")
+                              + "\n" + traceback.format_exc())
         event.Skip()
 
     def Destroy(self):

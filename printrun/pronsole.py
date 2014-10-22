@@ -369,16 +369,16 @@ class pronsole(cmd.Cmd):
 
     def do_exit(self, l):
         if self.status.extruder_temp_target != 0:
-            print "Setting extruder temp to 0"
+            self.log("Setting extruder temp to 0")
         self.p.send_now("M104 S0.0")
         if self.status.bed_enabled:
             if self.status.bed_temp_target != 0:
-                print "Setting bed temp to 0"
+                self.log("Setting bed temp to 0")
             self.p.send_now("M140 S0.0")
         self.log("Disconnecting from printer...")
         if self.p.printing:
-            print "Are you sure you want to exit while printing?"
-            print "(this will terminate the print)."
+            self.log(_("Are you sure you want to exit while printing?\n\
+(this will terminate the print)."))
             if not self.confirm():
                 return
         self.log(_("Exiting program. Goodbye!"))
@@ -986,8 +986,8 @@ class pronsole(cmd.Cmd):
             if isinstance(e, KeyboardInterrupt):
                 self.logError(_("...interrupted!"))
             else:
-                self.logError(_("Something wrong happened while uploading:"))
-                traceback.print_exc(file = sys.stdout)
+                self.logError(_("Something wrong happened while uploading:")
+                              + "\n" + traceback.format_exc())
             self.p.pause()
             self.p.send_now("M29 " + targetname)
             time.sleep(0.2)
@@ -1151,9 +1151,9 @@ class pronsole(cmd.Cmd):
     def startcb(self, resuming = False):
         self.starttime = time.time()
         if resuming:
-            print _("Print resumed at: %s") % format_time(self.starttime)
+            self.log(_("Print resumed at: %s") % format_time(self.starttime))
         else:
-            print _("Print started at: %s") % format_time(self.starttime)
+            self.log(_("Print started at: %s") % format_time(self.starttime))
             if not self.sdprinting:
                 self.compute_eta = RemainingTimeEstimator(self.fgcode)
             else:
@@ -1169,15 +1169,15 @@ class pronsole(cmd.Cmd):
         try:
             powerset_print_start(reason = "Preventing sleep during print")
         except:
-            logging.error(_("Failed to set power settings:"))
-            traceback.print_exc(file = sys.stdout)
+            self.logError(_("Failed to set power settings:")
+                          + "\n" + traceback.format_exc())
 
     def endcb(self):
         try:
             powerset_print_stop()
         except:
-            logging.error(_("Failed to set power settings:"))
-            traceback.print_exc(file = sys.stdout)
+            self.logError(_("Failed to set power settings:")
+                          + "\n" + traceback.format_exc())
         if self.p.queueindex == 0:
             print_duration = int(time.time() - self.starttime + self.extra_print_time)
             self.log(_("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
@@ -1226,7 +1226,7 @@ class pronsole(cmd.Cmd):
            and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()
-            if self.silent is False: print "\r" + tstring.ljust(15)
+            if self.silent is False: self.log("\r" + tstring.ljust(15))
             sys.stdout.write(self.promptf())
             sys.stdout.flush()
 
@@ -1294,10 +1294,10 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M105")
             time.sleep(0.75)
             if not self.status.bed_enabled:
-                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
+                self.log(_("Hotend: %s/%s") % (self.status.extruder_temp, self.status.extruder_temp_target))
             else:
-                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
-                print "Bed:    %s/%s" % (self.status.bed_temp, self.status.bed_temp_target)
+                self.log(_("Hotend: %s/%s") % (self.status.extruder_temp, self.status.extruder_temp_target))
+                self.log(_("Bed:    %s/%s") % (self.status.bed_temp, self.status.bed_temp_target))
 
     def help_gettemp(self):
         self.log(_("Read the extruder and bed temperature."))
@@ -1314,7 +1314,7 @@ class pronsole(cmd.Cmd):
 
         if f >= 0:
             if f > 250:
-                print _("%s is a high temperature to set your extruder to. Are you sure you want to do that?") % f
+                self.log(_("%s is a high temperature to set your extruder to. Are you sure you want to do that?") % f)
                 if not self.confirm():
                     return
             if self.p.online:
@@ -1396,7 +1396,7 @@ class pronsole(cmd.Cmd):
                     sys.stdout.flush()
                 prev_msg_len = len(prev_msg)
         except KeyboardInterrupt:
-            if self.silent is False: print _("Done monitoring.")
+            if self.silent is False: self.log(_("Done monitoring."))
         self.monitoring = 0
 
     def help_monitor(self):

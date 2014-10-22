@@ -14,7 +14,6 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import platform
-import traceback
 import logging
 import os
 
@@ -126,9 +125,8 @@ try:
     def powerset_print_stop():
         reset_priority()
         deinhibit_sleep()
-except ImportError:
-    print "psutil unavailable, could not import power utils:"
-    traceback.print_exc()
+except ImportError, e:
+    logging.warning("psutil unavailable, could not import power utils:" + e)
 
     def powerset_print_start(reason):
         pass

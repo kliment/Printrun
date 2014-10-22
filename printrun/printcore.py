@@ -115,7 +115,7 @@ class printcore():
     def logError(self, error):
         if self.errorcb:
             try: self.errorcb(error)
-            except: traceback.print_exc()
+            except: logging.error(traceback.format_exc())
         else:
             logging.error(error)
 
@@ -230,7 +230,7 @@ class printcore():
                 self.log.append(line)
                 if self.recvcb:
                     try: self.recvcb(line)
-                    except: traceback.print_exc()
+                    except: self.logError(traceback.format_exc())
                 if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except SelectError as e:
@@ -287,7 +287,7 @@ class printcore():
                     self.online = True
                     if self.onlinecb:
                         try: self.onlinecb()
-                        except: traceback.print_exc()
+                        except: self.logError(traceback.format_exc())
                     return
 
     def _listen(self):
@@ -307,7 +307,7 @@ class printcore():
             if line.startswith('ok') and "T:" in line and self.tempcb:
                 # callback for temp, status, whatever
                 try: self.tempcb(line)
-                except: traceback.print_exc()
+                except: self.logError(traceback.format_exc())
             elif line.startswith('Error'):
                 self.logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
@@ -410,9 +410,9 @@ class printcore():
             if e.message == "cannot join current thread":
                 pass
             else:
-                traceback.print_exc()
+                self.logError(traceback.format_exc())
         except:
-            traceback.print_exc()
+            self.logError(traceback.format_exc())
 
         self.print_thread = None
 
@@ -536,7 +536,7 @@ class printcore():
                 (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
                     try: self.layerchangecb(layer)
-                    except: traceback.print_exc()
+                    except: self.logError(traceback.format_exc())
             if self.preprintsendcb:
                 if self.queueindex + 1 < len(self.mainqueue):
                     (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
@@ -562,7 +562,7 @@ class printcore():
                 self.lineno += 1
                 if self.printsendcb:
                     try: self.printsendcb(gline)
-                    except: traceback.print_exc()
+                    except: self.logError(traceback.format_exc())
             else:
                 self.clear = True
             self.queueindex += 1
@@ -594,7 +594,7 @@ class printcore():
                 logging.info("SENT: %s" % command)
             if self.sendcb:
                 try: self.sendcb(command, gline)
-                except: traceback.print_exc()
+                except: self.logError(traceback.format_exc())
             try:
                 self.printer.write(str(command + "\n"))
                 if self.printer_tcp:

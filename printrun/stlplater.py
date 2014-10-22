@@ -24,6 +24,7 @@ install_locale('pronterface')
 
 import wx
 import time
+import logging
 import threading
 import math
 import sys
@@ -41,8 +42,8 @@ if "-nogl" not in sys.argv:
         from printrun import stlview
         glview = True
     except:
-        print "Could not load 3D viewer for plater:"
-        traceback.print_exc()
+        logging.warning("Could not load 3D viewer for plater:"
+                        + "\n" + traceback.format_exc())
 
 
 def evalme(s):
@@ -375,16 +376,22 @@ class StlPlater(Plater):
             try:
                 self.load_stl(filename)
             except:
-                dlg = wx.MessageDialog(self, _("Loading STL file failed"), _("Error"), wx.OK)
+                dlg = wx.MessageDialog(self, _("Loading STL file failed"),
+                                       _("Error:") + traceback.format_exc(),
+                                       wx.OK)
                 dlg.ShowModal()
-                traceback.print_exc(file = sys.stdout)
+                logging.error(_("Loading STL file failed:")
+                              + "\n" + traceback.format_exc())
         elif filename.lower().endswith(".scad"):
             try:
                 self.load_scad(filename)
             except:
-                dlg = wx.MessageDialog(self, _("Loading OpenSCAD file failed"), _("Error"), wx.OK)
+                dlg = wx.MessageDialog(self, _("Loading OpenSCAD file failed"),
+                                       _("Error:") + traceback.format_exc(),
+                                       wx.OK)
                 dlg.ShowModal()
-                traceback.print_exc(file = sys.stdout)
+                logging.error(_("Loading OpenSCAD file failed:")
+                              + "\n" + traceback.format_exc())
 
     def load_scad(self, name):
         lf = open(name)
@@ -470,10 +477,10 @@ class StlPlater(Plater):
     def autoplate(self, event = None):
         try:
             self.autoplate_simarrange()
-        except:
-            traceback.print_exc(file = sys.stdout)
-            print _("Failed to use simarrange for plating, "
-                    "falling back to the standard method")
+        except Exception, e:
+            logging.warning(_("Failed to use simarrange for plating, "
+                              "falling back to the standard method. "
+                              "The error was: ") + e)
             super(StlPlater, self).autoplate()
 
     def autoplate_simarrange(self):

@@ -17,6 +17,7 @@
 
 import sys
 import traceback
+import logging
 from printrun.pronsole import pronsole
 
 if __name__ == "__main__":
@@ -28,6 +29,6 @@ if __name__ == "__main__":
     except SystemExit:
         interp.p.disconnect()
     except:
-        print _("Caught an exception, exiting:")
-        traceback.print_exc()
+        logging.error(_("Caught an exception, exiting:")
+                      + "\n" + traceback.format_exc())
         interp.p.disconnect()
