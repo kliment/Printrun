@@ -22,6 +22,6 @@ from printrun.gcodeplater import GcodePlater
 
 if __name__ == '__main__':
     app = wx.App(False)
-    main = GcodePlater(sys.argv[1:])
+    main = GcodePlater(filenames = sys.argv[1:])
     main.Show()
     app.MainLoop()

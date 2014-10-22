@@ -34,7 +34,7 @@ import subprocess
 from copy import copy
 
 from printrun import stltool
-from printrun.objectplater import Plater
+from printrun.objectplater import make_plater, PlaterPanel
 
 glview = False
 if "-nogl" not in sys.argv:
@@ -216,15 +216,15 @@ class showstl(wx.Window):
             dc.Blit(scale * m.offsets[0] - bsz[0] / 2, 400 - (scale * m.offsets[1] + bsz[1] / 2), bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
         del dc
 
-class StlPlater(Plater):
+class StlPlaterPanel(PlaterPanel):
 
     load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
     save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
 
-    def __init__(self, filenames = [], size = (800, 580), callback = None,
-                 parent = None, build_dimensions = None, circular_platform = False,
-                 simarrange_path = None, antialias_samples = 0):
-        super(StlPlater, self).__init__(filenames, size, callback, parent, build_dimensions)
+    def prepare_ui(self, filenames = [], callback = None,
+                   parent = None, build_dimensions = None, circular_platform = False,
+                   simarrange_path = None, antialias_samples = 0):
+        super(StlPlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions)
         self.cutting = False
         self.cutting_axis = None
         self.cutting_dist = None
@@ -368,7 +368,8 @@ class StlPlater(Plater):
         self.export_to(name)
         if cb is not None:
             cb(name)
-        self.Destroy()
+        if self.destroy_on_done:
+            self.Destroy()
 
     def load_file(self, filename):
         if filename.lower().endswith(".stl"):
@@ -516,3 +517,5 @@ class StlPlater(Plater):
                         break
         if p.wait() != 0:
             raise RuntimeError(_("simarrange failed"))
+
+StlPlater = make_plater(StlPlaterPanel)

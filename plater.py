@@ -22,6 +22,6 @@ from printrun.stlplater import StlPlater
 
 if __name__ == '__main__':
     app = wx.App(False)
-    main = StlPlater(sys.argv[1:])
+    main = StlPlater(filenames = sys.argv[1:])
     main.Show()
     app.MainLoop()

@@ -30,7 +30,7 @@ import math
 import logging
 
 from printrun import gcoder
-from printrun.objectplater import Plater
+from printrun.objectplater import make_plater, PlaterPanel
 from printrun.gl.libtatlin import actors
 import printrun.gui.viz  # NOQA
 from printrun import gcview
@@ -72,13 +72,15 @@ def rewrite_gline(centeroffset, gline, cosr, sinr):
     else:
         return gline.raw
 
-class GcodePlater(Plater):
+class GcodePlaterPanel(PlaterPanel):
 
     load_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
     save_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
 
-    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None, circular_platform = False, antialias_samples = 0):
-        super(GcodePlater, self).__init__(filenames, size, callback, parent, build_dimensions)
+    def prepare_ui(self, filenames = [], callback = None,
+                   parent = None, build_dimensions = None,
+                   circular_platform = False, antialias_samples = 0):
+        super(GcodePlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
                                        antialias_samples = antialias_samples)
         self.set_viewer(viewer)
@@ -119,7 +121,8 @@ class GcodePlater(Plater):
         self.export_to(name)
         if cb is not None:
             cb(name)
-        self.Destroy()
+        if self.destroy_on_done:
+            self.Destroy()
 
     # What's hard in there ?
     # 1) [x] finding the order in which the objects are printed
@@ -229,9 +232,11 @@ class GcodePlater(Plater):
                         break
         logging.info(_("Exported merged G-Codes to %s") % name)
 
+GcodePlater = make_plater(GcodePlaterPanel)
+
 if __name__ == '__main__':
     app = wx.App(False)
-    main = GcodePlater(sys.argv[1:])
+    main = GcodePlater(filenames = sys.argv[1:])
     for fn in main.filenames:
         main.load_file(fn)
     main.filenames = None

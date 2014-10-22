@@ -31,11 +31,15 @@ def patch_method(obj, method, replacement):
         return replacement(*a, **kwargs)
     setattr(obj, method, types.MethodType(wrapped, obj))
 
-class Plater(wx.Frame):
-    def __init__(self, filenames = [], size = (800, 580), callback = None, parent = None, build_dimensions = None):
-        super(Plater, self).__init__(parent, title = _("Plate building tool"), size = size)
+class PlaterPanel(wx.Panel):
+    def __init__(self, **kwargs):
+        self.destroy_on_done = False
+        parent = kwargs.get("parent", None)
+        super(PlaterPanel, self).__init__(parent = parent)
+        self.prepare_ui(**kwargs)
+
+    def prepare_ui(self, filenames = [], callback = None, parent = None, build_dimensions = None):
         self.filenames = filenames
-        self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         panel = self.menupanel = wx.Panel(self, -1)
         sizer = self.menusizer = wx.GridBagSizer()
@@ -279,3 +283,16 @@ class Plater(wx.Frame):
 
     def export_to(self, name):
         raise NotImplementedError
+
+class Plater(wx.Frame):
+    def __init__(self, **kwargs):
+        self.destroy_on_done = True
+        parent = kwargs.get("parent", None)
+        size = kwargs.get("size", (800, 580))
+        wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
+        self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
+        self.prepare_ui(**kwargs)
+
+def make_plater(panel_class):
+    name = panel_class.__name__.replace("Panel", "")
+    return type(name, (Plater, panel_class), {})

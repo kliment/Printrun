@@ -126,9 +126,12 @@ class MainWindow(wx.Frame):
 
     def newPanel(self, parent, add_to_list = True):
         panel = wx.Panel(parent)
+        self.registerPanel(panel, add_to_list)
+        return panel
+
+    def registerPanel(self, panel, add_to_list = True):
         panel.SetBackgroundColour(self.bgcolor)
         if add_to_list: self.panels.append(panel)
-        return panel
 
     def createTabbedGui(self):
         self.notesizer = wx.BoxSizer(wx.VERTICAL)
@@ -176,6 +179,24 @@ class MainWindow(wx.Frame):
         self.notesizer.Add(self.notebook, 1, wx.EXPAND)
         self.notebook.AddPage(page1panel, _("Commands"))
         self.notebook.AddPage(page2panel, _("Status"))
+        if self.settings.uimode == _("Tabbed with platers"):
+            from printrun.stlplater import StlPlaterPanel
+            from printrun.gcodeplater import GcodePlaterPanel
+            page3panel = StlPlaterPanel(parent = self.notebook,
+                                        callback = self.platecb,
+                                        build_dimensions = self.build_dimensions_list,
+                                        circular_platform = self.settings.circular_bed,
+                                        simarrange_path = self.settings.simarrange_path,
+                                        antialias_samples = int(self.settings.antialias3dsamples))
+            page4panel = GcodePlaterPanel(parent = self.notebook,
+                                          callback = self.platecb,
+                                          build_dimensions = self.build_dimensions_list,
+                                          circular_platform = self.settings.circular_bed,
+                                          antialias_samples = int(self.settings.antialias3dsamples))
+            self.registerPanel(page3panel)
+            self.registerPanel(page4panel)
+            self.notebook.AddPage(page3panel, _("Plater"))
+            self.notebook.AddPage(page4panel, _("G-Code Plater"))
         self.panel.SetSizer(self.notesizer)
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
