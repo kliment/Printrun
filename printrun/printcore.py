@@ -25,7 +25,9 @@ import time
 import platform
 import os
 import sys
+stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
 reload(sys).setdefaultencoding('utf8')
+sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
 import logging
 import traceback
 import errno
@@ -34,10 +36,8 @@ import re
 from functools import wraps
 from collections import deque
 from printrun import gcoder
-from .utils import install_locale, decode_utf8, setup_logging
+from .utils import install_locale, decode_utf8
 install_locale('pronterface')
-
-setup_logging(sys.stderr)
 
 def locked(f):
     @wraps(f)

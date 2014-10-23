@@ -47,15 +47,18 @@ class LogFormatter(logging.Formatter):
             self._fmt = self.format_default
         return super(LogFormatter, self).format(record)
 
-def setup_logging(out, filepath = None):
+def setup_logging(out, filepath = None, reset_handlers = False):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+    if reset_handlers:
+        logger.handlers = []
     formatter = LogFormatter("[%(levelname)s] %(message)s", "%(message)s")
-    logger.handlers = []
     logging_handler = logging.StreamHandler(out)
     logging_handler.setFormatter(formatter)
     logger.addHandler(logging_handler)
-    if filepath is not None:
+    if filepath:
+        if os.path.isdir(filepath):
+            filepath = os.path.join(filepath, "printrun.log")
         formatter = LogFormatter("%(asctime)s - [%(levelname)s] %(message)s", "%(asctime)s - %(message)s")
         logging_handler = logging.FileHandler(filepath)
         logging_handler.setFormatter(formatter)
