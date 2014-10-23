@@ -47,9 +47,11 @@ class LogFormatter(logging.Formatter):
             self._fmt = self.format_default
         return super(LogFormatter, self).format(record)
 
-def setup_logging(out, filepath = None):
+def setup_logging(out, filepath = None, reset_handlers = False):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+    if reset_handlers:
+        logger.handlers = []
     formatter = LogFormatter("[%(levelname)s] %(message)s", "%(message)s")
     logging_handler = logging.StreamHandler(out)
     logging_handler.setFormatter(formatter)

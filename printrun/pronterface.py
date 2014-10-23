@@ -65,28 +65,32 @@ from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP
 
 class ConsoleOutputHandler(object):
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
-    When no file path is specified, we also redirect stdout to ourself to catch print messages and al."""
+    We also redirect stdout and stderr to ourself to catch print messages and al."""
 
     def __init__(self, target, log_path):
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+        sys.stdout = self
+        sys.stderr = self
         if log_path:
-            self.stdout = None
-            setup_logging(self, log_path)
+            self.print_on_stdout = False
+            setup_logging(self, log_path, reset_handlers = True)
             self.target = target
         else:
-            self.stdout = sys.stdout
-            sys.stdout = self
+            self.print_on_stdout = True
             setup_logging(sys.stdout)
             self.target = target
 
     def __del__(self):
         sys.stdout = self.stdout
+        sys.stderr = self.stderr
 
     def write(self, data):
         try:
             self.target(data)
         except:
             pass
-        if self.stdout:
+        if self.print_on_stdout:
             try:
                 data = data.encode("utf-8")
             except:
