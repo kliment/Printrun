@@ -709,7 +709,7 @@ class pronsole(cmd.Cmd):
         args = [arg for arg in args if not arg.startswith("-psn")]
         args = parser.parse_args(args = args)
         self.process_cmdline_arguments(args)
-        setup_logging(sys.stdout, self.settings.log_path)
+        setup_logging(sys.stdout, self.settings.log_path, True)
 
     #  --------------------------------------------------------------
     #  Printer connection handling
