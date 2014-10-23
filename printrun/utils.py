@@ -56,7 +56,7 @@ def setup_logging(out, filepath = None, reset_handlers = False):
     logging_handler = logging.StreamHandler(out)
     logging_handler.setFormatter(formatter)
     logger.addHandler(logging_handler)
-    if filepath is not None:
+    if filepath:
         formatter = LogFormatter("%(asctime)s - [%(levelname)s] %(message)s", "%(asctime)s - %(message)s")
         logging_handler = logging.FileHandler(filepath)
         logging_handler.setFormatter(formatter)
