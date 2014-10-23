@@ -20,9 +20,11 @@ import getopt
 import sys
 
 from printrun.printcore import printcore
+from printrun.utils import setup_logging
 from printrun import gcoder
 
 if __name__ == '__main__':
+    setup_logging(sys.stderr)
     baud = 115200
     loud = False
     statusreport = False

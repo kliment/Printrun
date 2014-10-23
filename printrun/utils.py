@@ -51,7 +51,6 @@ def setup_logging(out, filepath = None):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     formatter = LogFormatter("[%(levelname)s] %(message)s", "%(message)s")
-    logger.handlers = []
     logging_handler = logging.StreamHandler(out)
     logging_handler.setFormatter(formatter)
     logger.addHandler(logging_handler)
