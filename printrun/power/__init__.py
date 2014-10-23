@@ -133,7 +133,7 @@ try:
         reset_priority()
         deinhibit_sleep()
 except ImportError, e:
-    logging.warning("psutil unavailable, could not import power utils:" + e)
+    logging.warning("psutil unavailable, could not import power utils:" + str(e))
 
     def powerset_print_start(reason):
         pass
