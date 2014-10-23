@@ -266,7 +266,7 @@ class StlPlaterPanel(PlaterPanel):
             self.menusizer.Add(cutpanel, pos = (nrows + 1, 0), span = (1, 2), flag = wx.EXPAND)
         else:
             viewer = showstl(self, (580, 580), (0, 0))
-        self.simarrange_path = simarrange_path if simarrange_path else "./simarrange/sa"
+        self.simarrange_path = simarrange_path
         self.set_viewer(viewer)
 
     def start_cutting_tool(self, event, axis, direction):
@@ -475,12 +475,15 @@ class StlPlaterPanel(PlaterPanel):
             logging.info(_("Wrote plate to %s") % name)
 
     def autoplate(self, event = None):
-        try:
-            self.autoplate_simarrange()
-        except Exception, e:
-            logging.warning(_("Failed to use simarrange for plating, "
-                              "falling back to the standard method. "
-                              "The error was: ") + e)
+        if self.simarrange_path:
+            try:
+                self.autoplate_simarrange()
+            except Exception, e:
+                logging.warning(_("Failed to use simarrange for plating, "
+                                  "falling back to the standard method. "
+                                  "The error was: ") + e)
+                super(StlPlater, self).autoplate()
+        else:
             super(StlPlater, self).autoplate()
 
     def autoplate_simarrange(self):

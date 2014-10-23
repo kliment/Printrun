@@ -77,6 +77,20 @@ else:
 try:
     import psutil
 
+    def get_nice(nice, p = None):
+        if not p: p = psutil.Process(os.getpid())
+        if callable(p.nice):
+            return p.nice()
+        else:
+            return p.nice
+
+    def set_nice(nice, p = None):
+        if not p: p = psutil.Process(os.getpid())
+        if callable(p.nice):
+            p.nice(nice)
+        else:
+            p.nice = nice
+
     if platform.system() != "Windows":
         import resource
         if hasattr(psutil, "RLIMIT_NICE"):
@@ -87,22 +101,15 @@ try:
             # RLIMIT_NICE is not available (probably OSX), let's probe
             # Try setting niceness to -20 .. -1
             p = psutil.Process(os.getpid())
-            orig_nice = p.get_nice()
+            orig_nice = get_nice(p)
             for i in range(-20, 0):
                 try:
-                    p.set_nice(i)
+                    set_nice(i, p)
                     high_priority_nice = i
                     break
                 except psutil.AccessDenied, e:
                     pass
-            p.set_nice(orig_nice)
-
-    def set_nice(nice):
-        p = psutil.Process(os.getpid())
-        if callable(p.nice):
-            p.nice(nice)
-        else:
-            p.nice = nice
+            set_nice(orig_nice, p)
 
     def set_priority():
         if platform.system() == "Windows":
@@ -126,7 +133,7 @@ try:
         reset_priority()
         deinhibit_sleep()
 except ImportError, e:
-    logging.warning("psutil unavailable, could not import power utils:" + e)
+    logging.warning("psutil unavailable, could not import power utils:" + str(e))
 
     def powerset_print_start(reason):
         pass
