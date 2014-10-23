@@ -57,6 +57,8 @@ def setup_logging(out, filepath = None, reset_handlers = False):
     logging_handler.setFormatter(formatter)
     logger.addHandler(logging_handler)
     if filepath:
+        if os.path.isdir(filepath):
+            filepath = os.path.join(filepath, "printrun.log")
         formatter = LogFormatter("%(asctime)s - [%(levelname)s] %(message)s", "%(asctime)s - %(message)s")
         logging_handler = logging.FileHandler(filepath)
         logging_handler.setFormatter(formatter)
