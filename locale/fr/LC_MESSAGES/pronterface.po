@@ -711,7 +711,7 @@ msgstr "Température de l'extrudeuse pour le PLA (deg C)"
 
 #: printrun/pronsole.py:307
 msgid "Extruder temperature for PLA"
-msgstr "Température de l'extrudeuse pour l'ABS"
+msgstr "Température de l'extrudeuse pour le PLA"
 
 #: printrun/pronsole.py:308
 msgid "Feedrate for Control Panel Moves in X and Y (mm/min)"
