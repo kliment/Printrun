@@ -65,7 +65,7 @@ else:
                 return
             inhibit_sleep_handler.UnInhibit(inhibit_sleep_token)
             inhibit_sleep_token = None
-    except dbus.DBusException, e:
+    except (ImportError, dbus.DBusException) as e:
         logging.warning("Could not setup DBus for sleep inhibition: %s" % e)
 
         def inhibit_sleep(reason):
