@@ -1135,6 +1135,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if not self.p.online:
             wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
             return
+        self.sdprinting = False
         self.on_startprint()
         self.p.startprint(self.fgcode)
 

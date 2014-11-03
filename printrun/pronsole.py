@@ -1024,6 +1024,7 @@ class pronsole(cmd.Cmd):
             return
         self.log(_("Printing %s") % self.filename)
         self.log(_("You can monitor the print with the monitor command."))
+        self.sdprinting = False
         self.p.startprint(self.fgcode)
 
     def do_pause(self, l):
