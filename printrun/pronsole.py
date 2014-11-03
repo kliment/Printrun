@@ -1233,12 +1233,18 @@ class pronsole(cmd.Cmd):
                 command = command[1]
                 if command == "pause":
                     self.do_pause(None)
+                    sys.stdout.write(self.promptf())
+                    sys.stdout.flush()
                     return True
                 elif command == "resume":
                     self.do_resume(None)
+                    sys.stdout.write(self.promptf())
+                    sys.stdout.flush()
                     return True
                 elif command == "disconnect":
                     self.do_disconnect(None)
+                    sys.stdout.write(self.promptf())
+                    sys.stdout.flush()
                     return True
         return False
 

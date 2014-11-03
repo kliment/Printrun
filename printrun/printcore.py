@@ -19,7 +19,7 @@ __version__ = "2014.08.01"
 
 from serial import Serial, SerialException, PARITY_ODD, PARITY_NONE
 from select import error as SelectError
-from threading import Thread, Lock
+import threading
 from Queue import Queue, Empty as QueueEmpty
 import time
 import platform
@@ -44,7 +44,7 @@ def locked(f):
     def inner(*args, **kw):
         with inner.lock:
             return f(*args, **kw)
-    inner.lock = Lock()
+    inner.lock = threading.Lock()
     return inner
 
 def control_ttyhup(port, disable_hup):
@@ -126,7 +126,8 @@ class printcore():
         if self.printer:
             if self.read_thread:
                 self.stop_read_thread = True
-                self.read_thread.join()
+                if threading.current_thread() != self.read_thread:
+                    self.read_thread.join()
                 self.read_thread = None
             if self.print_thread:
                 self.printing = False
@@ -205,7 +206,7 @@ class printcore():
                     self.printer = None
                     return
             self.stop_read_thread = False
-            self.read_thread = Thread(target = self._listen)
+            self.read_thread = threading.Thread(target = self._listen)
             self.read_thread.start()
             self._start_sender()
 
@@ -328,7 +329,7 @@ class printcore():
 
     def _start_sender(self):
         self.stop_send_thread = False
-        self.send_thread = Thread(target = self._sender)
+        self.send_thread = threading.Thread(target = self._sender)
         self.send_thread.start()
 
     def _stop_sender(self):
@@ -371,8 +372,8 @@ class printcore():
             return True
         self.clear = False
         resuming = (startindex != 0)
-        self.print_thread = Thread(target = self._print,
-                                   kwargs = {"resuming": resuming})
+        self.print_thread = threading.Thread(target = self._print,
+                                             kwargs = {"resuming": resuming})
         self.print_thread.start()
         return True
 
@@ -451,8 +452,8 @@ class printcore():
 
         self.paused = False
         self.printing = True
-        self.print_thread = Thread(target = self._print,
-                                   kwargs = {"resuming": True})
+        self.print_thread = threading.Thread(target = self._print,
+                                             kwargs = {"resuming": True})
         self.print_thread.start()
 
     def send(self, command, wait = 0):
