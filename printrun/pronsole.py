@@ -1095,12 +1095,12 @@ class pronsole(cmd.Cmd):
         if "File selected" in l:
             self.log(_("Starting print"))
             self.p.send_now("M24")
-            self.sdprinting = 1
+            self.sdprinting = True
             # self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "Done printing file" in l:
             self.log(l)
-            self.sdprinting = 0
+            self.sdprinting = False
             self.recvlisteners.remove(self.waitforsdresponse)
             return
         if "SD printing byte" in l:

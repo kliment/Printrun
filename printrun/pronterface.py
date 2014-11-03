@@ -1715,9 +1715,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def listfiles(self, line, ignored = False):
         if "Begin file list" in line:
-            self.sdlisting = 1
+            self.sdlisting = True
         elif "End file list" in line:
-            self.sdlisting = 0
+            self.sdlisting = False
             self.recvlisteners.remove(self.listfiles)
             wx.CallAfter(self.filesloaded)
         elif self.sdlisting:
@@ -1732,13 +1732,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             wx.CallAfter(self.statusbar.SetStatusText, l)
         if "File selected" in l:
             wx.CallAfter(self.statusbar.SetStatusText, _("Starting print"))
-            self.sdprinting = 1
+            self.sdprinting = True
             self.p.send_now("M24")
             self.startcb()
             return
         if "Done printing file" in l:
             wx.CallAfter(self.statusbar.SetStatusText, l)
-            self.sdprinting = 0
+            self.sdprinting = False
             self.recvlisteners.remove(self.waitforsdresponse)
             self.endcb()
             return
