@@ -1687,14 +1687,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 command = command[1]
                 if command == "pause":
                     if not self.paused:
-                        self.pause()
+                        wx.CallAfter(lambda: self.pause())
                     return True
                 elif command == "resume":
                     if self.paused:
-                        self.pause()
+                        wx.CallAfter(lambda: self.pause())
                     return True
                 elif command == "disconnect":
-                    self.do_disconnect(None)
+                    wx.CallAfter(lambda: self.disconnect())
                     return True
         return False
 
