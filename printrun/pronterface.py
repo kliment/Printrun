@@ -1700,17 +1700,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def recvcb(self, l):
         l = l.rstrip()
-        if l.startswith("!!"):
-            return
-        report_type = self.recvcb_report(l)
-        isreport = report_type != REPORT_NONE
-        if report_type & REPORT_POS:
-            self.update_pos()
-        elif report_type & REPORT_TEMP:
-            wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
-            self.update_tempdisplay()
-        if not self.p.loud and (l not in ["ok", "wait"] and not isreport):
-            wx.CallAfter(self.addtexttolog, l + "\n")
+        if not self.recvcb_actions(l):
+            report_type = self.recvcb_report(l)
+            isreport = report_type != REPORT_NONE
+            if report_type & REPORT_POS:
+                self.update_pos()
+            elif report_type & REPORT_TEMP:
+                wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
+                self.update_tempdisplay()
+            if not self.p.loud and (l not in ["ok", "wait"] and not isreport):
+                wx.CallAfter(self.addtexttolog, l + "\n")
         for listener in self.recvlisteners:
             listener(l)
 

@@ -1244,12 +1244,12 @@ class pronsole(cmd.Cmd):
 
     def recvcb(self, l):
         l = l.rstrip()
+        for listener in self.recvlisteners:
+            listener(l)
         if not self.recvcb_actions(l):
             report_type = self.recvcb_report(l)
             if report_type & REPORT_TEMP:
                 self.status.update_tempreading(l)
-            for listener in self.recvlisteners:
-                listener(l)
             if l != "ok" and not self.sdlisting \
                and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
                 if l[:5] == "echo:":
