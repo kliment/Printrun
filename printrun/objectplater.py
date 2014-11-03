@@ -289,6 +289,8 @@ class Plater(wx.Frame):
         self.destroy_on_done = True
         parent = kwargs.get("parent", None)
         size = kwargs.get("size", (800, 580))
+        if "size" in kwargs:
+            del kwargs["size"]
         wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
         self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
         self.prepare_ui(**kwargs)
