@@ -1039,7 +1039,7 @@ class pronsole(cmd.Cmd):
     def help_pause(self):
         self.log(_("Pauses a running print"))
 
-    def pause(self, event):
+    def pause(self, event = None):
         return self.do_pause(None)
 
     def do_resume(self, l):
@@ -1217,20 +1217,46 @@ class pronsole(cmd.Cmd):
                 self.m105_waitcycles = 0
         return isreport
 
-    def recvcb(self, l):
-        report_type = self.recvcb_report(l)
-        if report_type & REPORT_TEMP:
-            self.status.update_tempreading(l)
-        tstring = l.rstrip()
-        for listener in self.recvlisteners:
-            listener(l)
-        if tstring != "ok" and not self.sdlisting \
-           and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
-            if tstring[:5] == "echo:":
-                tstring = tstring[5:].lstrip()
-            if self.silent is False: self.log("\r" + tstring.ljust(15))
+    def recvcb_actions(self, l):
+        if l.startswith("!!"):
+            self.do_pause(None)
+            msg = l.split(" ", 1)[1]
+            if self.silent is False: self.logError(msg.ljust(15))
             sys.stdout.write(self.promptf())
             sys.stdout.flush()
+            return True
+        elif l.startswith("//"):
+            command = l.split(" ", 1)[1]
+            self.log(_("Received command %s") % command)
+            command = command.split(":")
+            if len(command) == 2 and command[0] == "action":
+                command = command[1]
+                if command == "pause":
+                    self.do_pause(None)
+                    return True
+                elif command == "resume":
+                    self.do_resume(None)
+                    return True
+                elif command == "disconnect":
+                    self.do_disconnect(None)
+                    return True
+        return False
+
+    def recvcb(self, l):
+        l = l.rstrip()
+        if not self.recvcb_actions(l):
+            report_type = self.recvcb_report(l)
+            if report_type & REPORT_TEMP:
+                self.status.update_tempreading(l)
+            for listener in self.recvlisteners:
+                listener(l)
+            if l != "ok" and not self.sdlisting \
+               and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
+                if l[:5] == "echo:":
+                    l = l[5:].lstrip()
+                if self.silent is False: self.log("\r" + l.ljust(15))
+                sys.stdout.write(self.promptf())
+                sys.stdout.flush()
 
     def layer_change_cb(self, newlayer):
         layerz = self.fgcode.all_layers[newlayer].z

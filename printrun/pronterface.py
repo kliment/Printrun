@@ -1171,7 +1171,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.p.clear = True
         self.uploading = False
 
-    def pause(self, event):
+    def pause(self, event = None):
         if not self.paused:
             self.log(_("Print paused at: %s") % format_time(time.time()))
             if self.sdprinting:
@@ -1671,17 +1671,46 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if y is not None: self.current_pos[1] = y
         if z is not None: self.current_pos[2] = z
 
+    def recvcb_actions(self, l):
+        if l.startswith("!!"):
+            if not self.paused:
+                self.pause()
+            msg = l.split(" ", 1)[1]
+            if not self.p.loud:
+                wx.CallAfter(self.addtexttolog, msg + "\n")
+            return True
+        elif l.startswith("//"):
+            command = l.split(" ", 1)[1]
+            self.log(_("Received command %s") % command)
+            command = command.split(":")
+            if len(command) == 2 and command[0] == "action":
+                command = command[1]
+                if command == "pause":
+                    if not self.paused:
+                        self.pause()
+                    return True
+                elif command == "resume":
+                    if self.paused:
+                        self.do_resume(None)
+                    return True
+                elif command == "disconnect":
+                    self.do_disconnect(None)
+                    return True
+        return False
+
     def recvcb(self, l):
+        l = l.rstrip()
+        if l.startswith("!!"):
+            return
         report_type = self.recvcb_report(l)
         isreport = report_type != REPORT_NONE
-        if report_type == REPORT_POS:
+        if report_type & REPORT_POS:
             self.update_pos()
-        elif report_type == REPORT_TEMP:
+        elif report_type & REPORT_TEMP:
             wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
             self.update_tempdisplay()
-        tstring = l.rstrip()
-        if not self.p.loud and (tstring not in ["ok", "wait"] and not isreport):
-            wx.CallAfter(self.addtexttolog, tstring + "\n")
+        if not self.p.loud and (l not in ["ok", "wait"] and not isreport):
+            wx.CallAfter(self.addtexttolog, l + "\n")
         for listener in self.recvlisteners:
             listener(l)
 
