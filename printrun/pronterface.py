@@ -1691,7 +1691,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     return True
                 elif command == "resume":
                     if self.paused:
-                        self.do_resume(None)
+                        self.pause()
                     return True
                 elif command == "disconnect":
                     self.do_disconnect(None)
