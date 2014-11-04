@@ -61,7 +61,7 @@ from .excluder import Excluder
 from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
     FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
-from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP
+from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
 class ConsoleOutputHandler(object):
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
@@ -1675,7 +1675,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def recvcb_actions(self, l):
         if l.startswith("!!"):
             if not self.paused:
-                self.pause()
+                wx.CallAfter(self.pause)
             msg = l.split(" ", 1)[1]
             if not self.p.loud:
                 wx.CallAfter(self.addtexttolog, msg + "\n")
@@ -1688,14 +1688,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 command = command[1]
                 if command == "pause":
                     if not self.paused:
-                        wx.CallAfter(lambda: self.pause())
+                        wx.CallAfter(self.pause)
                     return True
                 elif command == "resume":
                     if self.paused:
-                        wx.CallAfter(lambda: self.pause())
+                        wx.CallAfter(self.pause)
                     return True
                 elif command == "disconnect":
-                    wx.CallAfter(lambda: self.disconnect())
+                    wx.CallAfter(self.disconnect)
                     return True
         return False
 
@@ -1709,7 +1709,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             elif report_type & REPORT_TEMP:
                 wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
                 self.update_tempdisplay()
-            if not self.p.loud and (l not in ["ok", "wait"] and not isreport):
+            if not self.p.loud and (l not in ["ok", "wait"] and (not isreport or report_type & REPORT_MANUAL)):
                 wx.CallAfter(self.addtexttolog, l + "\n")
         for listener in self.recvlisteners:
             listener(l)
