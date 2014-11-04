@@ -1676,9 +1676,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if l.startswith("!!"):
             if not self.paused:
                 wx.CallAfter(self.pause)
-            msg = l.split(" ", 1)[1]
-            if not self.p.loud:
-                wx.CallAfter(self.addtexttolog, msg + "\n")
+            msg = l.split(" ", 1)
+            if len(msg) > 1 and not self.p.loud:
+                wx.CallAfter(self.addtexttolog, msg[1] + "\n")
             return True
         elif l.startswith("//"):
             command = l.split(" ", 1)[1]

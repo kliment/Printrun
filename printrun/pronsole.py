@@ -1221,8 +1221,8 @@ class pronsole(cmd.Cmd):
     def recvcb_actions(self, l):
         if l.startswith("!!"):
             self.do_pause(None)
-            msg = l.split(" ", 1)[1]
-            if self.silent is False: self.logError(msg.ljust(15))
+            msg = l.split(" ", 1)
+            if len(msg) > 1 and self.silent is False: self.logError(msg[1].ljust(15))
             sys.stdout.write(self.promptf())
             sys.stdout.flush()
             return True
