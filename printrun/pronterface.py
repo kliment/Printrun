@@ -1681,22 +1681,24 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 wx.CallAfter(self.addtexttolog, msg[1] + "\n")
             return True
         elif l.startswith("//"):
-            command = l.split(" ", 1)[1]
-            self.log(_("Received command %s") % command)
-            command = command.split(":")
-            if len(command) == 2 and command[0] == "action":
+            command = l.split(" ", 1)
+            if len(command) > 1:
                 command = command[1]
-                if command == "pause":
-                    if not self.paused:
-                        wx.CallAfter(self.pause)
-                    return True
-                elif command == "resume":
-                    if self.paused:
-                        wx.CallAfter(self.pause)
-                    return True
-                elif command == "disconnect":
-                    wx.CallAfter(self.disconnect)
-                    return True
+                self.log(_("Received command %s") % command)
+                command = command.split(":")
+                if len(command) == 2 and command[0] == "action":
+                    command = command[1]
+                    if command == "pause":
+                        if not self.paused:
+                            wx.CallAfter(self.pause)
+                        return True
+                    elif command == "resume":
+                        if self.paused:
+                            wx.CallAfter(self.pause)
+                        return True
+                    elif command == "disconnect":
+                        wx.CallAfter(self.disconnect)
+                        return True
         return False
 
     def recvcb(self, l):

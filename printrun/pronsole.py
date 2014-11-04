@@ -1227,26 +1227,28 @@ class pronsole(cmd.Cmd):
             sys.stdout.flush()
             return True
         elif l.startswith("//"):
-            command = l.split(" ", 1)[1]
-            self.log(_("Received command %s") % command)
-            command = command.split(":")
-            if len(command) == 2 and command[0] == "action":
+            command = l.split(" ", 1)
+            if len(command) > 1:
                 command = command[1]
-                if command == "pause":
-                    self.do_pause(None)
-                    sys.stdout.write(self.promptf())
-                    sys.stdout.flush()
-                    return True
-                elif command == "resume":
-                    self.do_resume(None)
-                    sys.stdout.write(self.promptf())
-                    sys.stdout.flush()
-                    return True
-                elif command == "disconnect":
-                    self.do_disconnect(None)
-                    sys.stdout.write(self.promptf())
-                    sys.stdout.flush()
-                    return True
+                self.log(_("Received command %s") % command)
+                command = command.split(":")
+                if len(command) == 2 and command[0] == "action":
+                    command = command[1]
+                    if command == "pause":
+                        self.do_pause(None)
+                        sys.stdout.write(self.promptf())
+                        sys.stdout.flush()
+                        return True
+                    elif command == "resume":
+                        self.do_resume(None)
+                        sys.stdout.write(self.promptf())
+                        sys.stdout.flush()
+                        return True
+                    elif command == "disconnect":
+                        self.do_disconnect(None)
+                        sys.stdout.write(self.promptf())
+                        sys.stdout.flush()
+                        return True
         return False
 
     def recvcb(self, l):
