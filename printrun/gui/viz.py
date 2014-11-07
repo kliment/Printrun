@@ -40,6 +40,9 @@ class NoViz(object):
     def addgcode(self, *a, **kw):
         pass
 
+    def addgcodehighlight(self, *a, **kw):
+        pass
+
     def Refresh(self, *a):
         pass
 
