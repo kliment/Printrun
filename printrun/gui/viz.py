@@ -46,6 +46,14 @@ class NoViz(object):
     def setlayer(self, *a):
         pass
 
+class NoVizWindow(object):
+
+    def __init__(self):
+        self.p = NoViz()
+
+    def Destroy(self):
+        pass
+
 class VizPane(wx.BoxSizer):
 
     def __init__(self, root, parentpanel = None):
@@ -53,6 +61,8 @@ class VizPane(wx.BoxSizer):
         if not parentpanel: parentpanel = root.panel
         if root.settings.mainviz == "None":
             root.gviz = NoViz()
+            root.gwindow = NoVizWindow()
+            return
         use2dview = root.settings.mainviz == "2D"
         if root.settings.mainviz == "3D":
             try:
