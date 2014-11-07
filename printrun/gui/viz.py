@@ -27,6 +27,13 @@ class NoViz(object):
     def clear(self, *a):
         pass
 
+    def addfile_perlayer(self, gcode, showall = False):
+        layer_idx = 0
+        while layer_idx < len(gcode.all_layers):
+            yield layer_idx
+            layer_idx += 1
+        yield None
+
     def addfile(self, *a, **kw):
         pass
 
