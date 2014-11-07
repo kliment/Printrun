@@ -57,7 +57,6 @@ class PronterfaceQuitException(Exception):
     pass
 
 from .gui import MainWindow
-from .excluder import Excluder
 from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
     FloatSpinSetting, BooleanSetting, StaticTextSetting
 from printrun import gcoder
@@ -775,6 +774,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             wx.CallAfter(self.statusbar.SetStatusText, _("No file loaded. Please use load first."))
             return
         if not self.excluder:
+            from .excluder import Excluder
             self.excluder = Excluder()
         self.excluder.pop_window(self.fgcode, bgcolor = self.bgcolor,
                                  build_dimensions = self.build_dimensions_list)

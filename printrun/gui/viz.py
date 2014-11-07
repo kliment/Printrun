@@ -18,8 +18,6 @@ import logging
 
 import wx
 
-from printrun import gviz
-
 class NoViz(object):
 
     showall = False
@@ -78,6 +76,7 @@ class VizPane(wx.BoxSizer):
                               + "Falling back to 2D view, and here is the backtrace:\n"
                               + traceback.format_exc())
         if use2dview:
+            from printrun import gviz
             root.gviz = gviz.Gviz(parentpanel, (300, 300),
                                   build_dimensions = root.build_dimensions_list,
                                   grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
@@ -100,6 +99,7 @@ class VizPane(wx.BoxSizer):
                               + "Falling back to 2D view, and here is the backtrace:\n"
                               + traceback.format_exc())
         if not use3dview:
+            from printrun import gviz
             root.gwindow = gviz.GvizWindow(build_dimensions = root.build_dimensions_list,
                                            grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
                                            extrusion_width = root.settings.preview_extrusion_width,
