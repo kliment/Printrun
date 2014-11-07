@@ -835,7 +835,7 @@ class pronsole(cmd.Cmd):
                 self.disconnect()
                 return
             if do_monitoring:
-                if self.sdprinting:
+                if self.sdprinting and not self.paused:
                     self.p.send_now("M27")
                 if self.m105_waitcycles % 10 == 0:
                     self.p.send_now("M105")
