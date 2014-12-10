@@ -62,10 +62,11 @@ def disable_hup(port):
     control_ttyhup(port, True)
 
 class printcore():
-    def __init__(self, port = None, baud = None):
+    def __init__(self, port = None, baud = None, dtr=None):
         """Initializes a printcore instance. Pass the port and baud rate to
            connect immediately"""
         self.baud = None
+        self.dtr = None
         self.port = None
         self.analyzer = gcoder.GCode()
         # Serial instance connected to the printer, should be None when
@@ -144,7 +145,7 @@ class printcore():
         self.printing = False
 
     @locked
-    def connect(self, port = None, baud = None):
+    def connect(self, port = None, baud = None, dtr=None):
         """Set port and baudrate if given, then connect to printer
         """
         if self.printer:
@@ -153,6 +154,8 @@ class printcore():
             self.port = port
         if baud is not None:
             self.baud = baud
+        if dtr is not None:
+            self.dtr = dtr
         if self.port is not None and self.baud is not None:
             # Connect to socket if "port" is an IP, device if not
             host_regexp = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
@@ -194,6 +197,8 @@ class printcore():
                                           parity = PARITY_ODD)
                     self.printer.close()
                     self.printer.parity = PARITY_NONE
+                    if platform.system() != "Linux":  #there is a bug in pySerial preventing this from working on Linux, sadly.
+                        self.printer.setDTR(dtr);
                     self.printer.open()
                 except SerialException as e:
                     self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
