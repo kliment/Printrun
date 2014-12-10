@@ -325,6 +325,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         event.Skip()
 
     def on_exit(self, event):
+        # prevent unwanted exit
+        if(self.p.printing | self.p.paused):
+            dlg = wx.MessageDialog(self, "Print in progress !\nAre you sure you want to quit?", "Exit", wx.YES_NO | wx.ICON_WARNING)
+            if dlg.ShowModal() == wx.ID_YES:
+                self.Close()
         self.Close()
 
     def kill(self, e):
