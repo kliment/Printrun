@@ -715,9 +715,9 @@ class pronsole(cmd.Cmd):
     #  Printer connection handling
     #  --------------------------------------------------------------
 
-    def connect_to_printer(self, port, baud):
+    def connect_to_printer(self, port, baud, dtr):
         try:
-            self.p.connect(port, baud)
+            self.p.connect(port, baud, dtr)
         except SerialException as e:
             # Currently, there is no errno, but it should be there in the future
             if e.errno == 2:
@@ -765,7 +765,7 @@ class pronsole(cmd.Cmd):
         if baud != self.settings.baudrate:
             self.settings.baudrate = baud
             self.save_in_rc("set baudrate", "set baudrate %d" % baud)
-        self.connect_to_printer(port, baud)
+        self.connect_to_printer(port, baud,dtr)
 
     def help_connect(self):
         self.log("Connect to printer")

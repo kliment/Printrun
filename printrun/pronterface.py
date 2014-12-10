@@ -1050,7 +1050,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.paused = 0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
-        if not self.connect_to_printer(port, baud):
+        if not self.connect_to_printer(port, baud, self.settings.dtr):
             return
         if port != self.settings.port:
             self.set("port", port)
