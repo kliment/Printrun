@@ -765,7 +765,7 @@ class pronsole(cmd.Cmd):
         if baud != self.settings.baudrate:
             self.settings.baudrate = baud
             self.save_in_rc("set baudrate", "set baudrate %d" % baud)
-        self.connect_to_printer(port, baud,dtr)
+        self.connect_to_printer(port, baud, self.settings.dtr)
 
     def help_connect(self):
         self.log("Connect to printer")
