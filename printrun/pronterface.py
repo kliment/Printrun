@@ -1687,10 +1687,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             command = l.split(" ", 1)
             if len(command) > 1:
                 command = command[1]
-                self.log(_("Received command %s") % command)
                 command = command.split(":")
                 if len(command) == 2 and command[0] == "action":
                     command = command[1]
+                    self.log(_("Received command %s") % command)
                     if command == "pause":
                         if not self.paused:
                             wx.CallAfter(self.pause)
