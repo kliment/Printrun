@@ -27,6 +27,9 @@ try:
     from Cython.Distutils import build_ext
 except ImportError, e:
     print "WARNING: Failed to cythonize: %s" % e
+    # Debug helper: uncomment these:
+    # import traceback
+    # traceback.print_exc()
     extensions = None
     build_ext = None
 
