@@ -187,12 +187,19 @@ To use printcore you need python (ideally 2.6.x or 2.7.x) and pyserial (or pytho
 See pronsole for an example of a full-featured host, the bottom of printcore.py for a simple command-line
 sender, or the following code example:
 
-    p=printcore('/dev/ttyUSB0',115200)
-    p.startprint(data) # data is an array of gcode lines
-    p.send_now("M105") # sends M105 as soon as possible
-    p.pause()
+    #to send a file of gcode to the printer
+    from printrun.printcore import printcore
+    from printrun import gcoder
+    p=printcore('/dev/ttyUSB0',115200) # or p.printcore('COM3',115200) on Windows
+    gcode=[i.strip() for i in open('filename.gcode')] # or pass in your own array of gcode lines instead of reading from a file
+    gcode = gcoder.LightGCode(gcode)
+    p.startprint(gcode) # this will start a print
+
+    #If you need to interact with the printer:
+    p.send_now("M105") # this will send M105 immediately, ahead of the rest of the print
+    p.pause() # use these to pause/resume the current print
     p.resume()
-    p.disconnect()
+    p.disconnect() # this is how you disconnect from the printer once you are done. This will also stop running prints.
 
 ## PLATERS
 
