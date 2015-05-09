@@ -1622,19 +1622,6 @@ class pronsole(cmd.Cmd):
         self.log(_("home e - set extruder position to zero (Using G92)"))
         self.log(_("home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"))
 
-    def do_on(self, l):
-        self.on()
-
-    def on(self, ignore = None):
-        if self.p.online:
-            self.log(_("; Power supply on"))
-            self.onecmd("M80")
-        else:
-            self.logError(_("Printer is not online. Unable to turn it on."))
-
-    def help_on(self):
-        self.log(_("Turns on the power supply (if supported)"))        
-                
     def do_off(self, l):
         self.off()
 
