@@ -65,7 +65,9 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     self.Add(root.resetbtn)
 
     self.AddStretchSpacer(prop = 1)
-
+    if root.settings.onbtn:
+        root.onbtn = make_autosize_button(parentpanel, _("On"), root.on, _("Turn printer on"), self)
+        root.printerControls.append(root.onbtn)    
     root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
     root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
     root.sdbtn.Reparent(parentpanel)
