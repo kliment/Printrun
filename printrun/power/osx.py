@@ -37,7 +37,10 @@ def SetUpIOFramework():
 
 def StringToCFString(string):
     # we'll need to convert our strings before use
-    encoding = CoreFoundation.kCFStringEncodingASCII
+    try:
+        encoding = CoreFoundation.kCFStringEncodingASCII
+    except AttributeError:
+        encoding = 0x600
     cfstring = CoreFoundation.CFStringCreateWithCString(None, string, encoding)
     return objc.pyobjc_id(cfstring.nsstring())
 
