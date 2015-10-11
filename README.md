@@ -187,19 +187,21 @@ To use printcore you need python (ideally 2.6.x or 2.7.x) and pyserial (or pytho
 See pronsole for an example of a full-featured host, the bottom of printcore.py for a simple command-line
 sender, or the following code example:
 
-    #to send a file of gcode to the printer
-    from printrun.printcore import printcore
-    from printrun import gcoder
-    p=printcore('/dev/ttyUSB0',115200) # or p.printcore('COM3',115200) on Windows
-    gcode=[i.strip() for i in open('filename.gcode')] # or pass in your own array of gcode lines instead of reading from a file
-    gcode = gcoder.LightGCode(gcode)
-    p.startprint(gcode) # this will start a print
+```python
+#to send a file of gcode to the printer
+from printrun.printcore import printcore
+from printrun import gcoder
+p=printcore('/dev/ttyUSB0',115200) # or p.printcore('COM3',115200) on Windows
+gcode=[i.strip() for i in open('filename.gcode')] # or pass in your own array of gcode lines instead of reading from a file
+gcode = gcoder.LightGCode(gcode)
+p.startprint(gcode) # this will start a print
 
-    #If you need to interact with the printer:
-    p.send_now("M105") # this will send M105 immediately, ahead of the rest of the print
-    p.pause() # use these to pause/resume the current print
-    p.resume()
-    p.disconnect() # this is how you disconnect from the printer once you are done. This will also stop running prints.
+#If you need to interact with the printer:
+p.send_now("M105") # this will send M105 immediately, ahead of the rest of the print
+p.pause() # use these to pause/resume the current print
+p.resume()
+p.disconnect() # this is how you disconnect from the printer once you are done. This will also stop running prints.
+```
 
 ## PLATERS
 
@@ -225,10 +227,12 @@ When the 3D viewer is enabled, the controls are the following:
 on localhost port 7978, which provides print progress information.
 Here is a sample Python script querying the print status:
 
-    import xmlrpclib
+```python
+import xmlrpclib
 
-    rpc = xmlrpclib.ServerProxy('http://localhost:7978')
-    print rpc.status()
+rpc = xmlrpclib.ServerProxy('http://localhost:7978')
+print rpc.status()
+```
 
 ## CONFIGURATION
 
@@ -271,94 +275,110 @@ All macros are saved automatically immediately after being entered.
 
 Example 1, simple one-line alias:
 
-    PC> macro where M114
-    
+```python
+PC> macro where M114
+```
+
 Instead of having to remember the code to query position, you can query the position:
 
-    PC> where
-    X:25.00Y:11.43Z:5.11E:0.00
+```python
+PC> where
+X:25.00Y:11.43Z:5.11E:0.00
+```
 
 Example 2 - macros to switch between different slicer programs, using "set" command to change options:
 
-    PC> macro use_slicer
-    Enter macro using indented lines, end with empty line
-    ..> set sliceoptscommand Slic3r/slic3r.exe --load slic3r.ini
-    ..> set slicecommand Slic3r/slic3r.exe $s --load slic3r.ini --output $o
-    Macro 'use_slicer' defined
-    PC> macro use_sfact
-    ..> set sliceoptscommand python skeinforge/skeinforge_application/skeinforge.py
-    ..> set slicecommand python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s
-    Macro 'use_sfact' defined
-
+```python
+PC> macro use_slicer
+Enter macro using indented lines, end with empty line
+..> set sliceoptscommand Slic3r/slic3r.exe --load slic3r.ini
+..> set slicecommand Slic3r/slic3r.exe $s --load slic3r.ini --output $o
+Macro 'use_slicer' defined
+PC> macro use_sfact
+..> set sliceoptscommand python skeinforge/skeinforge_application/skeinforge.py
+..> set slicecommand python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s
+Macro 'use_sfact' defined
+```
 
 Example 3, simple parametric macro:
 
-    PC> macro move_down_by
-    Enter macro using indented lines, end with empty line
-    ..> G91
-    ..> G1 Z-{0}
-    ..> G92
-    ..>
+```python
+PC> macro move_down_by
+Enter macro using indented lines, end with empty line
+..> G91
+..> G1 Z-{0}
+..> G92
+..>
+```
 
 Invoke the macro to move the printhead down by 5 millimeters:
 
-    PC> move_down_by 5
-
+```python
+PC> move_down_by 5
+```
 
 For more powerful macro programming, it is possible to use python code escaping using ! symbol in front of macro commands.
 Note that this python code invocation also works in interactive prompt:
 
-    PC> !print "Hello, printer!"
-    Hello printer!
+```python
+PC> !print "Hello, printer!"
+Hello printer!
 
-    PC> macro debug_on !self.p.loud = 1
-    Macro 'debug_on' defined
-    PC> debug_on
-    PC> M114
-    SENT:  M114
-    X:0.00Y:0.00Z:0.00E:0.00 Count X:0.00Y:0.00Z:0.00
-    RECV:  X:0.00Y:0.00Z:0.00E:0.00 Count X:0.00Y:0.00Z:0.00
-    RECV:  ok
+PC> macro debug_on !self.p.loud = 1
+Macro 'debug_on' defined
+PC> debug_on
+PC> M114
+SENT:  M114
+X:0.00Y:0.00Z:0.00E:0.00 Count X:0.00Y:0.00Z:0.00
+RECV:  X:0.00Y:0.00Z:0.00E:0.00 Count X:0.00Y:0.00Z:0.00
+RECV:  ok
+```
 
 You can use macro command itself to create simple self-modify or toggle functionality:
 
 Example: swapping two macros to implement toggle:
 
-    PC> macro toggle_debug_on
-    Enter macro using indented lines, end with empty line
-    ..> !self.p.loud = 1
-    ..> !print "Diagnostic information ON"
-    ..> macro toggle_debug toggle_debug_off
-    ..>
-    Macro 'toggle_debug_on' defined
-    PC> macro toggle_debug_off
-    Enter macro using indented lines, end with empty line
-    ..> !self.p.loud = 0
-    ..> !print "Diagnostic information OFF"
-    ..> macro toggle_debug toggle_debug_on
-    ..>
-    Macro 'toggle_debug_off' defined
-    PC> macro toggle_debug toggle_debug_on
-    Macro 'toggle_debug' defined
+```python
+PC> macro toggle_debug_on
+Enter macro using indented lines, end with empty line
+..> !self.p.loud = 1
+..> !print "Diagnostic information ON"
+..> macro toggle_debug toggle_debug_off
+..>
+Macro 'toggle_debug_on' defined
+PC> macro toggle_debug_off
+Enter macro using indented lines, end with empty line
+..> !self.p.loud = 0
+..> !print "Diagnostic information OFF"
+..> macro toggle_debug toggle_debug_on
+..>
+Macro 'toggle_debug_off' defined
+PC> macro toggle_debug toggle_debug_on
+Macro 'toggle_debug' defined
+```
 
 Now, each time we invoke "toggle_debug" macro, it toggles debug information on and off:
 
-    PC> toggle_debug
-    Diagnostic information ON
-    
-    PC> toggle_debug
-    Diagnostic information OFF
+```python
+PC> toggle_debug
+Diagnostic information ON
+
+PC> toggle_debug
+Diagnostic information OFF
+```
 
 When python code (using ! symbol) is used in macros, it is even possible to use blocks/conditionals/loops.
 It is okay to mix python code with pronsole commands, just keep the python indentation.
 For example, following macro toggles the diagnostic information similarily to the previous example:
 
-    !if self.p.loud:
-      !self.p.loud = 0
-      !print "Diagnostic information OFF"
-    !else:
-      !self.p.loud = 1
-      !print "Diagnostic information ON"
+```python
+!if self.p.loud:
+  !self.p.loud = 0
+  !print "Diagnostic information OFF"
+!else:
+  !self.p.loud = 1
+  !print "Diagnostic information ON"
+```
 
 Macro parameters are available in '!'-escaped python code as locally defined list variable: arg[0] arg[1] ... arg[N]
 
@@ -369,20 +389,24 @@ Therefore it is best to use pronsole commands, which easily contain majority of 
 
 Some useful python-mode-only variables:
 
-    !self.settings - contains all settings, e.g. 
-      port (!self.settings.port), baudrate, xy_feedrate, e_feedrate, slicecommand, final_command, build_dimensions
-      You can set them also via pronsole command "set", but you can query the values only via python code.
-    !self.p - printcore object (see USING PRINTCORE section for using printcore object)
-    !self.cur_button - if macro was invoked via custom button, the number of the custom button, e.g. for usage in "button" command
-    !self.gwindow - wx graphical interface object for pronterface (highly risky to use because the GUI implementation details may change a lot between versions)
+```python
+!self.settings - contains all settings, e.g. 
+  port (!self.settings.port), baudrate, xy_feedrate, e_feedrate, slicecommand, final_command, build_dimensions
+  You can set them also via pronsole command "set", but you can query the values only via python code.
+!self.p - printcore object (see USING PRINTCORE section for using printcore object)
+!self.cur_button - if macro was invoked via custom button, the number of the custom button, e.g. for usage in "button" command
+!self.gwindow - wx graphical interface object for pronterface (highly risky to use because the GUI implementation details may change a lot between versions)
+```
 
 Some useful methods:
 
-    !self.onecmd - invokes raw command, e.g. 
-        !self.onecmd("move x 10")
-        !self.onecmd("!print self.p.loud")
-        !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
-    !self.project - invoke Projector
+```python
+!self.onecmd - invokes raw command, e.g. 
+    !self.onecmd("move x 10")
+    !self.onecmd("!print self.p.loud")
+    !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
+!self.project - invoke Projector
+```
 
 ## USING HOST COMMANDS
 
