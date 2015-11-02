@@ -174,6 +174,7 @@ class printcore():
             if not is_serial:
                 self.printer_tcp = socket.socket(socket.AF_INET,
                                                  socket.SOCK_STREAM)
+                self.printer_tcp.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 self.timeout = 0.25
                 self.printer_tcp.settimeout(1.0)
                 try:
