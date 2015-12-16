@@ -59,7 +59,7 @@ class ProntRPC(object):
         if self.pronsole.p.printing:
             progress = 100 * float(self.pronsole.p.queueindex) / len(self.pronsole.p.mainqueue)
         elif self.pronsole.sdprinting:
-            progress = self.percentdone
+            progress = self.pronsole.percentdone
         else: progress = None
         if self.pronsole.p.printing or self.pronsole.sdprinting:
             eta = self.pronsole.get_eta()
