@@ -50,6 +50,7 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = parent_graph.extruder1targettemps
             self.bedtemps = parent_graph.bedtemps
             self.bedtargettemps = parent_graph.bedtargettemps
+	    self.fanpowers=parent_graph.fanpowers
         else:
             self.extruder0temps = [0]
             self.extruder0targettemps = [0]
@@ -57,12 +58,13 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = [0]
             self.bedtemps = [0]
             self.bedtargettemps = [0]
+	    self.fanpowers= [0]
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
 
         self.minyvalue = 0
-        self.maxyvalue = 250
+        self.maxyvalue = 260
         self.rescaley = True  # should the Y axis be rescaled dynamically?
         if self.rescaley:
             self._ybounds = Graph._YBounds(self)
@@ -94,6 +96,7 @@ class Graph(BufferedCanvas):
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
         self.AddExtruder1Temperature(self.extruder1temps[-1])
         self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
+	self.AddFanPower(self.fanpowers[-1])
         if self.rescaley:
             self._ybounds.update()
         self.Refresh()
@@ -216,6 +219,10 @@ class Graph(BufferedCanvas):
                         x_pos - x_add - (font.GetPointSize() * text_size),
                         lastyvalue - (font.GetPointSize() / 2))
 
+    def drawfanpower(self, dc, gc):
+        self.drawtemperature(dc, gc, self.fanpowers,
+                             "Fan", 1, 0, 0, 0, 128)
+
     def drawbedtemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.bedtemps,
                              "Bed", 2, 255, 0, 0, 128)
@@ -239,6 +246,15 @@ class Graph(BufferedCanvas):
     def drawextruder1targettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder1targettemps,
                              "Ex1 Target", 2, 55, 55, 0, 128)
+
+    def SetFanPower(self, value):
+        self.fanpowers.pop()
+        self.fanpowers.append(value)
+
+    def AddFanPower(self, value):
+        self.fanpowers.append(value)
+        if float(len(self.fanpowers) - 1) / self.xsteps > 1:
+            self.fanpowers.pop(0)
 
     def SetBedTemperature(self, value):
         self.bedtemps.pop()
@@ -313,6 +329,7 @@ class Graph(BufferedCanvas):
         self.drawgrid(dc, gc)
         self.drawbedtargettemp(dc, gc)
         self.drawbedtemp(dc, gc)
+        self.drawfanpower(dc, gc)
         self.drawextruder0targettemp(dc, gc)
         self.drawextruder0temp(dc, gc)
         self.drawextruder1targettemp(dc, gc)
@@ -385,6 +402,8 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
+	    miny=min(0,miny);
+	    maxy=max(260,maxy);
 
             padding = (maxy - miny) * self.buffer / (1.0 - 2 * self.buffer)
             miny -= padding
@@ -417,6 +436,8 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
+	    miny=min(0,miny);
+	    maxy=max(260,maxy);
 
             # We have to rescale, so add padding
             bufratio = self.buffer / (1.0 - self.buffer)

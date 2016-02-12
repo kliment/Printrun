@@ -1556,6 +1556,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
+        elif gline.command in ["M106"]:
+            gline_s=gcoder.S(gline)
+            fanpow=255
+            if gline_s is not None:
+                fanpow=gline_s
+            if self.display_graph: wx.CallAfter(self.graph.SetFanPower, fanpow)
+        elif gline.command in ["M107"]:
+            if self.display_graph: wx.CallAfter(self.graph.SetFanPower, 0)
         elif gline.command.startswith("T"):
             tool = gline.command[1:]
             if hasattr(self, "extrudersel"): wx.CallAfter(self.extrudersel.SetValue, tool)
