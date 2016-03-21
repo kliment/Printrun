@@ -21,9 +21,13 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 ## Linux
 ### Ubuntu/Debian
 
-You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
+A Printrun package is already available for Debian Sid (or unstable) which can be installed by simply running
 
-1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg git`
+`apt-get install printrun`
+
+For any other release you can run Printrun directly from source. Fetch and install the dependencies using
+
+`sudo apt-get install python-serial python-wxgtk3.0 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg git`
 
 Clone the repository
 
