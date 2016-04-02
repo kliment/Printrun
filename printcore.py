@@ -18,6 +18,7 @@
 import time
 import getopt
 import sys
+import getopt
 
 from printrun.printcore import printcore
 from printrun.utils import setup_logging
@@ -28,32 +29,59 @@ if __name__ == '__main__':
     baud = 115200
     loud = False
     statusreport = False
+
+    from printrun.printcore import __version__ as printcore_version
+
+    usage = "Usage:\n"+\
+            "  printcore [OPTIONS] PORT FILE\n\n"+\
+            "Options:\n"+\
+            "  -b, --baud=BAUD_RATE"+\
+                        "\t\tSet baud rate value. Default value is 115200\n"+\
+            "  -s, --statusreport\t\tPrint progress as percentage\n"+\
+            "  -v, --verbose\t\t\tPrint additional progress information\n"+\
+            "  -V, --version\t\t\tPrint program's version number and exit\n"+\
+            "  -h, --help\t\t\tPrint this help message and exit\n"
+
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h,b:,v,s",
-                                   ["help", "baud", "verbose", "statusreport"])
+        opts, args = getopt.getopt(sys.argv[1:], "b:svVh",
+                        ["baud=", "statusreport", "verbose", "version", "help"])
     except getopt.GetoptError, err:
         print str(err)
+        print usage
         sys.exit(2)
     for o, a in opts:
         if o in ('-h', '--help'):
-            # FIXME: Fix help
-            print ("Opts are: --help, -b --baud = baudrate, -v --verbose, "
-                   "-s --statusreport")
-            sys.exit(1)
-        if o in ('-b', '--baud'):
-            baud = int(a)
-        if o in ('-v', '--verbose'):
+            print usage
+            sys.exit(0)
+        elif o in ('-V','--version'):
+            print "printrun "+printcore_version
+            sys.exit(0)
+        elif o in ('-b','--baud'):
+            try:
+                baud = int(a)
+            except ValueError:
+                print "ValueError:"
+                print "\tInvalid BAUD_RATE value '%s'" % a
+                print "\tBAUD_RATE must be an integer\n"
+                # FIXME: This should output a more apropiate error message when
+                #        not a good baud rate is passed as an argument
+                #        i.e: when baud <= 1000 or > 225000
+                print usage
+                sys.exit(2)
+        elif o in ('-v', '--verbose'):
             loud = True
         elif o in ('-s', '--statusreport'):
             statusreport = True
 
-    if len(args) > 1:
+    if len(args) <= 1:
+        print "Error: Port or gcode file were not specified.\n"
+        print usage
+        sys.exit(2)
+    elif len(args) > 1:
         port = args[-2]
         filename = args[-1]
         print "Printing: %s on %s with baudrate %d" % (filename, port, baud)
-    else:
-        print "Usage: python [-h|-b|-v|-s] printcore.py /dev/tty[USB|ACM]x filename.gcode"
-        sys.exit(2)
+
     p = printcore(port, baud)
     p.loud = loud
     time.sleep(2)

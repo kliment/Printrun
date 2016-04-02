@@ -482,9 +482,9 @@ class StlPlaterPanel(PlaterPanel):
                 logging.warning(_("Failed to use simarrange for plating, "
                                   "falling back to the standard method. "
                                   "The error was: ") + e)
-                super(StlPlater, self).autoplate()
+                super(StlPlaterPanel, self).autoplate()
         else:
-            super(StlPlater, self).autoplate()
+            super(StlPlaterPanel, self).autoplate()
 
     def autoplate_simarrange(self):
         logging.info(_("Autoplating using simarrange"))

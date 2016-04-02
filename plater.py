@@ -17,10 +17,35 @@
 
 import sys
 import wx
+import getopt
 
 from printrun.stlplater import StlPlater
 
 if __name__ == '__main__':
+
+    from printrun.printcore import __version__ as printcore_version
+
+    usage = "Usage:\n"+\
+            "  plater [OPTION]\n"+\
+            "  plater FILES\n\n"+\
+            "Options:\n"+\
+            "  -V, --version\t\t\tPrint program's version number and exit\n"+\
+            "  -h, --help\t\t\tPrint this help message and exit\n"
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hV", ["help", "version"])
+    except getopt.GetoptError, err:
+        print str(err)
+        print usage
+        sys.exit(2)
+    for o, a in opts:
+        if o in ('-V','--version'):
+            print "printrun "+printcore_version
+            sys.exit(0)
+        elif o in ('-h', '--help'):
+            print usage
+            sys.exit(0)
+
     app = wx.App(False)
     main = StlPlater(filenames = sys.argv[1:])
     main.Show()
