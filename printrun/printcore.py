@@ -182,6 +182,7 @@ class printcore():
                     self.printer_tcp.settimeout(self.timeout)
                     self.printer = self.printer_tcp.makefile()
                 except socket.error as e:
+                    if(e.strerror is None): e.strerror=""
                     self.logError(_("Could not connect to %s:%s:") % (hostname, port) +
                                   "\n" + _("Socket error %s:") % e.errno +
                                   "\n" + e.strerror)
