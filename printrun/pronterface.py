@@ -147,8 +147,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 color = hexcolor_to_float(getattr(self.settings, cleanname), 4)
                 setattr(self, cleanname, list(color))
 
-        self.pauseScript = "pause.gcode"
-        self.endScript = "end.gcode"
+        self.pauseScript = None #"pause.gcode"
+        self.endScript = None #"end.gcode"
 
         self.filename = filename
 
