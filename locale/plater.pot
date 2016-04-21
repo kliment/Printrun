@@ -1,0 +1,93 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2012-08-04 21:53+CEST\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: ENCODING\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: plater.py:246
+msgid "Plate building tool"
+msgstr ""
+
+#: plater.py:252
+msgid "Clear"
+msgstr ""
+
+#: plater.py:253
+msgid "Load"
+msgstr ""
+
+#: plater.py:255 plater.py:258
+msgid "Export"
+msgstr ""
+
+#: plater.py:260
+msgid "Done"
+msgstr ""
+
+#: plater.py:262
+msgid "Cancel"
+msgstr ""
+
+#: plater.py:264
+msgid "Snap to Z = 0"
+msgstr ""
+
+#: plater.py:265
+msgid "Put at 100, 100"
+msgstr ""
+
+#: plater.py:266
+msgid "Delete"
+msgstr ""
+
+#: plater.py:267
+msgid "Auto"
+msgstr ""
+
+#: plater.py:291
+msgid "Autoplating"
+msgstr ""
+
+#: plater.py:319
+msgid "Bed full, sorry sir :("
+msgstr ""
+
+#: plater.py:329
+msgid "Are you sure you want to clear the grid? All unsaved changes will be lost."
+msgstr ""
+
+#: plater.py:329
+msgid "Clear the grid?"
+msgstr ""
+
+#: plater.py:371
+msgid "Pick file to save to"
+msgstr ""
+
+#: plater.py:372
+msgid "STL files (;*.stl;*.STL;)"
+msgstr ""
+
+#: plater.py:393
+msgid "wrote %s"
+msgstr ""
+
+#: plater.py:396
+msgid "Pick file to load"
+msgstr ""
+
+#: plater.py:397
+msgid "STL files (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"
+msgstr ""
+
