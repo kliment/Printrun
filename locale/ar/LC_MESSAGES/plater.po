@@ -1,23 +1,23 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2012-08-04 21:53+CEST\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Project-Id-Version:Plater\n"
+"POT-Creation-Date: 2012-01-09 15:07+CET\n"
+"PO-Revision-Date: 2015-06-25 07:49+0300\n"
+"Last-Translator: سـند <0sanad0@gmail.com>\n"
+"Language-Team: < http://linuxac.org ســ  <مجتمع لينكس العربي\n"
+"Language: ar\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
-"Content-Transfer-Encoding: ENCODING\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+"X-Generator: Virtaal 0.7.1\n"
 "Generated-By: pygettext.py 1.5\n"
-
 
 #: plater.py:246
 msgid "Plate building tool"
-msgstr ""
+msgstr "أداة بناء اللوحة"
 
 #: plater.py:252
 msgid "Clear"
@@ -25,19 +25,19 @@ msgstr ""
 
 #: plater.py:253
 msgid "Load"
-msgstr ""
+msgstr "تحميل"
 
 #: plater.py:255 plater.py:258
 msgid "Export"
-msgstr ""
+msgstr "تصدير"
 
 #: plater.py:260
 msgid "Done"
-msgstr ""
+msgstr "حرر؛ عمل"
 
 #: plater.py:262
 msgid "Cancel"
-msgstr ""
+msgstr "الغِ"
 
 #: plater.py:264
 msgid "Snap to Z = 0"
@@ -49,15 +49,15 @@ msgstr ""
 
 #: plater.py:266
 msgid "Delete"
-msgstr ""
+msgstr "حذف"
 
 #: plater.py:267
 msgid "Auto"
-msgstr ""
+msgstr "تلقائي"
 
 #: plater.py:291
 msgid "Autoplating"
-msgstr ""
+msgstr "
 
 #: plater.py:319
 msgid "Bed full, sorry sir :("
@@ -66,6 +66,8 @@ msgstr ""
 #: plater.py:329
 msgid "Are you sure you want to clear the grid? All unsaved changes will be lost."
 msgstr ""
+"هل أنت متأكد من أنك تريد مسح الشبكة؟ سيتم فقدان كافة التغييرات التي لم يتم "
+"حفظها."
 
 #: plater.py:329
 msgid "Clear the grid?"
@@ -77,11 +79,11 @@ msgstr ""
 
 #: plater.py:372
 msgid "STL files (;*.stl;*.STL;)"
-msgstr ""
+msgstr "ملفات STL (;*.stl;*.STL;)"
 
 #: plater.py:393
 msgid "wrote %s"
-msgstr ""
+msgstr "كتب %s"
 
 #: plater.py:396
 msgid "Pick file to load"
@@ -89,5 +91,4 @@ msgstr ""
 
 #: plater.py:397
 msgid "STL files (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"
-msgstr ""
-
+msgstr "ملغات STL (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"
