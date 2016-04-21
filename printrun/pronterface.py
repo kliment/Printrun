@@ -438,6 +438,21 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except Exception, x:
             self.logError(_("You must enter a speed. (%s)") % (repr(x),))
 
+    def do_setflow(self, l = ""):
+        try:
+            if l.__class__ not in (str, unicode) or not len(l):
+                l = str(self.flow_slider.GetValue())
+            else:
+                l = l.lower()
+            flow = int(l)
+            if self.p.online:
+                self.p.send_now("M221 S" + l)
+                self.log(_("Setting print flow factor to %d%%.") % flow)
+            else:
+                self.logError(_("Printer is not online."))
+        except Exception, x:
+            self.logError(_("You must enter a flow. (%s)") % (repr(x),))
+
     def setbedgui(self, f):
         self.bsetpoint = f
         if self.display_gauges: self.bedtgauge.SetTarget(int(f))
