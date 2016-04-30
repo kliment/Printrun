@@ -1440,6 +1440,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def output_gcode_stats(self):
         gcode = self.fgcode
         self.log(_("%.2fmm of filament used in this print") % gcode.filament_length)
+        if(len(gcode.filament_length_multi)>1):
+            for i in enumerate(gcode.filament_length_multi):
+                print "Extruder %d: %0.02fmm" % (i[0],i[1])
         self.log(_("The print goes:"))
         self.log(_("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width))
         self.log(_("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth))

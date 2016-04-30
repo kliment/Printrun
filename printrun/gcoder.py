@@ -134,8 +134,11 @@ class GCode(object):
     current_z = 0
     # For E this is the absolute position from machine start
     current_e = 0
+    current_e_multi=[0]
     total_e = 0
+    total_e_multi=[0]
     max_e = 0
+    max_e_multi=[0]
     # Current feedrate
     current_f = 0
     # Offset: current offset between the machine origin and the machine current
@@ -144,6 +147,8 @@ class GCode(object):
     offset_y = 0
     offset_z = 0
     offset_e = 0
+    offset_e_multi = [0]
+
     # Expected behavior:
     # - G28 X => X axis is homed, offset_x <- 0, current_x <- home_x
     # - G92 Xk => X axis does not move, so current_x does not change
@@ -154,6 +159,7 @@ class GCode(object):
     # current abs X in machine current coordinate system: current_x - offset_x
 
     filament_length = None
+    filament_length_multi=[0]
     duration = None
     xmin = None
     xmax = None
@@ -184,6 +190,10 @@ class GCode(object):
 
     def _get_abs_e(self):
         return self.current_e - self.offset_e
+    abs_e = property(_get_abs_e)
+
+    def _get_abs_e_multi(self,i):
+        return self.current_e_multi[i] - self.offset_e_multi[i]
     abs_e = property(_get_abs_e)
 
     def _get_abs_pos(self):
@@ -329,6 +339,11 @@ class GCode(object):
         total_e = self.total_e
         max_e = self.max_e
 
+        current_e_multi = self.current_e_multi[current_tool]
+        offset_e_multi = self.offset_e_multi[current_tool]
+        total_e_multi = self.total_e_multi[current_tool]
+        max_e_multi = self.max_e_multi[current_tool]
+
         # Store this one out of the build_layers scope for efficiency
         cur_layer_has_extrusion = False
 
@@ -408,6 +423,16 @@ class GCode(object):
                     relative_e = True
                 elif line.command[0] == "T":
                     current_tool = int(line.command[1:])
+                    while(current_tool+1>len(self.current_e_multi)):
+                        self.current_e_multi+=[0]
+                        self.offset_e_multi+=[0]
+                        self.total_e_multi+=[0]
+                        self.max_e_multi+=[0]
+                current_e_multi = self.current_e_multi[current_tool]
+                offset_e_multi = self.offset_e_multi[current_tool]
+                total_e_multi = self.total_e_multi[current_tool]
+                max_e_multi = self.max_e_multi[current_tool]
+
 
                 if line.command[0] == "G":
                     parse_coordinates(line, split_raw, imperial)
@@ -462,15 +487,28 @@ class GCode(object):
                             line.extruding = line.e > 0
                             total_e += line.e
                             current_e += line.e
+                            total_e_multi += line.e
+                            current_e_multi += line.e
                         else:
                             new_e = line.e + offset_e
                             line.extruding = new_e > current_e
                             total_e += new_e - current_e
                             current_e = new_e
+                            new_e_multi = line.e + offset_e_multi
+                            total_e_multi += new_e_multi - current_e_multi
+                            current_e_multi = new_e_multi
+
                         max_e = max(max_e, total_e)
+                        max_e_multi=max(max_e_multi, total_e_multi)
                         cur_layer_has_extrusion |= line.extruding
                     elif line.command == "G92":
                         offset_e = current_e - line.e
+                        offset_e_multi = current_e_multi - line.e
+
+                self.current_e_multi[current_tool]=current_e_multi
+                self.offset_e_multi[current_tool]=offset_e_multi
+                self.max_e_multi[current_tool]=max_e_multi
+                self.total_e_multi[current_tool]=total_e_multi
 
                 # # Create layers and perform global computations
                 if build_layers:
@@ -623,11 +661,15 @@ class GCode(object):
         self.offset_x = offset_x
         self.offset_y = offset_y
         self.offset_z = offset_z
-
         self.current_e = current_e
         self.offset_e = offset_e
         self.max_e = max_e
         self.total_e = total_e
+        self.current_e_multi[current_tool]=current_e_multi
+        self.offset_e_multi[current_tool]=offset_e_multi
+        self.max_e_multi[current_tool]=max_e_multi
+        self.total_e_multi[current_tool]=total_e_multi
+
 
         # Finalize layers
         if build_layers:
@@ -652,6 +694,11 @@ class GCode(object):
             zmax = max(all_zs)
 
             self.filament_length = self.max_e
+            while len(self.filament_length_multi)<len(self.max_e_multi):
+                    self.filament_length_multi+=[0]
+            for i in enumerate(self.max_e_multi):
+                self.filament_length_multi[i[0]]=i[1]
+
 
             if self.filament_length > 0:
                 self.xmin = xmin_e if not math.isinf(xmin_e) else 0
@@ -699,6 +746,8 @@ def main():
     zdims = (gcode.zmin, gcode.zmax, gcode.height)
     print "\tZ: %0.02f - %0.02f (%0.02f)" % zdims
     print "Filament used: %0.02fmm" % gcode.filament_length
+    for i in enumerate(gcode.filament_length_multi):
+        print "E%d %0.02fmm" % (i[0],i[1])
     print "Number of layers: %d" % gcode.layers_count
     print "Estimated duration: %s" % gcode.estimate_duration()[1]
 
