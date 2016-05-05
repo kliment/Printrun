@@ -147,8 +147,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 color = hexcolor_to_float(getattr(self.settings, cleanname), 4)
                 setattr(self, cleanname, list(color))
 
-        self.pauseScript = "pause.gcode"
-        self.endScript = "end.gcode"
+        self.pauseScript = None #"pause.gcode"
+        self.endScript = None #"end.gcode"
 
         self.filename = filename
 
@@ -437,6 +437,21 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.logError(_("Printer is not online."))
         except Exception, x:
             self.logError(_("You must enter a speed. (%s)") % (repr(x),))
+
+    def do_setflow(self, l = ""):
+        try:
+            if l.__class__ not in (str, unicode) or not len(l):
+                l = str(self.flow_slider.GetValue())
+            else:
+                l = l.lower()
+            flow = int(l)
+            if self.p.online:
+                self.p.send_now("M221 S" + l)
+                self.log(_("Setting print flow factor to %d%%.") % flow)
+            else:
+                self.logError(_("Printer is not online."))
+        except Exception, x:
+            self.logError(_("You must enter a flow. (%s)") % (repr(x),))
 
     def setbedgui(self, f):
         self.bsetpoint = f
@@ -1322,7 +1337,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         dlg = None
         if filename is None:
             dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-            dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
+            dlg.SetWildcard(_("GCODE files (*.gcode;*.gco;*.g)|*.gcode;*.gco;*.g|OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
         if filename or dlg.ShowModal() == wx.ID_OK:
             if filename:
                 name = filename
@@ -1425,6 +1440,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def output_gcode_stats(self):
         gcode = self.fgcode
         self.log(_("%.2fmm of filament used in this print") % gcode.filament_length)
+        if(len(gcode.filament_length_multi)>1):
+            for i in enumerate(gcode.filament_length_multi):
+                print "Extruder %d: %0.02fmm" % (i[0],i[1])
         self.log(_("The print goes:"))
         self.log(_("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width))
         self.log(_("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth))

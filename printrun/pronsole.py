@@ -1187,8 +1187,9 @@ class pronsole(cmd.Cmd):
                                                                                 "duration": format_duration(print_duration)})
 
             # Update total filament length used
-            new_total = self.settings.total_filament_used + self.fgcode.filament_length
-            self.set("total_filament_used", new_total)
+            if self.fgcode is not None:
+                new_total = self.settings.total_filament_used + self.fgcode.filament_length
+                self.set("total_filament_used", new_total)
 
             if not self.settings.final_command:
                 return
