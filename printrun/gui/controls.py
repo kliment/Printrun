@@ -44,7 +44,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         gauges_base_line = base_line + 7
     else:
         gauges_base_line = base_line + 6
-    tempdisp_line = gauges_base_line + (2 if root.display_gauges else 0)
+    tempdisp_line = gauges_base_line + (4 if root.display_gauges else 0)
     if mini_mode and root.display_graph:
         e_base_line = base_line + 3
     else:
@@ -59,13 +59,18 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "btemp_off": (base_line + 1, 2),
         "btemp_val": (base_line + 1, 3),
         "btemp_set": (base_line + 1, 4),
-        "ebuttons": (e_base_line + 0, 0),
-        "esettings": (e_base_line + 1, 0),
-        "speedcontrol": (e_base_line + 2, 0),
-        "flowcontrol": (e_base_line + 3, 0),
-        "htemp_gauge": (gauges_base_line + 0, 0),
-        "btemp_gauge": (gauges_base_line + 1, 0),
-        "tempdisp": (tempdisp_line, 0),
+        "ctemp_label": (base_line + 2, 0),
+        "ctemp_off": (base_line + 2, 2),
+        "ctemp_val": (base_line + 2, 3),
+        "ctemp_set": (base_line + 2, 4),
+        "ebuttons": (e_base_line + 1, 0),
+        "esettings": (e_base_line + 2, 0),
+        "speedcontrol": (e_base_line + 3, 0),
+        "flowcontrol": (e_base_line + 4, 0),
+        "htemp_gauge": (gauges_base_line + 1, 0),
+        "btemp_gauge": (gauges_base_line + 2, 0),
+        "ctemp_gauge": (gauges_base_line + 3, 0),
+        "tempdisp": (tempdisp_line, 3),
         "extrude": (3, 0),
         "reverse": (3, 2),
     }
@@ -79,12 +84,17 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "btemp_off": (1, 1),
         "btemp_val": (1, 1),
         "btemp_set": (1, 1 if root.display_graph else 2),
+        "ctemp_label": (1, 2),
+        "ctemp_off": (1, 1),
+        "ctemp_val": (1, 1),
+        "ctemp_set": (1, 1 if root.display_graph else 2),
         "ebuttons": (1, 5 if root.display_graph else 6),
         "esettings": (1, 5 if root.display_graph else 6),
         "speedcontrol": (1, 5 if root.display_graph else 6),
         "flowcontrol": (1, 5 if root.display_graph else 6),
         "htemp_gauge": (1, 5 if mini_mode else 6),
         "btemp_gauge": (1, 5 if mini_mode else 6),
+        "ctemp_gauge": (1, 5 if mini_mode else 6),
         "tempdisp": (1, 5 if mini_mode else 6),
         "extrude": (1, 2),
         "reverse": (1, 3),
@@ -167,13 +177,37 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     root.printerControls.append(root.setbbtn)
     add("btemp_set", root.setbbtn, flag = wx.EXPAND)
 
+    # Cooler temp // NEXTIME
+    add("ctemp_label", wx.StaticText(parentpanel, -1, _("Cooler:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+    ctemp_choices = [root.coolertemps[i] + " (" + i + ")" for i in sorted(root.coolertemps.keys(), key = lambda x:root.temps[x])]
+
+    root.setcoff = make_button(parentpanel, _("Off"), lambda e: root.do_coolertemp("off"), _("Switch Cooler Off"), size = (38, -1), style = wx.BU_EXACTFIT)
+    root.printerControls.append(root.setcoff)
+    add("ctemp_off", root.setcoff)
+    
+    if root.settings.last_cooler_temperature not in map(float, root.coolertemps.values()):
+        ctemp_choices = [str(root.settings.last_cooler_temperature)] + ctemp_choices
+    root.ctemp = wx.ComboBox(parentpanel, -1, choices = ctemp_choices,
+                             style = wx.CB_DROPDOWN, size = (80, -1))
+    root.ctemp.SetToolTip(wx.ToolTip(_("Select Temperature for Cooler")))
+    root.ctemp.Bind(wx.EVT_COMBOBOX, root.ctemp_change)
+    add("ctemp_val", root.ctemp)
+    
+    root.setcbtn = make_button(parentpanel, _("Set"), root.do_coolertemp, _("Switch Cooler"), size = (38, -1), style = wx.BU_EXACTFIT)
+    root.printerControls.append(root.setcbtn)
+    add("ctemp_set", root.setcbtn, flag = wx.EXPAND)
+    
+    root.ctemp.SetValue(str(root.settings.last_cooler_temperature))
     root.btemp.SetValue(str(root.settings.last_bed_temperature))
     root.htemp.SetValue(str(root.settings.last_temperature))
+
 
     # added for an error where only the bed would get (pla) or (abs).
     # This ensures, if last temp is a default pla or abs, it will be marked so.
     # if it is not, then a (user) remark is added. This denotes a manual entry
-
+    for i in ctemp_choices:
+        if i.split()[0] == str(root.settings.last_cooler_temperature).split('.')[0] or i.split()[0] == str(root.settings.last_cooler_temperature):
+            root.ctemp.SetValue(i)
     for i in btemp_choices:
         if i.split()[0] == str(root.settings.last_bed_temperature).split('.')[0] or i.split()[0] == str(root.settings.last_bed_temperature):
             root.btemp.SetValue(i)
@@ -181,6 +215,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         if i.split()[0] == str(root.settings.last_temperature).split('.')[0] or i.split()[0] == str(root.settings.last_temperature):
             root.htemp.SetValue(i)
 
+    if '(' not in root.ctemp.Value:
+        root.btemp.SetValue(root.ctemp.Value + ' (user)')
     if '(' not in root.btemp.Value:
         root.btemp.SetValue(root.btemp.Value + ' (user)')
     if '(' not in root.htemp.Value:
@@ -261,6 +297,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         add("htemp_gauge", root.hottgauge, flag = wx.EXPAND)
         root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed:"), maxval = 150, bgcolor = root.bgcolor)
         add("btemp_gauge", root.bedtgauge, flag = wx.EXPAND)
+        root.coolertgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Cooler:"), maxval = 50, bgcolor = root.bgcolor)
+        add("ctemp_gauge", root.coolertgauge, flag = wx.EXPAND)
 
         def hotendgauge_scroll_setpoint(e):
             rot = e.GetWheelRotation()
@@ -275,8 +313,16 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
                 root.do_settemp(str(root.bsetpoint + 1))
             elif rot < 0:
                 root.do_settemp(str(max(0, root.bsetpoint - 1)))
+        def coolergauge_scroll_setpoint(e):
+            rot = e.GetWheelRotation()
+            if rot > 0:
+                root.do_settemp(str(root.csetpoint + 1))
+            elif rot < 0:
+                root.do_settemp(str(max(0, root.csetpoint - 1)))
+
         root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotendgauge_scroll_setpoint)
         root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bedgauge_scroll_setpoint)
+	root.coolertgauge.Bind(wx.EVT_MOUSEWHEEL, coolergauge_scroll_setpoint)
 
     # Temperature (M105) feedback display #
     root.tempdisp = wx.StaticText(parentpanel, -1, "", style = wx.ST_NO_AUTORESIZE)
