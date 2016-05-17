@@ -216,7 +216,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
             root.htemp.SetValue(i)
 
     if '(' not in root.ctemp.Value:
-        root.btemp.SetValue(root.ctemp.Value + ' (user)')
+        root.ctemp.SetValue(root.ctemp.Value + ' (user)')
     if '(' not in root.btemp.Value:
         root.btemp.SetValue(root.btemp.Value + ' (user)')
     if '(' not in root.htemp.Value:

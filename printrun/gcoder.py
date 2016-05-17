@@ -724,7 +724,9 @@ class GCode(object):
             self.duration = totaltime
 
     def idxs(self, i):
-        return self.layer_idxs[i], self.line_idxs[i]
+        if i in self.layer_idxs and i in self.line_idxs:
+            return self.layer_idxs[i], self.line_idxs[i]
+        return None, None
 
     def estimate_duration(self):
         return self.layers_count, self.duration

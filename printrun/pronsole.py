@@ -264,11 +264,11 @@ class pronsole(cmd.Cmd):
         return False
 
     def log(self, *msg):
-        msg = u"".join(unicode(i) for i in msg)
+        msg = u"".join(unicode(i).encode('utf-8', 'ignore') for i in msg)
         logging.info(msg)
 
     def logError(self, *msg):
-        msg = u"".join(unicode(i) for i in msg)
+        msg = u"".join(unicode(i).encode('utf-8', 'ignore') for i in msg)
         logging.error(msg)
         if not self.settings.error_command:
             return
