@@ -551,7 +551,10 @@ class printcore():
             if self.preprintsendcb:
                 if self.queueindex + 1 < len(self.mainqueue):
                     (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
-                    next_gline = self.mainqueue.all_layers[next_layer][next_line]
+                    try:
+                        next_gline = self.mainqueue.all_layers[next_layer][next_line]
+                    except:
+                        next_gline = None
                 else:
                     next_gline = None
                 gline = self.preprintsendcb(gline, next_gline)
