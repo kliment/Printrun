@@ -176,7 +176,7 @@ class RemainingTimeEstimator(object):
             layer, line = self.gcode.idxs(idx)
         except:
             self.last_idx = idx
-            return (0, total)
+            return (0, printtime)
         layer_progress = (1 - (float(line + 1) / self.current_layer_lines))
         remaining = layer_progress * self.current_layer_estimate + self.remaining_layers_estimate
         estimate = self.drift * remaining
