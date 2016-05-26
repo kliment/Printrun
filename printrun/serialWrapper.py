@@ -5,9 +5,9 @@
 # Therefore, it follows the license used by pyserial which is the '3-clause BSD license'
 
 from serial import *
-import os
+import sys
 
-if os.name == 'posix':
+if sys.platform.startswith('linux'):
 	import serial.serialposix
 
 	if not hasattr(serial.serialposix, "TCGETS2") and \
