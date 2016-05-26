@@ -1,7 +1,8 @@
 # Serial wrapper around pyserial that adds support for custom baudrates (250000)
 # on linux, when pyserial is < 2.7
 
-__copyright__ = "Copyright (C) 2015 Aleph Objects - Released under terms of the AGPLv3 License"
+# This code was copied from the pyserial 2.7 base code.
+# Therefore, it follows the license used by pyserial which is the '3-clause BSD license'
 
 from serial import *
 import os
