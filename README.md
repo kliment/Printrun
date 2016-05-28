@@ -21,7 +21,7 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 ## Linux
 ### Ubuntu/Debian
 
-You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
+You can run Printrun directly from source. Fetch and install the dependencies using
 
 1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg git`
 
@@ -30,6 +30,10 @@ Clone the repository
 `git clone https://github.com/kliment/Printrun.git`
 
 and you can start using Printrun from the Printrun directory created by the git clone command.
+
+Users of Ubuntu Xenial Xerus or later and Debian Jessie or later won't find the package "python-wxgtk2.8" available, having been replaced by "python-wxgtk3.0". Running Printrun with "python-wxgtk3.0" instead, is possible but it is known to be affected by issue #615.
+
+A Printrun preliminary package is already available in Ubuntu Yakkety Yak and Debian Stretch/Sid repositories. Please be aware that this initial package is also known to be affected by issue #615.
 
 ### Chrome OS 
 
