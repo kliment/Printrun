@@ -29,10 +29,12 @@ if __name__ == "__main__":
             "  pronsole [OPTION]\n\n"+\
             "Options:\n"+\
             "  -V, --version\t\t\tPrint program's version number and exit\n"+\
-            "  -h, --help\t\t\tPrint this help message and exit\n"
+            "  -h, --help\t\t\tPrint this help message and exit\n"+\
+            "  -c, --conf\t\t\tLoad this file on startup instead of .pronsolerc; you may chain config files, if so settings auto-save will use the last specified file\n"+\
+            "  -e, --execute\t\t\tExecutes command after configuration/.pronsolerc is loaded; macros/settings from these commands are not autosaved"
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hV", ["help", "version"])
+        opts, args = getopt.getopt(sys.argv[1:], "hVce", ["help", "version", "conf", "execute"])
     except getopt.GetoptError, err:
         print str(err)
         print usage
