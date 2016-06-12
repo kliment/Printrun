@@ -37,16 +37,17 @@ if __name__ == '__main__':
     from printrun.printcore import __version__ as printcore_version
 
     usage = "Usage:\n"+\
-            "  pronterface [OPTION]\n\n"+\
+            "  pronterface [OPTIONS] [FILE]\n\n"+\
             "Options:\n"+\
-            "  -V, --version\t\t\tPrint program's version number and exit\n"+\
             "  -h, --help\t\t\tPrint this help message and exit\n"+\
+            "  -V, --version\t\t\tPrint program's version number and exit\n"+\
+            "  -v, --verbose\t\t\tIncrease verbosity\n"+\
             "  -a, --autoconnect\t\tAutomatically try to connect to printer on startup\n"+\
-            "  -c, --conf\t\t\tLoad this file on startup instead of .pronsolerc; you may chain config files, if so settings auto-save will use the last specified file\n"+\
-            "  -e, --execute\t\t\tExecutes command after configuration/.pronsolerc is loaded; macros/settings from these commands are not autosaved"
+            "  -c, --conf, --config=CONFIG_FILE\tLoad this file on startup instead of .pronsolerc; you may chain config files, if so settings auto-save will use the last specified file\n"+\
+            "  -e, --execute=COMMAND\t\tExecutes command after configuration/.pronsolerc is loaded; macros/settings from these commands are not autosaved"
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hVcea", ["help", "version", "conf", "execute", "autoconnect"])
+        opts, args = getopt.getopt(sys.argv[1:], "hVvac:e:", ["help", "version", "verbose", "autoconnect", "conf=", "config=", "execute="])
     except getopt.GetoptError, err:
         print str(err)
         print usage
