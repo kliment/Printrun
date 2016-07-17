@@ -49,6 +49,9 @@ class ProntRPC(object):
         self.server.register_function(self.set_bed_temperature,'setbedtemp')
         self.server.register_function(self.load_file,'load_file')
         self.server.register_function(self.startprint,'startprint')
+        self.server.register_function(self.pauseprint,'pauseprint')
+        self.server.register_function(self.resumeprint,'resumeprint')
+        self.server.register_function(self.sendhome,'sendhome')
         self.thread = Thread(target = self.run_server)
         self.thread.start()
 
@@ -93,3 +96,11 @@ class ProntRPC(object):
 
     def startprint(self):
         self.pronsole.do_print("")
+
+    def pauseprint(self):
+        self.pronsole.do_pause("")
+
+    def resumeprint(self):
+        self.pronsole.do_resume("")
+    def sendhome(self):
+        self.pronsole.do_home("")
