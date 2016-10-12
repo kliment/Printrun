@@ -396,7 +396,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             f = float(l)
             if f >= 0:
                 if self.p.online:
-                    self.p.send_now("M104 S" + l) self
+                    self.p.send_now("M104 S" + l)
                     self.log(_("Setting hotend temperature to %f degrees Celsius.") % f)
                     self.sethotendgui(f)
                 else:
