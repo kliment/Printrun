@@ -1016,7 +1016,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
                     print("The progress should be updated on the printer now: " + printer_progress_string)
-                    print("M117 %04.2f%% Est: %s") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),format_duration(secondsremain))
                     #13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
