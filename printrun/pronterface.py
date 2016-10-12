@@ -1016,6 +1016,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
                     print("The progress should be updated on the printer now: " + printer_progress_string)
+                    if len(printer_progress_string) > 25:
+                        print("Warning: The print progress message might be too long to be displayed properly")
                     #13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
