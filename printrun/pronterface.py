@@ -114,6 +114,9 @@ class ComboSetting(wxSetting):
 class PronterWindow(MainWindow, pronsole.pronsole):
 
     _fgcode = None
+    display_progress_on_printer = True
+    printer_progress_time = time.time()
+    printer_progress_update_interval = 10
 
     def _get_fgcode(self):
         return self._fgcode
@@ -393,7 +396,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             f = float(l)
             if f >= 0:
                 if self.p.online:
-                    self.p.send_now("M104 S" + l)
+                    self.p.send_now("M104 S" + l) self
                     self.log(_("Setting hotend temperature to %f degrees Celsius.") % f)
                     self.sethotendgui(f)
                 else:
@@ -1007,6 +1010,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 status_string += _(" Est: %s of %s remaining | ") % (format_duration(secondsremain),
                                                                      format_duration(secondsestimate))
                 status_string += _(" Z: %.3f mm") % self.curlayer
+                if self.display_progress_on_printer and time.time() - self.printer_progress_time >= self.printer_progress_update_interval:
+                    self.printer_progress_time = time.time()
+                    printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
+                    #":" seems to be some kind of seperator for G-CODE"
+                    self.p.send_now(printer_progress_string.replace(":", "."))
+                    print("The progress should be updated on the printer now: " + printer_progress_string)
+                    print("M117 %04.2f%% Est: %s") % (100 * float(self.p.queueindex) / len(self.p.mainqueue),format_duration(secondsremain))
+                    #13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
         wx.CallAfter(self.statusbar.SetStatusText, status_string)
