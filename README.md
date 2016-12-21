@@ -173,7 +173,7 @@ If you want to load stl files, you need to install a slicing program such as Sli
 
 To invoke Slic3r directly from Pronterface your slicing command (_Settings_ > _Options_ > _External Commands_ > _Slice Command_) should look something like `slic3r $s -o $o`. If Slic3r is properly installed "slic3r" will suffice, otherwise, replace it with the full path to Slic3r's executable.
 
-If the Slic3r integration option (_Settings_ > _Options_ > _User interface_ > _Enable Slic3r integration_) is checked a new menu will apear after application restart which will allow you to choose among your previously saved Slic3r Print/Filament/Printer settings.
+If the Slic3r integration option (_Settings_ > _Options_ > _User interface_ > _Enable Slic3r integration_) is checked a new menu will appear after application restart which will allow you to choose among your previously saved Slic3r Print/Filament/Printer settings.
 
 ## USING PRONSOLE
 
