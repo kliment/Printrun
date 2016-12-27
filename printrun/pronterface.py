@@ -1210,7 +1210,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if self.display_progress_on_printer:
                 printer_progress_string = "M117 PausedInPronterface"
                 self.p.send_now(printer_progress_string)
-                print("The status should be updated on the printer now: " + printer_progress_string)
             if self.sdprinting:
                 self.p.send_now("M25")
             else:
@@ -1228,7 +1227,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if self.display_progress_on_printer:
                 printer_progress_string = "M117 Resuming"
                 self.p.send_now(printer_progress_string)
-                print("The status should be updated on the printer now: " + printer_progress_string)
             self.paused = False
             if self.sdprinting:
                 self.p.send_now("M24")
@@ -1562,7 +1560,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if self.display_progress_on_printer:
                 printer_progress_string = "M117 Finished Print"
                 self.p.send_now(printer_progress_string)
-                print("The status should be updated on the printer now: " + printer_progress_string)
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
             wx.CallAfter(self.toolbarsizer.Layout)
