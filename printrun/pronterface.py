@@ -219,6 +219,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         # disable all printer controls until we connect to a printer
         self.gui_set_disconnected()
         self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetFieldsCount(3)
+        self.statusbar.SetStatusWidths([-1, 30, 250] )
+
+        self.statusbar.SetStatusText(" || ", 1)
         self.statusbar.SetStatusText(_("Not connected to printer."))
 
         self.t = ConsoleOutputHandler(self.catchprint, self.settings.log_path)
@@ -1761,6 +1765,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.logError(traceback.format_exc())
 
     def update_pos(self):
+        self.statusbar.SetStatusText(str(self.posreport).split(" E:")[0], 2)
         bits = gcoder.m114_exp.findall(self.posreport)
         x = None
         y = None

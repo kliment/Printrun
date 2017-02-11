@@ -156,6 +156,7 @@ class pronsole(cmd.Cmd):
         self.userm114 = 0
         self.userm105 = 0
         self.m105_waitcycles = 0
+        self.m114_waitcycles = 5
         self.macros = {}
         self.history_file = "~/.pronsole-history"
         self.rc_loaded = False
@@ -862,7 +863,10 @@ class pronsole(cmd.Cmd):
                     self.p.send_now("M27")
                 if self.m105_waitcycles % 10 == 0:
                     self.p.send_now("M105")
+                if self.m114_waitcycles % 10 == 0:
+                    self.p.send_now("M114")
                 self.m105_waitcycles += 1
+                self.m114_waitcycles += 1
         cur_time = time.time()
         wait_time = 0
         while time.time() < cur_time + self.monitor_interval - 0.25:
@@ -1232,6 +1236,8 @@ class pronsole(cmd.Cmd):
             if self.userm114 > 0:
                 self.userm114 -= 1
                 isreport |= REPORT_MANUAL
+            else:
+                self.m114_waitcycles = 0
         if "ok T:"  in l or tempreading_exp.findall(l) or 'ok COOL:' in l:
             self.tempreadings = l
             isreport = REPORT_TEMP
