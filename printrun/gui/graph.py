@@ -49,13 +49,17 @@ class Graph(BufferedCanvas):
             self.extruder1temps = parent_graph.extruder1temps
             self.extruder1targettemps = parent_graph.extruder1targettemps
             self.bedtemps = parent_graph.bedtemps
+	    self.coolertemps = parent_graph.coolertemps
             self.bedtargettemps = parent_graph.bedtargettemps
+            self.coolertargettemps = parent_graph.coolertargettemps
 	    self.fanpowers=parent_graph.fanpowers
         else:
             self.extruder0temps = [0]
             self.extruder0targettemps = [0]
             self.extruder1temps = [0]
             self.extruder1targettemps = [0]
+	    self.coolertemps = [0]
+            self.coolertargettemps = [0]
             self.bedtemps = [0]
             self.bedtargettemps = [0]
 	    self.fanpowers= [0]
@@ -92,6 +96,8 @@ class Graph(BufferedCanvas):
     def updateTemperatures(self, event):
         self.AddBedTemperature(self.bedtemps[-1])
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
+        self.AddCoolerTemperature(self.coolertemps[-1])
+        self.AddCoolerTargetTemperature(self.coolertargettemps[-1])
         self.AddExtruder0Temperature(self.extruder0temps[-1])
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
         self.AddExtruder1Temperature(self.extruder1temps[-1])
@@ -230,6 +236,14 @@ class Graph(BufferedCanvas):
     def drawbedtargettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.bedtargettemps,
                              "Bed Target", 2, 255, 120, 0, 128)
+    def drawcoolertemp(self, dc, gc):
+        self.drawtemperature(dc, gc, self.coolertemps,
+                             "Cooler", 2, 255, 0, 0, 128)
+
+    def drawcoolertargettemp(self, dc, gc):
+        self.drawtemperature(dc, gc, self.coolertargettemps,
+                             "Cooler Target", 2, 255, 120, 0, 128)
+
 
     def drawextruder0temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0temps,
@@ -259,20 +273,39 @@ class Graph(BufferedCanvas):
     def SetBedTemperature(self, value):
         self.bedtemps.pop()
         self.bedtemps.append(value)
+    def SetCoolerTemperature(self, value):
+        self.coolertemps.pop()
+        self.coolertemps.append(value)
 
     def AddBedTemperature(self, value):
         self.bedtemps.append(value)
         if float(len(self.bedtemps) - 1) / self.xsteps > 1:
             self.bedtemps.pop(0)
 
+    def AddCoolerTemperature(self, value):
+        self.coolertemps.append(value)
+        if float(len(self.coolertemps) - 1) / self.xsteps > 1:
+            self.coolertemps.pop(0)
+
+
     def SetBedTargetTemperature(self, value):
         self.bedtargettemps.pop()
         self.bedtargettemps.append(value)
+
+    def SetCoolerTargetTemperature(self, value):
+        self.coolertargettemps.pop()
+        self.coolertargettemps.append(value)
 
     def AddBedTargetTemperature(self, value):
         self.bedtargettemps.append(value)
         if float(len(self.bedtargettemps) - 1) / self.xsteps > 1:
             self.bedtargettemps.pop(0)
+
+    def AddCoolerTargetTemperature(self, value):
+        self.coolertargettemps.append(value)
+        if float(len(self.coolertargettemps) - 1) / self.xsteps > 1:
+            self.coolertargettemps.pop(0)
+
 
     def SetExtruder0Temperature(self, value):
         self.extruder0temps.pop()
@@ -329,6 +362,8 @@ class Graph(BufferedCanvas):
         self.drawgrid(dc, gc)
         self.drawbedtargettemp(dc, gc)
         self.drawbedtemp(dc, gc)
+        self.drawcoolertargettemp(dc, gc)
+        self.drawcoolertemp(dc, gc)
         self.drawfanpower(dc, gc)
         self.drawextruder0targettemp(dc, gc)
         self.drawextruder0temp(dc, gc)
@@ -393,6 +428,10 @@ class Graph(BufferedCanvas):
             bed_min = min(self.graph.bedtemps)
             bed_max = max(self.graph.bedtemps)
             bed_target = self.graph.bedtargettemps[-1]
+            cooler_min = min(self.graph.coolertemps)
+            cooler_max = max(self.graph.coolertemps)
+            cooler_target = self.graph.coolertargettemps[-1]
+
 
             miny = min(extruder0_min, extruder0_target)
             maxy = max(extruder0_max, extruder0_target)
@@ -402,6 +441,10 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
+            if cooler_target > 0 or cooler_max > 5:  # use HBP
+                miny = min(miny, cooler_min, cooler_target)
+                maxy = max(maxy, cooler_max, cooler_target)
+
 	    miny=min(0,miny);
 	    maxy=max(260,maxy);
 
@@ -427,7 +470,9 @@ class Graph(BufferedCanvas):
             bed_min = self.graph.bedtemps[-1]
             bed_max = self.graph.bedtemps[-1]
             bed_target = self.graph.bedtargettemps[-1]
-
+            cooler_min = self.graph.coolertemps[-1]
+            cooler_max = self.graph.coolertemps[-1]
+            cooler_target = self.graph.coolertargettemps[-1]
             miny = min(extruder0_min, extruder0_target)
             maxy = max(extruder0_max, extruder0_target)
             if extruder1_target > 0 or extruder1_max > 5:  # use extruder1
@@ -436,6 +481,10 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
+            if cooler_target > 0 or cooler_max > 5:  # use HBP
+                miny = min(miny, cooler_min, cooler_target)
+                maxy = max(maxy, cooler_max, cooler_target)
+
 	    miny=min(0,miny);
 	    maxy=max(260,maxy);
 

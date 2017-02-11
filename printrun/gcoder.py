@@ -73,6 +73,9 @@ def find_specific_code(line, code):
 def S(line):
     return find_specific_code(line, "S")
 
+def C(line):
+    return " C " in line.raw
+
 def P(line):
     return find_specific_code(line, "P")
 

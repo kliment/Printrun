@@ -58,7 +58,7 @@ try:
 except:
     READLINE = False  # neither readline module is available
 
-tempreading_exp = re.compile("(^T:| T:)")
+tempreading_exp = re.compile("(^T:| T:|^COOL:| COOL:)")
 
 REPORT_NONE = 0
 REPORT_POS = 1
@@ -72,6 +72,8 @@ class Status(object):
         self.extruder_temp_target = 0
         self.bed_temp = 0
         self.bed_temp_target = 0
+        self.cooler_temp = 0
+        self.cooler_temp_target = 0
         self.print_job = None
         self.print_job_progress = 1.0
 
@@ -93,10 +95,21 @@ class Status(object):
             setpoint = temps["B"][1]
             if setpoint:
                 self.bed_temp_target = float(setpoint)
+        cooler_temp = float(temps["C"][0]) if "C" in temps and temps["C"][0] else None
+        if cooler_temp is not None:
+            self.cooler_temp = cooler_temp
+            setpoint = temps["C"][1]
+            if setpoint:
+                self.cooler_temp_target = float(setpoint)
+
 
     @property
     def bed_enabled(self):
         return self.bed_temp != 0
+
+    @property
+    def cooler_enabled(self):
+	return self.cooler_temp != 0
 
     @property
     def extruder_enabled(self):
@@ -136,6 +149,7 @@ class pronsole(cmd.Cmd):
         self.uploading = 0  # Unused, just for pronterface generalization
         self.temps = {"pla": "185", "abs": "230", "off": "0"}
         self.bedtemps = {"pla": "60", "abs": "110", "off": "0"}
+        self.coolertemps = {"off": "0"}
         self.percentdone = 0
         self.posreport = ""
         self.tempreadings = ""
@@ -250,11 +264,11 @@ class pronsole(cmd.Cmd):
         return False
 
     def log(self, *msg):
-        msg = u"".join(unicode(i) for i in msg)
+        msg = u"".join(unicode(i).encode('utf-8', 'ignore') for i in msg)
         logging.info(msg)
 
     def logError(self, *msg):
-        msg = u"".join(unicode(i) for i in msg)
+        msg = u"".join(unicode(i).encode('utf-8', 'ignore') for i in msg)
         logging.error(msg)
         if not self.settings.error_command:
             return
@@ -375,6 +389,10 @@ class pronsole(cmd.Cmd):
             if self.status.bed_temp_target != 0:
                 self.log("Setting bed temp to 0")
             self.p.send_now("M140 S0.0")
+        if self.status.cooler_enabled:
+            if self.status.cooler_temp_target != 0:
+                self.log("Setting cooler temp to 0")
+            self.p.send_now("M142 S0.0")
         self.log("Disconnecting from printer...")
         if self.p.printing:
             self.log(_("Are you sure you want to exit while printing?\n\
@@ -1214,7 +1232,7 @@ class pronsole(cmd.Cmd):
             if self.userm114 > 0:
                 self.userm114 -= 1
                 isreport |= REPORT_MANUAL
-        if "ok T:" in l or tempreading_exp.findall(l):
+        if "ok T:"  in l or tempreading_exp.findall(l) or 'ok COOL:' in l:
             self.tempreadings = l
             isreport = REPORT_TEMP
             if self.userm105 > 0:
@@ -1328,7 +1346,7 @@ class pronsole(cmd.Cmd):
 
     def tempcb(self, l):
         if "T:" in l:
-            self.log(l.strip().replace("T", "Hotend").replace("B", "Bed").replace("ok ", ""))
+            self.log(l.strip().replace("T", "Hotend").replace("B", "Bed").replace("C", "Cooler").replace("ok ", ""))
 
     def do_gettemp(self, l):
         if "dynamic" in l:
@@ -1341,6 +1359,8 @@ class pronsole(cmd.Cmd):
             else:
                 self.log(_("Hotend: %s/%s") % (self.status.extruder_temp, self.status.extruder_temp_target))
                 self.log(_("Bed:    %s/%s") % (self.status.bed_temp, self.status.bed_temp_target))
+            if self.status.cooler_enabled:
+                self.log(_("Cooler: %s/%s") % (self.status.cooler_temp, self.status.cooler_temp_target))
 
     def help_gettemp(self):
         self.log(_("Read the extruder and bed temperature."))
@@ -1395,6 +1415,24 @@ class pronsole(cmd.Cmd):
         else:
             self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
 
+    def do_coolertemp(self, l):
+        f = None
+        try:
+            l = l.lower().replace(", ", ".")
+            for i in self.coolertemps.keys():
+                l = l.replace(i, self.coolertemps[i])
+            f = float(l)
+        except:
+            self.logError(_("You must enter a temperature."))
+        if f is not None and f >= 0:
+            if self.p.online:
+                self.p.send_now("M142 S" + l)
+                self.log(_("Setting cooler temperature to %s degrees Celsius.") % f)
+            else:
+                self.logError(_("Printer is not online."))
+        else:
+            self.logError(_("You cannot set negative temperatures. To turn the cooler off entirely, set its temperature to 0."))
+
     def help_bedtemp(self):
         self.log(_("Sets the bed temperature to the value entered."))
         self.log(_("Enter either a temperature in celsius or one of the following keywords"))
@@ -1403,6 +1441,16 @@ class pronsole(cmd.Cmd):
     def complete_bedtemp(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
             return [i for i in self.bedtemps.keys() if i.startswith(text)]
+
+    def help_coolertemp(self):
+        self.log(_("Sets the cooler temperature to the value entered."))
+        self.log(_("Enter either a temperature in celsius or one of the following keywords"))
+        self.log(", ".join([i + "(" + self.coolertemps[i] + ")" for i in self.coolertemps.keys()]))
+
+    def complete_coolertemp(self, text, line, begidx, endidx):
+        if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1] == " "):
+            return [i for i in self.coolertemps.keys() if i.startswith(text)]
+
 
     def do_monitor(self, l):
         interval = 5
@@ -1640,6 +1688,8 @@ class pronsole(cmd.Cmd):
             self.onecmd("M104 S0")
             self.log(_("; Heatbed off"))
             self.onecmd("M140 S0")
+            self.log(_("; Cooler off"))
+	    self.onecmd("M142 S0")
             self.log(_("; Fan off"))
             self.onecmd("M107")
             self.log(_("; Power supply off"))

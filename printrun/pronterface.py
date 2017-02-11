@@ -423,6 +423,27 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except Exception, x:
             self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
+    def do_coolertemp(self, l = ""):
+        try:
+            if l.__class__ not in (str, unicode) or not len(l):
+                l = str(self.ctemp.GetValue().split()[0])
+            l = l.lower().replace(", ", ".")
+            for i in self.coolertemps.keys():
+                l = l.replace(i, self.coolertemps[i])
+            f = float(l)
+            if f >= 0:
+                if self.p.online:
+                    self.p.send_now("M142 S" + l)
+                    self.log(_("Setting Cooler temperature to %f degrees Celsius.") % f)
+                    self.setcoolergui(f)
+                else:
+                    self.logError(_("Printer is not online."))
+            else:
+                self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
+        except Exception, x:
+            self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
+
+
     def do_setspeed(self, l = ""):
         try:
             if l.__class__ not in (str, unicode) or not len(l):
@@ -472,6 +493,26 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             wx.CallAfter(self.setbbtn.SetForegroundColour, None)
             wx.CallAfter(self.btemp.SetBackgroundColour, "white")
             wx.CallAfter(self.btemp.Refresh)
+
+    def setcoolergui(self, f):
+        self.csetpoint = f
+        if self.display_gauges: self.coolertgauge.SetTarget(int(f))
+        if self.display_graph: wx.CallAfter(self.graph.SetCoolerTargetTemperature, int(f))
+        if f > 0:
+            wx.CallAfter(self.ctemp.SetValue, str(f))
+            self.set("last_cooler_temperature", str(f))
+            wx.CallAfter(self.setcoff.SetBackgroundColour, None)
+            wx.CallAfter(self.setcoff.SetForegroundColour, None)
+            wx.CallAfter(self.setcbtn.SetBackgroundColour, "#FFAA66")
+            wx.CallAfter(self.setcbtn.SetForegroundColour, "#660000")
+            wx.CallAfter(self.ctemp.SetBackgroundColour, "#FFDABB")
+        else:
+            wx.CallAfter(self.setcoff.SetBackgroundColour, "#0044CC")
+            wx.CallAfter(self.setcoff.SetForegroundColour, "white")
+            wx.CallAfter(self.setcbtn.SetBackgroundColour, None)
+            wx.CallAfter(self.setcbtn.SetForegroundColour, None)
+            wx.CallAfter(self.ctemp.SetBackgroundColour, "white")
+            wx.CallAfter(self.ctemp.Refresh)
 
     def sethotendgui(self, f):
         self.hsetpoint = f
@@ -577,6 +618,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.bsetpoint > 0:
             self.do_bedtemp("")
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
+
+    def ctemp_change(self, event):
+        if self.csetpoint > 0:
+            self.do_coolertemp("")
+        wx.CallAfter(self.ctemp.SetInsertionPoint, 0)
+
 
     def tool_change(self, event):
         self.do_tool(self.extrudersel.GetValue())
@@ -869,6 +916,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(HiddenSetting("last_window_maximized", False))
         self.settings._add(HiddenSetting("last_sash_position", -1))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
+        self.settings._add(HiddenSetting("last_cooler_temperature", 0.0))
         self.settings._add(HiddenSetting("last_file_path", u""))
         self.settings._add(HiddenSetting("last_file_filter", 0))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
@@ -1119,6 +1167,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.p.reset()
             self.sethotendgui(0)
             self.setbedgui(0)
+	    self.setcoolergui(0)
             self.p.printing = 0
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
             if self.paused:
@@ -1574,12 +1623,19 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
-        elif gline.command in ["M140", "M190"]:
+        elif gline.command in ["M140", "M190"] and not gcoder.C(gline):
             gline_s = gcoder.S(gline)
             if gline_s is not None:
                 temp = gline_s
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
+        elif gline.command in ["M142", "M192"] and gcoder.C(gline):
+            gline_s = gcoder.S(gline)
+            if gline_s is not None:
+                temp = gline_s
+                if self.display_gauges: wx.CallAfter(self.coolertgauge.SetTarget, temp)
+                if self.display_graph: wx.CallAfter(self.graph.SetCoolerTargetTemperature, temp)
+
         elif gline.command in ["M106"]:
             gline_s=gcoder.S(gline)
             fanpow=255
@@ -1691,6 +1747,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     setpoint = float(setpoint)
                     if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
                     if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
+            cooler_temp = float(temps["C"][0]) if "C" in temps and temps["C"][0] else None
+            if cooler_temp is not None:
+                if self.display_graph: wx.CallAfter(self.graph.SetCoolerTemperature, cooler_temp)
+                if self.display_gauges: wx.CallAfter(self.coolertgauge.SetValue, cooler_temp)
+                setpoint = temps["C"][1]
+                if setpoint:
+                    setpoint = float(setpoint)
+                    if self.display_graph: wx.CallAfter(self.graph.SetCoolerTargetTemperature, setpoint)
+                    if self.display_gauges: wx.CallAfter(self.coolertgauge.SetTarget, setpoint)
+
         except:
             self.logError(traceback.format_exc())
 
