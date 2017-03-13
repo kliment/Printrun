@@ -23,7 +23,7 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
 You can run Printrun directly from source. Fetch and install the dependencies using
 
-1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg git`
+1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git`
 
 Clone the repository
 
