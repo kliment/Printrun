@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import sys
 import wx
 import getopt
@@ -24,6 +25,8 @@ from printrun.stlplater import StlPlater
 if __name__ == '__main__':
 
     from printrun.printcore import __version__ as printcore_version
+
+    os.environ['GDK_BACKEND'] = 'x11'
 
     usage = "Usage:\n"+\
             "  plater [OPTION]\n"+\
