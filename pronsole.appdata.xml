@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+ <id type="desktop">pronsole.desktop</id>
+ <licence>CC0</licence>
+ <summary>3D printer host software for console</summary>
+ <description>
+  <p>Pronsole is a command line user interface for desktop 3D printers, such as RepRap. It lets you to load Gcode, connect to printer and send the Gcode to it. Best option for controling 3D printer from headless or not enough powerful machines.</p>
+  <p>It allows you not only to send Gcode form file, but also control the printer manually or send Gcode commands directly to the printer.</p>
+  <p>Is integrates slicing tool, so if you load an STL 3D model to it as well as Gcode.</p>
+ </description>
+ <screenshots>
+  <screenshot type="default" width="659" height="388">https://raw.github.com/kliment/Printrun/master/screenshots/pronsole.png</screenshot>
+ </screenshots>
+ <url type="homepage">https://github.com/kliment/Printrun</url>
+</application>

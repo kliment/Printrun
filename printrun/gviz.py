@@ -15,46 +15,80 @@
 
 from Queue import Queue
 from collections import deque
-import wx, time
-from printrun import gcoder
+import numpy
+import wx
+import time
+from . import gcoder
+from .injectgcode import injector, injector_edit
 
-from printrun_utils import imagefile
+from .utils import imagefile, install_locale, get_home_pos
+install_locale('pronterface')
+
+class GvizBaseFrame(wx.Frame):
+
+    def create_base_ui(self):
+        self.CreateStatusBar(1)
+        self.SetStatusText(_("Layer number and Z position show here when you scroll"))
+
+        hpanel = wx.Panel(self, -1)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        panel = wx.Panel(hpanel, -1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        self.toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
+        self.toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
+        self.toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
+        self.toolbar.AddSeparator()
+        self.toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
+        self.toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
+        self.toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"), longHelp = '')
+        self.toolbar.AddSeparator()
+        self.toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelpString = _("Inject G-Code"), longHelpString = _("Insert code at the beginning of this layer"))
+        self.toolbar.AddSimpleTool(7, wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelpString = _("Edit layer"), longHelpString = _("Edit the G-Code of this layer"))
+
+        vbox.Add(self.toolbar, 0, border = 5)
+
+        panel.SetSizer(vbox)
+
+        hbox.Add(panel, 1, flag = wx.EXPAND)
+        self.layerslider = wx.Slider(hpanel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
+        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
+        hbox.Add(self.layerslider, 0, border = 5, flag = wx.LEFT | wx.EXPAND)
+        hpanel.SetSizer(hbox)
+
+        return panel, vbox
+
+    def setlayercb(self, layer):
+        self.layerslider.SetValue(layer)
+
+    def process_slider(self, event):
+        raise NotImplementedError
 
 ID_ABOUT = 101
 ID_EXIT = 110
-class window(wx.Frame):
-    def __init__(self, f, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5):
-        wx.Frame.__init__(self, None, title = "Gcode view, shift to move view, mousewheel to set layer", size = size)
+class GvizWindow(GvizBaseFrame):
+    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
+        super(GvizWindow, self).__init__(None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
 
-        self.CreateStatusBar(1);
-        self.SetStatusText("Layer number and Z position show here when you scroll");
+        panel, vbox = self.create_base_ui()
 
-        panel = wx.Panel(self, -1)
-        self.p = gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, realparent = self)
+        self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER)
-        toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom In [+]', '')
-        toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Zoom Out [-]', '')
-        toolbar.AddSeparator()
-        toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Up a Layer [U]', '')
-        toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Move Down a Layer [D]', '')
-        toolbar.AddSimpleTool(5, wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Reset view', '')
-        toolbar.AddSeparator()
-        #toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), 'Insert Code at start of this layer', '')
-        toolbar.Realize()
-        vbox.Add(toolbar, 0, border = 5)
+        self.toolbar.Realize()
         vbox.Add(self.p, 1, wx.EXPAND)
-        panel.SetSizer(vbox)
-        self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1.2), id = 1)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.zoom(-1, -1, 1/1.2), id = 2)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerup(), id = 3)
-        self.Bind(wx.EVT_TOOL, lambda x:self.p.layerdown(), id = 4)
-        self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
-        #self.Bind(wx.EVT_TOOL, lambda x:self.p.inject(), id = 6)
 
-        self.initpos = [0, 0]
+        self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1.2), id = 1)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1 / 1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 3)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 4)
+        self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.inject(), id = 6)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.editlayer(), id = 7)
+
+        self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
         self.Bind(wx.EVT_KEY_DOWN, self.key)
         self.p.Bind(wx.EVT_MOUSEWHEEL, self.zoom)
@@ -63,11 +97,18 @@ class window(wx.Frame):
         self.Bind(wx.EVT_MOUSE_EVENTS, self.mouse)
 
         if f:
-            gcode = gcoder.GCode(f)
+            gcode = gcoder.GCode(f, get_home_pos(self.p.build_dimensions))
             self.p.addfile(gcode)
 
     def set_current_gline(self, gline):
         return
+
+    def process_slider(self, event):
+        self.p.layerindex = self.layerslider.GetValue()
+        z = self.p.get_currentz()
+        wx.CallAfter(self.SetStatusText, _("Layer %d - Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
+        self.p.dirty = True
+        wx.CallAfter(self.p.Refresh)
 
     def resetview(self, event):
         self.p.translate = [0.0, 0.0]
@@ -75,17 +116,17 @@ class window(wx.Frame):
         self.p.zoom(0, 0, 1.0)
 
     def mouse(self, event):
-        if event.ButtonUp(wx.MOUSE_BTN_LEFT):
+        if event.ButtonUp(wx.MOUSE_BTN_LEFT) or event.ButtonUp(wx.MOUSE_BTN_RIGHT):
             if self.initpos is not None:
                 self.initpos = None
         elif event.Dragging():
             e = event.GetPositionTuple()
-            if self.initpos is None or not hasattr(self, "basetrans"):
+            if self.initpos is None:
                 self.initpos = e
                 self.basetrans = self.p.translate
             self.p.translate = [self.basetrans[0] + (e[0] - self.initpos[0]),
                                 self.basetrans[1] + (e[1] - self.initpos[1])]
-            self.p.dirty = 1
+            self.p.dirty = True
             wx.CallAfter(self.p.Refresh)
         else:
             event.Skip()
@@ -105,70 +146,71 @@ class window(wx.Frame):
         if x in kzi:
             self.p.zoom(cx, cy, 1.2)
         if x in kzo:
-            self.p.zoom(cx, cy, 1/1.2)
+            self.p.zoom(cx, cy, 1 / 1.2)
 
     def zoom(self, event):
         z = event.GetWheelRotation()
         if event.ShiftDown():
-            if z > 0:   self.p.layerdown()
+            if z > 0: self.p.layerdown()
             elif z < 0: self.p.layerup()
         else:
-            if z > 0:   self.p.zoom(event.GetX(), event.GetY(), 1.2)
-            elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1/1.2)
+            if z > 0: self.p.zoom(event.GetX(), event.GetY(), 1.2)
+            elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1 / 1.2)
 
-class gviz(wx.Panel):
+class Gviz(wx.Panel):
 
     # Mark canvas as dirty when setting showall
     _showall = 0
+
     def _get_showall(self):
         return self._showall
+
     def _set_showall(self, showall):
         if showall != self._showall:
-            self.dirty = 1
+            self.dirty = True
             self._showall = showall
     showall = property(_get_showall, _set_showall)
 
-    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, realparent = None):
-        wx.Panel.__init__(self, parent, -1, size = size)
+    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000", realparent = None):
+        wx.Panel.__init__(self, parent, -1)
         self.widget = self
-        self.SetMinSize((150, 150))
+        size = [max(1.0, x) for x in size]
+        ratio = size[0] / size[1]
+        self.SetMinSize((150, 150 / ratio))
         self.parent = realparent if realparent else parent
         self.size = size
         self.build_dimensions = build_dimensions
         self.grid = grid
-        self.lastpos = [0, 0, 0, 0, 0, 0, 0]
-        self.hilightpos = self.lastpos[:]
         self.Bind(wx.EVT_PAINT, self.paint)
         self.Bind(wx.EVT_SIZE, self.resize)
-        self.lines = {}
-        self.pens = {}
-        self.arcs = {}
-        self.arcpens = {}
-        self.layers = []
-        self.layerindex = 0
-        self.filament_width = extrusion_width # set it to 0 to disable scaling lines with zoom
+        self.hilight = deque()
+        self.hilightarcs = deque()
+        self.hilightqueue = Queue(0)
+        self.hilightarcsqueue = Queue(0)
+        self.clear()
+        self.filament_width = extrusion_width  # set it to 0 to disable scaling lines with zoom
         self.update_basescale()
         self.scale = self.basescale
-        penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
+        penwidth = max(1.0, self.filament_width * ((self.scale[0] + self.scale[1]) / 2.0))
         self.translate = [0.0, 0.0]
         self.mainpen = wx.Pen(wx.Colour(0, 0, 0), penwidth)
         self.arcpen = wx.Pen(wx.Colour(255, 0, 0), penwidth)
         self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
-        self.fades = [wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50), penwidth) for i in xrange(6)]
-        self.penslist = [self.mainpen, self.travelpen, self.hlpen]+self.fades
-        self.showall = 0
-        self.hilight = deque()
-        self.hilightarcs = deque()
-        self.hilightqueue = Queue(0)
-        self.hilightarcsqueue = Queue(0)
-        self.dirty = 1
-        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
+        self.fades = [wx.Pen(wx.Colour(250 - 0.6 ** i * 100, 250 - 0.6 ** i * 100, 200 - 0.4 ** i * 50), penwidth) for i in xrange(6)]
+        self.penslist = [self.mainpen, self.travelpen, self.hlpen] + self.fades
+        self.bgcolor = wx.Colour()
+        self.bgcolor.SetFromName(bgcolor)
+        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
+        self.paint_overlay = None
 
     def inject(self):
-        #import pdb; pdb.set_trace()
-        print"Inject code here..."
-        print  "Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm"
+        layer = self.layers.index(self.layerindex)
+        injector(self.gcode, self.layerindex, layer)
+
+    def editlayer(self):
+        layer = self.layers.index(self.layerindex)
+        injector_edit(self.gcode, self.layerindex, layer)
 
     def clearhilights(self):
         self.hilight.clear()
@@ -179,49 +221,66 @@ class gviz(wx.Panel):
             self.hilightarcsqueue.get_nowait()
 
     def clear(self):
+        self.gcode = None
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
+        self.hilightpos = self.lastpos[:]
         self.lines = {}
         self.pens = {}
         self.arcs = {}
         self.arcpens = {}
-        self.layers = []
+        self.layers = {}
+        self.layersz = []
         self.clearhilights()
         self.layerindex = 0
         self.showall = 0
-        self.dirty = 1
+        self.dirty = True
+        self.partial = False
+        self.painted_layers = set()
         wx.CallAfter(self.Refresh)
+
+    def get_currentz(self):
+        z = self.layersz[self.layerindex]
+        z = 0. if z is None else z
+        return z
 
     def layerup(self):
         if self.layerindex + 1 < len(self.layers):
             self.layerindex += 1
-            self.parent.SetStatusText("Layer %d - Going Up - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
-            self.dirty = 1
+            z = self.get_currentz()
+            wx.CallAfter(self.parent.SetStatusText, _("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, z), 0)
+            self.dirty = True
+            self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
 
     def layerdown(self):
         if self.layerindex > 0:
             self.layerindex -= 1
-            self.parent.SetStatusText("Layer %d - Going Down - Z = %.03f mm" % (self.layerindex + 1, self.layers[self.layerindex]), 0)
-            self.dirty = 1
+            z = self.get_currentz()
+            wx.CallAfter(self.parent.SetStatusText, _("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, z), 0)
+            self.dirty = True
+            self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
 
     def setlayer(self, layer):
         if layer in self.layers:
-            self.layerindex = self.layers.index(layer)
-            self.dirty = 1
+            self.clearhilights()
+            self.layerindex = self.layers[layer]
+            self.dirty = True
             self.showall = 0
             wx.CallAfter(self.Refresh)
 
     def update_basescale(self):
-        self.basescale = 2*[min(float(self.size[0] - 1)/self.build_dimensions[0],
-                                float(self.size[1] - 1)/self.build_dimensions[1])]
+        self.basescale = 2 * [min(float(self.size[0] - 1) / self.build_dimensions[0],
+                                  float(self.size[1] - 1) / self.build_dimensions[1])]
 
     def resize(self, event):
-        oldside = max(1.0, min(self.size))
-        self.size = self.GetClientSizeTuple()
+        old_basescale = self.basescale
+        width, height = self.GetClientSizeTuple()
+        if width < 1 or height < 1:
+            return
+        self.size = (width, height)
         self.update_basescale()
-        newside = max(1.0, min(self.size))
-        zoomratio = float(newside) / oldside
+        zoomratio = float(self.basescale[0]) / old_basescale[0]
         wx.CallLater(200, self.zoom, 0, 0, zoomratio)
 
     def zoom(self, x, y, factor):
@@ -230,27 +289,27 @@ class gviz(wx.Panel):
             x = y = side / 2
         self.scale = [s * factor for s in self.scale]
 
-        self.translate = [ x - (x-self.translate[0]) * factor,
-                            y - (y-self.translate[1]) * factor]
-        penwidth = max(1.0, self.filament_width*((self.scale[0]+self.scale[1])/2.0))
+        self.translate = [x - (x - self.translate[0]) * factor,
+                          y - (y - self.translate[1]) * factor]
+        penwidth = max(1.0, self.filament_width * ((self.scale[0] + self.scale[1]) / 2.0))
         for pen in self.penslist:
             pen.SetWidth(penwidth)
-        self.dirty = 1
+        self.dirty = True
         wx.CallAfter(self.Refresh)
-    
+
     def _line_scaler(self, x):
-        return (self.scale[0]*x[0]+self.translate[0],
-                self.scale[1]*x[1]+self.translate[1],
-                self.scale[0]*x[2]+self.translate[0],
-                self.scale[1]*x[3]+self.translate[1],)
-    
+        return (self.scale[0] * x[0],
+                self.scale[1] * x[1],
+                self.scale[0] * x[2],
+                self.scale[1] * x[3],)
+
     def _arc_scaler(self, x):
-        return (self.scale[0]*x[0]+self.translate[0],
-                self.scale[1]*x[1]+self.translate[1],
-                self.scale[0]*x[2]+self.translate[0],
-                self.scale[1]*x[3]+self.translate[1],
-                self.scale[0]*x[4]+self.translate[0],
-                self.scale[1]*x[5]+self.translate[1],)
+        return (self.scale[0] * x[0],
+                self.scale[1] * x[1],
+                self.scale[0] * x[2],
+                self.scale[1] * x[3],
+                self.scale[0] * x[4],
+                self.scale[1] * x[5],)
 
     def _drawlines(self, dc, lines, pens):
         scaled_lines = map(self._line_scaler, lines)
@@ -264,7 +323,9 @@ class gviz(wx.Panel):
             dc.DrawArc(*scaled_arcs[i])
 
     def repaint_everything(self):
-        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1],-1)
+        width = self.scale[0] * self.build_dimensions[0]
+        height = self.scale[1] * self.build_dimensions[1]
+        self.blitmap = wx.EmptyBitmap(width + 1, height + 1, -1)
         dc = wx.MemoryDC()
         dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250, 250, 200)))
@@ -272,32 +333,36 @@ class gviz(wx.Panel):
         dc.SetPen(wx.Pen(wx.Colour(180, 180, 150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
-                for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1], self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1]+self.scale[1]*self.build_dimensions[1])
-                for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
-                    dc.DrawLine(self.translate[0], self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0], self.translate[1]+y*self.scale[1]*grid_unit)
+                for x in xrange(int(self.build_dimensions[0] / grid_unit) + 1):
+                    draw_x = self.scale[0] * x * grid_unit
+                    dc.DrawLine(draw_x, 0, draw_x, height)
+                for y in xrange(int(self.build_dimensions[1] / grid_unit) + 1):
+                    draw_y = self.scale[1] * (self.build_dimensions[1] - y * grid_unit)
+                    dc.DrawLine(0, draw_y, width, draw_y)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
 
         if not self.showall:
+            # Draw layer gauge
             dc.SetBrush(wx.Brush((43, 144, 255)))
-            dc.DrawRectangle(self.size[0]-15, 0, 15, self.size[1])
+            dc.DrawRectangle(width - 15, 0, 15, height)
             dc.SetBrush(wx.Brush((0, 255, 0)))
-            if len(self.layers):
-                dc.DrawRectangle(self.size[0]-14, (1.0-(1.0*(self.layerindex+1))/len(self.layers))*self.size[1], 13, self.size[1]-1)
+            if self.layers:
+                dc.DrawRectangle(width - 14, (1.0 - (1.0 * (self.layerindex + 1)) / len(self.layers)) * height, 13, height - 1)
 
         if self.showall:
-            l = []
-            for i in self.layers:
+            for i in range(len(self.layersz)):
+                self.painted_layers.add(i)
                 self._drawlines(dc, self.lines[i], self.pens[i])
                 self._drawarcs(dc, self.arcs[i], self.arcpens[i])
+            dc.SelectObject(wx.NullBitmap)
             return
 
-        if self.layerindex < len(self.layers) and self.layers[self.layerindex] in self.lines:
+        if self.layerindex < len(self.layers) and self.layerindex in self.lines:
             for layer_i in range(max(0, self.layerindex - 6), self.layerindex):
-                self._drawlines(dc, self.lines[self.layers[layer_i]], self.fades[self.layerindex - layer_i - 1])
-                self._drawarcs(dc, self.arcs[self.layers[layer_i]], self.fades[self.layerindex - layer_i - 1])
-            self._drawlines(dc, self.lines[self.layers[self.layerindex]], self.pens[self.layers[self.layerindex]])
-            self._drawarcs(dc, self.arcs[self.layers[self.layerindex]], self.arcpens[self.layers[self.layerindex]])
+                self._drawlines(dc, self.lines[layer_i], self.fades[self.layerindex - layer_i - 1])
+                self._drawarcs(dc, self.arcs[layer_i], self.fades[self.layerindex - layer_i - 1])
+            self._drawlines(dc, self.lines[self.layerindex], self.pens[self.layerindex])
+            self._drawarcs(dc, self.arcs[self.layerindex], self.arcpens[self.layerindex])
 
         self._drawlines(dc, self.hilight, self.hlpen)
         self._drawarcs(dc, self.hilightarcs, self.hlpen)
@@ -305,6 +370,16 @@ class gviz(wx.Panel):
         self.paint_hilights(dc)
 
         dc.SelectObject(wx.NullBitmap)
+
+    def repaint_partial(self):
+        if self.showall:
+            dc = wx.MemoryDC()
+            dc.SelectObject(self.blitmap)
+            for i in set(range(len(self.layersz))).difference(self.painted_layers):
+                self.painted_layers.add(i)
+                self._drawlines(dc, self.lines[i], self.pens[i])
+                self._drawarcs(dc, self.arcs[i], self.arcpens[i])
+            dc.SelectObject(wx.NullBitmap)
 
     def paint_hilights(self, dc = None):
         if self.hilightqueue.empty() and self.hilightarcsqueue.empty():
@@ -320,151 +395,160 @@ class gviz(wx.Panel):
         while not self.hilightarcsqueue.empty():
             hlarcs.append(self.hilightarcsqueue.get_nowait())
         self._drawarcs(dc, hlarcs, self.hlpen)
+        dc.SelectObject(wx.NullBitmap)
 
     def paint(self, event):
         if self.dirty:
-            self.dirty = 0
+            self.dirty = False
+            self.partial = False
             self.repaint_everything()
+        elif self.partial:
+            self.partial = False
+            self.repaint_partial()
         self.paint_hilights()
         dc = wx.PaintDC(self)
-        dc.DrawBitmap(self.blitmap, 0, 0)
+        dc.SetBackground(wx.Brush(self.bgcolor))
+        dc.Clear()
+        dc.DrawBitmap(self.blitmap, self.translate[0], self.translate[1])
+        if self.paint_overlay:
+            self.paint_overlay(dc)
 
-    def addfile(self, gcode):
+    def addfile_perlayer(self, gcode, showall = False):
         self.clear()
-        self.add_parsed_gcodes(gcode.lines)
+        self.gcode = gcode
+        self.showall = showall
+        generator = self.add_parsed_gcodes(gcode)
+        generator_output = generator.next()
+        while generator_output is not None:
+            yield generator_output
+            generator_output = generator.next()
+        max_layers = len(self.layers)
+        if hasattr(self.parent, "layerslider"):
+            self.parent.layerslider.SetRange(0, max_layers - 1)
+            self.parent.layerslider.SetValue(0)
+        yield None
 
-    # FIXME : there's code duplication going on there, we should factor it (but
-    # the reason addgcode is not factored as a add_parsed_gcodes([gline]) is
-    # because when loading a file there's no hilight, so it simply lets us not
-    # do the if hilight: all the time for nothing when loading a lot of lines
-    def add_parsed_gcodes(self, lines):
-        def _y(y):
-            return self.build_dimensions[1] - (y - self.build_dimensions[4])
-        def _x(x):
-            return x - self.build_dimensions[3]
+    def addfile(self, gcode = None, showall = False):
+        generator = self.addfile_perlayer(gcode, showall)
+        while generator.next() is not None:
+            continue
 
-        for gline in lines:
-            if gline.command not in ["G0", "G1", "G2", "G3"]:
-                continue
-            
-            target = self.lastpos[:]
-            target[5] = 0.0
-            target[6] = 0.0
-            if gline.relative:
-                if gline.x != None: target[0] += gline.x
-                if gline.y != None: target[1] += gline.y
-                if gline.z != None: target[2] += gline.z
-            else:
-                if gline.x != None: target[0] = gline.x
-                if gline.y != None: target[1] = gline.y
-                if gline.z != None: target[2] = gline.z
-            if gline.e != None:
-                if gline.relative_e:
-                    target[3] += gline.e
-                else:
-                    target[3] = gline.e
-            if gline.f != None: target[4] = gline.f
-            if gline.i != None: target[5] = gline.i
-            if gline.j != None: target[6] = gline.j
-            z = target[2]
-            if z not in self.layers:
-                self.lines[z] = []
-                self.pens[z] = []
-                self.arcs[z] = []
-                self.arcpens[z] = []
-                self.layers.append(z)
-            
-            start_pos = self.lastpos[:]
-
-            if gline.command in ["G0", "G1"]:
-                self.lines[z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
-                self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
-            elif gline.command in ["G2", "G3"]:
-                # startpos, endpos, arc center
-                arc = [_x(start_pos[0]), _y(start_pos[1]),
-                       _x(target[0]), _y(target[1]),
-                       _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
-                if gline.command == "G2":  # clockwise, reverse endpoints
-                    arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
-
-                self.arcs[z].append(arc)
-                self.arcpens[z].append(self.arcpen)
-
-            self.lastpos = target
-        self.dirty = 1
-        self.Refresh()
-
-    def addgcode(self, gcode = "M105", hilight = 0):
-        gcode = gcode.split("*")[0]
-        gcode = gcode.split(";")[0]
-        gcode = gcode.lower().strip()
-        if not gcode:
-            return
-        gline = gcoder.Line(gcode)
-        gline.parse_coordinates(False)
-
-        def _y(y):
-            return self.build_dimensions[1] - (y - self.build_dimensions[4])
-        def _x(x):
-            return x - self.build_dimensions[3]
-
-        if gline.command not in ["G0", "G1", "G2", "G3"]:
-            return
-
-        start_pos = self.hilightpos[:] if hilight else self.lastpos[:]
-        
+    def _get_movement(self, start_pos, gline):
+        """Takes a start position and a gcode, and returns a 3-uple containing
+        (final position, line, arc), with line and arc being None if not
+        used"""
         target = start_pos[:]
         target[5] = 0.0
         target[6] = 0.0
-        if gline.x != None: target[0] = gline.x
-        if gline.y != None: target[1] = gline.y
-        if gline.z != None: target[2] = gline.z
-        if gline.e != None: target[3] = gline.e
-        if gline.f != None: target[4] = gline.f
-        if gline.i != None: target[5] = gline.i
-        if gline.j != None: target[6] = gline.j
-
-        z = target[2]
-        if not hilight and z not in self.layers:
-            self.lines[z] = []
-            self.pens[z] = []
-            self.arcs[z] = []
-            self.arcpens[z] = []
-            self.layers.append(z)
+        if gline.current_x is not None: target[0] = gline.current_x
+        if gline.current_y is not None: target[1] = gline.current_y
+        if gline.current_z is not None: target[2] = gline.current_z
+        if gline.e is not None:
+            if gline.relative_e:
+                target[3] += gline.e
+            else:
+                target[3] = gline.e
+        if gline.f is not None: target[4] = gline.f
+        if gline.i is not None: target[5] = gline.i
+        if gline.j is not None: target[6] = gline.j
 
         if gline.command in ["G0", "G1"]:
-            line = [_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])]
-            if not hilight:
-                self.lines[z].append((_x(start_pos[0]), _y(start_pos[1]), _x(target[0]), _y(target[1])))
-                self.pens[z].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
-            else:
-                self.hilight.append(line)
-                self.hilightqueue.put_nowait(line)
+            line = [self._x(start_pos[0]),
+                    self._y(start_pos[1]),
+                    self._x(target[0]),
+                    self._y(target[1])]
+            return target, line, None
         elif gline.command in ["G2", "G3"]:
             # startpos, endpos, arc center
-            arc = [_x(start_pos[0]), _y(start_pos[1]),
-                   _x(target[0]), _y(target[1]),
-                   _x(start_pos[0] + target[5]), _y(start_pos[1] + target[6])]
+            arc = [self._x(start_pos[0]), self._y(start_pos[1]),
+                   self._x(target[0]), self._y(target[1]),
+                   self._x(start_pos[0] + target[5]), self._y(start_pos[1] + target[6])]
             if gline.command == "G2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
+            return target, None, arc
 
-            if not hilight:
-                self.arcs[z].append(arc)
-                self.arcpens[z].append(self.arcpen)
-            else:
-                self.hilightarcs.append(arc)
-                self.hilightarcsqueue.put_nowait(arc)
+    def _y(self, y):
+        return self.build_dimensions[1] - (y - self.build_dimensions[4])
 
-        if not hilight:
-            self.lastpos = target
-            self.dirty = 1
-        else:
-            self.hilightpos = target
-        self.Refresh()
+    def _x(self, x):
+        return x - self.build_dimensions[3]
+
+    def add_parsed_gcodes(self, gcode):
+        start_time = time.time()
+
+        layer_idx = 0
+        while layer_idx < len(gcode.all_layers):
+            layer = gcode.all_layers[layer_idx]
+            has_move = False
+            for gline in layer:
+                if gline.is_move:
+                    has_move = True
+                    break
+            if not has_move:
+                yield layer_idx
+                layer_idx += 1
+                continue
+            viz_layer = len(self.layers)
+            self.lines[viz_layer] = []
+            self.pens[viz_layer] = []
+            self.arcs[viz_layer] = []
+            self.arcpens[viz_layer] = []
+            for gline in layer:
+                if not gline.is_move:
+                    continue
+
+                target, line, arc = self._get_movement(self.lastpos[:], gline)
+
+                if line is not None:
+                    self.lines[viz_layer].append(line)
+                    self.pens[viz_layer].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
+                elif arc is not None:
+                    self.arcs[viz_layer].append(arc)
+                    self.arcpens[viz_layer].append(self.arcpen)
+
+                self.lastpos = target
+            # Transform into a numpy array for memory efficiency
+            self.lines[viz_layer] = numpy.asarray(self.lines[viz_layer], dtype = numpy.float32)
+            self.pens[viz_layer] = numpy.asarray(self.pens[viz_layer])
+            self.arcs[viz_layer] = numpy.asarray(self.arcs[viz_layer], dtype = numpy.float32)
+            self.arcpens[viz_layer] = numpy.asarray(self.arcpens[viz_layer])
+            # Only add layer to self.layers now to prevent the display of an
+            # unfinished layer
+            self.layers[layer_idx] = viz_layer
+            self.layersz.append(layer.z)
+
+            # Refresh display if more than 0.2s have passed
+            if time.time() - start_time > 0.2:
+                start_time = time.time()
+                self.partial = True
+                wx.CallAfter(self.Refresh)
+
+            yield layer_idx
+            layer_idx += 1
+
+        self.dirty = True
+        wx.CallAfter(self.Refresh)
+        yield None
+
+    def addgcodehighlight(self, gline):
+        if gline.command not in ["G0", "G1", "G2", "G3"]:
+            return
+
+        target, line, arc = self._get_movement(self.hilightpos[:], gline)
+
+        if line is not None:
+            self.hilight.append(line)
+            self.hilightqueue.put_nowait(line)
+        elif arc is not None:
+            self.hilightarcs.append(arc)
+            self.hilightarcsqueue.put_nowait(arc)
+
+        self.hilightpos = target
+        wx.CallAfter(self.Refresh)
 
 if __name__ == '__main__':
     import sys
     app = wx.App(False)
-    main = window(open(sys.argv[1]))
+    main = GvizWindow(open(sys.argv[1], "rU"))
     main.Show()
     app.MainLoop()

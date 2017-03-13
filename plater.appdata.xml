@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+ <id type="desktop">plater.desktop</id>
+ <licence>CC0</licence>
+ <summary>3D printer plating tool</summary>
+ <description>
+  <p>Plater is a simple graphical tool for preparing plates for desktop 3D printers, such as RepRap.</p>
+  <p>It lets you load 3D models and manipulate them on XY plane. It is also possible to let Plater automatically arrange the files to fit. You can than export the prepared plate for later use or load it directly to Pronterface (if installed).</p>
+ </description>
+ <screenshots>
+  <screenshot type="default" width="804" height="606">https://raw.github.com/kliment/Printrun/master/screenshots/plater.png</screenshot>
+ </screenshots>
+ <url type="homepage">https://github.com/kliment/Printrun</url>
+</application>

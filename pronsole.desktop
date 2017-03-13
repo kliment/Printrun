@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pronsole
+GenericName=Printer console
+Comment=Controls your 3D printer form console
+Icon=/usr/share/pixmaps/pronsole.png
+Exec=/usr/bin/pronsole.py
+StartupNotify=true
+Terminal=true
+Categories=Utility;Graphics;3DGraphics;ConsoleOnly;

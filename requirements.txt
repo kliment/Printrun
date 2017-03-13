@@ -1,0 +1,9 @@
+argparse
+pyreadline
+pyserial
+wxPython
+numpy
+pyglet>=1.1
+pycairo
+cairosvg
+psutil>=2.0

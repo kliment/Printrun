@@ -5,3 +5,6 @@
 uploads
 .DS_Store
 .vagrant
+prontserve-env
+printrun/gcoder_line.c
+printrun/gcoder_line.so
