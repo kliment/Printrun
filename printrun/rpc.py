@@ -45,6 +45,13 @@ class ProntRPC(object):
                 else:
                     raise
         self.server.register_function(self.get_status, 'status')
+        self.server.register_function(self.set_extruder_temperature,'settemp')
+        self.server.register_function(self.set_bed_temperature,'setbedtemp')
+        self.server.register_function(self.load_file,'load_file')
+        self.server.register_function(self.startprint,'startprint')
+        self.server.register_function(self.pauseprint,'pauseprint')
+        self.server.register_function(self.resumeprint,'resumeprint')
+        self.server.register_function(self.sendhome,'sendhome')
         self.thread = Thread(target = self.run_server)
         self.thread.start()
 
@@ -76,3 +83,24 @@ class ProntRPC(object):
                 "temps": temps,
                 "z": z,
                 }
+    def set_extruder_temperature(self, targettemp):
+        if self.pronsole.p.online:
+           self.pronsole.p.send_now("M104 S" + targettemp)
+
+    def set_bed_temperature(self,targettemp):
+        if self.pronsole.p.online:
+           self.pronsole.p.send_now("M140 S" + targettemp)
+
+    def load_file(self,filename):
+        self.pronsole.do_load(filename)
+
+    def startprint(self):
+        self.pronsole.do_print("")
+
+    def pauseprint(self):
+        self.pronsole.do_pause("")
+
+    def resumeprint(self):
+        self.pronsole.do_resume("")
+    def sendhome(self):
+        self.pronsole.do_home("")
