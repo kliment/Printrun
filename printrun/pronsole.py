@@ -1265,7 +1265,7 @@ class pronsole(cmd.Cmd):
             report_type = self.recvcb_report(l)
             if report_type & REPORT_TEMP:
                 self.status.update_tempreading(l)
-            if l != "ok" and not self.sdlisting \
+            if l[:2] != "ok" and l != "wait" and not self.sdlisting \
                and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
                 if l[:5] == "echo:":
                     l = l[5:].lstrip()
