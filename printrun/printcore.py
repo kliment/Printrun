@@ -61,7 +61,7 @@ def enable_hup(port):
 def disable_hup(port):
     control_ttyhup(port, True)
 
-class printcore():
+class printcore(object):
     def __init__(self, port = None, baud = None, dtr=None):
         """Initializes a printcore instance. Pass the port and baud rate to
            connect immediately"""
