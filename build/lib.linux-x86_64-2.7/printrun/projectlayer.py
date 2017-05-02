@@ -30,9 +30,6 @@ from collections import OrderedDict
 import itertools
 import math
 
-
-from printrun.objectplater import make_plater, PlaterPanel
-
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res = (1024, 768), printer = None, scale = 1.0, offset = (0, 0)):
         wx.Frame.__init__(self, parent = parent, title = title, size = res)
@@ -226,7 +223,7 @@ class DisplayFrame(wx.Frame):
 
         self.next_img()
 
-class SettingsFrame(PlaterPanel):
+class SettingsFrame(wx.Frame):
 
     def _set_setting(self, name, value):
         if self.pronterface:

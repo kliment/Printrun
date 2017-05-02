@@ -139,7 +139,6 @@ class MainWindow(wx.Frame):
         self.notebook.SetBackgroundColour(self.bgcolor)
         page1panel = self.newPanel(self.notebook)
         page2panel = self.newPanel(self.notebook)
-        page5panel = self.newPanel(self.notebook) #inicializacion para abrir 
         self.mainsizer_page1 = wx.BoxSizer(wx.VERTICAL)
         page1panel1 = self.newPanel(page1panel)
         page1panel2 = self.newPanel(page1panel)
@@ -180,11 +179,9 @@ class MainWindow(wx.Frame):
         self.notesizer.Add(self.notebook, 1, wx.EXPAND)
         self.notebook.AddPage(page1panel, _("Commands"))
         self.notebook.AddPage(page2panel, _("Status"))
-        #self.notebook.AddPage(page5panel, _("DLP"))
         if self.settings.uimode == _("Tabbed with platers"):
             from printrun.stlplater import StlPlaterPanel
             from printrun.gcodeplater import GcodePlaterPanel
-            from printrun.projectlayer import SettingsFrame
             page3panel = StlPlaterPanel(parent = self.notebook,
                                         callback = self.platecb,
                                         build_dimensions = self.build_dimensions_list,
@@ -196,14 +193,10 @@ class MainWindow(wx.Frame):
                                           build_dimensions = self.build_dimensions_list,
                                           circular_platform = self.settings.circular_bed,
                                           antialias_samples = int(self.settings.antialias3dsamples))
-            page5panel = SettingsFrame(self, self.p).Show()
-
             self.registerPanel(page3panel)
             self.registerPanel(page4panel)
-            self.registerPanel(page5panel)
             self.notebook.AddPage(page3panel, _("Plater"))
             self.notebook.AddPage(page4panel, _("G-Code Plater"))
-            self.notebook.AddPage(page5panel, _("Projector"))
         self.panel.SetSizer(self.notesizer)
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
         self.Bind(wx.EVT_CLOSE, self.kill)
