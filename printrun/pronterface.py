@@ -2181,6 +2181,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.slic3r_configpath = configpath
         configfile = os.path.join(configpath, "slic3r.ini")
         config = self.read_slic3r_config(configfile)
+        version = config.get("dummy", "version") # Slic3r version
         self.slic3r_configs = {}
         for cat in menus:
             menu = menus[cat]
@@ -2188,6 +2189,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             files = sorted(glob.glob(pattern))
             try:
                 preset = config.get("presets", cat)
+                # Starting from Slic3r 1.3.0, preset names have no extension
+                if version.split(".") >= ["1","3","0"]: preset += ".ini"
                 self.slic3r_configs[cat] = preset
             except:
                 preset = None
@@ -2224,7 +2227,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.slic3r_configs[cat] = file
         if self.settings.slic3rupdate:
             config = self.read_slic3r_config(configfile)
-            config.set("presets", cat, os.path.basename(file))
+            version = config.get("dummy", "version") # Slic3r version
+            preset = os.path.basename(file)
+            # Starting from Slic3r 1.3.0, preset names have no extension
+            if version.split(".") >= ["1","3","0"]:
+                preset = os.path.splitext(preset)[0]
+            config.set("presets", cat, preset)
             f = StringIO.StringIO()
             config.write(f)
             data = f.getvalue()
