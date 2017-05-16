@@ -2225,6 +2225,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def set_slic3r_config(self, configfile, cat, file):
         """Set new preset for a given category"""
         self.slic3r_configs[cat] = file
+        # Starting from Slic3r 1.3.0, preset names have no extension
+        if not os.path.isfile(self.slic3r_configs[cat]) and os.path.isfile(self.slic3r_configs[cat] + ".ini")
+            self.slic3r_configs[cat] += ".ini"
         if self.settings.slic3rupdate:
             config = self.read_slic3r_config(configfile)
             version = config.get("dummy", "version") # Slic3r version
