@@ -296,6 +296,7 @@ class Settings(object):
         self._add(HiddenSetting("default_extrusion", 5.0))
         self._add(HiddenSetting("last_extrusion", 5.0))
         self._add(HiddenSetting("total_filament_used", 0.0))
+        self._add(HiddenSetting("spool_list", ""))
 
     _settings = []
 
