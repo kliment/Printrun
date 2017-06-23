@@ -809,8 +809,7 @@ class pronsole(cmd.Cmd):
                 pass
 
         for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*",
-                  "/dev/cu.*", "/dev/rfcomm*",
-                  "/dev/TAZ", "/dev/MINI", "/dev/ROSTOCK"]:
+                  "/dev/cu.*", "/dev/rfcomm*"]
             baselist += glob.glob(g)
         return filter(self._bluetoothSerialFilter, baselist)
 
