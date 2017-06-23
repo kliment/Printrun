@@ -295,7 +295,6 @@ class pronsole(cmd.Cmd):
                 specials["progress_fancy"] = " " + str(progress) + "%"
             else:
                 specials["progress_fancy"] = ""
-            specials["device"] = "[Frankenstein]"
             specials["red"]    = "\033[31m"
             specials["green"]  = "\033[32m"
             specials["white"]  = "\033[37m"
