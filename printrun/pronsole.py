@@ -161,10 +161,10 @@ class pronsole(cmd.Cmd):
         self.extra_print_time = 0
         self.silent = False
         self.commandprefixes = 'MGT$'
-        self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
-                           "fallback": "%(bold)sPC>%(normal)s ",
-                           "macro": "%(bold)s..>%(normal)s ",
-                           "online": "%(bold)sT:%(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
+        self.promptstrs = {"offline":  "%(bold)soffline>%(normal)s ",
+                           "fallback": "%(bold)s%(red)s%(port)s%(white)s PC>%(normal)s ",
+                           "macro":    "%(bold)s..>%(normal)s ",
+                           "online":   "%(bold)s%(green)s%(port)s%(white)s T:%(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -279,6 +279,7 @@ class pronsole(cmd.Cmd):
             specials = {}
             specials["extruder_temp"] = str(int(self.status.extruder_temp))
             specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
+            specials["port"] = self.settings.port[5:]
             if self.status.extruder_temp_target == 0:
                 specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp))
             else:
@@ -294,7 +295,10 @@ class pronsole(cmd.Cmd):
                 specials["progress_fancy"] = " " + str(progress) + "%"
             else:
                 specials["progress_fancy"] = ""
-            specials["bold"] = "\033[01m"
+            specials["red"]    = "\033[31m"
+            specials["green"]  = "\033[32m"
+            specials["white"]  = "\033[37m"
+            specials["bold"]   = "\033[01m"
             specials["normal"] = "\033[00m"
             return promptstr % specials
 
@@ -803,7 +807,8 @@ class pronsole(cmd.Cmd):
             except:
                 pass
 
-        for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*", "/dev/cu.*", "/dev/rfcomm*"]:
+        for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*",
+                  "/dev/cu.*", "/dev/rfcomm*"]
             baselist += glob.glob(g)
         return filter(self._bluetoothSerialFilter, baselist)
 
