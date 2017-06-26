@@ -38,6 +38,7 @@ from collections import deque
 from printrun import gcoder
 from .utils import install_locale, decode_utf8
 install_locale('pronterface')
+from plugins import PRINTCORE_HANDLER
 
 def locked(f):
     @wraps(f)
@@ -108,12 +109,27 @@ class printcore():
         self.send_thread = None
         self.stop_send_thread = False
         self.print_thread = None
+        self.event_handler = PRINTCORE_HANDLER
+        for handler in self.event_handler:
+            try: handler.on_init()
+            except: logging.error(traceback.format_exc())
         if port is not None and baud is not None:
             self.connect(port, baud)
         self.xy_feedrate = None
         self.z_feedrate = None
 
+    def addEventHandler(self, handler):
+        '''
+        Adds an event handler.
+        
+        @param handler: The handler to be added.
+        '''
+        self.event_handler.append(handler)
+
     def logError(self, error):
+        for handler in self.event_handler:
+            try: handler.on_error(error)
+            except: logging.error(traceback.format_exc())
         if self.errorcb:
             try: self.errorcb(error)
             except: logging.error(traceback.format_exc())
@@ -140,6 +156,9 @@ class printcore():
                 pass
             except OSError:
                 pass
+        for handler in self.event_handler:
+            try: handler.on_disconnect()
+            except: logging.error(traceback.format_exc())
         self.printer = None
         self.online = False
         self.printing = False
@@ -215,6 +234,9 @@ class printcore():
                                   "\n" + _("IO error: %s") % e)
                     self.printer = None
                     return
+            for handler in self.event_handler:
+                try: handler.on_connect()
+                except: logging.error(traceback.format_exc())
             self.stop_read_thread = False
             self.read_thread = threading.Thread(target = self._listen)
             self.read_thread.start()
@@ -239,6 +261,9 @@ class printcore():
 
             if len(line) > 1:
                 self.log.append(line)
+                for handler in self.event_handler:
+                    try: handler.on_recv(line)
+                    except: logging.error(traceback.format_exc())
                 if self.recvcb:
                     try: self.recvcb(line)
                     except: self.logError(traceback.format_exc())
@@ -296,6 +321,9 @@ class printcore():
                 if line.startswith(tuple(self.greetings)) \
                    or line.startswith('ok') or "T:" in line:
                     self.online = True
+                    for handler in self.event_handler:
+                        try: handler.on_online()
+                        except: logging.error(traceback.format_exc())
                     if self.onlinecb:
                         try: self.onlinecb()
                         except: self.logError(traceback.format_exc())
@@ -315,6 +343,10 @@ class printcore():
                 continue
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
+            if line.startswith('ok') and "T:" in line:
+                for handler in self.event_handler:
+                    try: handler.on_temp(line)
+                    except: logging.error(traceback.format_exc())
             if line.startswith('ok') and "T:" in line and self.tempcb:
                 # callback for temp, status, whatever
                 try: self.tempcb(line)
@@ -489,6 +521,9 @@ class printcore():
     def _print(self, resuming = False):
         self._stop_sender()
         try:
+            for handler in self.event_handler:
+                try: handler.on_start(resuming)
+                except: logging.error(traceback.format_exc())
             if self.startcb:
                 # callback for printing started
                 try: self.startcb(resuming)
@@ -500,6 +535,9 @@ class printcore():
             self.sentlines = {}
             self.log.clear()
             self.sent = []
+            for handler in self.event_handler:
+                try: handler.on_end()
+                except: logging.error(traceback.format_exc())
             if self.endcb:
                 # callback for printing done
                 try: self.endcb()
@@ -543,11 +581,20 @@ class printcore():
         if self.printing and self.queueindex < len(self.mainqueue):
             (layer, line) = self.mainqueue.idxs(self.queueindex)
             gline = self.mainqueue.all_layers[layer][line]
+            if self.queueindex > 0:
+                (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
+                if prev_layer != layer:
+                    for handler in self.event_handler:
+                        try: handler.on_layerchange(layer)
+                        except: logging.error(traceback.format_exc())
             if self.layerchangecb and self.queueindex > 0:
                 (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
                     try: self.layerchangecb(layer)
                     except: self.logError(traceback.format_exc())
+            for handler in self.event_handler:
+                try: handler.on_preprintsend(gline, self.queueindex, self.mainqueue)
+                except: logging.error(traceback.format_exc())
             if self.preprintsendcb:
                 if self.queueindex + 1 < len(self.mainqueue):
                     (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
@@ -571,6 +618,9 @@ class printcore():
             if tline:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
+                for handler in self.event_handler:
+                    try: handler.on_printsend(gline)
+                    except: logging.error(traceback.format_exc())
                 if self.printsendcb:
                     try: self.printsendcb(gline)
                     except: self.logError(traceback.format_exc())
@@ -603,6 +653,10 @@ class printcore():
                                 "\n" + traceback.format_exc())
             if self.loud:
                 logging.info("SENT: %s" % command)
+
+            for handler in self.event_handler:
+                try: handler.on_send(command, gline)
+                except: logging.error(traceback.format_exc())
             if self.sendcb:
                 try: self.sendcb(command, gline)
                 except: self.logError(traceback.format_exc())
