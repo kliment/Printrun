@@ -162,9 +162,9 @@ class pronsole(cmd.Cmd):
         self.silent = False
         self.commandprefixes = 'MGT$'
         self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
-                           "fallback": "%(bold)sPC>%(normal)s ",
+                           "fallback": "%(bold)s%(port)s PC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
-                           "online": "%(bold)sT:%(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
+                           "online": "%(bold)s%(port)s T:%(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -279,6 +279,7 @@ class pronsole(cmd.Cmd):
             specials = {}
             specials["extruder_temp"] = str(int(self.status.extruder_temp))
             specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
+            specials["port"] = self.settings.port[5:]
             if self.status.extruder_temp_target == 0:
                 specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp))
             else:
