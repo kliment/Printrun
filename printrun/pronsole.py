@@ -64,6 +64,7 @@ REPORT_NONE = 0
 REPORT_POS = 1
 REPORT_TEMP = 2
 REPORT_MANUAL = 4
+DEG = u"\N{DEGREE SIGN}"
 
 class Status(object):
 
@@ -164,7 +165,7 @@ class pronsole(cmd.Cmd):
         self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
                            "fallback": "%(bold)s%(red)s%(port)s%(white)s PC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
-                           "online": "%(bold)s%(green)s%(port)s%(white)s T:%(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
+                           "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -281,9 +282,9 @@ class pronsole(cmd.Cmd):
             specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
             specials["port"] = self.settings.port[5:]
             if self.status.extruder_temp_target == 0:
-                specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp))
+                specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp)) + DEG
             else:
-                specials["extruder_temp_fancy"] = "%s/%s" % (str(int(self.status.extruder_temp)), str(int(self.status.extruder_temp_target)))
+                specials["extruder_temp_fancy"] = "%s%s/%s%s" % (str(int(self.status.extruder_temp)), DEG, str(int(self.status.extruder_temp_target)), DEG)
             if self.p.printing:
                 progress = int(1000 * float(self.p.queueindex) / len(self.p.mainqueue)) / 10
             elif self.sdprinting:
@@ -1341,10 +1342,10 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M105")
             time.sleep(0.75)
             if not self.status.bed_enabled:
-                self.log(_("Hotend: %s/%s") % (self.status.extruder_temp, self.status.extruder_temp_target))
+                self.log(_("Hotend: %s%s/%s%s") % (self.status.extruder_temp, DEG, self.status.extruder_temp_target, DEG))
             else:
-                self.log(_("Hotend: %s/%s") % (self.status.extruder_temp, self.status.extruder_temp_target))
-                self.log(_("Bed:    %s/%s") % (self.status.bed_temp, self.status.bed_temp_target))
+                self.log(_("Hotend: %s%s/%s%s") % (self.status.extruder_temp, DEG, self.status.extruder_temp_target, DEG))
+                self.log(_("Bed:    %s%s/%s%s") % (self.status.bed_temp, DEG, self.status.bed_temp_target, DEG))
 
     def help_gettemp(self):
         self.log(_("Read the extruder and bed temperature."))
