@@ -42,6 +42,7 @@ from .settings import Settings, BuildDimensionsSetting
 from .power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
 from .rpc import ProntRPC
+from printrun import spoolmanager
 
 if os.name == "nt":
     try:
@@ -166,6 +167,8 @@ class pronsole(cmd.Cmd):
                            "fallback": "%(bold)s%(red)s%(port)s%(white)s PC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
                            "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
+        self.spool_manager = spoolmanager.SpoolManager(self)
+        self.current_tool = 0   # Keep track of the extruder being used
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -1201,6 +1204,20 @@ class pronsole(cmd.Cmd):
                 new_total = self.settings.total_filament_used + self.fgcode.filament_length
                 self.set("total_filament_used", new_total)
 
+                # Update the length of filament in the spools
+                self.spool_manager.refresh()
+                if(len(gcode.filament_length_multi)>1):
+                    for i in enumerate(gcode.filament_length_multi):
+                        if self.spool_manager.getSpoolName(i[0]) != None:
+                            self.spool_manager.editLength(
+                                -i[1], extruder = i[0])
+                else:
+                    if self.spool_manager.getSpoolName(0) != None:
+                            self.spool_manager.editLength(
+                                -self.fgcode.filament_length, extruder = 0)
+
+        else:
+
             if not self.settings.final_command:
                 return
             output = get_command_output(self.settings.final_command,
@@ -1466,6 +1483,7 @@ class pronsole(cmd.Cmd):
             if self.p.online:
                 self.p.send_now("T%d" % tool)
                 self.log(_("Using tool %d.") % tool)
+                self.current_tool = tool
             else:
                 self.logError(_("Printer is not online."))
         else:
@@ -1569,6 +1587,12 @@ class pronsole(cmd.Cmd):
         self.p.send_now("G91")
         self.p.send_now("G1 E" + str(length) + " F" + str(feed))
         self.p.send_now("G90")
+
+        # Update the length of filament in the current spool
+        self.spool_manager.refresh()
+        if self.spool_manager.getSpoolName(self.current_tool) != None:
+            self.spool_manager.editLength(-length,
+                extruder = self.current_tool)
 
     def help_extrude(self):
         self.log(_("Extrudes a length of filament, 5mm by default, or the number of mm given as a parameter"))
