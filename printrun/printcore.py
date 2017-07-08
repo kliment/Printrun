@@ -38,7 +38,7 @@ from collections import deque
 from printrun import gcoder
 from .utils import install_locale, decode_utf8
 install_locale('pronterface')
-from plugins import PRINTCORE_HANDLER
+from printrun.plugins import PRINTCORE_HANDLER
 
 def locked(f):
     @wraps(f)
