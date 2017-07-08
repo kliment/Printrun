@@ -31,6 +31,7 @@ except ImportError: import json
 
 from . import pronsole
 from . import printcore
+from printrun import spoolmanager
 
 from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
@@ -711,6 +712,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def create_menu(self):
         """Create main menu"""
         self.menustrip = wx.MenuBar()
+
         # File menu
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Open file")))
@@ -728,14 +730,20 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
 
+        # Tools Menu
         m = wx.Menu()
         self.Bind(wx.EVT_MENU, self.do_editgcode, m.Append(-1, _("&Edit..."), _(" Edit open file")))
         self.Bind(wx.EVT_MENU, self.plate, m.Append(-1, _("Plater"), _(" Compose 3D models into a single plate")))
         self.Bind(wx.EVT_MENU, self.plate_gcode, m.Append(-1, _("G-Code Plater"), _(" Compose G-Codes into a single plate")))
         self.Bind(wx.EVT_MENU, self.exclude, m.Append(-1, _("Excluder"), _(" Exclude parts of the bed from being printed")))
         self.Bind(wx.EVT_MENU, self.project, m.Append(-1, _("Projector"), _(" Project slices")))
+        self.Bind(wx.EVT_MENU,
+                  self.show_spool_manager,
+                  m.Append(-1, _("Spool Manager"),
+                           _(" Manage different spools of filament")))
         self.menustrip.Append(m, _("&Tools"))
 
+        # Advanced Menu
         m = wx.Menu()
         self.recoverbtn = m.Append(-1, _("Recover"), _(" Recover previous print after a disconnect (homes X, Y, restores Z and E status)"))
         self.recoverbtn.Disable = lambda *a: self.recoverbtn.Enable(False)
@@ -798,6 +806,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.excluder = Excluder()
         self.excluder.pop_window(self.fgcode, bgcolor = self.bgcolor,
                                  build_dimensions = self.build_dimensions_list)
+
+    def show_spool_manager(self, event):
+        """Show Spool Manager Window"""
+        spoolmanager.SpoolManagerMainWindow(self, self.spool_manager).Show()
 
     def about(self, event):
         """Show about dialog"""
@@ -1461,12 +1473,45 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if print_stats:
             self.output_gcode_stats()
 
+    def calculate_remaining_filament(self, length, extruder = 0):
+        """
+        float calculate_remaining_filament( float length, int extruder )
+
+        Calculate the remaining length of filament for the given extruder if
+        the given length were to be extruded.
+        """
+
+        remainder = self.spool_manager.getRemainingFilament(extruder) - length
+        minimum_warning_length = 1000.0
+        if remainder < minimum_warning_length:
+            self.log(_("\nWARNING: Currently loaded spool for extruder " +
+            "%d will likely run out of filament during the print.\n" %
+            extruder))
+        return remainder
+
     def output_gcode_stats(self):
         gcode = self.fgcode
+        self.spool_manager.refresh()
+
         self.log(_("%.2fmm of filament used in this print") % gcode.filament_length)
+
         if(len(gcode.filament_length_multi)>1):
             for i in enumerate(gcode.filament_length_multi):
-                print "Extruder %d: %0.02fmm" % (i[0],i[1])
+                if self.spool_manager.getSpoolName(i[0]) == None:
+                    print "- Extruder %d: %0.02fmm" % (i[0], i[1])
+                else:
+                    print ("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
+                        " from spool '%s' (%.2fmm will remain)" %
+                        (self.spool_manager.getSpoolName(i[0]),
+                        self.calculate_remaining_filament(i[1], i[0])))
+        else:
+            if self.spool_manager.getSpoolName(0) != None:
+                self.log(_(
+                    "Using spool '%s' (%.2fmm of filament will remain)" %
+                    (self.spool_manager.getSpoolName(0),
+                    self.calculate_remaining_filament(
+                        gcode.filament_length, 0))))
+
         self.log(_("The print goes:"))
         self.log(_("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width))
         self.log(_("- from %.2f mm to %.2f mm in Y and is %.2f mm deep") % (gcode.ymin, gcode.ymax, gcode.depth))

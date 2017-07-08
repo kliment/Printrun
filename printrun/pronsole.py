@@ -42,6 +42,7 @@ from .settings import Settings, BuildDimensionsSetting
 from .power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
 from .rpc import ProntRPC
+from printrun import spoolmanager
 
 if os.name == "nt":
     try:
@@ -64,6 +65,7 @@ REPORT_NONE = 0
 REPORT_POS = 1
 REPORT_TEMP = 2
 REPORT_MANUAL = 4
+DEG = u"\N{DEGREE SIGN}"
 
 class Status(object):
 
@@ -162,9 +164,11 @@ class pronsole(cmd.Cmd):
         self.silent = False
         self.commandprefixes = 'MGT$'
         self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
-                           "fallback": "%(bold)sPC>%(normal)s ",
+                           "fallback": "%(bold)s%(red)s%(port)s%(white)s PC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
-                           "online": "%(bold)sT:%(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
+                           "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
+        self.spool_manager = spoolmanager.SpoolManager(self)
+        self.current_tool = 0   # Keep track of the extruder being used
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -279,10 +283,11 @@ class pronsole(cmd.Cmd):
             specials = {}
             specials["extruder_temp"] = str(int(self.status.extruder_temp))
             specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
+            specials["port"] = self.settings.port[5:]
             if self.status.extruder_temp_target == 0:
-                specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp))
+                specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp)) + DEG
             else:
-                specials["extruder_temp_fancy"] = "%s/%s" % (str(int(self.status.extruder_temp)), str(int(self.status.extruder_temp_target)))
+                specials["extruder_temp_fancy"] = "%s%s/%s%s" % (str(int(self.status.extruder_temp)), DEG, str(int(self.status.extruder_temp_target)), DEG)
             if self.p.printing:
                 progress = int(1000 * float(self.p.queueindex) / len(self.p.mainqueue)) / 10
             elif self.sdprinting:
@@ -294,6 +299,9 @@ class pronsole(cmd.Cmd):
                 specials["progress_fancy"] = " " + str(progress) + "%"
             else:
                 specials["progress_fancy"] = ""
+            specials["red"] = "\033[31m"
+            specials["green"] = "\033[32m"
+            specials["white"] = "\033[37m"
             specials["bold"] = "\033[01m"
             specials["normal"] = "\033[00m"
             return promptstr % specials
@@ -1196,6 +1204,20 @@ class pronsole(cmd.Cmd):
                 new_total = self.settings.total_filament_used + self.fgcode.filament_length
                 self.set("total_filament_used", new_total)
 
+                # Update the length of filament in the spools
+                self.spool_manager.refresh()
+                if(len(gcode.filament_length_multi)>1):
+                    for i in enumerate(gcode.filament_length_multi):
+                        if self.spool_manager.getSpoolName(i[0]) != None:
+                            self.spool_manager.editLength(
+                                -i[1], extruder = i[0])
+                else:
+                    if self.spool_manager.getSpoolName(0) != None:
+                            self.spool_manager.editLength(
+                                -self.fgcode.filament_length, extruder = 0)
+
+        else:
+
             if not self.settings.final_command:
                 return
             output = get_command_output(self.settings.final_command,
@@ -1337,10 +1359,10 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M105")
             time.sleep(0.75)
             if not self.status.bed_enabled:
-                self.log(_("Hotend: %s/%s") % (self.status.extruder_temp, self.status.extruder_temp_target))
+                self.log(_("Hotend: %s%s/%s%s") % (self.status.extruder_temp, DEG, self.status.extruder_temp_target, DEG))
             else:
-                self.log(_("Hotend: %s/%s") % (self.status.extruder_temp, self.status.extruder_temp_target))
-                self.log(_("Bed:    %s/%s") % (self.status.bed_temp, self.status.bed_temp_target))
+                self.log(_("Hotend: %s%s/%s%s") % (self.status.extruder_temp, DEG, self.status.extruder_temp_target, DEG))
+                self.log(_("Bed:    %s%s/%s%s") % (self.status.bed_temp, DEG, self.status.bed_temp_target, DEG))
 
     def help_gettemp(self):
         self.log(_("Read the extruder and bed temperature."))
@@ -1461,6 +1483,7 @@ class pronsole(cmd.Cmd):
             if self.p.online:
                 self.p.send_now("T%d" % tool)
                 self.log(_("Using tool %d.") % tool)
+                self.current_tool = tool
             else:
                 self.logError(_("Printer is not online."))
         else:
@@ -1564,6 +1587,12 @@ class pronsole(cmd.Cmd):
         self.p.send_now("G91")
         self.p.send_now("G1 E" + str(length) + " F" + str(feed))
         self.p.send_now("G90")
+
+        # Update the length of filament in the current spool
+        self.spool_manager.refresh()
+        if self.spool_manager.getSpoolName(self.current_tool) != None:
+            self.spool_manager.editLength(-length,
+                extruder = self.current_tool)
 
     def help_extrude(self):
         self.log(_("Extrudes a length of filament, 5mm by default, or the number of mm given as a parameter"))
