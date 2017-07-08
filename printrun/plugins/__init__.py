@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-#from plugins.sample import SampleHandler
+#from printrun.plugins.sample import SampleHandler
 #
 #PRINTCORE_HANDLER = [SampleHandler()]
 PRINTCORE_HANDLER = []
