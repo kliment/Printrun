@@ -21,9 +21,9 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 ## Linux
 ### Ubuntu/Debian
 
-You can run Printrun directly from source. Fetch and install the dependencies using
+You can run Printrun directly from source. Fetch and install the dependencies usingh
 
-1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git`
+1. `sudo apt-get install python-serial python-wxgtk3.0 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git`
 
 Clone the repository
 
@@ -35,15 +35,15 @@ Users of Ubuntu Xenial Xerus or later and Debian Jessie or later won't find the 
 
 A Printrun preliminary package is already available in Ubuntu Yakkety Yak and Debian Stretch/Sid repositories. Please be aware that this initial package is also known to be affected by issue #615.
 
-### Chrome OS 
+### Chrome OS
 
 You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install dependencies with the line given above for Ubuntu/Debian, and obtain the source via git clone.
 
 By default you have no access to the serial port under Chrome OS crouton, so you cannot connect to your 3D printer. Add yourself to the serial group within the linux environment to fix this
 
-`sudo usermod -G serial -a <username>` 
+`sudo usermod -G serial -a <username>`
 
-where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer. 
+where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer.
 
 ### Fedora
 
@@ -116,14 +116,14 @@ Download the following, and install in this order:
   4. https://pypi.python.org/packages/any/p/pyreadline/pyreadline-1.7.1.win32.exe
   5. http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
 
-For the last one, you will need to unpack it, open a command terminal, 
+For the last one, you will need to unpack it, open a command terminal,
 go into the the directory you unpacked it in and run
 `python setup.py install`
 
 ### Mac OS X Lion
 
   1. Ensure that the active Python is the system version. (`brew uninstall python` or other appropriate incantations)
-  2. Download an install [wxPython2.8-osx-unicode] matching to your python version (most likely 2.7 on Lion, 
+  2. Download an install [wxPython2.8-osx-unicode] matching to your python version (most likely 2.7 on Lion,
         check with: python --version) from: http://wxpython.org/download.php#stable
   Known to work PythonWX: http://superb-sea2.dl.sourceforge.net/project/wxpython/wxPython/2.8.12.1/wxPython2.8-osx-unicode-2.8.12.1-universal-py2.7.dmg
   3. Download and unpack pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
@@ -131,7 +131,7 @@ go into the the directory you unpacked it in and run
   5. Repeat 4. with http://http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
 
 The tools will probably run just fine in 64bit on Lion, you don't need to mess
-with any of the 32bit settings. In case they don't, try 
+with any of the 32bit settings. In case they don't, try
   5. export VERSIONER_PYTHON_PREFER_32_BIT=yes
 in a terminal before running Pronterface
 
@@ -142,14 +142,14 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
   1. Download and install http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
   2. Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
   3. Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
-     
+
      `defaults write com.apple.versioner.python Prefer-32-Bit -bool yes`
-     
+
      `sudo python setup.py install`
 
 Alternatively, you can run python in 32 bit mode by setting the following environment variable before running the setup.py command:
 
-This alternative approach is confirmed to work on Mac OS X 10.6.8. 
+This alternative approach is confirmed to work on Mac OS X 10.6.8.
 
 `export VERSIONER_PYTHON_PREFER_32_BIT=yes`
 
@@ -390,7 +390,7 @@ For example, following macro toggles the diagnostic information similarily to th
 
 Macro parameters are available in '!'-escaped python code as locally defined list variable: arg[0] arg[1] ... arg[N]
 
-All python code is executed in the context of the pronsole (or PronterWindow) object, 
+All python code is executed in the context of the pronsole (or PronterWindow) object,
 so it is possible to use all internal variables and methods, which provide great deal of functionality.
 However the internal variables and methods are not very well documented and may be subject of change, as the program is developed.
 Therefore it is best to use pronsole commands, which easily contain majority of the functionality that might be needed.
@@ -398,7 +398,7 @@ Therefore it is best to use pronsole commands, which easily contain majority of 
 Some useful python-mode-only variables:
 
 ```python
-!self.settings - contains all settings, e.g. 
+!self.settings - contains all settings, e.g.
   port (!self.settings.port), baudrate, xy_feedrate, e_feedrate, slicecommand, final_command, build_dimensions
   You can set them also via pronsole command "set", but you can query the values only via python code.
 !self.p - printcore object (see USING PRINTCORE section for using printcore object)
@@ -409,7 +409,7 @@ Some useful python-mode-only variables:
 Some useful methods:
 
 ```python
-!self.onecmd - invokes raw command, e.g. 
+!self.onecmd - invokes raw command, e.g.
     !self.onecmd("move x 10")
     !self.onecmd("!print self.p.loud")
     !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
