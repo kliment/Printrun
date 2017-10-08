@@ -9,4 +9,4 @@ Path=/usr/share/pronterface/
 StartupNotify=true
 Terminal=false
 Categories=GNOME;GTK;Utility;Graphics;3DGraphics;
-MimeType=text/plain;application/octet-stream;application/sla;
+MimeType=application/sla;model/x.stl-binary;model/x.stl-ascii;text/x.gcode;
