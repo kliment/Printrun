@@ -52,6 +52,9 @@ class ProntRPC(object):
         self.server.register_function(self.pauseprint,'pauseprint')
         self.server.register_function(self.resumeprint,'resumeprint')
         self.server.register_function(self.sendhome,'sendhome')
+        self.server.register_function(self.connect,'connect')
+        self.server.register_function(self.disconnect, 'disconnect')
+        self.server.register_function(self.send, 'send')
         self.thread = Thread(target = self.run_server)
         self.thread.start()
 
@@ -104,3 +107,9 @@ class ProntRPC(object):
         self.pronsole.do_resume("")
     def sendhome(self):
         self.pronsole.do_home("")
+    def connect(self):
+        self.pronsole.do_connect("")
+    def disconnect(self):
+        self.pronsole.do_disconnect("")
+    def send(self, command):
+        self.pronsole.p.send_now(command)
