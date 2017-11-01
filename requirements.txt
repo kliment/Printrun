@@ -1,9 +1,12 @@
-argparse
+python (>= 2.7, << 3)
 pyreadline
-pyserial
-wxPython
-numpy
-pyglet>=1.1
-pycairo
-cairosvg
-psutil>=2.0
+pyserial (>= 2.6)
+wxPython (>= 2.8, << 4.0)
+numpy (>= 1.8.2)
+pyglet (>= 1.1)
+pycairo (>= 1.8.8)
+cairosvg (>= 1.0.9)
+psutil (>= 2.1)
+dbus-python (>= 1.2.0)
+pygobject (>= 3.14.0)
+libxml2 (>= 2.9.1)
