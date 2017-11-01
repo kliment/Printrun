@@ -1,5 +1,5 @@
-[Printrun - UNRELEASED]
-=======================
+Printrun - 1.6.0
+================
 
 New Features
 ------------
