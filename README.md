@@ -18,6 +18,10 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
+Note for OSX users: if OSX tells you the file is corrupted, you don't need to redownload it. Instead, you need to allow OSX to run unsigned apps. To do this, run 
+`sudo spctl --master-disable`
+
+
 ## Linux
 ### Ubuntu/Debian
 
