@@ -1206,8 +1206,8 @@ class pronsole(cmd.Cmd):
 
                 # Update the length of filament in the spools
                 self.spool_manager.refresh()
-                if(len(gcode.filament_length_multi)>1):
-                    for i in enumerate(gcode.filament_length_multi):
+                if(len(fgcode.filament_length_multi)>1):
+                    for i in enumerate(fgcode.filament_length_multi):
                         if self.spool_manager.getSpoolName(i[0]) != None:
                             self.spool_manager.editLength(
                                 -i[1], extruder = i[0])
