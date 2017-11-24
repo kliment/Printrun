@@ -116,7 +116,7 @@ class pronsole(cmd.Cmd):
         self.statuscheck = False
         self.status_thread = None
         self.monitor_interval = 3
-        self.p = printcore.printcore()
+        self.p = printcore.PrintCore()
         self.p.recvcb = self.recvcb
         self.p.startcb = self.startcb
         self.p.endcb = self.endcb
