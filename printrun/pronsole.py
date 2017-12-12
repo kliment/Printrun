@@ -30,6 +30,7 @@ import logging
 import traceback
 import re
 
+from appdirs import user_data_dir
 from serial import SerialException
 
 from . import printcore
@@ -169,6 +170,7 @@ class pronsole(cmd.Cmd):
                            "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
         self.spool_manager = spoolmanager.SpoolManager(self)
         self.current_tool = 0   # Keep track of the extruder being used
+        self.data_dir = os.path.join(user_data_dir, "pronsole")
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -200,7 +202,10 @@ class pronsole(cmd.Cmd):
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
                 readline.parse_and_bind(self.completekey + ": complete")
+                defaulthistory = os.path.expanduser(self.history_file)
                 history = os.path.expanduser(self.history_file)
+                if not os.path.exists(defaulthistory):
+                    history = os.path.join(self.data_dir, "history")
                 if os.path.exists(history):
                     readline.read_history_file(history)
             except ImportError:
