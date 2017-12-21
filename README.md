@@ -25,19 +25,28 @@ Note for OSX users: if OSX tells you the file is corrupted, you don't need to re
 ## Linux
 ### Ubuntu/Debian
 
-You can run Printrun directly from source. Fetch and install the dependencies using
+You can install Printrun from official packages (*):
+```
+sudo apt install printrun
+```
 
-1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git`
+Or you can run Printrun directly from source.
 
-Clone the repository
+1. Fetch and install the dependencies using (**):
+```
+sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git`
+```
+    
+2. Clone the repository
+```
+git clone https://github.com/kliment/Printrun.git
+```
 
-`git clone https://github.com/kliment/Printrun.git`
+3. You can start using Printrun from the Printrun directory created by the git clone command.
 
-and you can start using Printrun from the Printrun directory created by the git clone command.
+(*) Please be aware that the Printrun package available in Ubuntu Yakkety Yak, or later, and Debian Stretch/Sid repositories, is known to be affected by issue [#615](https://github.com/kliment/Printrun/issues/615).
 
-Users of Ubuntu Xenial Xerus or later and Debian Jessie or later won't find the package "python-wxgtk2.8" available, having been replaced by "python-wxgtk3.0". Running Printrun with "python-wxgtk3.0" instead, is possible but it is known to be affected by issue #615.
-
-A Printrun preliminary package is already available in Ubuntu Yakkety Yak and Debian Stretch/Sid repositories. Please be aware that this initial package is also known to be affected by issue #615.
+(**) Users of Ubuntu Xenial Xerus or later and Debian Jessie or later won't find the package "python-wxgtk2.8" available, having been replaced by "python-wxgtk3.0". Running Printrun with "python-wxgtk3.0" instead, is possible but it is known to be affected by issue [#615](https://github.com/kliment/Printrun/issues/615).
 
 ### Chrome OS 
 
