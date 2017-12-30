@@ -42,7 +42,7 @@ from .settings import Settings, BuildDimensionsSetting
 from .power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
 from .rpc import ProntRPC
-from printrun import spoolmanager
+from printrun.spoolmanager import spoolmanager
 
 if os.name == "nt":
     try:

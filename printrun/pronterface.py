@@ -31,7 +31,7 @@ except ImportError: import json
 
 from . import pronsole
 from . import printcore
-from printrun import spoolmanager
+from printrun.spoolmanager import spoolmanager_gui
 
 from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
@@ -809,7 +809,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def show_spool_manager(self, event):
         """Show Spool Manager Window"""
-        spoolmanager.SpoolManagerMainWindow(self, self.spool_manager).Show()
+        spoolmanager_gui.SpoolManagerMainWindow(self, self.spool_manager).Show()
 
     def about(self, event):
         """Show about dialog"""
