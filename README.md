@@ -34,7 +34,7 @@ Or you can run Printrun directly from source.
 
 1. Fetch and install the dependencies using (**):
 ```
-sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git`
+sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git
 ```
     
 2. Clone the repository
