@@ -30,7 +30,7 @@ import logging
 import traceback
 import re
 
-from appdirs import user_data_dir
+from appdirs import user_config_dir, user_data_dir
 from serial import SerialException
 
 from . import printcore
@@ -170,6 +170,7 @@ class pronsole(cmd.Cmd):
                            "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
         self.spool_manager = spoolmanager.SpoolManager(self)
         self.current_tool = 0   # Keep track of the extruder being used
+        self.config_dir = os.path.join(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
 
     #  --------------------------------------------------------------
@@ -603,17 +604,19 @@ class pronsole(cmd.Cmd):
         finally:
             self.processing_rc = False
 
-    def load_default_rc(self, rc_filename = ".pronsolerc"):
-        if rc_filename == ".pronsolerc" and hasattr(sys, "frozen") and sys.frozen in ["windows_exe", "console_exe"]:
-            rc_filename = "printrunconf.ini"
+    def load_default_rc(self, rc_filename=None):
+        defaultconfig = os.path.expanduser("~/.pronsolerc")
+        if rc_filename:
+            config = rc_filename
+        else:
+            if os.path.exists(defaultconfig):
+                config = defaultconfig
+            else:
+                config = os.path.join(self.config_dir, "pronsolerc")
         try:
-            try:
-                self.load_rc(os.path.join(os.path.expanduser("~"), rc_filename))
-            except IOError:
-                self.load_rc(rc_filename)
+            self.load_rc(config)
         except IOError:
-            # make sure the filename is initialized
-            self.rc_filename = os.path.abspath(os.path.join(os.path.expanduser("~"), rc_filename))
+            self.logError(_("Error loading config file \"%s\".") % config)
 
     def save_in_rc(self, key, definition):
         """
