@@ -206,6 +206,8 @@ class pronsole(cmd.Cmd):
                 defaulthistory = os.path.expanduser(self.history_file)
                 history = os.path.expanduser(self.history_file)
                 if not os.path.exists(defaulthistory):
+                    if not os.path.exists(self.data_dir):
+                        os.makedirs(self.data_dir)
                     history = os.path.join(self.data_dir, "history")
                 if os.path.exists(history):
                     readline.read_history_file(history)
@@ -612,6 +614,8 @@ class pronsole(cmd.Cmd):
             if os.path.exists(defaultconfig):
                 config = defaultconfig
             else:
+                if not os.path.exists(self.config_dir):
+                    os.makedirs(self.config_dir)
                 config = os.path.join(self.config_dir, "pronsolerc")
         try:
             self.load_rc(config)
