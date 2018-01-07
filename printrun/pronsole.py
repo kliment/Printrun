@@ -170,7 +170,7 @@ class pronsole(cmd.Cmd):
                            "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
         self.spool_manager = spoolmanager.SpoolManager(self)
         self.current_tool = 0   # Keep track of the extruder being used
-        self.data_dir = os.path.join(user_data_dir("pronsole"))
+        self.data_dir = os.path.join(user_data_dir("Printrun"))
 
     #  --------------------------------------------------------------
     #  General console handling
