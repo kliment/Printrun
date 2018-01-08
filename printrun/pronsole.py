@@ -610,6 +610,8 @@ class pronsole(cmd.Cmd):
         defaultconfig = os.path.expanduser("~/.pronsolerc")
         if rc_filename:
             config = rc_filename
+        elif hasattr(sys, "frozen") and sys.frozen in ["windows_exe", "console_exe"]:
+            config = "printrunconf.ini"
         elif os.path.exists(defaultconfig):
             config = defaultconfig
         else:
