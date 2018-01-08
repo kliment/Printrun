@@ -30,7 +30,7 @@ import logging
 import traceback
 import re
 
-from appdirs import user_config_dir, user_data_dir
+from appdirs import user_cache_dir, user_config_dir, user_data_dir
 from serial import SerialException
 
 from . import printcore
@@ -170,6 +170,7 @@ class pronsole(cmd.Cmd):
                            "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
         self.spool_manager = spoolmanager.SpoolManager(self)
         self.current_tool = 0   # Keep track of the extruder being used
+        self.cache_dir = os.path.join(user_cache_dir("Printrun"))
         self.config_dir = os.path.join(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
 
@@ -641,9 +642,14 @@ class pronsole(cmd.Cmd):
         try:
             written = False
             if os.path.exists(self.rc_filename):
-                shutil.copy(self.rc_filename, self.rc_filename + "~bak")
-                rci = codecs.open(self.rc_filename + "~bak", "r", "utf-8")
-            rco = codecs.open(self.rc_filename + "~new", "w", "utf-8")
+                if not os.path.exists(self.cache_dir):
+                    os.makedirs(self.cache_dir)
+                configcache = os.path.join(self.cache_dir, os.path.basename(self.rc_filename))
+                configcachebak = configcache + "~bak"
+                configcachenew = configcache + "~new"
+                shutil.copy(self.rc_filename, configcachebak)
+                rci = codecs.open(configcachebak, "r", "utf-8")
+            rco = codecs.open(configcachenew, "w", "utf-8")
             if rci is not None:
                 overwriting = False
                 for rc_cmd in rci:
@@ -664,7 +670,7 @@ class pronsole(cmd.Cmd):
             if rci is not None:
                 rci.close()
             rco.close()
-            shutil.move(self.rc_filename + "~new", self.rc_filename)
+            shutil.move(configcachenew, self.rc_filename)
             # if definition != "":
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
             # else:
