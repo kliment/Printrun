@@ -610,13 +610,12 @@ class pronsole(cmd.Cmd):
         defaultconfig = os.path.expanduser("~/.pronsolerc")
         if rc_filename:
             config = rc_filename
+        elif os.path.exists(defaultconfig):
+            config = defaultconfig
         else:
-            if os.path.exists(defaultconfig):
-                config = defaultconfig
-            else:
-                if not os.path.exists(self.config_dir):
-                    os.makedirs(self.config_dir)
-                config = os.path.join(self.config_dir, "pronsolerc")
+            if not os.path.exists(self.config_dir):
+                os.makedirs(self.config_dir)
+            config = os.path.join(self.config_dir, "pronsolerc")
         try:
             self.load_rc(config)
         except IOError:
