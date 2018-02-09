@@ -62,19 +62,19 @@ where `<username>` should be your username. Log out and in to make this group ch
 
 You can install Printrun from official packages. Install the whole package using
 
-`sudo yum install printrun`
+`sudo dnf install printrun`
 
 Or get only apps you need by
 
-`sudo yum install pronsole` or `pronterface` or `plater`
+`sudo dnf install pronsole` or `pronterface` or `plater`
 
-Adding `--enablerepo updates-testing` option to `yum` might give you newer packages (but also not very tested).
+Adding `--enablerepo updates-testing` option to `dnf` might sometimes give you newer packages (but also not very tested).
 
 You can also run Printrun directly from source, if the packages are too old for you. Fetch and install the dependencies using
 
-1. `sudo yum install pyserial wxPython python-pyglet python-cairosvg`
+1. `sudo dnf install pyserial wxPython python-pyglet python-cairosvg`
 
-Optional: `sudo yum install skeinforge simarrange`
+Optional: `sudo dnf install simarrange`
 
 ### Archlinux
 
