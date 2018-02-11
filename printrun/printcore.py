@@ -24,10 +24,6 @@ from queue import Queue, Empty as QueueEmpty
 import time
 import platform
 import os
-import sys
-stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
-reload(sys).setdefaultencoding('utf8')
-sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
 import logging
 import traceback
 import errno
@@ -36,7 +32,8 @@ import re
 from functools import wraps
 from collections import deque
 from printrun import gcoder
-from .utils import install_locale, decode_utf8
+from .utils import set_utf8_locale, install_locale, decode_utf8
+set_utf8_locale()
 install_locale('pronterface')
 from printrun.plugins import PRINTCORE_HANDLER
 

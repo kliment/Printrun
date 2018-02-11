@@ -20,7 +20,15 @@ import gettext
 import datetime
 import subprocess
 import shlex
+import locale
 import logging
+
+
+def set_utf8_locale():
+    """Make sure we read/write all text files in UTF-8"""
+    lang, encoding = locale.getlocale()
+    if encoding != 'UTF-8':
+        locale.setlocale(locale.LC_CTYPE, (lang, 'UTF-8'))
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not
