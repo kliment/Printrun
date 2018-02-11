@@ -44,11 +44,12 @@ def homogeneous(v, w = 1):
 def applymatrix(facet, matrix = I):
     return genfacet(map(lambda x: matrix.dot(homogeneous(x))[:3], facet[1]))
 
-def ray_triangle_intersection(ray_near, ray_dir, (v1, v2, v3)):
+def ray_triangle_intersection(ray_near, ray_dir, v123):
     """
     Möller–Trumbore intersection algorithm in pure python
     Based on http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
     """
+    v1, v2, v3 = v123
     eps = 0.000001
     edge1 = v2 - v1
     edge2 = v3 - v1
