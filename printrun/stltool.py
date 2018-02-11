@@ -42,7 +42,7 @@ def homogeneous(v, w = 1):
     return numpy.append(v, w)
 
 def applymatrix(facet, matrix = I):
-    return genfacet(map(lambda x: matrix.dot(homogeneous(x))[:3], facet[1]))
+    return genfacet([matrix.dot(homogeneous(x))[:3] for x in facet[1]])
 
 def ray_triangle_intersection(ray_near, ray_dir, v123):
     """
@@ -193,8 +193,8 @@ class stl(object):
                 self.name = "binary soloid"
                 facet = [fd[:3], [fd[3:6], fd[6:9], fd[9:12]]]
                 self.facets.append(facet)
-                self.facetsminz.append((min(map(lambda x: x[2], facet[1])), facet))
-                self.facetsmaxz.append((max(map(lambda x: x[2], facet[1])), facet))
+                self.facetsminz.append((min(x[2] for x in facet[1]), facet))
+                self.facetsmaxz.append((max(x[2] for x in facet[1]), facet))
             f.close()
             return
 
@@ -267,8 +267,8 @@ class stl(object):
         s.facetloc = 0
         s.name = self.name
         for facet in s.facets:
-            s.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
-            s.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
+            s.facetsminz += [(min(x[2] for x in facet[1]), facet)]
+            s.facetsmaxz += [(max(x[2] for x in facet[1]), facet)]
         return s
 
     def translation_matrix(self, v):
@@ -329,8 +329,8 @@ class stl(object):
         s.facetloc = 0
         s.name = self.name
         for facet in s.facets:
-            s.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
-            s.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
+            s.facetsminz += [(min(x[2] for x in facet[1]), facet)]
+            s.facetsmaxz += [(max(x[2] for x in facet[1]), facet)]
         return s
 
     def export(self, f = sys.stdout):
@@ -357,17 +357,17 @@ class stl(object):
             l = l.replace(", ", ".")
             self.infacet = 1
             self.facetloc = 0
-            normal = numpy.array(map(float, l.split()[2:]))
+            normal = numpy.array([float(f) for f in l.split()[2:]])
             self.facet = (normal, (numpy.zeros(3), numpy.zeros(3), numpy.zeros(3)))
         elif l.startswith("endfacet"):
             self.infacet = 0
             self.facets.append(self.facet)
             facet = self.facet
-            self.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
-            self.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
+            self.facetsminz += [(min(x[2] for x in facet[1]), facet)]
+            self.facetsmaxz += [(max(x[2] for x in facet[1]), facet)]
         elif l.startswith("vertex"):
             l = l.replace(", ", ".")
-            self.facet[1][self.facetloc][:] = numpy.array(map(float, l.split()[1:]))
+            self.facet[1][self.facetloc][:] = numpy.array([float(f) for f in l.split()[1:]])
             self.facetloc += 1
         return 1
 

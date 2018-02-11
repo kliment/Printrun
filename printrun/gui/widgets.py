@@ -288,8 +288,8 @@ class TempGauge(wx.Panel):
             lo, hi, val, valhi = cmid, cmax, val - vmid, vmax - vmid
         vv = float(val) / valhi
         rgb = lo.Red() + (hi.Red() - lo.Red()) * vv, lo.Green() + (hi.Green() - lo.Green()) * vv, lo.Blue() + (hi.Blue() - lo.Blue()) * vv
-        rgb = map(lambda x: x * 0.8, rgb)
-        return wx.Colour(*map(int, rgb))
+        rgb = (int(x * 0.8) for x in rgb)
+        return wx.Colour(*rgb)
 
     def paint(self, ev):
         self.width, self.height = self.GetClientSize()

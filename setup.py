@@ -142,13 +142,13 @@ for basedir, subdirs, files in os.walk("locale"):
         continue
     destpath = os.path.join("share", "pronterface", basedir)
     files = filter(lambda x: x.endswith(".mo"), files)
-    files = map(lambda x: os.path.join(basedir, x), files)
+    files = [os.path.join(basedir, x) for x in files]
     data_files.append((destpath, files))
 
 extra_data_dirs = ["css"]
 for extra_data_dir in extra_data_dirs:
     for basedir, subdirs, files in os.walk(extra_data_dir):
-        files = map(lambda x: os.path.join(basedir, x), files)
+        files = [os.path.join(basedir, x) for x in files]
         destpath = os.path.join("share", "pronterface", basedir)
         data_files.append((destpath, files))
 

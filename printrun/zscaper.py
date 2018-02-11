@@ -50,8 +50,8 @@ def genscape(data = [[0, 1, 0, 0], [1, 0, 2, 0], [1, 0, 0, 0], [0, 1, 0, 1]],
 def zimage(name, out):
     i = wx.Image(name)
     s = i.GetSize()
-    print(len(map(ord, i.GetData()[::3])))
-    b = map(ord, i.GetData()[::3])
+    b = list(map(ord, i.GetData()[::3]))
+    print(b)
     data = []
     for i in xrange(s[0]):
         data += [b[i * s[1]:(i + 1) * s[1]]]

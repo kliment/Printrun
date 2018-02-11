@@ -312,11 +312,11 @@ class Gviz(wx.Panel):
                 self.scale[1] * x[5],)
 
     def _drawlines(self, dc, lines, pens):
-        scaled_lines = map(self._line_scaler, lines)
+        scaled_lines = [self._line_scaler(l) for l in lines]
         dc.DrawLineList(scaled_lines, pens)
 
     def _drawarcs(self, dc, arcs, pens):
-        scaled_arcs = map(self._arc_scaler, arcs)
+        scaled_arcs = [self._arc_scaler(a) for a in arcs]
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         for i in range(len(scaled_arcs)):
             dc.SetPen(pens[i] if type(pens) == list else pens)

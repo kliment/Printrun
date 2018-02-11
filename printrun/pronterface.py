@@ -1944,7 +1944,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             colour = bdef.background
             if type(colour) not in (str, unicode):
                 if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                    colour = map(lambda x: x % 256, colour)
+                    colour = (x % 256 for x in colour)
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                 else:
                     colour = wx.Colour(colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1962,7 +1962,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 colour = button.properties.background
                 if type(colour) not in (str, unicode):
                     if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                        colour = map(lambda x: x % 256, colour)
+                        colour = (x % 256 for x in colour)
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                     else:
                         colour = wx.Colour(colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)

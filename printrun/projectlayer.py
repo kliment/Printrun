@@ -558,7 +558,7 @@ class SettingsFrame(wx.Frame):
         # format: abc_1.png, which would be followed by abc_10.png alphabetically.
         os.chdir(self.image_dir)
         vals = filter(os.path.isfile, os.listdir('.'))
-        keys = map(lambda p: int(re.search('\d+', p).group()), vals)
+        keys = (int(re.search('\d+', p).group()) for p in vals)
         imagefilesDict = dict(itertools.izip(keys, vals))
         imagefilesOrderedDict = OrderedDict(sorted(imagefilesDict.items(), key = lambda t: t[0]))
 

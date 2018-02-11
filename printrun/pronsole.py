@@ -501,7 +501,7 @@ class pronsole(cmd.Cmd):
 
     def do_macro(self, args):
         if args.strip() == "":
-            self.print_topics("User-defined macros", map(str, self.macros.keys()), 15, 80)
+            self.print_topics("User-defined macros", [str(k) for k in self.macros.keys()], 15, 80)
             return
         arglist = args.split(None, 1)
         macro_name = arglist[0]
