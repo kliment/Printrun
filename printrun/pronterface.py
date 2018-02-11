@@ -16,12 +16,12 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import Queue
+import queue
 import sys
 import time
 import threading
 import traceback
-import cStringIO as StringIO
+import io as StringIO
 import subprocess
 import glob
 import logging
@@ -165,7 +165,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.current_pos = [0, 0, 0]
         self.paused = False
         self.uploading = False
-        self.sentglines = Queue.Queue(0)
+        self.sentglines = queue.Queue(0)
         self.cpbuttons = {
             "motorsoff": SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), _("Switch all motors off")),
             "extrude": SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), _("Advance extruder by set length")),
@@ -1046,7 +1046,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 gc = self.sentglines.get_nowait()
                 wx.CallAfter(self.gviz.addgcodehighlight, gc)
                 self.sentglines.task_done()
-        except Queue.Empty:
+        except queue.Empty:
             pass
 
     def statuschecker(self):
@@ -2253,8 +2253,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def read_slic3r_config(self, configfile, parser = None):
         """Helper to read a Slic3r configuration file"""
-        import ConfigParser
-        parser = ConfigParser.RawConfigParser()
+        import configparser
+        parser = configparser.RawConfigParser()
 
         class add_header(object):
             def __init__(self, f):

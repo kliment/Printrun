@@ -47,7 +47,7 @@ from printrun.spoolmanager import spoolmanager
 
 if os.name == "nt":
     try:
-        import _winreg
+        import winreg
     except:
         pass
 READLINE = True
@@ -822,10 +822,10 @@ class pronsole(cmd.Cmd):
         baselist = []
         if os.name == "nt":
             try:
-                key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
                 i = 0
                 while(1):
-                    baselist += [_winreg.EnumValue(key, i)[1]]
+                    baselist += [winreg.EnumValue(key, i)[1]]
                     i += 1
             except:
                 pass

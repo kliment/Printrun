@@ -22,7 +22,7 @@ import zipfile
 import tempfile
 import shutil
 from cairosvg.surface import PNGSurface
-import cStringIO
+import io
 import imghdr
 import copy
 import re
@@ -101,9 +101,9 @@ class DisplayFrame(wx.Frame):
 
                     g = layercopy.find("{http://www.w3.org/2000/svg}g")
                     g.set('transform', 'scale(' + str(self.scale) + ')')
-                    stream = cStringIO.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(layercopy)))
+                    stream = io.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(layercopy)))
                 else:
-                    stream = cStringIO.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(image)))
+                    stream = io.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(image)))
 
                 pngImage = wx.ImageFromStream(stream)
 
