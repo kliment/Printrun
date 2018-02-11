@@ -16,7 +16,7 @@
 # Copyright 2017 Rock Storm <rockstorm@gmx.com>
 
 import wx
-import spoolmanager
+from . import spoolmanager
 
 class SpoolManagerMainWindow(wx.Frame):
     """

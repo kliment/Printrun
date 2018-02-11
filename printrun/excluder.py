@@ -119,7 +119,7 @@ class Excluder(object):
 
 if __name__ == '__main__':
     import sys
-    import gcoder
+    from . import gcoder
     gcode = gcoder.GCode(open(sys.argv[1]))
     app = wx.App(False)
     ex = Excluder()

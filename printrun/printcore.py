@@ -17,7 +17,7 @@
 
 __version__ = "1.6.0"
 
-from serialWrapper import Serial, SerialException, PARITY_ODD, PARITY_NONE
+from .serialWrapper import Serial, SerialException, PARITY_ODD, PARITY_NONE
 from select import error as SelectError
 import threading
 from Queue import Queue, Empty as QueueEmpty

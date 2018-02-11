@@ -14,7 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-from stltool import stl, genfacet, emitstl
+from .stltool import stl, genfacet, emitstl
 a = wx.App()
 
 def genscape(data = [[0, 1, 0, 0], [1, 0, 2, 0], [1, 0, 0, 0], [0, 1, 0, 1]],
