@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hVvac:e:", ["help", "version", "verbose", "autoconnect", "conf=", "config=", "execute="])
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print str(err)
         print usage
         sys.exit(2)

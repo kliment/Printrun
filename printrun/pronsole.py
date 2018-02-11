@@ -557,7 +557,7 @@ class pronsole(cmd.Cmd):
                 self.save_in_rc("set " + var, "set %s %s" % (var, value))
         except AttributeError:
             logging.debug(_("Unknown variable '%s'") % var)
-        except ValueError, ve:
+        except ValueError as ve:
             if hasattr(ve, "from_validator"):
                 self.logError(_("Bad value %s for variable '%s': %s") % (str, var, ve.args[0]))
             else:
@@ -675,7 +675,7 @@ class pronsole(cmd.Cmd):
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
             # else:
             #    self.log("Removed '"+key+"' from '"+self.rc_filename+"'")
-        except Exception, e:
+        except Exception as e:
             self.logError("Saving failed for ", key + ":", str(e))
         finally:
             del rci, rco
@@ -962,7 +962,7 @@ class pronsole(cmd.Cmd):
                             blocking = True)
                 self.log(_("Loading sliced file."))
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
-        except Exception, e:
+        except Exception as e:
             self.logError(_("Slicing failed: %s") % e)
 
     def complete_slice(self, text, line, begidx, endidx):

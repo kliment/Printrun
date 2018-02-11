@@ -106,7 +106,7 @@ help = u"""
 """[1:-1].encode('utf-8') % (sys.argv[0], n, k, temp, tempmax, port if port else 'auto')
 try:
     opts, args = getopt.getopt(sys.argv[1:], "hl:s:t:p:", ["help", "length=", "steps=", "temp=", "port="])
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     print str(err)
     print help
     sys.exit(2)

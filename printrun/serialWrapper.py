@@ -41,7 +41,7 @@ if sys.platform.startswith('linux'):
 
 				# set serial_struct
 				res = FCNTL.ioctl(port.fd, TCSETS2, buf)
-			except IOError, e:
+			except IOError as e:
 				raise ValueError('Failed to set custom baud rate (%s): %s' % (baudrate, e))
 
 		# We need to change the function inside the serialposix module otherwise, it won't

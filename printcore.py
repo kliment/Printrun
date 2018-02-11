@@ -45,7 +45,7 @@ if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:], "b:svVh",
                         ["baud=", "statusreport", "verbose", "version", "help"])
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print str(err)
         print usage
         sys.exit(2)

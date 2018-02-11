@@ -209,7 +209,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                         rco = open("custombtn.txt", "w")
                         rco.write(_("# I moved all your custom buttons into .pronsolerc.\n# Please don't add them here any more.\n# Backup of your old buttons is in custombtn.old\n"))
                         rco.close()
-                    except IOError, x:
+                    except IOError as x:
                         logging.error(str(x))
                 else:
                     logging.warning(_("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"))
@@ -405,7 +405,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.logError(_("Printer is not online."))
             else:
                 self.logError(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_bedtemp(self, l = ""):
@@ -425,7 +425,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.logError(_("Printer is not online."))
             else:
                 self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_setspeed(self, l = ""):
@@ -440,7 +440,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.log(_("Setting print speed factor to %d%%.") % speed)
             else:
                 self.logError(_("Printer is not online."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a speed. (%s)") % (repr(x),))
 
     def do_setflow(self, l = ""):
@@ -455,7 +455,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.log(_("Setting print flow factor to %d%%.") % flow)
             else:
                 self.logError(_("Printer is not online."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a flow. (%s)") % (repr(x),))
 
     def setbedgui(self, f):

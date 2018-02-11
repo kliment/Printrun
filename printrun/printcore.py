@@ -449,7 +449,7 @@ class printcore():
         # might be calling it from the thread itself
         try:
             self.print_thread.join()
-        except RuntimeError, e:
+        except RuntimeError as e:
             if e.message == "cannot join current thread":
                 pass
             else:
