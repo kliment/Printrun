@@ -26,7 +26,7 @@ class SampleHandler(PrinterEventHandler):
         pass
 
     def __write(self, field, text = ""):
-        print "%-15s - %s" % (field, text)
+        print("%-15s - %s" % (field, text))
 
     def on_init(self):
         self.__write("on_init")

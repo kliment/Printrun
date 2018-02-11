@@ -132,16 +132,16 @@ class DisplayFrame(wx.Frame):
             pass
 
     def show_img_delay(self, image):
-        print "Showing", str(time.clock())
+        print("Showing", str(time.clock()))
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
         wx.FutureCall(1000 * self.interval, self.hide_pic_and_rise)
 
     def rise(self):
         if (self.direction == "Top Down"):
-            print "Lowering", str(time.clock())
+            print("Lowering", str(time.clock()))
         else:
-            print "Rising", str(time.clock())
+            print("Rising", str(time.clock()))
 
         if self.printer is not None and self.printer.online:
             self.printer.send_now("G91")
@@ -170,7 +170,7 @@ class DisplayFrame(wx.Frame):
         wx.FutureCall(1000 * self.pause, self.next_img)
 
     def hide_pic(self):
-        print "Hiding", str(time.clock())
+        print("Hiding", str(time.clock()))
         self.pic.Hide()
 
     def hide_pic_and_rise(self):
@@ -181,11 +181,11 @@ class DisplayFrame(wx.Frame):
         if not self.running:
             return
         if self.index < len(self.layers):
-            print self.index
+            print(self.index)
             wx.CallAfter(self.show_img_delay, self.layers[self.index])
             self.index += 1
         else:
-            print "end"
+            print("end")
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
 
@@ -584,8 +584,8 @@ class SettingsFrame(wx.Frame):
                 layers = self.parse_svg(name)
                 layerHeight = layers[1]
                 self.thickness.SetValue(str(layers[1]))
-                print "Layer thickness detected:", layerHeight, "mm"
-            print len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm"
+                print("Layer thickness detected:", layerHeight, "mm")
+            print(len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm")
             self.layers = layers
             self.set_total_layers(len(layers[0]))
             self.set_current_layer(0)
@@ -660,7 +660,7 @@ class SettingsFrame(wx.Frame):
     def present_first_layer(self, event):
         if (self.first_layer.GetValue()):
             if not hasattr(self, "layers"):
-                print "No model loaded!"
+                print("No model loaded!")
                 self.first_layer.SetValue(False)
                 return
             self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
@@ -768,7 +768,7 @@ class SettingsFrame(wx.Frame):
 
     def start_present(self, event):
         if not hasattr(self, "layers"):
-            print "No model loaded!"
+            print("No model loaded!")
             return
 
         self.pause_button.SetLabel("Pause")
@@ -793,18 +793,18 @@ class SettingsFrame(wx.Frame):
                                    layer_red = self.layer_red.IsChecked())
 
     def stop_present(self, event):
-        print "Stop"
+        print("Stop")
         self.pause_button.SetLabel("Pause")
         self.set_current_layer(0)
         self.display_frame.running = False
 
     def pause_present(self, event):
         if self.pause_button.GetLabel() == 'Pause':
-            print "Pause"
+            print("Pause")
             self.pause_button.SetLabel("Continue")
             self.display_frame.running = False
         else:
-            print "Continue"
+            print("Continue")
             self.pause_button.SetLabel("Pause")
             self.display_frame.running = True
             self.display_frame.next_img()

@@ -718,8 +718,8 @@ class pronsole(cmd.Cmd):
             try:
                 self.load_rc(config)
             except EnvironmentError as err:
-                print ("ERROR: Unable to load configuration file: %s" %
-                       str(err)[10:])
+                print(("ERROR: Unable to load configuration file: %s" %
+                       str(err)[10:]))
                 sys.exit(1)
         if not self.rc_loaded:
             self.load_default_rc()

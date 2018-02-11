@@ -1030,7 +1030,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
-                    print("The progress should be updated on the printer now: " + printer_progress_string)
+                    print(("The progress should be updated on the printer now: " + printer_progress_string))
                     if len(printer_progress_string) > 25:
                         print("Warning: The print progress message might be too long to be displayed properly")
                     #13 chars for up to 99h est.
@@ -1501,12 +1501,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if(len(gcode.filament_length_multi)>1):
             for i in enumerate(gcode.filament_length_multi):
                 if self.spool_manager.getSpoolName(i[0]) == None:
-                    print "- Extruder %d: %0.02fmm" % (i[0], i[1])
+                    print("- Extruder %d: %0.02fmm" % (i[0], i[1]))
                 else:
-                    print ("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
+                    print(("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
                         " from spool '%s' (%.2fmm will remain)" %
                         (self.spool_manager.getSpoolName(i[0]),
-                        self.calculate_remaining_filament(i[1], i[0])))
+                        self.calculate_remaining_filament(i[1], i[0]))))
         else:
             if self.spool_manager.getSpoolName(0) != None:
                 self.log(_(

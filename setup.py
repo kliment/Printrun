@@ -26,7 +26,7 @@ try:
     extensions = cythonize("printrun/gcoder_line.pyx")
     from Cython.Distutils import build_ext
 except ImportError as e:
-    print "WARNING: Failed to cythonize: %s" % e
+    print("WARNING: Failed to cythonize: %s" % e)
     # Debug helper: uncomment these:
     # import traceback
     # traceback.print_exc()
@@ -91,7 +91,7 @@ class uninstall(_install):
             for counter in xrange(len(files)):
                 files[counter] = prepend + files[counter].rstrip()
         for file in files:
-            print "Uninstalling", file
+            print("Uninstalling", file)
             try:
                 os.unlink(file)
             except:
@@ -100,7 +100,7 @@ class uninstall(_install):
 ops = ("install", "build", "sdist", "uninstall", "clean", "build_ext")
 
 if len(sys.argv) < 2 or sys.argv[1] not in ops:
-    print "Please specify operation : %s" % " | ".join(ops)
+    print("Please specify operation : %s" % " | ".join(ops))
     raise SystemExit
 
 prefix = None

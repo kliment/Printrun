@@ -385,6 +385,6 @@ if __name__ == "__main__":
             else:
                 break
 
-        print i, len(working)
+        print(i, len(working))
     emitstl("../../Downloads/frame-vertex-neo-foot-x4-a.stl", s.facets, "emitted_object")
 # stl("../prusamendel/stl/mendelplate.stl")

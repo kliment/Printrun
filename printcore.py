@@ -46,27 +46,27 @@ if __name__ == '__main__':
         opts, args = getopt.getopt(sys.argv[1:], "b:svVh",
                         ["baud=", "statusreport", "verbose", "version", "help"])
     except getopt.GetoptError as err:
-        print str(err)
-        print usage
+        print(str(err))
+        print(usage)
         sys.exit(2)
     for o, a in opts:
         if o in ('-h', '--help'):
-            print usage
+            print(usage)
             sys.exit(0)
         elif o in ('-V','--version'):
-            print "printrun "+printcore_version
+            print("printrun "+printcore_version)
             sys.exit(0)
         elif o in ('-b','--baud'):
             try:
                 baud = int(a)
             except ValueError:
-                print "ValueError:"
-                print "\tInvalid BAUD_RATE value '%s'" % a
-                print "\tBAUD_RATE must be an integer\n"
+                print("ValueError:")
+                print("\tInvalid BAUD_RATE value '%s'" % a)
+                print("\tBAUD_RATE must be an integer\n")
                 # FIXME: This should output a more apropiate error message when
                 #        not a good baud rate is passed as an argument
                 #        i.e: when baud <= 1000 or > 225000
-                print usage
+                print(usage)
                 sys.exit(2)
         elif o in ('-v', '--verbose'):
             loud = True
@@ -74,13 +74,13 @@ if __name__ == '__main__':
             statusreport = True
 
     if len(args) <= 1:
-        print "Error: Port or gcode file were not specified.\n"
-        print usage
+        print("Error: Port or gcode file were not specified.\n")
+        print(usage)
         sys.exit(2)
     elif len(args) > 1:
         port = args[-2]
         filename = args[-1]
-        print "Printing: %s on %s with baudrate %d" % (filename, port, baud)
+        print("Printing: %s on %s with baudrate %d" % (filename, port, baud))
 
     p = printcore(port, baud)
     p.loud = loud

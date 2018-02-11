@@ -32,7 +32,7 @@ build_dimensions = [200, 200, 100, -100, -100, 0]
 build_dimensions = [200, 200, 100, 0, 0, 0]
 frame = GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer', size = (800, 800), build_dimensions = build_dimensions)
 gcode = gcoder.GCode(open(sys.argv[1]))
-print "Gcode loaded"
+print("Gcode loaded")
 frame.addfile(gcode)
 
 first_move = None

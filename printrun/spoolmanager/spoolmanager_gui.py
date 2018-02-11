@@ -183,7 +183,7 @@ class SpoolListView(wx.ListView):
     def populateList(self, spool_manager):
         """Get the list of recorded spools from the Spool Manager."""
         spool_list = spool_manager.getSpoolList()
-        print
+        print()
         for i in range(len(spool_list)):
             self.Append(spool_list[i])
         self.SetColumnWidth(0, -1 | -2)
