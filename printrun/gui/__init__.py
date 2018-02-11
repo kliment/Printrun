@@ -17,8 +17,10 @@ import logging
 
 try:
     import wx
+    if wx.VERSION < (4,):
+        raise ImportError()
 except:
-    logging.error(_("WX is not installed. This program requires WX to run."))
+    logging.error(_("WX >= 4 is not installed. This program requires WX >= 4 to run."))
     raise
 
 from printrun.utils import install_locale
@@ -202,9 +204,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.kill)
 
         # Custom buttons
-        if wx.VERSION > (2, 9): self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
-        else: self.cbuttonssizer = wx.GridBagSizer()
-        self.cbuttonssizer = wx.GridBagSizer()
+        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
         self.centerpanel = self.newPanel(page1panel2)
         self.centerpanel.SetSizer(self.cbuttonssizer)
         rightsizer.Add(self.centerpanel, 0, wx.ALIGN_CENTER)
@@ -255,8 +255,7 @@ class MainWindow(wx.Frame):
             logpanel = self.newPanel(left_real_panel)
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
-        if wx.VERSION > (2, 9): self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
-        else: self.cbuttonssizer = wx.GridBagSizer()
+        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
         self.centerpanel = self.newPanel(vizpanel)
         self.centerpanel.SetSizer(self.cbuttonssizer)
         viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)

@@ -36,8 +36,8 @@ class DisplayFrame(wx.Frame):
         self.printer = printer
         self.control_frame = parent
         self.pic = wx.StaticBitmap(self)
-        self.bitmap = wx.EmptyBitmap(*res)
-        self.bbitmap = wx.EmptyBitmap(*res)
+        self.bitmap = wx.Bitmap(*res)
+        self.bbitmap = wx.Bitmap(*res)
         self.slicer = 'bitmap'
         self.dpi = 96
         dc = wx.MemoryDC()
@@ -73,8 +73,8 @@ class DisplayFrame(wx.Frame):
             pass
 
     def resize(self, res = (1024, 768)):
-        self.bitmap = wx.EmptyBitmap(*res)
-        self.bbitmap = wx.EmptyBitmap(*res)
+        self.bitmap = wx.Bitmap(*res)
+        self.bbitmap = wx.Bitmap(*res)
         dc = wx.MemoryDC()
         dc.SelectObject(self.bbitmap)
         dc.SetBackground(wx.Brush("black"))
@@ -624,7 +624,7 @@ class SettingsFrame(wx.Frame):
             resolution_x_pixels = int(self.X.GetValue())
             resolution_y_pixels = int(self.Y.GetValue())
 
-            gridBitmap = wx.EmptyBitmap(resolution_x_pixels, resolution_y_pixels)
+            gridBitmap = wx.Bitmap(resolution_x_pixels, resolution_y_pixels)
             dc = wx.MemoryDC()
             dc.SelectObject(gridBitmap)
             dc.SetBackground(wx.Brush("black"))

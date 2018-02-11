@@ -21,8 +21,10 @@ import getopt
 
 try:
     import wx  # NOQA
+    if wx.VERSION < (4,):
+        raise ImportError()
 except:
-    print("wxPython is not installed. This program requires wxPython to run.")
+    print("wxPython >= 4 is not installed. This program requires wxPython >=4 to run.")
     if sys.version_info.major >= 3:
         print("""\
 As you are currently running python3, this is most likely because wxPython is

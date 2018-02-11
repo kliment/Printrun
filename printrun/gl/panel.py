@@ -97,7 +97,7 @@ class wxGLPanel(wx.Panel):
         if self.IsFrozen():
             event.Skip()
             return
-        if (wx.VERSION > (2, 9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
+        if self.canvas.IsShownOnScreen():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
             self.OnReshape()
@@ -326,10 +326,10 @@ class wxGLPanel(wx.Panel):
 
     def handle_rotation(self, event):
         if self.initpos is None:
-            self.initpos = event.GetPositionTuple()
+            self.initpos = event.GetPosition()
         else:
             p1 = self.initpos
-            p2 = event.GetPositionTuple()
+            p2 = event.GetPosition()
             sz = self.GetClientSize()
             p1x = float(p1[0]) / (sz[0] / 2) - 1
             p1y = 1 - float(p1[1]) / (sz[1] / 2)
@@ -342,10 +342,10 @@ class wxGLPanel(wx.Panel):
 
     def handle_translation(self, event):
         if self.initpos is None:
-            self.initpos = event.GetPositionTuple()
+            self.initpos = event.GetPosition()
         else:
             p1 = self.initpos
-            p2 = event.GetPositionTuple()
+            p2 = event.GetPosition()
             if self.orthographic:
                 x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
                 x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])

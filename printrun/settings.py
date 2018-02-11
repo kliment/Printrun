@@ -39,7 +39,7 @@ def setting_add_tooltip(func):
                 deftxt += repr(self.default) + "  " + resethelp
         helptxt += sep + deftxt
         if len(helptxt):
-            widget.SetToolTipString(helptxt)
+            widget.SetToolTip(helptxt)
         return widget
     return decorator
 

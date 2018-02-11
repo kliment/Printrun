@@ -41,8 +41,11 @@ install_locale('pronterface')
 
 try:
     import wx
+    import wx.adv
+    if wx.VERSION < (4,):
+        raise ImportError()
 except:
-    logging.error(_("WX is not installed. This program requires WX to run."))
+    logging.error(_("WX >= 4 is not installed. This program requires WX >= 4 to run."))
     raise
 
 from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit
@@ -725,7 +728,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filehistory.UseMenu(recent)
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
-        m.AppendMenu(wx.ID_ANY, _("&Recent Files"), recent)
+        m.Append(wx.ID_ANY, _("&Recent Files"), recent)
         self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console"), _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
@@ -814,7 +817,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def about(self, event):
         """Show about dialog"""
 
-        info = wx.AboutDialogInfo()
+        info = wx.adv.AboutDialogInfo()
 
         info.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
         info.SetName('Printrun')
@@ -848,7 +851,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         info.AddDeveloper('Kliment Yanev')
         info.AddDeveloper('Guillaume Seguin')
 
-        wx.AboutBox(info)
+        wx.adv.AboutBox(info)
 
     #  --------------------------------------------------------------
     #  Settings & command line handling (including update callbacks)

@@ -167,7 +167,7 @@ class StlViewPanel(wxGLPanel):
         RMB: nothing
             with shift move viewport
         """
-        self.mousepos = event.GetPositionTuple()
+        self.mousepos = event.GetPosition()
         if event.Dragging() and event.LeftIsDown():
             self.handle_rotation(event)
         elif event.Dragging() and event.RightIsDown():
@@ -187,7 +187,7 @@ class StlViewPanel(wxGLPanel):
     def handle_wheel(self, event):
         delta = event.GetWheelRotation()
         factor = 1.05
-        x, y = event.GetPositionTuple()
+        x, y = event.GetPosition()
         x, y, _ = self.mouse_to_3d(x, y, local_transform = True)
         if delta > 0:
             self.zoom(factor, (x, y))

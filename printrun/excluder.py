@@ -24,10 +24,9 @@ class ExcluderWindow(gviz.GvizWindow):
     def __init__(self, excluder, *args, **kwargs):
         super(ExcluderWindow, self).__init__(*args, **kwargs)
         self.SetTitle(_("Part excluder: draw rectangles where print instructions should be ignored"))
-        self.toolbar.AddLabelTool(128, " " + _("Reset selection"),
-                                  wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
-                                  shortHelp = _("Reset selection"),
-                                  longHelp = "")
+        self.toolbar.AddTool(128, " " + _("Reset selection"),
+                             wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                             _("Reset selection"))
         self.Bind(wx.EVT_TOOL, self.reset_selection, id = 128)
         self.parent = excluder
         self.p.paint_overlay = self.paint_selection
@@ -46,7 +45,7 @@ class ExcluderWindow(gviz.GvizWindow):
            or event.ButtonUp(wx.MOUSE_BTN_RIGHT):
             self.initpos = None
         elif event.Dragging() and event.RightIsDown():
-            e = event.GetPositionTuple()
+            e = event.GetPosition()
             if not self.initpos or not hasattr(self, "basetrans"):
                 self.initpos = e
                 self.basetrans = self.p.translate
@@ -55,7 +54,7 @@ class ExcluderWindow(gviz.GvizWindow):
             self.p.dirty = 1
             wx.CallAfter(self.p.Refresh)
         elif event.Dragging() and event.LeftIsDown():
-            x, y = event.GetPositionTuple()
+            x, y = event.GetPosition()
             if not self.initpos:
                 self.basetrans = self.p.translate
             x = (x - self.basetrans[0]) / self.p.scale[0]

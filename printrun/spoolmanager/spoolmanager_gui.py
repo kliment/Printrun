@@ -46,11 +46,11 @@ class SpoolManagerMainWindow(wx.Frame):
 
         # Generate the buttons
         self.new_button = wx.Button(self, wx.ID_ADD)
-        self.new_button.SetToolTipString("Add a new spool")
+        self.new_button.SetToolTip("Add a new spool")
         self.edit_button = wx.Button(self, wx.ID_EDIT)
-        self.edit_button.SetToolTipString("Edit the selected spool")
+        self.edit_button.SetToolTip("Edit the selected spool")
         self.delete_button = wx.Button(self, wx.ID_DELETE)
-        self.delete_button.SetToolTipString("Delete the selected spool")
+        self.delete_button.SetToolTip("Delete the selected spool")
 
         # "Program" the buttons
         self.new_button.Bind(wx.EVT_BUTTON, self.onClickAdd)
@@ -220,10 +220,10 @@ class CurrentSpoolDialog(wx.Panel):
 
             # Generate the "load" and "unload" buttons
             load_button.append(wx.Button(self, label = "Load"))
-            load_button[i].SetToolTipString(
+            load_button[i].SetToolTip(
                 "Load selected spool for Extruder %d" % i)
             unload_button.append(wx.Button(self, label = "Unload"))
-            unload_button[i].SetToolTipString(
+            unload_button[i].SetToolTip(
                 "Unload the spool for Extruder %d" % i)
 
             # "Program" the buttons
@@ -241,7 +241,7 @@ class CurrentSpoolDialog(wx.Panel):
 
             dialog_sizer.append(wx.BoxSizer(wx.HORIZONTAL))
             dialog_sizer[i].Add(self.extruder_dialog[i], 1, wx.ALIGN_CENTER)
-            dialog_sizer[i].AddSpacer((10, -1))
+            dialog_sizer[i].AddSpacer(10)
             dialog_sizer[i].Add(button_sizer[i], 0, wx.EXPAND)
 
             full_sizer.Add(dialog_sizer[i], 0, wx.ALL | wx.EXPAND, 10)
@@ -310,13 +310,13 @@ class SpoolManagerAddWindow(wx.Frame):
             "Name", "Default Spool", "")
         self.diameter_dialog = LabeledTextCtrl(self,
             "Diameter", "1.75", "mm")
-        self.diameter_dialog.SetToolTipString(
+        self.diameter_dialog.SetToolTip(
             "Typically, either 1.75 mm or 2.85 mm (a.k.a '3')")
         self.weight_dialog = LabeledTextCtrl(self,
             "Weight", "1", "Kg")
         self.density_dialog = LabeledTextCtrl(self,
             "Density", "1.25", "g/cm^3")
-        self.density_dialog.SetToolTipString(
+        self.density_dialog.SetToolTip(
             "Typical densities are 1.25 g/cm^3 for PLA and 1.08 g/cm^3 for" +
             " ABS")
         self.length_dialog = LabeledTextCtrl(self,
