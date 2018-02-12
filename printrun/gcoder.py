@@ -56,7 +56,7 @@ class PyLightLine:
         return None
 
 try:
-    import gcoder_line
+    from . import gcoder_line
     Line = gcoder_line.GLine
     LightLine = gcoder_line.GLightLine
 except Exception as e:

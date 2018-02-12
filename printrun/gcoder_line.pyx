@@ -1,3 +1,5 @@
+#cython: language_level=3
+#
 # This file is copied from GCoder.
 #
 # GCoder is free software: you can redistribute it and/or modify
@@ -18,6 +20,7 @@ from libc.stdint cimport uint8_t, uint32_t
 from libc.string cimport strlen, strncpy
 
 cdef char* copy_string(object value):
+    value = value.encode('utf-8')
     cdef char* orig = value
     str_len = len(orig)
     cdef char* array = <char *>malloc(str_len + 1)
@@ -192,7 +195,7 @@ cdef class GLine:
             self._status = set_has_var(self._status, pos_gcview_end_vertex)
     property raw:
         def __get__(self):
-            if has_var(self._status, pos_raw): return self._raw
+            if has_var(self._status, pos_raw): return self._raw.decode('utf-8')
             else: return None
         def __set__(self, value):
             # WARNING: memory leak could happen here, as we don't do the following :
@@ -201,7 +204,7 @@ cdef class GLine:
             self._status = set_has_var(self._status, pos_raw)
     property command:
         def __get__(self):
-            if has_var(self._status, pos_command): return self._command
+            if has_var(self._status, pos_command): return self._command.decode('utf-8')
             else: return None
         def __set__(self, value):
             # WARNING: memory leak could happen here, as we don't do the following :
@@ -231,7 +234,7 @@ cdef class GLightLine:
 
     property raw:
         def __get__(self):
-            if has_var(self._status, pos_raw): return self._raw
+            if has_var(self._status, pos_raw): return self._raw.decode('utf-8')
             else: return None
         def __set__(self, value):
             # WARNING: memory leak could happen here, as we don't do the following :
@@ -240,7 +243,7 @@ cdef class GLightLine:
             self._status = set_has_var(self._status, pos_raw)
     property command:
         def __get__(self):
-            if has_var(self._status, pos_command): return self._command
+            if has_var(self._status, pos_command): return self._command.decode('utf-8')
             else: return None
         def __set__(self, value):
             # WARNING: memory leak could happen here, as we don't do the following :
