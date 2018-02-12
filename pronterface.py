@@ -25,13 +25,7 @@ try:
         raise ImportError()
 except:
     print("wxPython >= 4 is not installed. This program requires wxPython >=4 to run.")
-    if sys.version_info.major >= 3:
-        print("""\
-As you are currently running python3, this is most likely because wxPython is
-not yet available for python3. You should try running with python2 instead.""")
-        sys.exit(-1)
-    else:
-        raise
+    raise
 
 from printrun.pronterface import PronterApp
 
