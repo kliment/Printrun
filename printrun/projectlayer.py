@@ -27,7 +27,6 @@ import imghdr
 import copy
 import re
 from collections import OrderedDict
-import itertools
 import math
 
 class DisplayFrame(wx.Frame):
@@ -559,7 +558,7 @@ class SettingsFrame(wx.Frame):
         os.chdir(self.image_dir)
         vals = [f for f in os.listdir('.') if os.path.isfile(f)]
         keys = (int(re.search('\d+', p).group()) for p in vals)
-        imagefilesDict = dict(itertools.izip(keys, vals))
+        imagefilesDict = dict(zip(keys, vals))
         imagefilesOrderedDict = OrderedDict(sorted(imagefilesDict.items(), key = lambda t: t[0]))
 
         for f in imagefilesOrderedDict.values():
