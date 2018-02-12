@@ -169,4 +169,5 @@ setup(name = "Printrun",
       scripts = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
       cmdclass = cmdclass,
       ext_modules = extensions,
+      classifiers=["Programming Language :: Python :: 3 :: Only"],
       )
