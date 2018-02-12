@@ -1711,7 +1711,7 @@ class pronsole(cmd.Cmd):
             self.onecmd(command)
 
     def do_run_script(self, l):
-        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE)
+        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE, universal_newlines = True)
         for line in p.stdout.readlines():
             self.log("<< " + line.strip())
 
@@ -1719,7 +1719,7 @@ class pronsole(cmd.Cmd):
         self.log(_("Runs a custom script. Current gcode filename can be given using $s token."))
 
     def do_run_gcode_script(self, l):
-        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE)
+        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE, universal_newlines = True)
         for line in p.stdout.readlines():
             self.onecmd(line.strip())
 

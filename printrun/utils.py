@@ -125,12 +125,11 @@ def format_duration(delta):
     return str(datetime.timedelta(seconds = int(delta)))
 
 def prepare_command(command, replaces = None):
-    command = shlex.split(command.replace("\\", "\\\\").encode())
+    command = shlex.split(command.replace("\\", "\\\\"))
     if replaces:
         replaces["$python"] = sys.executable
         for pattern, rep in replaces.items():
             command = [bit.replace(pattern, rep) for bit in command]
-    command = [bit.encode() for bit in command]
     return command
 
 def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
@@ -143,7 +142,7 @@ def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = s
 def get_command_output(command, replaces):
     p = run_command(command, replaces,
                     stdout = subprocess.PIPE, stderr = subprocess.STDOUT,
-                    blocking = False)
+                    blocking = False, universal_newlines = True)
     return p.stdout.read()
 
 def dosify(name):

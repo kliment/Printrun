@@ -494,7 +494,7 @@ class StlPlaterPanel(PlaterPanel):
                    "-m",  # Pack around center
                    "-x", str(int(self.build_dimensions[0])),
                    "-y", str(int(self.build_dimensions[1]))] + files
-        p = subprocess.Popen(command, stdout = subprocess.PIPE)
+        p = subprocess.Popen(command, stdout = subprocess.PIPE, universal_newlines = True)
 
         pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
         for line in p.stdout:

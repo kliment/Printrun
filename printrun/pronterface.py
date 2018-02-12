@@ -1299,7 +1299,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         fpath = os.path.join(self.slic3r_configpath, cat, config)
                         pararray += ["--load", fpath]
             self.log(_("Running ") + " ".join(pararray))
-            self.slicep = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
+            self.slicep = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE, universal_newlines = True)
             while True:
                 o = self.slicep.stdout.read(1)
                 if o == '' and self.slicep.poll() is not None: break
