@@ -197,7 +197,7 @@ class Gviz(wx.Panel):
         self.arcpen = wx.Pen(wx.Colour(255, 0, 0), penwidth)
         self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
-        self.fades = [wx.Pen(wx.Colour(int(250 - 0.6 ** i * 100), int(250 - 0.6 ** i * 100), int(200 - 0.4 ** i * 50)), penwidth) for i in xrange(6)]
+        self.fades = [wx.Pen(wx.Colour(int(250 - 0.6 ** i * 100), int(250 - 0.6 ** i * 100), int(200 - 0.4 ** i * 50)), penwidth) for i in range(6)]
         self.penslist = [self.mainpen, self.travelpen, self.hlpen] + self.fades
         self.bgcolor = wx.Colour()
         self.bgcolor.Set(bgcolor)
@@ -333,10 +333,10 @@ class Gviz(wx.Panel):
         dc.SetPen(wx.Pen(wx.Colour(180, 180, 150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
-                for x in xrange(int(self.build_dimensions[0] / grid_unit) + 1):
+                for x in range(int(self.build_dimensions[0] / grid_unit) + 1):
                     draw_x = self.scale[0] * x * grid_unit
                     dc.DrawLine(draw_x, 0, draw_x, height)
-                for y in xrange(int(self.build_dimensions[1] / grid_unit) + 1):
+                for y in range(int(self.build_dimensions[1] / grid_unit) + 1):
                     draw_y = self.scale[1] * (self.build_dimensions[1] - y * grid_unit)
                     dc.DrawLine(0, draw_y, width, draw_y)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))

@@ -648,8 +648,8 @@ class SettingsFrame(wx.Frame):
             gridCountX = int(projectedXmm / 10)
             gridCountY = int(projectedYmm / 10)
 
-            for y in xrange(0, gridCountY + 1):
-                for x in xrange(0, gridCountX + 1):
+            for y in range(0, gridCountY + 1):
+                for x in range(0, gridCountX + 1):
                     dc.DrawLine(0, y * (pixelsYPerMM * 10), resolution_x_pixels, y * (pixelsYPerMM * 10))
                     dc.DrawLine(x * (pixelsXPerMM * 10), 0, x * (pixelsXPerMM * 10), resolution_y_pixels)
 

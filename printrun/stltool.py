@@ -182,7 +182,7 @@ class stl(object):
                 buf += newdata
             facetcount = struct.unpack_from("<I", buf, 80)
             facetformat = struct.Struct("<ffffffffffffH")
-            for i in xrange(facetcount[0]):
+            for i in range(facetcount[0]):
                 buf = f.read(50)
                 while len(buf) < 50:
                     newdata = f.read(50 - len(buf))
@@ -373,7 +373,7 @@ class stl(object):
 
 if __name__ == "__main__":
     s = stl("../../Downloads/frame-vertex-neo-foot-x4.stl")
-    for i in xrange(11, 11):
+    for i in range(11, 11):
         working = s.facets[:]
         for j in reversed(sorted(s.facetsminz)):
             if j[0] > i:

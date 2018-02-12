@@ -41,8 +41,8 @@ def genscape(data = [[0, 1, 0, 0], [1, 0, 2, 0], [1, 0, 0, 0], [0, 1, 0, 1]],
         o.facets += [genfacet([[pscale * i[0], 2.0 * bmidpoint[0], data[datal - 1][i[0]] * zscale + bheight], [pscale * i[1], 2.0 * bmidpoint[0], data[datal - 1][i[1]] * zscale + bheight], [pscale * i[1], 2.0 * bmidpoint[0], 0.0]])]
         o.facets += [genfacet([[pscale * i[1], 0.0, 0.0], [pscale * i[0], 0.0, data[0][i[0]] * zscale + bheight], [pscale * i[0], 0.0, 0.0]])]
         o.facets += [genfacet([[pscale * i[0], 2.0 * bmidpoint[0], data[datal - 1][i[0]] * zscale + bheight], [pscale * i[1], 2.0 * bmidpoint[0], 0.0], [pscale * i[0], 2.0 * bmidpoint[0], 0.0]])]
-    for i in xrange(datah - 1):
-        for j in xrange(datal - 1):
+    for i in range(datah - 1):
+        for j in range(datal - 1):
             o.facets += [genfacet([[pscale * i, pscale * j, data[j][i] * zscale + bheight], [pscale * (i + 1), pscale * (j), data[j][i + 1] * zscale + bheight], [pscale * (i + 1), pscale * (j + 1), data[j + 1][i + 1] * zscale + bheight]])]
             o.facets += [genfacet([[pscale * (i), pscale * (j + 1), data[j + 1][i] * zscale + bheight], [pscale * i, pscale * j, data[j][i] * zscale + bheight], [pscale * (i + 1), pscale * (j + 1), data[j + 1][i + 1] * zscale + bheight]])]
             # print o.facets[-1]
@@ -53,7 +53,7 @@ def zimage(name, out):
     b = list(map(ord, i.GetData()[::3]))
     print(b)
     data = []
-    for i in xrange(s[0]):
+    for i in range(s[0]):
         data += [b[i * s[1]:(i + 1) * s[1]]]
     # data = [i[::5] for i in data[::5]]
     emitstl(out, genscape(data, zscale = 0.1).facets, name)

@@ -48,7 +48,7 @@ class install (_install):
         if self.prefix:
             length += len(self.prefix)
         if length:
-            for counter in xrange(len(outputs)):
+            for counter in range(len(outputs)):
                 outputs[counter] = outputs[counter][length:]
         data = "\n".join(outputs)
         try:
@@ -88,7 +88,7 @@ class uninstall(_install):
         if self.prefix:
             prepend += self.prefix
         if len(prepend):
-            for counter in xrange(len(files)):
+            for counter in range(len(files)):
                 files[counter] = prepend + files[counter].rstrip()
         for file in files:
             print("Uninstalling", file)

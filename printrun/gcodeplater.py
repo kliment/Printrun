@@ -223,7 +223,7 @@ class GcodePlaterPanel(PlaterPanel):
                         else:
                             f.write(rewrite_gline(co, l, math.cos(r), math.sin(r)) + "\n")
                 # Find the current real position
-                for i in xrange(len(model.gcode) - 1, -1, -1):
+                for i in range(len(model.gcode) - 1, -1, -1):
                     gline = model.gcode.lines[i]
                     if gline.is_move:
                         last_real_position = (- trans[0] + gline.current_x,

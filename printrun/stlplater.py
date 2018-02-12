@@ -195,11 +195,11 @@ class showstl(wx.Window):
             dc = wx.ClientDC(self)
         scale = 2
         dc.SetPen(wx.Pen(wx.Colour(100, 100, 100)))
-        for i in xrange(20):
+        for i in range(20):
             dc.DrawLine(0, i * scale * 10, 400, i * scale * 10)
             dc.DrawLine(i * scale * 10, 0, i * scale * 10, 400)
         dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
-        for i in xrange(4):
+        for i in range(4):
             dc.DrawLine(0, i * scale * 50, 400, i * scale * 50)
             dc.DrawLine(i * scale * 50, 0, i * scale * 50, 400)
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
