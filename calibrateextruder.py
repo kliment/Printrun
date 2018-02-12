@@ -41,7 +41,7 @@ import os
 def float_input(prompt=''):
     f = None
     while f is None:
-        s = raw_input(prompt)
+        s = input(prompt)
         try:
             f = float(s)
         except ValueError:

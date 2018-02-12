@@ -226,7 +226,7 @@ class pronsole(cmd.Cmd):
                 else:
                     if self.use_rawinput:
                         try:
-                            line = raw_input(self.prompt)
+                            line = input(self.prompt)
                         except EOFError:
                             self.log("")
                             self.do_exit("")
@@ -255,7 +255,7 @@ class pronsole(cmd.Cmd):
                     pass
 
     def confirm(self):
-        y_or_n = raw_input("y/n: ")
+        y_or_n = input("y/n: ")
         if y_or_n == "y":
             return True
         elif y_or_n != "n":
