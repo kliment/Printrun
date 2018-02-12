@@ -384,7 +384,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_settemp(self, l = ""):
         try:
-            if l.__class__ not in (str, str) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.htemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.temps.keys():
@@ -404,7 +404,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_bedtemp(self, l = ""):
         try:
-            if l.__class__ not in (str, str) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.btemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.bedtemps.keys():
@@ -424,7 +424,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_setspeed(self, l = ""):
         try:
-            if l.__class__ not in (str, str) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.speed_slider.GetValue())
             else:
                 l = l.lower()
@@ -439,7 +439,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_setflow(self, l = ""):
         try:
-            if l.__class__ not in (str, str) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.flow_slider.GetValue())
             else:
                 l = l.lower()
@@ -1936,7 +1936,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.save_in_rc(("button %d" % n), '')
         elif bdef.background:
             colour = bdef.background
-            if type(colour) not in (str, str):
+            if not isinstance(colour, str):
                 if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
                     colour = (x % 256 for x in colour)
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1954,7 +1954,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             bedit.command.SetValue(button.properties.command)
             if button.properties.background:
                 colour = button.properties.background
-                if type(colour) not in (str, str):
+                if not isinstance(colour, str):
                     if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
                         colour = (x % 256 for x in colour)
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
