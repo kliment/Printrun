@@ -477,7 +477,7 @@ class pronsole(cmd.Cmd):
             lines = macro_def.split("\n")
             for l in lines:
                 pycode += self.compile_macro_line(l)
-        exec pycode
+        exec(pycode)
         return macro
 
     def start_macro(self, macro_name, prev_definition = "", suppress_instructions = False):
