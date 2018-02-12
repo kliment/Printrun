@@ -94,10 +94,6 @@ class ConsoleOutputHandler(object):
         except:
             pass
         if self.print_on_stdout:
-            try:
-                data = data.encode("utf-8")
-            except:
-                pass
             self.stdout.write(data)
 
     def flush(self):
