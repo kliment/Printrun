@@ -689,7 +689,7 @@ class GCode(object):
             self.line_idxs = array('I', line_idxs)
 
             # Compute bounding box
-            all_zs = self.all_zs.union(set([zmin])).difference(set([None]))
+            all_zs = self.all_zs.union({zmin}).difference({None})
             zmin = min(all_zs)
             zmax = max(all_zs)
 
