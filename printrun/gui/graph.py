@@ -141,7 +141,7 @@ class Graph(BufferedCanvas):
             degrees = y * spacing
             y_pos = self._y_pos(degrees)
             dc.DrawLine(0, y_pos, self.width, y_pos)
-            gc.DrawText(unicode(y * spacing),
+            gc.DrawText(str(y * spacing),
                         1, y_pos - (font.GetPointSize() / 2))
 
         if self.timer.IsRunning() is False:
