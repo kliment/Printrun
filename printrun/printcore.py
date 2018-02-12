@@ -250,7 +250,7 @@ class printcore():
     def _readline(self):
         try:
             try:
-                line = self.printer.readline()
+                line = self.printer.readline().decode('ascii')
                 if self.printer_tcp and not line:
                     raise OSError(-1, "Read EOF from socket")
             except socket.timeout:
@@ -658,7 +658,7 @@ class printcore():
                 try: self.sendcb(command, gline)
                 except: self.logError(traceback.format_exc())
             try:
-                self.printer.write(str(command + "\n"))
+                self.printer.write((command + "\n").encode('ascii'))
                 if self.printer_tcp:
                     try:
                         self.printer.flush()
