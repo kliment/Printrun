@@ -1892,7 +1892,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.Bind(wx.EVT_BUTTON, self.process_button)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttons_widgets.append(b)
-            if type(self.cbuttonssizer) == wx.GridBagSizer:
+            if isinstance(self.cbuttonssizer, wx.GridBagSizer):
                 self.cbuttonssizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
                 self.cbuttonssizer.Add(b, flag = wx.EXPAND)
@@ -1939,7 +1939,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         elif bdef.background:
             colour = bdef.background
             if type(colour) not in (str, str):
-                if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
+                if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
                     colour = (x % 256 for x in colour)
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                 else:
@@ -1957,7 +1957,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if button.properties.background:
                 colour = button.properties.background
                 if type(colour) not in (str, str):
-                    if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
+                    if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
                         colour = (x % 256 for x in colour)
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                     else:

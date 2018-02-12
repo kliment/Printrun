@@ -319,7 +319,7 @@ class Gviz(wx.Panel):
         scaled_arcs = [self._arc_scaler(a) for a in arcs]
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         for i in range(len(scaled_arcs)):
-            dc.SetPen(pens[i] if type(pens) == list else pens)
+            dc.SetPen(pens[i] if isinstance(pens, list) else pens)
             dc.DrawArc(*scaled_arcs[i])
 
     def repaint_everything(self):
