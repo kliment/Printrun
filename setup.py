@@ -141,8 +141,8 @@ for basedir, subdirs, files in os.walk("locale"):
     if not basedir.endswith("LC_MESSAGES"):
         continue
     destpath = os.path.join("share", "pronterface", basedir)
-    files = filter(lambda x: x.endswith(".mo"), files)
-    files = [os.path.join(basedir, x) for x in files]
+    files = (f for f in files if f.endswith(".mo"))
+    files = [os.path.join(basedir, f) for f in files]
     data_files.append((destpath, files))
 
 extra_data_dirs = ["css"]

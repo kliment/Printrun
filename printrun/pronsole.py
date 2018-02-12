@@ -832,7 +832,7 @@ class pronsole(cmd.Cmd):
 
         for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*", "/dev/cu.*", "/dev/rfcomm*"]:
             baselist += glob.glob(g)
-        return filter(self._bluetoothSerialFilter, baselist)
+        return [p for p in baselist if self._bluetoothSerialFilter(p)]
 
     def _bluetoothSerialFilter(self, serial):
         return not ("Bluetooth" in serial or "FireFly" in serial)

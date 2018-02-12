@@ -557,7 +557,7 @@ class SettingsFrame(wx.Frame):
         # them with the original then sorts them. It allows for filenames of the
         # format: abc_1.png, which would be followed by abc_10.png alphabetically.
         os.chdir(self.image_dir)
-        vals = filter(os.path.isfile, os.listdir('.'))
+        vals = [f for f in os.listdir('.') if os.path.isfile(f)]
         keys = (int(re.search('\d+', p).group()) for p in vals)
         imagefilesDict = dict(itertools.izip(keys, vals))
         imagefilesOrderedDict = OrderedDict(sorted(imagefilesDict.items(), key = lambda t: t[0]))
