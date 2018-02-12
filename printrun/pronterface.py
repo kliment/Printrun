@@ -883,7 +883,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(HiddenSetting("last_window_maximized", False))
         self.settings._add(HiddenSetting("last_sash_position", -1))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
-        self.settings._add(HiddenSetting("last_file_path", u""))
+        self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_file_filter", 0))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
         self.settings._add(StaticTextSetting("separator_2d_viewer", _("2D viewer options"), "", group = "Viewer"))
@@ -1455,7 +1455,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def post_gcode_load(self, print_stats = True):
         # Must be called in wx.CallAfter for safety
         self.loading_gcode = False
-        self.SetTitle(_(u"Pronterface - %s") % self.filename)
+        self.SetTitle(_("Pronterface - %s") % self.filename)
         message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
         self.log(message)
         self.statusbar.SetStatusText(message)

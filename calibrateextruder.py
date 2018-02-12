@@ -75,7 +75,7 @@ def heatup(p, temp, s = 0):
             time.sleep(1.5)
             f = True
         curtemp = gettemp(p)
-        if curtemp: w(u"\rHeating extruder up.. %3d \xb0C" % curtemp)
+        if curtemp: w("\rHeating extruder up.. %3d \xb0C" % curtemp)
     if s: print()
     else: print("\nReady.")
 
@@ -96,7 +96,7 @@ if not os.path.exists(port):
     port = 0
 
 # Parse options
-help = u"""
+help = """
 %s [ -l DISTANCE ] [ -s STEPS ] [ -t TEMP ] [ -p PORT ]
         -l      --length        Length of filament to extrude for each calibration step (default: %d mm)
         -s      --steps         Initial amount of steps to use (default: %d steps)
@@ -121,7 +121,7 @@ for o, a in opts:
     elif o in ('-t', '--temp'):
         temp = int(a)
         if temp >= tempmax:
-            print((u'%d \xb0C? Are you insane?'.encode('utf-8') % temp) + (" That's over nine thousand!" if temp > 9000 else ''))
+            print(('%d \xb0C? Are you insane?'.encode('utf-8') % temp) + (" That's over nine thousand!" if temp > 9000 else ''))
             sys.exit(255)
     elif o in ('-p', '--port'):
         port = a

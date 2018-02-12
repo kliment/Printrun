@@ -268,21 +268,21 @@ class printcore():
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                self.logError(_(u"Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                self.logError(_("Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 return None
             else:
-                self.logError(_(u"SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                self.logError(_("SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 raise
         except SerialException as e:
-            self.logError(_(u"Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
+            self.logError(_("Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
             return None
         except socket.error as e:
-            self.logError(_(u"Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+            self.logError(_("Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
             return None
         except OSError as e:
             if e.errno == errno.EAGAIN:  # Not a real error, no data was available
                 return ""
-            self.logError(_(u"Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
+            self.logError(_("Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
             return None
 
     def _listen_can_continue(self):
@@ -667,14 +667,14 @@ class printcore():
                 self.writefailures = 0
             except socket.error as e:
                 if e.errno is None:
-                    self.logError(_(u"Can't write to printer (disconnected ?):") +
+                    self.logError(_("Can't write to printer (disconnected ?):") +
                                   "\n" + traceback.format_exc())
                 else:
-                    self.logError(_(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                    self.logError(_("Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
             except SerialException as e:
-                self.logError(_(u"Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
+                self.logError(_("Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
                 self.writefailures += 1
             except RuntimeError as e:
-                self.logError(_(u"Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                self.logError(_("Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1

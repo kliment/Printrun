@@ -66,7 +66,7 @@ REPORT_NONE = 0
 REPORT_POS = 1
 REPORT_TEMP = 2
 REPORT_MANUAL = 4
-DEG = u"\N{DEGREE SIGN}"
+DEG = "\N{DEGREE SIGN}"
 
 class Status(object):
 
@@ -263,11 +263,11 @@ class pronsole(cmd.Cmd):
         return False
 
     def log(self, *msg):
-        msg = u"".join(str(i) for i in msg)
+        msg = "".join(str(i) for i in msg)
         logging.info(msg)
 
     def logError(self, *msg):
-        msg = u"".join(str(i) for i in msg)
+        msg = "".join(str(i) for i in msg)
         logging.error(msg)
         if not self.settings.error_command:
             return
