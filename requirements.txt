@@ -1,4 +1,4 @@
-python (>= 3.6)
+# python (>= 3.6)
 pyreadline
 pyserial (>= 2.6)
 wxPython (>= 4.0)

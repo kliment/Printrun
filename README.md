@@ -25,32 +25,16 @@ Note for OSX users: if OSX tells you the file is corrupted, you don't need to re
 ## Linux
 ### Ubuntu/Debian
 
-You can install Printrun from official packages (*):
+You can install Printrun from official packages (\*):
 ```
 sudo apt install printrun
 ```
 
-Or you can run Printrun directly from source.
-
-1. Fetch and install the dependencies using (**):
-```
-sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-numpy cython python-libxml2 python-gobject python-dbus python-psutil python-cairosvg libpython-dev git
-```
-    
-2. Clone the repository
-```
-git clone https://github.com/kliment/Printrun.git
-```
-
-3. You can start using Printrun from the Printrun directory created by the git clone command.
-
-(*) Please be aware that the Printrun package available in Ubuntu Yakkety Yak, or later, and Debian Stretch/Sid repositories, is known to be affected by issue [#615](https://github.com/kliment/Printrun/issues/615).
-
-(**) Users of Ubuntu Xenial Xerus or later and Debian Jessie or later won't find the package "python-wxgtk2.8" available, having been replaced by "python-wxgtk3.0". Running Printrun with "python-wxgtk3.0" instead, is possible but it is known to be affected by issue [#615](https://github.com/kliment/Printrun/issues/615).
+(\*) Please be aware that the Printrun package available in Ubuntu Yakkety Yak, or later, and Debian Stretch/Sid repositories, is known to be affected by issue [#615](https://github.com/kliment/Printrun/issues/615).
 
 ### Chrome OS 
 
-You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install dependencies with the line given above for Ubuntu/Debian, and obtain the source via git clone.
+You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install printrun with the line given above for Ubuntu/Debian.
 
 By default you have no access to the serial port under Chrome OS crouton, so you cannot connect to your 3D printer. Add yourself to the serial group within the linux environment to fix this
 
@@ -70,11 +54,6 @@ Or get only apps you need by
 
 Adding `--enablerepo updates-testing` option to `dnf` might sometimes give you newer packages (but also not very tested).
 
-You can also run Printrun directly from source, if the packages are too old for you. Fetch and install the dependencies using
-
-1. `sudo dnf install pyserial wxPython python-pyglet python-cairosvg`
-
-Optional: `sudo dnf install simarrange`
 
 ### Archlinux
 
@@ -92,26 +71,43 @@ Run Printrun for source if you want to test out the latest features.
 
 To use pronterface, you need:
 
-  * python (ideally 2.6.x or 2.7.x),
-  * pyserial (or python-serial on ubuntu/debian)
-  * pyreadline (not needed on Linux) and
-  * argparse (installed by default with python >= 2.7)
-  * wxPython (some features such as Tabbed mode work better with wx 2.9)
+  * Python 3 (ideally 3.6),
+  * pyserial (or python3-serial on ubuntu/debian)
+  * pyreadline (not needed on Linux)
+  * wxPython 4
   * pyglet
   * numpy (for 3D view)
   * pycairo (to use Projector feature)
   * cairosvg (to use Projector feature)
-  * dbus (to inhibit sleep on some Linux systems)
+  * dbus (to inhibit sleep on some Linux systems) 
 
-Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section), or pip:
+### Use Python virtual environment
 
-```pip install -r requirements.txt```
+Easiest way to run Printrun from source is to create and use a Python [virtual environment](https://docs.python.org/3/tutorial/venv.html).
+The following section assumes Linux. Please see specific instructions for Windows and macOS X below.
+
+**Ubuntu/Debian note:** You might need to install `python3-venv` first.
+
+**Note:** wxPython4 doesn't have Linux wheels available from the Python Package Index yet. Find a proper wheel for your distro at [extras.wxpython.org](https://extras.wxpython.org/wxPython4/extras/linux/gtk3/) and substitute the link in the bellow example. You might skip the wheel installation, but that results in compiling wxPython4 from source, which can be time and resource consuming and might fail.
+
+
+```console
+$ git clone https://github.com/kliment/Printrun.git  # clone the repository
+$ python3 -m venv venv  # create an virtual environment
+$ . venv/bin/activate  # activate the virtual environment (notice the space after the dot)
+(venv) $ python -m pip install https://extras.wxpython.org/wxPython4/extras/linux/gtk3/fedora-27/wxPython-4.0.1-cp36-cp36m-linux_x86_64.whl  # replace the link with yours
+(venv) $ python -m pip install -r requirements.txt  # intall the rest of dependencies
+(venv) $ python pronterface.py  # run Pronterface
+```
 
 ### Cython-based G-Code parser
 
 Printrun default G-Code parser is quite memory hungry, but we also provide a much lighter one which just needs an extra build-time dependency (Cython), plus compiling the extension with:
 
-    python setup.py build_ext --inplace
+```console
+(venv) $ python -m pip install Cython
+(venv) $ python setup.py build_ext --inplace
+```
 
 The warning message
 
@@ -121,54 +117,25 @@ means that this optimized G-Code parser hasn't been compiled. To get rid of it a
 
 ### Windows
 
-Download the following, and install in this order:
+Download and install [Python 3.6](https://www.python.org/downloads/) and follow the **Python virtual environment** section above except use the following to create and activate the virtual environment and install dependencies:
 
-  1. http://python.org/ftp/python/2.7.2/python-2.7.2.msi
-  2. http://pypi.python.org/packages/any/p/pyserial/pyserial-2.5.win32.exe
-  3. http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py27.exe
-  4. https://pypi.python.org/packages/any/p/pyreadline/pyreadline-1.7.1.win32.exe
-  5. http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
+```cmd
+> py -3 -m venv venv
+> venv\Scripts\activate
+> python -m pip install -r requirements.txt
+```
 
-For the last one, you will need to unpack it, open a command terminal, 
-go into the the directory you unpacked it in and run
-`python setup.py install`
 
-### Mac OS X Lion
+### macOS X
 
-  1. Ensure that the active Python is the system version. (`brew uninstall python` or other appropriate incantations)
-  2. Download an install [wxPython2.8-osx-unicode] matching to your python version (most likely 2.7 on Lion, 
-        check with: python --version) from: http://wxpython.org/download.php#stable
-  Known to work PythonWX: http://superb-sea2.dl.sourceforge.net/project/wxpython/wxPython/2.8.12.1/wxPython2.8-osx-unicode-2.8.12.1-universal-py2.7.dmg
-  3. Download and unpack pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
-  4. In a terminal, change to the folder you unzipped to, then type in: `sudo python setup.py install`
-  5. Repeat 4. with http://http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
+Install Python 3, you can use Brew:
 
-The tools will probably run just fine in 64bit on Lion, you don't need to mess
-with any of the 32bit settings. In case they don't, try 
-  5. export VERSIONER_PYTHON_PREFER_32_BIT=yes
-in a terminal before running Pronterface
+```console
+$ brew install python3
+```
 
-### Mac OS X (pre Lion)
+And follow the above **Python virtual environment** section. You don't need to search for wxPython wheel, macOS wheels are available from the Python Package Index.
 
-A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
-
-  1. Download and install http://downloads.sourceforge.net/wxpython/wxPython2.8-osx-unicode-2.8.12.0-universal-py2.6.dmg
-  2. Grab the source for pyserial from http://pypi.python.org/packages/source/p/pyserial/pyserial-2.5.tar.gz
-  3. Unzip pyserial to a folder. Then, in a terminal, change to the folder you unzipped to, then type in:
-     
-     `defaults write com.apple.versioner.python Prefer-32-Bit -bool yes`
-     
-     `sudo python setup.py install`
-
-Alternatively, you can run python in 32 bit mode by setting the following environment variable before running the setup.py command:
-
-This alternative approach is confirmed to work on Mac OS X 10.6.8. 
-
-`export VERSIONER_PYTHON_PREFER_32_BIT=yes`
-
-`sudo python setup.py install`
-
-Then repeat the same with http://http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
 
 # USING PRINTRUN
 
@@ -192,8 +159,8 @@ If the Slic3r integration option (_Settings_ > _Options_ > _User interface_ > _E
 
 To use pronsole, you need:
 
-  * python (ideally 2.6.x or 2.7.x),
-  * pyserial (or python-serial on ubuntu/debian) and
+  * Python 3 (ideally 3.6),
+  * pyserial (or python3-serial on ubuntu/debian) and
   * pyreadline (not needed on Linux)
 
 Start pronsole and you will be greeted with a command prompt. Type help to view the available commands.
@@ -204,7 +171,7 @@ The "skeinforge" folder must be in the same folder as pronsole.py
 
 ## USING PRINTCORE
 
-To use printcore you need python (ideally 2.6.x or 2.7.x) and pyserial (or python-serial on ubuntu/debian)
+To use printcore you need Python 3 (ideally 3.6) and pyserial (or python3-serial on ubuntu/debian)
 See pronsole for an example of a full-featured host, the bottom of printcore.py for a simple command-line
 sender, or the following code example:
 
@@ -249,10 +216,10 @@ on localhost port 7978, which provides print progress information.
 Here is a sample Python script querying the print status:
 
 ```python
-import xmlrpclib
+import xmlrpc.client
 
-rpc = xmlrpclib.ServerProxy('http://localhost:7978')
-print rpc.status()
+rpc = xmlrpc.client.ServerProxy('http://localhost:7978')
+print(rpc.status())
 ```
 
 ## CONFIGURATION
@@ -342,7 +309,7 @@ For more powerful macro programming, it is possible to use python code escaping 
 Note that this python code invocation also works in interactive prompt:
 
 ```python
-PC> !print "Hello, printer!"
+PC> !print("Hello, printer!")
 Hello printer!
 
 PC> macro debug_on !self.p.loud = 1
@@ -363,14 +330,14 @@ Example: swapping two macros to implement toggle:
 PC> macro toggle_debug_on
 Enter macro using indented lines, end with empty line
 ..> !self.p.loud = 1
-..> !print "Diagnostic information ON"
+..> !print("Diagnostic information ON")
 ..> macro toggle_debug toggle_debug_off
 ..>
 Macro 'toggle_debug_on' defined
 PC> macro toggle_debug_off
 Enter macro using indented lines, end with empty line
 ..> !self.p.loud = 0
-..> !print "Diagnostic information OFF"
+..> !print("Diagnostic information OFF")
 ..> macro toggle_debug toggle_debug_on
 ..>
 Macro 'toggle_debug_off' defined
@@ -395,10 +362,10 @@ For example, following macro toggles the diagnostic information similarily to th
 ```python
 !if self.p.loud:
   !self.p.loud = 0
-  !print "Diagnostic information OFF"
+  !print("Diagnostic information OFF")
 !else:
   !self.p.loud = 1
-  !print "Diagnostic information ON"
+  !print("Diagnostic information ON")
 ```
 
 Macro parameters are available in '!'-escaped python code as locally defined list variable: arg[0] arg[1] ... arg[N]

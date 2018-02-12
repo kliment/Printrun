@@ -11,3 +11,4 @@ printrun/gcoder_line*.so
 .project
 .pydevproject
 /build/
+/venv/
