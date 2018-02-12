@@ -99,9 +99,9 @@ class GcodePlaterPanel(PlaterPanel):
         if gcode.filament_length > 0:
             model.display_travels = False
         generator = model.load_data(gcode)
-        generator_output = generator.next()
+        generator_output = next(generator)
         while generator_output is not None:
-            generator_output = generator.next()
+            generator_output = next(generator)
         obj = gcview.GCObject(model)
         obj.offsets = [self.build_dimensions[3], self.build_dimensions[4], 0]
         obj.gcode = gcode

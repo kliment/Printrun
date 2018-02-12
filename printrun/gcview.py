@@ -332,16 +332,16 @@ class GcodeViewLoader(object):
             set_model_colors(self.model, self.root)
         if gcode is not None:
             generator = self.model.load_data(gcode)
-            generator_output = generator.next()
+            generator_output = next(generator)
             while generator_output is not None:
                 yield generator_output
-                generator_output = generator.next()
+                generator_output = next(generator)
         wx.CallAfter(self.Refresh)
         yield None
 
     def addfile(self, gcode = None, showall = False):
         generator = self.addfile_perlayer(gcode, showall)
-        while generator.next() is not None:
+        while next(generator) is not None:
             continue
 
     def set_gcview_params(self, path_width, path_height):

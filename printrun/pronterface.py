@@ -1543,14 +1543,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if max_layer is None:
                     break
                 while next_layer <= max_layer:
-                    assert(generator.next() == next_layer)
+                    assert(next(generator) == next_layer)
                     next_layer += 1
                 time.sleep(0.1)
-            generator_output = generator.next()
+            generator_output = next(generator)
             while generator_output is not None:
                 assert(generator_output in (None, next_layer))
                 next_layer += 1
-                generator_output = generator.next()
+                generator_output = next(generator)
         else:
             # If GCode is not being loaded asynchroneously, it is already
             # loaded, so let's make visualization sequentially

@@ -418,10 +418,10 @@ class Gviz(wx.Panel):
         self.gcode = gcode
         self.showall = showall
         generator = self.add_parsed_gcodes(gcode)
-        generator_output = generator.next()
+        generator_output = next(generator)
         while generator_output is not None:
             yield generator_output
-            generator_output = generator.next()
+            generator_output = next(generator)
         max_layers = len(self.layers)
         if hasattr(self.parent, "layerslider"):
             self.parent.layerslider.SetRange(0, max_layers - 1)
@@ -430,7 +430,7 @@ class Gviz(wx.Panel):
 
     def addfile(self, gcode = None, showall = False):
         generator = self.addfile_perlayer(gcode, showall)
-        while generator.next() is not None:
+        while next(generator) is not None:
             continue
 
     def _get_movement(self, start_pos, gline):
