@@ -89,7 +89,7 @@ class GcodePlaterPanel(PlaterPanel):
         self.platform_object = gcview.GCObject(self.platform)
 
     def get_objects(self):
-        return [self.platform_object] + self.models.values()
+        return [self.platform_object] + list(self.models.values())
     objects = property(get_objects)
 
     def load_file(self, filename):
@@ -142,7 +142,7 @@ class GcodePlaterPanel(PlaterPanel):
         return self.export_sequential(name)
 
     def export_combined(self, name):
-        models = self.models.values()
+        models = list(self.models.values())
         last_real_position = None
         # Sort models by Z max to print smaller objects first
         models.sort(key = lambda x: x.dims[-1])
@@ -196,7 +196,7 @@ class GcodePlaterPanel(PlaterPanel):
         logging.info(_("Exported merged G-Codes to %s") % name)
 
     def export_sequential(self, name):
-        models = self.models.values()
+        models = list(self.models.values())
         last_real_position = None
         # Sort models by Z max to print smaller objects first
         models.sort(key = lambda x: x.dims[-1])

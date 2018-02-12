@@ -361,7 +361,7 @@ class Settings(object):
         except AttributeError:
             pass
         try:
-            return getattr(self, "__%s_alias" % key)().keys()
+            return list(getattr(self, "__%s_alias" % key)().keys())
         except AttributeError:
             pass
         return []

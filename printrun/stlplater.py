@@ -335,7 +335,7 @@ class StlPlaterPanel(PlaterPanel):
         best_match = None
         best_facet = None
         best_dist = float("inf")
-        for key, model in self.models.iteritems():
+        for key, model in self.models.items():
             transformation = transformation_matrix(model)
             transformed = model.transform(transformation)
             if not transformed.intersect_box(ray_near, ray_far):
@@ -510,7 +510,7 @@ class StlPlaterPanel(PlaterPanel):
                 x = float(bits[1])
                 y = float(bits[2])
                 rot = -float(bits[3])
-                for name, model in models.items():
+                for name, model in list(models.items()):
                     # FIXME: not sure this is going to work superwell with utf8
                     if model.filename == filename:
                         model.offsets[0] = x + self.build_dimensions[3]
