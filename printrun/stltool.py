@@ -100,7 +100,7 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = True):
         return
     if binary:
         with open(filename, "wb") as f:
-            buf = "".join(["\0"] * 80)
+            buf = b"".join([b"\0"] * 80)
             buf += struct.pack("<I", len(facets))
             facetformat = struct.Struct("<ffffffffffffH")
             for facet in facets:
