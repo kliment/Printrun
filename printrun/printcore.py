@@ -29,7 +29,7 @@ import traceback
 import errno
 import socket
 import re
-from functools import wraps
+from functools import wraps, reduce
 from collections import deque
 from printrun import gcoder
 from .utils import set_utf8_locale, install_locale, decode_utf8
