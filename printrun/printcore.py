@@ -250,7 +250,12 @@ class printcore():
     def _readline(self):
         try:
             try:
-                line = self.printer.readline().decode('ascii')
+                try:
+                    line = self.printer.readline().decode('ascii')
+                except UnicodeDecodeError:
+                    self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
+                                  "\n" + _("Maybe a bad baudrate?"))
+                    return None
                 if self.printer_tcp and not line:
                     raise OSError(-1, "Read EOF from socket")
             except socket.timeout:
