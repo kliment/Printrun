@@ -233,3 +233,7 @@ tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
     return dict((m[0], (m[1], m[2])) for m in matches)
+
+def compile_file(filename):
+    with open(filename) as f:
+        return compile(f.read(), filename, 'exec')

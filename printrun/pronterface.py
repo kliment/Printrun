@@ -36,7 +36,7 @@ from printrun.spoolmanager import spoolmanager_gui
 from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
-    prepare_command, check_rgb_color, check_rgba_color
+    prepare_command, check_rgb_color, check_rgba_color, compile_file
 install_locale('pronterface')
 
 try:
@@ -194,7 +194,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.panel.SetBackgroundColour(self.bgcolor)
         customdict = {}
         try:
-            execfile(configfile("custombtn.txt"), customdict)
+            exec(compile_file(configfile("custombtn.txt")), customdict)
             if len(customdict["btns"]):
                 if not len(self.custombuttons):
                     try:
