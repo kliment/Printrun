@@ -121,7 +121,7 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = True):
                 f.write("  endfacet" + "\n")
             f.write("endsolid " + objname + "\n")
 
-class stl(object):
+class stl:
 
     _dims = None
 

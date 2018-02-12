@@ -307,7 +307,7 @@ class GcodeViewPanel(wxGLPanel):
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.Refresh)
 
-class GCObject(object):
+class GCObject:
 
     def __init__(self, model):
         self.offsets = [0, 0, 0]
@@ -317,7 +317,7 @@ class GCObject(object):
         self.scale = [1.0, 1.0, 1.0]
         self.model = model
 
-class GcodeViewLoader(object):
+class GcodeViewLoader:
 
     path_halfwidth = 0.2
     path_halfheight = 0.15

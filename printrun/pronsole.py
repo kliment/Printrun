@@ -68,7 +68,7 @@ REPORT_TEMP = 2
 REPORT_MANUAL = 4
 DEG = "\N{DEGREE SIGN}"
 
-class Status(object):
+class Status:
 
     def __init__(self):
         self.extruder_temp = 0

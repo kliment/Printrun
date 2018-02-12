@@ -42,7 +42,7 @@ from .gl.libtatlin import actors
 def vec(*args):
     return (GLfloat * len(args))(*args)
 
-class stlview(object):
+class stlview:
     def __init__(self, facets, batch):
         # Create the vertex and normal arrays.
         vertices = []

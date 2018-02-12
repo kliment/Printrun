@@ -360,7 +360,7 @@ class TempGauge(wx.Panel):
         gc.DrawText(self.title, x0 + 18, y0 + 3)
         gc.DrawText(text, x0 + 118, y0 + 3)
 
-class SpecialButton(object):
+class SpecialButton:
 
     label = None
     command = None

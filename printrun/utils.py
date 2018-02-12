@@ -148,7 +148,7 @@ def get_command_output(command, replaces):
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8] + ".g"
 
-class RemainingTimeEstimator(object):
+class RemainingTimeEstimator:
 
     drift = None
     gcode = None

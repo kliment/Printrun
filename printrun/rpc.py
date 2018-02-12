@@ -23,7 +23,7 @@ install_locale('pronterface')
 
 RPC_PORT = 7978
 
-class ProntRPC(object):
+class ProntRPC:
 
     server = None
 

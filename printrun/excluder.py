@@ -96,7 +96,7 @@ class ExcluderWindow(gviz.GvizWindow):
         self.parent.rectangles = []
         wx.CallAfter(self.p.Refresh)
 
-class Excluder(object):
+class Excluder:
 
     def __init__(self):
         self.rectangles = []

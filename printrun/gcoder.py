@@ -30,7 +30,7 @@ m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|([XYZ]):?([-+]?[0-9]*\.?[0-9]*)")
 specific_exp = "(?:\([^\(\)]*\))|(?:;.*)|(?:[/\*].*\n)|(%s[-+]?[0-9]*\.?[0-9]*)"
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
-class PyLine(object):
+class PyLine:
 
     __slots__ = ('x', 'y', 'z', 'e', 'f', 'i', 'j',
                  'raw', 'command', 'is_move',
@@ -45,7 +45,7 @@ class PyLine(object):
     def __getattr__(self, name):
         return None
 
-class PyLightLine(object):
+class PyLightLine:
 
     __slots__ = ('raw', 'command')
 
@@ -108,7 +108,7 @@ class Layer(list):
         super(Layer, self).__init__(lines)
         self.z = z
 
-class GCode(object):
+class GCode:
 
     line_class = Line
 

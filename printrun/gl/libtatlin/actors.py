@@ -65,7 +65,7 @@ def triangulate_box(i1, i2, i3, i4,
     return [i1, i2, j2, j2, j1, i1, i2, i3, j3, j3, j2, i2,
             i3, i4, j4, j4, j3, i3, i4, i1, j1, j1, j4, i4]
 
-class BoundingBox(object):
+class BoundingBox:
     """
     A rectangular box (cuboid) enclosing a 3D model, defined by lower and upper corners.
     """
@@ -89,7 +89,7 @@ class BoundingBox(object):
         return round(height, 2)
 
 
-class Platform(object):
+class Platform:
     """
     Platform on which models are placed.
     """
@@ -174,7 +174,7 @@ class Platform(object):
         # glCallList(self.display_list)
         self.draw()
 
-class PrintHead(object):
+class PrintHead:
     def __init__(self):
         self.color = (43. / 255, 0., 175. / 255, 1.0)
         self.scale = 5
@@ -209,7 +209,7 @@ class PrintHead(object):
         glLineWidth(orig_linewidth)
         glDisable(GL_LINE_SMOOTH)
 
-class Model(object):
+class Model:
     """
     Parent class for models that provides common functionality.
     """

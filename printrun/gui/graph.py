@@ -335,7 +335,7 @@ class Graph(BufferedCanvas):
         self.drawextruder1targettemp(dc, gc)
         self.drawextruder1temp(dc, gc)
 
-    class _YBounds(object):
+    class _YBounds:
         """Small helper class to claculate y bounds dynamically"""
 
         def __init__(self, graph, minimum_scale=5.0, buffer=0.10):

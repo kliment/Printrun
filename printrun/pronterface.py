@@ -66,7 +66,7 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
-class ConsoleOutputHandler(object):
+class ConsoleOutputHandler:
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
     We also redirect stdout and stderr to ourself to catch print messages and al."""
 
@@ -2252,7 +2252,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         import configparser
         parser = configparser.RawConfigParser()
 
-        class add_header(object):
+        class add_header:
             def __init__(self, f):
                 self.f = f
                 self.header = '[dummy]'
