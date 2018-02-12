@@ -124,7 +124,7 @@ class Platform(object):
         def color(i):
             if i % self.graduations_major == 0:
                 glColor4f(*self.color_grads_major)
-            elif i % (self.graduations_major / 2) == 0:
+            elif i % (self.graduations_major // 2) == 0:
                 glColor4f(*self.color_grads_interm)
             else:
                 if self.light: return False
@@ -471,7 +471,7 @@ class GcodeModel(Model):
                         new_normals = []
                         if prev_is_extruding:
                             # Store previous vertices indices
-                            prev_id = vertex_k / 3 - 4
+                            prev_id = vertex_k // 3 - 4
                             avg_move_normal_x = (prev_move_normal_x + move_normal_x) / 2
                             avg_move_normal_y = (prev_move_normal_y + move_normal_y) / 2
                             norm = avg_move_normal_x * avg_move_normal_x + avg_move_normal_y * avg_move_normal_y
@@ -502,7 +502,7 @@ class GcodeModel(Model):
                                 new_normals.extend((-prev_move_normal_x, -prev_move_normal_y, 0))
                                 new_normals.extend((0, 0, -1))
                                 new_normals.extend((prev_move_normal_x, prev_move_normal_y, 0))
-                                first = vertex_k / 3
+                                first = vertex_k // 3
                                 # Link to previous
                                 new_indices += triangulate_box(prev_id, prev_id + 1,
                                                                prev_id + 2, prev_id + 3,
@@ -542,7 +542,7 @@ class GcodeModel(Model):
                                 new_normals.extend((-avg_move_normal_x, -avg_move_normal_y, 0))
                                 new_normals.extend((0, 0, -1))
                                 new_normals.extend((avg_move_normal_x, avg_move_normal_y, 0))
-                                first = vertex_k / 3
+                                first = vertex_k // 3
                                 # Link to previous
                                 new_indices += triangulate_box(prev_id, prev_id + 1,
                                                                prev_id + 2, prev_id + 3,
@@ -562,7 +562,7 @@ class GcodeModel(Model):
                             new_normals.extend((-move_normal_x, -move_normal_y, 0))
                             new_normals.extend((0, 0, -1))
                             new_normals.extend((move_normal_x, move_normal_y, 0))
-                            first = vertex_k / 3
+                            first = vertex_k // 3
                             new_indices = triangulate_rectangle(first, first + 1,
                                                                 first + 2, first + 3)
 
@@ -580,7 +580,7 @@ class GcodeModel(Model):
                             new_normals.extend((-move_normal_x, -move_normal_y, 0))
                             new_normals.extend((0, 0, -1))
                             new_normals.extend((move_normal_x, move_normal_y, 0))
-                            end_first = vertex_k / 3 + len(new_vertices) / 3 - 4
+                            end_first = vertex_k // 3 + len(new_vertices) // 3 - 4
                             new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
                                                                  end_first + 1, end_first)
                             new_indices += triangulate_box(first, first + 1,
@@ -597,7 +597,7 @@ class GcodeModel(Model):
                         for new_i, item in enumerate(new_normals):
                             normals[normal_k + new_i] = item
                         normal_k += len(new_normals)
-                        new_colors = list(gline_color)[:-1] * (len(new_vertices) / 3)
+                        new_colors = list(gline_color)[:-1] * (len(new_vertices) // 3)
                         for new_i, item in enumerate(new_colors):
                             colors[color_k + new_i] = item
                         color_k += len(new_colors)
@@ -608,9 +608,9 @@ class GcodeModel(Model):
                         prev_move_angle = move_angle
 
                     prev_pos = current_pos
-                    count_travel_indices.append(travel_vertex_k / 3)
+                    count_travel_indices.append(travel_vertex_k // 3)
                     count_print_indices.append(index_k)
-                    count_print_vertices.append(vertex_k / 3)
+                    count_print_vertices.append(vertex_k // 3)
                     gline.gcview_end_vertex = len(count_print_indices) - 1
 
                 if has_movement:
@@ -655,7 +655,7 @@ class GcodeModel(Model):
         t_end = time.time()
 
         logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
-        logging.debug(_('Vertex count: %d') % ((len(self.vertices) + len(self.travels)) / 3))
+        logging.debug(_('Vertex count: %d') % ((len(self.vertices) + len(self.travels)) // 3))
         yield None
 
     def copy(self):
@@ -904,10 +904,10 @@ class GcodeModelLight(Model):
                     color_k += 8
 
                     prev_pos = current_pos
-                    gline.gcview_end_vertex = vertex_k / 3
+                    gline.gcview_end_vertex = vertex_k // 3
 
                 if has_movement:
-                    self.layer_stops.append(vertex_k / 3)
+                    self.layer_stops.append(vertex_k // 3)
                     self.layer_idxs_map[layer_idx] = len(self.layer_stops) - 1
                     self.max_layers = len(self.layer_stops) - 1
                     self.num_layers_to_draw = self.max_layers + 1
@@ -936,7 +936,7 @@ class GcodeModelLight(Model):
         t_end = time.time()
 
         logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
-        logging.debug(_('Vertex count: %d') % (len(self.vertices) / 3))
+        logging.debug(_('Vertex count: %d') % (len(self.vertices) // 3))
         yield None
 
     def copy(self):

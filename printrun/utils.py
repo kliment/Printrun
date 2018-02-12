@@ -212,7 +212,7 @@ def get_home_pos(build_dimensions):
 def hexcolor_to_float(color, components):
     color = color[1:]
     numel = len(color)
-    ndigits = numel / components
+    ndigits = numel // components
     div = 16 ** ndigits - 1
     return tuple(round(float(int(color[i:i + ndigits], 16)) / div, 2)
                  for i in range(0, numel, ndigits))
