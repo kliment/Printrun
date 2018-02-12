@@ -50,7 +50,7 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = parent_graph.extruder1targettemps
             self.bedtemps = parent_graph.bedtemps
             self.bedtargettemps = parent_graph.bedtargettemps
-	    self.fanpowers=parent_graph.fanpowers
+            self.fanpowers=parent_graph.fanpowers
         else:
             self.extruder0temps = [0]
             self.extruder0targettemps = [0]
@@ -58,7 +58,7 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = [0]
             self.bedtemps = [0]
             self.bedtargettemps = [0]
-	    self.fanpowers= [0]
+            self.fanpowers= [0]
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
@@ -96,7 +96,7 @@ class Graph(BufferedCanvas):
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
         self.AddExtruder1Temperature(self.extruder1temps[-1])
         self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
-	self.AddFanPower(self.fanpowers[-1])
+        self.AddFanPower(self.fanpowers[-1])
         if self.rescaley:
             self._ybounds.update()
         self.Refresh()
@@ -402,8 +402,8 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
-	    miny=min(0,miny);
-	    maxy=max(260,maxy);
+            miny=min(0,miny);
+            maxy=max(260,maxy);
 
             padding = (maxy - miny) * self.buffer / (1.0 - 2 * self.buffer)
             miny -= padding
@@ -436,8 +436,8 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
-	    miny=min(0,miny);
-	    maxy=max(260,maxy);
+            miny=min(0,miny);
+            maxy=max(260,maxy);
 
             # We have to rescale, so add padding
             bufratio = self.buffer / (1.0 - self.buffer)
