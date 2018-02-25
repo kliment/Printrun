@@ -18,7 +18,7 @@ import logging
 
 import wx
 
-class NoViz(object):
+class NoViz:
 
     showall = False
 
@@ -47,7 +47,7 @@ class NoViz(object):
     def setlayer(self, *a):
         pass
 
-class NoVizWindow(object):
+class NoVizWindow:
 
     def __init__(self):
         self.p = NoViz()

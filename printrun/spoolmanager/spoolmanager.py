@@ -254,7 +254,7 @@ class SpoolManager():
         n = 3 # number of fields in spool_item
         string_list = setting.split(", ")
         variable = []
-        for i in range(len(string_list)/n):
+        for i in range(len(string_list)//n):
             variable.append(
                 [string_list[n*i],
                  float(string_list[n*i+1]),

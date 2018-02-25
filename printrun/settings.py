@@ -43,7 +43,7 @@ def setting_add_tooltip(func):
         return widget
     return decorator
 
-class Setting(object):
+class Setting:
 
     DEFAULT_GROUP = "Printer"
 
@@ -253,7 +253,7 @@ class BuildDimensionsSetting(wxSetting):
         values = [float(w.GetValue()) for w in self.widgets]
         self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
 
-class Settings(object):
+class Settings:
     def __baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
 
     def __init__(self, root):
@@ -361,7 +361,7 @@ class Settings(object):
         except AttributeError:
             pass
         try:
-            return getattr(self, "__%s_alias" % key)().keys()
+            return list(getattr(self, "__%s_alias" % key)().keys())
         except AttributeError:
             pass
         return []

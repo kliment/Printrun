@@ -22,12 +22,11 @@ import zipfile
 import tempfile
 import shutil
 from cairosvg.surface import PNGSurface
-import cStringIO
+import io
 import imghdr
 import copy
 import re
 from collections import OrderedDict
-import itertools
 import math
 
 class DisplayFrame(wx.Frame):
@@ -101,9 +100,9 @@ class DisplayFrame(wx.Frame):
 
                     g = layercopy.find("{http://www.w3.org/2000/svg}g")
                     g.set('transform', 'scale(' + str(self.scale) + ')')
-                    stream = cStringIO.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(layercopy)))
+                    stream = io.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(layercopy)))
                 else:
-                    stream = cStringIO.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(image)))
+                    stream = io.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(image)))
 
                 pngImage = wx.ImageFromStream(stream)
 
@@ -132,16 +131,16 @@ class DisplayFrame(wx.Frame):
             pass
 
     def show_img_delay(self, image):
-        print "Showing", str(time.clock())
+        print("Showing", str(time.clock()))
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
         wx.FutureCall(1000 * self.interval, self.hide_pic_and_rise)
 
     def rise(self):
         if (self.direction == "Top Down"):
-            print "Lowering", str(time.clock())
+            print("Lowering", str(time.clock()))
         else:
-            print "Rising", str(time.clock())
+            print("Rising", str(time.clock()))
 
         if self.printer is not None and self.printer.online:
             self.printer.send_now("G91")
@@ -170,7 +169,7 @@ class DisplayFrame(wx.Frame):
         wx.FutureCall(1000 * self.pause, self.next_img)
 
     def hide_pic(self):
-        print "Hiding", str(time.clock())
+        print("Hiding", str(time.clock()))
         self.pic.Hide()
 
     def hide_pic_and_rise(self):
@@ -181,11 +180,11 @@ class DisplayFrame(wx.Frame):
         if not self.running:
             return
         if self.index < len(self.layers):
-            print self.index
+            print(self.index)
             wx.CallAfter(self.show_img_delay, self.layers[self.index])
             self.index += 1
         else:
-            print "end"
+            print("end")
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
 
@@ -557,9 +556,9 @@ class SettingsFrame(wx.Frame):
         # them with the original then sorts them. It allows for filenames of the
         # format: abc_1.png, which would be followed by abc_10.png alphabetically.
         os.chdir(self.image_dir)
-        vals = filter(os.path.isfile, os.listdir('.'))
-        keys = map(lambda p: int(re.search('\d+', p).group()), vals)
-        imagefilesDict = dict(itertools.izip(keys, vals))
+        vals = [f for f in os.listdir('.') if os.path.isfile(f)]
+        keys = (int(re.search('\d+', p).group()) for p in vals)
+        imagefilesDict = dict(zip(keys, vals))
         imagefilesOrderedDict = OrderedDict(sorted(imagefilesDict.items(), key = lambda t: t[0]))
 
         for f in imagefilesOrderedDict.values():
@@ -584,8 +583,8 @@ class SettingsFrame(wx.Frame):
                 layers = self.parse_svg(name)
                 layerHeight = layers[1]
                 self.thickness.SetValue(str(layers[1]))
-                print "Layer thickness detected:", layerHeight, "mm"
-            print len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm"
+                print("Layer thickness detected:", layerHeight, "mm")
+            print(len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm")
             self.layers = layers
             self.set_total_layers(len(layers[0]))
             self.set_current_layer(0)
@@ -648,8 +647,8 @@ class SettingsFrame(wx.Frame):
             gridCountX = int(projectedXmm / 10)
             gridCountY = int(projectedYmm / 10)
 
-            for y in xrange(0, gridCountY + 1):
-                for x in xrange(0, gridCountX + 1):
+            for y in range(0, gridCountY + 1):
+                for x in range(0, gridCountX + 1):
                     dc.DrawLine(0, y * (pixelsYPerMM * 10), resolution_x_pixels, y * (pixelsYPerMM * 10))
                     dc.DrawLine(x * (pixelsXPerMM * 10), 0, x * (pixelsXPerMM * 10), resolution_y_pixels)
 
@@ -660,7 +659,7 @@ class SettingsFrame(wx.Frame):
     def present_first_layer(self, event):
         if (self.first_layer.GetValue()):
             if not hasattr(self, "layers"):
-                print "No model loaded!"
+                print("No model loaded!")
                 self.first_layer.SetValue(False)
                 return
             self.display_frame.offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue()))
@@ -768,7 +767,7 @@ class SettingsFrame(wx.Frame):
 
     def start_present(self, event):
         if not hasattr(self, "layers"):
-            print "No model loaded!"
+            print("No model loaded!")
             return
 
         self.pause_button.SetLabel("Pause")
@@ -793,18 +792,18 @@ class SettingsFrame(wx.Frame):
                                    layer_red = self.layer_red.IsChecked())
 
     def stop_present(self, event):
-        print "Stop"
+        print("Stop")
         self.pause_button.SetLabel("Pause")
         self.set_current_layer(0)
         self.display_frame.running = False
 
     def pause_present(self, event):
         if self.pause_button.GetLabel() == 'Pause':
-            print "Pause"
+            print("Pause")
             self.pause_button.SetLabel("Continue")
             self.display_frame.running = False
         else:
-            print "Continue"
+            print("Continue")
             self.pause_button.SetLabel("Pause")
             self.display_frame.running = True
             self.display_frame.next_img()

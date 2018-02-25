@@ -42,13 +42,14 @@ def homogeneous(v, w = 1):
     return numpy.append(v, w)
 
 def applymatrix(facet, matrix = I):
-    return genfacet(map(lambda x: matrix.dot(homogeneous(x))[:3], facet[1]))
+    return genfacet([matrix.dot(homogeneous(x))[:3] for x in facet[1]])
 
-def ray_triangle_intersection(ray_near, ray_dir, (v1, v2, v3)):
+def ray_triangle_intersection(ray_near, ray_dir, v123):
     """
     Möller–Trumbore intersection algorithm in pure python
     Based on http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
     """
+    v1, v2, v3 = v123
     eps = 0.000001
     edge1 = v2 - v1
     edge2 = v3 - v1
@@ -99,7 +100,7 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = True):
         return
     if binary:
         with open(filename, "wb") as f:
-            buf = "".join(["\0"] * 80)
+            buf = b"".join([b"\0"] * 80)
             buf += struct.pack("<I", len(facets))
             facetformat = struct.Struct("<ffffffffffffH")
             for facet in facets:
@@ -120,7 +121,7 @@ def emitstl(filename, facets = [], objname = "stltool_export", binary = True):
                 f.write("  endfacet" + "\n")
             f.write("endsolid " + objname + "\n")
 
-class stl(object):
+class stl:
 
     _dims = None
 
@@ -181,7 +182,7 @@ class stl(object):
                 buf += newdata
             facetcount = struct.unpack_from("<I", buf, 80)
             facetformat = struct.Struct("<ffffffffffffH")
-            for i in xrange(facetcount[0]):
+            for i in range(facetcount[0]):
                 buf = f.read(50)
                 while len(buf) < 50:
                     newdata = f.read(50 - len(buf))
@@ -192,8 +193,8 @@ class stl(object):
                 self.name = "binary soloid"
                 facet = [fd[:3], [fd[3:6], fd[6:9], fd[9:12]]]
                 self.facets.append(facet)
-                self.facetsminz.append((min(map(lambda x: x[2], facet[1])), facet))
-                self.facetsmaxz.append((max(map(lambda x: x[2], facet[1])), facet))
+                self.facetsminz.append((min(x[2] for x in facet[1]), facet))
+                self.facetsmaxz.append((max(x[2] for x in facet[1]), facet))
             f.close()
             return
 
@@ -266,8 +267,8 @@ class stl(object):
         s.facetloc = 0
         s.name = self.name
         for facet in s.facets:
-            s.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
-            s.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
+            s.facetsminz += [(min(x[2] for x in facet[1]), facet)]
+            s.facetsmaxz += [(max(x[2] for x in facet[1]), facet)]
         return s
 
     def translation_matrix(self, v):
@@ -328,8 +329,8 @@ class stl(object):
         s.facetloc = 0
         s.name = self.name
         for facet in s.facets:
-            s.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
-            s.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
+            s.facetsminz += [(min(x[2] for x in facet[1]), facet)]
+            s.facetsmaxz += [(max(x[2] for x in facet[1]), facet)]
         return s
 
     def export(self, f = sys.stdout):
@@ -356,23 +357,23 @@ class stl(object):
             l = l.replace(", ", ".")
             self.infacet = 1
             self.facetloc = 0
-            normal = numpy.array(map(float, l.split()[2:]))
+            normal = numpy.array([float(f) for f in l.split()[2:]])
             self.facet = (normal, (numpy.zeros(3), numpy.zeros(3), numpy.zeros(3)))
         elif l.startswith("endfacet"):
             self.infacet = 0
             self.facets.append(self.facet)
             facet = self.facet
-            self.facetsminz += [(min(map(lambda x:x[2], facet[1])), facet)]
-            self.facetsmaxz += [(max(map(lambda x:x[2], facet[1])), facet)]
+            self.facetsminz += [(min(x[2] for x in facet[1]), facet)]
+            self.facetsmaxz += [(max(x[2] for x in facet[1]), facet)]
         elif l.startswith("vertex"):
             l = l.replace(", ", ".")
-            self.facet[1][self.facetloc][:] = numpy.array(map(float, l.split()[1:]))
+            self.facet[1][self.facetloc][:] = numpy.array([float(f) for f in l.split()[1:]])
             self.facetloc += 1
         return 1
 
 if __name__ == "__main__":
     s = stl("../../Downloads/frame-vertex-neo-foot-x4.stl")
-    for i in xrange(11, 11):
+    for i in range(11, 11):
         working = s.facets[:]
         for j in reversed(sorted(s.facetsminz)):
             if j[0] > i:
@@ -385,6 +386,6 @@ if __name__ == "__main__":
             else:
                 break
 
-        print i, len(working)
+        print(i, len(working))
     emitstl("../../Downloads/frame-vertex-neo-foot-x4-a.stl", s.facets, "emitted_object")
 # stl("../prusamendel/stl/mendelplate.stl")

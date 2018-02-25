@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -15,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-class PrinterEventHandler(object):
+class PrinterEventHandler:
     '''
     Defines a skeletton of an event-handler for printer events. It
     allows attaching to the printcore and will be triggered for

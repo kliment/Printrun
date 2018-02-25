@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This file is part of the Printrun suite.
 #
@@ -25,13 +25,7 @@ try:
         raise ImportError()
 except:
     print("wxPython >= 4 is not installed. This program requires wxPython >=4 to run.")
-    if sys.version_info.major >= 3:
-        print("""\
-As you are currently running python3, this is most likely because wxPython is
-not yet available for python3. You should try running with python2 instead.""")
-        sys.exit(-1)
-    else:
-        raise
+    raise
 
 from printrun.pronterface import PronterApp
 
@@ -53,16 +47,16 @@ if __name__ == '__main__':
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hVvac:e:", ["help", "version", "verbose", "autoconnect", "conf=", "config=", "execute="])
-    except getopt.GetoptError, err:
-        print str(err)
-        print usage
+    except getopt.GetoptError as err:
+        print(str(err))
+        print(usage)
         sys.exit(2)
     for o, a in opts:
         if o in ('-V','--version'):
-            print "printrun "+printcore_version
+            print("printrun "+printcore_version)
             sys.exit(0)
         elif o in ('-h', '--help'):
-            print usage
+            print(usage)
             sys.exit(0)
 
     app = PronterApp(False)

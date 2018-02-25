@@ -65,7 +65,7 @@ else:
                 return
             inhibit_sleep_handler.UnInhibit(inhibit_sleep_token)
             inhibit_sleep_token = None
-    except Exception, e:
+    except Exception as e:
         logging.warning("Could not setup DBus for sleep inhibition: %s" % e)
 
         def inhibit_sleep(reason):
@@ -107,7 +107,7 @@ try:
                     set_nice(i, p)
                     high_priority_nice = i
                     break
-                except psutil.AccessDenied, e:
+                except psutil.AccessDenied as e:
                     pass
             set_nice(orig_nice, p)
 
@@ -132,7 +132,7 @@ try:
     def powerset_print_stop():
         reset_priority()
         deinhibit_sleep()
-except ImportError, e:
+except ImportError as e:
     logging.warning("psutil unavailable, could not import power utils:" + str(e))
 
     def powerset_print_start(reason):

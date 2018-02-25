@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCServer
 from threading import Thread
 import socket
 import logging
@@ -23,7 +23,7 @@ install_locale('pronterface')
 
 RPC_PORT = 7978
 
-class ProntRPC(object):
+class ProntRPC:
 
     server = None
 

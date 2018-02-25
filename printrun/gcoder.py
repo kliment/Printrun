@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This file is copied from GCoder.
 #
 # GCoder is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|([XYZ]):?([-+]?[0-9]*\.?[0-9]*)")
 specific_exp = "(?:\([^\(\)]*\))|(?:;.*)|(?:[/\*].*\n)|(%s[-+]?[0-9]*\.?[0-9]*)"
 move_gcodes = ["G0", "G1", "G2", "G3"]
 
-class PyLine(object):
+class PyLine:
 
     __slots__ = ('x', 'y', 'z', 'e', 'f', 'i', 'j',
                  'raw', 'command', 'is_move',
@@ -45,7 +45,7 @@ class PyLine(object):
     def __getattr__(self, name):
         return None
 
-class PyLightLine(object):
+class PyLightLine:
 
     __slots__ = ('raw', 'command')
 
@@ -56,10 +56,10 @@ class PyLightLine(object):
         return None
 
 try:
-    import gcoder_line
+    from . import gcoder_line
     Line = gcoder_line.GLine
     LightLine = gcoder_line.GLightLine
-except Exception, e:
+except Exception as e:
     logging.warning("Memory-efficient GCoder implementation unavailable: %s" % e)
     Line = PyLine
     LightLine = PyLightLine
@@ -108,7 +108,7 @@ class Layer(list):
         super(Layer, self).__init__(lines)
         self.z = z
 
-class GCode(object):
+class GCode:
 
     line_class = Line
 
@@ -689,7 +689,7 @@ class GCode(object):
             self.line_idxs = array('I', line_idxs)
 
             # Compute bounding box
-            all_zs = self.all_zs.union(set([zmin])).difference(set([None]))
+            all_zs = self.all_zs.union({zmin}).difference({None})
             zmin = min(all_zs)
             zmax = max(all_zs)
 
@@ -731,25 +731,25 @@ class LightGCode(GCode):
 
 def main():
     if len(sys.argv) < 2:
-        print "usage: %s filename.gcode" % sys.argv[0]
+        print("usage: %s filename.gcode" % sys.argv[0])
         return
 
-    print "Line object size:", sys.getsizeof(Line("G0 X0"))
-    print "Light line object size:", sys.getsizeof(LightLine("G0 X0"))
+    print("Line object size:", sys.getsizeof(Line("G0 X0")))
+    print("Light line object size:", sys.getsizeof(LightLine("G0 X0")))
     gcode = GCode(open(sys.argv[1], "rU"))
 
-    print "Dimensions:"
+    print("Dimensions:")
     xdims = (gcode.xmin, gcode.xmax, gcode.width)
-    print "\tX: %0.02f - %0.02f (%0.02f)" % xdims
+    print("\tX: %0.02f - %0.02f (%0.02f)" % xdims)
     ydims = (gcode.ymin, gcode.ymax, gcode.depth)
-    print "\tY: %0.02f - %0.02f (%0.02f)" % ydims
+    print("\tY: %0.02f - %0.02f (%0.02f)" % ydims)
     zdims = (gcode.zmin, gcode.zmax, gcode.height)
-    print "\tZ: %0.02f - %0.02f (%0.02f)" % zdims
-    print "Filament used: %0.02fmm" % gcode.filament_length
+    print("\tZ: %0.02f - %0.02f (%0.02f)" % zdims)
+    print("Filament used: %0.02fmm" % gcode.filament_length)
     for i in enumerate(gcode.filament_length_multi):
-        print "E%d %0.02fmm" % (i[0],i[1])
-    print "Number of layers: %d" % gcode.layers_count
-    print "Estimated duration: %s" % gcode.estimate_duration()[1]
+        print("E%d %0.02fmm" % (i[0],i[1]))
+    print("Number of layers: %d" % gcode.layers_count)
+    print("Estimated duration: %s" % gcode.estimate_duration()[1])
 
 if __name__ == '__main__':
     main()

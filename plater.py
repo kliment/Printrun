@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This file is part of the Printrun suite.
 #
@@ -37,16 +37,16 @@ if __name__ == '__main__':
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hV", ["help", "version"])
-    except getopt.GetoptError, err:
-        print str(err)
-        print usage
+    except getopt.GetoptError as err:
+        print(str(err))
+        print(usage)
         sys.exit(2)
     for o, a in opts:
         if o in ('-V','--version'):
-            print "printrun "+printcore_version
+            print("printrun "+printcore_version)
             sys.exit(0)
         elif o in ('-h', '--help'):
-            print usage
+            print(usage)
             sys.exit(0)
 
     app = wx.App(False)

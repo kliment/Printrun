@@ -32,7 +32,7 @@ class LogPane(wx.BoxSizer):
         root.commandbox.SetToolTip(wx.ToolTip(_("Send commands to printer\n(Type 'help' for simple\nhelp function)")))
         root.commandbox.Bind(wx.EVT_TEXT_ENTER, root.sendline)
         root.commandbox.Bind(wx.EVT_CHAR, root.cbkey)
-        root.commandbox.history = [u""]
+        root.commandbox.history = [""]
         root.commandbox.histindex = 1
         lbrs.Add(root.commandbox, 1)
         root.sendbtn = make_button(bottom_panel, _("Send"), root.sendline, _("Send Command to Printer"), style = wx.BU_EXACTFIT, container = lbrs)

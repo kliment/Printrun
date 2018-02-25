@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This file is part of the Printrun suite.
 #
@@ -91,7 +91,7 @@ class GcodeViewPanel(wxGLPanel):
 
     def inject(self):
         l = self.parent.model.num_layers_to_draw
-        filtered = [k for k, v in self.parent.model.layer_idxs_map.iteritems() if v == l]
+        filtered = [k for k, v in self.parent.model.layer_idxs_map.items() if v == l]
         if filtered:
             injector(self.parent.model.gcode, l, filtered[0])
         else:
@@ -99,7 +99,7 @@ class GcodeViewPanel(wxGLPanel):
 
     def editlayer(self):
         l = self.parent.model.num_layers_to_draw
-        filtered = [k for k, v in self.parent.model.layer_idxs_map.iteritems() if v == l]
+        filtered = [k for k, v in self.parent.model.layer_idxs_map.items() if v == l]
         if filtered:
             injector_edit(self.parent.model.gcode, l, filtered[0])
         else:
@@ -307,7 +307,7 @@ class GcodeViewPanel(wxGLPanel):
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.Refresh)
 
-class GCObject(object):
+class GCObject:
 
     def __init__(self, model):
         self.offsets = [0, 0, 0]
@@ -317,7 +317,7 @@ class GCObject(object):
         self.scale = [1.0, 1.0, 1.0]
         self.model = model
 
-class GcodeViewLoader(object):
+class GcodeViewLoader:
 
     path_halfwidth = 0.2
     path_halfheight = 0.15
@@ -332,16 +332,16 @@ class GcodeViewLoader(object):
             set_model_colors(self.model, self.root)
         if gcode is not None:
             generator = self.model.load_data(gcode)
-            generator_output = generator.next()
+            generator_output = next(generator)
             while generator_output is not None:
                 yield generator_output
-                generator_output = generator.next()
+                generator_output = next(generator)
         wx.CallAfter(self.Refresh)
         yield None
 
     def addfile(self, gcode = None, showall = False):
         generator = self.addfile_perlayer(gcode, showall)
-        while generator.next() is not None:
+        while next(generator) is not None:
             continue
 
     def set_gcview_params(self, path_width, path_height):
@@ -441,7 +441,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
 
     def update_status(self, extra):
         layer = self.model.num_layers_to_draw
-        filtered = [k for k, v in self.model.layer_idxs_map.iteritems() if v == layer]
+        filtered = [k for k, v in self.model.layer_idxs_map.items() if v == layer]
         if filtered:
             true_layer = filtered[0]
             z = self.model.gcode.all_layers[true_layer].z

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -16,12 +14,12 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import Queue
+import queue
 import sys
 import time
 import threading
 import traceback
-import cStringIO as StringIO
+import io as StringIO
 import subprocess
 import glob
 import logging
@@ -36,7 +34,7 @@ from printrun.spoolmanager import spoolmanager_gui
 from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
-    prepare_command, check_rgb_color, check_rgba_color
+    prepare_command, check_rgb_color, check_rgba_color, compile_file
 install_locale('pronterface')
 
 try:
@@ -66,7 +64,7 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
-class ConsoleOutputHandler(object):
+class ConsoleOutputHandler:
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
     We also redirect stdout and stderr to ourself to catch print messages and al."""
 
@@ -94,10 +92,6 @@ class ConsoleOutputHandler(object):
         except:
             pass
         if self.print_on_stdout:
-            try:
-                data = data.encode("utf-8")
-            except:
-                pass
             self.stdout.write(data)
 
     def flush(self):
@@ -165,7 +159,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.current_pos = [0, 0, 0]
         self.paused = False
         self.uploading = False
-        self.sentglines = Queue.Queue(0)
+        self.sentglines = queue.Queue(0)
         self.cpbuttons = {
             "motorsoff": SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), _("Switch all motors off")),
             "extrude": SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), _("Advance extruder by set length")),
@@ -198,18 +192,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.panel.SetBackgroundColour(self.bgcolor)
         customdict = {}
         try:
-            execfile(configfile("custombtn.txt"), customdict)
+            exec(compile_file(configfile("custombtn.txt")), customdict)
             if len(customdict["btns"]):
                 if not len(self.custombuttons):
                     try:
                         self.custombuttons = customdict["btns"]
-                        for n in xrange(len(self.custombuttons)):
+                        for n in range(len(self.custombuttons)):
                             self.cbutton_save(n, self.custombuttons[n])
                         os.rename("custombtn.txt", "custombtn.old")
                         rco = open("custombtn.txt", "w")
                         rco.write(_("# I moved all your custom buttons into .pronsolerc.\n# Please don't add them here any more.\n# Backup of your old buttons is in custombtn.old\n"))
                         rco.close()
-                    except IOError, x:
+                    except IOError as x:
                         logging.error(str(x))
                 else:
                     logging.warning(_("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"))
@@ -390,7 +384,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_settemp(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.htemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.temps.keys():
@@ -405,12 +399,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.logError(_("Printer is not online."))
             else:
                 self.logError(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_bedtemp(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.btemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.bedtemps.keys():
@@ -425,12 +419,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.logError(_("Printer is not online."))
             else:
                 self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_setspeed(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.speed_slider.GetValue())
             else:
                 l = l.lower()
@@ -440,12 +434,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.log(_("Setting print speed factor to %d%%.") % speed)
             else:
                 self.logError(_("Printer is not online."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a speed. (%s)") % (repr(x),))
 
     def do_setflow(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.flow_slider.GetValue())
             else:
                 l = l.lower()
@@ -455,7 +449,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.log(_("Setting print flow factor to %d%%.") % flow)
             else:
                 self.logError(_("Printer is not online."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a flow. (%s)") % (repr(x),))
 
     def setbedgui(self, f):
@@ -887,7 +881,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(HiddenSetting("last_window_maximized", False))
         self.settings._add(HiddenSetting("last_sash_position", -1))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
-        self.settings._add(HiddenSetting("last_file_path", u""))
+        self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_file_filter", 0))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
         self.settings._add(StaticTextSetting("separator_2d_viewer", _("2D viewer options"), "", group = "Viewer"))
@@ -1030,7 +1024,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
-                    print("The progress should be updated on the printer now: " + printer_progress_string)
+                    print(("The progress should be updated on the printer now: " + printer_progress_string))
                     if len(printer_progress_string) > 25:
                         print("Warning: The print progress message might be too long to be displayed properly")
                     #13 chars for up to 99h est.
@@ -1046,7 +1040,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 gc = self.sentglines.get_nowait()
                 wx.CallAfter(self.gviz.addgcodehighlight, gc)
                 self.sentglines.task_done()
-        except Queue.Empty:
+        except queue.Empty:
             pass
 
     def statuschecker(self):
@@ -1303,7 +1297,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         fpath = os.path.join(self.slic3r_configpath, cat, config)
                         pararray += ["--load", fpath]
             self.log(_("Running ") + " ".join(pararray))
-            self.slicep = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
+            self.slicep = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE, universal_newlines = True)
             while True:
                 o = self.slicep.stdout.read(1)
                 if o == '' and self.slicep.poll() is not None: break
@@ -1459,7 +1453,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def post_gcode_load(self, print_stats = True):
         # Must be called in wx.CallAfter for safety
         self.loading_gcode = False
-        self.SetTitle(_(u"Pronterface - %s") % self.filename)
+        self.SetTitle(_("Pronterface - %s") % self.filename)
         message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
         self.log(message)
         self.statusbar.SetStatusText(message)
@@ -1501,12 +1495,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if(len(gcode.filament_length_multi)>1):
             for i in enumerate(gcode.filament_length_multi):
                 if self.spool_manager.getSpoolName(i[0]) == None:
-                    print "- Extruder %d: %0.02fmm" % (i[0], i[1])
+                    print("- Extruder %d: %0.02fmm" % (i[0], i[1]))
                 else:
-                    print ("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
+                    print(("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
                         " from spool '%s' (%.2fmm will remain)" %
                         (self.spool_manager.getSpoolName(i[0]),
-                        self.calculate_remaining_filament(i[1], i[0])))
+                        self.calculate_remaining_filament(i[1], i[0]))))
         else:
             if self.spool_manager.getSpoolName(0) != None:
                 self.log(_(
@@ -1543,14 +1537,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if max_layer is None:
                     break
                 while next_layer <= max_layer:
-                    assert(generator.next() == next_layer)
+                    assert(next(generator) == next_layer)
                     next_layer += 1
                 time.sleep(0.1)
-            generator_output = generator.next()
+            generator_output = next(generator)
             while generator_output is not None:
                 assert(generator_output in (None, next_layer))
                 next_layer += 1
-                generator_output = generator.next()
+                generator_output = next(generator)
         else:
             # If GCode is not being loaded asynchroneously, it is already
             # loaded, so let's make visualization sequentially
@@ -1896,7 +1890,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.Bind(wx.EVT_BUTTON, self.process_button)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttons_widgets.append(b)
-            if type(self.cbuttonssizer) == wx.GridBagSizer:
+            if isinstance(self.cbuttonssizer, wx.GridBagSizer):
                 self.cbuttonssizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
                 self.cbuttonssizer.Add(b, flag = wx.EXPAND)
@@ -1942,9 +1936,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.save_in_rc(("button %d" % n), '')
         elif bdef.background:
             colour = bdef.background
-            if type(colour) not in (str, unicode):
-                if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                    colour = map(lambda x: x % 256, colour)
+            if not isinstance(colour, str):
+                if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
+                    colour = (x % 256 for x in colour)
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                 else:
                     colour = wx.Colour(colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1960,9 +1954,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             bedit.command.SetValue(button.properties.command)
             if button.properties.background:
                 colour = button.properties.background
-                if type(colour) not in (str, unicode):
-                    if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                        colour = map(lambda x: x % 256, colour)
+                if not isinstance(colour, str):
+                    if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
+                        colour = (x % 256 for x in colour)
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                     else:
                         colour = wx.Colour(colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -2253,10 +2247,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def read_slic3r_config(self, configfile, parser = None):
         """Helper to read a Slic3r configuration file"""
-        import ConfigParser
-        parser = ConfigParser.RawConfigParser()
+        import configparser
+        parser = configparser.RawConfigParser()
 
-        class add_header(object):
+        class add_header:
             def __init__(self, f):
                 self.f = f
                 self.header = '[dummy]'

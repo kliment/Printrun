@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from Queue import Queue
+from queue import Queue
 from collections import deque
 import numpy
 import wx
@@ -197,7 +197,7 @@ class Gviz(wx.Panel):
         self.arcpen = wx.Pen(wx.Colour(255, 0, 0), penwidth)
         self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
-        self.fades = [wx.Pen(wx.Colour(int(250 - 0.6 ** i * 100), int(250 - 0.6 ** i * 100), int(200 - 0.4 ** i * 50)), penwidth) for i in xrange(6)]
+        self.fades = [wx.Pen(wx.Colour(int(250 - 0.6 ** i * 100), int(250 - 0.6 ** i * 100), int(200 - 0.4 ** i * 50)), penwidth) for i in range(6)]
         self.penslist = [self.mainpen, self.travelpen, self.hlpen] + self.fades
         self.bgcolor = wx.Colour()
         self.bgcolor.Set(bgcolor)
@@ -312,14 +312,14 @@ class Gviz(wx.Panel):
                 self.scale[1] * x[5],)
 
     def _drawlines(self, dc, lines, pens):
-        scaled_lines = map(self._line_scaler, lines)
+        scaled_lines = [self._line_scaler(l) for l in lines]
         dc.DrawLineList(scaled_lines, pens)
 
     def _drawarcs(self, dc, arcs, pens):
-        scaled_arcs = map(self._arc_scaler, arcs)
+        scaled_arcs = [self._arc_scaler(a) for a in arcs]
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         for i in range(len(scaled_arcs)):
-            dc.SetPen(pens[i] if type(pens) == list else pens)
+            dc.SetPen(pens[i] if isinstance(pens, list) else pens)
             dc.DrawArc(*scaled_arcs[i])
 
     def repaint_everything(self):
@@ -333,10 +333,10 @@ class Gviz(wx.Panel):
         dc.SetPen(wx.Pen(wx.Colour(180, 180, 150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
-                for x in xrange(int(self.build_dimensions[0] / grid_unit) + 1):
+                for x in range(int(self.build_dimensions[0] / grid_unit) + 1):
                     draw_x = self.scale[0] * x * grid_unit
                     dc.DrawLine(draw_x, 0, draw_x, height)
-                for y in xrange(int(self.build_dimensions[1] / grid_unit) + 1):
+                for y in range(int(self.build_dimensions[1] / grid_unit) + 1):
                     draw_y = self.scale[1] * (self.build_dimensions[1] - y * grid_unit)
                     dc.DrawLine(0, draw_y, width, draw_y)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
@@ -418,10 +418,10 @@ class Gviz(wx.Panel):
         self.gcode = gcode
         self.showall = showall
         generator = self.add_parsed_gcodes(gcode)
-        generator_output = generator.next()
+        generator_output = next(generator)
         while generator_output is not None:
             yield generator_output
-            generator_output = generator.next()
+            generator_output = next(generator)
         max_layers = len(self.layers)
         if hasattr(self.parent, "layerslider"):
             self.parent.layerslider.SetRange(0, max_layers - 1)
@@ -430,7 +430,7 @@ class Gviz(wx.Panel):
 
     def addfile(self, gcode = None, showall = False):
         generator = self.addfile_perlayer(gcode, showall)
-        while generator.next() is not None:
+        while next(generator) is not None:
             continue
 
     def _get_movement(self, start_pos, gline):

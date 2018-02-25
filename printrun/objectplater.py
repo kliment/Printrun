@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -246,8 +244,8 @@ class PlaterPanel(wx.Panel):
 
     def add_model(self, name, model):
         newname = os.path.split(name.lower())[1]
-        if not isinstance(newname, unicode):
-            newname = unicode(newname, "utf-8")
+        if not isinstance(newname, str):
+            newname = str(newname, "utf-8")
         c = 1
         while newname in self.models:
             newname = os.path.split(name.lower())[1]

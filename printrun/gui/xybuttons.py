@@ -155,7 +155,7 @@ class XYButtons(BufferedCanvas):
         return (quadrant, idx)
 
     def mouseOverKeypad(self, mpos):
-        for idx, kpos in self.keypad_positions.items():
+        for idx, kpos in list(self.keypad_positions.items()):
             radius = self.distanceToPoint(mpos[0], mpos[1], kpos[0], kpos[1])
             if radius < 9:
                 return idx
@@ -269,7 +269,7 @@ class XYButtons(BufferedCanvas):
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
             gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128 + 64)))
-            for idx, kpos in self.label_overlay_positions.items():
+            for idx, kpos in list(self.label_overlay_positions.items()):
                 if idx != self.concentric:
                     r = kpos[2]
                     gc.DrawEllipse(kpos[0] - r, kpos[1] - r, r * 2, r * 2)
