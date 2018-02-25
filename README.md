@@ -1,3 +1,7 @@
+# PRINTRUN 2.X
+
+This branch holds the development of Printrun 2.x. This new version of Printrun supports Python 3 and wxPython 4 and will become the master branch in the future. All new features and developments should be merged to it.
+
 Printrun consists of printcore, pronsole and pronterface, and a small collection of helpful scripts.
 
   * printcore.py is a library that makes writing reprap hosts easy
@@ -25,12 +29,7 @@ Note for OSX users: if OSX tells you the file is corrupted, you don't need to re
 ## Linux
 ### Ubuntu/Debian
 
-You can install Printrun from official packages (\*):
-```
-sudo apt install printrun
-```
-
-(\*) Please be aware that the Printrun package available in Ubuntu Yakkety Yak, or later, and Debian Stretch/Sid repositories, is known to be affected by issue [#615](https://github.com/kliment/Printrun/issues/615).
+There is currently no package for Printrun 2. It must be [run from source](https://github.com/kliment/Printrun/tree/2.x#running-from-source).
 
 ### Chrome OS 
 
@@ -114,6 +113,28 @@ The warning message
     WARNING:root:Memory-efficient GCoder implementation unavailable: No module named gcoder_line
 
 means that this optimized G-Code parser hasn't been compiled. To get rid of it and benefit from the better implementation, please install Cython and run the command above.
+
+### Ubuntu/Debian
+
+The above method is the recommended way to run Printrun 2 from source. However, if you can't find a suitable wxPython4 wheel, or if it fails for other reasons, it could be run without using a python virtual environment. For users of Debian 10 Buster or later and Ubuntu 18.04 Bionic Beaver or later.
+
+Install the dependencies:
+
+```
+sudo apt install python3-serial python3-numpy cython3 python3-libxml2 python3-gi python3-dbus python3-psutil python3-cairosvg libpython3-dev python3-appdirs python3-wxgtk4.0
+```
+
+```
+sudo apt install python3-pip
+pip3 install pyglet
+```
+
+Install git, clone this repository and checkout the 2.x branch:
+```
+sudo apt install git
+git clone https://github.com/kliment/Printrun.git
+cd Printrun && git checkout -b 2.x origin/2.x
+```
 
 ### Windows
 
@@ -459,3 +480,4 @@ along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 ```
 
 All scripts should contain this license note, if not, feel free to ask us. Please note that files where it is difficult to state this license note (such as images) are distributed under the same terms.
+
