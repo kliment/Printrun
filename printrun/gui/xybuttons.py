@@ -68,7 +68,7 @@ class XYButtons(BufferedCanvas):
         self.lastCorner = None
 
         self.bgcolor = wx.Colour()
-        self.bgcolor.SetFromName(bgcolor)
+        self.bgcolor.Set(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
         BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())
@@ -218,7 +218,7 @@ class XYButtons(BufferedCanvas):
         w, h = self.corner_size
         xinset, yinset = self.corner_inset
         cx, cy = self.center
-        ww, wh = self.GetSizeTuple()
+        ww, wh = self.GetSize()
 
         if corner == 0:
             x, y = (cx - ww / 2 + xinset + 1, cy - wh / 2 + yinset)

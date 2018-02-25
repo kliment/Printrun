@@ -74,7 +74,7 @@ class showstl(wx.Window):
         self.prevsel = -1
 
     def prepare_model(self, m, scale):
-        m.bitmap = wx.EmptyBitmap(800, 800, 32)
+        m.bitmap = wx.Bitmap(800, 800, 32)
         dc = wx.MemoryDC()
         dc.SelectObject(m.bitmap)
         dc.SetBackground(wx.Brush((0, 0, 0, 0)))
@@ -105,7 +105,7 @@ class showstl(wx.Window):
     def move(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if self.initpos is not None:
-                currentpos = event.GetPositionTuple()
+                currentpos = event.GetPosition()
                 delta = (0.5 * (currentpos[0] - self.initpos[0]),
                          -0.5 * (currentpos[1] - self.initpos[1])
                          )
@@ -116,10 +116,10 @@ class showstl(wx.Window):
             self.parent.right(event)
         elif event.Dragging():
             if self.initpos is None:
-                self.initpos = event.GetPositionTuple()
+                self.initpos = event.GetPosition()
             self.Refresh()
             dc = wx.ClientDC(self)
-            p = event.GetPositionTuple()
+            p = event.GetPosition()
             dc.DrawLine(self.initpos[0], self.initpos[1], p[0], p[1])
             del dc
         else:

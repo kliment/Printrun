@@ -44,7 +44,7 @@ class ZButtons(BufferedCanvas):
         self.lastValue = None
 
         self.bgcolor = wx.Colour()
-        self.bgcolor.SetFromName(bgcolor)
+        self.bgcolor.Set(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
         BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())

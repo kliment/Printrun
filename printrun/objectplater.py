@@ -96,11 +96,11 @@ class PlaterPanel(wx.Panel):
         if hasattr(viewer, "handle_rotation"):
             def handle_rotation(self, event, orig_handler):
                 if self.initpos is None:
-                    self.initpos = event.GetPositionTuple()
+                    self.initpos = event.GetPosition()
                 else:
                     if event.ShiftDown():
                         p1 = self.initpos
-                        p2 = event.GetPositionTuple()
+                        p2 = event.GetPosition()
                         x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
                         x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
                         self.parent.move_shape((x2 - x1, y2 - y1))

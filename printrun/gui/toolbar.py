@@ -27,7 +27,7 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
         parentpanel = root.newPanel(parentpanel)
         glob.Add(parentpanel, 1, flag = wx.EXPAND)
         glob.Add(root.locker, 0, flag = wx.ALIGN_CENTER)
-    ToolbarSizer = wx.WrapSizer if use_wrapsizer and wx.VERSION > (2, 9) else wx.BoxSizer
+    ToolbarSizer = wx.WrapSizer if use_wrapsizer else wx.BoxSizer
     self = ToolbarSizer(wx.HORIZONTAL)
     root.rescanbtn = make_autosize_button(parentpanel, _("Port"), root.rescanports, _("Communication Settings\nClick to rescan ports"))
     self.Add(root.rescanbtn, 0, wx.TOP | wx.LEFT, 0)
