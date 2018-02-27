@@ -126,7 +126,7 @@ sudo apt install python3-serial python3-numpy cython3 python3-libxml2 python3-gi
 
 ```
 sudo apt install python3-pip
-pip3 install pyglet
+pip3 install --user pyglet
 ```
 
 Install git, clone this repository and checkout the 2.x branch:
