@@ -16,6 +16,7 @@
 import cmd
 import glob
 import os
+import platform
 import time
 import threading
 import sys
@@ -605,22 +606,34 @@ class pronsole(cmd.Cmd):
         finally:
             self.processing_rc = False
 
-    def load_default_rc(self, rc_filename=None):
-        defaultconfig = os.path.expanduser("~/.pronsolerc")
-        if rc_filename:
-            config = rc_filename
-        elif hasattr(sys, "frozen") and sys.frozen in ["windows_exe", "console_exe"]:
-            config = "printrunconf.ini"
-        elif os.path.exists(defaultconfig):
-            config = defaultconfig
+    def load_default_rc(self):
+        # Set the default name depending on the platform
+        if platform.system() == 'Windows':
+            config_file_old_name = "printrunconf.ini"
+            config_file_name = config_file_old_name
         else:
+            config_file_old_name = ".pronsolerc"
+            config_file_name = "pronsolerc"
+
+        # Check whether a configuration file exists in the old location
+        config_file_old_path = os.path.join(os.path.expanduser("~"),
+                                            config_file_old_name)
+        if os.path.exists(config_file_old_path):
+            config_file_path = os.path.abspath(config_old_filepath)
+        else:
+            # Use location provided by appdirs
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
-            config = os.path.join(self.config_dir, "pronsolerc")
+            config_file_path = os.path.join(self.config_dir, config_file_name)
+
+        # Load the default configuration file
         try:
-            self.load_rc(config)
+            self.load_rc(config_file_path)
         except IOError:
-            self.logError(_("Error loading config file \"%s\".") % config)
+            # Make sure the filename is initialized and create the file if it
+            # doesn't exist
+            self.rc_filename = config_file_path
+            open(self.rc_filename, 'a').close()
 
     def save_in_rc(self, key, definition):
         """
