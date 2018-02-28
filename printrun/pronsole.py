@@ -607,32 +607,30 @@ class pronsole(cmd.Cmd):
             self.processing_rc = False
 
     def load_default_rc(self):
-        # Set the default name depending on the platform
-        if platform.system() == 'Windows':
-            config_file_old_name = "printrunconf.ini"
-            config_file_name = config_file_old_name
-        else:
-            config_file_old_name = ".pronsolerc"
-            config_file_name = "pronsolerc"
-
-        # Check whether a configuration file exists in the old location
-        config_file_old_path = os.path.join(os.path.expanduser("~"),
-                                            config_file_old_name)
-        if os.path.exists(config_file_old_path):
-            config_file_path = os.path.abspath(config_old_filepath)
-        else:
-            # Use location provided by appdirs
+        # Check if a configuration file exists in an "old" location,
+        # if not, use the "new" location provided by appdirs
+        if os.path.exists(os.path.expanduser("~/.pronsolerc")):
+            config = os.path.expanduser("~/.pronsolerc")
+        else if os.path.exists(os.path.expanduser("~/printrunconf.ini")):
+            config = os.path.expanduser("~/printrunconf.ini")
+        else
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
-            config_file_path = os.path.join(self.config_dir, config_file_name)
+
+            if platform.system() == 'Windows':
+                config_name = "printrunconf.ini"
+            else:
+                config_name = "pronsolerc"
+
+            config = os.path.join(self.config_dir, config_name)
 
         # Load the default configuration file
         try:
-            self.load_rc(config_file_path)
+            self.load_rc(config)
         except IOError:
-            # Make sure the filename is initialized and create the file if it
-            # doesn't exist
-            self.rc_filename = config_file_path
+            # Make sure the filename is initialized,
+            # and create the file if it doesn't exist
+            self.rc_filename = config
             open(self.rc_filename, 'a').close()
 
     def save_in_rc(self, key, definition):
