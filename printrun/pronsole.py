@@ -627,7 +627,7 @@ class pronsole(cmd.Cmd):
         # Load the default configuration file
         try:
             self.load_rc(config)
-        except IOError:
+        except FileNotFoundError:
             # Make sure the filename is initialized,
             # and create the file if it doesn't exist
             self.rc_filename = config
