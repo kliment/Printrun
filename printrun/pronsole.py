@@ -16,6 +16,7 @@
 import cmd
 import glob
 import os
+import platform
 import time
 import threading
 import sys
@@ -605,22 +606,32 @@ class pronsole(cmd.Cmd):
         finally:
             self.processing_rc = False
 
-    def load_default_rc(self, rc_filename=None):
-        defaultconfig = os.path.expanduser("~/.pronsolerc")
-        if rc_filename:
-            config = rc_filename
-        elif hasattr(sys, "frozen") and sys.frozen in ["windows_exe", "console_exe"]:
-            config = "printrunconf.ini"
-        elif os.path.exists(defaultconfig):
-            config = defaultconfig
-        else:
+    def load_default_rc(self):
+        # Check if a configuration file exists in an "old" location,
+        # if not, use the "new" location provided by appdirs
+        if os.path.exists(os.path.expanduser("~/.pronsolerc")):
+            config = os.path.expanduser("~/.pronsolerc")
+        else if os.path.exists(os.path.expanduser("~/printrunconf.ini")):
+            config = os.path.expanduser("~/printrunconf.ini")
+        else
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
-            config = os.path.join(self.config_dir, "pronsolerc")
+
+            if platform.system() == 'Windows':
+                config_name = "printrunconf.ini"
+            else:
+                config_name = "pronsolerc"
+
+            config = os.path.join(self.config_dir, config_name)
+
+        # Load the default configuration file
         try:
             self.load_rc(config)
         except IOError:
-            self.logError(_("Error loading config file \"%s\".") % config)
+            # Make sure the filename is initialized,
+            # and create the file if it doesn't exist
+            self.rc_filename = config
+            open(self.rc_filename, 'a').close()
 
     def save_in_rc(self, key, definition):
         """
