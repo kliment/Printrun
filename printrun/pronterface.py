@@ -2019,7 +2019,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 item = popupmenu.Append(-1, _("Add custom button"))
                 self.Bind(wx.EVT_MENU, self.cbutton_edit, item)
             self.panel.PopupMenu(popupmenu, pos)
-        elif e.Dragging() and e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
+        elif e.Dragging() and e.ButtonDown(wx.MOUSE_BTN_LEFT):
             obj = e.GetEventObject()
             scrpos = obj.ClientToScreen(e.GetPosition())
             if not hasattr(self, "dragpos"):
@@ -2086,7 +2086,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         src.SetForegroundColour(drg.fgc)
                         src.SetLabel(drg.label)
                     self.last_drag_dest = dst
-        elif hasattr(self, "dragging") and not e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
+        elif hasattr(self, "dragging") and not e.ButtonDown(wx.MOUSE_BTN_LEFT):
             # dragging finished
             obj = e.GetEventObject()
             scrpos = obj.ClientToScreen(e.GetPosition())
