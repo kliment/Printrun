@@ -1,3 +1,20 @@
+Printrun - 2.0.0rc1
+====================
+
+Pre-release for testing purpouses.
+
+### New Features
+
+ - Support the XDG Directory Specification (#866)
+    * New dependency: appdirs
+ - Port for wxPython 4 (#886)
+ - Port for Python 3 (#887)
+ 
+### Fixed Bugs
+
+ - Pronsole depending on the wx module (#867)
+
+
 Printrun - 1.6.0
 ================
 
