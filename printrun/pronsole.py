@@ -611,9 +611,9 @@ class pronsole(cmd.Cmd):
         # if not, use the "new" location provided by appdirs
         if os.path.exists(os.path.expanduser("~/.pronsolerc")):
             config = os.path.expanduser("~/.pronsolerc")
-        else if os.path.exists(os.path.expanduser("~/printrunconf.ini")):
+        elif os.path.exists(os.path.expanduser("~/printrunconf.ini")):
             config = os.path.expanduser("~/printrunconf.ini")
-        else
+        else:
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
 
