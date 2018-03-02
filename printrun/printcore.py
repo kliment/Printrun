@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "2.0.0rc1"
+__version__ = "2.0.0rc2"
 
 import sys
 if sys.version_info.major < 3:

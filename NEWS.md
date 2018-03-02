@@ -1,3 +1,13 @@
+Printrun - 2.0.0rc2
+====================
+
+Pre-release for testing purposes.
+
+### Fixed Bugs
+
+ - Fix SyntaxError at startup (497179c)
+
+
 Printrun - 2.0.0rc1
 ====================
 
