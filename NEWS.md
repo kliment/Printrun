@@ -7,12 +7,14 @@ Pre-release for testing purpouses.
 
  - Support the XDG Directory Specification (#866)
     * New dependency: appdirs
- - Port for wxPython 4 (#886)
- - Port for Python 3 (#887)
+ - Port to wxPython 4 (#886)
+ - Port to Python 3 (#887)
+ - Disable tabbed mode (8590f33)
  
 ### Fixed Bugs
 
  - Pronsole depending on the wx module (#867)
+ - Error at loading non-existent configuration files (#890)
 
 
 Printrun - 1.6.0
