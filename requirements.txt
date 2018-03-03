@@ -1,6 +1,6 @@
 # python (>= 3.6)
 pyreadline
-pyserial (>= 2.6)
+pyserial >= 2.7
 wxPython (>= 4.0)
 numpy (>= 1.8.2)
 pyglet (>= 1.1)

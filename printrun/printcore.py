@@ -20,7 +20,7 @@ if sys.version_info.major < 3:
     print("You need to run this on Python 3")
     sys.exit(-1)
 
-from .serialWrapper import Serial, SerialException, PARITY_ODD, PARITY_NONE
+from serial import Serial, SerialException, PARITY_ODD, PARITY_NONE
 from select import error as SelectError
 import threading
 from queue import Queue, Empty as QueueEmpty
