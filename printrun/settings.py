@@ -145,7 +145,9 @@ class SpinSetting(wxSetting):
 
     def get_specific_widget(self, parent):
         from wx.lib.agw.floatspin import FloatSpin
-        self.widget = FloatSpin(parent, -1, min_val = self.min, max_val = self.max, digits = 0)
+        import wx
+        self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max)
+        self.widget.SetDigits(0)
         self.widget.SetValue(self.value)
         orig = self.widget.GetValue
         self.widget.GetValue = lambda: int(orig())
@@ -155,7 +157,9 @@ class FloatSpinSetting(SpinSetting):
 
     def get_specific_widget(self, parent):
         from wx.lib.agw.floatspin import FloatSpin
-        self.widget = FloatSpin(parent, -1, value = self.value, min_val = self.min, max_val = self.max, increment = self.increment, digits = 2)
+        import wx
+        self.widget = wx.SpinCtrlDouble(parent, -1, initial = self.value, min = self.min, max = self.max, inc = self.increment)
+        self.widget.SetDigits(2)
         return self.widget
 
 class BooleanSetting(wxSetting):
@@ -216,7 +220,9 @@ class BuildDimensionsSetting(wxSetting):
         import wx
         build_dimensions = parse_build_dimensions(self.value)
         self.widgets = []
-        w = lambda val, m, M: self.widgets.append(FloatSpin(parent, -1, value = val, min_val = m, max_val = M, digits = 2))
+        def w(val, m, M):
+            self.widgets.append(wx.SpinCtrlDouble(parent, -1, initial = val, min = m, max = M))
+            self.widgets[-1].SetDigits(2)
         addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
         addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
         self.widget = wx.GridBagSizer()
