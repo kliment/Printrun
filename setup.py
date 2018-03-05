@@ -18,7 +18,8 @@
 import sys
 import os
 from stat import S_IRUSR, S_IWUSR, S_IRGRP, S_IROTH
-from distutils.core import setup
+from setuptools import setup
+from setuptools import find_packages
 from distutils.command.install import install as _install
 from distutils.command.install_data import install_data as _install_data
 try:
@@ -165,7 +166,7 @@ setup(name = "Printrun",
       url = "http://github.com/kliment/Printrun/",
       license = "GPLv3",
       data_files = data_files,
-      packages = ["printrun", "printrun.gl", "printrun.gl.libtatlin", "printrun.gui", "printrun.power", "printrun.plugins"],
+      packages = find_packages(),
       scripts = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
       cmdclass = cmdclass,
       ext_modules = extensions,
