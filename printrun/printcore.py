@@ -36,7 +36,10 @@ from functools import wraps, reduce
 from collections import deque
 from printrun import gcoder
 from .utils import set_utf8_locale, install_locale, decode_utf8
-set_utf8_locale()
+try:
+    set_utf8_locale()
+except:
+    pass
 install_locale('pronterface')
 from printrun.plugins import PRINTCORE_HANDLER
 
