@@ -229,7 +229,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     root.flow_slider = wx.Slider(flowpanel, -1, 100, 1, 300)
     flowsizer.Add(root.flow_slider, 1, flag = wx.EXPAND)
 
-    root.flow_spin = FloatSpin(flowpanel, -1, value = 100, min_val = 1, max_val = 300, digits = 0, style = wx.ALIGN_LEFT, size = (60, -1))
+    root.flow_spin = wx.SpinCtrlDouble(flowpanel, -1, initial = 100, min = 1, max = 300, style = wx.ALIGN_LEFT, size = (115, -1))
     flowsizer.Add(root.flow_spin, 0, flag = wx.ALIGN_CENTER_VERTICAL)
     root.flow_label = wx.StaticText(flowpanel, -1, _("%"))
     flowsizer.Add(root.flow_label, flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
@@ -247,7 +247,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         value = root.flow_spin.GetValue()
         root.flow_setbtn.SetBackgroundColour("red")
         root.flow_slider.SetValue(value)
-    root.flow_spin.Bind(wx.EVT_SPINCTRL, flowslider_spin)
+    root.flow_spin.Bind(wx.EVT_SPINCTRLDOUBLE, flowslider_spin)
 
     def flowslider_scroll(event):
         value = root.flow_slider.GetValue()
