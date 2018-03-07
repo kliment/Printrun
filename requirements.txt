@@ -1,5 +1,4 @@
 # python (>= 3.6)
-pyreadline
 pyserial >= 2.7
 wxPython (>= 4.0)
 numpy (>= 1.8.2)
@@ -7,7 +6,8 @@ pyglet (>= 1.1)
 pycairo (>= 1.8.8)
 cairosvg (>= 1.0.9)
 psutil (>= 2.1)
-dbus-python (>= 1.2.0)
-pygobject (>= 3.14.0)
 lxml (>= 2.9.1)
 appdirs (>= 1.4.0)
+dbus-python >= 1.2.0 ; sys_platform == 'linux'
+pyobjc-framework-Cocoa ; sys_platform == 'darwin'
+pyreadline ; sys_platform == 'win32'
