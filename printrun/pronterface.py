@@ -1881,7 +1881,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.SetToolTip(wx.ToolTip(_("Execute command: ") + btndef.command))
                 if btndef.background:
                     b.SetBackgroundColour(btndef.background)
-                    rr, gg, bb = b.GetBackgroundColour().Get()
+                    rr, gg, bb, aa = b.GetBackgroundColour().Get() #last item is alpha
                     if 0.3 * rr + 0.59 * gg + 0.11 * bb < 60:
                         b.SetForegroundColour("#ffffff")
                 b.custombutton = i
@@ -2185,7 +2185,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if macro == "": return self.new_macro()
         if macro in self.macros:
             old_def = self.macros[macro]
-        elif len([c for c in macro.encode("ascii", "replace") if not c.isalnum() and c != "_"]):
+        elif len([chr(c) for c in macro.encode("ascii", "replace") if not chr(c).isalnum() and chr(c) != "_"]):
             self.log(_("Macro name may contain only ASCII alphanumeric symbols and underscores"))
             return
         elif hasattr(self.__class__, "do_" + macro):

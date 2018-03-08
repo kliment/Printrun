@@ -469,6 +469,7 @@ class pronsole(cmd.Cmd):
             self.logError("Empty macro - cancelled")
             return
         macro = None
+        namespace={}
         pycode = "def macro(self,*arg):\n"
         if "\n" not in macro_def.strip():
             pycode += self.compile_macro_line("  " + macro_def.strip())
@@ -476,7 +477,11 @@ class pronsole(cmd.Cmd):
             lines = macro_def.split("\n")
             for l in lines:
                 pycode += self.compile_macro_line(l)
-        exec(pycode)
+        exec(pycode,namespace)
+        try:
+            macro=namespace['macro']
+        except:
+            pass
         return macro
 
     def start_macro(self, macro_name, prev_definition = "", suppress_instructions = False):
