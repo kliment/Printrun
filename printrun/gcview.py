@@ -416,7 +416,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.objects = [GCObject(self.platform), GCObject(None)]
 
         fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        self.toolbar.InsertLabelTool(6, 8, " " + _("Fit to plate"), fit_image,
+        self.toolbar.InsertTool(6, 8, " " + _("Fit to plate"), fit_image,
                                      shortHelp = _("Fit to plate [F]"),
                                      longHelp = '')
         self.toolbar.Realize()
