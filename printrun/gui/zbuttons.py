@@ -146,7 +146,7 @@ class ZButtons(BufferedCanvas):
 
         mpos = event.GetPosition()
         r, d = self.getRangeDir(mpos)
-        if r >= 0:
+        if r is not None and r >= 0:
             value = d * self.move_values[r]
             if self.moveCallback:
                 self.lastValue = value
