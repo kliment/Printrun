@@ -2261,6 +2261,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     finally: self.header = None
                 else:
                     return self.f.readline()
+
+            def __iter__(self):
+                import itertools
+                return itertools.chain([self.header], iter(self.f))
+
         parser.readfp(add_header(open(configfile)), configfile)
         return parser
 
