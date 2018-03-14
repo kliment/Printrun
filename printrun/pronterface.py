@@ -1875,7 +1875,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         for i, btndef in enumerate(custombuttons):
             if btndef is None:
                 if i == len(custombuttons) - 1:
-                    self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
+                    self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (35, 18), style = wx.BU_EXACTFIT)
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
