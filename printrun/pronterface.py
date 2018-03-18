@@ -265,15 +265,21 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             temppanel = wx.Panel(self)
             # TODO: add viz widgets to statefulControls
             statefuls=self.statefulControls
-            if hasattr(self,"graph"):
+            if hasattr(self,"graph") and self.graph is not None:
                 statefuls+=[self.graph,]
-            if hasattr(self,"bedtgauge"):
+            if hasattr(self,"bedtgauge") and self.bedtgauge is not None:
                 statefuls+=[self.bedtgauge,]
-            if hasattr(self,"hottgauge"):
+            if hasattr(self,"hottgauge") and self.hottgauge is not None:
                 statefuls+=[self.hottgauge,]
             for control in statefuls:
-                control.GetContainingSizer().Detach(control)
-                control.Reparent(temppanel)
+                try:
+                    control.GetContainingSizer().Detach(control)
+                except:
+                    pass
+                try:
+                    control.Reparent(temppanel)
+                except:
+                    pass
             self.panel.DestroyChildren()
             self.gwindow.Destroy()
             self.reset_ui()
