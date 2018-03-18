@@ -264,7 +264,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             # to retain across UI changes
             temppanel = wx.Panel(self)
             # TODO: add viz widgets to statefulControls
-            for control in self.statefulControls:
+            statefuls=self.statefulControls
+            if hasattr(self,"graph"):
+                statefuls+=[self.graph,]
+            if hasattr(self,"bedtgauge"):
+                statefuls+=[self.bedtgauge,]
+            if hasattr(self,"hottgauge"):
+                statefuls+=[self.hottgauge,]
+            for control in statefuls:
                 control.GetContainingSizer().Detach(control)
                 control.Reparent(temppanel)
             self.panel.DestroyChildren()
