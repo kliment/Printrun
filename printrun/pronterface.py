@@ -271,7 +271,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 statefuls+=[self.bedtgauge,]
             if hasattr(self,"hottgauge") and self.hottgauge is not None:
                 statefuls+=[self.hottgauge,]
-            for control in statefuls:
+            for control in self.panel.GetChildren():
                 try:
                     control.GetContainingSizer().Detach(control)
                 except:
