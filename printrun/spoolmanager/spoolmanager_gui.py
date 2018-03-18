@@ -33,6 +33,8 @@ class SpoolManagerMainWindow(wx.Frame):
 
         self.statusbar = self.CreateStatusBar()
 
+        self.SetIcon(parent.GetIcon())
+
         # Initiate the back-end
         self.spool_manager = spool_manager
         self.spool_manager.refresh()
@@ -176,23 +178,31 @@ class SpoolListView(wx.ListView):
     def __init__(self, parent, spool_manager):
         wx.ListView.__init__(self, parent,
             style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
-        self.InsertColumn(0, "Spool")
-        self.InsertColumn(1, "Filament")
+        self.InsertColumn(0, "Spool", width = wx.LIST_AUTOSIZE_USEHEADER)
+        self.InsertColumn(1, "Filament", width = wx.LIST_AUTOSIZE_USEHEADER)
         self.populateList(spool_manager)
+
+        # "Program" the layout
+        self.Bind(wx.EVT_SIZE, self.onResizeList)
 
     def populateList(self, spool_manager):
         """Get the list of recorded spools from the Spool Manager."""
         spool_list = spool_manager.getSpoolList()
-        print()
         for i in range(len(spool_list)):
             self.Append(spool_list[i])
-        self.SetColumnWidth(0, -1 | -2)
-        self.SetColumnWidth(1, -1 | -2)
 
     def refreshList(self, spool_manager):
         """Refresh the list by re-reading the Spool Manager list."""
         self.DeleteAllItems()
         self.populateList(spool_manager)
+
+    def onResizeList(self, event):
+        list_size = self.GetSize()
+        self.SetColumnWidth(1, -2)
+        filament_column_width = self.GetColumnWidth(1)
+        self.SetColumnWidth(col = 0,
+                            width = list_size.width - filament_column_width)
+        event.Skip()
 
 
 class CurrentSpoolDialog(wx.Panel):
@@ -304,6 +314,8 @@ class SpoolManagerAddWindow(wx.Frame):
         self.statusbar = self.CreateStatusBar()
 
         self.parent = parent
+
+        self.SetIcon(parent.GetIcon())
 
         # Generate the dialogs
         self.name_dialog = LabeledTextCtrl(self,
@@ -475,6 +487,8 @@ class SpoolManagerEditWindow(wx.Frame):
 
         self.parent = parent
 
+        self.SetIcon(parent.GetIcon())
+
         self.old_spool_name = spool_name
         self.old_spool_length = getFloat(self, spool_length)
 
@@ -521,13 +535,19 @@ class SpoolManagerEditWindow(wx.Frame):
         # Layout
         ## Group the length field and its correspondent buttons
         self.length_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.length_sizer.Add(self.minus3_button, 0, wx.FIXED_MINSIZE)
-        self.length_sizer.Add(self.minus2_button, 0, wx.FIXED_MINSIZE)
-        self.length_sizer.Add(self.minus1_button, 0, wx.FIXED_MINSIZE)
+        self.length_sizer.Add(self.minus3_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
+        self.length_sizer.Add(self.minus2_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
+        self.length_sizer.Add(self.minus1_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
         self.length_sizer.Add(self.length_field, 1, wx.EXPAND)
-        self.length_sizer.Add(self.plus1_button, 0, wx.FIXED_MINSIZE)
-        self.length_sizer.Add(self.plus2_button, 0, wx.FIXED_MINSIZE)
-        self.length_sizer.Add(self.plus3_button, 0, wx.FIXED_MINSIZE)
+        self.length_sizer.Add(self.plus1_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
+        self.length_sizer.Add(self.plus2_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
+        self.length_sizer.Add(self.plus3_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
 
         ## Group the bottom buttons
         self.bottom_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -537,12 +557,12 @@ class SpoolManagerEditWindow(wx.Frame):
         ## Lay out the whole window
         self.full_sizer = wx.BoxSizer(wx.VERTICAL)
         self.full_sizer.Add(self.name_field, 0, wx.EXPAND)
-        self.full_sizer.AddSpacer((-1,10))
+        self.full_sizer.AddSpacer(10)
         self.full_sizer.Add(self.length_title, 0,
             wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
         self.full_sizer.Add(self.length_sizer, 0,
             wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
-        self.full_sizer.AddSpacer((-1,10))
+        self.full_sizer.AddSpacer(10)
         self.full_sizer.Add(self.bottom_buttons_sizer, 0, wx.ALIGN_CENTER)
 
         self.SetSizerAndFit(self.full_sizer)
