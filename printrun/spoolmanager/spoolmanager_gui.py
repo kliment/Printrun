@@ -218,6 +218,10 @@ class CurrentSpoolDialog(wx.Panel):
 
         full_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # Calculate the minimum size needed to properly display the
+        # extruder information
+        min_size = self.GetTextExtent("    Remaining filament: 0000000.00")
+
         # Generate a dialog for every extruder
         self.extruder_dialog = []
         load_button = []
@@ -226,7 +230,9 @@ class CurrentSpoolDialog(wx.Panel):
         dialog_sizer = []
         for i in range(self.extruders):
             # Generate the dialog with the spool information
-            self.extruder_dialog.append(wx.StaticText(self))
+            self.extruder_dialog.append(
+                wx.StaticText(self, style = wx.ST_ELLIPSIZE_END))
+            self.extruder_dialog[i].SetMinSize(wx.Size(min_size.width, -1))
 
             # Generate the "load" and "unload" buttons
             load_button.append(wx.Button(self, label = "Load"))
@@ -265,12 +271,12 @@ class CurrentSpoolDialog(wx.Panel):
         """Retrieve the current spools from the Spool Manager."""
 
         for i in range(self.extruders):
-            self.extruder_dialog[i].SetLabel(
-                "Spool for Extruder %d:\n" % i +
-                "    Name:               %s\n" %
-                spool_manager.getSpoolName(i) +
-                "    Remaining filament: %.2f" %
-                spool_manager.getRemainingFilament(i))
+            spool_name = spool_manager.getSpoolName(i)
+            spool_filament = spool_manager.getRemainingFilament(i)
+            label = ("Spool for Extruder %d:\n" % i +
+                     "    Name:               %s\n" % spool_name +
+                     "    Remaining filament: %.2f" % spool_filament)
+            self.extruder_dialog[i].SetLabelText(label)
 
 
 # ---------------------------------------------------------------------------
