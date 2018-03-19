@@ -422,7 +422,10 @@ class GCode:
                 elif line.command == "M83":
                     relative_e = True
                 elif line.command[0] == "T":
-                    current_tool = int(line.command[1:])
+                    try:
+                        current_tool = int(line.command[1:])
+                    except:
+                        pass #handle T? by treating it as no tool change
                     while(current_tool+1>len(self.current_e_multi)):
                         self.current_e_multi+=[0]
                         self.offset_e_multi+=[0]
