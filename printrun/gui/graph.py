@@ -34,13 +34,14 @@ class GraphWindow(wx.Frame):
 
     def Destroy(self):
         self.graph.StopPlotting()
+        if self.parentg is not None:
+            self.parentg.window=None
         return super(GraphWindow,self).Destroy()
 
     def __del__(self):
         if self.parentg is not None:
             self.parentg.window=None
         self.graph.StopPlotting()
-        super(GraphWindow,self).__del__(self)
 
 class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
@@ -87,7 +88,7 @@ class Graph(BufferedCanvas):
         self.window = None
 
     def show_graph_window(self, event = None):
-        if not self.window:
+        if self.window is None or not self.window:
             self.window = GraphWindow(self.root, self)
             self.window.Show()
             if self.timer.IsRunning():
