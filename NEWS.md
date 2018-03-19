@@ -1,3 +1,21 @@
+Printrun - 2.0.0rc3
+====================
+
+Pre-release for testing purposes.
+
+### Fixed Bugs
+
+ - Couple of wxPython 4 incompatibilities (116fdda, eb6bd43)
+ - Couple of GTK3 visibility problems (#899, f265256, 9193014)
+ - Added spoolmanager to installed modules (#896)
+ - Setlocale issues on Windows (bf53af9)
+ - Installation on macOS and Windows (#901)
+ - Macro-related functionality (95877a4)
+ - Clicking +Z⇑ and -Z⇓ (#910)
+ - Python 3 incompatibilities (#912)
+ - Segmentation faults (#895, #909)
+
+
 Printrun - 2.0.0rc2
 ====================
 
