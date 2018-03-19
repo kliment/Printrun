@@ -25,11 +25,22 @@ class GraphWindow(wx.Frame):
     def __init__(self, root, parent_graph = None, size = (600, 600)):
         super(GraphWindow, self).__init__(None, title = _("Temperature graph"),
                                           size = size)
+        self.parentg=parent_graph;
         panel = wx.Panel(self, -1)
         vbox = wx.BoxSizer(wx.VERTICAL)
         self.graph = Graph(panel, wx.ID_ANY, root, parent_graph = parent_graph)
         vbox.Add(self.graph, 1, wx.EXPAND)
         panel.SetSizer(vbox)
+
+    def Destroy(self):
+        self.graph.StopPlotting()
+        return super(GraphWindow,self).Destroy()
+
+    def __del__(self):
+        if self.parentg is not None:
+            self.parentg.window=None
+        self.graph.StopPlotting()
+        super(GraphWindow,self).__del__(self)
 
 class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
@@ -313,9 +324,13 @@ class Graph(BufferedCanvas):
         self.timer.Start(time)
         if self.window: self.window.graph.StartPlotting(time)
 
+    def Destroy(self):
+        self.StopPlotting()
+        return super(BufferedCanvas, self).Destroy()
+
     def StopPlotting(self):
         self.timer.Stop()
-        self.Refresh()
+        #self.Refresh() # do not refresh when stopping in case the underlying object has been destroyed already
         if self.window: self.window.graph.StopPlotting()
 
     def draw(self, dc, w, h):

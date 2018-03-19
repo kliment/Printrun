@@ -254,6 +254,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def reload_ui(self, *args):
         if not self.window_ready: return
+        temp_monitor=self.settings.monitor
+        self.settings.monitor=False
+        self.update_monitor()
         self.Freeze()
 
         # If UI is being recreated, delete current one
@@ -265,22 +268,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             temppanel = wx.Panel(self)
             # TODO: add viz widgets to statefulControls
             statefuls=self.statefulControls
-            if hasattr(self,"graph") and self.graph is not None:
-                statefuls+=[self.graph,]
-            if hasattr(self,"bedtgauge") and self.bedtgauge is not None:
-                statefuls+=[self.bedtgauge,]
-            if hasattr(self,"hottgauge") and self.hottgauge is not None:
-                statefuls+=[self.hottgauge,]
-            for control in self.panel.GetChildren():
-                try:
+            for control in statefuls:
                     control.GetContainingSizer().Detach(control)
-                except:
-                    pass
-                try:
                     control.Reparent(temppanel)
-                except:
-                    pass
-            self.panel.DestroyChildren()
+            #self.panel.DestroyChildren() #do not destroy children when redrawing so that any timers currently running do not have references to missing objects - they get recreated if necessary anyway
             self.gwindow.Destroy()
             self.reset_ui()
 
@@ -315,10 +306,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.panel.Layout()
             if self.fgcode:
                 self.start_viz_thread()
-            if self.settings.monitor:
-                self.update_monitor()
         self.ui_ready = True
+        self.settings.monitor=temp_monitor;
         self.Thaw()
+        if self.settings.monitor:
+                self.update_monitor()
 
     def on_resize(self, event):
         wx.CallAfter(self.on_resize_real)
