@@ -2164,19 +2164,19 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.update_macros_menu()
 
     def new_macro(self, e = None):
-        dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))
+        dialog = wx.Dialog(self, -1, _("Enter macro name"))
         panel = wx.Panel(dialog, -1)
         vbox = wx.BoxSizer(wx.VERTICAL)
         wx.StaticText(panel, -1, _("Macro name:"), (8, 14))
         dialog.namectrl = wx.TextCtrl(panel, -1, '', (110, 8), size = (130, 24), style = wx.TE_PROCESS_ENTER)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        okb = wx.Button(dialog, wx.ID_OK, _("Ok"), size = (60, 24))
+        okb = wx.Button(dialog, wx.ID_OK, _("Ok"))
         dialog.Bind(wx.EVT_TEXT_ENTER, lambda e: dialog.EndModal(wx.ID_OK), dialog.namectrl)
         hbox.Add(okb)
-        hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel"), size = (60, 24)))
+        hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel")))
         vbox.Add(panel)
         vbox.Add(hbox, 1, wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, 10)
-        dialog.SetSizer(vbox)
+        dialog.SetSizerAndFit(vbox)
         dialog.Centre()
         macro = ""
         if dialog.ShowModal() == wx.ID_OK:
