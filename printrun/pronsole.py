@@ -173,6 +173,7 @@ class pronsole(cmd.Cmd):
         self.cache_dir = os.path.join(user_cache_dir("Printrun"))
         self.config_dir = os.path.join(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
+        self.lineignorepattern=re.compile("ok ?\d*$")
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -1306,7 +1307,7 @@ class pronsole(cmd.Cmd):
             report_type = self.recvcb_report(l)
             if report_type & REPORT_TEMP:
                 self.status.update_tempreading(l)
-            if l[:2] != "ok" and l[:4] != "wait" and not self.sdlisting \
+            if not self.lineignorepattern.match(l) and l[:4] != "wait" and not self.sdlisting \
                and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
                 if l[:5] == "echo:":
                     l = l[5:].lstrip()
