@@ -2165,22 +2165,38 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def new_macro(self, e = None):
         dialog = wx.Dialog(self, -1, _("Enter macro name"))
-        panel = wx.Panel(dialog, -1)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        wx.StaticText(panel, -1, _("Macro name:"), (8, 14))
-        dialog.namectrl = wx.TextCtrl(panel, -1, '', (110, 8), size = (130, 24), style = wx.TE_PROCESS_ENTER)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        text = wx.StaticText(dialog, -1, _("Macro name:"))
+        namectrl = wx.TextCtrl(dialog, -1, style = wx.TE_PROCESS_ENTER)
         okb = wx.Button(dialog, wx.ID_OK, _("Ok"))
-        dialog.Bind(wx.EVT_TEXT_ENTER, lambda e: dialog.EndModal(wx.ID_OK), dialog.namectrl)
-        hbox.Add(okb)
-        hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel")))
-        vbox.Add(panel)
-        vbox.Add(hbox, 1, wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, 10)
-        dialog.SetSizerAndFit(vbox)
+        dialog.Bind(wx.EVT_TEXT_ENTER,
+            lambda e: dialog.EndModal(wx.ID_OK), namectrl)
+        cancel_button = wx.Button(dialog, wx.ID_CANCEL, _("Cancel"))
+
+        # Layout
+        ## Group the buttons horizontally
+        buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttons_sizer.Add(okb, 0)
+        buttons_sizer.Add(cancel_button, 0)
+        ## Set a minimum size for the name control box
+        min_size = namectrl.GetTextExtent('Default Long Macro Name')
+        namectrl.SetMinSize(wx.Size(min_size.width, -1))
+        ## Group the text and the name control box horizontally
+        name_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        name_sizer.Add(text, 0, flag = wx.ALIGN_CENTER)
+        name_sizer.AddSpacer(10)
+        name_sizer.Add(namectrl, 1, wx.EXPAND)
+        ## Group everything vertically
+        dialog_sizer = wx.BoxSizer(wx.VERTICAL)
+        dialog_sizer.Add(name_sizer, 0, border = 10,
+            flag = wx.LEFT | wx.TOP | wx.RIGHT)
+        dialog_sizer.Add(buttons_sizer, 0, border = 10,
+            flag = wx.ALIGN_CENTER | wx.ALL)
+        dialog.SetSizerAndFit(dialog_sizer)
         dialog.Centre()
+
         macro = ""
         if dialog.ShowModal() == wx.ID_OK:
-            macro = dialog.namectrl.GetValue()
+            macro = namectrl.GetValue()
             if macro != "":
                 wx.CallAfter(self.edit_macro, macro)
         dialog.Destroy()
