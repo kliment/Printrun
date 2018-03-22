@@ -964,11 +964,11 @@ class pronsole(cmd.Cmd):
                 return
         try:
             if settings:
-                command = self.settings.sliceoptscommand
+                command = self.settings.slicecommandpath+self.settings.sliceoptscommand
                 self.log(_("Entering slicer settings: %s") % command)
                 run_command(command, blocking = True)
             else:
-                command = self.settings.slicecommand
+                command = self.settings.slicecommandpath+self.settings.slicecommand
                 stl_name = l[0]
                 gcode_name = stl_name.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")
                 run_command(command,

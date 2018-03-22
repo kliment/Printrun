@@ -15,6 +15,8 @@
 
 import logging
 import traceback
+import os
+import sys
 
 from functools import wraps
 
@@ -277,8 +279,14 @@ class Settings:
         self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (mm/min)"), "Printer"))
         self._add(SpinSetting("z_feedrate", 100, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (mm/min)"), "Printer"))
         self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (mm/min)"), "Printer"))
-        self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command"), "External"))
-        self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command"), "External"))
+        defaultslicerpath=""
+        if sys.platform=="darwin" and getattr( sys, 'frozen', False ):
+            defaultslicerpath="/Applications/Slic3r.app/Contents/MacOS/"
+        if sys.platform=="win32" and getattr( sys, 'frozen', False ):
+            defaultslicerpath=".\\slic3r\\"
+        self._add(StringSetting("slicecommandpath", defaultslicerpath, _("Path to slicer"), _("Path to slicer"), "External"))
+        self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        self._add(StringSetting("sliceoptscommand", "slic3r", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("start_command", "", _("Start command"), _("Executable to run when the print is started"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
         self._add(StringSetting("error_command", "", _("Error command"), _("Executable to run when an error occurs"), "External"))
