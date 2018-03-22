@@ -87,7 +87,7 @@ def imagefile(filename):
                                    "images", filename)
     if os.path.exists(local_candidate):
         return local_candidate
-    frozen_candidate=os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),"images","filename")
+    frozen_candidate=os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),"images",filename)
     if os.path.exists(frozen_candidate):
         return frozen_candidate
     else:
