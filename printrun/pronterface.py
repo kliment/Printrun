@@ -78,7 +78,7 @@ class ConsoleOutputHandler(object):
             self.target = target
         else:
             self.print_on_stdout = True
-            setup_logging(sys.stdout)
+            setup_logging(sys.stdout, reset_handlers = True)
             self.target = target
 
     def __del__(self):
