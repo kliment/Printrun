@@ -87,6 +87,9 @@ def imagefile(filename):
                                    "images", filename)
     if os.path.exists(local_candidate):
         return local_candidate
+    frozen_candidate=os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),"images","filename")
+    if os.path.exists(frozen_candidate):
+        return frozen_candidate
     else:
         return os.path.join("images", filename)
 
@@ -94,6 +97,7 @@ def lookup_file(filename, prefixes):
     local_candidate = os.path.join(os.path.dirname(sys.argv[0]), filename)
     if os.path.exists(local_candidate):
         return local_candidate
+    if sys.frozen: prefixes+=[getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),]
     for prefix in prefixes:
         candidate = os.path.join(prefix, filename)
         if os.path.exists(candidate):
