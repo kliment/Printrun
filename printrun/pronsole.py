@@ -172,7 +172,7 @@ class pronsole(cmd.Cmd):
         self.cache_dir = os.path.join(user_cache_dir("Printrun"))
         self.config_dir = os.path.join(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
-        self.lineignorepattern=re.compile("ok ?\d*$|busy: ?processing|busy: ?heating|Active Extruder: ?\d*$")
+        self.lineignorepattern=re.compile("ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
 
     #  --------------------------------------------------------------
     #  General console handling
