@@ -2221,7 +2221,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             while True:
                 item = self.macros_menu.FindItemByPosition(1)
                 if item is None: break
-                self.macros_menu.DeleteItem(item)
+                self.macros_menu.DestroyItem(item)
         except:
             pass
         for macro in self.macros.keys():
