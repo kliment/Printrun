@@ -201,7 +201,6 @@ class MainWindow(wx.Frame):
             self.notebook.AddPage(page4panel, _("G-Code Plater"))
         self.panel.SetSizer(self.notesizer)
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
-        self.Bind(wx.EVT_CLOSE, self.kill)
 
         # Custom buttons
         self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)

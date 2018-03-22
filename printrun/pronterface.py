@@ -184,7 +184,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.window_ready = True
-
+        self.Bind(wx.EVT_CLOSE, self.closewin)
         # set feedrates in printcore for pause/resume
         self.p.xy_feedrate = self.settings.xy_feedrate
         self.p.z_feedrate = self.settings.z_feedrate
@@ -331,7 +331,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def on_exit(self, event):
         self.Close()
 
-    def kill(self, e):
+    def closewin(self, e):
+        e.StopPropagation()
+        self.do_exit("")
+
+    def kill(self, e=None):
         if self.p.printing or self.p.paused:
             dlg = wx.MessageDialog(self, _("Print in progress ! Are you really sure you want to quit ?"), _("Exit"), wx.YES_NO | wx.ICON_WARNING)
             if dlg.ShowModal() == wx.ID_NO:
