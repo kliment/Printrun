@@ -274,7 +274,6 @@ class MainWindow(wx.Frame):
         self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
-        self.Bind(wx.EVT_CLOSE, self.kill)
 
         self.mainsizer.Layout()
         # This prevents resizing below a reasonnable value
