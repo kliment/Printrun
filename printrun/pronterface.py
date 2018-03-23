@@ -2271,9 +2271,17 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         orig_appname = self.app.GetAppName()
         self.app.SetAppName("Slic3r")
         configpath = wx.StandardPaths.Get().GetUserDataDir()
-        self.app.SetAppName(orig_appname)
         self.slic3r_configpath = configpath
         configfile = os.path.join(configpath, "slic3r.ini")
+        if not os.path.exists(configfile):
+            self.app.SetAppName("Slic3rPE")
+            configpath = wx.StandardPaths.Get().GetUserDataDir()
+            self.slic3r_configpath = configpath
+            configfile = os.path.join(configpath, "slic3r.ini")
+        if not os.path.exists(configfile):
+            self.settings.slic3rintegration=False;
+            return
+        self.app.SetAppName(orig_appname)
         config = self.read_slic3r_config(configfile)
         version = config.get("dummy", "version") # Slic3r version
         self.slic3r_configs = {}
