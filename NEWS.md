@@ -1,3 +1,26 @@
+Printrun - 2.0.0rc4
+====================
+
+Pre-release for testing purposes.
+
+### New Features
+
+ - Support for the T? command (#888)
+ - Have slic3r as default slicing option (#904)
+
+### Fixed Bugs
+
+ - Segmentation fault (#909)
+ - Button text incorrectly changing (#903)
+ - Dialogs resized (#905, #915)
+ - Macro duplicates (#907)
+ - Ok messages with Repetire firmware (#917)
+ - Messages printed twice in terminal (#916)
+ - Prevent race condition on exit (42d7cd0, 16ee30b)
+ - Object has no attribute 'slic3r_configs' (#865)
+ 
+
+
 Printrun - 2.0.0rc3
 ====================
 
@@ -13,7 +36,7 @@ Pre-release for testing purposes.
  - Macro-related functionality (95877a4)
  - Clicking +Z⇑ and -Z⇓ (#910)
  - Python 3 incompatibilities (#912)
- - Segmentation faults (#895, #909)
+ - Segmentation fault (#895)
 
 
 Printrun - 2.0.0rc2
