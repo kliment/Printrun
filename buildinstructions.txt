@@ -1,0 +1,54 @@
+setup on osx:
+(install python 3.6)
+(install python extension compile environment)
+(install git)
+git clone http://github.com/kliment/Printrun.git
+cd Printrun
+git checkout 2.x
+git pull
+python3 -m venv v3
+. ./v3/bin/activate
+pip install --upgrade pip
+pip install cffi
+pip install -r requirements.txt
+pip install cython
+python setup.py build_ext --inplace
+
+for running:
+python pronterface.py
+
+for packaging:
+pip install pyinstaller
+pyi-makespec -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
+rm -rf dist
+pyinstaller --clean pronterface.spec -y
+(edit .plist file to add:
+<key>NSAppSleepDisabled</key>
+<true/>
+)
+(optional) codesign -s identityname dist/pronterface.app --deep
+
+setup on windows:
+(install python 3.6)
+(install python extension compile environment)
+(install git)
+git clone http://github.com/kliment/Printrun.git
+cd Printrun
+git checkout 2.x
+git pull
+\path\to\python3\python -m venv v3
+v3\Scripts\activate
+pip install --upgrade pip
+pip install cffi
+pip install -r requirements.txt
+pip install cython
+python setup.py build_ext --inplace
+
+for running:
+python pronterface.py
+
+for packaging:
+pip install pyinstaller
+pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+pyinstaller --clean pronterface.spec -y
+
