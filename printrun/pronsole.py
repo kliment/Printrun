@@ -1113,7 +1113,7 @@ class pronsole(cmd.Cmd):
                 self.log(_("Files on SD card:"))
                 self.log("\n".join(self.sdfiles))
         elif self.sdlisting:
-            self.sdfiles.append(line.strip().lower())
+            self.sdfiles.append(re.sub(" \d+","",line.strip().lower()))
 
     def _do_ls(self, echo):
         # FIXME: this was 2, but I think it should rather be 0 as in do_upload
