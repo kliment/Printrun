@@ -212,9 +212,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         except:
             pass
-        self.create_menu()
-        self.update_recent_files("recentfiles", self.settings.recentfiles)
-
+        self.menustrip = wx.MenuBar()
         self.reload_ui()
         # disable all printer controls until we connect to a printer
         self.gui_set_disconnected()
@@ -264,6 +262,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.ui_ready:
             # Store log console content
             logcontent = self.logbox.GetValue()
+            while self.menustrip.GetMenuCount():
+                self.menustrip.Remove(0)
             if(len(self.commandbox.history)):
                 #save current command box history
                 history = (self.history_file)
@@ -284,6 +284,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.reset_ui()
 
         # Create UI
+        self.create_menu()
+        self.update_recent_files("recentfiles", self.settings.recentfiles)
         if 0: #self.settings.uimode in (_("Tabbed"), _("Tabbed with platers")): #disable tabbed mode for now
             self.createTabbedGui()
         else:
@@ -734,7 +736,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def create_menu(self):
         """Create main menu"""
-        self.menustrip = wx.MenuBar()
 
         # File menu
         m = wx.Menu()
