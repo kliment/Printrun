@@ -929,7 +929,7 @@ class pronsole(cmd.Cmd):
             self.fgcode = gcoder.LightGCode(deferred = True)
         else:
             self.fgcode = gcode
-        self.fgcode.prepare(open(filename, "rU"),
+        self.fgcode.prepare(open(filename, "r", encoding="utf-8"),
                             get_home_pos(self.build_dimensions_list),
                             layer_callback = layer_callback)
         self.fgcode.estimate_duration()

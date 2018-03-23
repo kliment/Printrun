@@ -286,6 +286,10 @@ class Settings:
             defaultslicerpath=".\\slic3r\\"
         self._add(StringSetting("slicecommandpath", defaultslicerpath, _("Path to slicer"), _("Path to slicer"), "External"))
         self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        if sys.platform=="win32":
+            self._add(StringSetting("slicecommand", "slic3r-console $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        else:
+            self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "slic3r", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("start_command", "", _("Start command"), _("Executable to run when the print is started"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
