@@ -1,6 +1,6 @@
 setup on osx:
 (install python 3.6)
-(install python extension compile environment)
+(install python extension compile environment, this is automagically done if you have xcode)
 (install git)
 git clone http://github.com/kliment/Printrun.git
 cd Printrun
@@ -9,6 +9,7 @@ git pull
 python3 -m venv v3
 . ./v3/bin/activate
 pip install --upgrade pip
+pip install --upgrade setuptools
 pip install cffi
 pip install -r requirements.txt
 pip install cython
@@ -30,7 +31,7 @@ pyinstaller --clean pronterface.spec -y
 
 setup on windows:
 (install python 3.6)
-(install python extension compile environment)
+(install python extension compile environment, see https://wiki.python.org/moin/WindowsCompilers )
 (install git)
 git clone http://github.com/kliment/Printrun.git
 cd Printrun
@@ -39,6 +40,7 @@ git pull
 \path\to\python3\python -m venv v3
 v3\Scripts\activate
 pip install --upgrade pip
+pip install --upgrade setuptools
 pip install cffi
 pip install -r requirements.txt
 pip install cython
