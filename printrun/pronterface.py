@@ -2055,7 +2055,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 item = popupmenu.Append(-1, _("Add custom button"))
                 self.Bind(wx.EVT_MENU, self.cbutton_edit, item)
             self.panel.PopupMenu(popupmenu, pos)
-        elif e.Dragging() and e.ButtonDown(wx.MOUSE_BTN_LEFT):
+        elif e.Dragging() and e.LeftIsDown():
             obj = e.GetEventObject()
             scrpos = obj.ClientToScreen(e.GetPosition())
             if not hasattr(self, "dragpos"):
@@ -2069,9 +2069,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     return
             if not hasattr(self, "dragging"):
                 # init dragging of the custom button
-                if hasattr(obj, "custombutton") and obj.properties is not None:
+                if hasattr(obj, "custombutton") and (not hasattr(obj,"properties") or obj.properties is not None):
                     for b in self.custombuttons_widgets:
-                        if b.properties is None:
+                        if not hasattr(b,"properties") or b.properties is None:
                             b.Enable()
                             b.SetLabel("")
                             b.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
@@ -2122,7 +2122,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         src.SetForegroundColour(drg.fgc)
                         src.SetLabel(drg.label)
                     self.last_drag_dest = dst
-        elif hasattr(self, "dragging") and not e.ButtonDown(wx.MOUSE_BTN_LEFT):
+        elif hasattr(self, "dragging") and not e.LeftIsDown():
             # dragging finished
             obj = e.GetEventObject()
             scrpos = obj.ClientToScreen(e.GetPosition())
@@ -2133,7 +2133,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if b.GetScreenRect().Contains(scrpos):
                     dst = b
                     break
-            if dst is not None:
+            if dst is not None and hasattr(dst,"custombutton"):
                 src_i = src.custombutton
                 dst_i = dst.custombutton
                 self.custombuttons[src_i], self.custombuttons[dst_i] = self.custombuttons[dst_i], self.custombuttons[src_i]
