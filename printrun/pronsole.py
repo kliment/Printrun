@@ -145,7 +145,6 @@ class pronsole(cmd.Cmd):
         self.userm105 = 0
         self.m105_waitcycles = 0
         self.macros = {}
-        self.history_file = "~/.pronsole-history"
         self.rc_loaded = False
         self.processing_rc = False
         self.processing_args = False
@@ -170,6 +169,7 @@ class pronsole(cmd.Cmd):
         self.spool_manager = spoolmanager.SpoolManager(self)
         self.current_tool = 0   # Keep track of the extruder being used
         self.cache_dir = os.path.join(user_cache_dir("Printrun"))
+        self.history_file = os.path.join(self.cache_dir,"history")
         self.config_dir = os.path.join(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
         self.lineignorepattern=re.compile("ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
@@ -204,12 +204,11 @@ class pronsole(cmd.Cmd):
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
                 readline.parse_and_bind(self.completekey + ": complete")
-                defaulthistory = os.path.expanduser(self.history_file)
-                history = os.path.expanduser(self.history_file)
-                if not os.path.exists(defaulthistory):
-                    if not os.path.exists(self.data_dir):
-                        os.makedirs(self.data_dir)
-                    history = os.path.join(self.data_dir, "history")
+                history = (self.history_file)
+                if not os.path.exists(history):
+                    if not os.path.exists(self.cache_dir):
+                        os.makedirs(self.cache_dir)
+                    history = os.path.join(self.cache_dir, "history")
                 if os.path.exists(history):
                     readline.read_history_file(history)
             except ImportError:
@@ -250,7 +249,7 @@ class pronsole(cmd.Cmd):
                 try:
                     import readline
                     readline.set_completer(self.old_completer)
-                    readline.write_history_file(history)
+                    readline.write_history_file(self.history_file)
                 except ImportError:
                     pass
 

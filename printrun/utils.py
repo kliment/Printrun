@@ -240,3 +240,17 @@ def parse_temperature_report(report):
 def compile_file(filename):
     with open(filename) as f:
         return compile(f.read(), filename, 'exec')
+
+def read_history_from(filename):
+    history=[]
+    if os.path.exists(filename):
+        _hf=open(filename,encoding="utf-8")
+        for i in _hf:
+            history.append(i.rstrip())
+    return history
+
+def write_history_to(filename, hist):
+    _hf=open(filename,"w",encoding="utf-8")
+    for i in hist:
+        _hf.write(i+"\n")
+    _hf.close()

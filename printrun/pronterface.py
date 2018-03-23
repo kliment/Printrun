@@ -34,7 +34,8 @@ from printrun.spoolmanager import spoolmanager_gui
 from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
-    prepare_command, check_rgb_color, check_rgba_color, compile_file
+    prepare_command, check_rgb_color, check_rgba_color, compile_file, \
+    write_history_to, read_history_from
 install_locale('pronterface')
 
 try:
@@ -263,6 +264,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.ui_ready:
             # Store log console content
             logcontent = self.logbox.GetValue()
+            if(len(self.commandbox.history)):
+                #save current command box history
+                history = (self.history_file)
+                if not os.path.exists(history):
+                    if not os.path.exists(self.cache_dir):
+                        os.makedirs(self.cache_dir)
+                write_history_to(history,self.commandbox.history)
             # Create a temporary panel to reparent widgets with state we want
             # to retain across UI changes
             temppanel = wx.Panel(self)
@@ -308,6 +316,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.start_viz_thread()
         self.ui_ready = True
         self.settings.monitor=temp_monitor;
+        self.commandbox.history=read_history_from(self.history_file)
+        self.commandbox.histindex == len(self.commandbox.history)
         self.Thaw()
         if self.settings.monitor:
                 self.update_monitor()
@@ -336,6 +346,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.do_exit("")
 
     def kill(self, e=None):
+        if(len(self.commandbox.history)):
+                #save current command box history
+                history = (self.history_file)
+                if not os.path.exists(history):
+                    if not os.path.exists(self.cache_dir):
+                        os.makedirs(self.cache_dir)
+                write_history_to(history,self.commandbox.history)
         if self.p.printing or self.p.paused:
             dlg = wx.MessageDialog(self, _("Print in progress ! Are you really sure you want to quit ?"), _("Exit"), wx.YES_NO | wx.ICON_WARNING)
             if dlg.ShowModal() == wx.ID_NO:
