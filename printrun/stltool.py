@@ -164,7 +164,7 @@ class stl:
         self.facetloc = 0
         if filename is None:
             return
-        with open(filename) as f:
+        with open(filename,encoding="ascii",errors="ignore") as f:
             data = f.read()
         if "facet normal" in data[1:300] and "outer loop" in data[1:300]:
             lines = data.split("\n")
