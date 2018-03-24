@@ -404,10 +404,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.log(_("Done monitoring."))
 
     def do_pront_extrude(self, l = ""):
+        if self.p.printing and not self.paused:
+            return
         feed = self.settings.e_feedrate
         self.do_extrude_final(self.edist.GetValue(), feed)
 
     def do_pront_reverse(self, l = ""):
+        if self.p.printing and not self.paused:
+            return
         feed = self.settings.e_feedrate
         self.do_extrude_final(- self.edist.GetValue(), feed)
 
