@@ -91,8 +91,8 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     }
 
     if standalone_mode:
-        pos_mapping["tempgraph"] = (base_line + 5, 0)
-        span_mapping["tempgraph"] = (5, 6)
+        pos_mapping["tempgraph"] = (base_line + 6, 0)
+        span_mapping["tempgraph"] = (3, 2)
     elif mini_mode:
         pos_mapping["tempgraph"] = (base_line + 2, 0)
         span_mapping["tempgraph"] = (1, 5)
