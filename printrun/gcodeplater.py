@@ -151,7 +151,7 @@ class GcodePlaterPanel(PlaterPanel):
             def add_offset(layer):
                 return layer.z + model.offsets[2] if layer.z is not None else layer.z
             alllayers += [(add_offset(layer), model_i, layer_i)
-                          for (layer_i, layer) in enumerate(model.gcode.all_layers) if layer]
+                          for (layer_i, layer) in enumerate(model.gcode.all_layers) if add_offset(layer) is not None]
         alllayers.sort()
         laste = [0] * len(models)
         lasttool = [0] * len(models)
