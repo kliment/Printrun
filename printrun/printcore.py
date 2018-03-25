@@ -397,6 +397,8 @@ class printcore():
                 time.sleep(0.001)
             if not(self.priqueue.empty()):
                 self._sendnext(now=True)
+            else:
+                time.sleep(0.1)
             while self.printer and self.printing and not self.clear:
                 time.sleep(0.001)
 
