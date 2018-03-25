@@ -713,21 +713,24 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def addtexttolog(self, text):
         try:
+            max_length = 20000
+            current_length = self.logbox.GetLastPosition()
+            if current_length > max_length:
+                self.logbox.Remove(0, current_length / 10)
             currentCaretPosition = self.logbox.GetInsertionPoint()
             currentLengthOfText = self.logbox.GetLastPosition()
             if self.autoscrolldisable:
                 self.logbox.Freeze()
                 (currentSelectionStart, currentSelectionEnd) = self.logbox.GetSelection()
+                self.logbox.SetInsertionPointEnd()
                 self.logbox.AppendText(text)
                 self.logbox.SetInsertionPoint(currentCaretPosition)
                 self.logbox.SetSelection(currentSelectionStart, currentSelectionEnd)
                 self.logbox.Thaw()
             else:
+                self.logbox.SetInsertionPointEnd()
                 self.logbox.AppendText(text)
-            max_length = 20000
-            current_length = self.logbox.GetLastPosition()
-            if current_length > max_length:
-                self.logbox.Remove(0, current_length / 10)
+
         except:
             self.log(_("Attempted to write invalid text to console, which could be due to an invalid baudrate"))
 
@@ -744,7 +747,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         command = self.commandbox.GetValue()
         if not len(command):
             return
-        wx.CallAfter(self.addtexttolog, ">>> " + command + "\n")
+        logging.info(">>> " + command)
         line = self.precmd(str(command))
         self.onecmd(line)
         self.commandbox.SetSelection(0, len(command))
@@ -1078,9 +1081,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
-                    print(("The progress should be updated on the printer now: " + printer_progress_string))
+                    logging.info(("The progress should be updated on the printer now: " + printer_progress_string))
                     if len(printer_progress_string) > 25:
-                        print("Warning: The print progress message might be too long to be displayed properly")
+                        logging.info("Warning: The print progress message might be too long to be displayed properly")
                     #13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
@@ -1555,9 +1558,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if(len(gcode.filament_length_multi)>1):
             for i in enumerate(gcode.filament_length_multi):
                 if self.spool_manager.getSpoolName(i[0]) == None:
-                    print("- Extruder %d: %0.02fmm" % (i[0], i[1]))
+                    logging.info("- Extruder %d: %0.02fmm" % (i[0], i[1]))
                 else:
-                    print(("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
+                    logging.info(("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
                         " from spool '%s' (%.2fmm will remain)" %
                         (self.spool_manager.getSpoolName(i[0]),
                         self.calculate_remaining_filament(i[1], i[0]))))
@@ -1843,7 +1846,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 wx.CallAfter(self.pause)
             msg = l.split(" ", 1)
             if len(msg) > 1 and not self.p.loud:
-                wx.CallAfter(self.addtexttolog, msg[1] + "\n")
+                self.log(msg[1] + "\n")
             return True
         elif l.startswith("//"):
             command = l.split(" ", 1)
@@ -1877,7 +1880,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
                 self.update_tempdisplay()
             if not self.lineignorepattern.match(l) and not self.p.loud and (l not in ["ok", "wait"] and (not isreport or report_type & REPORT_MANUAL)):
-                wx.CallAfter(self.addtexttolog, l + "\n")
+                self.log(l)
         for listener in self.recvlisteners:
             listener(l)
 
