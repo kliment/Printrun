@@ -389,14 +389,14 @@ class printcore():
             self.send_thread = None
 
     def _sender(self):
+        if not self.paused:
+            self.lineno = 0
+            self._send("M110", -1, True)
         while not self.stop_send_thread:
-            try:
-                command = self.priqueue.get(True, 0.1)
-            except QueueEmpty:
-                continue
             while self.printer and self.printing and not self.clear:
                 time.sleep(0.001)
-            self._send(command)
+            if not(self.priqueue.empty()):
+                self._sendnext(now=True)
             while self.printer and self.printing and not self.clear:
                 time.sleep(0.001)
 
@@ -565,16 +565,16 @@ class printcore():
         if command.startswith(";@pause"):
             self.pause()
 
-    def _sendnext(self):
+    def _sendnext(self, now=False):
         if not self.printer:
             return
-        while self.printer and self.printing and not self.clear:
+        while self.printer and (self.printing or now) and not self.clear:
             time.sleep(0.001)
         # Only wait for oks when using serial connections or when not using tcp
         # in streaming mode
         if not self.printer_tcp or not self.tcp_streaming_mode:
             self.clear = False
-        if not (self.printing and self.printer and self.online):
+        if not ((self.printing or now) and self.printer and self.online):
             self.clear = True
             return
         if self.resendfrom < self.lineno and self.resendfrom > -1:
@@ -583,7 +583,8 @@ class printcore():
             return
         self.resendfrom = -1
         if not self.priqueue.empty():
-            self._send(self.priqueue.get_nowait())
+            self._send(self.priqueue.get_nowait(),self.lineno, True)
+            self.lineno += 1
             self.priqueue.task_done()
             return
         if self.printing and self.queueindex < len(self.mainqueue):
@@ -636,12 +637,13 @@ class printcore():
                 self.clear = True
             self.queueindex += 1
         else:
-            self.printing = False
-            self.clear = True
-            if not self.paused:
-                self.queueindex = 0
-                self.lineno = 0
-                self._send("M110", -1, True)
+            if not now:
+                self.printing = False
+                self.clear = True
+                if not self.paused:
+                    self.queueindex = 0
+                    self.lineno = 0
+                    self._send("M110", -1, True)
 
     def _send(self, command, lineno = 0, calcchecksum = False):
         # Only add checksums if over serial (tcp does the flow control itself)
