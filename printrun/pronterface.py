@@ -172,6 +172,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filehistory = None
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
+        self.autoscrolldisable=False
 
         # FIXME: We need to initialize the main window after loading the
         # configs to restore the size, but this might have some unforeseen
@@ -712,7 +713,17 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def addtexttolog(self, text):
         try:
-            self.logbox.AppendText(text)
+            currentCaretPosition = self.logbox.GetInsertionPoint()
+            currentLengthOfText = self.logbox.GetLastPosition()
+            if self.autoscrolldisable:
+                self.logbox.Freeze()
+                (currentSelectionStart, currentSelectionEnd) = self.logbox.GetSelection()
+                self.logbox.AppendText(text)
+                self.logbox.SetInsertionPoint(currentCaretPosition)
+                self.logbox.SetSelection(currentSelectionStart, currentSelectionEnd)
+                self.logbox.Thaw()
+            else:
+                self.logbox.AppendText(text)
             max_length = 20000
             current_length = self.logbox.GetLastPosition()
             if current_length > max_length:
@@ -725,6 +736,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def set_verbose_communications(self, e):
         self.p.loud = e.IsChecked()
+
+    def set_autoscrolldisable(self,e):
+        self.autoscrolldisable = e.IsChecked()
 
     def sendline(self, e):
         command = self.commandbox.GetValue()
@@ -812,6 +826,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                                   _("Print all G-code sent to and received from the printer."))
         m.Check(mItem.GetId(), self.p.loud)
         self.Bind(wx.EVT_MENU, self.set_verbose_communications, mItem)
+
+        mItem = m.AppendCheckItem(-1, _("Don't autoscroll"),
+                                  _("Disables automatic scrolling of the console when new text is added"))
+        m.Check(mItem.GetId(), self.autoscrolldisable)
+        self.Bind(wx.EVT_MENU, self.set_autoscrolldisable, mItem)
 
         self.menustrip.Append(m, _("&Settings"))
         self.update_macros_menu()
