@@ -1,6 +1,6 @@
 # PRINTRUN 2.X
 
-This branch holds the development of Printrun 2.x. This new version of Printrun supports Python 3 and wxPython 4 and will become the master branch in the future. All new features and developments should be merged to it.
+The master branch holds the development of Printrun 2.x. This new version of Printrun supports Python 3 and wxPython 4. All new features and developments should be merged to it.
 
 Printrun consists of printcore, pronsole and pronterface, and a small collection of helpful scripts.
 
@@ -29,7 +29,7 @@ Note for OSX users: if OSX tells you the file is corrupted, you don't need to re
 ## Linux
 ### Ubuntu/Debian
 
-There is currently no package for Printrun 2. It must be [run from source](https://github.com/kliment/Printrun/tree/2.x#running-from-source).
+There is currently no package for Printrun 2. It must be [run from source](https://github.com/kliment/Printrun/tree/master#running-from-source).
 
 ### Chrome OS 
 
@@ -129,11 +129,11 @@ sudo apt install python3-pip
 pip3 install --user pyglet
 ```
 
-Install git, clone this repository and checkout the 2.x branch:
+Install git, clone this repository:
 ```
 sudo apt install git
 git clone https://github.com/kliment/Printrun.git
-cd Printrun && git checkout -b 2.x origin/2.x
+cd Printrun
 ```
 
 ### Windows
