@@ -4,7 +4,6 @@ setup on osx:
 (install git)
 git clone http://github.com/kliment/Printrun.git
 cd Printrun
-git checkout 2.x
 git pull
 python3 -m venv v3
 . ./v3/bin/activate
@@ -35,7 +34,6 @@ setup on windows:
 (install git)
 git clone http://github.com/kliment/Printrun.git
 cd Printrun
-git checkout 2.x
 git pull
 \path\to\python3\python -m venv v3
 v3\Scripts\activate
