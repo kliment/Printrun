@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -15,28 +13,33 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "1.6.0"
+__version__ = "2.0.0rc5"
 
-from serialWrapper import Serial, SerialException, PARITY_ODD, PARITY_NONE
+import sys
+if sys.version_info.major < 3:
+    print("You need to run this on Python 3")
+    sys.exit(-1)
+
+from serial import Serial, SerialException, PARITY_ODD, PARITY_NONE
 from select import error as SelectError
 import threading
-from Queue import Queue, Empty as QueueEmpty
+from queue import Queue, Empty as QueueEmpty
 import time
 import platform
 import os
-import sys
-stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
-reload(sys).setdefaultencoding('utf8')
-sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
 import logging
 import traceback
 import errno
 import socket
 import re
-from functools import wraps
+from functools import wraps, reduce
 from collections import deque
 from printrun import gcoder
-from .utils import install_locale, decode_utf8
+from .utils import set_utf8_locale, install_locale, decode_utf8
+try:
+    set_utf8_locale()
+except:
+    pass
 install_locale('pronterface')
 from printrun.plugins import PRINTCORE_HANDLER
 
@@ -253,7 +256,12 @@ class printcore():
     def _readline(self):
         try:
             try:
-                line = self.printer.readline()
+                try:
+                    line = self.printer.readline().decode('ascii')
+                except UnicodeDecodeError:
+                    self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
+                                  "\n" + _("Maybe a bad baudrate?"))
+                    return None
                 if self.printer_tcp and not line:
                     raise OSError(-1, "Read EOF from socket")
             except socket.timeout:
@@ -271,21 +279,21 @@ class printcore():
             return line
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                self.logError(_(u"Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                self.logError(_("Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 return None
             else:
-                self.logError(_(u"SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                self.logError(_("SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 raise
         except SerialException as e:
-            self.logError(_(u"Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
+            self.logError(_("Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
             return None
         except socket.error as e:
-            self.logError(_(u"Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+            self.logError(_("Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
             return None
         except OSError as e:
             if e.errno == errno.EAGAIN:  # Not a real error, no data was available
                 return ""
-            self.logError(_(u"Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
+            self.logError(_("Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
             return None
 
     def _listen_can_continue(self):
@@ -449,7 +457,7 @@ class printcore():
         # might be calling it from the thread itself
         try:
             self.print_thread.join()
-        except RuntimeError, e:
+        except RuntimeError as e:
             if e.message == "cannot join current thread":
                 pass
             else:
@@ -661,7 +669,7 @@ class printcore():
                 try: self.sendcb(command, gline)
                 except: self.logError(traceback.format_exc())
             try:
-                self.printer.write(str(command + "\n"))
+                self.printer.write((command + "\n").encode('ascii'))
                 if self.printer_tcp:
                     try:
                         self.printer.flush()
@@ -670,14 +678,14 @@ class printcore():
                 self.writefailures = 0
             except socket.error as e:
                 if e.errno is None:
-                    self.logError(_(u"Can't write to printer (disconnected ?):") +
+                    self.logError(_("Can't write to printer (disconnected ?):") +
                                   "\n" + traceback.format_exc())
                 else:
-                    self.logError(_(u"Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                    self.logError(_("Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
             except SerialException as e:
-                self.logError(_(u"Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
+                self.logError(_("Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
                 self.writefailures += 1
             except RuntimeError as e:
-                self.logError(_(u"Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                self.logError(_("Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1

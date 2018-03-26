@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This file is part of the Printrun suite.
 #
@@ -89,7 +89,7 @@ class GcodePlaterPanel(PlaterPanel):
         self.platform_object = gcview.GCObject(self.platform)
 
     def get_objects(self):
-        return [self.platform_object] + self.models.values()
+        return [self.platform_object] + list(self.models.values())
     objects = property(get_objects)
 
     def load_file(self, filename):
@@ -99,9 +99,9 @@ class GcodePlaterPanel(PlaterPanel):
         if gcode.filament_length > 0:
             model.display_travels = False
         generator = model.load_data(gcode)
-        generator_output = generator.next()
+        generator_output = next(generator)
         while generator_output is not None:
-            generator_output = generator.next()
+            generator_output = next(generator)
         obj = gcview.GCObject(model)
         obj.offsets = [self.build_dimensions[3], self.build_dimensions[4], 0]
         obj.gcode = gcode
@@ -142,7 +142,7 @@ class GcodePlaterPanel(PlaterPanel):
         return self.export_sequential(name)
 
     def export_combined(self, name):
-        models = self.models.values()
+        models = list(self.models.values())
         last_real_position = None
         # Sort models by Z max to print smaller objects first
         models.sort(key = lambda x: x.dims[-1])
@@ -151,7 +151,7 @@ class GcodePlaterPanel(PlaterPanel):
             def add_offset(layer):
                 return layer.z + model.offsets[2] if layer.z is not None else layer.z
             alllayers += [(add_offset(layer), model_i, layer_i)
-                          for (layer_i, layer) in enumerate(model.gcode.all_layers) if layer]
+                          for (layer_i, layer) in enumerate(model.gcode.all_layers) if add_offset(layer) is not None]
         alllayers.sort()
         laste = [0] * len(models)
         lasttool = [0] * len(models)
@@ -196,7 +196,7 @@ class GcodePlaterPanel(PlaterPanel):
         logging.info(_("Exported merged G-Codes to %s") % name)
 
     def export_sequential(self, name):
-        models = self.models.values()
+        models = list(self.models.values())
         last_real_position = None
         # Sort models by Z max to print smaller objects first
         models.sort(key = lambda x: x.dims[-1])
@@ -223,7 +223,7 @@ class GcodePlaterPanel(PlaterPanel):
                         else:
                             f.write(rewrite_gline(co, l, math.cos(r), math.sin(r)) + "\n")
                 # Find the current real position
-                for i in xrange(len(model.gcode) - 1, -1, -1):
+                for i in range(len(model.gcode) - 1, -1, -1):
                     gline = model.gcode.lines[i]
                     if gline.is_move:
                         last_real_position = (- trans[0] + gline.current_x,

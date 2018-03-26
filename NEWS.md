@@ -1,3 +1,93 @@
+Printrun - 2.0.0rc5
+====================
+
+Pre-release for testing purposes.
+
+### New Features
+
+ - Slic3r integration works with Slic3r PE (959e03e)
+ - Disable extrude and retract while printing (284f793, c772209)
+ - Add disable autoscroll option (4df9d58)
+
+### Fixed Bugs
+
+ - sys.frozen problem with installed Printrun (#920)
+ - Button dragging (#690)
+ - Repetier M20 (#848)
+ - Crash on startup with tabbed mode enabled (979df4a)
+ - Absurd 3D viewer viewport rotation control (#622)
+ - STL parser and GCODE plater export Python 3 problems (f8aeafd, 2ea0835)
+
+
+Printrun - 2.0.0rc4
+====================
+
+Pre-release for testing purposes.
+
+### New Features
+
+ - Support for the T? command (#888)
+ - Have slic3r as default slicing option (#904)
+
+### Fixed Bugs
+
+ - Segmentation fault (#909)
+ - Button text incorrectly changing (#903)
+ - Dialogs resized (#905, #915)
+ - Macro duplicates (#907)
+ - Ok messages with Repetire firmware (#917)
+ - Messages printed twice in terminal (#916)
+ - Prevent race condition on exit (42d7cd0, 16ee30b)
+ - Object has no attribute 'slic3r_configs' (#865)
+
+
+Printrun - 2.0.0rc3
+====================
+
+Pre-release for testing purposes.
+
+### Fixed Bugs
+
+ - Couple of wxPython 4 incompatibilities (116fdda, eb6bd43)
+ - Couple of GTK3 visibility problems (#899, f265256, 9193014)
+ - Added spoolmanager to installed modules (#896)
+ - Setlocale issues on Windows (bf53af9)
+ - Installation on macOS and Windows (#901)
+ - Macro-related functionality (95877a4)
+ - Clicking +Z⇑ and -Z⇓ (#910)
+ - Python 3 incompatibilities (#912)
+ - Segmentation fault (#895)
+
+
+Printrun - 2.0.0rc2
+====================
+
+Pre-release for testing purposes.
+
+### Fixed Bugs
+
+ - Fix SyntaxError at startup (497179c)
+
+
+Printrun - 2.0.0rc1
+====================
+
+Pre-release for testing purpouses.
+
+### New Features
+
+ - Support the XDG Directory Specification (#866)
+    * New dependency: appdirs
+ - Port to wxPython 4 (#886)
+ - Port to Python 3 (#887)
+ - Disable tabbed mode (8590f33)
+ 
+### Fixed Bugs
+
+ - Pronsole depending on the wx module (#867)
+ - Error at loading non-existent configuration files (#890)
+
+
 Printrun - 1.6.0
 ================
 

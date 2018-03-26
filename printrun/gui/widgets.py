@@ -225,7 +225,7 @@ class ButtonEdit(wx.Dialog):
                 valid = True
             elif macro in self.pronterface.macros:
                 valid = True
-            elif hasattr(self.pronterface.__class__, u"do_" + macro):
+            elif hasattr(self.pronterface.__class__, "do_" + macro):
                 valid = False
             elif len([c for c in macro if not c.isalnum() and c != "_"]):
                 valid = False
@@ -257,7 +257,7 @@ class TempGauge(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.paint)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.bgcolor = wx.Colour()
-        self.bgcolor.SetFromName(bgcolor)
+        self.bgcolor.Set(bgcolor)
         self.width, self.height = size
         self.title = title
         self.max = maxval
@@ -288,17 +288,17 @@ class TempGauge(wx.Panel):
             lo, hi, val, valhi = cmid, cmax, val - vmid, vmax - vmid
         vv = float(val) / valhi
         rgb = lo.Red() + (hi.Red() - lo.Red()) * vv, lo.Green() + (hi.Green() - lo.Green()) * vv, lo.Blue() + (hi.Blue() - lo.Blue()) * vv
-        rgb = map(lambda x: x * 0.8, rgb)
-        return wx.Colour(*map(int, rgb))
+        rgb = (int(x * 0.8) for x in rgb)
+        return wx.Colour(*rgb)
 
     def paint(self, ev):
-        self.width, self.height = self.GetClientSizeTuple()
+        self.width, self.height = self.GetClientSize()
         self.recalc()
         x0, y0, x1, y1, xE, yE = 1, 1, self.ypt + 1, 1, self.width + 1 - 2, 20
         dc = wx.PaintDC(self)
         dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
-        cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50.100)
+        cold, medium, hot = wx.Colour(0, 167, 223), wx.Colour(239, 233, 119), wx.Colour(210, 50, 0)
         # gauge1, gauge2 = wx.Colour(255, 255, 210), (self.gaugeColour or wx.Colour(234, 82, 0))
         gauge1 = wx.Colour(255, 255, 210)
         shadow1, shadow2 = wx.Colour(110, 110, 110), self.bgcolor
@@ -350,7 +350,7 @@ class TempGauge(wx.Panel):
         setp_path.AddLineToPoint(setpoint, yE - 5)
         gc.DrawPath(setp_path)
         # draw readout
-        text = u"T\u00B0 %u/%u" % (self.value, self.setpoint)
+        text = "T\u00B0 %u/%u" % (self.value, self.setpoint)
         # gc.SetFont(gc.CreateFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD), wx.WHITE))
         # gc.DrawText(text, 29,-2)
         gc.SetFont(gc.CreateFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD), wx.WHITE))
@@ -360,7 +360,7 @@ class TempGauge(wx.Panel):
         gc.DrawText(self.title, x0 + 18, y0 + 3)
         gc.DrawText(text, x0 + 118, y0 + 3)
 
-class SpecialButton(object):
+class SpecialButton:
 
     label = None
     command = None

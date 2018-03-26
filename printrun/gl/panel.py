@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -41,12 +39,13 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
     glViewport, GL_VIEWPORT
 from pyglet import gl
-from .trackball import trackball, mulquat
+from .trackball import trackball, mulquat, axis_to_quat
 from .libtatlin.actors import vec
 
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
 
+    orbit_control=True
     orthographic = True
     color_background = (0.98, 0.98, 0.78, 1)
     do_lights = True
@@ -80,6 +79,8 @@ class wxGLPanel(wx.Panel):
         self.rot_lock = Lock()
         self.basequat = [0, 0, 0, 1]
         self.zoom_factor = 1.0
+        self.angle_z = 0
+        self.angle_x = 0
 
         self.gl_broken = False
 
@@ -97,7 +98,7 @@ class wxGLPanel(wx.Panel):
         if self.IsFrozen():
             event.Skip()
             return
-        if (wx.VERSION > (2, 9) and self.canvas.IsShownOnScreen()) or self.canvas.GetContext():
+        if self.canvas.IsShownOnScreen():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
             self.OnReshape()
@@ -324,12 +325,22 @@ class wxGLPanel(wx.Panel):
         x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
         self.zoom(factor, (x, y))
 
+    def orbit(self, p1x, p1y, p2x, p2y):
+        rz = p2x-p1x;
+        self.angle_z-=rz
+        rotz = axis_to_quat([0.0,0.0,1.0],self.angle_z)
+
+        rx = p2y-p1y;
+        self.angle_x+=rx
+        rota = axis_to_quat([1.0,0.0,0.0],self.angle_x)
+        return mulquat(rotz,rota)
+
     def handle_rotation(self, event):
         if self.initpos is None:
-            self.initpos = event.GetPositionTuple()
+            self.initpos = event.GetPosition()
         else:
             p1 = self.initpos
-            p2 = event.GetPositionTuple()
+            p2 = event.GetPosition()
             sz = self.GetClientSize()
             p1x = float(p1[0]) / (sz[0] / 2) - 1
             p1y = 1 - float(p1[1]) / (sz[1] / 2)
@@ -337,15 +348,18 @@ class wxGLPanel(wx.Panel):
             p2y = 1 - float(p2[1]) / (sz[1] / 2)
             quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
             with self.rot_lock:
-                self.basequat = mulquat(self.basequat, quat)
+                if self.orbit_control:
+                    self.basequat = self.orbit(p1x, p1y, p2x, p2y)
+                else:
+                    self.basequat = mulquat(self.basequat, quat)
             self.initpos = p2
 
     def handle_translation(self, event):
         if self.initpos is None:
-            self.initpos = event.GetPositionTuple()
+            self.initpos = event.GetPosition()
         else:
             p1 = self.initpos
-            p2 = event.GetPositionTuple()
+            p2 = event.GetPosition()
             if self.orthographic:
                 x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
                 x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])

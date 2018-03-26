@@ -20,19 +20,26 @@ import gettext
 import datetime
 import subprocess
 import shlex
+import locale
 import logging
+
+
+def set_utf8_locale():
+    """Make sure we read/write all text files in UTF-8"""
+    lang, encoding = locale.getlocale()
+    if encoding != 'UTF-8':
+        locale.setlocale(locale.LC_CTYPE, (lang, 'UTF-8'))
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not
 # found (windows)
 def install_locale(domain):
     if os.path.exists('/usr/share/pronterface/locale'):
-        gettext.install(domain, '/usr/share/pronterface/locale', unicode = 1)
+        gettext.install(domain, '/usr/share/pronterface/locale')
     elif os.path.exists('/usr/local/share/pronterface/locale'):
-        gettext.install(domain, '/usr/local/share/pronterface/locale',
-                        unicode = 1)
+        gettext.install(domain, '/usr/local/share/pronterface/locale')
     else:
-        gettext.install(domain, './locale', unicode = 1)
+        gettext.install(domain, './locale')
 
 class LogFormatter(logging.Formatter):
     def __init__(self, format_default, format_info):
@@ -80,6 +87,9 @@ def imagefile(filename):
                                    "images", filename)
     if os.path.exists(local_candidate):
         return local_candidate
+    frozen_candidate=os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),"images",filename)
+    if os.path.exists(frozen_candidate):
+        return frozen_candidate
     else:
         return os.path.join("images", filename)
 
@@ -87,6 +97,7 @@ def lookup_file(filename, prefixes):
     local_candidate = os.path.join(os.path.dirname(sys.argv[0]), filename)
     if os.path.exists(local_candidate):
         return local_candidate
+    if getattr(sys,"frozen",False): prefixes+=[getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),]
     for prefix in prefixes:
         candidate = os.path.join(prefix, filename)
         if os.path.exists(candidate):
@@ -118,12 +129,11 @@ def format_duration(delta):
     return str(datetime.timedelta(seconds = int(delta)))
 
 def prepare_command(command, replaces = None):
-    command = shlex.split(command.replace("\\", "\\\\").encode())
+    command = shlex.split(command.replace("\\", "\\\\"))
     if replaces:
         replaces["$python"] = sys.executable
         for pattern, rep in replaces.items():
             command = [bit.replace(pattern, rep) for bit in command]
-    command = [bit.encode() for bit in command]
     return command
 
 def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
@@ -136,13 +146,13 @@ def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = s
 def get_command_output(command, replaces):
     p = run_command(command, replaces,
                     stdout = subprocess.PIPE, stderr = subprocess.STDOUT,
-                    blocking = False)
+                    blocking = False, universal_newlines = True)
     return p.stdout.read()
 
 def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8] + ".g"
 
-class RemainingTimeEstimator(object):
+class RemainingTimeEstimator:
 
     drift = None
     gcode = None
@@ -191,7 +201,7 @@ def parse_build_dimensions(bdim):
     # etc
     bdl = re.findall("([-+]?[0-9]*\.?[0-9]*)", bdim)
     defaults = [200, 200, 100, 0, 0, 0, 0, 0, 0]
-    bdl = filter(None, bdl)
+    bdl = [b for b in bdl if b]
     bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
     if len(bdl_float) < len(defaults):
         bdl_float += [defaults[i] for i in range(len(bdl_float), len(defaults))]
@@ -205,7 +215,7 @@ def get_home_pos(build_dimensions):
 def hexcolor_to_float(color, components):
     color = color[1:]
     numel = len(color)
-    ndigits = numel / components
+    ndigits = numel // components
     div = 16 ** ndigits - 1
     return tuple(round(float(int(color[i:i + ndigits], 16)) / div, 2)
                  for i in range(0, numel, ndigits))
@@ -226,3 +236,21 @@ tempreport_exp = re.compile("([TB]\d*):([-+]?\d*\.?\d*)(?: ?\/)?([-+]?\d*\.?\d*)
 def parse_temperature_report(report):
     matches = tempreport_exp.findall(report)
     return dict((m[0], (m[1], m[2])) for m in matches)
+
+def compile_file(filename):
+    with open(filename) as f:
+        return compile(f.read(), filename, 'exec')
+
+def read_history_from(filename):
+    history=[]
+    if os.path.exists(filename):
+        _hf=open(filename,encoding="utf-8")
+        for i in _hf:
+            history.append(i.rstrip())
+    return history
+
+def write_history_to(filename, hist):
+    _hf=open(filename,"w",encoding="utf-8")
+    for i in hist:
+        _hf.write(i+"\n")
+    _hf.close()

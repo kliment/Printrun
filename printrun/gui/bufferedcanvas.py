@@ -90,7 +90,7 @@ class BufferedCanvas(wx.Panel):
         self.Refresh()
 
     def getWidthHeight(self):
-        width, height = self.GetClientSizeTuple()
+        width, height = self.GetClientSize()
         if width == 0:
             width = 1
         if height == 0:
@@ -103,7 +103,7 @@ class BufferedCanvas(wx.Panel):
 
     def onPaint(self, event):
         # Blit the front buffer to the screen
-        w, h = self.GetClientSizeTuple()
+        w, h = self.GetClientSize()
         if not w or not h:
             return
         else:

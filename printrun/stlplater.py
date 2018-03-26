@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This file is part of the Printrun suite.
 #
@@ -74,7 +74,7 @@ class showstl(wx.Window):
         self.prevsel = -1
 
     def prepare_model(self, m, scale):
-        m.bitmap = wx.EmptyBitmap(800, 800, 32)
+        m.bitmap = wx.Bitmap(800, 800, 32)
         dc = wx.MemoryDC()
         dc.SelectObject(m.bitmap)
         dc.SetBackground(wx.Brush((0, 0, 0, 0)))
@@ -105,7 +105,7 @@ class showstl(wx.Window):
     def move(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             if self.initpos is not None:
-                currentpos = event.GetPositionTuple()
+                currentpos = event.GetPosition()
                 delta = (0.5 * (currentpos[0] - self.initpos[0]),
                          -0.5 * (currentpos[1] - self.initpos[1])
                          )
@@ -116,10 +116,10 @@ class showstl(wx.Window):
             self.parent.right(event)
         elif event.Dragging():
             if self.initpos is None:
-                self.initpos = event.GetPositionTuple()
+                self.initpos = event.GetPosition()
             self.Refresh()
             dc = wx.ClientDC(self)
-            p = event.GetPositionTuple()
+            p = event.GetPosition()
             dc.DrawLine(self.initpos[0], self.initpos[1], p[0], p[1])
             del dc
         else:
@@ -195,11 +195,11 @@ class showstl(wx.Window):
             dc = wx.ClientDC(self)
         scale = 2
         dc.SetPen(wx.Pen(wx.Colour(100, 100, 100)))
-        for i in xrange(20):
+        for i in range(20):
             dc.DrawLine(0, i * scale * 10, 400, i * scale * 10)
             dc.DrawLine(i * scale * 10, 0, i * scale * 10, 400)
         dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
-        for i in xrange(4):
+        for i in range(4):
             dc.DrawLine(0, i * scale * 50, 400, i * scale * 50)
             dc.DrawLine(i * scale * 50, 0, i * scale * 50, 400)
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
@@ -335,7 +335,7 @@ class StlPlaterPanel(PlaterPanel):
         best_match = None
         best_facet = None
         best_dist = float("inf")
-        for key, model in self.models.iteritems():
+        for key, model in self.models.items():
             transformation = transformation_matrix(model)
             transformed = model.transform(transformation)
             if not transformed.intersect_box(ray_near, ray_far):
@@ -478,7 +478,7 @@ class StlPlaterPanel(PlaterPanel):
         if self.simarrange_path:
             try:
                 self.autoplate_simarrange()
-            except Exception, e:
+            except Exception as e:
                 logging.warning(_("Failed to use simarrange for plating, "
                                   "falling back to the standard method. "
                                   "The error was: ") + e)
@@ -494,7 +494,7 @@ class StlPlaterPanel(PlaterPanel):
                    "-m",  # Pack around center
                    "-x", str(int(self.build_dimensions[0])),
                    "-y", str(int(self.build_dimensions[1]))] + files
-        p = subprocess.Popen(command, stdout = subprocess.PIPE)
+        p = subprocess.Popen(command, stdout = subprocess.PIPE, universal_newlines = True)
 
         pos_regexp = re.compile("File: (.*) minx: ([0-9]+), miny: ([0-9]+), minrot: ([0-9]+)")
         for line in p.stdout:
@@ -510,7 +510,7 @@ class StlPlaterPanel(PlaterPanel):
                 x = float(bits[1])
                 y = float(bits[2])
                 rot = -float(bits[3])
-                for name, model in models.items():
+                for name, model in list(models.items()):
                     # FIXME: not sure this is going to work superwell with utf8
                     if model.filename == filename:
                         model.offsets[0] = x + self.build_dimensions[3]

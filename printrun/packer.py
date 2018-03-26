@@ -23,7 +23,7 @@ import Polygon
 import Polygon.Utils
 
 
-class Vector2(object):
+class Vector2:
     """Simple 2d vector / point class."""
 
     def __init__(self, x=0, y=0):
@@ -60,7 +60,7 @@ class Vector2(object):
         )
 
 
-class Rect(object):
+class Rect:
     """Simple rectangle object."""
     def __init__(self, width, height, data={}):
         self.width = width
@@ -110,7 +110,7 @@ class Rect(object):
         return self.width * self.height
 
 
-class PointList(object):
+class PointList:
     """Methods for transforming a list of points."""
     def __init__(self, points=[]):
         self.points = points
@@ -142,7 +142,7 @@ class PointList(object):
         return segs
 
 
-class LineSegment(object):
+class LineSegment:
     def __init__(self, start, end):
         self.start = start
         self.end = end
@@ -177,7 +177,7 @@ class LineSegment(object):
         return closest_point.distance(point)
 
 
-class Packer(object):
+class Packer:
     def __init__(self):
         self._rects = []
 

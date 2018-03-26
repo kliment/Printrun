@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This file is part of the Printrun suite.
 #
@@ -42,7 +42,7 @@ from .gl.libtatlin import actors
 def vec(*args):
     return (GLfloat * len(args))(*args)
 
-class stlview(object):
+class stlview:
     def __init__(self, facets, batch):
         # Create the vertex and normal arrays.
         vertices = []
@@ -54,7 +54,7 @@ class stlview(object):
                 normals.extend(i[0])
 
         # Create a list of triangle indices.
-        indices = range(3 * len(facets))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
+        indices = list(range(3 * len(facets)))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
         self.vertex_list = batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -167,7 +167,7 @@ class StlViewPanel(wxGLPanel):
         RMB: nothing
             with shift move viewport
         """
-        self.mousepos = event.GetPositionTuple()
+        self.mousepos = event.GetPosition()
         if event.Dragging() and event.LeftIsDown():
             self.handle_rotation(event)
         elif event.Dragging() and event.RightIsDown():
@@ -187,7 +187,7 @@ class StlViewPanel(wxGLPanel):
     def handle_wheel(self, event):
         delta = event.GetWheelRotation()
         factor = 1.05
-        x, y = event.GetPositionTuple()
+        x, y = event.GetPosition()
         x, y, _ = self.mouse_to_3d(x, y, local_transform = True)
         if delta > 0:
             self.zoom(factor, (x, y))

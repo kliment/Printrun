@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This file is part of the Printrun suite.
 #
@@ -18,15 +18,16 @@
 import sys
 import os
 from stat import S_IRUSR, S_IWUSR, S_IRGRP, S_IROTH
-from distutils.core import setup
+from setuptools import setup
+from setuptools import find_packages
 from distutils.command.install import install as _install
 from distutils.command.install_data import install_data as _install_data
 try:
     from Cython.Build import cythonize
     extensions = cythonize("printrun/gcoder_line.pyx")
     from Cython.Distutils import build_ext
-except ImportError, e:
-    print "WARNING: Failed to cythonize: %s" % e
+except ImportError as e:
+    print("WARNING: Failed to cythonize: %s" % e)
     # Debug helper: uncomment these:
     # import traceback
     # traceback.print_exc()
@@ -48,7 +49,7 @@ class install (_install):
         if self.prefix:
             length += len(self.prefix)
         if length:
-            for counter in xrange(len(outputs)):
+            for counter in range(len(outputs)):
                 outputs[counter] = outputs[counter][length:]
         data = "\n".join(outputs)
         try:
@@ -88,10 +89,10 @@ class uninstall(_install):
         if self.prefix:
             prepend += self.prefix
         if len(prepend):
-            for counter in xrange(len(files)):
+            for counter in range(len(files)):
                 files[counter] = prepend + files[counter].rstrip()
         for file in files:
-            print "Uninstalling", file
+            print("Uninstalling", file)
             try:
                 os.unlink(file)
             except:
@@ -100,7 +101,7 @@ class uninstall(_install):
 ops = ("install", "build", "sdist", "uninstall", "clean", "build_ext")
 
 if len(sys.argv) < 2 or sys.argv[1] not in ops:
-    print "Please specify operation : %s" % " | ".join(ops)
+    print("Please specify operation : %s" % " | ".join(ops))
     raise SystemExit
 
 prefix = None
@@ -141,14 +142,14 @@ for basedir, subdirs, files in os.walk("locale"):
     if not basedir.endswith("LC_MESSAGES"):
         continue
     destpath = os.path.join("share", "pronterface", basedir)
-    files = filter(lambda x: x.endswith(".mo"), files)
-    files = map(lambda x: os.path.join(basedir, x), files)
+    files = (f for f in files if f.endswith(".mo"))
+    files = [os.path.join(basedir, f) for f in files]
     data_files.append((destpath, files))
 
 extra_data_dirs = ["css"]
 for extra_data_dir in extra_data_dirs:
     for basedir, subdirs, files in os.walk(extra_data_dir):
-        files = map(lambda x: os.path.join(basedir, x), files)
+        files = [os.path.join(basedir, x) for x in files]
         destpath = os.path.join("share", "pronterface", basedir)
         data_files.append((destpath, files))
 
@@ -165,8 +166,9 @@ setup(name = "Printrun",
       url = "http://github.com/kliment/Printrun/",
       license = "GPLv3",
       data_files = data_files,
-      packages = ["printrun", "printrun.gl", "printrun.gl.libtatlin", "printrun.gui", "printrun.power", "printrun.plugins", "printrun.spoolmanager"],
+      packages = find_packages(),
       scripts = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
       cmdclass = cmdclass,
       ext_modules = extensions,
+      classifiers=["Programming Language :: Python :: 3 :: Only"],
       )

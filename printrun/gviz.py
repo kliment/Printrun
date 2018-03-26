@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from Queue import Queue
+from queue import Queue
 from collections import deque
 import numpy
 import wx
@@ -38,15 +38,15 @@ class GvizBaseFrame(wx.Frame):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         self.toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
-        self.toolbar.AddSimpleTool(1, wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"), '')
-        self.toolbar.AddSimpleTool(2, wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"), '')
+        self.toolbar.AddTool(1, '', wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"),)
+        self.toolbar.AddTool(2, '', wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddSimpleTool(3, wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"), '')
-        self.toolbar.AddSimpleTool(4, wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"), '')
-        self.toolbar.AddLabelTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"), longHelp = '')
+        self.toolbar.AddTool(3, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
+        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
+        self.toolbar.AddTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddSimpleTool(6, wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelpString = _("Inject G-Code"), longHelpString = _("Insert code at the beginning of this layer"))
-        self.toolbar.AddSimpleTool(7, wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelpString = _("Edit layer"), longHelpString = _("Edit the G-Code of this layer"))
+        self.toolbar.AddTool(6, '', wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
+        self.toolbar.AddTool(7, '', wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Edit layer"), longHelp = _("Edit the G-Code of this layer"))
 
         vbox.Add(self.toolbar, 0, border = 5)
 
@@ -120,7 +120,7 @@ class GvizWindow(GvizBaseFrame):
             if self.initpos is not None:
                 self.initpos = None
         elif event.Dragging():
-            e = event.GetPositionTuple()
+            e = event.GetPosition()
             if self.initpos is None:
                 self.initpos = e
                 self.basetrans = self.p.translate
@@ -197,19 +197,19 @@ class Gviz(wx.Panel):
         self.arcpen = wx.Pen(wx.Colour(255, 0, 0), penwidth)
         self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
-        self.fades = [wx.Pen(wx.Colour(250 - 0.6 ** i * 100, 250 - 0.6 ** i * 100, 200 - 0.4 ** i * 50), penwidth) for i in xrange(6)]
+        self.fades = [wx.Pen(wx.Colour(int(250 - 0.6 ** i * 100), int(250 - 0.6 ** i * 100), int(200 - 0.4 ** i * 50)), penwidth) for i in range(6)]
         self.penslist = [self.mainpen, self.travelpen, self.hlpen] + self.fades
         self.bgcolor = wx.Colour()
-        self.bgcolor.SetFromName(bgcolor)
-        self.blitmap = wx.EmptyBitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
+        self.bgcolor.Set(bgcolor)
+        self.blitmap = wx.Bitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
         self.paint_overlay = None
 
     def inject(self):
-        layer = self.layers.index(self.layerindex)
+        layer = self.layers[self.layerindex]
         injector(self.gcode, self.layerindex, layer)
 
     def editlayer(self):
-        layer = self.layers.index(self.layerindex)
+        layer = self.layers[self.layerindex]
         injector_edit(self.gcode, self.layerindex, layer)
 
     def clearhilights(self):
@@ -275,7 +275,7 @@ class Gviz(wx.Panel):
 
     def resize(self, event):
         old_basescale = self.basescale
-        width, height = self.GetClientSizeTuple()
+        width, height = self.GetClientSize()
         if width < 1 or height < 1:
             return
         self.size = (width, height)
@@ -312,20 +312,20 @@ class Gviz(wx.Panel):
                 self.scale[1] * x[5],)
 
     def _drawlines(self, dc, lines, pens):
-        scaled_lines = map(self._line_scaler, lines)
+        scaled_lines = [self._line_scaler(l) for l in lines]
         dc.DrawLineList(scaled_lines, pens)
 
     def _drawarcs(self, dc, arcs, pens):
-        scaled_arcs = map(self._arc_scaler, arcs)
+        scaled_arcs = [self._arc_scaler(a) for a in arcs]
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         for i in range(len(scaled_arcs)):
-            dc.SetPen(pens[i] if type(pens) == list else pens)
+            dc.SetPen(pens[i] if isinstance(pens, list) else pens)
             dc.DrawArc(*scaled_arcs[i])
 
     def repaint_everything(self):
         width = self.scale[0] * self.build_dimensions[0]
         height = self.scale[1] * self.build_dimensions[1]
-        self.blitmap = wx.EmptyBitmap(width + 1, height + 1, -1)
+        self.blitmap = wx.Bitmap(width + 1, height + 1, -1)
         dc = wx.MemoryDC()
         dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250, 250, 200)))
@@ -333,10 +333,10 @@ class Gviz(wx.Panel):
         dc.SetPen(wx.Pen(wx.Colour(180, 180, 150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
-                for x in xrange(int(self.build_dimensions[0] / grid_unit) + 1):
+                for x in range(int(self.build_dimensions[0] / grid_unit) + 1):
                     draw_x = self.scale[0] * x * grid_unit
                     dc.DrawLine(draw_x, 0, draw_x, height)
-                for y in xrange(int(self.build_dimensions[1] / grid_unit) + 1):
+                for y in range(int(self.build_dimensions[1] / grid_unit) + 1):
                     draw_y = self.scale[1] * (self.build_dimensions[1] - y * grid_unit)
                     dc.DrawLine(0, draw_y, width, draw_y)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
@@ -418,10 +418,10 @@ class Gviz(wx.Panel):
         self.gcode = gcode
         self.showall = showall
         generator = self.add_parsed_gcodes(gcode)
-        generator_output = generator.next()
+        generator_output = next(generator)
         while generator_output is not None:
             yield generator_output
-            generator_output = generator.next()
+            generator_output = next(generator)
         max_layers = len(self.layers)
         if hasattr(self.parent, "layerslider"):
             self.parent.layerslider.SetRange(0, max_layers - 1)
@@ -430,7 +430,7 @@ class Gviz(wx.Panel):
 
     def addfile(self, gcode = None, showall = False):
         generator = self.addfile_perlayer(gcode, showall)
-        while generator.next() is not None:
+        while next(generator) is not None:
             continue
 
     def _get_movement(self, start_pos, gline):

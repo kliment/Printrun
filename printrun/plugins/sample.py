@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -26,7 +24,7 @@ class SampleHandler(PrinterEventHandler):
         pass
 
     def __write(self, field, text = ""):
-        print "%-15s - %s" % (field, text)
+        print("%-15s - %s" % (field, text))
 
     def on_init(self):
         self.__write("on_init")

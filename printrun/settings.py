@@ -15,6 +15,8 @@
 
 import logging
 import traceback
+import os
+import sys
 
 from functools import wraps
 
@@ -39,11 +41,11 @@ def setting_add_tooltip(func):
                 deftxt += repr(self.default) + "  " + resethelp
         helptxt += sep + deftxt
         if len(helptxt):
-            widget.SetToolTipString(helptxt)
+            widget.SetToolTip(helptxt)
         return widget
     return decorator
 
-class Setting(object):
+class Setting:
 
     DEFAULT_GROUP = "Printer"
 
@@ -145,7 +147,9 @@ class SpinSetting(wxSetting):
 
     def get_specific_widget(self, parent):
         from wx.lib.agw.floatspin import FloatSpin
-        self.widget = FloatSpin(parent, -1, min_val = self.min, max_val = self.max, digits = 0)
+        import wx
+        self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max)
+        self.widget.SetDigits(0)
         self.widget.SetValue(self.value)
         orig = self.widget.GetValue
         self.widget.GetValue = lambda: int(orig())
@@ -155,7 +159,9 @@ class FloatSpinSetting(SpinSetting):
 
     def get_specific_widget(self, parent):
         from wx.lib.agw.floatspin import FloatSpin
-        self.widget = FloatSpin(parent, -1, value = self.value, min_val = self.min, max_val = self.max, increment = self.increment, digits = 2)
+        import wx
+        self.widget = wx.SpinCtrlDouble(parent, -1, initial = self.value, min = self.min, max = self.max, inc = self.increment)
+        self.widget.SetDigits(2)
         return self.widget
 
 class BooleanSetting(wxSetting):
@@ -216,7 +222,9 @@ class BuildDimensionsSetting(wxSetting):
         import wx
         build_dimensions = parse_build_dimensions(self.value)
         self.widgets = []
-        w = lambda val, m, M: self.widgets.append(FloatSpin(parent, -1, value = val, min_val = m, max_val = M, digits = 2))
+        def w(val, m, M):
+            self.widgets.append(wx.SpinCtrlDouble(parent, -1, initial = val, min = m, max = M))
+            self.widgets[-1].SetDigits(2)
         addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
         addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
         self.widget = wx.GridBagSizer()
@@ -253,7 +261,7 @@ class BuildDimensionsSetting(wxSetting):
         values = [float(w.GetValue()) for w in self.widgets]
         self.value = "%.02fx%.02fx%.02f%+.02f%+.02f%+.02f%+.02f%+.02f%+.02f" % tuple(values)
 
-class Settings(object):
+class Settings:
     def __baudrate_list(self): return ["2400", "9600", "19200", "38400", "57600", "115200", "250000"]
 
     def __init__(self, root):
@@ -271,8 +279,18 @@ class Settings(object):
         self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (mm/min)"), "Printer"))
         self._add(SpinSetting("z_feedrate", 100, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (mm/min)"), "Printer"))
         self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (mm/min)"), "Printer"))
-        self._add(StringSetting("slicecommand", "python skeinforge/skeinforge_application/skeinforge_utilities/skeinforge_craft.py $s", _("Slice command"), _("Slice command"), "External"))
-        self._add(StringSetting("sliceoptscommand", "python skeinforge/skeinforge_application/skeinforge.py", _("Slicer options command"), _("Slice settings command"), "External"))
+        defaultslicerpath=""
+        if sys.platform=="darwin" and getattr( sys, 'frozen', False ):
+            defaultslicerpath="/Applications/Slic3r.app/Contents/MacOS/"
+        if sys.platform=="win32" and getattr( sys, 'frozen', False ):
+            defaultslicerpath=".\\slic3r\\"
+        self._add(StringSetting("slicecommandpath", defaultslicerpath, _("Path to slicer"), _("Path to slicer"), "External"))
+        self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        if sys.platform=="win32":
+            self._add(StringSetting("slicecommand", "slic3r-console $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        else:
+            self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        self._add(StringSetting("sliceoptscommand", "slic3r", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("start_command", "", _("Start command"), _("Executable to run when the print is started"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
         self._add(StringSetting("error_command", "", _("Error command"), _("Executable to run when an error occurs"), "External"))
@@ -361,7 +379,7 @@ class Settings(object):
         except AttributeError:
             pass
         try:
-            return getattr(self, "__%s_alias" % key)().keys()
+            return list(getattr(self, "__%s_alias" % key)().keys())
         except AttributeError:
             pass
         return []

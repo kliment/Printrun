@@ -17,8 +17,10 @@ import logging
 
 try:
     import wx
+    if wx.VERSION < (4,):
+        raise ImportError()
 except:
-    logging.error(_("WX is not installed. This program requires WX to run."))
+    logging.error(_("WX >= 4 is not installed. This program requires WX >= 4 to run."))
     raise
 
 from printrun.utils import install_locale
@@ -39,7 +41,7 @@ class ToggleablePane(wx.BoxSizer):
         self.parentpanel = parentpanel
         self.parentsizers = parentsizers
         self.panepanel = root.newPanel(parentpanel)
-        self.button = wx.Button(parentpanel, -1, label, size = (22, 18), style = wx.BU_EXACTFIT)
+        self.button = wx.Button(parentpanel, -1, label, size = (35, 18), style = wx.BU_EXACTFIT)
         self.button.Bind(wx.EVT_BUTTON, self.toggle)
 
     def toggle(self, event):
@@ -199,12 +201,9 @@ class MainWindow(wx.Frame):
             self.notebook.AddPage(page4panel, _("G-Code Plater"))
         self.panel.SetSizer(self.notesizer)
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
-        self.Bind(wx.EVT_CLOSE, self.kill)
 
         # Custom buttons
-        if wx.VERSION > (2, 9): self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
-        else: self.cbuttonssizer = wx.GridBagSizer()
-        self.cbuttonssizer = wx.GridBagSizer()
+        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
         self.centerpanel = self.newPanel(page1panel2)
         self.centerpanel.SetSizer(self.cbuttonssizer)
         rightsizer.Add(self.centerpanel, 0, wx.ALIGN_CENTER)
@@ -255,8 +254,7 @@ class MainWindow(wx.Frame):
             logpanel = self.newPanel(left_real_panel)
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
-        if wx.VERSION > (2, 9): self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
-        else: self.cbuttonssizer = wx.GridBagSizer()
+        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
         self.centerpanel = self.newPanel(vizpanel)
         self.centerpanel.SetSizer(self.cbuttonssizer)
         viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
@@ -276,7 +274,6 @@ class MainWindow(wx.Frame):
         self.mainsizer.Add(lowerpanel, 1, wx.EXPAND)
         self.panel.SetSizer(self.mainsizer)
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
-        self.Bind(wx.EVT_CLOSE, self.kill)
 
         self.mainsizer.Layout()
         # This prevents resizing below a reasonnable value

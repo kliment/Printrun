@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -16,15 +14,16 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import Queue
+import queue
 import sys
 import time
 import threading
 import traceback
-import cStringIO as StringIO
+import io as StringIO
 import subprocess
 import glob
 import logging
+import re
 
 try: import simplejson as json
 except ImportError: import json
@@ -36,13 +35,17 @@ from printrun.spoolmanager import spoolmanager_gui
 from .utils import install_locale, setup_logging, dosify, \
     iconfile, configfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
-    prepare_command, check_rgb_color, check_rgba_color
+    prepare_command, check_rgb_color, check_rgba_color, compile_file, \
+    write_history_to, read_history_from
 install_locale('pronterface')
 
 try:
     import wx
+    import wx.adv
+    if wx.VERSION < (4,):
+        raise ImportError()
 except:
-    logging.error(_("WX is not installed. This program requires WX to run."))
+    logging.error(_("WX >= 4 is not installed. This program requires WX >= 4 to run."))
     raise
 
 from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit
@@ -63,7 +66,7 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
-class ConsoleOutputHandler(object):
+class ConsoleOutputHandler:
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
     We also redirect stdout and stderr to ourself to catch print messages and al."""
 
@@ -91,10 +94,6 @@ class ConsoleOutputHandler(object):
         except:
             pass
         if self.print_on_stdout:
-            try:
-                data = data.encode("utf-8")
-            except:
-                pass
             self.stdout.write(data)
 
     def flush(self):
@@ -162,7 +161,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.current_pos = [0, 0, 0]
         self.paused = False
         self.uploading = False
-        self.sentglines = Queue.Queue(0)
+        self.sentglines = queue.Queue(0)
         self.cpbuttons = {
             "motorsoff": SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), _("Switch all motors off")),
             "extrude": SpecialButton(_("Extrude"), ("pront_extrude"), (225, 200, 200), _("Advance extruder by set length")),
@@ -173,6 +172,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filehistory = None
         self.autoconnect = False
         self.parse_cmdline(sys.argv[1:])
+        self.autoscrolldisable=False
 
         # FIXME: We need to initialize the main window after loading the
         # configs to restore the size, but this might have some unforeseen
@@ -187,7 +187,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.window_ready = True
-
+        self.Bind(wx.EVT_CLOSE, self.closewin)
         # set feedrates in printcore for pause/resume
         self.p.xy_feedrate = self.settings.xy_feedrate
         self.p.z_feedrate = self.settings.z_feedrate
@@ -195,18 +195,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.panel.SetBackgroundColour(self.bgcolor)
         customdict = {}
         try:
-            execfile(configfile("custombtn.txt"), customdict)
+            exec(compile_file(configfile("custombtn.txt")), customdict)
             if len(customdict["btns"]):
                 if not len(self.custombuttons):
                     try:
                         self.custombuttons = customdict["btns"]
-                        for n in xrange(len(self.custombuttons)):
+                        for n in range(len(self.custombuttons)):
                             self.cbutton_save(n, self.custombuttons[n])
                         os.rename("custombtn.txt", "custombtn.old")
                         rco = open("custombtn.txt", "w")
                         rco.write(_("# I moved all your custom buttons into .pronsolerc.\n# Please don't add them here any more.\n# Backup of your old buttons is in custombtn.old\n"))
                         rco.close()
-                    except IOError, x:
+                    except IOError as x:
                         logging.error(str(x))
                 else:
                     logging.warning(_("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"))
@@ -214,9 +214,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         except:
             pass
-        self.create_menu()
-        self.update_recent_files("recentfiles", self.settings.recentfiles)
-
+        self.menustrip = wx.MenuBar()
         self.reload_ui()
         # disable all printer controls until we connect to a printer
         self.gui_set_disconnected()
@@ -257,25 +255,40 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def reload_ui(self, *args):
         if not self.window_ready: return
+        temp_monitor=self.settings.monitor
+        self.settings.monitor=False
+        self.update_monitor()
         self.Freeze()
 
         # If UI is being recreated, delete current one
         if self.ui_ready:
             # Store log console content
             logcontent = self.logbox.GetValue()
+            while self.menustrip.GetMenuCount():
+                self.menustrip.Remove(0)
+            if(len(self.commandbox.history)):
+                #save current command box history
+                history = (self.history_file)
+                if not os.path.exists(history):
+                    if not os.path.exists(self.cache_dir):
+                        os.makedirs(self.cache_dir)
+                write_history_to(history,self.commandbox.history)
             # Create a temporary panel to reparent widgets with state we want
             # to retain across UI changes
             temppanel = wx.Panel(self)
             # TODO: add viz widgets to statefulControls
-            for control in self.statefulControls:
-                control.GetContainingSizer().Detach(control)
-                control.Reparent(temppanel)
-            self.panel.DestroyChildren()
+            statefuls=self.statefulControls
+            for control in statefuls:
+                    control.GetContainingSizer().Detach(control)
+                    control.Reparent(temppanel)
+            #self.panel.DestroyChildren() #do not destroy children when redrawing so that any timers currently running do not have references to missing objects - they get recreated if necessary anyway
             self.gwindow.Destroy()
             self.reset_ui()
 
         # Create UI
-        if 0: #self.settings.uimode in (_("Tabbed"), _("Tabbed with platers")): #disable tabbed mode for now
+        self.create_menu()
+        self.update_recent_files("recentfiles", self.settings.recentfiles)
+        if self.settings.uimode in (_("Tabbed"), _("Tabbed with platers")):
             self.createTabbedGui()
         else:
             self.createGui(self.settings.uimode == _("Compact"),
@@ -305,10 +318,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.panel.Layout()
             if self.fgcode:
                 self.start_viz_thread()
-            if self.settings.monitor:
-                self.update_monitor()
         self.ui_ready = True
+        self.settings.monitor=temp_monitor;
+        self.commandbox.history=read_history_from(self.history_file)
+        self.commandbox.histindex == len(self.commandbox.history)
         self.Thaw()
+        if self.settings.monitor:
+                self.update_monitor()
 
     def on_resize(self, event):
         wx.CallAfter(self.on_resize_real)
@@ -329,7 +345,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def on_exit(self, event):
         self.Close()
 
-    def kill(self, e):
+    def closewin(self, e):
+        e.StopPropagation()
+        self.do_exit("")
+
+    def kill(self, e=None):
+        if(len(self.commandbox.history)):
+                #save current command box history
+                history = (self.history_file)
+                if not os.path.exists(history):
+                    if not os.path.exists(self.cache_dir):
+                        os.makedirs(self.cache_dir)
+                write_history_to(history,self.commandbox.history)
         if self.p.printing or self.p.paused:
             dlg = wx.MessageDialog(self, _("Print in progress ! Are you really sure you want to quit ?"), _("Exit"), wx.YES_NO | wx.ICON_WARNING)
             if dlg.ShowModal() == wx.ID_NO:
@@ -378,16 +405,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.log(_("Done monitoring."))
 
     def do_pront_extrude(self, l = ""):
+        if self.p.printing and not self.paused:
+            self.log(_("Please pause or stop print before extruding."))
+            return
         feed = self.settings.e_feedrate
         self.do_extrude_final(self.edist.GetValue(), feed)
 
     def do_pront_reverse(self, l = ""):
+        if self.p.printing and not self.paused:
+            self.log(_("Please pause or stop print before reversing."))
+            return
         feed = self.settings.e_feedrate
         self.do_extrude_final(- self.edist.GetValue(), feed)
 
     def do_settemp(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.htemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.temps.keys():
@@ -402,12 +435,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.logError(_("Printer is not online."))
             else:
                 self.logError(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_bedtemp(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.btemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
             for i in self.bedtemps.keys():
@@ -422,12 +455,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     self.logError(_("Printer is not online."))
             else:
                 self.logError(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_setspeed(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.speed_slider.GetValue())
             else:
                 l = l.lower()
@@ -437,12 +470,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.log(_("Setting print speed factor to %d%%.") % speed)
             else:
                 self.logError(_("Printer is not online."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a speed. (%s)") % (repr(x),))
 
     def do_setflow(self, l = ""):
         try:
-            if l.__class__ not in (str, unicode) or not len(l):
+            if not isinstance(l, str) or not len(l):
                 l = str(self.flow_slider.GetValue())
             else:
                 l = l.lower()
@@ -452,7 +485,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.log(_("Setting print flow factor to %d%%.") % flow)
             else:
                 self.logError(_("Printer is not online."))
-        except Exception, x:
+        except Exception as x:
             self.logError(_("You must enter a flow. (%s)") % (repr(x),))
 
     def setbedgui(self, f):
@@ -547,9 +580,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def platecb(self, name):
         self.log(_("Plated %s") % name)
         self.loadfile(None, name)
-        #if self.settings.uimode in (_("Tabbed"), _("Tabbed with platers")):
+        if self.settings.uimode in (_("Tabbed"), _("Tabbed with platers")):
             # Switch to page 1 (Status tab)
-        #    self.notebook.SetSelection(1)
+            self.notebook.SetSelection(1)
 
     def do_editgcode(self, e = None):
         if self.filename is not None:
@@ -680,11 +713,24 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def addtexttolog(self, text):
         try:
-            self.logbox.AppendText(text)
             max_length = 20000
             current_length = self.logbox.GetLastPosition()
             if current_length > max_length:
                 self.logbox.Remove(0, current_length / 10)
+            currentCaretPosition = self.logbox.GetInsertionPoint()
+            currentLengthOfText = self.logbox.GetLastPosition()
+            if self.autoscrolldisable:
+                self.logbox.Freeze()
+                (currentSelectionStart, currentSelectionEnd) = self.logbox.GetSelection()
+                self.logbox.SetInsertionPointEnd()
+                self.logbox.AppendText(text)
+                self.logbox.SetInsertionPoint(currentCaretPosition)
+                self.logbox.SetSelection(currentSelectionStart, currentSelectionEnd)
+                self.logbox.Thaw()
+            else:
+                self.logbox.SetInsertionPointEnd()
+                self.logbox.AppendText(text)
+
         except:
             self.log(_("Attempted to write invalid text to console, which could be due to an invalid baudrate"))
 
@@ -694,11 +740,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def set_verbose_communications(self, e):
         self.p.loud = e.IsChecked()
 
+    def set_autoscrolldisable(self,e):
+        self.autoscrolldisable = e.IsChecked()
+
     def sendline(self, e):
         command = self.commandbox.GetValue()
         if not len(command):
             return
-        wx.CallAfter(self.addtexttolog, ">>> " + command + "\n")
+        logging.info(">>> " + command)
         line = self.precmd(str(command))
         self.onecmd(line)
         self.commandbox.SetSelection(0, len(command))
@@ -711,7 +760,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def create_menu(self):
         """Create main menu"""
-        self.menustrip = wx.MenuBar()
 
         # File menu
         m = wx.Menu()
@@ -725,7 +773,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filehistory.UseMenu(recent)
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
-        m.AppendMenu(wx.ID_ANY, _("&Recent Files"), recent)
+        m.Append(wx.ID_ANY, _("&Recent Files"), recent)
         self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console"), _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
@@ -782,6 +830,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         m.Check(mItem.GetId(), self.p.loud)
         self.Bind(wx.EVT_MENU, self.set_verbose_communications, mItem)
 
+        mItem = m.AppendCheckItem(-1, _("Don't autoscroll"),
+                                  _("Disables automatic scrolling of the console when new text is added"))
+        m.Check(mItem.GetId(), self.autoscrolldisable)
+        self.Bind(wx.EVT_MENU, self.set_autoscrolldisable, mItem)
+
         self.menustrip.Append(m, _("&Settings"))
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
@@ -814,7 +867,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def about(self, event):
         """Show about dialog"""
 
-        info = wx.AboutDialogInfo()
+        info = wx.adv.AboutDialogInfo()
 
         info.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
         info.SetName('Printrun')
@@ -828,7 +881,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                        % self.settings.total_filament_used
 
         info.SetDescription(description)
-        info.SetCopyright('(C) 2011 - 2015')
+        info.SetCopyright('(C) 2011 - 2018')
         info.SetWebSite('https://github.com/kliment/Printrun')
 
         licence = """\
@@ -848,7 +901,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         info.AddDeveloper('Kliment Yanev')
         info.AddDeveloper('Guillaume Seguin')
 
-        wx.AboutBox(info)
+        wx.adv.AboutBox(info)
 
     #  --------------------------------------------------------------
     #  Settings & command line handling (including update callbacks)
@@ -863,6 +916,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("display_progress_on_printer", False, _("Display progress on printer"), _("Show progress on printers display (sent via M117, might not be supported by all printers)"), "Printer"))
         self.settings._add(SpinSetting("printer_progress_update_interval", 10., 0, 120, _("Printer progress update interval"), _("Interval in which pronterface sends the progress to the printer if enabled, in seconds"), "Printer"))
         self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), ], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
+        #self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), _("Tabbed"), _("Tabbed with platers")], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
         self.settings._add(ComboSetting("controlsmode", "Standard", ["Standard", "Mini"], _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
@@ -884,7 +938,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(HiddenSetting("last_window_maximized", False))
         self.settings._add(HiddenSetting("last_sash_position", -1))
         self.settings._add(HiddenSetting("last_bed_temperature", 0.0))
-        self.settings._add(HiddenSetting("last_file_path", u""))
+        self.settings._add(HiddenSetting("last_file_path", ""))
         self.settings._add(HiddenSetting("last_file_filter", 0))
         self.settings._add(HiddenSetting("last_temperature", 0.0))
         self.settings._add(StaticTextSetting("separator_2d_viewer", _("2D viewer options"), "", group = "Viewer"))
@@ -1027,9 +1081,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
-                    print("The progress should be updated on the printer now: " + printer_progress_string)
+                    logging.info(("The progress should be updated on the printer now: " + printer_progress_string))
                     if len(printer_progress_string) > 25:
-                        print("Warning: The print progress message might be too long to be displayed properly")
+                        logging.info("Warning: The print progress message might be too long to be displayed properly")
                     #13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
@@ -1043,7 +1097,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 gc = self.sentglines.get_nowait()
                 wx.CallAfter(self.gviz.addgcodehighlight, gc)
                 self.sentglines.task_done()
-        except Queue.Empty:
+        except queue.Empty:
             pass
 
     def statuschecker(self):
@@ -1292,7 +1346,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def slice_func(self):
         try:
             output_filename = self.model_to_gcode_filename(self.filename)
-            pararray = prepare_command(self.settings.slicecommand,
+            pararray = prepare_command(self.settings.slicecommandpath+self.settings.slicecommand,
                                        {"$s": self.filename, "$o": output_filename})
             if self.settings.slic3rintegration:
                 for cat, config in self.slic3r_configs.items():
@@ -1300,7 +1354,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         fpath = os.path.join(self.slic3r_configpath, cat, config)
                         pararray += ["--load", fpath]
             self.log(_("Running ") + " ".join(pararray))
-            self.slicep = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
+            self.slicep = subprocess.Popen(pararray, stdin=subprocess.DEVNULL, stderr = subprocess.STDOUT, stdout = subprocess.PIPE, universal_newlines = True)
             while True:
                 o = self.slicep.stdout.read(1)
                 if o == '' and self.slicep.poll() is not None: break
@@ -1326,6 +1380,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.filename = fn
         self.slicing = False
         self.slicep = None
+        self.loadbtn.SetLabel, _("Load file")
 
     def slice(self, filename):
         wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
@@ -1423,6 +1478,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                             gcode = gcode)
         except PronterfaceQuitException:
             return
+        except Exception as e:
+            self.log(str(e))
+            wx.CallAfter(self.post_gcode_load,False,True)
+            return
         wx.CallAfter(self.post_gcode_load)
 
     def layer_ready_cb(self, gcode, layer):
@@ -1453,20 +1512,21 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.start_viz_thread(gcode)
         return gcode
 
-    def post_gcode_load(self, print_stats = True):
+    def post_gcode_load(self, print_stats = True, failed=False):
         # Must be called in wx.CallAfter for safety
         self.loading_gcode = False
-        self.SetTitle(_(u"Pronterface - %s") % self.filename)
-        message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
-        self.log(message)
-        self.statusbar.SetStatusText(message)
-        self.savebtn.Enable(True)
+        if failed == False:
+            self.SetTitle(_("Pronterface - %s") % self.filename)
+            message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
+            self.log(message)
+            self.statusbar.SetStatusText(message)
+            self.savebtn.Enable(True)
         self.loadbtn.SetLabel(_("Load File"))
         self.printbtn.SetLabel(_("Print"))
         self.pausebtn.SetLabel(_("Pause"))
         self.pausebtn.Disable()
         self.recoverbtn.Disable()
-        if self.p.online:
+        if failed==False and self.p.online:
             self.printbtn.Enable()
         self.toolbarsizer.Layout()
         self.viz_last_layer = None
@@ -1498,12 +1558,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if(len(gcode.filament_length_multi)>1):
             for i in enumerate(gcode.filament_length_multi):
                 if self.spool_manager.getSpoolName(i[0]) == None:
-                    print "- Extruder %d: %0.02fmm" % (i[0], i[1])
+                    logging.info("- Extruder %d: %0.02fmm" % (i[0], i[1]))
                 else:
-                    print ("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
+                    logging.info(("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
                         " from spool '%s' (%.2fmm will remain)" %
                         (self.spool_manager.getSpoolName(i[0]),
-                        self.calculate_remaining_filament(i[1], i[0])))
+                        self.calculate_remaining_filament(i[1], i[0]))))
         else:
             if self.spool_manager.getSpoolName(0) != None:
                 self.log(_(
@@ -1519,45 +1579,48 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.log(_("Estimated duration: %d layers, %s") % gcode.estimate_duration())
 
     def loadviz(self, gcode = None):
-        self.gviz.clear()
-        self.gwindow.p.clear()
-        if gcode is not None:
-            generator = self.gviz.addfile_perlayer(gcode, True)
-            next_layer = 0
-            # Progressive loading of visualization
-            # We load layers up to the last one which has been processed in GCoder
-            # (self.viz_last_layer)
-            # Once the GCode has been entirely loaded, this variable becomes None,
-            # indicating that we can do the last generator call to finish the
-            # loading of the visualization, which will itself return None.
-            # During preloading we verify that the layer we added is the one we
-            # expected through the assert call.
-            while True:
-                global pronterface_quitting
-                if pronterface_quitting:
-                    return
-                max_layer = self.viz_last_layer
-                if max_layer is None:
-                    break
-                while next_layer <= max_layer:
-                    assert(generator.next() == next_layer)
+        try:
+            self.gviz.clear()
+            self.gwindow.p.clear()
+            if gcode is not None:
+                generator = self.gviz.addfile_perlayer(gcode, True)
+                next_layer = 0
+                # Progressive loading of visualization
+                # We load layers up to the last one which has been processed in GCoder
+                # (self.viz_last_layer)
+                # Once the GCode has been entirely loaded, this variable becomes None,
+                # indicating that we can do the last generator call to finish the
+                # loading of the visualization, which will itself return None.
+                # During preloading we verify that the layer we added is the one we
+                # expected through the assert call.
+                while True:
+                    global pronterface_quitting
+                    if pronterface_quitting:
+                        return
+                    max_layer = self.viz_last_layer
+                    if max_layer is None:
+                        break
+                    while next_layer <= max_layer:
+                        assert(next(generator) == next_layer)
+                        next_layer += 1
+                    time.sleep(0.1)
+                generator_output = next(generator)
+                while generator_output is not None:
+                    assert(generator_output in (None, next_layer))
                     next_layer += 1
-                time.sleep(0.1)
-            generator_output = generator.next()
-            while generator_output is not None:
-                assert(generator_output in (None, next_layer))
-                next_layer += 1
-                generator_output = generator.next()
-        else:
-            # If GCode is not being loaded asynchroneously, it is already
-            # loaded, so let's make visualization sequentially
-            gcode = self.fgcode
-            self.gviz.addfile(gcode)
-        wx.CallAfter(self.gviz.Refresh)
-        # Load external window sequentially now that everything is ready.
-        # We can't really do any better as the 3D viewer might clone the
-        # finalized model from the main visualization
-        self.gwindow.p.addfile(gcode)
+                    generator_output = next(generator)
+            else:
+                # If GCode is not being loaded asynchroneously, it is already
+                # loaded, so let's make visualization sequentially
+                gcode = self.fgcode
+                self.gviz.addfile(gcode)
+            wx.CallAfter(self.gviz.Refresh)
+            # Load external window sequentially now that everything is ready.
+            # We can't really do any better as the 3D viewer might clone the
+            # finalized model from the main visualization
+            self.gwindow.p.addfile(gcode)
+        except:
+            wx.CallAfter(self.gviz.Refresh)
 
     #  --------------------------------------------------------------
     #  File saving handling
@@ -1783,7 +1846,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 wx.CallAfter(self.pause)
             msg = l.split(" ", 1)
             if len(msg) > 1 and not self.p.loud:
-                wx.CallAfter(self.addtexttolog, msg[1] + "\n")
+                self.log(msg[1] + "\n")
             return True
         elif l.startswith("//"):
             command = l.split(" ", 1)
@@ -1817,7 +1880,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 wx.CallAfter(self.tempdisp.SetLabel, self.tempreadings.strip().replace("ok ", ""))
                 self.update_tempdisplay()
             if not self.lineignorepattern.match(l) and not self.p.loud and (l not in ["ok", "wait"] and (not isreport or report_type & REPORT_MANUAL)):
-                wx.CallAfter(self.addtexttolog, l + "\n")
+                self.log(l)
         for listener in self.recvlisteners:
             listener(l)
 
@@ -1829,7 +1892,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.recvlisteners.remove(self.listfiles)
             wx.CallAfter(self.filesloaded)
         elif self.sdlisting:
-            self.sdfiles.append(line.strip().lower())
+            self.sdfiles.append(re.sub(" \d+$","",line.strip().lower()))
 
     def waitforsdresponse(self, l):
         if "file.open failed" in l:
@@ -1873,7 +1936,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         for i, btndef in enumerate(custombuttons):
             if btndef is None:
                 if i == len(custombuttons) - 1:
-                    self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (19, 18), style = wx.BU_EXACTFIT)
+                    self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (35, 18), style = wx.BU_EXACTFIT)
                     b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
@@ -1884,7 +1947,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.SetToolTip(wx.ToolTip(_("Execute command: ") + btndef.command))
                 if btndef.background:
                     b.SetBackgroundColour(btndef.background)
-                    rr, gg, bb = b.GetBackgroundColour().Get()
+                    rr, gg, bb, aa = b.GetBackgroundColour().Get() #last item is alpha
                     if 0.3 * rr + 0.59 * gg + 0.11 * bb < 60:
                         b.SetForegroundColour("#ffffff")
                 b.custombutton = i
@@ -1893,7 +1956,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.Bind(wx.EVT_BUTTON, self.process_button)
                 b.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
             self.custombuttons_widgets.append(b)
-            if type(self.cbuttonssizer) == wx.GridBagSizer:
+            if isinstance(self.cbuttonssizer, wx.GridBagSizer):
                 self.cbuttonssizer.Add(b, pos = (i // 4, i % 4), flag = wx.EXPAND)
             else:
                 self.cbuttonssizer.Add(b, flag = wx.EXPAND)
@@ -1939,9 +2002,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.save_in_rc(("button %d" % n), '')
         elif bdef.background:
             colour = bdef.background
-            if type(colour) not in (str, unicode):
-                if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                    colour = map(lambda x: x % 256, colour)
+            if not isinstance(colour, str):
+                if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
+                    colour = (x % 256 for x in colour)
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                 else:
                     colour = wx.Colour(colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -1957,9 +2020,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             bedit.command.SetValue(button.properties.command)
             if button.properties.background:
                 colour = button.properties.background
-                if type(colour) not in (str, unicode):
-                    if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                        colour = map(lambda x: x % 256, colour)
+                if not isinstance(colour, str):
+                    if isinstance(colour, tuple) and tuple(map(type, colour)) == (int, int, int):
+                        colour = (x % 256 for x in colour)
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                     else:
                         colour = wx.Colour(colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
@@ -2022,7 +2085,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 item = popupmenu.Append(-1, _("Add custom button"))
                 self.Bind(wx.EVT_MENU, self.cbutton_edit, item)
             self.panel.PopupMenu(popupmenu, pos)
-        elif e.Dragging() and e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
+        elif e.Dragging() and e.LeftIsDown():
             obj = e.GetEventObject()
             scrpos = obj.ClientToScreen(e.GetPosition())
             if not hasattr(self, "dragpos"):
@@ -2036,9 +2099,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     return
             if not hasattr(self, "dragging"):
                 # init dragging of the custom button
-                if hasattr(obj, "custombutton") and obj.properties is not None:
+                if hasattr(obj, "custombutton") and (not hasattr(obj,"properties") or obj.properties is not None):
                     for b in self.custombuttons_widgets:
-                        if b.properties is None:
+                        if not hasattr(b,"properties") or b.properties is None:
                             b.Enable()
                             b.SetLabel("")
                             b.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
@@ -2089,7 +2152,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         src.SetForegroundColour(drg.fgc)
                         src.SetLabel(drg.label)
                     self.last_drag_dest = dst
-        elif hasattr(self, "dragging") and not e.ButtonIsDown(wx.MOUSE_BTN_LEFT):
+        elif hasattr(self, "dragging") and not e.LeftIsDown():
             # dragging finished
             obj = e.GetEventObject()
             scrpos = obj.ClientToScreen(e.GetPosition())
@@ -2100,7 +2163,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if b.GetScreenRect().Contains(scrpos):
                     dst = b
                     break
-            if dst is not None:
+            if dst is not None and hasattr(dst,"custombutton"):
                 src_i = src.custombutton
                 dst_i = dst.custombutton
                 self.custombuttons[src_i], self.custombuttons[dst_i] = self.custombuttons[dst_i], self.custombuttons[src_i]
@@ -2162,23 +2225,39 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.update_macros_menu()
 
     def new_macro(self, e = None):
-        dialog = wx.Dialog(self, -1, _("Enter macro name"), size = (260, 85))
-        panel = wx.Panel(dialog, -1)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        wx.StaticText(panel, -1, _("Macro name:"), (8, 14))
-        dialog.namectrl = wx.TextCtrl(panel, -1, '', (110, 8), size = (130, 24), style = wx.TE_PROCESS_ENTER)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        okb = wx.Button(dialog, wx.ID_OK, _("Ok"), size = (60, 24))
-        dialog.Bind(wx.EVT_TEXT_ENTER, lambda e: dialog.EndModal(wx.ID_OK), dialog.namectrl)
-        hbox.Add(okb)
-        hbox.Add(wx.Button(dialog, wx.ID_CANCEL, _("Cancel"), size = (60, 24)))
-        vbox.Add(panel)
-        vbox.Add(hbox, 1, wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, 10)
-        dialog.SetSizer(vbox)
+        dialog = wx.Dialog(self, -1, _("Enter macro name"))
+        text = wx.StaticText(dialog, -1, _("Macro name:"))
+        namectrl = wx.TextCtrl(dialog, -1, style = wx.TE_PROCESS_ENTER)
+        okb = wx.Button(dialog, wx.ID_OK, _("Ok"))
+        dialog.Bind(wx.EVT_TEXT_ENTER,
+            lambda e: dialog.EndModal(wx.ID_OK), namectrl)
+        cancel_button = wx.Button(dialog, wx.ID_CANCEL, _("Cancel"))
+
+        # Layout
+        ## Group the buttons horizontally
+        buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttons_sizer.Add(okb, 0)
+        buttons_sizer.Add(cancel_button, 0)
+        ## Set a minimum size for the name control box
+        min_size = namectrl.GetTextExtent('Default Long Macro Name')
+        namectrl.SetMinSize(wx.Size(min_size.width, -1))
+        ## Group the text and the name control box horizontally
+        name_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        name_sizer.Add(text, 0, flag = wx.ALIGN_CENTER)
+        name_sizer.AddSpacer(10)
+        name_sizer.Add(namectrl, 1, wx.EXPAND)
+        ## Group everything vertically
+        dialog_sizer = wx.BoxSizer(wx.VERTICAL)
+        dialog_sizer.Add(name_sizer, 0, border = 10,
+            flag = wx.LEFT | wx.TOP | wx.RIGHT)
+        dialog_sizer.Add(buttons_sizer, 0, border = 10,
+            flag = wx.ALIGN_CENTER | wx.ALL)
+        dialog.SetSizerAndFit(dialog_sizer)
         dialog.Centre()
+
         macro = ""
         if dialog.ShowModal() == wx.ID_OK:
-            macro = dialog.namectrl.GetValue()
+            macro = namectrl.GetValue()
             if macro != "":
                 wx.CallAfter(self.edit_macro, macro)
         dialog.Destroy()
@@ -2188,7 +2267,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if macro == "": return self.new_macro()
         if macro in self.macros:
             old_def = self.macros[macro]
-        elif len([c for c in macro.encode("ascii", "replace") if not c.isalnum() and c != "_"]):
+        elif len([chr(c) for c in macro.encode("ascii", "replace") if not chr(c).isalnum() and chr(c) != "_"]):
             self.log(_("Macro name may contain only ASCII alphanumeric symbols and underscores"))
             return
         elif hasattr(self.__class__, "do_" + macro):
@@ -2206,7 +2285,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             while True:
                 item = self.macros_menu.FindItemByPosition(1)
                 if item is None: break
-                self.macros_menu.DeleteItem(item)
+                self.macros_menu.DestroyItem(item)
         except:
             pass
         for macro in self.macros.keys():
@@ -2222,9 +2301,17 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         orig_appname = self.app.GetAppName()
         self.app.SetAppName("Slic3r")
         configpath = wx.StandardPaths.Get().GetUserDataDir()
-        self.app.SetAppName(orig_appname)
         self.slic3r_configpath = configpath
         configfile = os.path.join(configpath, "slic3r.ini")
+        if not os.path.exists(configfile):
+            self.app.SetAppName("Slic3rPE")
+            configpath = wx.StandardPaths.Get().GetUserDataDir()
+            self.slic3r_configpath = configpath
+            configfile = os.path.join(configpath, "slic3r.ini")
+        if not os.path.exists(configfile):
+            self.settings.slic3rintegration=False;
+            return
+        self.app.SetAppName(orig_appname)
         config = self.read_slic3r_config(configfile)
         version = config.get("dummy", "version") # Slic3r version
         self.slic3r_configs = {}
@@ -2250,10 +2337,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def read_slic3r_config(self, configfile, parser = None):
         """Helper to read a Slic3r configuration file"""
-        import ConfigParser
-        parser = ConfigParser.RawConfigParser()
+        import configparser
+        parser = configparser.RawConfigParser()
 
-        class add_header(object):
+        class add_header:
             def __init__(self, f):
                 self.f = f
                 self.header = '[dummy]'
@@ -2264,6 +2351,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     finally: self.header = None
                 else:
                     return self.f.readline()
+
+            def __iter__(self):
+                import itertools
+                return itertools.chain([self.header], iter(self.f))
+
         parser.readfp(add_header(open(configfile)), configfile)
         return parser
 

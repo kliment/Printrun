@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -18,6 +16,7 @@
 import cmd
 import glob
 import os
+import platform
 import time
 import threading
 import sys
@@ -47,7 +46,7 @@ from printrun.spoolmanager import spoolmanager
 
 if os.name == "nt":
     try:
-        import _winreg
+        import winreg
     except:
         pass
 READLINE = True
@@ -66,9 +65,9 @@ REPORT_NONE = 0
 REPORT_POS = 1
 REPORT_TEMP = 2
 REPORT_MANUAL = 4
-DEG = u"\N{DEGREE SIGN}"
+DEG = "\N{DEGREE SIGN}"
 
-class Status(object):
+class Status:
 
     def __init__(self):
         self.extruder_temp = 0
@@ -146,7 +145,6 @@ class pronsole(cmd.Cmd):
         self.userm105 = 0
         self.m105_waitcycles = 0
         self.macros = {}
-        self.history_file = "~/.pronsole-history"
         self.rc_loaded = False
         self.processing_rc = False
         self.processing_args = False
@@ -171,9 +169,10 @@ class pronsole(cmd.Cmd):
         self.spool_manager = spoolmanager.SpoolManager(self)
         self.current_tool = 0   # Keep track of the extruder being used
         self.cache_dir = os.path.join(user_cache_dir("Printrun"))
+        self.history_file = os.path.join(self.cache_dir,"history")
         self.config_dir = os.path.join(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
-        self.lineignorepattern=re.compile("ok ?\d*$|busy: ?processing|busy: ?heating")
+        self.lineignorepattern=re.compile("ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -205,12 +204,11 @@ class pronsole(cmd.Cmd):
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
                 readline.parse_and_bind(self.completekey + ": complete")
-                defaulthistory = os.path.expanduser(self.history_file)
-                history = os.path.expanduser(self.history_file)
-                if not os.path.exists(defaulthistory):
-                    if not os.path.exists(self.data_dir):
-                        os.makedirs(self.data_dir)
-                    history = os.path.join(self.data_dir, "history")
+                history = (self.history_file)
+                if not os.path.exists(history):
+                    if not os.path.exists(self.cache_dir):
+                        os.makedirs(self.cache_dir)
+                    history = os.path.join(self.cache_dir, "history")
                 if os.path.exists(history):
                     readline.read_history_file(history)
             except ImportError:
@@ -227,7 +225,7 @@ class pronsole(cmd.Cmd):
                 else:
                     if self.use_rawinput:
                         try:
-                            line = raw_input(self.prompt)
+                            line = input(self.prompt)
                         except EOFError:
                             self.log("")
                             self.do_exit("")
@@ -251,12 +249,12 @@ class pronsole(cmd.Cmd):
                 try:
                     import readline
                     readline.set_completer(self.old_completer)
-                    readline.write_history_file(history)
+                    readline.write_history_file(self.history_file)
                 except ImportError:
                     pass
 
     def confirm(self):
-        y_or_n = raw_input("y/n: ")
+        y_or_n = input("y/n: ")
         if y_or_n == "y":
             return True
         elif y_or_n != "n":
@@ -264,11 +262,11 @@ class pronsole(cmd.Cmd):
         return False
 
     def log(self, *msg):
-        msg = u"".join(unicode(i) for i in msg)
+        msg = "".join(str(i) for i in msg)
         logging.info(msg)
 
     def logError(self, *msg):
-        msg = u"".join(unicode(i) for i in msg)
+        msg = "".join(str(i) for i in msg)
         logging.error(msg)
         if not self.settings.error_command:
             return
@@ -471,6 +469,7 @@ class pronsole(cmd.Cmd):
             self.logError("Empty macro - cancelled")
             return
         macro = None
+        namespace={}
         pycode = "def macro(self,*arg):\n"
         if "\n" not in macro_def.strip():
             pycode += self.compile_macro_line("  " + macro_def.strip())
@@ -478,7 +477,11 @@ class pronsole(cmd.Cmd):
             lines = macro_def.split("\n")
             for l in lines:
                 pycode += self.compile_macro_line(l)
-        exec pycode
+        exec(pycode,namespace)
+        try:
+            macro=namespace['macro']
+        except:
+            pass
         return macro
 
     def start_macro(self, macro_name, prev_definition = "", suppress_instructions = False):
@@ -502,7 +505,7 @@ class pronsole(cmd.Cmd):
 
     def do_macro(self, args):
         if args.strip() == "":
-            self.print_topics("User-defined macros", map(str, self.macros.keys()), 15, 80)
+            self.print_topics("User-defined macros", [str(k) for k in self.macros.keys()], 15, 80)
             return
         arglist = args.split(None, 1)
         macro_name = arglist[0]
@@ -558,7 +561,7 @@ class pronsole(cmd.Cmd):
                 self.save_in_rc("set " + var, "set %s %s" % (var, value))
         except AttributeError:
             logging.debug(_("Unknown variable '%s'") % var)
-        except ValueError, ve:
+        except ValueError as ve:
             if hasattr(ve, "from_validator"):
                 self.logError(_("Bad value %s for variable '%s': %s") % (str, var, ve.args[0]))
             else:
@@ -608,22 +611,32 @@ class pronsole(cmd.Cmd):
         finally:
             self.processing_rc = False
 
-    def load_default_rc(self, rc_filename=None):
-        defaultconfig = os.path.expanduser("~/.pronsolerc")
-        if rc_filename:
-            config = rc_filename
-        elif hasattr(sys, "frozen") and sys.frozen in ["windows_exe", "console_exe"]:
-            config = "printrunconf.ini"
-        elif os.path.exists(defaultconfig):
-            config = defaultconfig
+    def load_default_rc(self):
+        # Check if a configuration file exists in an "old" location,
+        # if not, use the "new" location provided by appdirs
+        if os.path.exists(os.path.expanduser("~/.pronsolerc")):
+            config = os.path.expanduser("~/.pronsolerc")
+        elif os.path.exists(os.path.expanduser("~/printrunconf.ini")):
+            config = os.path.expanduser("~/printrunconf.ini")
         else:
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
-            config = os.path.join(self.config_dir, "pronsolerc")
+
+            if platform.system() == 'Windows':
+                config_name = "printrunconf.ini"
+            else:
+                config_name = "pronsolerc"
+
+            config = os.path.join(self.config_dir, config_name)
+
+        # Load the default configuration file
         try:
             self.load_rc(config)
-        except IOError:
-            self.logError(_("Error loading config file \"%s\".") % config)
+        except FileNotFoundError:
+            # Make sure the filename is initialized,
+            # and create the file if it doesn't exist
+            self.rc_filename = config
+            open(self.rc_filename, 'a').close()
 
     def save_in_rc(self, key, definition):
         """
@@ -676,7 +689,7 @@ class pronsole(cmd.Cmd):
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
             # else:
             #    self.log("Removed '"+key+"' from '"+self.rc_filename+"'")
-        except Exception, e:
+        except Exception as e:
             self.logError("Saving failed for ", key + ":", str(e))
         finally:
             del rci, rco
@@ -719,8 +732,8 @@ class pronsole(cmd.Cmd):
             try:
                 self.load_rc(config)
             except EnvironmentError as err:
-                print ("ERROR: Unable to load configuration file: %s" %
-                       str(err)[10:])
+                print(("ERROR: Unable to load configuration file: %s" %
+                       str(err)[10:]))
                 sys.exit(1)
         if not self.rc_loaded:
             self.load_default_rc()
@@ -823,17 +836,17 @@ class pronsole(cmd.Cmd):
         baselist = []
         if os.name == "nt":
             try:
-                key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
                 i = 0
                 while(1):
-                    baselist += [_winreg.EnumValue(key, i)[1]]
+                    baselist += [winreg.EnumValue(key, i)[1]]
                     i += 1
             except:
                 pass
 
         for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*", "/dev/cu.*", "/dev/rfcomm*"]:
             baselist += glob.glob(g)
-        return filter(self._bluetoothSerialFilter, baselist)
+        return [p for p in baselist if self._bluetoothSerialFilter(p)]
 
     def _bluetoothSerialFilter(self, serial):
         return not ("Bluetooth" in serial or "FireFly" in serial)
@@ -916,7 +929,7 @@ class pronsole(cmd.Cmd):
             self.fgcode = gcoder.LightGCode(deferred = True)
         else:
             self.fgcode = gcode
-        self.fgcode.prepare(open(filename, "rU"),
+        self.fgcode.prepare(open(filename, "r", encoding="utf-8"),
                             get_home_pos(self.build_dimensions_list),
                             layer_callback = layer_callback)
         self.fgcode.estimate_duration()
@@ -950,11 +963,11 @@ class pronsole(cmd.Cmd):
                 return
         try:
             if settings:
-                command = self.settings.sliceoptscommand
+                command = self.settings.slicecommandpath+self.settings.sliceoptscommand
                 self.log(_("Entering slicer settings: %s") % command)
                 run_command(command, blocking = True)
             else:
-                command = self.settings.slicecommand
+                command = self.settings.slicecommandpath+self.settings.slicecommand
                 stl_name = l[0]
                 gcode_name = stl_name.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")
                 run_command(command,
@@ -963,7 +976,7 @@ class pronsole(cmd.Cmd):
                             blocking = True)
                 self.log(_("Loading sliced file."))
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
-        except Exception, e:
+        except Exception as e:
             self.logError(_("Slicing failed: %s") % e)
 
     def complete_slice(self, text, line, begidx, endidx):
@@ -1100,7 +1113,7 @@ class pronsole(cmd.Cmd):
                 self.log(_("Files on SD card:"))
                 self.log("\n".join(self.sdfiles))
         elif self.sdlisting:
-            self.sdfiles.append(line.strip().lower())
+            self.sdfiles.append(re.sub(" \d+$","",line.strip().lower()))
 
     def _do_ls(self, echo):
         # FIXME: this was 2, but I think it should rather be 0 as in do_upload
@@ -1712,7 +1725,7 @@ class pronsole(cmd.Cmd):
             self.onecmd(command)
 
     def do_run_script(self, l):
-        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE)
+        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE, universal_newlines = True)
         for line in p.stdout.readlines():
             self.log("<< " + line.strip())
 
@@ -1720,7 +1733,7 @@ class pronsole(cmd.Cmd):
         self.log(_("Runs a custom script. Current gcode filename can be given using $s token."))
 
     def do_run_gcode_script(self, l):
-        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE)
+        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE, universal_newlines = True)
         for line in p.stdout.readlines():
             self.onecmd(line.strip())
 

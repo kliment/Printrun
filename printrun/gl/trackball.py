@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
@@ -35,7 +33,7 @@ def trackball(p1x, p1y, p2x, p2y, r):
     a = cross(p2, p1)
 
     d = map(lambda x, y: x - y, p1, p2)
-    t = math.sqrt(sum(map(lambda x: x * x, d))) / (2.0 * TRACKBALLSIZE)
+    t = math.sqrt(sum(x * x for x in d)) / (2.0 * TRACKBALLSIZE)
 
     if t > 1.0:
         t = 1.0
@@ -46,9 +44,9 @@ def trackball(p1x, p1y, p2x, p2y, r):
     return axis_to_quat(a, phi)
 
 def axis_to_quat(a, phi):
-    lena = math.sqrt(sum(map(lambda x: x * x, a)))
-    q = map(lambda x: x * (1 / lena), a)
-    q = map(lambda x: x * math.sin(phi / 2.0), q)
+    lena = math.sqrt(sum(x * x for x in a))
+    q = [x * (1 / lena) for x in a]
+    q = [x * math.sin(phi / 2.0) for x in q]
     q.append(math.cos(phi / 2.0))
     return q
 
