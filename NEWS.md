@@ -1,3 +1,24 @@
+Printrun - 2.0.0rc5
+====================
+
+Pre-release for testing purposes.
+
+### New Features
+
+ - Slic3r integration works with Slic3r PE (959e03e)
+ - Disable extrude and retract while printing (284f793, c772209)
+ - Add disable autoscroll option (4df9d58)
+
+### Fixed Bugs
+
+ - sys.frozen problem with installed Printrun (#920)
+ - Button dragging (#690)
+ - Repetier M20 (#848)
+ - Crash on startup with tabbed mode enabled (979df4a)
+ - Absurd 3D viewer viewport rotation control (#622)
+ - STL parser and GCODE plater export Python 3 problems (f8aeafd, 2ea0835)
+
+
 Printrun - 2.0.0rc4
 ====================
 
@@ -18,7 +39,6 @@ Pre-release for testing purposes.
  - Messages printed twice in terminal (#916)
  - Prevent race condition on exit (42d7cd0, 16ee30b)
  - Object has no attribute 'slic3r_configs' (#865)
- 
 
 
 Printrun - 2.0.0rc3
