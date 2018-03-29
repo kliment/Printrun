@@ -392,7 +392,7 @@ class pronsole(cmd.Cmd):
                 self.log("Setting bed temp to 0")
             self.p.send_now("M140 S0.0")
         self.log("Disconnecting from printer...")
-        if self.p.printing:
+        if self.p.printing and l is not "force":
             self.log(_("Are you sure you want to exit while printing?\n\
 (this will terminate the print)."))
             if not self.confirm():

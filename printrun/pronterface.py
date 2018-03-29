@@ -347,7 +347,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def closewin(self, e):
         e.StopPropagation()
-        self.do_exit("")
+        self.do_exit("force")
 
     def kill(self, e=None):
         if(len(self.commandbox.history)):
