@@ -14,6 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import platform
 import queue
 import sys
 import time
@@ -945,7 +946,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "Viewer", increment = 0.1), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "Viewer"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "Viewer"), self.update_gviz_params)
-        self.settings._add(StringSetting("bgcolor", "#FFFFFF", _("Background color"), _("Pronterface background color"), "Colors"), self.reload_ui, validate = check_rgb_color)
+        self.settings._add(StringSetting("bgcolor", self._preferred_bgcolour_hex(), _("Background color"), _("Pronterface background color"), "Colors"), self.reload_ui, validate = check_rgb_color)
         self.settings._add(StringSetting("gcview_color_background", "#FAFAC7FF", _("3D view background color"), _("Color of the 3D view background"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
         self.settings._add(StringSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
         self.settings._add(StringSetting("gcview_color_tool0", "#FF000099", _("3D view print moves color"), _("Color of print moves with tool 0 in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
@@ -960,6 +961,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         recentfilessetting = StringSetting("recentfiles", "[]")
         recentfilessetting.hidden = True
         self.settings._add(recentfilessetting, self.update_recent_files)
+
+    def _preferred_bgcolour_hex(self):
+        if platform.system() == "Windows":
+            # the system settings approach returns black here, which we don't want
+            return "#FFFFFF"
+        sys_bgcolour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_BACKGROUND)
+        return sys_bgcolour.GetAsString(flags=wx.C2S_HTML_SYNTAX)
 
     def add_cmdline_arguments(self, parser):
         pronsole.pronsole.add_cmdline_arguments(self, parser)
