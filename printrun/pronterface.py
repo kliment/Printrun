@@ -963,10 +963,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(recentfilessetting, self.update_recent_files)
 
     def _preferred_bgcolour_hex(self):
-        if platform.system() == "Windows":
-            # the system settings approach returns black here, which we don't want
-            return "#FFFFFF"
         sys_bgcolour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_BACKGROUND)
+        if platform.system() == "Windows":
+            sys_bgcolour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW) 
         return sys_bgcolour.GetAsString(flags=wx.C2S_HTML_SYNTAX)
 
     def add_cmdline_arguments(self, parser):
