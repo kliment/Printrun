@@ -669,12 +669,16 @@ class printcore():
                 try: self.sendcb(command, gline)
                 except: self.logError(traceback.format_exc())
             try:
-                self.printer.write((command + "\n").encode('ascii'))
+                message = (command + "\n")
                 if self.printer_tcp:
+                    self.printer.write(message)
                     try:
                         self.printer.flush()
                     except socket.timeout:
                         pass
+                else:
+                    # serial operates on bytes, needs no flushing
+                    self.printer.write(message.encode('ascii'))
                 self.writefailures = 0
             except socket.error as e:
                 if e.errno is None:
