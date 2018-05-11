@@ -41,6 +41,7 @@ def StringToCFString(string):
         encoding = CoreFoundation.kCFStringEncodingASCII
     except AttributeError:
         encoding = 0x600
+    string = string.encode('ascii')
     cfstring = CoreFoundation.CFStringCreateWithCString(None, string, encoding)
     return objc.pyobjc_id(cfstring.nsstring())
 
