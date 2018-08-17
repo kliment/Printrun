@@ -69,12 +69,12 @@ class GvizBaseFrame(wx.Frame):
 ID_ABOUT = 101
 ID_EXIT = 110
 class GvizWindow(GvizBaseFrame):
-    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
+    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, center_origin=False, bgcolor = "#000000"):
         super(GvizWindow, self).__init__(None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
 
         panel, vbox = self.create_base_ui()
 
-        self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
+        self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self, center_origin = center_origin)
 
         self.toolbar.Realize()
         vbox.Add(self.p, 1, wx.EXPAND)
@@ -171,7 +171,7 @@ class Gviz(wx.Panel):
             self._showall = showall
     showall = property(_get_showall, _set_showall)
 
-    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000", realparent = None):
+    def __init__(self, parent, size = (200, 200), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000", realparent = None, center_origin=False):
         wx.Panel.__init__(self, parent, -1)
         self.widget = self
         size = [max(1.0, x) for x in size]
@@ -203,6 +203,7 @@ class Gviz(wx.Panel):
         self.bgcolor.Set(bgcolor)
         self.blitmap = wx.Bitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
         self.paint_overlay = None
+        self.center_origin = center_origin
 
     def inject(self):
         layer = self.layers[self.layerindex]
@@ -410,6 +411,7 @@ class Gviz(wx.Panel):
         dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
         dc.DrawBitmap(self.blitmap, self.translate[0], self.translate[1])
+        #dc.DrawBitmap(self.blitmap, 100, -100)
         if self.paint_overlay:
             self.paint_overlay(dc)
 
@@ -468,10 +470,16 @@ class Gviz(wx.Panel):
             return target, None, arc
 
     def _y(self, y):
-        return self.build_dimensions[1] - (y - self.build_dimensions[4])
+        if self.center_origin:
+            return self.build_dimensions[1] - (y - self.build_dimensions[4]) - (self.build_dimensions[1]/2)
+        else:
+            return self.build_dimensions[1] - (y - self.build_dimensions[4])
 
     def _x(self, x):
-        return x - self.build_dimensions[3]
+        if self.center_origin:
+            return x - self.build_dimensions[3] + (self.build_dimensions[0] / 2)
+        else:
+            return x - self.build_dimensions[3]
 
     def add_parsed_gcodes(self, gcode):
         start_time = time.time()
@@ -549,6 +557,6 @@ class Gviz(wx.Panel):
 if __name__ == '__main__':
     import sys
     app = wx.App(False)
-    main = GvizWindow(open(sys.argv[1], "rU"))
+    main = GvizWindow(open(sys.argv[1], "rU"), build_dimensions = [200, 200, 100, 0, 0, 0], center_origin=True)
     main.Show()
     app.MainLoop()

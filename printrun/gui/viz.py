@@ -81,6 +81,7 @@ class VizPane(wx.BoxSizer):
                                   build_dimensions = root.build_dimensions_list,
                                   grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
                                   extrusion_width = root.settings.preview_extrusion_width,
+                                  center_origin = root.settings.circular_bed,
                                   bgcolor = root.bgcolor)
             root.gviz.SetToolTip(wx.ToolTip(_("Click to examine / edit\n  layers of loaded file")))
             root.gviz.showall = 1
@@ -103,6 +104,7 @@ class VizPane(wx.BoxSizer):
             root.gwindow = gviz.GvizWindow(build_dimensions = root.build_dimensions_list,
                                            grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
                                            extrusion_width = root.settings.preview_extrusion_width,
+                                           center_origin = root.settings.circular_bed,
                                            bgcolor = root.bgcolor)
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
         if not isinstance(root.gviz, NoViz):
