@@ -92,6 +92,7 @@ The following section assumes Linux. Please see specific instructions for Window
 
 ```console
 $ git clone https://github.com/kliment/Printrun.git  # clone the repository
+$ cd Printrun  # change to Printrun directory
 $ python3 -m venv venv  # create an virtual environment
 $ . venv/bin/activate  # activate the virtual environment (notice the space after the dot)
 (venv) $ python -m pip install https://extras.wxpython.org/wxPython4/extras/linux/gtk3/fedora-27/wxPython-4.0.1-cp36-cp36m-linux_x86_64.whl  # replace the link with yours
