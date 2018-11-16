@@ -335,7 +335,7 @@ class Graph(BufferedCanvas):
         if self.window: self.window.graph.StopPlotting()
 
     def draw(self, dc, w, h):
-        dc.SetBackground(wx.Brush(self.root.bgcolor))
+        dc.SetBackground(wx.Brush(self.root.settings.graph_color_background))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         self.width = w
@@ -346,8 +346,9 @@ class Graph(BufferedCanvas):
         self.drawfanpower(dc, gc)
         self.drawextruder0targettemp(dc, gc)
         self.drawextruder0temp(dc, gc)
-        self.drawextruder1targettemp(dc, gc)
-        self.drawextruder1temp(dc, gc)
+        if self.extruder1targettemps[-1]>0 or self.extruder1temps[-1]>5:
+            self.drawextruder1targettemp(dc, gc)
+            self.drawextruder1temp(dc, gc)
 
     class _YBounds:
         """Small helper class to claculate y bounds dynamically"""
