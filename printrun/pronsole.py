@@ -743,8 +743,7 @@ class pronsole(cmd.Cmd):
         self.processing_args = False
         self.update_rpc_server(None, self.settings.rpc_server)
         if args.filename:
-            filename = args.filename.decode(locale.getpreferredencoding())
-            self.cmdline_filename_callback(filename)
+            self.cmdline_filename_callback(args.filename)
 
     def cmdline_filename_callback(self, filename):
         self.do_load(filename)
