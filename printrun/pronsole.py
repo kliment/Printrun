@@ -254,7 +254,10 @@ class pronsole(cmd.Cmd):
                     pass
 
     def confirm(self):
-        y_or_n = input("y/n: ")
+        try:
+            y_or_n = input("y/n: ")
+        except EOFError:
+            return False
         if y_or_n == "y":
             return True
         elif y_or_n != "n":
