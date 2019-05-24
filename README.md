@@ -22,7 +22,7 @@ A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
-Note for OSX users: if OSX tells you the file is corrupted, you don't need to redownload it. Instead, you need to allow OSX to run unsigned apps. To do this, run 
+Note for OSX users: if OSX tells you the file is corrupted, you don't need to redownload it. Instead, you need to allow OSX to run unsigned apps. To do this, run
 `sudo spctl --master-disable`
 
 
@@ -31,15 +31,15 @@ Note for OSX users: if OSX tells you the file is corrupted, you don't need to re
 
 There is currently no package for Printrun 2. It must be [run from source](https://github.com/kliment/Printrun/tree/master#running-from-source).
 
-### Chrome OS 
+### Chrome OS
 
 You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install printrun with the line given above for Ubuntu/Debian.
 
 By default you have no access to the serial port under Chrome OS crouton, so you cannot connect to your 3D printer. Add yourself to the serial group within the linux environment to fix this
 
-`sudo usermod -G serial -a <username>` 
+`sudo usermod -G serial -a <username>`
 
-where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer. 
+where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer.
 
 ### Fedora
 
@@ -78,7 +78,7 @@ To use pronterface, you need:
   * numpy (for 3D view)
   * pycairo (to use Projector feature)
   * cairosvg (to use Projector feature)
-  * dbus (to inhibit sleep on some Linux systems) 
+  * dbus (to inhibit sleep on some Linux systems)
 
 ### Use Python virtual environment
 
@@ -158,6 +158,60 @@ $ brew install python3
 
 And follow the above **Python virtual environment** section. You don't need to search for wxPython wheel, macOS wheels are available from the Python Package Index.
 
+### Docker
+
+You can use the Printrun utilities inside of Docker container.
+
+```console
+git clone https://github.com/kliment/Printrun.git
+cd Printrun
+
+docker build -t printrun:latest .
+
+docker run -ti --rm \
+  --device /dev/ttyUSB0 \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  printrun:latest
+```
+
+> or directly pulling container image
+
+```console
+docker run -ti --rm \
+  --device /dev/ttyUSB0 \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  utkudarilmaz/printrun:latest
+```
+
++ **--device** parameter for connecting the printer via specified device.
++ **-e DISPLAY=$DISPLAY** and **-v /tmp/.X11-unix:/tmp/.X11-unix** parameters
+for using pronsole in GUI.
+
+Of course, you can use the Pronsole utility without volume and environment
+variable parameters give to container.   
+
+On default, if you run container without parameter, Pronterface will be opened.
+If you want to run another Printrun utility just give that name to Docker
+command's end.
+
+Example:
+
+```console
+docker run -ti --rm \
+  --device /dev/ttyUSB0 \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  utkudarilmaz/printrun:latest pronsole.py
+```
+
+**Note:** If you get *"Unable to access the X Display, is $DISPLAY set
+properly?"* error you have to run below command on your console.
+
+```console
+xhost +si:localuser:root
+```
 
 # USING PRINTRUN
 
@@ -392,7 +446,7 @@ For example, following macro toggles the diagnostic information similarily to th
 
 Macro parameters are available in '!'-escaped python code as locally defined list variable: arg[0] arg[1] ... arg[N]
 
-All python code is executed in the context of the pronsole (or PronterWindow) object, 
+All python code is executed in the context of the pronsole (or PronterWindow) object,
 so it is possible to use all internal variables and methods, which provide great deal of functionality.
 However the internal variables and methods are not very well documented and may be subject of change, as the program is developed.
 Therefore it is best to use pronsole commands, which easily contain majority of the functionality that might be needed.
@@ -400,7 +454,7 @@ Therefore it is best to use pronsole commands, which easily contain majority of 
 Some useful python-mode-only variables:
 
 ```python
-!self.settings - contains all settings, e.g. 
+!self.settings - contains all settings, e.g.
   port (!self.settings.port), baudrate, xy_feedrate, e_feedrate, slicecommand, final_command, build_dimensions
   You can set them also via pronsole command "set", but you can query the values only via python code.
 !self.p - printcore object (see USING PRINTCORE section for using printcore object)
@@ -411,7 +465,7 @@ Some useful python-mode-only variables:
 Some useful methods:
 
 ```python
-!self.onecmd - invokes raw command, e.g. 
+!self.onecmd - invokes raw command, e.g.
     !self.onecmd("move x 10")
     !self.onecmd("!print self.p.loud")
     !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
@@ -481,4 +535,3 @@ along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 ```
 
 All scripts should contain this license note, if not, feel free to ask us. Please note that files where it is difficult to state this license note (such as images) are distributed under the same terms.
-
