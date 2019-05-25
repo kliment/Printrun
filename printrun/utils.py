@@ -136,12 +136,12 @@ def prepare_command(command, replaces = None):
             command = [bit.replace(pattern, rep) for bit in command]
     return command
 
-def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False):
+def run_command(command, replaces = None, stdout = subprocess.STDOUT, stderr = subprocess.STDOUT, blocking = False, universal_newlines = False):
     command = prepare_command(command, replaces)
     if blocking:
-        return subprocess.call(command)
+        return subprocess.call(command, universal_newlines = universal_newlines)
     else:
-        return subprocess.Popen(command, stderr = stderr, stdout = stdout)
+        return subprocess.Popen(command, stderr = stderr, stdout = stdout, universal_newlines = universal_newlines)
 
 def get_command_output(command, replaces):
     p = run_command(command, replaces,
