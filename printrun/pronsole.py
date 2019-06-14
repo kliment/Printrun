@@ -1738,3 +1738,16 @@ class pronsole(cmd.Cmd):
 
     def help_run_gcode_script(self):
         self.log(_("Runs a custom script which output gcode which will in turn be executed. Current gcode filename can be given using $s token."))
+
+    def complete_run_gcode_script(self, text, line, begidx, endidx):
+        words = line.split()
+        sep = os.path.sep
+        if len(words) < 2:
+            return ['.' + sep , sep]
+        corrected_text = words[-1] # text arg skips leading '/', include it
+        if corrected_text == '.':
+            return ['./'] # guide user that in linux, PATH does not include . and relative executed scripts must start with ./
+        prefix_len = len(corrected_text) - len(text)
+        res = [((f + sep) if os.path.isdir(f) else f)[prefix_len:] #skip unskipped prefix_len
+                for f in glob.glob(corrected_text + '*')]
+        return res
