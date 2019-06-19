@@ -240,6 +240,8 @@ class GCode:
             self.layer_idxs = array('I', [])
             self.line_idxs = array('I', [])
 
+    def has_index(self, i):
+        return i < len(self)
     def __len__(self):
         return len(self.line_idxs)
 
