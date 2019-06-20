@@ -104,6 +104,37 @@ class Status:
     def extruder_enabled(self):
         return self.extruder_temp != 0
 
+class RGSGCoder():
+    """Bare alternative to gcoder.LightGCode which does not preload all lines in memory,
+but still allows run_gcode_script (hence the RGS) to be processed by do_print (checksum,threading,ok waiting)"""
+    def __init__(self, line):
+        self.lines = True
+        self.filament_length = 0.
+        self.filament_length_multi = [0]
+        self.proc = run_command(line, {"$s": 'str(self.filename)'}, stdout = subprocess.PIPE, universal_newlines = True)
+        lr = gcoder.Layer([])
+        lr.duration = 0.
+        self.all_layers = [lr]
+        self.read() #empty layer causes division by zero during progress calculation
+    def read(self):
+        ln = self.proc.stdout.readline()
+        if not ln:
+            self.proc.stdout.close()
+            return None
+        ln = ln.strip()
+        if not ln:
+            return None
+        pyLn = gcoder.PyLightLine(ln)
+        self.all_layers[0].append(pyLn)
+        return pyLn
+    def has_index(self, i):
+        while i >= len(self.all_layers[0]) and not self.proc.stdout.closed:
+            self.read()
+        return i < len(self.all_layers[0])
+    def __len__(self):
+        return len(self.all_layers[0])
+    def idxs(self, i):
+        return 0, i #layer, line
 
 class pronsole(cmd.Cmd):
     def __init__(self):
@@ -1732,9 +1763,24 @@ class pronsole(cmd.Cmd):
         self.log(_("Runs a custom script. Current gcode filename can be given using $s token."))
 
     def do_run_gcode_script(self, l):
-        p = run_command(l, {"$s": str(self.filename)}, stdout = subprocess.PIPE, universal_newlines = True)
-        for line in p.stdout.readlines():
-            self.onecmd(line.strip())
+        try:
+            self.fgcode = RGSGCoder(l)
+            self.do_print(None)
+        except BaseException as e:
+            self.logError(traceback.format_exc())
 
     def help_run_gcode_script(self):
         self.log(_("Runs a custom script which output gcode which will in turn be executed. Current gcode filename can be given using $s token."))
+
+    def complete_run_gcode_script(self, text, line, begidx, endidx):
+        words = line.split()
+        sep = os.path.sep
+        if len(words) < 2:
+            return ['.' + sep , sep]
+        corrected_text = words[-1] # text arg skips leading '/', include it
+        if corrected_text == '.':
+            return ['./'] # guide user that in linux, PATH does not include . and relative executed scripts must start with ./
+        prefix_len = len(corrected_text) - len(text)
+        res = [((f + sep) if os.path.isdir(f) else f)[prefix_len:] #skip unskipped prefix_len
+                for f in glob.glob(corrected_text + '*')]
+        return res

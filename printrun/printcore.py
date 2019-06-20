@@ -586,7 +586,7 @@ class printcore():
             self._send(self.priqueue.get_nowait())
             self.priqueue.task_done()
             return
-        if self.printing and self.queueindex < len(self.mainqueue):
+        if self.printing and self.mainqueue.has_index(self.queueindex):
             (layer, line) = self.mainqueue.idxs(self.queueindex)
             gline = self.mainqueue.all_layers[layer][line]
             if self.queueindex > 0:
@@ -604,7 +604,7 @@ class printcore():
                 try: handler.on_preprintsend(gline, self.queueindex, self.mainqueue)
                 except: logging.error(traceback.format_exc())
             if self.preprintsendcb:
-                if self.queueindex + 1 < len(self.mainqueue):
+                if self.mainqueue.has_index(self.queueindex + 1):
                     (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
                     next_gline = self.mainqueue.all_layers[next_layer][next_line]
                 else:
