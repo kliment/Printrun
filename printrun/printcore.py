@@ -113,6 +113,11 @@ class printcore():
         self.stop_send_thread = False
         self.print_thread = None
         self.event_handler = PRINTCORE_HANDLER
+        # Not all platforms need to do this parity workaround, and some drivers
+        # don't support it.  Limit it to platforms that actually require it
+        # here to avoid doing redundant work elsewhere and potentially breaking
+        # things.
+        self.needs_parity_workaround = platform.system() == "linux" and os.path.exists("/etc/debian")
         for handler in self.event_handler:
             try: handler.on_init()
             except: logging.error(traceback.format_exc())
@@ -215,12 +220,18 @@ class printcore():
                 disable_hup(self.port)
                 self.printer_tcp = None
                 try:
-                    self.printer = Serial(port = self.port,
-                                          baudrate = self.baud,
-                                          timeout = 0.25,
-                                          parity = PARITY_ODD)
-                    self.printer.close()
-                    self.printer.parity = PARITY_NONE
+                    if self.needs_parity_workaround:
+                        self.printer = Serial(port = self.port,
+                                              baudrate = self.baud,
+                                              timeout = 0.25,
+                                              parity = PARITY_ODD)
+                        self.printer.close()
+                        self.printer.parity = PARITY_NONE
+                    else:
+                        self.printer = Serial(baudrate = self.baud,
+                                              timeout = 0.25,
+                                              parity = PARITY_NONE)
+                        self.printer.setPort(self.port)
                     try:  #this appears not to work on many platforms, so we're going to call it but not care if it fails
                         self.printer.setDTR(dtr);
                     except:
