@@ -2393,5 +2393,6 @@ class PronterApp(wx.App):
     def __init__(self, *args, **kwargs):
         super(PronterApp, self).__init__(*args, **kwargs)
         self.SetAppName("Pronterface")
+        self.locale = wx.Locale(wx.Locale.GetSystemLanguage())
         self.mainwindow = PronterWindow(self)
         self.mainwindow.Show()
