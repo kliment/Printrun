@@ -182,13 +182,13 @@ class printcore():
             # Connect to socket if "port" is an IP, device if not
             host_regexp = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
             is_serial = True
-            if ":" in port:
-                bits = port.split(":")
+            if ":" in self.port:
+                bits = self.port.split(":")
                 if len(bits) == 2:
                     hostname = bits[0]
                     try:
-                        port = int(bits[1])
-                        if host_regexp.match(hostname) and 1 <= port <= 65535:
+                        port_number = int(bits[1])
+                        if host_regexp.match(hostname) and 1 <= port_number <= 65535:
                             is_serial = False
                     except:
                         pass
@@ -200,12 +200,12 @@ class printcore():
                 self.timeout = 0.25
                 self.printer_tcp.settimeout(1.0)
                 try:
-                    self.printer_tcp.connect((hostname, port))
+                    self.printer_tcp.connect((hostname, port_number))
                     self.printer_tcp.settimeout(self.timeout)
                     self.printer = self.printer_tcp.makefile()
                 except socket.error as e:
                     if(e.strerror is None): e.strerror=""
-                    self.logError(_("Could not connect to %s:%s:") % (hostname, port) +
+                    self.logError(_("Could not connect to %s:%s:") % (hostname, port_number) +
                                   "\n" + _("Socket error %s:") % e.errno +
                                   "\n" + e.strerror)
                     self.printer = None
