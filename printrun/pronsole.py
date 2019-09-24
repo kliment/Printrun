@@ -1279,8 +1279,6 @@ class pronsole(cmd.Cmd):
                             self.spool_manager.editLength(
                                 -self.fgcode.filament_length, extruder = 0)
 
-        else:
-
             if not self.settings.final_command:
                 return
             output = get_command_output(self.settings.final_command,
