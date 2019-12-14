@@ -215,7 +215,7 @@ class pronsole(cmd.Cmd):
 
     def preloop(self):
         self.log(_("Welcome to the printer console! Type \"help\" for a list of available commands."))
-        self.prompt = self.promptf()
+        self.calc_prompt()
         cmd.Cmd.preloop(self)
 
     # We replace this function, defined in cmd.py .
@@ -306,8 +306,9 @@ class pronsole(cmd.Cmd):
             self.log("Error command output:")
             self.log(output.rstrip())
 
-    def promptf(self):
-        """A function to generate prompts so that we can do dynamic prompts. """
+    def calc_prompt(self):
+        """Calculate prompt string and save it in self.prompt without writing it out.
+        Always change prompt with this method only, so prompt_visible_len is calculated. """
         if self.in_macro:
             promptstr = self.promptstrs["macro"]
         elif not self.p.online:
@@ -316,34 +317,38 @@ class pronsole(cmd.Cmd):
             promptstr = self.promptstrs["online"]
         else:
             promptstr = self.promptstrs["fallback"]
-        if "%" not in promptstr:
-            return promptstr
+        if '%' not in promptstr:
+            self.prompt = promptstr
+            self.prompt_visible_len = len(promptstr)
+            return
+        specials = {}
+        specials["extruder_temp"] = str(int(self.status.extruder_temp))
+        specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
+        specials["port"] = self.settings.port[5:]
+        if self.status.extruder_temp_target == 0:
+            specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp)) + DEG
         else:
-            specials = {}
-            specials["extruder_temp"] = str(int(self.status.extruder_temp))
-            specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
-            specials["port"] = self.settings.port[5:]
-            if self.status.extruder_temp_target == 0:
-                specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp)) + DEG
-            else:
-                specials["extruder_temp_fancy"] = "%s%s/%s%s" % (str(int(self.status.extruder_temp)), DEG, str(int(self.status.extruder_temp_target)), DEG)
-            if self.p.printing:
-                progress = int(1000 * float(self.p.queueindex) / len(self.p.mainqueue)) / 10
-            elif self.sdprinting:
-                progress = self.percentdone
-            else:
-                progress = 0.0
-            specials["progress"] = str(progress)
-            if self.p.printing or self.sdprinting:
-                specials["progress_fancy"] = " " + str(progress) + "%"
-            else:
-                specials["progress_fancy"] = ""
-            specials["red"] = "\033[31m"
-            specials["green"] = "\033[32m"
-            specials["white"] = "\033[37m"
-            specials["bold"] = "\033[01m"
-            specials["normal"] = "\033[00m"
-            return promptstr % specials
+            specials["extruder_temp_fancy"] = "%s%s/%s%s" % (str(int(self.status.extruder_temp)), DEG, str(int(self.status.extruder_temp_target)), DEG)
+        if self.p.printing:
+            progress = int(1000 * float(self.p.queueindex) / len(self.p.mainqueue)) / 10
+        elif self.sdprinting:
+            progress = self.percentdone
+        else:
+            progress = 0.0
+        specials["progress"] = str(progress)
+        if self.p.printing or self.sdprinting:
+            specials["progress_fancy"] = " " + str(progress) + "%"
+        else:
+            specials["progress_fancy"] = ""
+        specials["red"] = "\033[31m"
+        specials["green"] = "\033[32m"
+        specials["white"] = "\033[37m"
+        specials["bold"] = "\033[01m"
+        specials["normal"] = "\033[00m"
+        self.prompt = promptstr % specials
+        for k in 'red', 'green', 'white', 'bold', 'normal':
+            specials[k] = ''
+        self.prompt_visible_len = len(promptstr % specials)
 
     def postcmd(self, stop, line):
         """ A hook we override to generate prompts after
@@ -352,7 +357,7 @@ class pronsole(cmd.Cmd):
             temp info gets updated for the prompt."""
         if self.p.online and self.dynamic_temp:
             self.p.send_now("M105")
-        self.prompt = self.promptf()
+        self.calc_prompt()
         return stop
 
     def kill(self):
@@ -363,9 +368,31 @@ class pronsole(cmd.Cmd):
         if self.rpc_server is not None:
             self.rpc_server.shutdown()
 
-    def write_prompt(self):
-        sys.stdout.write(self.promptf())
+    def write_prompt(self, calc=True, overwrite_line=False):
+        if calc:
+            self.calc_prompt()
+        prefix = save_cursor = restore_cursor = ''
+        if overwrite_line:
+            # user may have written some partial command
+            # old prompt: G0 X100
+            # new longer prompt: G0 X100
+            len_change = self.prompt_visible_len - self.prompt_written_len
+            prefix = '\r'
+            save_cursor = '\0337'     #tput sc
+            restore_cursor = '\0338'  #tput rc
+            if len_change < 0:
+                #must shift to left, delete
+                #got from bash$ tput dch
+                prefix += '\033[%dP' % -len_change
+                restore_cursor += '\033[%dD' % -len_change #tput cub
+            elif len_change > 0:
+                #must shift to right, insert
+                #got from bash$ tput ich
+                prefix += '\033[%d@' % len_change
+                restore_cursor += '\033[%dC' % len_change
+        sys.stdout.write(save_cursor + prefix + self.prompt + restore_cursor)
         sys.stdout.flush()
+        self.prompt_written_len = self.prompt_visible_len
 
     def help_help(self, l = ""):
         self.do_help("")
@@ -461,7 +488,7 @@ class pronsole(cmd.Cmd):
     def end_macro(self):
         if "onecmd" in self.__dict__: del self.onecmd  # remove override
         self.in_macro = False
-        self.prompt = self.promptf()
+        self.calc_prompt()
         if self.cur_macro_def != "":
             self.macros[self.cur_macro_name] = self.cur_macro_def
             macro = self.compile_macro(self.cur_macro_name, self.cur_macro_def)
@@ -522,7 +549,7 @@ class pronsole(cmd.Cmd):
         self.cur_macro_def = ""
         self.onecmd = self.hook_macro  # override onecmd temporarily
         self.in_macro = False
-        self.prompt = self.promptf()
+        self.calc_prompt()
 
     def delete_macro(self, macro_name):
         if macro_name in self.macros.keys():
@@ -1312,8 +1339,7 @@ class pronsole(cmd.Cmd):
             self.do_pause(None)
             msg = l.split(" ", 1)
             if len(msg) > 1 and self.silent is False: self.logError(msg[1].ljust(15))
-            sys.stdout.write(self.promptf())
-            sys.stdout.flush()
+            self.write_prompt()
             return True
         elif l.startswith("//"):
             command = l.split(" ", 1)
@@ -1325,18 +1351,15 @@ class pronsole(cmd.Cmd):
                     command = command[1]
                     if command == "pause":
                         self.do_pause(None)
-                        sys.stdout.write(self.promptf())
-                        sys.stdout.flush()
+                        self.write_prompt()
                         return True
                     elif command == "resume":
                         self.do_resume(None)
-                        sys.stdout.write(self.promptf())
-                        sys.stdout.flush()
+                        self.write_prompt()
                         return True
                     elif command == "disconnect":
                         self.do_disconnect(None)
-                        sys.stdout.write(self.promptf())
-                        sys.stdout.flush()
+                        self.write_prompt()
                         return True
         return False
 
@@ -1348,13 +1371,13 @@ class pronsole(cmd.Cmd):
             report_type = self.recvcb_report(l)
             if report_type & REPORT_TEMP:
                 self.status.update_tempreading(l)
+                self.write_prompt(overwrite_line=True)
             if not self.lineignorepattern.match(l) and l[:4] != "wait" and not self.sdlisting \
                and not self.monitoring and (report_type == REPORT_NONE or report_type & REPORT_MANUAL):
                 if l[:5] == "echo:":
                     l = l[5:].lstrip()
                 if self.silent is False: self.log("\r" + l.ljust(15))
-                sys.stdout.write(self.promptf())
-                sys.stdout.flush()
+                self.write_prompt()
 
     def layer_change_cb(self, newlayer):
         layerz = self.fgcode.all_layers[newlayer].z
