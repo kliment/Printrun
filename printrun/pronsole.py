@@ -322,7 +322,8 @@ class pronsole(cmd.Cmd):
             specials = {}
             specials["extruder_temp"] = str(int(self.status.extruder_temp))
             specials["extruder_temp_target"] = str(int(self.status.extruder_temp_target))
-            specials["port"] = self.settings.port[5:]
+            # port: /dev/tty* | netaddress:port
+            specials["port"] = self.settings.port.replace('/dev/', '')
             if self.status.extruder_temp_target == 0:
                 specials["extruder_temp_fancy"] = str(int(self.status.extruder_temp)) + DEG
             else:
@@ -812,7 +813,8 @@ class pronsole(cmd.Cmd):
                 self.logError(traceback.format_exc())
             return False
         self.statuscheck = True
-        self.status_thread = threading.Thread(target = self.statuschecker)
+        self.status_thread = threading.Thread(target = self.statuschecker,
+                                              name = 'status thread')
         self.status_thread.start()
         return True
 
@@ -908,7 +910,7 @@ class pronsole(cmd.Cmd):
             if self.p.writefailures >= 4:
                 self.logError(_("Disconnecting after 4 failed writes."))
                 self.status_thread = None
-                self.disconnect()
+                self.p.disconnect()
                 return
             if do_monitoring:
                 if self.sdprinting and not self.paused:
