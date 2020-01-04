@@ -138,6 +138,22 @@ git clone https://github.com/kliment/Printrun.git
 cd Printrun
 ```
 
+### Raspbian
+
+Due to the extended time _~ 330 minutes_ to build wxpython on a Raspberry Pi, there is a prebuilt wheel package below.
+
+```
+https://github.com/ipatch/homebrew-us-05/blob/printrun/printrun/dependencies/raspbian/wxPython-4.0.7.post2-cp37-cp37m-linux_armv7l.whl
+```
+
+The sha256sum of the above package is
+
+```
+0cac5caeff6376e4f2b211546fdfeb792f9aa937e4bbd8612270fc4a7661660f
+```
+
+The package is stored within a different github repo because the [upstream repo](https://github.com/kliment/Printrun) of [this fork](https://github.com/ipatch/Printrun) does not have git large file suppport setup on it, so github prohibits large files being added to public forks unless the author of the upstream repo enables large files.
+
 ### Windows
 
 Download and install [Python 3.6](https://www.python.org/downloads/) and follow the **Python virtual environment** section above except use the following to create and activate the virtual environment and install dependencies:
