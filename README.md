@@ -75,6 +75,7 @@ To use pronterface, you need:
   * pyreadline (not needed on Linux)
   * wxPython 4
   * pyglet
+  * appdirs
   * numpy (for 3D view)
   * pycairo (to use Projector feature)
   * cairosvg (to use Projector feature)

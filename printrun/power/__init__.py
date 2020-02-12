@@ -39,10 +39,16 @@ else:
         inhibit_sleep_token = None
         bus = dbus.SessionBus()
         try:
-            # GNOME uses the right object path, try it first
-            service_name = "org.freedesktop.ScreenSaver"
-            proxy = bus.get_object(service_name,
-                                   "/org/freedesktop/ScreenSaver")
+            if os.environ.get('DESKTOP_SESSION') == "mate":
+                # Mate uses a special service
+                service_name = "org.mate.ScreenSaver"
+                object_path = "/org/mate/ScreenSaver"
+            else:
+                # standard service name
+                service_name = "org.freedesktop.ScreenSaver"
+                object_path = "/org/freedesktop/ScreenSaver"
+            # GNOME and Mate use the right object path, try it first
+            proxy = bus.get_object(service_name, object_path)
             inhibit_sleep_handler = dbus.Interface(proxy, service_name)
             # Do a test run
             token = inhibit_sleep_handler.Inhibit("printrun", "test")

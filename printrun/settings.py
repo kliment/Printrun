@@ -366,7 +366,7 @@ class Settings:
         try:
             cb = None
             try:
-                cb = getattr(self, "__%s_cb" % key)
+                cb = getattr(self, "_%s_cb" % key)
             except AttributeError:
                 pass
             if cb is not None: cb(key, value)

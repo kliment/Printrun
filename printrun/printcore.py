@@ -32,6 +32,7 @@ import traceback
 import errno
 import socket
 import re
+import selectors
 from functools import wraps, reduce
 from collections import deque
 from printrun import gcoder
@@ -64,6 +65,11 @@ def enable_hup(port):
 
 def disable_hup(port):
     control_ttyhup(port, True)
+
+PR_EOF = None  #printrun's marker for EOF
+PR_AGAIN = b'' #printrun's marker for timeout/no data
+SYS_EOF = b''  #python's marker for EOF
+SYS_AGAIN = None #python's marker for timeout/no data
 
 class printcore():
     def __init__(self, port = None, baud = None, dtr=None):
@@ -112,7 +118,14 @@ class printcore():
         self.send_thread = None
         self.stop_send_thread = False
         self.print_thread = None
+        self.readline_buf = []
+        self.selector = None
         self.event_handler = PRINTCORE_HANDLER
+        # Not all platforms need to do this parity workaround, and some drivers
+        # don't support it.  Limit it to platforms that actually require it
+        # here to avoid doing redundant work elsewhere and potentially breaking
+        # things.
+        self.needs_parity_workaround = platform.system() == "linux" and os.path.exists("/etc/debian")
         for handler in self.event_handler:
             try: handler.on_init()
             except: logging.error(traceback.format_exc())
@@ -154,10 +167,19 @@ class printcore():
                 self.print_thread.join()
             self._stop_sender()
             try:
+                if self.selector is not None:
+                    self.selector.unregister(self.printer_tcp)
+                    self.selector.close()
+                    self.selector = None
+                if self.printer_tcp is not None:
+                    self.printer_tcp.close()
+                    self.printer_tcp = None
                 self.printer.close()
             except socket.error:
+                logger.error(traceback.format_exc())
                 pass
             except OSError:
+                logger.error(traceback.format_exc())
                 pass
         for handler in self.event_handler:
             try: handler.on_disconnect()
@@ -182,13 +204,13 @@ class printcore():
             # Connect to socket if "port" is an IP, device if not
             host_regexp = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
             is_serial = True
-            if ":" in port:
-                bits = port.split(":")
+            if ":" in self.port:
+                bits = self.port.split(":")
                 if len(bits) == 2:
                     hostname = bits[0]
                     try:
-                        port = int(bits[1])
-                        if host_regexp.match(hostname) and 1 <= port <= 65535:
+                        port_number = int(bits[1])
+                        if host_regexp.match(hostname) and 1 <= port_number <= 65535:
                             is_serial = False
                     except:
                         pass
@@ -200,12 +222,17 @@ class printcore():
                 self.timeout = 0.25
                 self.printer_tcp.settimeout(1.0)
                 try:
-                    self.printer_tcp.connect((hostname, port))
-                    self.printer_tcp.settimeout(self.timeout)
-                    self.printer = self.printer_tcp.makefile()
+                    self.printer_tcp.connect((hostname, port_number))
+                    #a single read timeout raises OSError for all later reads
+                    #probably since python 3.5
+                    #use non blocking instead
+                    self.printer_tcp.settimeout(0)
+                    self.printer = self.printer_tcp.makefile('rwb', buffering=0)
+                    self.selector = selectors.DefaultSelector()
+                    self.selector.register(self.printer_tcp, selectors.EVENT_READ)
                 except socket.error as e:
                     if(e.strerror is None): e.strerror=""
-                    self.logError(_("Could not connect to %s:%s:") % (hostname, port) +
+                    self.logError(_("Could not connect to %s:%s:") % (hostname, port_number) +
                                   "\n" + _("Socket error %s:") % e.errno +
                                   "\n" + e.strerror)
                     self.printer = None
@@ -215,12 +242,18 @@ class printcore():
                 disable_hup(self.port)
                 self.printer_tcp = None
                 try:
-                    self.printer = Serial(port = self.port,
-                                          baudrate = self.baud,
-                                          timeout = 0.25,
-                                          parity = PARITY_ODD)
-                    self.printer.close()
-                    self.printer.parity = PARITY_NONE
+                    if self.needs_parity_workaround:
+                        self.printer = Serial(port = self.port,
+                                              baudrate = self.baud,
+                                              timeout = 0.25,
+                                              parity = PARITY_ODD)
+                        self.printer.close()
+                        self.printer.parity = PARITY_NONE
+                    else:
+                        self.printer = Serial(baudrate = self.baud,
+                                              timeout = 0.25,
+                                              parity = PARITY_NONE)
+                        self.printer.setPort(self.port)
                     try:  #this appears not to work on many platforms, so we're going to call it but not care if it fails
                         self.printer.setDTR(dtr);
                     except:
@@ -241,7 +274,8 @@ class printcore():
                 try: handler.on_connect()
                 except: logging.error(traceback.format_exc())
             self.stop_read_thread = False
-            self.read_thread = threading.Thread(target = self._listen)
+            self.read_thread = threading.Thread(target = self._listen,
+                                                name='read thread')
             self.read_thread.start()
             self._start_sender()
 
@@ -253,19 +287,54 @@ class printcore():
             time.sleep(0.2)
             self.printer.setDTR(0)
 
+    def _readline_buf(self):
+        "Try to readline from buffer"
+        if len(self.readline_buf):
+            chunk = self.readline_buf[-1]
+            eol = chunk.find(b'\n')
+            if eol >= 0:
+                line = b''.join(self.readline_buf[:-1]) + chunk[:(eol+1)]
+                self.readline_buf = []
+                if eol + 1 < len(chunk):
+                    self.readline_buf.append(chunk[(eol+1):])
+                return line
+        return PR_AGAIN
+
+    def _readline_nb(self):
+        "Non blocking readline. Socket based files do not support non blocking or timeouting readline"
+        if self.printer_tcp:
+            line = self._readline_buf()
+            if line:
+                return line
+            chunk_size = 256
+            while True:
+                chunk = self.printer.read(chunk_size)
+                if chunk is SYS_AGAIN and self.selector.select(self.timeout):
+                    chunk = self.printer.read(chunk_size)
+                #print('_readline_nb chunk', chunk, type(chunk))
+                if chunk:
+                    self.readline_buf.append(chunk)
+                    line = self._readline_buf()
+                    if line:
+                        return line
+                elif chunk is SYS_AGAIN:
+                    return PR_AGAIN
+                else:
+                    #chunk == b'' means EOF
+                    line = b''.join(self.readline_buf)
+                    self.readline_buf = []
+                    self.stop_read_thread = True
+                    return line if line else PR_EOF
+        else: # serial port
+            return self.printer.readline()
+
     def _readline(self):
         try:
-            try:
-                try:
-                    line = self.printer.readline().decode('ascii')
-                except UnicodeDecodeError:
-                    self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
-                                  "\n" + _("Maybe a bad baudrate?"))
-                    return None
-                if self.printer_tcp and not line:
-                    raise OSError(-1, "Read EOF from socket")
-            except socket.timeout:
-                return ""
+            line_bytes = self._readline_nb()
+            if line_bytes is PR_EOF:
+                self.logError(_("Can't read from printer (disconnected?). line_bytes is None"))
+                return PR_EOF
+            line = line_bytes.decode('ascii')
 
             if len(line) > 1:
                 self.log.append(line)
@@ -277,6 +346,10 @@ class printcore():
                     except: self.logError(traceback.format_exc())
                 if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
+        except UnicodeDecodeError:
+            self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
+                              "\n" + _("Maybe a bad baudrate?"))
+            return None
         except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
                 self.logError(_("Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
@@ -346,6 +419,7 @@ class printcore():
         while self._listen_can_continue():
             line = self._readline()
             if line is None:
+                logging.debug('_readline() is None, exiting _listen()')
                 break
             if line.startswith('DEBUG_'):
                 continue
@@ -355,10 +429,10 @@ class printcore():
                 for handler in self.event_handler:
                     try: handler.on_temp(line)
                     except: logging.error(traceback.format_exc())
-            if line.startswith('ok') and "T:" in line and self.tempcb:
-                # callback for temp, status, whatever
-                try: self.tempcb(line)
-                except: self.logError(traceback.format_exc())
+                if self.tempcb:
+                    # callback for temp, status, whatever
+                    try: self.tempcb(line)
+                    except: self.logError(traceback.format_exc())
             elif line.startswith('Error'):
                 self.logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
@@ -376,10 +450,12 @@ class printcore():
                         pass
                 self.clear = True
         self.clear = True
+        logging.debug('Exiting read thread')
 
     def _start_sender(self):
         self.stop_send_thread = False
-        self.send_thread = threading.Thread(target = self._sender)
+        self.send_thread = threading.Thread(target = self._sender,
+                                            name = 'send thread')
         self.send_thread.start()
 
     def _stop_sender(self):
@@ -423,6 +499,7 @@ class printcore():
         self.clear = False
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
+                                             name = 'print thread',
                                              kwargs = {"resuming": resuming})
         self.print_thread.start()
         return True
@@ -503,6 +580,7 @@ class printcore():
         self.paused = False
         self.printing = True
         self.print_thread = threading.Thread(target = self._print,
+                                             name = 'print thread',
                                              kwargs = {"resuming": True})
         self.print_thread.start()
 
@@ -586,7 +664,7 @@ class printcore():
             self._send(self.priqueue.get_nowait())
             self.priqueue.task_done()
             return
-        if self.printing and self.queueindex < len(self.mainqueue):
+        if self.printing and self.mainqueue.has_index(self.queueindex):
             (layer, line) = self.mainqueue.idxs(self.queueindex)
             gline = self.mainqueue.all_layers[layer][line]
             if self.queueindex > 0:
@@ -604,7 +682,7 @@ class printcore():
                 try: handler.on_preprintsend(gline, self.queueindex, self.mainqueue)
                 except: logging.error(traceback.format_exc())
             if self.preprintsendcb:
-                if self.queueindex + 1 < len(self.mainqueue):
+                if self.mainqueue.has_index(self.queueindex + 1):
                     (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
                     next_gline = self.mainqueue.all_layers[next_layer][next_line]
                 else:
