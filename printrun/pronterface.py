@@ -2102,7 +2102,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 return
             else:
                 dx, dy = self.dragpos[0] - scrpos[0], self.dragpos[1] - scrpos[1]
-                if dx * dx + dy * dy < 5 * 5:  # threshold to detect dragging for jittery mice
+                if dx * dx + dy * dy < 30 * 30:  # threshold to detect dragging for jittery mice
                     e.Skip()
                     return
             if not hasattr(self, "dragging"):
