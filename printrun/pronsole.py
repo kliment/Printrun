@@ -878,7 +878,7 @@ class pronsole(cmd.Cmd):
 
         for g in ['/dev/ttyUSB*', '/dev/ttyACM*', "/dev/tty.*", "/dev/cu.*", "/dev/rfcomm*"]:
             baselist += glob.glob(g)
-        if(self.settings.devicepath):
+        if(sys.platform!="win32" and self.settings.devicepath):
             baselist += glob.glob(self.settings.devicepath)
         return [p for p in baselist if self._bluetoothSerialFilter(p)]
 
