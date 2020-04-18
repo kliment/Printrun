@@ -318,7 +318,7 @@ PC> macro move_down_by
 Enter macro using indented lines, end with empty line
 ..> G91
 ..> G1 Z-{0}
-..> G92
+..> G90
 ..>
 ```
 
