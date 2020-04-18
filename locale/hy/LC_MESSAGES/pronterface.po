@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
 "POT-Creation-Date: 2014-03-30 14:35+CEST\n"
-"PO-Revision-Date: 2020-04-16 20:32+0400\n"
+"PO-Revision-Date: 2020-04-17 22:36+0400\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
 "Last-Translator: Avag Sayan <info@armath.am>\n"
 "Language-Team: Armath Engineering Labs, info@armath.am\n"
-"X-Generator: Poedit 2.3\n"
+"X-Generator: Poedit 2.0.6\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Language: hy_AM\n"
 
@@ -38,11 +38,11 @@ msgstr "Արտահանված G-Code-ը վերածել %-ի"
 
 #: printrun/gcview.py:352
 msgid "Fit to plate"
-msgstr "Ֆիքսել հատակին"
+msgstr "Ֆիքսել հարթությանը"
 
 #: printrun/gcview.py:353
 msgid "Fit to plate [F]"
-msgstr "Ֆիքսել հատակին [F]"
+msgstr "Ֆիքսել հարթությանը [F]"
 
 #: printrun/gui/__init__.py:19 printrun/pronterface.py:45
 msgid "WX is not installed. This program requires WX to run."
@@ -58,11 +58,11 @@ msgstr "Կարգավիճակ"
 
 #: printrun/gui/controls.py:126
 msgid "Heat:"
-msgstr "Ջերմություն:"
+msgstr "Գլխիկ՝"
 
 #: printrun/gui/controls.py:129
 msgid "Switch Hotend Off"
-msgstr "Անջատել Hotend-ը"
+msgstr "Անջատել տաքացումը"
 
 #: printrun/gui/controls.py:129 printrun/gui/controls.py:149
 #: printrun/gui/toolbar.py:85
@@ -75,16 +75,16 @@ msgstr "Նշել Ջերմաստիճանը Hotend-ի համար"
 
 #: printrun/gui/controls.py:141
 msgid "Switch Hotend On"
-msgstr "Միացնել Hotend-ը"
+msgstr "Միացնել գլխիկը"
 
 #: printrun/gui/controls.py:141 printrun/gui/controls.py:161
 #: printrun/gui/controls.py:198
 msgid "Set"
-msgstr "Սահմանել"
+msgstr "Հաստատել"
 
 #: printrun/gui/controls.py:146 printrun/gui/controls.py:215
 msgid "Bed:"
-msgstr "Հարթակ:"
+msgstr "Հարթակ՝"
 
 #: printrun/gui/controls.py:149
 msgid "Switch Heated Bed Off"
@@ -124,7 +124,7 @@ msgstr "մմ"
 
 #: printrun/gui/controls.py:267
 msgid "mm @"
-msgstr "մմ @"
+msgstr "մմ"
 
 #: printrun/gui/controls.py:269
 msgid "Amount to Extrude or Retract (mm)"
@@ -132,7 +132,7 @@ msgstr "Դուրս մղելու կամ հետ քաշելու չափը (մմ)"
 
 #: printrun/gui/controls.py:272
 msgid "Extrude / Retract speed (mm/min)"
-msgstr "Դուրս մղել / Հետ քաշել (մմ/րոպե)"
+msgstr "Դուրս մղել / Հետ քաշել (մմ/ր)"
 
 #: printrun/gui/controls.py:278
 msgid "Speed:"
@@ -142,9 +142,7 @@ msgstr "Արագություն:"
 msgid ""
 "mm/\n"
 "min"
-msgstr ""
-" մմ/\n"
-"րոպե"
+msgstr " մմ/ր"
 
 #: printrun/gui/controls.py:290
 msgid "Tool:"
@@ -160,7 +158,7 @@ msgstr "Նշել ընթացիկ «Էքստրուդեր»ը"
 
 #: printrun/gui/controls.py:371
 msgid "Set Maximum Speed for X & Y axes (mm/min)"
-msgstr "Սահմանել Առավելագույն Արագություն X և Y առանցքների համար (մմ/րոպե)"
+msgstr "Սահմանել Առավելագույն Արագություն X և Y առանցքների համար (մմ/ր)"
 
 #: printrun/gui/controls.py:372
 msgid "XY:"
@@ -168,15 +166,15 @@ msgstr "XY ՝"
 
 #: printrun/gui/controls.py:374
 msgid "mm/min Z:"
-msgstr "մմ/րոպե Z `"
+msgstr "մմ/ր Z `"
 
 #: printrun/gui/controls.py:376
 msgid "Set Maximum Speed for Z axis (mm/min)"
-msgstr "Սահմանել Առավելագույն Արագություն Z առանցքի համար (մմ/րոպե)"
+msgstr "Սահմանել Առավելագույն Արագություն Z առանցքի համար (մմ/ր)"
 
 #: printrun/gui/graph.py:28
 msgid "Temperature graph"
-msgstr "Ջերմաստիճանի գրաֆիկա"
+msgstr "Ջերմաստիճանի գծապատկեր"
 
 #: printrun/gui/log.py:32
 msgid ""
@@ -202,7 +200,7 @@ msgstr "Կողպել"
 
 #: printrun/gui/toolbar.py:25
 msgid "Lock graphical interface"
-msgstr "Կողպել գրաֆիկ միջերես (interface)"
+msgstr "Կողպել գրաֆիկ միջերեսը (interface)"
 
 #: printrun/gui/toolbar.py:32
 msgid ""
@@ -218,7 +216,7 @@ msgstr "Port"
 
 #: printrun/gui/toolbar.py:37
 msgid "Select Port Printer is connected to"
-msgstr "Տպիչի նշված Port-ը միաված է"
+msgstr "Տպիչի նշված Port-ը միացված է"
 
 #: printrun/gui/toolbar.py:46
 msgid "Select Baud rate for printer communication"
@@ -234,11 +232,11 @@ msgstr "Միանալ տպիչին"
 
 #: printrun/gui/toolbar.py:61
 msgid "Reset"
-msgstr "Զրոյացնել կարգավորումները"
+msgstr "Վերատեղադրել"
 
 #: printrun/gui/toolbar.py:61
 msgid "Reset the printer"
-msgstr "Զրոյացնել տպիչը"
+msgstr "Վերատեղադրել տպիչը"
 
 #: printrun/gui/toolbar.py:69
 msgid "Load a 3D model file"
@@ -424,7 +422,7 @@ msgstr "Autoplating"
 
 #: printrun/objectplater.py:199
 msgid "Bed full, sorry sir :("
-msgstr "Կներեք, բայց հատակը լիքն է :("
+msgstr "Կներեք, բայց հարթակը լիքն է :("
 
 #: printrun/objectplater.py:209
 msgid "Are you sure you want to clear the grid? All unsaved changes will be lost."
@@ -468,7 +466,7 @@ msgstr "Հնարավոր չի բեռնել գոյություն չունեցող
 
 #: printrun/plater.py:360
 msgid "Wrote plate to %s"
-msgstr "ֆիքսել հատակը %s-ին"
+msgstr "ֆիքսել հարթակը %s-ին"
 
 #: printrun/plater.py:367
 msgid "Failed to use simarrange for plating, falling back to the standard method"
@@ -575,7 +573,7 @@ msgstr "Լռելայն ՝"
 
 #: printrun/pronsole.py:73
 msgid "(Control-doubleclick to reset to default value)"
-msgstr "(Ctrl-երկու կրկնակի սեղմել, որպեսզի գործադրել լռելայն արժեքները )"
+msgstr "(կրկնակի սեղմել Ctrl` լռելայն արժեքները գործադրելու համար )"
 
 #: printrun/pronsole.py:108
 msgid "Are you sure you want to reset the setting to the default value: {0!r} ?"
@@ -647,7 +645,7 @@ msgstr "Երբ օգտագործում ենք տպիչին միանալու TCP �
 
 #: printrun/pronsole.py:304
 msgid "Bed temperature for ABS"
-msgstr "Հատակի ջերմաստիճանը ABS-ի համար"
+msgstr "Հարթակի ջերմաստիճանը ABS-ի համար"
 
 #: printrun/pronsole.py:304
 msgid "Heated Build Platform temp for ABS (deg C)"
@@ -655,11 +653,11 @@ msgstr "Տաքացվող պլաֆորմի ջերմաստիճանը ABS-ի համ
 
 #: printrun/pronsole.py:305
 msgid "Bed temperature for PLA"
-msgstr "Հատակի ջերմաստիճանը ABS-ի համար"
+msgstr "Հարթակի ջերմաստիճանը PLA-ի համար"
 
 #: printrun/pronsole.py:305
 msgid "Heated Build Platform temp for PLA (deg C)"
-msgstr "Տաքացվող պլաֆորմi ջերմաստիճանը PLA-ի համար (աստ. C)"
+msgstr "Տաքացվող պլաֆորմի ջերմաստիճանը PLA-ի համար (աստ. C)"
 
 #: printrun/pronsole.py:306
 msgid "Extruder temp for ABS (deg C)"
@@ -679,7 +677,7 @@ msgstr "Գլխիկի ջերմաստիճանը PLA-ի համար (աստ. C)"
 
 #: printrun/pronsole.py:308
 msgid "Feedrate for Control Panel Moves in X and Y (mm/min)"
-msgstr "Սնուցման արագությունը կառավարման վահանակի X and Y շարժման համար (մմ/րոպե)"
+msgstr "Սնուցման արագությունը կառավարման վահանակի X and Y շարժման համար (մմ/ր)"
 
 #: printrun/pronsole.py:308
 msgid "X && Y manual feedrate"
@@ -687,7 +685,7 @@ msgstr "X && Y ձեռքով սնուցման արագություն"
 
 #: printrun/pronsole.py:309
 msgid "Feedrate for Control Panel Moves in Z (mm/min)"
-msgstr "Սնուցման արագությունը կառավարման վահանակի Z շարժման համար (մմ/րոպե)"
+msgstr "Սնուցման արագությունը կառավարման վահանակի Z շարժման համար (մմ/ր)"
 
 #: printrun/pronsole.py:309
 msgid "Z manual feedrate"
@@ -699,7 +697,7 @@ msgstr "E ձեռքով սնուցման արագություն"
 
 #: printrun/pronsole.py:310
 msgid "Feedrate for Control Panel Moves in Extrusions (mm/min)"
-msgstr "Սնուցման արագությունը կառավարման վահանակի E շարժման համար (մմ/րոպե)"
+msgstr "Սնուցման արագությունը կառավարման վահանակի E շարժման համար (մմ/ր)"
 
 #: printrun/pronsole.py:311
 msgid "Slice command"
@@ -994,7 +992,7 @@ msgstr "Ցույց տալ, թե իչքան ժամանակ է մնացել տպա
 
 #: printrun/pronsole.py:1498
 msgid "Read the extruder and bed temperature."
-msgstr "Կարդալ գլխիկի և հատակի ջերմաստիճանները:"
+msgstr "Կարդալ գլխիկի և հարթակի ջերմաստիճանները:"
 
 #: printrun/pronsole.py:1507 printrun/pronsole.py:1540
 msgid "You must enter a temperature."
@@ -1022,15 +1020,15 @@ msgstr "Մուտքագրել ջերմաստիճանը ցելսիուսով կա�
 
 #: printrun/pronsole.py:1544
 msgid "Setting bed temperature to %s degrees Celsius."
-msgstr "Սահմանել հատակի ջերմաստիճանը %s աստիճան Ցելսիուս:"
+msgstr "Սահմանել հարթակի ջերմաստիճանը %s աստիճան Ցելսիուս:"
 
 #: printrun/pronsole.py:1548 printrun/pronterface.py:379
 msgid "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
-msgstr "Չեք կարող սահմանել բացասական արժեքով ջերմաստիճան: Հատակի տաքացումը ամբողջությամբ անջատելու համար սահմանեք 0 ջերմաստիճան:"
+msgstr "Չեք կարող սահմանել բացասական արժեքով ջերմաստիճան: Հարթակի տաքացումը ամբողջությամբ անջատելու համար սահմանեք 0 ջերմաստիճան:"
 
 #: printrun/pronsole.py:1551
 msgid "Sets the bed temperature to the value entered."
-msgstr "Սահմանել հատակի տաքացման ջերմաստիճանը մուտքագրած արժեքի չափով:"
+msgstr "Սահմանել հարթակի տաքացման ջերմաստիճանը մուտքագրած արժեքի չափով:"
 
 #: printrun/pronsole.py:1565
 msgid "Printer is not printing. Please print something before monitoring."
@@ -1115,11 +1113,11 @@ msgstr "X 10 շարժումը կտեղափոխի X առանցքը դեպի առ�
 
 #: printrun/pronsole.py:1667
 msgid "move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"
-msgstr "Y 10 5000 քայլը կշրժի Y առանցքը դեպի առաջ 10մմ 5000մմ/րոպե արագությամբ"
+msgstr "Y 10 5000 քայլը կշրժի Y առանցքը դեպի առաջ 10մմ 5000մմ/ր արագությամբ"
 
 #: printrun/pronsole.py:1668
 msgid "move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)"
-msgstr "Z -1 քայլը կշարժի Z առանցքը դեպի ներգև 1մմ %s մմ/րոպե (լռելայն արագություն)"
+msgstr "Z -1 քայլը կշարժի Z առանցքը դեպի ներգև 1մմ %s մմ/ր (լռելայն արագություն)"
 
 #: printrun/pronsole.py:1669
 msgid "Common amounts are in the tabcomplete list."
@@ -1151,19 +1149,19 @@ msgstr "Լռելայն 5մմ կամ տրված պարամետրի թվով եր�
 
 #: printrun/pronsole.py:1723
 msgid "extrude - extrudes 5mm of filament at 300mm/min (5mm/s)"
-msgstr "արտամղել - արտամղել 5մմ լցանյութ 300մմ/րոպե արագությամբ (5մմ/վրկ)"
+msgstr "արտամղել - արտամղել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
 #: printrun/pronsole.py:1724
 msgid "extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)"
-msgstr "արտամղել 20 - արտամղել 20մմ լցանյութ 300մմ/րոպե արագությամբ (5մմ/վրկ)"
+msgstr "արտամղել 20 - արտամղել 20մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
 #: printrun/pronsole.py:1725
 msgid "extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)"
-msgstr "արտամղել 5 - հետ բերել 5մմ լցանյութ 300մմ/րոպե արագությամբ (5մմ/վրկ)"
+msgstr "արտամղել 5 - հետ բերել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
 #: printrun/pronsole.py:1726
 msgid "extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
-msgstr "արտամղել 10 210 - արտամղել 10մմ լցանյութ 210մմ/րոպե արագությամբ (3.5մմ/վրկ)"
+msgstr "արտամղել 10 210 - արտամղել 10մմ լցանյութ 210մմ/ր արագությամբ (3.5մմ/վրկ)"
 
 #: printrun/pronsole.py:1732
 msgid "Printer is not online. Unable to reverse."
@@ -1175,19 +1173,19 @@ msgstr "Հետ շարժել արտամղիչը 5մմ-ի կամ տրված պար
 
 #: printrun/pronsole.py:1752
 msgid "reverse - reverses 5mm of filament at 300mm/min (5mm/s)"
-msgstr "հետ շարժել - հետ քաշել 5մմ լցանյութ 300մմ/րոպե արագությամբ (5մմ/վրկ)"
+msgstr "հետ շարժել - հետ քաշել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
 #: printrun/pronsole.py:1753
 msgid "reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)"
-msgstr "հետ շարժել 20 - հետ քաշել 20մմ լցանյութ 300մմ/րոպե արագությամբ (5մմ/վրկ)"
+msgstr "հետ շարժել 20 - հետ քաշել 20մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
 #: printrun/pronsole.py:1754
 msgid "reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
-msgstr "հետ շարժել 10 210 - հետ քաշել 10մմ լցանյութ 210մմ/րոպե արագությամբ (3.5մմ/վրկ)"
+msgstr "հետ շարժել 10 210 - հետ քաշել 10մմ լցանյութ 210մմ/ր արագությամբ (3.5մմ/վրկ)"
 
 #: printrun/pronsole.py:1755
 msgid "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
-msgstr "արտամղել -5 - արտամղել 5մմ լցանյութ 300մմ/րոպե արագությամբ (5մմ/վրկ)"
+msgstr "արտամղել -5 - արտամղել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
 #: printrun/pronsole.py:1777
 msgid "Homes the printer"
@@ -1215,7 +1213,7 @@ msgstr "զրոյական դիրք xyze - զրոյացնել բոլոր առան�
 
 #: printrun/pronsole.py:1790
 msgid "; Motors off"
-msgstr "; Անջատել շարժիչները"
+msgstr "; Անջատ շարժիչներ"
 
 #: printrun/pronsole.py:1792
 msgid "; Extruder off"
@@ -1223,7 +1221,7 @@ msgstr "; Անջատել արտամղիչը"
 
 #: printrun/pronsole.py:1794
 msgid "; Heatbed off"
-msgstr "; Անջատել տաքացվող հատակը"
+msgstr "; Անջատել տաքացվող հարթակը"
 
 #: printrun/pronsole.py:1796
 msgid "; Fan off"
@@ -1263,7 +1261,7 @@ msgstr "Փոխարկել բոլոր շարժիչները"
 
 #: printrun/pronterface.py:150
 msgid "Advance extruder by set length"
-msgstr "Բարձրացնել արտամղիչը սահմանված երկարությամբ "
+msgstr "Առաջ շարժել արտամղիչը սահմանված երկարությամբ "
 
 #: printrun/pronterface.py:150
 msgid "Extrude"
@@ -1313,7 +1311,7 @@ msgstr "Դուք պետք է մուտքագրեք ջերմաստիճանը: (%s)
 
 #: printrun/pronterface.py:374
 msgid "Setting bed temperature to %f degrees Celsius."
-msgstr "Սահմանել հատակի ջերմաստիճանը՝ %f աստիճան ցելսիուս:"
+msgstr "Սահմանել հարթակի ջերմաստիճանը՝ %f աստիճան ցելսիուս:"
 
 #: printrun/pronterface.py:392
 msgid "Setting print speed factor to %d%%."
@@ -1435,7 +1433,7 @@ msgstr "Վերականգնել"
 
 #: printrun/pronterface.py:679
 msgid "&Advanced"
-msgstr "&Մասնագիտացված"
+msgstr "&Ընդլայնված"
 
 #: printrun/pronterface.py:686
 msgid "Print &settings"
@@ -1541,11 +1539,11 @@ msgstr "Գծել շրջանային կառուցման պլատֆորմը մեկ
 
 #: printrun/pronterface.py:784
 msgid "Extruders count"
-msgstr "«Էքստրուդեր»-ների հաշիվ"
+msgstr "«Գլխիկների քանակը"
 
 #: printrun/pronterface.py:784
 msgid "Number of extruders"
-msgstr "«Էքստրուդեր»-ի համարը"
+msgstr "«Գլխիկի համարը"
 
 #: printrun/pronterface.py:785
 msgid "Clamp manual moves"
@@ -1627,11 +1625,11 @@ msgstr "Հետևել ընթացիկ տպվող շերտը հիմնական 3D ա
 
 #: printrun/pronterface.py:794
 msgid "Display temperature graph"
-msgstr "Ցուցադրել ջերմաստիճանային գրաֆիկը"
+msgstr "Ցուցադրել ջերմաստիճանային գծապատկերը"
 
 #: printrun/pronterface.py:794
 msgid "Display time-lapse temperature graph"
-msgstr "Ցուցադրել ջերմաստիճանի ժամանակային գրաֆիկը"
+msgstr "Ցուցադրել ջերմաստիճանի ժամանակային գծապատկերը"
 
 #: printrun/pronterface.py:795
 msgid "Display graphical gauges for temperatures visualization"
@@ -1639,7 +1637,7 @@ msgstr "Ցուցադրել գրաֆիկական չափումներ ջերմաս�
 
 #: printrun/pronterface.py:795
 msgid "Display temperature gauges"
-msgstr "Ցուցադրել ջերմաստիճանային չափփումները"
+msgstr "Ցուցադրել ջերմաստիճանային չափումները"
 
 #: printrun/pronterface.py:796
 msgid "Display a checkbox that, when check, locks most of Pronterface"
@@ -1655,7 +1653,7 @@ msgstr "Եթե կողպման վանդակը ակտիվաացված է, ապա �
 
 #: printrun/pronterface.py:797
 msgid "Lock interface upon print start"
-msgstr "Կողպել միջերես մինչ տպագրության մեկնարկը"
+msgstr "Կողպել միջերեսը, մինչ տպագրության մեկնարկը"
 
 #: printrun/pronterface.py:804
 msgid "Preview extrusion width"
@@ -1715,7 +1713,7 @@ msgstr "Տպիչի շարժման գույնը 0 գործիքով եռաչափ �
 
 #: printrun/pronterface.py:811
 msgid "3D view tool 1 moves color"
-msgstr "1 գործիքի շարժման գույնը եռաչափ տեսքով"
+msgstr "Գործիքի շարժման թիվ 1 գույնը եռաչափ տեսքով"
 
 #: printrun/pronterface.py:811
 msgid "Color of print moves with tool 1 in 3D view"
@@ -1731,7 +1729,7 @@ msgstr "Տպագրած շարժումների գույնը եռաչափ տեսք
 
 #: printrun/pronterface.py:813
 msgid "3D view current layer moves color"
-msgstr "Ընթաղիկ շերտի գույնը եռաչափ տեսքով"
+msgstr "Ընթացիկ շերտի գույնը եռաչափ տեսքով"
 
 #: printrun/pronterface.py:813
 msgid "Color of moves in current layer in 3D view"
@@ -1739,7 +1737,7 @@ msgstr "Ընթացիկ շերտի շարժման գույնը եռաչափ տե�
 
 #: printrun/pronterface.py:814
 msgid "3D view printed current layer moves color"
-msgstr "Ընթացիկի տպագրած շերտի գույնը եռաչափ տեսքով"
+msgstr "Ընթացիկ տպագրած շերտի գույնը եռաչափ տեսքով"
 
 #: printrun/pronterface.py:814
 msgid "Color of already printed moves from current layer in 3D view"
@@ -1823,15 +1821,15 @@ msgstr "Անջատված է:"
 
 #: printrun/pronterface.py:1071
 msgid "Reset."
-msgstr "Զրոյացնել կարգավորումները:"
+msgstr "Վերատեղադրել:"
 
 #: printrun/pronterface.py:1072
 msgid "Are you sure you want to reset the printer?"
-msgstr "Իրո՞ք ցանկանում եք զրոյացնել տպիչի կարգավորումները:"
+msgstr "Իրո՞ք ցանկանում եք վերատեղադրել տպիչը:"
 
 #: printrun/pronterface.py:1072
 msgid "Reset?"
-msgstr "Զրոյացնել կարգավորումները?"
+msgstr "Վերատեղադրել?"
 
 #: printrun/pronterface.py:1093
 msgid "Restart"
