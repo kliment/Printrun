@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
- <id>plater</id>
- <metadata_license>FSFAP</metadata_license>
- <project-license>GPL-3.0+</project-license>
+ <id>com.github.kliment/printrun/plater</id>
+ <metadata_license>CC0-1.0</metadata_license>
+ <project_license>GPL-3.0+</project_license>
  <name>Plater</name>
  <summary>3D printer plating tool</summary>
  <description>
@@ -11,7 +11,9 @@
  </description>
  <launchable type="desktop-id">plater.desktop</launchable>
  <screenshots>
-  <screenshot type="default" width="804" height="606">https://raw.github.com/kliment/Printrun/master/screenshots/plater.png</screenshot>
+   <screenshot type="default">
+     <image width="804" height="606">https://raw.github.com/kliment/Printrun/master/screenshots/plater.png</image>
+   </screenshot>
  </screenshots>
  <url type="homepage">https://github.com/kliment/Printrun</url>
 </component>
