@@ -57,7 +57,7 @@ msgstr "تلقائي"
 
 #: plater.py:291
 msgid "Autoplating"
-msgstr "
+msgstr ""
 
 #: plater.py:319
 msgid "Bed full, sorry sir :("
