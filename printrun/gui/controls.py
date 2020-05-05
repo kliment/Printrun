@@ -189,7 +189,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     # Speed control #
     speedpanel = root.newPanel(parentpanel)
     speedsizer = wx.BoxSizer(wx.HORIZONTAL)
-    speedsizer.Add(wx.StaticText(speedpanel, -1, _("Print speed:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+    speedsizer.Add(wx.StaticText(speedpanel, -1, _("Print speed:")), flag = wx.ALIGN_CENTER_VERTICAL)
 
     root.speed_slider = wx.Slider(speedpanel, -1, 100, 1, 300)
     speedsizer.Add(root.speed_slider, 1, flag = wx.EXPAND)
@@ -198,7 +198,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     root.speed_spin.SetDigits(0)
     speedsizer.Add(root.speed_spin, 0, flag = wx.ALIGN_CENTER_VERTICAL)
     root.speed_label = wx.StaticText(speedpanel, -1, _("%"))
-    speedsizer.Add(root.speed_label, flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+    speedsizer.Add(root.speed_label, flag = wx.ALIGN_CENTER_VERTICAL)
 
     def speedslider_set(event):
         root.do_setspeed()
@@ -224,7 +224,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     # Flow control #
     flowpanel = root.newPanel(parentpanel)
     flowsizer = wx.BoxSizer(wx.HORIZONTAL)
-    flowsizer.Add(wx.StaticText(flowpanel, -1, _("Print flow:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+    flowsizer.Add(wx.StaticText(flowpanel, -1, _("Print flow:")), flag = wx.ALIGN_CENTER_VERTICAL)
 
     root.flow_slider = wx.Slider(flowpanel, -1, 100, 1, 300)
     flowsizer.Add(root.flow_slider, 1, flag = wx.EXPAND)
@@ -232,7 +232,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     root.flow_spin = wx.SpinCtrlDouble(flowpanel, -1, initial = 100, min = 1, max = 300, style = wx.ALIGN_LEFT, size = (115, -1))
     flowsizer.Add(root.flow_spin, 0, flag = wx.ALIGN_CENTER_VERTICAL)
     root.flow_label = wx.StaticText(flowpanel, -1, _("%"))
-    flowsizer.Add(root.flow_label, flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+    flowsizer.Add(root.flow_label, flag = wx.ALIGN_CENTER_VERTICAL)
 
     def flowslider_set(event):
         root.do_setflow()
@@ -420,9 +420,9 @@ class ControlsSizer(wx.GridBagSizer):
 
         root.xyfeedc = wx.SpinCtrl(lltspanel, -1, str(root.settings.xy_feedrate), min = 0, max = 50000, size = (130, -1))
         root.xyfeedc.SetToolTip(wx.ToolTip(_("Set Maximum Speed for X & Y axes (mm/min)")))
-        llts.Add(wx.StaticText(lltspanel, -1, _("XY:")), flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        llts.Add(wx.StaticText(lltspanel, -1, _("XY:")), flag = wx.ALIGN_CENTER_VERTICAL)
         llts.Add(root.xyfeedc)
-        llts.Add(wx.StaticText(lltspanel, -1, _("mm/min Z:")), flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        llts.Add(wx.StaticText(lltspanel, -1, _("mm/min Z:")), flag = wx.ALIGN_CENTER_VERTICAL)
         root.zfeedc = wx.SpinCtrl(lltspanel, -1, str(root.settings.z_feedrate), min = 0, max = 50000, size = (130, -1))
         root.zfeedc.SetToolTip(wx.ToolTip(_("Set Maximum Speed for Z axis (mm/min)")))
         llts.Add(root.zfeedc,)

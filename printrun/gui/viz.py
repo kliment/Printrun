@@ -106,4 +106,4 @@ class VizPane(wx.BoxSizer):
                                            bgcolor = root.bgcolor)
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
         if not isinstance(root.gviz, NoViz):
-            self.Add(root.gviz.widget, 1, flag = wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL)
+            self.Add(root.gviz.widget, 1, flag = wx.EXPAND)
