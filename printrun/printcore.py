@@ -253,9 +253,9 @@ class printcore():
                         self.printer = Serial(baudrate = self.baud,
                                               timeout = 0.25,
                                               parity = PARITY_NONE)
-                        self.printer.setPort(self.port)
+                        self.printer.port = self.port
                     try:  #this appears not to work on many platforms, so we're going to call it but not care if it fails
-                        self.printer.setDTR(dtr);
+                        self.printer.dtr = dtr
                     except:
                         #self.logError(_("Could not set DTR on this platform")) #not sure whether to output an error message
                         pass
@@ -283,9 +283,9 @@ class printcore():
         """Reset the printer
         """
         if self.printer and not self.printer_tcp:
-            self.printer.setDTR(1)
+            self.printer.dtr = 1
             time.sleep(0.2)
-            self.printer.setDTR(0)
+            self.printer.dtr = 0
 
     def _readline_buf(self):
         "Try to readline from buffer"
@@ -374,7 +374,7 @@ class printcore():
             return not self.stop_read_thread and self.printer
         return (not self.stop_read_thread
                 and self.printer
-                and self.printer.isOpen())
+                and self.printer.is_open)
 
     def _listen_until_online(self):
         while not self.online and self._listen_can_continue():
