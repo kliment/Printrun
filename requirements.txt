@@ -1,5 +1,5 @@
 # python (>= 3.6)
-pyserial >= 2.7
+pyserial (>= 3.0)
 wxPython (>= 4.0)
 numpy (>= 1.8.2)
 pyglet (>= 1.1)
