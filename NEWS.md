@@ -1,3 +1,37 @@
+Printrun - 2.0.0
+================
+
+### New Features
+
+ - Armenian translation by @Avag-Sayan (#1042)
+
+### Fixed Bugs
+
+ - Settings reset with Ctrl+DoubleClick (c6a4d3d)
+ - Apply settings without restart (2ea52b2)
+ - Colors on 3D viewer not working (#1054)
+ - Decode messages from printer as UTF-8 (#1058)
+ - Update to pySerial 3.0 (#1055)
+ - Compatibility with wxPython 4.1.0 (#1051)
+ - Metadata updated to AppStream's spec 0.12 (#1049)
+ - Building on Windows (#1040)
+ - Timeout on socket connections (#1027)
+ - Port not allowed to be set before connecting (#1019)
+ - Serial parity nor working correctly on FreeBSD (#1017)
+ - Mismatch between C/C++ and Windows locale (#1015)
+ - Completion and buffer overflow on `run_gcode_script` (#1009)
+ - Mate screensaver disabling not supported (#979)
+ - Crashing of `run_script` and `run_gcode_script` (#978)
+ - Dependency gathering explanation (#962)
+ - Image path on setup file (#942)
+ - CoreFoundation encoding errors (#937)
+ - Final command not executing (#933)
+ - Use theme background colour (#932)
+ - Hide stats for second extruder when not used (#791)
+ - Preset temperatures not read from config file (#676)
+ - Hardcoded icon paths in launchers (71e4476)
+
+
 Printrun - 2.0.0rc5
 ====================
 
