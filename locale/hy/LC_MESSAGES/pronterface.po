@@ -1,5 +1,4 @@
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Armenian Pronterface Message Catalog
 #
 msgid ""
 msgstr ""

@@ -1,12 +1,10 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Armenian Plater Message Catalog
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Plater\n"
 "POT-Creation-Date: 2012-08-04 21:53+CEST\n"
-"POT-Creation-Date: 2020-18-04 11:16+CEST\n"
+"PO-Revision-Date: 2020-18-04 11:16+CEST\n"
 "Last-Translator: Avag Sayan <info@armath.am>\n"
 "Language-Team: Armath Engineering Labs, info@armath.am\n"
 "MIME-Version: 1.0\n"
