@@ -316,7 +316,7 @@ class GCode:
             self.lines.append(gline)
             self.append_layer.append(gline)
             self.layer_idxs.append(self.append_layer_id)
-            self.line_idxs.append(len(self.append_layer))
+            self.line_idxs.append(len(self.append_layer)-1)
         return gline
 
     def _preprocess(self, lines = None, build_layers = False,
