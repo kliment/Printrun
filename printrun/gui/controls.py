@@ -44,7 +44,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         gauges_base_line = base_line + 7
     else:
         gauges_base_line = base_line + 6
-    tempdisp_line = gauges_base_line + (2 if root.display_gauges else 0)
+    tempdisp_line = gauges_base_line + (2+2 if root.display_gauges else 0) # AGe Move Templine +2 down for additional Gauges
     if mini_mode and root.display_graph:
         e_base_line = base_line + 3
     else:
@@ -63,8 +63,10 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "esettings": (e_base_line + 1, 0),
         "speedcontrol": (e_base_line + 2, 0),
         "flowcontrol": (e_base_line + 3, 0),
-        "htemp_gauge": (gauges_base_line + 0, 0),
-        "btemp_gauge": (gauges_base_line + 1, 0),
+        "htemp_gauge": (gauges_base_line + 0, 0), # AGe old htemp_gauge
+        "htemp2_gauge": (gauges_base_line + 1, 0), # AGe addition
+        "btemp_gauge": (gauges_base_line + 2, 0), # AGe old btemp_gauge
+        "btemp2_gauge": (gauges_base_line + 3, 0), # AGe addition
         "tempdisp": (tempdisp_line, 0),
         "extrude": (3, 0),
         "reverse": (3, 2),
@@ -84,7 +86,9 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
         "speedcontrol": (1, 5 if root.display_graph else 6),
         "flowcontrol": (1, 5 if root.display_graph else 6),
         "htemp_gauge": (1, 5 if mini_mode else 6),
+        "htemp2_gauge": (1, 5 if mini_mode else 6),
         "btemp_gauge": (1, 5 if mini_mode else 6),
+        "btemp2_gauge": (1, 5 if mini_mode else 6),
         "tempdisp": (1, 5 if mini_mode else 6),
         "extrude": (1, 2),
         "reverse": (1, 3),
@@ -260,8 +264,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     if root.display_gauges:
         root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300, bgcolor = root.bgcolor)
         add("htemp_gauge", root.hottgauge, flag = wx.EXPAND)
+        root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater2:"), maxval = 300, bgcolor = root.bgcolor) # AGe add gauges for 2. Extruder
+        add("htemp2_gauge", root.hottgauge, flag = wx.EXPAND)
         root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed:"), maxval = 150, bgcolor = root.bgcolor)
         add("btemp_gauge", root.bedtgauge, flag = wx.EXPAND)
+        root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed2:"), maxval = 150, bgcolor = root.bgcolor) # AGe add gauges for 2. Bed
+        add("btemp2_gauge", root.bedtgauge, flag = wx.EXPAND)
 
         def hotendgauge_scroll_setpoint(e):
             rot = e.GetWheelRotation()
