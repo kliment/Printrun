@@ -1850,11 +1850,21 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if bed_temp is not None:
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
-                setpoint = temps["B"][1]
+                setpoint = float(temps["B"][1]) #AGe change setpoint as float
                 if setpoint:
-                    setpoint = float(setpoint)
+                    #setpoint = float(setpoint)
                     if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
                     if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
+            bed_temp = float(temps["B1"][0]) if "B1" in temps and temps["B1"][0] else None #AGe add bed1
+            if bed_temp is not None:
+                if self.display_graph: wx.CallAfter(self.graph.SetBed1Temperature, bed_temp)
+                if self.display_gauges: wx.CallAfter(self.bedt1gauge.SetValue, bed_temp)
+                setpoint = float(temps["B1"][1]) #AGe change setpoint as float
+                if setpoint:
+                    #setpoint = float(setpoint)
+                    if self.display_graph: wx.CallAfter(self.graph.SetBed1TargetTemperature, setpoint)
+                    if self.display_gauges: wx.CallAfter(self.bedt1gauge.SetTarget, setpoint)
+
         except:
             self.logError(traceback.format_exc())
 
