@@ -60,6 +60,8 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = parent_graph.extruder1targettemps
             self.bedtemps = parent_graph.bedtemps
             self.bedtargettemps = parent_graph.bedtargettemps
+            self.bed1temps = parent_graph.bed1temps #AGe add bed1
+            self.bed1targettemps = parent_graph.bed1targettemps #AGe add bed1
             self.fanpowers=parent_graph.fanpowers
         else:
             self.extruder0temps = [0]
@@ -68,6 +70,8 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = [0]
             self.bedtemps = [0]
             self.bedtargettemps = [0]
+            self.bed1temps = [0] #AGe add bed1
+            self.bed1targettemps = [0] #AGe add bed1
             self.fanpowers= [0]
 
         self.timer = wx.Timer(self)
@@ -102,6 +106,8 @@ class Graph(BufferedCanvas):
     def updateTemperatures(self, event):
         self.AddBedTemperature(self.bedtemps[-1])
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
+        self.AddBed1Temperature(self.bed1temps[-1]) #AGe add bed1
+        self.AddBed1TargetTemperature(self.bed1targettemps[-1]) #AGe add bed1
         self.AddExtruder0Temperature(self.extruder0temps[-1])
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
         self.AddExtruder1Temperature(self.extruder1temps[-1])
@@ -241,6 +247,14 @@ class Graph(BufferedCanvas):
         self.drawtemperature(dc, gc, self.bedtargettemps,
                              "Bed Target", 2, 255, 120, 0, 128)
 
+    def drawbed1temp(self, dc, gc): #AGe add bed1
+        self.drawtemperature(dc, gc, self.bed1temps,
+                             "Bed 1", 2, 255, 0, 0, 128)
+
+    def drawbed1targettemp(self, dc, gc): #AGe add bed1
+        self.drawtemperature(dc, gc, self.bed1targettemps,
+                             "Bed 1 Target", 2, 255, 120, 0, 128)
+
     def drawextruder0temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0temps,
                              "Ex0", 1, 0, 155, 255, 128)
@@ -283,6 +297,24 @@ class Graph(BufferedCanvas):
         self.bedtargettemps.append(value)
         if float(len(self.bedtargettemps) - 1) / self.xsteps > 1:
             self.bedtargettemps.pop(0)
+
+    def SetBed1Temperature(self, value): #AGe add bed1
+        self.bed1temps.pop()
+        self.bed1temps.append(value)
+
+    def AddBed1Temperature(self, value): #AGe add bed1
+        self.bed1temps.append(value)
+        if float(len(self.bed1temps) - 1) / self.xsteps > 1:
+            self.bed1temps.pop(0)
+
+    def SetBed1TargetTemperature(self, value): #AGe add bed1
+        self.bed1targettemps.pop()
+        self.bed1targettemps.append(value)
+
+    def AddBed1TargetTemperature(self, value): #AGe add bed1
+        self.bed1targettemps.append(value)
+        if float(len(self.bed1targettemps) - 1) / self.xsteps > 1:
+            self.bed1targettemps.pop(0)
 
     def SetExtruder0Temperature(self, value):
         self.extruder0temps.pop()
@@ -385,7 +417,7 @@ class Graph(BufferedCanvas):
                 bounds = self.getBoundsQuick()
                 self.graph.minyvalue, self.graph.maxyvalue = bounds
 
-        def getBounds(self):
+        def getBounds(self): # AGe to do Check bounds for bed1
             """
             Calculates the bounds based on the current temperatures
 
