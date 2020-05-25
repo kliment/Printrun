@@ -1,4 +1,4 @@
-About this fork
+# About this fork
 
 This fork adds two additional gauges for a second extruder and bed incl. graph update separated in an additional branch named Gauges. The source code (master branch) is based on 2.0.0.5 RC5 and includes all changes from the actual master including the modification for decoding utf-8 (pyserial 3.x) printcore: Decode serial as UTF-8 #1058.
 
