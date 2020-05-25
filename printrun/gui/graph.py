@@ -375,6 +375,9 @@ class Graph(BufferedCanvas):
         self.drawgrid(dc, gc)
         self.drawbedtargettemp(dc, gc)
         self.drawbedtemp(dc, gc)
+        if self.bed1targettemps[-1]>0 or self.bed1temps[-1]>5: #AGe add
+            self.drawbed1targettemp(dc, gc) #AGe add
+            self.drawbed1temp(dc, gc) #AGe add
         self.drawfanpower(dc, gc)
         self.drawextruder0targettemp(dc, gc)
         self.drawextruder0temp(dc, gc)
@@ -440,6 +443,9 @@ class Graph(BufferedCanvas):
             bed_min = min(self.graph.bedtemps)
             bed_max = max(self.graph.bedtemps)
             bed_target = self.graph.bedtargettemps[-1]
+            bed1_min = min(self.graph.bed1temps) #AGe add
+            bed1_max = max(self.graph.bed1temps) #AGe add
+            bed1_target = self.graph.bed1targettemps[-1] #AGe add
 
             miny = min(extruder0_min, extruder0_target)
             maxy = max(extruder0_max, extruder0_target)
@@ -449,6 +455,10 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
+            if bed1_target > 0 or bed1_max > 5:  # use HBP2 # AGe Add
+                miny = min(miny, bed1_min, bed1_target) # AGe Add
+                maxy = max(maxy, bed1_max, bed1_target) # AGe Add
+
             miny=min(0,miny);
             maxy=max(260,maxy);
 
@@ -474,6 +484,9 @@ class Graph(BufferedCanvas):
             bed_min = self.graph.bedtemps[-1]
             bed_max = self.graph.bedtemps[-1]
             bed_target = self.graph.bedtargettemps[-1]
+            bed1_min = self.graph.bed1temps[-1] # AGe Add
+            bed1_max = self.graph.bed1temps[-1] # AGe Add
+            bed1_target = self.graph.bed1targettemps[-1] # AGe Add
 
             miny = min(extruder0_min, extruder0_target)
             maxy = max(extruder0_max, extruder0_target)
@@ -483,6 +496,9 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
+            if bed1_target > 0 or bed1_max > 5:  # use HBP1 # AGe Add
+                miny = min(miny, bed1_min, bed1_target) # AGe Add
+                maxy = max(maxy, bed1_max, bed1_target) # AGe Add
             miny=min(0,miny);
             maxy=max(260,maxy);
 

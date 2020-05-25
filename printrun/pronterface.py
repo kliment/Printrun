@@ -509,6 +509,26 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             wx.CallAfter(self.btemp.SetBackgroundColour, "white")
             wx.CallAfter(self.btemp.Refresh)
 
+    def setbed1gui(self, f):
+        self.bsetpoint = f
+        if self.display_gauges: self.bedt1gauge.SetTarget(int(f))
+        if self.display_graph: wx.CallAfter(self.graph.SetBed1TargetTemperature, int(f))
+        if f > 0:
+            wx.CallAfter(self.btemp.SetValue, str(f))
+            self.set("last_bed_temperature", str(f))
+            wx.CallAfter(self.setboff.SetBackgroundColour, None)
+            wx.CallAfter(self.setboff.SetForegroundColour, None)
+            wx.CallAfter(self.setbbtn.SetBackgroundColour, "#FFAA66")
+            wx.CallAfter(self.setbbtn.SetForegroundColour, "#660000")
+            wx.CallAfter(self.btemp.SetBackgroundColour, "#FFDABB")
+        else:
+            wx.CallAfter(self.setboff.SetBackgroundColour, "#0044CC")
+            wx.CallAfter(self.setboff.SetForegroundColour, "white")
+            wx.CallAfter(self.setbbtn.SetBackgroundColour, None)
+            wx.CallAfter(self.setbbtn.SetForegroundColour, None)
+            wx.CallAfter(self.btemp.SetBackgroundColour, "white")
+            wx.CallAfter(self.btemp.Refresh)
+
     def sethotendgui(self, f):
         self.hsetpoint = f
         if self.display_gauges: self.hottgauge.SetTarget(int(f))
@@ -1731,10 +1751,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 temp = gline_s
                 if self.display_gauges: 
                     wx.CallAfter(self.hottgauge.SetTarget, temp)
-                    wx.CallAfter(self.hott1gauge.SetTarget, temp) #AGe add
+                  #  wx.CallAfter(self.hott1gauge.SetTarget, temp) #AGe add
                 if self.display_graph: 
                     wx.CallAfter(self.graph.SetExtruder0TargetTemperature, temp)
-                    wx.CallAfter(self.graph.SetExtruder1TargetTemperature, temp) #Age add
+                  #  wx.CallAfter(self.graph.SetExtruder1TargetTemperature, temp) #Age add
         elif gline.command in ["M140", "M190"]:
             gline_s = gcoder.S(gline)
             if gline_s is not None:
@@ -1841,30 +1861,32 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 hotend_temp = float(temps["T1"][0])
                 if self.display_graph: wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
                 if self.display_gauges: wx.CallAfter(self.hott1gauge.SetValue, hotend_temp) #AGe add
-
+                setpoint = None
                 setpoint = float(temps["T1"][1]) #AGe change setpoint as float
-                if setpoint and self.display_graph:
+                if setpoint is not None and self.display_graph:
                     wx.CallAfter(self.graph.SetExtruder1TargetTemperature, setpoint) # AGe remove float for setpoint
                     wx.CallAfter(self.hott1gauge.SetTarget, setpoint) #AGe add
+            
             bed_temp = float(temps["B"][0]) if "B" in temps and temps["B"][0] else None
             if bed_temp is not None:
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
-                setpoint = float(temps["B"][1]) #AGe change setpoint as float
+                setpoint = temps["B"][1]
                 if setpoint:
-                    #setpoint = float(setpoint)
+                    setpoint = float(setpoint)
                     if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
                     if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
             bed_temp = float(temps["B1"][0]) if "B1" in temps and temps["B1"][0] else None #AGe add bed1
             if bed_temp is not None:
+                # bed_temp = float(bed_temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetBed1Temperature, bed_temp)
                 if self.display_gauges: wx.CallAfter(self.bedt1gauge.SetValue, bed_temp)
-                setpoint = float(temps["B1"][1]) #AGe change setpoint as float
-                if setpoint:
-                    #setpoint = float(setpoint)
+                setpoint = None
+                setpoint = temps["B1"][1]
+                if setpoint is not None:
+                    setpoint = float(setpoint)
                     if self.display_graph: wx.CallAfter(self.graph.SetBed1TargetTemperature, setpoint)
                     if self.display_gauges: wx.CallAfter(self.bedt1gauge.SetTarget, setpoint)
-
         except:
             self.logError(traceback.format_exc())
 
