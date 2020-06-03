@@ -143,12 +143,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.ui_ready = False
         self._add_settings(size)
 
-        for field in dir(self.settings):
-            if field.startswith("_gcview_color_"):
-                cleanname = field[1:]
-                color = hexcolor_to_float(getattr(self.settings, cleanname), 4)
-                setattr(self, cleanname, list(color))
-
         self.pauseScript = None #"pause.gcode"
         self.endScript = None #"end.gcode"
 
@@ -172,8 +166,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.btndict = {}
         self.filehistory = None
         self.autoconnect = False
+        self.autoscrolldisable = False
+
         self.parse_cmdline(sys.argv[1:])
-        self.autoscrolldisable=False
+        for field in dir(self.settings):
+            if field.startswith("_gcview_color_"):
+                cleanname = field[1:]
+                color = hexcolor_to_float(getattr(self.settings, cleanname), 4)
+                setattr(self, cleanname, list(color))
 
         # FIXME: We need to initialize the main window after loading the
         # configs to restore the size, but this might have some unforeseen
