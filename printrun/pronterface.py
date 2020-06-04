@@ -1028,6 +1028,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         wx.CallAfter(widget.Refresh)
 
     def update_gcview_colors(self, param, value):
+        if not self.window_ready:
+            return
         color = hexcolor_to_float(value, 4)
         # This is sort of a hack: we copy the color values into the preexisting
         # color tuple so that we don't need to update the tuple used by gcview
