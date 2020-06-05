@@ -181,11 +181,15 @@ class PronterOptionsDialog(wx.Dialog):
 def PronterOptions(pronterface):
     dialog = PronterOptionsDialog(pronterface)
     if dialog.ShowModal() == wx.ID_OK:
+        changed_settings = []
         for setting in pronterface.settings._all_settings():
             old_value = setting.value
             setting.update()
             if setting.value != old_value:
                 pronterface.set(setting.name, setting.value)
+                changed_settings.append(setting)
+        if changed_settings:
+            pronterface.on_settings_change(changed_settings)
     dialog.Destroy()
 
 class ButtonEdit(wx.Dialog):

@@ -363,6 +363,7 @@ class GcodeModel(Model):
         # to store coordinates/colors/normals.
         # Nicely enough we have 3 per kind of thing for all kinds.
         coordspervertex = 3
+        buffered_color_len = 3  # 4th color component (alpha) is ignored
         verticesperline = 8
         coordsperline = coordspervertex * verticesperline
         coords_count = lambda nlines: nlines * coordsperline
@@ -389,20 +390,19 @@ class GcodeModel(Model):
         vertices = self.vertices = numpy.zeros(ncoords, dtype = GLfloat)
         vertex_k = 0
         colors = self.colors = numpy.zeros(ncoords, dtype = GLfloat)
+
         color_k = 0
         normals = self.normals = numpy.zeros(ncoords, dtype = GLfloat)
-        normal_k = 0
         indices = self.indices = numpy.zeros(nindices, dtype = GLuint)
         index_k = 0
         self.layer_idxs_map = {}
         self.layer_stops = [0]
 
-        prev_is_extruding = False
         prev_move_normal_x = None
         prev_move_normal_y = None
         prev_move_angle = None
-
         prev_pos = (0, 0, 0)
+        prev_gline = None
         layer_idx = 0
 
         self.printed_until = 0
@@ -437,21 +437,10 @@ class GcodeModel(Model):
                     has_movement = True
                     current_pos = (gline.current_x, gline.current_y, gline.current_z)
                     if not gline.extruding:
-                        travel_vertices[travel_vertex_k] = prev_pos[0]
-                        travel_vertices[travel_vertex_k + 1] = prev_pos[1]
-                        travel_vertices[travel_vertex_k + 2] = prev_pos[2]
-                        travel_vertices[travel_vertex_k + 3] = current_pos[0]
-                        travel_vertices[travel_vertex_k + 4] = current_pos[1]
-                        travel_vertices[travel_vertex_k + 5] = current_pos[2]
+                        travel_vertices[travel_vertex_k:travel_vertex_k+3] = prev_pos
+                        travel_vertices[travel_vertex_k + 3:travel_vertex_k + 6] = current_pos
                         travel_vertex_k += 6
-                        prev_is_extruding = False
                     else:
-                        gline_color = self.movement_color(gline)
-
-                        next_move = get_next_move(model_data, layer_idx, gline_idx)
-                        next_is_extruding = (next_move.extruding
-                                             if next_move is not None else False)
-
                         delta_x = current_pos[0] - prev_pos[0]
                         delta_y = current_pos[1] - prev_pos[1]
                         norm = delta_x * delta_x + delta_y * delta_y
@@ -469,7 +458,7 @@ class GcodeModel(Model):
                         new_indices = []
                         new_vertices = []
                         new_normals = []
-                        if prev_is_extruding:
+                        if prev_gline and prev_gline.extruding:
                             # Store previous vertices indices
                             prev_id = vertex_k // 3 - 4
                             avg_move_normal_x = (prev_move_normal_x + move_normal_x) / 2
@@ -566,6 +555,8 @@ class GcodeModel(Model):
                             new_indices = triangulate_rectangle(first, first + 1,
                                                                 first + 2, first + 3)
 
+                        next_move = get_next_move(model_data, layer_idx, gline_idx)
+                        next_is_extruding = next_move and next_move.extruding
                         if not next_is_extruding:
                             # Compute caps and link everything
                             p1x = current_pos[0] - path_halfwidth * move_normal_x
@@ -591,23 +582,25 @@ class GcodeModel(Model):
                         for new_i, item in enumerate(new_indices):
                             indices[index_k + new_i] = item
                         index_k += len(new_indices)
-                        for new_i, item in enumerate(new_vertices):
-                            vertices[vertex_k + new_i] = item
-                        vertex_k += len(new_vertices)
-                        for new_i, item in enumerate(new_normals):
-                            normals[normal_k + new_i] = item
-                        normal_k += len(new_normals)
-                        new_colors = list(gline_color)[:-1] * (len(new_vertices) // 3)
-                        for new_i, item in enumerate(new_colors):
-                            colors[color_k + new_i] = item
-                        color_k += len(new_colors)
 
-                        prev_is_extruding = True
+                        new_vertices_len = len(new_vertices)
+                        vertices[vertex_k:vertex_k+new_vertices_len] = new_vertices
+                        normals[vertex_k:vertex_k+new_vertices_len] = new_normals
+                        vertex_k += new_vertices_len
+
+                        new_vertices_count = new_vertices_len//coordspervertex
+                        # settings support alpha (transperancy), but it is ignored here
+                        gline_color = self.movement_color(gline)[:buffered_color_len]
+                        for _ in range(new_vertices_count):
+                            colors[color_k:color_k+buffered_color_len] = gline_color
+                            color_k += buffered_color_len
+
                         prev_move_normal_x = move_normal_x
                         prev_move_normal_y = move_normal_y
                         prev_move_angle = move_angle
 
                     prev_pos = current_pos
+                    prev_gline = gline
                     count_travel_indices.append(travel_vertex_k // 3)
                     count_print_indices.append(index_k)
                     count_print_vertices.append(vertex_k // 3)
@@ -637,7 +630,7 @@ class GcodeModel(Model):
             self.travels.resize(travel_vertex_k, refcheck = False)
             self.vertices.resize(vertex_k, refcheck = False)
             self.colors.resize(color_k, refcheck = False)
-            self.normals.resize(normal_k, refcheck = False)
+            self.normals.resize(vertex_k, refcheck = False)
             self.indices.resize(index_k, refcheck = False)
 
             self.layer_stops = array.array('L', self.layer_stops)
@@ -672,6 +665,24 @@ class GcodeModel(Model):
         copy.fully_loaded = True
         copy.initialized = False
         return copy
+
+    def update_colors(self):
+        """Rebuild gl color buffer without loading. Used after color settings edit"""
+        ncoords = self.count_print_vertices[-1]
+        colors = numpy.empty(ncoords*3, dtype = GLfloat)
+        cur_vertex = 0
+        gline_i = 1
+        for gline in self.gcode.lines:
+            if gline.gcview_end_vertex:
+                gline_color = self.movement_color(gline)[:3]
+                last_vertex = self.count_print_vertices[gline_i]
+                gline_i += 1
+                while cur_vertex < last_vertex:
+                    colors[cur_vertex*3:cur_vertex*3+3] = gline_color
+                    cur_vertex += 1
+        if self.vertex_color_buffer:
+            self.vertex_color_buffer.delete()
+        self.vertex_color_buffer = numpy2vbo(colors, use_vbos = self.use_vbos)
 
     # ------------------------------------------------------------------------
     # DRAWING
