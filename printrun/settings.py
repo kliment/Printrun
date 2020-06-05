@@ -83,6 +83,8 @@ class Setting:
     def update(self):
         raise NotImplementedError
 
+    def validate(self, value): pass
+
     def __str__(self):
         return self.name
 
@@ -122,6 +124,31 @@ class StringSetting(wxSetting):
         import wx
         self.widget = wx.TextCtrl(parent, -1, str(self.value))
         return self.widget
+
+def wxColorToStr(color, withAlpha = True):
+    # including Alpha seems to be non standard in CSS
+    format = '#{0.red:02X}{0.green:02X}{0.blue:02X}' \
+        + ('{0.alpha:02X}' if withAlpha else '')
+    return format.format(color)
+
+class ColorSetting(wxSetting):
+    def __init__(self, name, default, label = None, help = None, group = None, isRGBA=True):
+        super().__init__(name, default, label, help, group)
+        self.isRGBA = isRGBA
+
+    def validate(self, value):
+        from .utils import check_rgb_color, check_rgba_color
+        validate = check_rgba_color if self.isRGBA else check_rgb_color
+        validate(value)
+
+    def get_specific_widget(self, parent):
+        import wx
+        self.widget = wx.ColourPickerCtrl(parent, colour=wx.Colour(self.value), style=wx.CLRP_USE_TEXTCTRL)
+        self.widget.SetValue = self.widget.SetColour
+        self.widget.LayoutDirection = wx.Layout_RightToLeft
+        return self.widget
+    def update(self):
+        self._value = wxColorToStr(self.widget.Colour, self.isRGBA)
 
 class ComboSetting(wxSetting):
 
@@ -334,13 +361,11 @@ class Settings:
             return object.__getattribute__(self, name)
         return getattr(self, "_" + name).value
 
-    def _add(self, setting, callback = None, validate = None,
+    def _add(self, setting, callback = None,
              alias = None, autocomplete_list = None):
         setattr(self, setting.name, setting)
         if callback:
             setattr(self, "__" + setting.name + "_cb", callback)
-        if validate:
-            setattr(self, "__" + setting.name + "_validate", validate)
         if alias:
             setattr(self, "__" + setting.name + "_alias", alias)
         if autocomplete_list:
@@ -353,20 +378,16 @@ class Settings:
             pass
         except AttributeError:
             pass
-        try:
-            getattr(self, "__%s_validate" % key)(value)
-        except AttributeError:
-            pass
+        setting = getattr(self, '_'+key)
+        setting.validate(value)
         t = type(getattr(self, key))
-        if t == bool and value == "False": setattr(self, key, False)
-        else: setattr(self, key, t(value))
+        if t == bool and value == "False":
+            value = False
+        setattr(self, key, t(value))
         try:
-            cb = None
-            try:
-                cb = getattr(self, "__%s_cb" % key)
-            except AttributeError:
-                pass
-            if cb is not None: cb(key, value)
+            cb = getattr(self, "__%s_cb" % key, None)
+            if cb is not None:
+                cb(key, value)
         except:
             logging.warning((_("Failed to run callback after setting \"%s\":") % key) +
                             "\n" + traceback.format_exc())
