@@ -191,8 +191,7 @@ def PronterOptions(pronterface):
             if setting.value != old_value:
                 pronterface.set(setting.name, setting.value)
                 changed_settings.append(setting)
-        if changed_settings:
-            pronterface.on_settings_change(changed_settings)
+        pronterface.on_settings_change(changed_settings)
     notebookSelection = dialog.notebook.Selection
     dialog.Destroy()
 

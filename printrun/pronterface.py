@@ -347,10 +347,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Close()
 
     def on_settings_change(self, changed_settings):
-        if self.gviz.model:
-            from .gcview import set_model_colors
-            set_model_colors(self.gviz.model, self)
-            self.gviz.model.update_colors()
+        if self.gviz:
+            self.gviz.on_settings_change(changed_settings)
 
     def closewin(self, e):
         e.StopPropagation()

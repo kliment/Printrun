@@ -157,7 +157,8 @@ class GvizWindow(GvizBaseFrame):
             if z > 0: self.p.zoom(event.GetX(), event.GetY(), 1.2)
             elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1 / 1.2)
 
-class Gviz(wx.Panel):
+from printrun.gui.viz import BaseViz
+class Gviz(wx.Panel, BaseViz):
 
     # Mark canvas as dirty when setting showall
     _showall = 0
