@@ -591,7 +591,7 @@ class GcodeModel(Model):
                         new_vertices_count = new_vertices_len//coordspervertex
                         # settings support alpha (transperancy), but it is ignored here
                         gline_color = self.movement_color(gline)[:buffered_color_len]
-                        for _ in range(new_vertices_count):
+                        for vi in range(new_vertices_count):
                             colors[color_k:color_k+buffered_color_len] = gline_color
                             color_k += buffered_color_len
 

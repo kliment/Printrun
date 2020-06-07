@@ -1635,6 +1635,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             # finalized model from the main visualization
             self.gwindow.p.addfile(gcode)
         except:
+            logging.error(traceback.format_exc())
             wx.CallAfter(self.gviz.Refresh)
 
     #  --------------------------------------------------------------
