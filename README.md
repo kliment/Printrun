@@ -1,5 +1,5 @@
 # About this fork
-This fork adds two additional gauges for a second extruder and bed incl. graph update separated in an additional branch named Gauges. The source code (master branch) is based on 2.0.0.5 RC5 and includes all changes from the actual master including the modification for decoding utf-8 (pyserial 3.x)  [printcore: Decode serial as UTF-8 #1058](https://github.com/kliment/Printrun/commit/1423eb46eb7ee095d1737c5382090b33c61e4b86).
+This fork adds two additional gauges for a second extruder and bed incl. graph update separated in an additional branch named Gauges. The source code (master branch) is based on 2.0.0.5 RC5 and includes all changes from the actual master including the modification for decoding utf-8 (pyserial 3.x) [printcore: Decode serial as UTF-8 #1058](https://github.com/kliment/Printrun/commit/1423eb46eb7ee095d1737c5382090b33c61e4b86).
 
 Tested with Smoothieware.
 
