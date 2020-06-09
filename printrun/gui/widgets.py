@@ -130,7 +130,7 @@ class PronterOptionsDialog(wx.Dialog):
         panel = wx.Panel(self)
         header = wx.StaticBox(panel, label = _("Settings"))
         sbox = wx.StaticBoxSizer(header, wx.VERTICAL)
-        notebook = wx.Notebook(panel)
+        self.notebook = notebook = wx.Notebook(panel)
         all_settings = pronterface.settings._all_settings()
         group_list = []
         groups = {}
@@ -178,14 +178,21 @@ class PronterOptionsDialog(wx.Dialog):
         self.SetSizerAndFit(topsizer)
         self.SetMinSize(self.GetSize())
 
+notebookSelection = 0
 def PronterOptions(pronterface):
     dialog = PronterOptionsDialog(pronterface)
+    global notebookSelection
+    dialog.notebook.Selection = notebookSelection
     if dialog.ShowModal() == wx.ID_OK:
+        changed_settings = []
         for setting in pronterface.settings._all_settings():
             old_value = setting.value
             setting.update()
             if setting.value != old_value:
                 pronterface.set(setting.name, setting.value)
+                changed_settings.append(setting)
+        pronterface.on_settings_change(changed_settings)
+    notebookSelection = dialog.notebook.Selection
     dialog.Destroy()
 
 class ButtonEdit(wx.Dialog):
