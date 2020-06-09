@@ -3,7 +3,6 @@ This fork adds two additional gauges for a second extruder and bed incl. graph u
 
 Tested with Smoothieware.
 
-
 # PRINTRUN 2.X
 
 The master branch holds the development of Printrun 2.x. This new version of Printrun supports Python 3 and wxPython 4. All new features and developments should be merged to it.
