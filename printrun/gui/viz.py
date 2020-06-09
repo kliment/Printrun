@@ -18,10 +18,7 @@ import logging
 
 import wx
 
-class NoViz:
-
-    showall = False
-
+class BaseViz:
     def clear(self, *a):
         pass
 
@@ -35,16 +32,18 @@ class NoViz:
     def addfile(self, *a, **kw):
         pass
 
-    def addgcode(self, *a, **kw):
-        pass
-
     def addgcodehighlight(self, *a, **kw):
         pass
 
-    def Refresh(self, *a):
+    def setlayer(self, *a):
         pass
 
-    def setlayer(self, *a):
+    def on_settings_change(self, changed_settings):
+        pass
+
+class NoViz(BaseViz):
+    showall = False
+    def Refresh(self, *a):
         pass
 
 class NoVizWindow:

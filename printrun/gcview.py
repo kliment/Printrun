@@ -347,7 +347,8 @@ class GcodeViewLoader:
     def set_gcview_params(self, path_width, path_height):
         return set_gcview_params(self, path_width, path_height)
 
-class GcodeViewMainWrapper(GcodeViewLoader):
+from printrun.gviz import BaseViz
+class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
 
     def __init__(self, parent, build_dimensions, root, circular, antialias_samples):
         self.root = root
@@ -368,6 +369,13 @@ class GcodeViewMainWrapper(GcodeViewLoader):
     def __getattr__(self, name):
         return getattr(self.glpanel, name)
 
+    def on_settings_change(self, changed_settings):
+        if self.model:
+            for s in changed_settings:
+                if s.name.startswith('gcview_color_'):
+                    self.model.update_colors()
+                    break
+
     def set_current_gline(self, gline):
         if gline.is_move and gline.gcview_end_vertex is not None \
            and self.model and self.model.loaded:
@@ -377,9 +385,6 @@ class GcodeViewMainWrapper(GcodeViewLoader):
 
     def recreate_platform(self, build_dimensions, circular):
         return recreate_platform(self, build_dimensions, circular)
-
-    def addgcodehighlight(self, *a):
-        pass
 
     def setlayer(self, layer):
         if layer in self.model.layer_idxs_map:

@@ -334,7 +334,7 @@ class printcore():
             if line_bytes is PR_EOF:
                 self.logError(_("Can't read from printer (disconnected?). line_bytes is None"))
                 return PR_EOF
-            line = line_bytes.decode('utf-8') #AGe smoothieware problem M503 with ASCII. fix from rockstorm, Fixes #1058.
+            line = line_bytes.decode('utf-8')
 
             if len(line) > 1:
                 self.log.append(line)
