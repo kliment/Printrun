@@ -63,7 +63,7 @@ class PronterfaceQuitException(Exception):
 
 from .gui import MainWindow
 from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
-    FloatSpinSetting, BooleanSetting, StaticTextSetting
+    FloatSpinSetting, BooleanSetting, StaticTextSetting, ColorSetting
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
@@ -143,12 +143,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.ui_ready = False
         self._add_settings(size)
 
-        for field in dir(self.settings):
-            if field.startswith("_gcview_color_"):
-                cleanname = field[1:]
-                color = hexcolor_to_float(getattr(self.settings, cleanname), 4)
-                setattr(self, cleanname, list(color))
-
         self.pauseScript = None #"pause.gcode"
         self.endScript = None #"end.gcode"
 
@@ -172,8 +166,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.btndict = {}
         self.filehistory = None
         self.autoconnect = False
+        self.autoscrolldisable = False
+
         self.parse_cmdline(sys.argv[1:])
-        self.autoscrolldisable=False
+        for field in dir(self.settings):
+            if field.startswith("_gcview_color_"):
+                cleanname = field[1:]
+                color = hexcolor_to_float(getattr(self.settings, cleanname), 4)
+                setattr(self, cleanname, list(color))
 
         # FIXME: We need to initialize the main window after loading the
         # configs to restore the size, but this might have some unforeseen
@@ -320,7 +320,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if self.fgcode:
                 self.start_viz_thread()
         self.ui_ready = True
-        self.settings.monitor=temp_monitor;
+        self.settings.monitor=temp_monitor
         self.commandbox.history=read_history_from(self.history_file)
         self.commandbox.histindex == len(self.commandbox.history)
         self.Thaw()
@@ -345,6 +345,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def on_exit(self, event):
         self.Close()
+
+    def on_settings_change(self, changed_settings):
+        if self.gviz:
+            self.gviz.on_settings_change(changed_settings)
 
     def closewin(self, e):
         e.StopPropagation()
@@ -986,27 +990,28 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "Viewer", increment = 0.1), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "Viewer"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "Viewer"), self.update_gviz_params)
-        self.settings._add(StringSetting("bgcolor", self._preferred_bgcolour_hex(), _("Background color"), _("Pronterface background color"), "Colors"), self.reload_ui, validate = check_rgb_color)
-        self.settings._add(StringSetting("graph_color_background", "#FAFAC7", _("Graph background color"), _("Color of the temperature graph background"), "Colors"), self.reload_ui, validate = check_rgb_color)
-        self.settings._add(StringSetting("gcview_color_background", "#FAFAC7FF", _("3D view background color"), _("Color of the 3D view background"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_tool0", "#FF000099", _("3D view print moves color"), _("Color of print moves with tool 0 in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_tool1", "#AC0DFF99", _("3D view tool 1 moves color"), _("Color of print moves with tool 1 in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_tool2", "#FFCE0099", _("3D view tool 2 moves color"), _("Color of print moves with tool 2 in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_tool3", "#FF009F99", _("3D view tool 3 moves color"), _("Color of print moves with tool 3 in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_tool4", "#00FF8F99", _("3D view tool 4 moves color"), _("Color of print moves with tool 4 in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_printed", "#33BF0099", _("3D view printed moves color"), _("Color of printed moves in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_current", "#00E5FFCC", _("3D view current layer moves color"), _("Color of moves in current layer in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
-        self.settings._add(StringSetting("gcview_color_current_printed", "#196600CC", _("3D view printed current layer moves color"), _("Color of already printed moves from current layer in 3D view"), "Colors"), self.update_gcview_colors, validate = check_rgba_color)
+        self.settings._add(ColorSetting("bgcolor", self._preferred_bgcolour_hex(), _("Background color"), _("Pronterface background color"), "Colors", isRGBA=False), self.reload_ui)
+        self.settings._add(ColorSetting("graph_color_background", "#FAFAC7", _("Graph background color"), _("Color of the temperature graph background"), "Colors", isRGBA=False), self.reload_ui)
+        self.settings._add(ColorSetting("gcview_color_background", "#FAFAC7FF", _("3D view background color"), _("Color of the 3D view background"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_tool0", "#FF000099", _("3D view print moves color"), _("Color of print moves with tool 0 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_tool1", "#AC0DFF99", _("3D view tool 1 moves color"), _("Color of print moves with tool 1 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_tool2", "#FFCE0099", _("3D view tool 2 moves color"), _("Color of print moves with tool 2 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_tool3", "#FF009F99", _("3D view tool 3 moves color"), _("Color of print moves with tool 3 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_tool4", "#00FF8F99", _("3D view tool 4 moves color"), _("Color of print moves with tool 4 in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_printed", "#33BF0099", _("3D view printed moves color"), _("Color of printed moves in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_current", "#00E5FFCC", _("3D view current layer moves color"), _("Color of moves in current layer in 3D view"), "Colors"), self.update_gcview_colors)
+        self.settings._add(ColorSetting("gcview_color_current_printed", "#196600CC", _("3D view printed current layer moves color"), _("Color of already printed moves from current layer in 3D view"), "Colors"), self.update_gcview_colors)
         self.settings._add(StaticTextSetting("note1", _("Note:"), _("Changing some of these settings might require a restart to get effect"), group = "UI"))
         recentfilessetting = StringSetting("recentfiles", "[]")
         recentfilessetting.hidden = True
         self.settings._add(recentfilessetting, self.update_recent_files)
 
     def _preferred_bgcolour_hex(self):
-        sys_bgcolour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_BACKGROUND)
-        if platform.system() == "Windows":
-            sys_bgcolour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW) 
+        id = wx.SYS_COLOUR_WINDOW \
+            if platform.system() == 'Windows' \
+            else wx.SYS_COLOUR_BACKGROUND
+        sys_bgcolour = wx.SystemSettings.GetColour(id)
         return sys_bgcolour.GetAsString(flags=wx.C2S_HTML_SYNTAX)
 
     def add_cmdline_arguments(self, parser):
@@ -1068,6 +1073,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         wx.CallAfter(widget.Refresh)
 
     def update_gcview_colors(self, param, value):
+        if not self.window_ready:
+            return
         color = hexcolor_to_float(value, 4)
         # This is sort of a hack: we copy the color values into the preexisting
         # color tuple so that we don't need to update the tuple used by gcview
@@ -1668,6 +1675,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             # finalized model from the main visualization
             self.gwindow.p.addfile(gcode)
         except:
+            logging.error(traceback.format_exc())
             wx.CallAfter(self.gviz.Refresh)
 
     #  --------------------------------------------------------------
