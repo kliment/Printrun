@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Pronterface jm1\n"
+"Project-Id-Version: Pronterface\n"
 "POT-Creation-Date: 2014-03-30 14:35+CEST\n"
-"PO-Revision-Date: 2020-06-07 11:41+0200\n"
+"PO-Revision-Date: 2020-06-07 12:22+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: <>\n"
 "Language: de\n"
