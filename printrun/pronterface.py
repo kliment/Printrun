@@ -355,7 +355,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.do_exit("force")
 
     def kill(self, e=None):
-        if(len(self.commandbox.history)):
+        if len(self.commandbox.history):
                 #save current command box history
                 history = (self.history_file)
                 if not os.path.exists(history):
@@ -382,12 +382,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.gwindow.Destroy)
         wx.CallAfter(self.Destroy)
 
-    def _get_bgcolor(self):
-        if self.settings.bgcolor != "auto":
-            return self.settings.bgcolor
-        else:
-            return wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
-    bgcolor = property(_get_bgcolor)
+    @property
+    def bgcolor(self):
+        return self.settings.bgcolor == 'auto' \
+            and wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME) \
+            or self.settings.bgcolor
 
     #  --------------------------------------------------------------
     #  Main interface actions

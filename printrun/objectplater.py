@@ -39,7 +39,7 @@ class PlaterPanel(wx.Panel):
     def prepare_ui(self, filenames = [], callback = None, parent = None, build_dimensions = None):
         self.filenames = filenames
         self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        panel = self.menupanel = wx.Panel(self, -1)
+        panel = self.menupanel = wx.Panel(self)
         sizer = self.menusizer = wx.GridBagSizer()
         self.l = wx.ListBox(panel)
         sizer.Add(self.l, pos = (1, 0), span = (1, 2), flag = wx.EXPAND)

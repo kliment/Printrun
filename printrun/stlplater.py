@@ -224,7 +224,7 @@ class StlPlaterPanel(PlaterPanel):
     def prepare_ui(self, filenames = [], callback = None,
                    parent = None, build_dimensions = None, circular_platform = False,
                    simarrange_path = None, antialias_samples = 0):
-        super(StlPlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions)
+        super().prepare_ui(filenames, callback, parent, build_dimensions)
         self.cutting = False
         self.cutting_axis = None
         self.cutting_dist = None

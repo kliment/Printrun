@@ -45,7 +45,7 @@ from .libtatlin.actors import vec
 class wxGLPanel(wx.Panel):
     '''A simple class for using OpenGL with wxPython.'''
 
-    orbit_control=True
+    orbit_control = True
     orthographic = True
     color_background = (0.98, 0.98, 0.78, 1)
     do_lights = True
@@ -95,10 +95,7 @@ class wxGLPanel(wx.Panel):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        if self.IsFrozen():
-            event.Skip()
-            return
-        if self.canvas.IsShownOnScreen():
+        if not self.IsFrozen() and  self.canvas.IsShownOnScreen():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
             self.OnReshape()
@@ -125,7 +122,7 @@ class wxGLPanel(wx.Panel):
         # clean up the pyglet OpenGL context
         self.pygletcontext.destroy()
         # call the super method
-        super(wxGLPanel, self).Destroy()
+        super().Destroy()
 
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
@@ -326,11 +323,11 @@ class wxGLPanel(wx.Panel):
         self.zoom(factor, (x, y))
 
     def orbit(self, p1x, p1y, p2x, p2y):
-        rz = p2x-p1x;
+        rz = p2x-p1x
         self.angle_z-=rz
         rotz = axis_to_quat([0.0,0.0,1.0],self.angle_z)
 
-        rx = p2y-p1y;
+        rx = p2y-p1y
         self.angle_x+=rx
         rota = axis_to_quat([1.0,0.0,0.0],self.angle_x)
         return mulquat(rotz,rota)
@@ -342,10 +339,10 @@ class wxGLPanel(wx.Panel):
             p1 = self.initpos
             p2 = event.GetPosition()
             sz = self.GetClientSize()
-            p1x = float(p1[0]) / (sz[0] / 2) - 1
-            p1y = 1 - float(p1[1]) / (sz[1] / 2)
-            p2x = float(p2[0]) / (sz[0] / 2) - 1
-            p2y = 1 - float(p2[1]) / (sz[1] / 2)
+            p1x = p1[0] / (sz[0] / 2) - 1
+            p1y = 1 - p1[1] / (sz[1] / 2)
+            p2x = p2[0] / (sz[0] / 2) - 1
+            p2y = 1 - p2[1] / (sz[1] / 2)
             quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
             with self.rot_lock:
                 if self.orbit_control:

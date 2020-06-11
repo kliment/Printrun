@@ -79,13 +79,10 @@ class GcodeViewPanel(wxGLPanel):
         self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
         self.initialized = 0
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
-        self.parent = realparent if realparent else parent
+        self.parent = realparent or parent
         self.initpos = None
-        if build_dimensions:
-            self.build_dimensions = build_dimensions
-        else:
-            self.build_dimensions = [200, 200, 100, 0, 0, 0]
-        self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
+        self.build_dimensions = build_dimensions
+        self.dist = max(self.build_dimensions[:2])
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
@@ -109,7 +106,7 @@ class GcodeViewPanel(wxGLPanel):
         pass
 
     def OnInitGL(self, *args, **kwargs):
-        super(GcodeViewPanel, self).OnInitGL(*args, **kwargs)
+        super().OnInitGL(*args, **kwargs)
         if hasattr(self.parent, "filenames") and self.parent.filenames:
             for filename in self.parent.filenames:
                 self.parent.load_file(filename)
@@ -175,8 +172,7 @@ class GcodeViewPanel(wxGLPanel):
         return mvmat
 
     def double(self, event):
-        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
-            self.parent.clickcb(event)
+        getattr(self.parent, 'clickcb', bool)(event)
 
     def move(self, event):
         """react to mouse actions:
@@ -188,19 +184,15 @@ class GcodeViewPanel(wxGLPanel):
             self.canvas.SetFocus()
             event.Skip()
             return
-        if event.Dragging() and event.LeftIsDown():
-            self.handle_rotation(event)
-        elif event.Dragging() and event.RightIsDown():
-            self.handle_translation(event)
-        elif event.LeftUp():
+        if event.Dragging():
+            if event.LeftIsDown():
+                self.handle_rotation(event)
+            elif event.RightIsDown():
+                self.handle_translation(event)
+            self.Refresh(False)
+        elif event.LeftUp() or event.RightUp():
             self.initpos = None
-        elif event.RightUp():
-            self.initpos = None
-        else:
-            event.Skip()
-            return
         event.Skip()
-        wx.CallAfter(self.Refresh)
 
     def layerup(self):
         if not hasattr(self.parent, "model") or not self.parent.model:

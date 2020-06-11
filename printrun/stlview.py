@@ -90,7 +90,7 @@ class StlViewPanel(wxGLPanel):
                                         circular = circular)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
-        wx.CallAfter(self.forceresize)
+        wx.CallAfter(self.forceresize) #why needed
         self.mousepos = (0, 0)
 
     def OnReshape(self):
@@ -155,8 +155,11 @@ class StlViewPanel(wxGLPanel):
             self.parent.clickcb(event)
 
     def forceresize(self):
-        self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
-        self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
+        #print('forceresize')
+        x, y = self.GetClientSize()
+        #TODO: probably not needed
+        self.SetClientSize((x, y+1))
+        self.SetClientSize((x, y))
         self.initialized = False
 
     def move(self, event):
@@ -257,6 +260,8 @@ class StlViewPanel(wxGLPanel):
         if not self.platform.initialized:
             self.platform.init()
         self.initialized = 1
+        #TODO: this probably creates constant redraw
+        # create_objects is called during OnDraw, remove
         wx.CallAfter(self.Refresh)
 
     def prepare_model(self, m, scale):
