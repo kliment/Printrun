@@ -33,10 +33,11 @@ if __name__ == '__main__':
             "  plater FILES\n\n"+\
             "Options:\n"+\
             "  -V, --version\t\t\tPrint program's version number and exit\n"+\
-            "  -h, --help\t\t\tPrint this help message and exit\n"
+            "  -h, --help\t\t\tPrint this help message and exit\n" \
+            "  --no-gl\t\t\tUse 2D implementation, that seems unusable"
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hV", ["help", "version"])
+        opts, args = getopt.getopt(sys.argv[1:], "hV", ["help", "version", 'no-gl'])
     except getopt.GetoptError as err:
         print(str(err))
         print(usage)

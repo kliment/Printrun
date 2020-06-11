@@ -36,12 +36,12 @@ from copy import copy
 from printrun import stltool
 from printrun.objectplater import make_plater, PlaterPanel
 
-glview = False
-if "-nogl" not in sys.argv:
+glview = '--no-gl' not in sys.argv
+if glview:
     try:
         from printrun import stlview
-        glview = True
     except:
+        glview = False
         logging.warning("Could not load 3D viewer for plater:"
                         + "\n" + traceback.format_exc())
 
