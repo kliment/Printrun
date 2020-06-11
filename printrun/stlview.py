@@ -69,10 +69,10 @@ class StlViewPanel(wxGLPanel):
 
     do_lights = False
 
-    def __init__(self, parent, size, id = wx.ID_ANY,
+    def __init__(self, parent, size,
                  build_dimensions = None, circular = False,
                  antialias_samples = 0):
-        super(StlViewPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0,
+        super().__init__(parent, wx.DefaultPosition, size, 0,
                                            antialias_samples = antialias_samples)
         self.batches = []
         self.rot = 0

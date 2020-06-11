@@ -50,12 +50,12 @@ class wxGLPanel(wx.Panel):
     color_background = (0.98, 0.98, 0.78, 1)
     do_lights = True
 
-    def __init__(self, parent, id, pos = wx.DefaultPosition,
+    def __init__(self, parent, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0,
                  antialias_samples = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
-        super(wxGLPanel, self).__init__(parent, id, pos, size, style)
+        super(wxGLPanel, self).__init__(parent, wx.ID_ANY, pos, size, style)
 
         self.GLinitialized = False
         self.mview_initialized = False

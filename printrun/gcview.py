@@ -68,10 +68,10 @@ def set_gcview_params(self, path_width, path_height):
 
 class GcodeViewPanel(wxGLPanel):
 
-    def __init__(self, parent, id = wx.ID_ANY,
-                 build_dimensions = None, realparent = None,
-                 antialias_samples = 0):
-        super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition,
+    def __init__(self, parent,
+                 build_dimensions = (200, 200, 100, 0, 0, 0),
+                 realparent = None, antialias_samples = 0):
+        super().__init__(parent, wx.DefaultPosition,
                                              wx.DefaultSize, 0,
                                              antialias_samples = antialias_samples)
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
