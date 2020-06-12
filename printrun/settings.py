@@ -158,7 +158,16 @@ class ComboSetting(wxSetting):
 
     def get_specific_widget(self, parent):
         import wx
-        self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
+        readonly = isinstance(self.choices, tuple)
+        if readonly:
+            # wx.Choice drops its list on click, no need to click down arrow
+            # which is far to the right because of wx.EXPAND
+            self.widget = wx.Choice(parent, -1, choices = self.choices)
+            self.widget.GetValue = lambda: self.choices[self.widget.Selection]
+            self.widget.SetValue = lambda v: self.widget.SetSelection(self.choices.index(v))
+            self.widget.SetValue(self.value)
+        else:
+            self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
         return self.widget
 
 class SpinSetting(wxSetting):
