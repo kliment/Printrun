@@ -110,12 +110,10 @@ class PlaterPanel(wx.Panel):
         if hasattr(viewer, "handle_wheel"):
             def handle_wheel(self, event, orig_handler):
                 if event.ShiftDown():
-                    delta = event.GetWheelRotation()
                     angle = 10
-                    if delta > 0:
-                        self.parent.rotate_shape(angle / 2)
-                    else:
-                        self.parent.rotate_shape(-angle / 2)
+                    if event.GetWheelRotation() < 0:
+                        angle = -angle
+                    self.parent.rotate_shape(angle / 2)
                 else:
                     orig_handler(event)
             patch_method(viewer, "handle_wheel", handle_wheel)

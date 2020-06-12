@@ -171,21 +171,16 @@ class StlViewPanel(wxGLPanel):
             with shift move viewport
         """
         self.mousepos = event.GetPosition()
-        if event.Dragging() and event.LeftIsDown():
-            self.handle_rotation(event)
-        elif event.Dragging() and event.RightIsDown():
-            self.handle_translation(event)
-        elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
-            if self.initpos is not None:
-                self.initpos = None
-        elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
-            if self.initpos is not None:
-                self.initpos = None
-        else:
-            event.Skip()
-            return
+        if event.Dragging():
+            if event.LeftIsDown():
+                self.handle_rotation(event)
+            elif event.RightIsDown():
+                self.handle_translation(event)
+            self.Refresh(False)
+        elif event.ButtonUp(wx.MOUSE_BTN_LEFT) or \
+            event.ButtonUp(wx.MOUSE_BTN_RIGHT):
+            self.initpos = None
         event.Skip()
-        wx.CallAfter(self.Refresh)
 
     def handle_wheel(self, event):
         delta = event.GetWheelRotation()
