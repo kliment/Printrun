@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
 "POT-Creation-Date: 2014-03-30 14:35+CEST\n"
-"PO-Revision-Date: 2020-06-07 12:22+0200\n"
+"PO-Revision-Date: 2020-06-22 21:44+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: <>\n"
 "Language: de\n"
@@ -49,7 +49,6 @@ msgid "WX is not installed. This program requires WX to run."
 msgstr "WX ist nicht installiert. Dieses Programm erfordert WX zum Starten."
 
 #: printrun/gui/__init__.py:159
-#, fuzzy
 msgid "Commands"
 msgstr "Befehle"
 
@@ -71,7 +70,6 @@ msgid "Off"
 msgstr "Aus"
 
 #: printrun/gui/controls.py:137
-#, fuzzy
 msgid "Select Temperature for Hotend"
 msgstr "Temperatur für Hotend auswählen"
 
@@ -303,9 +301,8 @@ msgid "Cancel"
 msgstr "Abbrechen"
 
 #: printrun/gui/widgets.py:70
-#, fuzzy
 msgid "Not Found!"
-msgstr "Datei nicht gefunden!"
+msgstr "Nicht gefunden!"
 
 #: printrun/gui/widgets.py:124
 msgid "Printer settings"
@@ -659,109 +656,97 @@ msgstr ""
 
 #: printrun/pronsole.py:304
 msgid "Bed temperature for ABS"
-msgstr ""
+msgstr "Bett-Temp. für ABS"
 
 #: printrun/pronsole.py:304
-#, fuzzy
 msgid "Heated Build Platform temp for ABS (deg C)"
-msgstr "Heizbett Temp. für ABS (Vorgabe: 110 Grad Celsius)"
+msgstr "Heizbett Temp. für ABS (Grad Celsius)"
 
 #: printrun/pronsole.py:305
 msgid "Bed temperature for PLA"
-msgstr ""
+msgstr "Bett Temperatur für PLA"
 
 #: printrun/pronsole.py:305
-#, fuzzy
 msgid "Heated Build Platform temp for PLA (deg C)"
-msgstr "Heizbett Temp. für PLA (Vorgabe: 60 Grad Celsius)"
+msgstr "Heizbett Temp. für PLA (Grad Celsius)"
 
 #: printrun/pronsole.py:306
-#, fuzzy
 msgid "Extruder temp for ABS (deg C)"
-msgstr "Extruder Temperatur für ABS (Vorgabe: 230 Grad Celsius)"
+msgstr "Extruder Temperatur für ABS (Grad Celsius)"
 
 #: printrun/pronsole.py:306
-#, fuzzy
 msgid "Extruder temperature for ABS"
-msgstr "Extruder Temperatur für ABS (Vorgabe: 230 Grad Celsius)"
+msgstr "Extruder Temperatur für ABS"
 
 #: printrun/pronsole.py:307
-#, fuzzy
 msgid "Extruder temp for PLA (deg C)"
-msgstr "Extruder Temperatur für PLA (Vorgabe: 185 Grad Celsius)"
+msgstr "Extruder Temperatur für PLA (Grad Celsius)"
 
 #: printrun/pronsole.py:307
-#, fuzzy
 msgid "Extruder temperature for PLA"
-msgstr "Extruder Temperatur für PLA (Vorgabe: 185 Grad Celsius)"
+msgstr "Extruder Temperatur für PLA"
 
 #: printrun/pronsole.py:308
-#, fuzzy
 msgid "Feedrate for Control Panel Moves in X and Y (mm/min)"
-msgstr "Vorschub Control Panel Bewegungen X und Y (Vorgabe: 3000mm/min)"
+msgstr "Vorschub Control Panel Bewegungen X und Y (mm/min)"
 
 #: printrun/pronsole.py:308
 msgid "X && Y manual feedrate"
-msgstr ""
+msgstr "X && Y manueller Vorschub"
 
 #: printrun/pronsole.py:309
-#, fuzzy
 msgid "Feedrate for Control Panel Moves in Z (mm/min)"
-msgstr "Vorschub Control Panel Bewegungen Z (Vorgabe: 200mm/min)"
+msgstr "Vorschub Control Panel Bewegungen Z (200mm/min)"
 
 #: printrun/pronsole.py:309
 msgid "Z manual feedrate"
-msgstr ""
+msgstr "Z manueller Vorschub"
 
 #: printrun/pronsole.py:310
 msgid "E manual feedrate"
-msgstr ""
+msgstr "E manueller Vorschub"
 
 #: printrun/pronsole.py:310
-#, fuzzy
 msgid "Feedrate for Control Panel Moves in Extrusions (mm/min)"
-msgstr "Vorschub Control Panel Bewegungen Extrudierung (Vorgabe: 300mm/min)"
+msgstr "Extrudervorschub für Control Panel Bewegungen (300mm/min)"
 
 #: printrun/pronsole.py:311
-#, fuzzy
 msgid "Slice command"
-msgstr "Kommando ausführen:"
+msgstr "Befehl für Slicer"
 
 #: printrun/pronsole.py:312
-#, fuzzy
 msgid "Slice settings command"
-msgstr "Slicing Einstellungen"
+msgstr "Befehl für Slicing Einstellungen"
 
 #: printrun/pronsole.py:312
 msgid "Slicer options command"
-msgstr ""
+msgstr "Befehl für Slicer Optionen"
 
 #: printrun/pronsole.py:313
 msgid "Executable to run when the print is finished"
-msgstr ""
+msgstr "Auszuführender Anwendung, wenn der Druck abgeschlossen ist"
 
 #: printrun/pronsole.py:313
-#, fuzzy
 msgid "Final command"
-msgstr "Kommando"
+msgstr "Letzter Befehl"
 
 #: printrun/pronsole.py:314
-#, fuzzy
 msgid "Error command"
-msgstr "Kommando ausführen:"
+msgstr "Befehl bei Fehler"
 
 #: printrun/pronsole.py:314
 msgid "Executable to run when an error occurs"
-msgstr ""
+msgstr "Im Fehlerfall auszuführender Befehl"
 
 #: printrun/pronsole.py:381
 msgid "Failed to run callback after setting \"%s\":"
-msgstr ""
+msgstr "Fehler beim Ausführen des Rückrufs nach der Einstellung \"%s\":"
 
 #: printrun/pronsole.py:469
 msgid "Build dimensions"
-msgstr ""
+msgstr "Maße Plattform"
 
+# Nicht sicher, wie optional switch position zu übersetzen ist.
 #: printrun/pronsole.py:469
 #, fuzzy
 msgid ""
@@ -776,16 +761,20 @@ msgid ""
 "XXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"
 msgstr ""
 "Abmessungen der Bauplattform\n"
-" & optional Versatz vom Ausgangspunkt\n"
+" & optionaler Versatz vom Ausgangspunkt\n"
+" & optionaler Versatz für Startposition\n"
 "\n"
 "Beispiel:\n"
 "   XXXxYYY\n"
 "   XXX,YYY,ZZZ\n"
-"   XXXxYYYxZZZ+OffX+OffY+OffZ"
+"   XXXxYYYxZZZ+OffX+OffY+OffZ\n"
+"XXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"
 
 #: printrun/pronsole.py:495
 msgid "Welcome to the printer console! Type \"help\" for a list of available commands."
 msgstr ""
+"Willkommen an der Druckerkonsole! Geben Sie 'help' ein, um eine Liste der verfügbaren "
+"Befehle anzuzeigen."
 
 #: printrun/pronsole.py:657 printrun/pronsole.py:665 printrun/pronsole.py:673
 #: printrun/pronsole.py:1519 printrun/pronsole.py:1546 printrun/pronsole.py:1618
@@ -795,11 +784,11 @@ msgstr "Drucker ist nicht online."
 
 #: printrun/pronsole.py:692
 msgid "Exiting program. Goodbye!"
-msgstr ""
+msgstr "Programm beenden. Auf Wiedersehen!"
 
 #: printrun/pronsole.py:697
 msgid "Disconnects from the printer and exits the program."
-msgstr ""
+msgstr "Trennt die Verbindung zum Drucker und beendet das Programm."
 
 #: printrun/pronsole.py:974
 msgid ""
@@ -815,25 +804,23 @@ msgstr ""
 
 #: printrun/pronsole.py:976
 msgid "file to load"
-msgstr ""
+msgstr "zu ladende Datei"
 
 #: printrun/pronsole.py:1104
-#, fuzzy
 msgid "Loaded %s, %d lines."
-msgstr "Geladen %s, %d Zeilen"
+msgstr "Geladen %s, %d Zeilen."
 
 #: printrun/pronsole.py:1105 printrun/pronterface.py:1381
-#, fuzzy
 msgid "Estimated duration: %d layers, %s"
-msgstr "Geschätze Dauer (pessimistisch): "
+msgstr "Geschätze Dauer: %d Schichten, %s"
 
 #: printrun/pronsole.py:1134
 msgid "No file name given."
-msgstr ""
+msgstr "Kein Dateiname angegeben."
 
 #: printrun/pronsole.py:1140
 msgid "Skeining file: %s"
-msgstr ""
+msgstr "Skeining-Datei: %s"
 
 #: printrun/pronsole.py:1142 printrun/pronterface.py:1305
 msgid "File not found!"
@@ -841,119 +828,120 @@ msgstr "Datei nicht gefunden!"
 
 #: printrun/pronsole.py:1147
 msgid "Entering slicer settings: %s"
-msgstr ""
+msgstr "Eingabe Slicer-Einstellungen: %s"
 
 #: printrun/pronsole.py:1151
-#, fuzzy
 msgid "Slicing: "
-msgstr "Slicing"
+msgstr "Slicing: "
 
 #: printrun/pronsole.py:1158
-#, fuzzy
 msgid "Loading sliced file."
-msgstr "Datei laden"
+msgstr "Slicer-Datei laden."
 
 #: printrun/pronsole.py:1161
-#, fuzzy
 msgid "Slicing failed: %s"
-msgstr "Slicing"
+msgstr "Slicing fehlgeschlagen: %s"
 
 #: printrun/pronsole.py:1174
 msgid "Creates a gcode file from an stl model using the slicer (with tab-completion)"
 msgstr ""
+"Erstellt eine Gcode-Datei aus einem STL-Modell mit dem Slicer (mit Tab-"
+"Vervollständigung)."
 
 #: printrun/pronsole.py:1175
 msgid "slice filename.stl - create gcode file"
-msgstr ""
+msgstr "slice filename.stl - Gcode-Datei erstellen"
 
 #: printrun/pronsole.py:1176
 msgid ""
 "slice filename.stl view - create gcode file and view using skeiniso (if using "
 "skeinforge)"
 msgstr ""
+"slice filename.stl view - Gcode-Datei erstellen und mit skeiniso anzeigen (wenn Sie "
+"skeinforge verwenden)."
 
 #: printrun/pronsole.py:1177
-#, fuzzy
 msgid "slice set - adjust slicer settings"
-msgstr " Slicing Einstellungen anpassen"
+msgstr "Slicer-Einstellung - Slicing Einstellungen anpassen"
 
 #: printrun/pronsole.py:1189
 msgid "Please enter target name in 8.3 format."
-msgstr ""
+msgstr "Geben Sie den Zielnamen im 8.3-Format ein."
 
 #: printrun/pronsole.py:1195
 msgid "Uploading as %s"
-msgstr ""
+msgstr "Hochladen als %s"
 
 #: printrun/pronsole.py:1196
 msgid "Uploading %s"
-msgstr ""
+msgstr "Hochladen %s"
 
 #: printrun/pronsole.py:1198
 msgid "Press Ctrl-C to interrupt upload."
-msgstr ""
+msgstr "Drücken Sie Strg-C, um den Upload zu unterbrechen."
 
 #: printrun/pronsole.py:1201
 msgid "Progress: "
-msgstr ""
+msgstr "Fortschritt: "
 
 #: printrun/pronsole.py:1212
 msgid "Upload completed. %s should now be on the card."
-msgstr ""
+msgstr "Upload abgeschlossen. %s sollte jetzt auf der Karte sein."
 
 #: printrun/pronsole.py:1216
 msgid "...interrupted!"
-msgstr ""
+msgstr "… unterbrochen!"
 
 #: printrun/pronsole.py:1218
 msgid "Something wrong happened while uploading:"
-msgstr ""
+msgstr "Beim Hochladen ist ein Fehler aufgetreten:"
 
 #: printrun/pronsole.py:1224
 msgid "A partial file named %s may have been written to the sd card."
-msgstr ""
+msgstr "Möglicherweise wurde eine Teildatei mit dem Namen%s auf die SD-Karte geschrieben."
 
 #: printrun/pronsole.py:1241
 msgid "Send a loaded gcode file to the printer. Load a file with the load command first."
 msgstr ""
+"Sendet eine geladene Gcode-Datei an den Drucker. Laden Sie zuerst eine Datei mit dem "
+"Befehl load."
 
 #: printrun/pronsole.py:1243
 msgid "Send a loaded gcode file to the printer. You have %s loaded right now."
-msgstr ""
+msgstr "Sendet eine geladene Gcode-Datei an den Drucker. Sie haben %s gerade geladen."
 
 #: printrun/pronsole.py:1247 printrun/pronterface.py:730 printrun/pronterface.py:1108
 msgid "No file loaded. Please use load first."
 msgstr "Keine Datei geladen. Benutze zuerst laden."
 
 #: printrun/pronsole.py:1252
-#, fuzzy
 msgid "Printing %s"
-msgstr " Drucken:%04.2f %% |"
+msgstr "Drucken %s"
 
 #: printrun/pronsole.py:1253
 msgid "You can monitor the print with the monitor command."
-msgstr ""
+msgstr "Sie können den Druck mit dem Monitorbefehl überwachen."
 
 #: printrun/pronsole.py:1261
 msgid "Not printing, cannot pause."
-msgstr ""
+msgstr "Nicht am drucken, kann nicht pausieren."
 
 #: printrun/pronsole.py:1267
-#, fuzzy
 msgid "Pauses a running print"
-msgstr "Starte Druck"
+msgstr "Pausiert einen laufenden Druck an"
 
 #: printrun/pronsole.py:1274
 msgid "Not paused, unable to resume. Start a print first."
 msgstr ""
+"Nicht am pausieren, kann nicht fortgesetzt werden. Starten Sie zuerst einen Druck."
 
 #: printrun/pronsole.py:1284
 msgid "Resumes a paused print."
-msgstr ""
+msgstr "Einen pausierenden Druck fortsetzen."
 
 #: printrun/pronsole.py:1293
 msgid "Files on SD card:"
-msgstr ""
+msgstr "Dateien auf SD-Karte:"
 
 #: printrun/pronsole.py:1307 printrun/pronsole.py:1349 printrun/pronsole.py:1562
 #, fuzzy
@@ -962,7 +950,7 @@ msgstr "Drucker ist nicht online."
 
 #: printrun/pronsole.py:1312
 msgid "Lists files on the SD card"
-msgstr ""
+msgstr "Listet Dateien der SD-Karte auf"
 
 #: printrun/pronsole.py:1316 printrun/pronterface.py:1645
 msgid "Opening file failed."
@@ -973,26 +961,24 @@ msgid "Starting print"
 msgstr "Starte Druck"
 
 #: printrun/pronsole.py:1345
-#, fuzzy
 msgid "Resets the printer."
-msgstr "Drucker Verbinden"
+msgstr "Setzt den Drucker zurück."
 
 #: printrun/pronsole.py:1355
-#, fuzzy
 msgid "File is not present on card. Please upload it first."
-msgstr "Keine Datei geladen. Benutze zuerst laden."
+msgstr "Datei ist nicht auf der Karte vorhanden. Bitte laden Sie diese zuerst hoch."
 
 #: printrun/pronsole.py:1359
 msgid "Printing file: %s from SD card."
-msgstr ""
+msgstr "Druckdatei: %s von SD-Karte."
 
 #: printrun/pronsole.py:1360
 msgid "Requesting SD print..."
-msgstr ""
+msgstr "SD-Druck anfordern..."
 
 #: printrun/pronsole.py:1364
 msgid "Print a file from the SD card. Tab completes with available file names."
-msgstr ""
+msgstr "Drucken einer Datei von SD-Karte. Tab vervollständigt verfügbare Dateinamen."
 
 #: printrun/pronsole.py:1365
 msgid "sdprint filename.g"
@@ -1000,41 +986,39 @@ msgstr ""
 
 #: printrun/pronsole.py:1382
 msgid "Print resumed at: %s"
-msgstr ""
+msgstr "Druck fortgesetzt bei: %s"
 
 #: printrun/pronsole.py:1384
 msgid "Print started at: %s"
-msgstr ""
+msgstr "Druck gestartet bei: %s"
 
 #: printrun/pronsole.py:1392
 msgid "Failed to inhibit sleep:"
-msgstr ""
+msgstr "Schlafmodus konnte nicht gesperrt werden:"
 
 #: printrun/pronsole.py:1399
 msgid "Failed to uninhibit sleep:"
-msgstr ""
+msgstr "Fehler beim Deaktivieren des Schlafmodus:"
 
 #: printrun/pronsole.py:1403
 msgid "Print ended at: %(end_time)s and took %(duration)s"
-msgstr ""
+msgstr "Druck beendet um: %(end_time)s und dauerte %(duration)s"
 
 #: printrun/pronsole.py:1457
 msgid "Printer is not currently printing. No ETA available."
-msgstr ""
+msgstr "Der Drucker druckt derzeit nicht. Keine Fertigstellungszeit (ETA) verfügbar."
 
 #: printrun/pronsole.py:1460
-#, fuzzy
 msgid "Est: %s of %s remaining"
-msgstr " Erw: %s von %s verbleibend | "
+msgstr "Erw: %s von %s verbleibend"
 
 #: printrun/pronsole.py:1465
 msgid "Displays estimated remaining print time."
-msgstr ""
+msgstr "Zeigt die geschätzte verbleibende Druckzeit an."
 
 #: printrun/pronsole.py:1498
-#, fuzzy
 msgid "Read the extruder and bed temperature."
-msgstr "Sie müssen eine Temperatur eingeben."
+msgstr "Zeigt die Extruder- und Betttemperatur."
 
 #: printrun/pronsole.py:1507 printrun/pronsole.py:1540
 msgid "You must enter a temperature."
@@ -1044,33 +1028,34 @@ msgstr "Sie müssen eine Temperatur eingeben."
 msgid ""
 "%s is a high temperature to set your extruder to. Are you sure you want to do that?"
 msgstr ""
+"%s ist eine hohe Temperatur, auf die der Extruder eingestellt werden soll. Sind Sie "
+"sicher, dass Sie das tun möchten?"
 
 #: printrun/pronsole.py:1517
-#, fuzzy
 msgid "Setting hotend temperature to %s degrees Celsius."
-msgstr "Setze Hotend Temperatur auf %f Grad Celsius."
+msgstr "Setze Hotend Temperatur auf %s Grad Celsius."
 
 #: printrun/pronsole.py:1521 printrun/pronterface.py:359
 msgid ""
 "You cannot set negative temperatures. To turn the hotend off entirely, set its "
 "temperature to 0."
 msgstr ""
-"Sie können keine negativen Temperaturen einstellen. Um das Hotend ganz auszuschalten, "
-"Temperatur auf 0 setzen."
+"Sie können keine negativen Temperaturen einstellen. Die Temperatur auf 0 setzen um das "
+"Hotend ganz auszuschalten."
 
 #: printrun/pronsole.py:1524
-#, fuzzy
 msgid "Sets the hotend temperature to the value entered."
-msgstr "Setze Hotend Temperatur auf %f Grad Celsius."
+msgstr "Setzt die Hotend-Temperatur auf den eingegebenen Wert."
 
 #: printrun/pronsole.py:1525 printrun/pronsole.py:1552
 msgid "Enter either a temperature in celsius or one of the following keywords"
 msgstr ""
+"Geben Sie entweder eine Temperatur in Celsius oder eines der folgenden Schlüsselwörter "
+"ein"
 
 #: printrun/pronsole.py:1544
-#, fuzzy
 msgid "Setting bed temperature to %s degrees Celsius."
-msgstr "Setze Heizbett Temperatur auf %f Grad Celsius."
+msgstr "Stellt die Bett-Temperatur auf %s Grad Celsius ein."
 
 #: printrun/pronsole.py:1548 printrun/pronterface.py:379
 msgid ""
@@ -1081,26 +1066,24 @@ msgstr ""
 "Temperatur auf 0 setzen."
 
 #: printrun/pronsole.py:1551
-#, fuzzy
 msgid "Sets the bed temperature to the value entered."
-msgstr "Setze Heizbett Temperatur auf %f Grad Celsius."
+msgstr "Setzt die Bett-Temperatur auf den eingegebenen Wert ein."
 
 #: printrun/pronsole.py:1565
 msgid "Printer is not printing. Please print something before monitoring."
-msgstr ""
+msgstr "Der Drucker druckt nicht. Bitte drucken Sie vor der Überwachung etwas aus."
 
 #: printrun/pronsole.py:1567
-#, fuzzy
 msgid "Monitoring printer, use ^C to interrupt."
-msgstr "Überwache Drucker."
+msgstr "Überwache den Drucker, mit ^C unterbrechen."
 
 #: printrun/pronsole.py:1572 printrun/pronterface.py:329
 msgid "Invalid period given."
-msgstr "Ungültiger Abschnitt angegeben."
+msgstr "Ungültiger Zeitraum angegeben."
 
 #: printrun/pronsole.py:1573
 msgid "Updating values every %f seconds."
-msgstr ""
+msgstr "Aktualisieren der Werte alle %f Sekunden."
 
 #: printrun/pronsole.py:1584 printrun/pronsole.py:1587
 msgid "Print progress: "
@@ -1569,12 +1552,11 @@ msgstr ""
 
 #: printrun/pronterface.py:713
 msgid "&Settings"
-msgstr "&Einstellungen"
+msgstr "Ein&stellungen"
 
 #: printrun/pronterface.py:719
-#, fuzzy
 msgid "&About Printrun"
-msgstr "Drucker überwachen"
+msgstr "&Über Printrun"
 
 #: printrun/pronterface.py:719
 msgid "Show about dialog"
@@ -1582,7 +1564,7 @@ msgstr ""
 
 #: printrun/pronterface.py:720
 msgid "&Help"
-msgstr ""
+msgstr "&Hilfe"
 
 #: printrun/pronterface.py:746
 msgid "Printrun is a pure Python 3D printing (and other types of CNC) host software."
@@ -1594,9 +1576,8 @@ msgid "%.02fmm of filament have been extruded during prints"
 msgstr "mm Filament in Druck genutzt\n"
 
 #: printrun/pronterface.py:781
-#, fuzzy
 msgid "Monitor printer status"
-msgstr "Drucker überwachen"
+msgstr "Überwachung des Druckerstatus"
 
 #: printrun/pronterface.py:781
 msgid ""
@@ -1621,13 +1602,12 @@ msgid "Draw a circular (or oval) build platform instead of a rectangular one"
 msgstr ""
 
 #: printrun/pronterface.py:784
-#, fuzzy
 msgid "Extruders count"
-msgstr "Extrudieren"
+msgstr "Anzahl Extruder"
 
 #: printrun/pronterface.py:784
 msgid "Number of extruders"
-msgstr ""
+msgstr "Anzahl der vorhandenen Extruder"
 
 #: printrun/pronterface.py:785
 msgid "Clamp manual moves"
@@ -1748,46 +1728,40 @@ msgid "Preview extrusion width"
 msgstr ""
 
 #: printrun/pronterface.py:804
-#, fuzzy
 msgid "Width of Extrusion in Preview"
-msgstr "Vorschaubreite der Extrudierung (Vorgabe: 0.5)"
+msgstr "Extrusionsbreite in der Vorschau"
 
 #: printrun/pronterface.py:805
-#, fuzzy
 msgid "Fine Grid Spacing"
-msgstr "Feiner Rasterabstand (Vorgabe: 10)"
+msgstr "Abstand Feinraster"
 
 #: printrun/pronterface.py:805
-#, fuzzy
 msgid "Fine grid spacing"
-msgstr "Feiner Rasterabstand (Vorgabe: 10)"
+msgstr "Abstand Feinraster"
 
 #: printrun/pronterface.py:806
-#, fuzzy
 msgid "Coarse Grid Spacing"
-msgstr "Grober Rasterabstand (Vorgabe: 50)"
+msgstr "Abstand Grobraster"
 
 #: printrun/pronterface.py:806
-#, fuzzy
 msgid "Coarse grid spacing"
-msgstr "Grober Rasterabstand (Vorgabe: 50)"
+msgstr "Abstand Grobraster"
 
 #: printrun/pronterface.py:807
 msgid "Background color"
-msgstr ""
+msgstr "Hintergrundfarbe"
 
 #: printrun/pronterface.py:807
-#, fuzzy
 msgid "Pronterface background color"
-msgstr "Pronterface Hintergrundfarbe (Vorgabe: #FFFFFF)"
+msgstr "Pronterface Hintergrundfarbe"
 
 #: printrun/pronterface.py:808
 msgid "3D view background color"
-msgstr ""
+msgstr "Hintergrundfarbe 3D-Ansicht"
 
 #: printrun/pronterface.py:808
 msgid "Color of the 3D view background"
-msgstr ""
+msgstr "Farbe des Hintergrunds der 3D-Ansicht"
 
 #: printrun/pronterface.py:809
 msgid "3D view travel moves color"
