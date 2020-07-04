@@ -42,11 +42,8 @@ from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
 from .libtatlin.actors import vec
 
-class wxGLPanel(wx.ScrolledWindow):
+class wxGLPanel(wx.Window):
     '''A simple class for using OpenGL with wxPython.'''
-    # Extending wx.ScrolledWindow so the resizes are not
-    # propagated to the parents - the splitter need not resize
-    # see and thank http://www.pietrobattiston.it/pygtk:resizing
 
     orbit_control = True
     orthographic = True
@@ -90,10 +87,18 @@ class wxGLPanel(wx.ScrolledWindow):
         self.Bind(wx.EVT_SIZE, self.OnScrollSize)
         self.canvas.Bind(wx.EVT_SIZE, self.processSizeEvent)
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
-        #self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
-        #TODO: why bind to ScrolledWindow works,
-        # but bind to GLCanvas does not work
+        #Why Bind to parent (self) Window works,
+        # but Bind to self.canvas GLCanvas does not work?
         self.Bind(wx.EVT_PAINT, self.processPaintEvent)
+        #should be
+        # self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
+        # Maybe the reason is that the GLCanvas::draw() in wxWidgets 3.0
+        # has a bug which makes it think that the canvas is clipped out
+        # and no EVT_PAINT is emitted
+        # The Window.draw() does not have the bug, and the EVT_PAINT
+        # is emitted. When we upgrade to wxWidgets 3.1 we should be
+        # able to draw in the canvas event, and we can remove the Window parent
+        # and sublass GLCanvas
 
     def OnScrollSize(self, event):
         self.canvas.SetSize(event.Size)
@@ -105,7 +110,7 @@ class wxGLPanel(wx.ScrolledWindow):
     def processSizeEvent(self, event):
         '''Process the resize event.'''
 
-        print('processSizeEvent frozen', self.IsFrozen(), event.Size.x, self.ClientSize.x)
+        # print('processSizeEvent frozen', self.IsFrozen(), event.Size.x, self.ClientSize.x)
         if not self.IsFrozen() and self.canvas.IsShownOnScreen():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
@@ -117,7 +122,7 @@ class wxGLPanel(wx.ScrolledWindow):
 
     def processPaintEvent(self, event):
         '''Process the drawing event.'''
-        print('wxGLPanel.processPaintEvent', self.ClientSize.Width)
+        # print('wxGLPanel.processPaintEvent', self.ClientSize.Width)
         self.canvas.SetCurrent(self.context)
 
         if not self.gl_broken:
@@ -237,7 +242,7 @@ class wxGLPanel(wx.ScrolledWindow):
         """Draw the window."""
         #import time
         #start = time.perf_counter()
-        print('DrawCanvas', self.canvas.GetClientRect())
+        # print('DrawCanvas', self.canvas.GetClientRect())
         self.pygletcontext.set_current()
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -330,6 +335,9 @@ class wxGLPanel(wx.ScrolledWindow):
         self.zoom_factor *= factor
         if to:
             glTranslatef(-delta_x, -delta_y, 0)
+        # when you resize (enlarge) 3d view fast and the log pane
+        # minimum size constraint is hit, garbage may remain.
+        # The following refresh clears it.
         wx.CallAfter(self.Refresh)
 
     def zoom_to_center(self, factor):
