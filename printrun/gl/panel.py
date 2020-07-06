@@ -42,7 +42,7 @@ from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
 from .libtatlin.actors import vec
 
-class wxGLPanel(wx.Panel):
+class wxGLPanel(glcanvas.GLCanvas):
     '''A simple class for using OpenGL with wxPython.'''
 
     orbit_control = True
@@ -55,7 +55,6 @@ class wxGLPanel(wx.Panel):
                  antialias_samples = 0):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
-        super(wxGLPanel, self).__init__(parent, wx.ID_ANY, pos, size, style)
 
         self.GLinitialized = False
         self.mview_initialized = False
@@ -67,14 +66,15 @@ class wxGLPanel(wx.Panel):
             attribList += (glcanvas.WX_GL_SAMPLE_BUFFERS, 1,
                            glcanvas.WX_GL_SAMPLES, antialias_samples)
 
+
+        super().__init__(parent, wx.ID_ANY, attribList, pos, size, style)
+        # canvas is leftover from when it was child of a Panel
+        self.canvas = self
+
         self.width = None
         self.height = None
 
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.canvas = glcanvas.GLCanvas(self, attribList = attribList)
         self.context = glcanvas.GLContext(self.canvas)
-        self.sizer.Add(self.canvas, 1, wx.EXPAND)
-        self.SetSizerAndFit(self.sizer)
 
         self.rot_lock = Lock()
         self.basequat = [0, 0, 0, 1]
