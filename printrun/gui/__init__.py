@@ -240,7 +240,7 @@ class MainWindow(wx.Frame):
             rightpanel = self.newPanel(lowerpanel)
             rightsizer = wx.BoxSizer(wx.VERTICAL)
             rightpanel.SetSizer(rightsizer)
-            self.splitterwindow = wx.SplitterWindow(rightpanel, style = wx.SP_3D)
+            self.splitterwindow = wx.SplitterWindow(rightpanel, style = wx.SP_3D | wx.SP_LIVE_UPDATE)
             self.splitterwindow.SetMinimumPaneSize(150)
             self.splitterwindow.SetSashGravity(0.8)
             rightsizer.Add(self.splitterwindow, 1, wx.EXPAND)
