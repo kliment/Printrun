@@ -42,8 +42,11 @@ from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
 from .libtatlin.actors import vec
 
-class wxGLPanel(glcanvas.GLCanvas):
+class wxGLPanel(wx.ScrolledWindow):
     '''A simple class for using OpenGL with wxPython.'''
+    # Extending wx.ScrolledWindow so the resizes are not
+    # propagated to the parents - the splitter need not resize
+    # see and thank http://www.pietrobattiston.it/pygtk:resizing
 
     orbit_control = True
     orthographic = True
@@ -53,8 +56,9 @@ class wxGLPanel(glcanvas.GLCanvas):
     def __init__(self, parent, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0,
                  antialias_samples = 0):
-        # Forcing a no full repaint to stop flickering
-        style = style | wx.NO_FULL_REPAINT_ON_RESIZE
+        # Full repaint should not be a performance problem
+        #TODO: test on windows, tested in Ubuntu
+        style = style | wx.FULL_REPAINT_ON_RESIZE
 
         self.GLinitialized = False
         self.mview_initialized = False
@@ -66,10 +70,8 @@ class wxGLPanel(glcanvas.GLCanvas):
             attribList += (glcanvas.WX_GL_SAMPLE_BUFFERS, 1,
                            glcanvas.WX_GL_SAMPLES, antialias_samples)
 
-
-        super().__init__(parent, wx.ID_ANY, attribList, pos, size, style)
-        # canvas is leftover from when it was child of a Panel
-        self.canvas = self
+        super().__init__(parent, wx.ID_ANY, pos, size, style)
+        self.canvas = glcanvas.GLCanvas(self, wx.ID_ANY, attribList, pos, size, style)
 
         self.width = None
         self.height = None
@@ -85,9 +87,16 @@ class wxGLPanel(glcanvas.GLCanvas):
         self.gl_broken = False
 
         # bind events
-        self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
+        self.Bind(wx.EVT_SIZE, self.OnScrollSize)
         self.canvas.Bind(wx.EVT_SIZE, self.processSizeEvent)
-        self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
+        self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
+        #self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
+        #TODO: why bind to ScrolledWindow works,
+        # but bind to GLCanvas does not work
+        self.Bind(wx.EVT_PAINT, self.processPaintEvent)
+
+    def OnScrollSize(self, event):
+        self.canvas.SetSize(event.Size)
 
     def processEraseBackgroundEvent(self, event):
         '''Process the erase background event.'''
@@ -95,23 +104,26 @@ class wxGLPanel(glcanvas.GLCanvas):
 
     def processSizeEvent(self, event):
         '''Process the resize event.'''
-        if not self.IsFrozen() and  self.canvas.IsShownOnScreen():
+
+        print('processSizeEvent frozen', self.IsFrozen(), event.Size.x, self.ClientSize.x)
+        if not self.IsFrozen() and self.canvas.IsShownOnScreen():
             # Make sure the frame is shown before calling SetCurrent.
             self.canvas.SetCurrent(self.context)
             self.OnReshape()
-            self.Refresh(False)
-            timer = wx.CallLater(100, self.Refresh)
-            timer.Start()
+
+            # self.Refresh(False)
+            # print('Refresh')
         event.Skip()
 
     def processPaintEvent(self, event):
         '''Process the drawing event.'''
+        print('wxGLPanel.processPaintEvent', self.ClientSize.Width)
         self.canvas.SetCurrent(self.context)
 
         if not self.gl_broken:
             try:
                 self.OnInitGL()
-                self.OnDraw()
+                self.DrawCanvas()
             except pyglet.gl.lib.GLException:
                 self.gl_broken = True
                 logging.error(_("OpenGL failed, disabling it:")
@@ -221,8 +233,11 @@ class wxGLPanel(glcanvas.GLCanvas):
             self.zoomed_height = hratio / minratio
             glScalef(factor * minratio, factor * minratio, 1)
 
-    def OnDraw(self, *args, **kwargs):
+    def DrawCanvas(self):
         """Draw the window."""
+        #import time
+        #start = time.perf_counter()
+        print('DrawCanvas', self.canvas.GetClientRect())
         self.pygletcontext.set_current()
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
