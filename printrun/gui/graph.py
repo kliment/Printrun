@@ -249,27 +249,27 @@ class Graph(BufferedCanvas):
 
     def drawbed1temp(self, dc, gc): #AGe add bed1
         self.drawtemperature(dc, gc, self.bed1temps,
-                             "Bed 1", 2, 255, 0, 0, 128)
+                             "Bed 1", 5, 255, 0, 0, 128)
 
     def drawbed1targettemp(self, dc, gc): #AGe add bed1
         self.drawtemperature(dc, gc, self.bed1targettemps,
-                             "Bed 1 Target", 2, 255, 120, 0, 128)
+                             "Bed 1 Target", 5, 255, 120, 0, 128)
 
     def drawextruder0temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0temps,
-                             "Ex0", 1, 0, 155, 255, 128)
+                             "Ex0", 3, 0, 155, 255, 128)
 
     def drawextruder0targettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0targettemps,
-                             "Ex0 Target", 2, 0, 5, 255, 128)
+                             "Ex0 Target", 3, 0, 5, 255, 128)
 
     def drawextruder1temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder1temps,
-                             "Ex1", 3, 55, 55, 0, 128)
+                             "Ex1", 4, 55, 55, 0, 128)
 
     def drawextruder1targettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder1targettemps,
-                             "Ex1 Target", 2, 55, 55, 0, 128)
+                             "Ex1 Target", 4, 55, 55, 0, 128)
 
     def SetFanPower(self, value):
         self.fanpowers.pop()
