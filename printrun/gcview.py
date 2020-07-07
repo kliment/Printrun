@@ -107,12 +107,12 @@ class GcodeViewPanel(wxGLPanel):
 
     def OnInitGL(self, *args, **kwargs):
         super().OnInitGL(*args, **kwargs)
-        if hasattr(self.parent, "filenames") and self.parent.filenames:
-            for filename in self.parent.filenames:
+        filenames = getattr(self.parent, 'filenames', None)
+        if filenames:
+            for filename in filenames:
                 self.parent.load_file(filename)
             self.parent.autoplate()
-            if hasattr(self.parent, "loadcb"):
-                self.parent.loadcb()
+            getattr(self.parent, 'loadcb', bool)()
             self.parent.filenames = None
 
     def create_objects(self):
@@ -122,7 +122,7 @@ class GcodeViewPanel(wxGLPanel):
                 obj.model.init()
 
     def update_object_resize(self):
-        '''called when the window recieves only if opengl is initialized'''
+        '''called when the window receives only if opengl is initialized'''
         pass
 
     def draw_objects(self):
@@ -195,7 +195,7 @@ class GcodeViewPanel(wxGLPanel):
         event.Skip()
 
     def layerup(self):
-        if not hasattr(self.parent, "model") or not self.parent.model:
+        if not getattr(self.parent, 'model', False):
             return
         max_layers = self.parent.model.max_layers
         current_layer = self.parent.model.num_layers_to_draw
@@ -208,7 +208,7 @@ class GcodeViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def layerdown(self):
-        if not hasattr(self.parent, "model") or not self.parent.model:
+        if not getattr(self.parent, 'model', False):
             return
         current_layer = self.parent.model.num_layers_to_draw
         new_layer = max(1, current_layer - 1)
@@ -406,10 +406,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.p = self  # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
         self.platform = actors.Platform(build_dimensions, circular = circular)
-        if objects:
-            self.model = objects[1].model
-        else:
-            self.model = None
+        self.model = objects[1].model if objects else None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
         fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
