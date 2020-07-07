@@ -42,7 +42,10 @@ from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
 from .libtatlin.actors import vec
 
-class wxGLPanel(wx.Window):
+BASE_CLASS = wx.Window
+# BASE_CLASS = wx.ScrolledWindow
+# BASE_CLASS = glcanvas.GLCanvas
+class wxGLPanel(BASE_CLASS):
     '''A simple class for using OpenGL with wxPython.'''
 
     orbit_control = True
@@ -59,19 +62,25 @@ class wxGLPanel(wx.Window):
 
         self.GLinitialized = False
         self.mview_initialized = False
-        attribList = (glcanvas.WX_GL_RGBA,  # RGBA
+        attribList = [glcanvas.WX_GL_RGBA,  # RGBA
                       glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
-                      glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
+                      glcanvas.WX_GL_DEPTH_SIZE, 24  # 24 bit
+                      ]
 
         if antialias_samples > 0 and hasattr(glcanvas, "WX_GL_SAMPLE_BUFFERS"):
             attribList += (glcanvas.WX_GL_SAMPLE_BUFFERS, 1,
                            glcanvas.WX_GL_SAMPLES, antialias_samples)
 
-        super().__init__(parent, wx.ID_ANY, pos, size, style)
-        self.canvas = glcanvas.GLCanvas(self, wx.ID_ANY, attribList, pos, size, style)
+        attribList.append(0)
 
-        self.width = None
-        self.height = None
+        if (BASE_CLASS is glcanvas.GLCanvas):
+            super().__init__(parent, wx.ID_ANY, attribList, pos, size, style)
+            self.canvas = self
+        else:
+            super().__init__(parent, wx.ID_ANY, pos, size, style)
+            self.canvas = glcanvas.GLCanvas(self, wx.ID_ANY, attribList, pos, size, style)
+
+        self.width = self.height = None
 
         self.context = glcanvas.GLContext(self.canvas)
 
@@ -84,21 +93,26 @@ class wxGLPanel(wx.Window):
         self.gl_broken = False
 
         # bind events
-        self.Bind(wx.EVT_SIZE, self.OnScrollSize)
         self.canvas.Bind(wx.EVT_SIZE, self.processSizeEvent)
+        if (self.canvas is not self):
+            self.Bind(wx.EVT_SIZE, self.OnScrollSize)
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
-        #Why Bind to parent (self) Window works,
-        # but Bind to self.canvas GLCanvas does not work?
-        self.Bind(wx.EVT_PAINT, self.processPaintEvent)
-        #should be
-        # self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
-        # Maybe the reason is that the GLCanvas::draw() in wxWidgets 3.0
-        # has a bug which makes it think that the canvas is clipped out
-        # and no EVT_PAINT is emitted
-        # The Window.draw() does not have the bug, and the EVT_PAINT
-        # is emitted. When we upgrade to wxWidgets 3.1 we should be
-        # able to draw in the canvas event, and we can remove the Window parent
-        # and sublass GLCanvas
+        # In wxWidgets 3.0.x there is a clipping bug during resizing
+        # which could be affected by painting the container
+        # self.Bind(wx.EVT_PAINT, self.processPaintEvent)
+        # Upgrade to wxPython 4.1 recommended
+        self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
+
+    # def processIdle(self, event):
+    #     print('processIdle')
+    #     event.Skip()
+
+    def Layout(self):
+        return super().Layout()
+
+    def Refresh(self, eraseback=True):
+        # print('Refresh')
+        return super().Refresh(eraseback)
 
     def OnScrollSize(self, event):
         self.canvas.SetSize(event.Size)
@@ -175,6 +189,7 @@ class wxGLPanel(wx.Window):
         self.width = max(float(width), 1.0)
         self.height = max(float(height), 1.0)
         self.OnInitGL(call_reshape = False)
+        # print('glViewport', width)
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -248,6 +263,7 @@ class wxGLPanel(wx.Window):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.draw_objects()
         self.canvas.SwapBuffers()
+        #print('Draw took', '%.2f'%(time.perf_counter()-start))
 
     # ==========================================================================
     # To be implemented by a sub class
@@ -335,10 +351,13 @@ class wxGLPanel(wx.Window):
         self.zoom_factor *= factor
         if to:
             glTranslatef(-delta_x, -delta_y, 0)
-        # when you resize (enlarge) 3d view fast and the log pane
-        # minimum size constraint is hit, garbage may remain.
-        # The following refresh clears it.
-        wx.CallAfter(self.Refresh)
+        # For wxPython (<4.1) and GTK:
+        # when you resize (enlarge) 3d view fast towards the log pane
+        # sash garbage may remain in GLCanvas
+        # The following refresh clears it at the cost of
+        # doubled frame draws.
+        # wx.CallAfter(self.Refresh)
+        self.Refresh(False)
 
     def zoom_to_center(self, factor):
         self.canvas.SetCurrent(self.context)
