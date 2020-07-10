@@ -37,12 +37,17 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_MODELVIEW_MATRIX, GL_ONE_MINUS_SRC_ALPHA, glOrtho, \
     GL_PROJECTION, GL_PROJECTION_MATRIX, glScalef, \
     GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
-    glViewport, GL_VIEWPORT
+    glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, \
+    glBegin, glVertex2f, glVertex3f, glEnd, GL_LINE_LOOP, glColor3f, \
+    GL_LINE_STIPPLE, glColor4f, glLineStipple
+
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
 from .libtatlin.actors import vec
+from pyglet.gl.glu import gluOrtho2D
 
 BASE_CLASS = wx.Window
+# BASE_CLASS = wx.Panel
 # BASE_CLASS = wx.ScrolledWindow
 # BASE_CLASS = glcanvas.GLCanvas
 class wxGLPanel(BASE_CLASS):
@@ -73,7 +78,7 @@ class wxGLPanel(BASE_CLASS):
 
         attribList.append(0)
 
-        if (BASE_CLASS is glcanvas.GLCanvas):
+        if BASE_CLASS is glcanvas.GLCanvas:
             super().__init__(parent, wx.ID_ANY, attribList, pos, size, style)
             self.canvas = self
         else:
@@ -94,8 +99,11 @@ class wxGLPanel(BASE_CLASS):
 
         # bind events
         self.canvas.Bind(wx.EVT_SIZE, self.processSizeEvent)
-        if (self.canvas is not self):
+        if self.canvas is not self:
             self.Bind(wx.EVT_SIZE, self.OnScrollSize)
+            # do not focus parent (panel like) but its canvas
+            self.SetCanFocus(False)
+
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
         # In wxWidgets 3.0.x there is a clipping bug during resizing
         # which could be affected by painting the container
@@ -103,6 +111,18 @@ class wxGLPanel(BASE_CLASS):
         # Upgrade to wxPython 4.1 recommended
         self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
 
+        self.canvas.Bind(wx.EVT_SET_FOCUS, self.processFocus)
+        self.canvas.Bind(wx.EVT_KILL_FOCUS, self.processKillFocus)
+
+    def processFocus(self, ev):
+        # print('processFocus')
+        self.Refresh(False)
+        ev.Skip()
+
+    def processKillFocus(self, ev):
+        # print('processKillFocus')
+        self.Refresh(False)
+        ev.Skip()
     # def processIdle(self, event):
     #     print('processIdle')
     #     event.Skip()
@@ -262,8 +282,37 @@ class wxGLPanel(BASE_CLASS):
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.draw_objects()
+
+        if self.canvas.HasFocus():
+            self.drawFocus()
         self.canvas.SwapBuffers()
         #print('Draw took', '%.2f'%(time.perf_counter()-start))
+
+    def drawFocus(self):
+        glColor4f(0, 0, 0, 0.4)
+
+        glPushMatrix()
+        glLoadIdentity()
+
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        gluOrtho2D(0, self.width, 0, self.height)
+
+        glLineStipple(1, 0xf0f0)
+        glEnable(GL_LINE_STIPPLE)
+        glBegin(GL_LINE_LOOP)
+        glVertex2f(1, 0)
+        glVertex2f(self.width, 0)
+        glVertex2f(self.width, self.height-1)
+        glVertex2f(1, self.height-1)
+        glEnd()
+        glDisable(GL_LINE_STIPPLE)
+
+        glPopMatrix() # restore PROJECTION
+
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix()
 
     # ==========================================================================
     # To be implemented by a sub class
