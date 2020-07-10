@@ -66,6 +66,15 @@ def set_gcview_params(self, path_width, path_height):
             has_changed = True
     return has_changed
 
+# E selected for Up because is above D
+LAYER_UP_KEYS = ord('U'), ord('E'), wx.WXK_UP
+LAYER_DOWN_KEYS = ord('D'), wx.WXK_DOWN
+ZOOM_IN_KEYS = wx.WXK_PAGEDOWN, 388, wx.WXK_RIGHT, ord('=')
+ZOOM_OUT_KEYS = wx.WXK_PAGEUP, 390, wx.WXK_LEFT, ord('-')
+FIT_KEYS = [ord('F')]
+CURRENT_LAYER_KEYS = [ord('C')]
+RESET_KEYS = [ord('R')]
+
 class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent,
@@ -262,34 +271,29 @@ class GcodeViewPanel(wxGLPanel):
 
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
-        step = 1.1
-        if event.ControlDown():
-            step = 1.05
-        kup = [85, 315]               # Up keys
-        kdo = [68, 317]               # Down Keys
-        kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
-        kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
-        kfit = [70]       # Fit to print keys
-        kshowcurrent = [67]       # Show only current layer keys
-        kreset = [82]       # Reset keys
+        step = event.ControlDown() and 1.05 or 1.1
         key = event.GetKeyCode()
-        if key in kup:
+        if key in LAYER_UP_KEYS:
             self.layerup()
-        if key in kdo:
+            return  # prevent shifting focus to other controls
+        elif key in LAYER_DOWN_KEYS:
             self.layerdown()
-        x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
-        if key in kzi:
+            return
+        # x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
+        elif key in ZOOM_IN_KEYS:
             self.zoom_to_center(step)
-        if key in kzo:
+            return
+        elif key in ZOOM_OUT_KEYS:
             self.zoom_to_center(1 / step)
-        if key in kfit:
+            return
+        elif key in FIT_KEYS:
             self.fit()
-        if key in kshowcurrent:
+        elif key in CURRENT_LAYER_KEYS:
             if not self.parent.model or not self.parent.model.loaded:
                 return
             self.parent.model.only_current = not self.parent.model.only_current
             wx.CallAfter(self.Refresh)
-        if key in kreset:
+        elif key in RESET_KEYS:
             self.resetview()
         event.Skip()
 
