@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
 "POT-Creation-Date: 2014-03-30 14:35+CEST\n"
-"PO-Revision-Date: 2020-06-22 21:44+0200\n"
+"PO-Revision-Date: 2020-07-13 23:31+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: <>\n"
 "Language: de\n"
@@ -1087,7 +1087,7 @@ msgstr "Aktualisieren der Werte alle %f Sekunden."
 
 #: printrun/pronsole.py:1584 printrun/pronsole.py:1587
 msgid "Print progress: "
-msgstr ""
+msgstr "Druckfortschritt: "
 
 #: printrun/pronsole.py:1595 printrun/pronterface.py:333
 msgid "Done monitoring."
@@ -1095,123 +1095,130 @@ msgstr "Überwachung abgeschlossen."
 
 #: printrun/pronsole.py:1599
 msgid "Monitor a machine's temperatures and an SD print's status."
-msgstr ""
+msgstr "Überwacht die Temperaturen des Druckers und den Status des Drucks über SD-Karte."
 
 #: printrun/pronsole.py:1600
 msgid "monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"
 msgstr ""
+"monitor - Meldet alle 5 Sekunden Temperatur und SD-Druckstatus (bei Druck über SD-Karte)"
 
 #: printrun/pronsole.py:1601
 msgid ""
 "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"
 msgstr ""
+"monitor 2 - Meldet alle 2 Sekunden Temperatur und SD-Druckstatus (bei Druck über SD-"
+"Karte)"
 
 #: printrun/pronsole.py:1612
 msgid "You must specify the tool index as an integer."
-msgstr ""
+msgstr "Sie müssen den Werkzeugindex als ganzzahlige Zahl angeben."
 
 #: printrun/pronsole.py:1616
 msgid "Using tool %d."
-msgstr ""
+msgstr "Benutze Werkzeug %d."
 
 #: printrun/pronsole.py:1620
 msgid "You cannot set negative tool numbers."
-msgstr ""
+msgstr "Sie können keine negativen Werkzeugnummern festlegen."
 
 #: printrun/pronsole.py:1623
 msgid "Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."
-msgstr ""
+msgstr "Wechselt zum angegebenen Werkzeug (z.B. gibt Werkzeug 1 den G-Code T1 aus)."
 
 #: printrun/pronsole.py:1627
 msgid "No move specified."
-msgstr ""
+msgstr "Keine Bewegung angegeben."
 
 #: printrun/pronsole.py:1630 printrun/pronsole.py:1692 printrun/pronsole.py:1735
 #: printrun/pronsole.py:1762
 msgid ""
 "Printer is currently printing. Please pause the print before you issue manual commands."
 msgstr ""
+"Der Drucker druckt gerade. Bitte pausieren Sie den Druckvorgang, bevor Sie manuelle "
+"Befehle erteilen."
 
 #: printrun/pronsole.py:1633 printrun/pronsole.py:1759
-#, fuzzy
 msgid "Printer is not online. Unable to move."
-msgstr "Drucker ist nicht online."
+msgstr "Drucker ist nicht online. Keine Bewegungen möglich."
 
 #: printrun/pronsole.py:1649
 msgid "Unknown axis."
-msgstr ""
+msgstr "Unbekannte Achse."
 
 #: printrun/pronsole.py:1654
 msgid "Invalid distance"
-msgstr ""
+msgstr "Ungültiger Abstand"
 
 #: printrun/pronsole.py:1665
 msgid "Move an axis. Specify the name of the axis and the amount. "
-msgstr ""
+msgstr "Bewegt eine Achse. Geben Sie den Namen der Achse und den Betrag an. "
 
 #: printrun/pronsole.py:1666
 msgid "move X 10 will move the X axis forward by 10mm at %s mm/min (default XY speed)"
 msgstr ""
+"Bewegen X 10 bewegt die X-Achse um 10 mm bei %s mm/min (Standard-XY-Geschwindigkeit) "
+"vorwärts"
 
 #: printrun/pronsole.py:1667
 msgid "move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"
-msgstr ""
+msgstr "Bewegen Y 10 5000 bewegt die Y-Achse um 10 mm bei 5000mm/min vorwärts"
 
 #: printrun/pronsole.py:1668
 msgid "move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)"
 msgstr ""
+"Bewegen Z -1 bewegt die Z-Achse um 1 mm bei %s mm/min (Standard-Z-Geschwindigkeit) nach "
+"unten"
 
 #: printrun/pronsole.py:1669
 msgid "Common amounts are in the tabcomplete list."
-msgstr ""
+msgstr "Übliche Beträge finden Sie in der Tab-Vollständigen Liste."
 
 #: printrun/pronsole.py:1699 printrun/pronsole.py:1742
-#, fuzzy
 msgid "Invalid length given."
-msgstr "Ungültiger Abschnitt angegeben."
+msgstr "Ungültiger Länge angegeben."
 
 #: printrun/pronsole.py:1704 printrun/pronsole.py:1747
-#, fuzzy
 msgid "Invalid speed given."
-msgstr "Ungültiger Abschnitt angegeben."
+msgstr "Ungültige Geschwindigkeit angegeben."
 
 #: printrun/pronsole.py:1712
 msgid "Extruding %fmm of filament."
-msgstr ""
+msgstr "Extrudiere %fmm Filament."
 
 #: printrun/pronsole.py:1714
 msgid "Reversing %fmm of filament."
-msgstr ""
+msgstr "Einzug von %fmm Filament."
 
 #: printrun/pronsole.py:1716
 msgid "Length is 0, not doing anything."
-msgstr ""
+msgstr "Länge ist 0, nichts zu tun."
 
 #: printrun/pronsole.py:1722
 msgid ""
 "Extrudes a length of filament, 5mm by default, or the number of mm given as a parameter"
 msgstr ""
+"Extrudiert eine Länge Filament, standardmäßig 5 mm, oder die als Parameter angegebene "
+"Länge in mm"
 
 #: printrun/pronsole.py:1723
 msgid "extrude - extrudes 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "extrude - extrudiert 5 mm Filament mit 300 mm/min (5 mm/s)"
 
 #: printrun/pronsole.py:1724
 msgid "extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "extrude 20 - extrudiert 20 mm Filament mit 300 mm/min (5 mm/s)"
 
 #: printrun/pronsole.py:1725
 msgid "extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "extrude -5 - zieht 5 mm Filament zurück mit 300 mm/min (5 mm/s)"
 
 #: printrun/pronsole.py:1726
 msgid "extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
-msgstr ""
+msgstr "extrude 10 210 - extrudiert 10 mm Filament mit 210 mm/min (3.5 mm/s)"
 
 #: printrun/pronsole.py:1732
-#, fuzzy
 msgid "Printer is not online. Unable to reverse."
-msgstr "Drucker ist nicht online."
+msgstr "Drucker ist nicht online. Einzug nicht möglich."
 
 #: printrun/pronsole.py:1751
 msgid "Reverses the extruder, 5mm by default, or the number of mm given as a parameter"
@@ -1234,74 +1241,77 @@ msgid "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
 msgstr ""
 
 #: printrun/pronsole.py:1777
-#, fuzzy
 msgid "Homes the printer"
-msgstr "Drucker Verbinden"
+msgstr "Referenzieren des Druckers"
 
 #: printrun/pronsole.py:1778
 msgid "home - homes all axes and zeroes the extruder(Using G28 and G92)"
 msgstr ""
+"Home - Referenziert alle Achsen und stellt Extruder-Position auf 0 (mit G28 und G92)"
 
 #: printrun/pronsole.py:1779
 msgid "home xy - homes x and y axes (Using G28)"
-msgstr ""
+msgstr "Home xy- Referenziert x- und y-Achse (mit G28)"
 
 #: printrun/pronsole.py:1780
 msgid "home z - homes z axis only (Using G28)"
-msgstr ""
+msgstr "Home z- Referenziert z-Achse (mit G28)"
 
 #: printrun/pronsole.py:1781
 msgid "home e - set extruder position to zero (Using G92)"
-msgstr ""
+msgstr "Home e- Setzt Extruder-Position auf 0 (mit G92)"
 
 #: printrun/pronsole.py:1782
 msgid "home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"
 msgstr ""
+"Home xyze - Referenziert alle Achsen und stellt Extruder-Position auf 0 (mit G28 und "
+"G92)"
 
 #: printrun/pronsole.py:1790
-#, fuzzy
 msgid "; Motors off"
-msgstr "Motoren aus"
+msgstr "; Motoren aus"
 
 #: printrun/pronsole.py:1792
-#, fuzzy
 msgid "; Extruder off"
-msgstr "Extrudieren"
+msgstr "; Extruder aus"
 
 #: printrun/pronsole.py:1794
 msgid "; Heatbed off"
-msgstr ""
+msgstr "; Heizbett aus"
 
 #: printrun/pronsole.py:1796
 msgid "; Fan off"
-msgstr ""
+msgstr "; Lüfter aus"
 
 #: printrun/pronsole.py:1798
 msgid "; Power supply off"
-msgstr ""
+msgstr "; Stromversorgung aus"
 
 #: printrun/pronsole.py:1801
-#, fuzzy
 msgid "Printer is not online. Unable to turn it off."
-msgstr "Drucker ist nicht online."
+msgstr "Drucker ist nicht online. Ausschalten nicht möglich."
 
 #: printrun/pronsole.py:1804
 msgid "Turns off everything on the printer"
-msgstr ""
+msgstr "Schaltet am Drucker alles aus"
 
 #: printrun/pronsole.py:1815
 msgid "G-Code calling host command \"%s\""
-msgstr ""
+msgstr "G-Code ruft den Host-Befehl \"%s\" auf"
 
 #: printrun/pronsole.py:1824
 msgid "Runs a custom script. Current gcode filename can be given using %s token."
 msgstr ""
+"Führt ein benutzerdefiniertes Skript aus. Der aktuelle G-Code-Dateiname kann mit dem "
+"Merkmal %s angegeben werden."
 
 #: printrun/pronsole.py:1832
 msgid ""
 "Runs a custom script which output gcode which will in turn be executed. Current gcode "
 "filename can be given using %s token."
 msgstr ""
+"Führt ein benutzerdefiniertes Skript aus, welches einen G-Code ausgibt, der wiederum "
+"ausgeführt wird. Der aktuelle G-Code-Dateiname kann mit dem Merkmal %s angegeben werden."
 
 #: printrun/pronterface.py:149
 msgid "Motors off"
@@ -1309,11 +1319,11 @@ msgstr "Motoren aus"
 
 #: printrun/pronterface.py:149
 msgid "Switch all motors off"
-msgstr ""
+msgstr "Schalte alle Motoren aus"
 
 #: printrun/pronterface.py:150
 msgid "Advance extruder by set length"
-msgstr ""
+msgstr "Extrudieren mit eingestellter Länge"
 
 #: printrun/pronterface.py:150
 msgid "Extrude"
@@ -1321,16 +1331,15 @@ msgstr "Extrudieren"
 
 #: printrun/pronterface.py:151
 msgid "Reverse"
-msgstr "Rückwärts"
+msgstr "Zurückziehen"
 
 #: printrun/pronterface.py:151
 msgid "Reverse extruder by set length"
-msgstr ""
+msgstr "Zurückziehen mit eingestellter Länge"
 
 #: printrun/pronterface.py:165
-#, fuzzy
 msgid "Pronterface"
-msgstr "Printer Interface"
+msgstr "Pronterface"
 
 #: printrun/pronterface.py:192
 msgid ""
@@ -1371,12 +1380,11 @@ msgstr "Setze Heizbett Temperatur auf %f Grad Celsius."
 
 #: printrun/pronterface.py:392
 msgid "Setting print speed factor to %d%%."
-msgstr ""
+msgstr "Setze Druckgeschwindigkeit auf %d%%."
 
 #: printrun/pronterface.py:396
-#, fuzzy
 msgid "You must enter a speed. (%s)"
-msgstr "Sie müssen eine Temperatur eingeben. (%s)"
+msgstr "Sie müssen eine Geschwindigkeit eingeben. (%s)"
 
 #: printrun/pronterface.py:470
 msgid "Plate function activated"
@@ -1443,16 +1451,15 @@ msgstr " Offene Datei bearbeiten"
 
 #: printrun/pronterface.py:668
 msgid "&Edit..."
-msgstr "&Bearbeiten..."
+msgstr "&Editor..."
 
 #: printrun/pronterface.py:669
 msgid " Compose 3D models into a single plate"
 msgstr ""
 
 #: printrun/pronterface.py:669
-#, fuzzy
 msgid "Plater"
-msgstr "Heizelement:"
+msgstr "Druckplatte"
 
 #: printrun/pronterface.py:670
 msgid " Compose G-Codes into a single plate"
@@ -1480,7 +1487,7 @@ msgstr "Projektor"
 
 #: printrun/pronterface.py:673
 msgid "&Tools"
-msgstr ""
+msgstr "&Werkzeuge"
 
 #: printrun/pronterface.py:676
 msgid " Recover previous print after a disconnect (homes X, Y, restores Z and E status)"
@@ -1511,11 +1518,11 @@ msgstr "Drucken"
 
 #: printrun/pronterface.py:694
 msgid "&Slic3r"
-msgstr ""
+msgstr "&Slic3r"
 
 #: printrun/pronterface.py:696
 msgid "Failed to load Slic3r configuration:"
-msgstr ""
+msgstr "Fehler beim Laden der Slic3r-Konfiguration:"
 
 #: printrun/pronterface.py:702
 msgid "&Macros"
@@ -1544,11 +1551,11 @@ msgstr "Slicing Einstellungen"
 
 #: printrun/pronterface.py:708
 msgid "Debug communications"
-msgstr ""
+msgstr "Kommunikationsüberwachung"
 
 #: printrun/pronterface.py:709
 msgid "Print all G-code sent to and received from the printer."
-msgstr ""
+msgstr "Druckt den gesamten G-Code, der an den Drucker gesendet und empfangen wird, aus."
 
 #: printrun/pronterface.py:713
 msgid "&Settings"
@@ -1560,7 +1567,7 @@ msgstr "&Über Printrun"
 
 #: printrun/pronterface.py:719
 msgid "Show about dialog"
-msgstr ""
+msgstr "Über Printrun anzeigen"
 
 #: printrun/pronterface.py:720
 msgid "&Help"
@@ -1568,12 +1575,11 @@ msgstr "&Hilfe"
 
 #: printrun/pronterface.py:746
 msgid "Printrun is a pure Python 3D printing (and other types of CNC) host software."
-msgstr ""
+msgstr "Printrun ist eine reine Python 3D-Druck- (und andere Arten von CNC)-Hostsoftware."
 
 #: printrun/pronterface.py:750
-#, fuzzy
 msgid "%.02fmm of filament have been extruded during prints"
-msgstr "mm Filament in Druck genutzt\n"
+msgstr "Während des Druckvorgangs wurden %.02fmm Filament extrudiert"
 
 #: printrun/pronterface.py:781
 msgid "Monitor printer status"
@@ -1757,27 +1763,27 @@ msgstr "Pronterface Hintergrundfarbe"
 
 #: printrun/pronterface.py:808
 msgid "3D view background color"
-msgstr "Hintergrundfarbe 3D-Ansicht"
+msgstr "3D-Ansicht Hintergrundfarbe"
 
 #: printrun/pronterface.py:808
 msgid "Color of the 3D view background"
-msgstr "Farbe des Hintergrunds der 3D-Ansicht"
+msgstr "Farbe des Hintergrunds in der 3D-Ansicht"
 
 #: printrun/pronterface.py:809
 msgid "3D view travel moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Reisebewegungen"
 
 #: printrun/pronterface.py:809
 msgid "Color of travel moves in 3D view"
-msgstr ""
+msgstr "Farbe der Reisebewegungen in der 3D-Ansicht"
 
 #: printrun/pronterface.py:810
 msgid "3D view print moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen"
 
 #: printrun/pronterface.py:810
 msgid "Color of print moves with tool 0 in 3D view"
-msgstr ""
+msgstr "Farbe der Druckbewegungen in der 3D-Ansicht"
 
 #: printrun/pronterface.py:811
 msgid "3D view tool 1 moves color"
@@ -1952,7 +1958,9 @@ msgstr "Öffne zu druckende Datei"
 msgid ""
 "OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;"
 "*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"
-msgstr "OBJ,STL und GCODE Dateien (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)"
+msgstr ""
+"OBJ,STL und GCODE Dateien (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)|*.gcode;*.gco;*."
+"g;*.stl;*.STL;*.obj;*.OBJ|Alle Dateien (*.*)|*.*"
 
 #: printrun/pronterface.py:1325
 msgid "Could not update recent files list:"
@@ -2067,7 +2075,7 @@ msgstr "Name '%s' wird durch eingebauten Befehl genutzt"
 
 #: pronsole.py:31
 msgid "Caught an exception, exiting:"
-msgstr "Es wurde eine Ausnahme festgestellt:"
+msgstr "Eine Ausnahme abgefangen, beendet mit:"
 
 #~ msgid "Folder of last opened file"
 #~ msgstr "Verzeichniss der zuletzt geöffneten Datei"
