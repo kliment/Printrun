@@ -73,6 +73,7 @@ class Graph(BufferedCanvas):
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.processDestroy)
 
         self.minyvalue = 0
         self.maxyvalue = 260
@@ -89,6 +90,12 @@ class Graph(BufferedCanvas):
         self.window = None
         self.reserved = []
 
+    def processDestroy(self, event):
+        # print('processDestroy')
+        self.StopPlotting()
+        self.Unbind(wx.EVT_TIMER)
+        event.Skip()
+
     def show_graph_window(self, event = None):
         if self.window is None or not self.window:
             self.window = GraphWindow(self.root, self)
@@ -102,6 +109,7 @@ class Graph(BufferedCanvas):
         if self.window: self.window.Close()
 
     def updateTemperatures(self, event):
+        # print('updateTemperatures')
         self.AddBedTemperature(self.bedtemps[-1])
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
         self.AddExtruder0Temperature(self.extruder0temps[-1])
@@ -385,6 +393,7 @@ class Graph(BufferedCanvas):
         if self.window: self.window.graph.StartPlotting(time)
 
     def Destroy(self):
+        # print(__class__, '.Destroy')
         self.StopPlotting()
         return super(BufferedCanvas, self).Destroy()
 

@@ -266,7 +266,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             for control in self.statefulControls:
                 control.GetContainingSizer().Detach(control)
                 control.Reparent(temppanel)
-            #self.panel.DestroyChildren() #do not destroy children when redrawing so that any timers currently running do not have references to missing objects - they get recreated if necessary anyway
+            self.panel.DestroyChildren()
             self.gwindow.Destroy()
             self.reset_ui()
 
