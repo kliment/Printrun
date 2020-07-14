@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
 "POT-Creation-Date: 2014-03-30 14:35+CEST\n"
-"PO-Revision-Date: 2020-07-13 23:31+0200\n"
+"PO-Revision-Date: 2020-07-14 23:57+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: <>\n"
 "Language: de\n"
@@ -56,14 +56,14 @@ msgstr "Befehle"
 msgid "Status"
 msgstr "Status"
 
+# Check
 #: printrun/gui/controls.py:126
-#, fuzzy
 msgid "Heat:"
-msgstr "Heizen:"
+msgstr "Extruder:"
 
 #: printrun/gui/controls.py:129
 msgid "Switch Hotend Off"
-msgstr "Hotend ausschalten"
+msgstr "Extruder ausschalten"
 
 #: printrun/gui/controls.py:129 printrun/gui/controls.py:149 printrun/gui/toolbar.py:85
 msgid "Off"
@@ -75,28 +75,27 @@ msgstr "Temperatur für Hotend auswählen"
 
 #: printrun/gui/controls.py:141
 msgid "Switch Hotend On"
-msgstr "Hotend einschalten"
+msgstr "Extruder einschalten"
 
 #: printrun/gui/controls.py:141 printrun/gui/controls.py:161 printrun/gui/controls.py:198
 msgid "Set"
-msgstr "Ein"
+msgstr "Einstellen"
 
 #: printrun/gui/controls.py:146 printrun/gui/controls.py:215
 msgid "Bed:"
-msgstr "Heizbett:"
+msgstr "Druckbett:"
 
 #: printrun/gui/controls.py:149
 msgid "Switch Heated Bed Off"
-msgstr "Heizbett ausschalten"
+msgstr "Heizung Druckbett ausschalten"
 
 #: printrun/gui/controls.py:157
-#, fuzzy
 msgid "Select Temperature for Heated Bed"
-msgstr "Letzte gesetzte Temperatur für das Heizbett"
+msgstr "Wähle Temperatur für beheiztes Druckbett"
 
 #: printrun/gui/controls.py:161
 msgid "Switch Heated Bed On"
-msgstr "Heizbett einschalten"
+msgstr "Heizung Druckbett einschalten"
 
 #: printrun/gui/controls.py:187
 msgid "Print speed:"
@@ -112,7 +111,7 @@ msgstr "Druckgeschwindigkeitsfaktor einstellen"
 
 #: printrun/gui/controls.py:213
 msgid "Heater:"
-msgstr "Heizelement:"
+msgstr "Extruder:"
 
 #: printrun/gui/controls.py:265
 msgid "Length:"
@@ -384,7 +383,7 @@ msgstr "Schicht %d - Nach unten - Z = %.03f mm"
 
 #: printrun/objectplater.py:35
 msgid "Plate building tool"
-msgstr ""
+msgstr "Druckplattenaufbauwerkzeug"
 
 #: printrun/objectplater.py:45
 msgid "Clear"
@@ -656,19 +655,19 @@ msgstr ""
 
 #: printrun/pronsole.py:304
 msgid "Bed temperature for ABS"
-msgstr "Bett-Temp. für ABS"
+msgstr "Druckbett-Temp. für ABS"
 
 #: printrun/pronsole.py:304
 msgid "Heated Build Platform temp for ABS (deg C)"
-msgstr "Heizbett Temp. für ABS (Grad Celsius)"
+msgstr "Druckbett Temp. für ABS (Grad Celsius)"
 
 #: printrun/pronsole.py:305
 msgid "Bed temperature for PLA"
-msgstr "Bett Temperatur für PLA"
+msgstr "Druckbett Temperatur für PLA"
 
 #: printrun/pronsole.py:305
 msgid "Heated Build Platform temp for PLA (deg C)"
-msgstr "Heizbett Temp. für PLA (Grad Celsius)"
+msgstr "Druckbett Temp. für PLA (Grad Celsius)"
 
 #: printrun/pronsole.py:306
 msgid "Extruder temp for ABS (deg C)"
@@ -748,7 +747,6 @@ msgstr "Maße Plattform"
 
 # Nicht sicher, wie optional switch position zu übersetzen ist.
 #: printrun/pronsole.py:469
-#, fuzzy
 msgid ""
 "Dimensions of Build Platform\n"
 " & optional offset of origin\n"
@@ -795,12 +793,17 @@ msgid ""
 "load this file on startup instead of .pronsolerc ; you may chain config files, if so "
 "settings auto-save will use the last specified file"
 msgstr ""
+"Diese Datei beim Start anstelle von .pronsolerc laden. Sie können Konfigurationsdateien "
+"verketten. In diesem Fall wird beim automatischen Speichern der Einstellungen die "
+"zuletzt angegebene Datei verwendet"
 
 #: printrun/pronsole.py:975
 msgid ""
 "executes command after configuration/.pronsolerc is loaded ; macros/settings from these "
 "commands are not autosaved"
 msgstr ""
+"führt den Befehl aus, nachdem configuration/.pronsolerc geladen wurde; Makros/"
+"Einstellungen aus diesen Befehlen werden nicht automatisch gespeichert"
 
 #: printrun/pronsole.py:976
 msgid "file to load"
@@ -944,9 +947,8 @@ msgid "Files on SD card:"
 msgstr "Dateien auf SD-Karte:"
 
 #: printrun/pronsole.py:1307 printrun/pronsole.py:1349 printrun/pronsole.py:1562
-#, fuzzy
 msgid "Printer is not online. Please connect to it first."
-msgstr "Drucker ist nicht online."
+msgstr "Drucker ist nicht online. Bitte stellen Sie zuerst eine Verbindung her."
 
 #: printrun/pronsole.py:1312
 msgid "Lists files on the SD card"
@@ -982,7 +984,7 @@ msgstr "Drucken einer Datei von SD-Karte. Tab vervollständigt verfügbare Datei
 
 #: printrun/pronsole.py:1365
 msgid "sdprint filename.g"
-msgstr ""
+msgstr "sdprint Dateiname.g"
 
 #: printrun/pronsole.py:1382
 msgid "Print resumed at: %s"
@@ -1018,7 +1020,7 @@ msgstr "Zeigt die geschätzte verbleibende Druckzeit an."
 
 #: printrun/pronsole.py:1498
 msgid "Read the extruder and bed temperature."
-msgstr "Zeigt die Extruder- und Betttemperatur."
+msgstr "Zeigt die Extruder- und Druckbetttemperatur."
 
 #: printrun/pronsole.py:1507 printrun/pronsole.py:1540
 msgid "You must enter a temperature."
@@ -1033,7 +1035,7 @@ msgstr ""
 
 #: printrun/pronsole.py:1517
 msgid "Setting hotend temperature to %s degrees Celsius."
-msgstr "Setze Hotend Temperatur auf %s Grad Celsius."
+msgstr "Setze Extruder Temperatur auf %s Grad Celsius."
 
 #: printrun/pronsole.py:1521 printrun/pronterface.py:359
 msgid ""
@@ -1045,7 +1047,7 @@ msgstr ""
 
 #: printrun/pronsole.py:1524
 msgid "Sets the hotend temperature to the value entered."
-msgstr "Setzt die Hotend-Temperatur auf den eingegebenen Wert."
+msgstr "Setzt die Extruder-Temperatur auf den eingegebenen Wert."
 
 #: printrun/pronsole.py:1525 printrun/pronsole.py:1552
 msgid "Enter either a temperature in celsius or one of the following keywords"
@@ -1055,19 +1057,19 @@ msgstr ""
 
 #: printrun/pronsole.py:1544
 msgid "Setting bed temperature to %s degrees Celsius."
-msgstr "Stellt die Bett-Temperatur auf %s Grad Celsius ein."
+msgstr "Stellt die Druckbett Temperatur auf %s Grad Celsius ein."
 
 #: printrun/pronsole.py:1548 printrun/pronterface.py:379
 msgid ""
 "You cannot set negative temperatures. To turn the bed off entirely, set its temperature "
 "to 0."
 msgstr ""
-"Sie können keine negativen Temperaturen einstellen. Um das Heizbett ganz auszuschalten, "
-"Temperatur auf 0 setzen."
+"Sie können keine negativen Temperaturen einstellen. Um das Druckbett ganz "
+"auszuschalten, Temperatur auf 0 setzen."
 
 #: printrun/pronsole.py:1551
 msgid "Sets the bed temperature to the value entered."
-msgstr "Setzt die Bett-Temperatur auf den eingegebenen Wert ein."
+msgstr "Setzt die Druckbett-Temperatur auf den eingegebenen Wert ein."
 
 #: printrun/pronsole.py:1565
 msgid "Printer is not printing. Please print something before monitoring."
@@ -1223,22 +1225,24 @@ msgstr "Drucker ist nicht online. Einzug nicht möglich."
 #: printrun/pronsole.py:1751
 msgid "Reverses the extruder, 5mm by default, or the number of mm given as a parameter"
 msgstr ""
+"Einzug (zurückziehen) einer Länge Filament, standardmäßig 5 mm, oder die als Parameter "
+"angegebene Länge in mm"
 
 #: printrun/pronsole.py:1752
 msgid "reverse - reverses 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "reverse - Einzug von 5 mm Filament mit 300 mm/min (5 mm/s)"
 
 #: printrun/pronsole.py:1753
 msgid "reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "reverse 20 - Einzug von 20 mm Filament mit 300 mm/min (5 mm/s)"
 
 #: printrun/pronsole.py:1754
 msgid "reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
-msgstr ""
+msgstr "reverse 10 210 - Einzug von 10 mm Filament mit 210 mm/min (3.5 mm/s)"
 
 #: printrun/pronsole.py:1755
 msgid "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "reverse -5 - Extrudiert 5 mm Filament mit 300 mm/min (5 mm/s)"
 
 #: printrun/pronsole.py:1777
 msgid "Homes the printer"
@@ -1277,7 +1281,7 @@ msgstr "; Extruder aus"
 
 #: printrun/pronsole.py:1794
 msgid "; Heatbed off"
-msgstr "; Heizbett aus"
+msgstr "; Druckbett aus"
 
 #: printrun/pronsole.py:1796
 msgid "; Fan off"
@@ -1368,7 +1372,7 @@ msgstr "Überwache Drucker."
 
 #: printrun/pronterface.py:354
 msgid "Setting hotend temperature to %f degrees Celsius."
-msgstr "Setze Hotend Temperatur auf %f Grad Celsius."
+msgstr "Setze Extruder Temperatur auf %f Grad Celsius."
 
 #: printrun/pronterface.py:361 printrun/pronterface.py:381
 msgid "You must enter a temperature. (%s)"
@@ -1376,7 +1380,7 @@ msgstr "Sie müssen eine Temperatur eingeben. (%s)"
 
 #: printrun/pronterface.py:374
 msgid "Setting bed temperature to %f degrees Celsius."
-msgstr "Setze Heizbett Temperatur auf %f Grad Celsius."
+msgstr "Setze Druckbett Temperatur auf %f Grad Celsius."
 
 #: printrun/pronterface.py:392
 msgid "Setting print speed factor to %d%%."
@@ -1388,15 +1392,16 @@ msgstr "Sie müssen eine Geschwindigkeit eingeben. (%s)"
 
 #: printrun/pronterface.py:470
 msgid "Plate function activated"
-msgstr ""
+msgstr "Funktion Druckplatte aktiviert"
 
 #: printrun/pronterface.py:479
 msgid "G-Code plate function activated"
-msgstr ""
+msgstr "Funktion G-Code Druckplatte aktiviert"
 
+# Check
 #: printrun/pronterface.py:486
 msgid "Plated %s"
-msgstr ""
+msgstr "Platziert %s"
 
 #: printrun/pronterface.py:500
 msgid "SD Upload"
@@ -1411,11 +1416,15 @@ msgid ""
 "Manual move outside of the build volume prevented (see the \"Clamp manual moves\" "
 "option)."
 msgstr ""
+"Manuelle Bewegung außerhalb des Druckbettvolumens verhindert (siehe Option \"Manuelle "
+"Bewegungen begrenzen\")."
 
 #: printrun/pronterface.py:621
 msgid ""
 "Attempted to write invalid text to console, which could be due to an invalid baudrate"
 msgstr ""
+"Es wurde versucht, einen ungültigen Text in die Konsole zu schreiben, was auf eine "
+"ungültige Baudrate zurückzuführen sein könnte"
 
 #: printrun/pronterface.py:655
 msgid " Opens file"
@@ -1439,7 +1448,7 @@ msgstr " Schliesst das Fenster"
 
 #: printrun/pronterface.py:664
 msgid "E&xit"
-msgstr "&Verlassen"
+msgstr "&Beenden"
 
 #: printrun/pronterface.py:665
 msgid "&File"
@@ -1455,7 +1464,7 @@ msgstr "&Editor..."
 
 #: printrun/pronterface.py:669
 msgid " Compose 3D models into a single plate"
-msgstr ""
+msgstr " 3D-Modelle auf einer einzigen Druckplatte zusammenstellen"
 
 #: printrun/pronterface.py:669
 msgid "Plater"
@@ -1463,19 +1472,20 @@ msgstr "Druckplatte"
 
 #: printrun/pronterface.py:670
 msgid " Compose G-Codes into a single plate"
-msgstr ""
+msgstr " G-Code Modelle auf einer einzigen Druckplatte zusammenstellen"
 
 #: printrun/pronterface.py:670
 msgid "G-Code Plater"
-msgstr ""
+msgstr "G-Code Druckplatte"
 
 #: printrun/pronterface.py:671
 msgid " Exclude parts of the bed from being printed"
-msgstr ""
+msgstr " Schließt Teile auf dem Druckbett vom Druck aus"
 
+# Besseren Begriff suchen
 #: printrun/pronterface.py:671
 msgid "Excluder"
-msgstr ""
+msgstr "Ausschließer"
 
 #: printrun/pronterface.py:672
 msgid " Project slices"
@@ -1492,29 +1502,28 @@ msgstr "&Werkzeuge"
 #: printrun/pronterface.py:676
 msgid " Recover previous print after a disconnect (homes X, Y, restores Z and E status)"
 msgstr ""
+" Wiederherstellung des vorheriger Drucks nach einer Trennung (Referenziert zuerst X, Y, "
+"Wiederherstellung des Z- und E-Status)"
 
 #: printrun/pronterface.py:676
 msgid "Recover"
-msgstr ""
+msgstr "Wiederherstellung"
 
 #: printrun/pronterface.py:679
 msgid "&Advanced"
-msgstr ""
+msgstr "&Erweitert"
 
 #: printrun/pronterface.py:686
-#, fuzzy
 msgid "Print &settings"
-msgstr "Einstellungen bearbeiten"
+msgstr "Druckein&stellungen"
 
 #: printrun/pronterface.py:687
-#, fuzzy
 msgid "&Filament"
-msgstr "&Datei"
+msgstr "&Filament"
 
 #: printrun/pronterface.py:688
-#, fuzzy
 msgid "&Printer"
-msgstr "Drucken"
+msgstr "&Drucker"
 
 #: printrun/pronterface.py:694
 msgid "&Slic3r"
@@ -1545,7 +1554,6 @@ msgid " Adjust slicing settings"
 msgstr " Slicing Einstellungen anpassen"
 
 #: printrun/pronterface.py:706
-#, fuzzy
 msgid "Slicing settings"
 msgstr "Slicing Einstellungen"
 
@@ -1590,22 +1598,24 @@ msgid ""
 "Regularly monitor printer temperatures (required to have functional temperature graph "
 "or gauges)"
 msgstr ""
+"Regelmäßige Überwachung der Druckertemperaturen (erforderlich, um funktionale "
+"Temperaturdiagramme oder Messgeräte zu erzeugen)"
 
 #: printrun/pronterface.py:782
 msgid "Path to the simarrange binary to use in the STL plater"
-msgstr ""
+msgstr "Pfad zur Simarrange-Binärdatei, die beim STL-Plater verwendet werden soll"
 
 #: printrun/pronterface.py:782
 msgid "Simarrange command"
-msgstr ""
+msgstr "Simarrange Befehl"
 
 #: printrun/pronterface.py:783
 msgid "Circular build platform"
-msgstr ""
+msgstr "Kreisförmige Druckplattform"
 
 #: printrun/pronterface.py:783
 msgid "Draw a circular (or oval) build platform instead of a rectangular one"
-msgstr ""
+msgstr "Zeichnet eine kreisförmige (oder ovale) Plattform anstelle einer rechteckigen"
 
 #: printrun/pronterface.py:784
 msgid "Extruders count"
@@ -1617,16 +1627,15 @@ msgstr "Anzahl der vorhandenen Extruder"
 
 #: printrun/pronterface.py:785
 msgid "Clamp manual moves"
-msgstr ""
+msgstr "Manuelle Bewegungen begrenzen"
 
 #: printrun/pronterface.py:785
 msgid "Prevent manual moves from leaving the specified build dimensions"
-msgstr ""
+msgstr "Verhindert manuelle Bewegungen, die die Maße der Druckplattform verlassen"
 
 #: printrun/pronterface.py:786
-#, fuzzy
 msgid "Interface mode"
-msgstr "Makro Name eingeben"
+msgstr "Anzeigemodus"
 
 #: printrun/pronterface.py:786
 msgid ""
@@ -1635,107 +1644,124 @@ msgid ""
 "Tabbed mode is a two-pages mode, where the first page shows controls and the second one "
 "shows visualization and log."
 msgstr ""
+"Standard Modus ist ein einseitiges Layout mit drei Spalten für Steuerelementen / "
+"Visualisierung / Protokoll\n"
+"Compact Modus ist ein einseitiges Layout mit zwei Spalte für Steuerelementen + "
+"Protokoll / Visualisierung\n"
+"Tabbed Modus ist ein zweiseitiges Layout, in dem die erste Seite Steuerelemente und auf "
+"der zweiten Seite Visualisierung / Protokoll angezeigt werden."
 
 #: printrun/pronterface.py:787
 msgid "Controls mode"
-msgstr ""
+msgstr "Steuerungsmodus"
 
 #: printrun/pronterface.py:787
 msgid ""
 "Standard controls include all controls needed for printer setup and calibration, while "
 "Mini controls are limited to the ones needed for daily printing"
 msgstr ""
+"Standard umfassen alle Steuerelemente, die für die Druckereinrichtung und -kalibrierung "
+"erforderlich sind, während bei Mini die Steuerelemente auf die, für den täglichen Druck "
+"erforderlichen Elemente beschränkt sind"
 
 #: printrun/pronterface.py:788
 msgid "Add a menu to select Slic3r profiles directly from Pronterface"
-msgstr ""
+msgstr "Menü zur Auswahl von Slic3r-Profilen direkt aus Pronterface hinzufügen"
 
 #: printrun/pronterface.py:788
 msgid "Enable Slic3r integration"
-msgstr ""
+msgstr "Slic3r-Integration aktivieren"
 
 #: printrun/pronterface.py:789
 msgid "Update Slic3r default presets"
-msgstr ""
+msgstr "Aktualisiert die Slic3r-Standardvoreinstellungen"
 
 #: printrun/pronterface.py:789
 msgid ""
 "When selecting a profile in Slic3r integration menu, also save it as the default Slic3r "
 "preset"
 msgstr ""
+"Wenn ein Profil im Slic3r-Integrationsmenü ausgewählt wird, speichern Sie es ebenfalls "
+"als Standardvoreinstellung für Slic3r"
 
 #: printrun/pronterface.py:790
 msgid "Main visualization"
-msgstr ""
+msgstr "Visualisierung"
 
 #: printrun/pronterface.py:790
 msgid "Select visualization for main window."
-msgstr ""
+msgstr "Wählen Sie den Visualisierungstyp für das Hauptfenster aus."
 
 #: printrun/pronterface.py:791
 msgid "Use 3D in GCode viewer window"
-msgstr ""
+msgstr "Verwendet 3D im Fenster des G-Code-Betrachters"
 
 #: printrun/pronterface.py:791
 msgid "Use 3D mode instead of 2D layered mode in the visualization window"
-msgstr ""
+msgstr "Verwendet den 3D-Modus anstelle des 2D-Ebenenmodus im Visualisierungsfenster"
 
 #: printrun/pronterface.py:792
 msgid "Use a lighter 3D visualization"
-msgstr ""
+msgstr "Verwendet eine vereinfachte 3D-Visualisierung"
 
 #: printrun/pronterface.py:792
 msgid ""
 "Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"
 msgstr ""
+"Verwendet für den 3D-Betrachter eine vereinfachte Visualisierung mit einfachen Linien "
+"anstelle von extrudierten Pfaden"
 
 #: printrun/pronterface.py:793
 msgid "Track current layer in main 3D view"
-msgstr ""
+msgstr "Verfolgt aktuelle Druckschicht in der 3D Ansicht"
 
 #: printrun/pronterface.py:793
 msgid "Track the currently printing layer in the main 3D visualization"
-msgstr ""
+msgstr "Verfolgen der aktuellen Druckschicht im Fenster der 3D-Visualisierung"
 
 #: printrun/pronterface.py:794
 msgid "Display temperature graph"
-msgstr ""
+msgstr "Anzeige des Temperaturdiagrams"
 
 #: printrun/pronterface.py:794
 msgid "Display time-lapse temperature graph"
-msgstr ""
+msgstr "Zeitraffer-Temperaturdiagramm anzeigen"
 
 #: printrun/pronterface.py:795
 msgid "Display graphical gauges for temperatures visualization"
-msgstr ""
+msgstr "Grafische Messgeräte für die Temperaturvisualisierung anzeigen"
 
 #: printrun/pronterface.py:795
 msgid "Display temperature gauges"
-msgstr ""
+msgstr "Temperaturmessgeräte anzeigen"
 
 #: printrun/pronterface.py:796
 msgid "Display a checkbox that, when check, locks most of Pronterface"
 msgstr ""
+"Kontrollkästchen einblenden, welches bei Aktivierung bis auf das Menü und dieses "
+"Kontrollkästchen, alle direkten Steuerelemente in Pronterface sperrt"
 
 #: printrun/pronterface.py:796
 msgid "Display interface lock checkbox"
-msgstr ""
+msgstr "Kontrollkästchen Anzeigesperre anzeigen"
 
 #: printrun/pronterface.py:797
 msgid "If lock checkbox is enabled, lock the interface when starting a print"
 msgstr ""
+"Bei Aktivierung des Kontrollkästchen wird das Benutzerinterface beim Start eines "
+"Druckvorgangs gesperrt"
 
 #: printrun/pronterface.py:797
 msgid "Lock interface upon print start"
-msgstr ""
+msgstr "Benutzerschnittstelle beim Druckstart sperren"
 
 #: printrun/pronterface.py:804
 msgid "Preview extrusion width"
-msgstr ""
+msgstr "Vorschau Extrusionsbreite"
 
 #: printrun/pronterface.py:804
 msgid "Width of Extrusion in Preview"
-msgstr "Extrusionsbreite in der Vorschau"
+msgstr "Breite der Extrusion in der Vorschau"
 
 #: printrun/pronterface.py:805
 msgid "Fine Grid Spacing"
@@ -1783,43 +1809,45 @@ msgstr "3D -Ansicht Farbe Druckbewegungen"
 
 #: printrun/pronterface.py:810
 msgid "Color of print moves with tool 0 in 3D view"
-msgstr "Farbe der Druckbewegungen in der 3D-Ansicht"
+msgstr "Farbe der Druckbewegungen mit Werkzeug 0 bzw. Extruder 0 in der 3D-Ansicht"
 
 #: printrun/pronterface.py:811
 msgid "3D view tool 1 moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen Werkzeug 1"
 
 #: printrun/pronterface.py:811
 msgid "Color of print moves with tool 1 in 3D view"
-msgstr ""
+msgstr "Farbe der Druckbewegungen mit Werkzeug 1 bzw. Extruder 1 in der 3D-Ansicht"
 
 #: printrun/pronterface.py:812
 msgid "3D view printed moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe gedruckte Bewegungen"
 
 #: printrun/pronterface.py:812
 msgid "Color of printed moves in 3D view"
-msgstr ""
+msgstr "Farbe der gedruckten Bewegungen in der 3D-Ansicht"
 
 #: printrun/pronterface.py:813
 msgid "3D view current layer moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen der aktuellen Ebene"
 
 #: printrun/pronterface.py:813
 msgid "Color of moves in current layer in 3D view"
-msgstr ""
+msgstr "Farbe der Bewegungen auf der aktuellen Ebene in der 3D-Ansicht"
 
 #: printrun/pronterface.py:814
 msgid "3D view printed current layer moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe bereits gedruckter Bewegungen der aktuellen Ebene"
 
 #: printrun/pronterface.py:814
 msgid "Color of already printed moves from current layer in 3D view"
-msgstr ""
+msgstr "Farbe der bereits gedruckten Bewegungen auf der aktuellen Ebene in der 3D-Ansicht"
 
 #: printrun/pronterface.py:815
 msgid "Changing most settings here will require restart to get effect"
 msgstr ""
+"Bei vielen Einstellungen müssen Sie bei Änderungen Printrun für die Übernahme dieser "
+"neu starten"
 
 #: printrun/pronterface.py:815
 msgid "Note:"
@@ -2065,7 +2093,6 @@ msgid "Ok"
 msgstr "Ok"
 
 #: printrun/pronterface.py:2035
-#, fuzzy
 msgid "Macro name may contain only ASCII alphanumeric symbols and underscores"
 msgstr "Makro Name darf nur alphanumerische Zeichen und Unterstriche enthalten"
 
