@@ -81,7 +81,7 @@ class PlaterPanel(wx.Panel):
             sizer.Add(cancelbutton, pos = (6, 1), span = (1, 1), flag = wx.EXPAND)
         self.basedir = "."
         self.models = {}
-        panel.SetSizerAndFit(sizer)
+        panel.SetSizer(sizer)
         self.mainsizer.Add(panel, flag = wx.EXPAND)
         self.SetSizer(self.mainsizer)
         if build_dimensions:
