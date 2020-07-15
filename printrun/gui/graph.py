@@ -23,10 +23,10 @@ from .bufferedcanvas import BufferedCanvas
 
 class GraphWindow(wx.Frame):
     def __init__(self, root, parent_graph = None, size = (600, 600)):
-        super(GraphWindow, self).__init__(None, title = _("Temperature graph"),
+        super().__init__(None, title = _("Temperature graph"),
                                           size = size)
-        self.parentg=parent_graph;
-        panel = wx.Panel(self, -1)
+        self.parentg = parent_graph
+        panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
         self.graph = Graph(panel, wx.ID_ANY, root, parent_graph = parent_graph)
         vbox.Add(self.graph, 1, wx.EXPAND)
@@ -36,7 +36,7 @@ class GraphWindow(wx.Frame):
         self.graph.StopPlotting()
         if self.parentg is not None:
             self.parentg.window=None
-        return super(GraphWindow,self).Destroy()
+        return super().Destroy()
 
     def __del__(self):
         if self.parentg is not None:
@@ -50,7 +50,7 @@ class Graph(BufferedCanvas):
                  size = wx.Size(150, 80), style = 0, parent_graph = None):
         # Forcing a no full repaint to stop flickering
         style = style | wx.NO_FULL_REPAINT_ON_RESIZE
-        super(Graph, self).__init__(parent, id, pos, size, style)
+        super().__init__(parent, id, pos, size, style)
         self.root = root
 
         if parent_graph is not None:
@@ -154,12 +154,12 @@ class Graph(BufferedCanvas):
             gc.DrawText(str(y * spacing),
                         1, y_pos - (font.GetPointSize() / 2))
 
-        if self.timer.IsRunning() is False:
+        if not self.timer.IsRunning():
             font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD)
             gc.SetFont(font, wx.Colour(3, 4, 4))
             gc.DrawText("Graph offline",
-                        self.width / 2 - (font.GetPointSize() * 3),
-                        self.height / 2 - (font.GetPointSize() * 1))
+                        self.width / 2 - font.GetPointSize() * 3,
+                        self.height / 2 - font.GetPointSize() * 1)
 
         # dc.DrawCircle(50, 50, 1)
 
@@ -197,37 +197,32 @@ class Graph(BufferedCanvas):
 
     def drawtemperature(self, dc, gc, temperature_list,
                         text, text_xoffset, r, g, b, a):
-        if self.timer.IsRunning() is False:
-            dc.SetPen(wx.Pen(wx.Colour(128, 128, 128, 128), 1))
-        else:
-            dc.SetPen(wx.Pen(wx.Colour(r, g, b, a), 1))
+        color = self.timer.IsRunning() and (r, g, b, a) or [128] * 4
+        dc.SetPen(wx.Pen(color, 1))
 
         x_add = float(self.width) / self.xsteps
         x_pos = 0.0
         lastxvalue = 0.0
         lastyvalue = temperature_list[-1]
 
-        for temperature in (temperature_list):
+        for temperature in temperature_list:
             y_pos = self._y_pos(temperature)
-            if (x_pos > 0.0):  # One need 2 points to draw a line.
+            if x_pos > 0.0:  # One need 2 points to draw a line.
                 dc.DrawLine(lastxvalue, lastyvalue, x_pos, y_pos)
 
             lastxvalue = x_pos
             x_pos = float(x_pos) + x_add
             lastyvalue = y_pos
 
-        if len(text) > 0:
+        if len(text):
             font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD)
             # font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-            if self.timer.IsRunning() is False:
-                gc.SetFont(font, wx.Colour(128, 128, 128))
-            else:
-                gc.SetFont(font, wx.Colour(r, g, b))
+            gc.SetFont(font, color[:3])
 
             text_size = len(text) * text_xoffset + 1
             gc.DrawText(text,
-                        x_pos - x_add - (font.GetPointSize() * text_size),
-                        lastyvalue - (font.GetPointSize() / 2))
+                        x_pos - x_add - font.GetPointSize() * text_size,
+                        lastyvalue - font.GetPointSize() / 2)
 
     def drawfanpower(self, dc, gc):
         self.drawtemperature(dc, gc, self.fanpowers,

@@ -61,7 +61,7 @@ def transformation_matrix(model):
 
 class showstl(wx.Window):
     def __init__(self, parent, size, pos):
-        wx.Window.__init__(self, parent, size = size, pos = pos)
+        super().__init__(parent, size = size, pos = pos)
         self.i = 0
         self.parent = parent
         self.previ = 0
@@ -181,10 +181,7 @@ class showstl(wx.Window):
         if self.prevsel != s:
             self.i = 0
             self.prevsel = s
-        if z < 0:
-            self.rotate_shape(-1)
-        else:
-            self.rotate_shape(1)
+        self.rotate_shape(-1 if z < 0 else 1) #TEST
 
     def repaint(self, event):
         dc = wx.PaintDC(self)
@@ -229,7 +226,7 @@ class StlPlaterPanel(PlaterPanel):
         self.cutting_axis = None
         self.cutting_dist = None
         if glview:
-            viewer = stlview.StlViewPanel(self, (580, 580),
+            viewer = stlview.StlViewPanel(self, wx.DefaultSize,
                                           build_dimensions = self.build_dimensions,
                                           circular = circular_platform,
                                           antialias_samples = antialias_samples)
@@ -242,7 +239,7 @@ class StlPlaterPanel(PlaterPanel):
             cutconfirmbutton.Disable()
             self.cutconfirmbutton = cutconfirmbutton
             self.menusizer.Add(cutconfirmbutton, pos = (nrows, 1), span = (1, 1), flag = wx.EXPAND)
-            cutpanel = wx.Panel(self.menupanel, -1)
+            cutpanel = wx.Panel(self.menupanel)
             cutsizer = self.cutsizer = wx.BoxSizer(wx.HORIZONTAL)
             cutpanel.SetSizer(cutsizer)
             cutxplusbutton = wx.ToggleButton(cutpanel, label = _(">X"), style = wx.BU_EXACTFIT)
@@ -270,22 +267,20 @@ class StlPlaterPanel(PlaterPanel):
         self.set_viewer(viewer)
 
     def start_cutting_tool(self, event, axis, direction):
-        toggle = event.GetEventObject()
-        if toggle.GetValue():
+        toggle = event.EventObject
+        self.cutting = toggle.Value
+        if toggle.Value:
             # Disable the other toggles
-            for child in self.cutsizer.GetChildren():
-                child = child.GetWindow()
+            for child in self.cutsizer.Children:
+                child = child.Window
                 if child != toggle:
-                    child.SetValue(False)
-            self.cutting = True
+                    child.Value = False
             self.cutting_axis = axis
-            self.cutting_dist = None
             self.cutting_direction = direction
         else:
-            self.cutting = False
             self.cutting_axis = None
-            self.cutting_dist = None
             self.cutting_direction = None
+        self.cutting_dist = None
 
     def cut_confirm(self, event):
         name = self.l.GetSelection()

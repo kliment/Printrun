@@ -76,14 +76,12 @@ class ConsoleOutputHandler:
         self.stderr = sys.stderr
         sys.stdout = self
         sys.stderr = self
+        self.print_on_stdout = not log_path
         if log_path:
-            self.print_on_stdout = False
             setup_logging(self, log_path, reset_handlers = True)
-            self.target = target
         else:
-            self.print_on_stdout = True
             setup_logging(sys.stdout, reset_handlers = True)
-            self.target = target
+        self.target = target
 
     def __del__(self):
         sys.stdout = self.stdout
@@ -245,8 +243,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def reload_ui(self, *args):
         if not self.window_ready: return
-        temp_monitor=self.settings.monitor
-        self.settings.monitor=False
+        temp_monitor = self.settings.monitor
+        self.settings.monitor = False
         self.update_monitor()
         self.Freeze()
 
@@ -254,23 +252,20 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.ui_ready:
             # Store log console content
             logcontent = self.logbox.GetValue()
-            while self.menustrip.GetMenuCount():
-                self.menustrip.Remove(0)
-            if(len(self.commandbox.history)):
+            self.menustrip.SetMenus([])
+            if len(self.commandbox.history):
                 #save current command box history
-                history = (self.history_file)
-                if not os.path.exists(history):
+                if not os.path.exists(self.history_file):
                     if not os.path.exists(self.cache_dir):
                         os.makedirs(self.cache_dir)
-                write_history_to(history,self.commandbox.history)
+                write_history_to(self.history_file, self.commandbox.history)
             # Create a temporary panel to reparent widgets with state we want
             # to retain across UI changes
             temppanel = wx.Panel(self)
             # TODO: add viz widgets to statefulControls
-            statefuls=self.statefulControls
-            for control in statefuls:
-                    control.GetContainingSizer().Detach(control)
-                    control.Reparent(temppanel)
+            for control in self.statefulControls:
+                control.GetContainingSizer().Detach(control)
+                control.Reparent(temppanel)
             #self.panel.DestroyChildren() #do not destroy children when redrawing so that any timers currently running do not have references to missing objects - they get recreated if necessary anyway
             self.gwindow.Destroy()
             self.reset_ui()
@@ -714,7 +709,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             currentLengthOfText = self.logbox.GetLastPosition()
             if self.autoscrolldisable:
                 self.logbox.Freeze()
-                (currentSelectionStart, currentSelectionEnd) = self.logbox.GetSelection()
+                currentSelectionStart, currentSelectionEnd = self.logbox.GetSelection()
                 self.logbox.SetInsertionPointEnd()
                 self.logbox.AppendText(text)
                 self.logbox.SetInsertionPoint(currentCaretPosition)
