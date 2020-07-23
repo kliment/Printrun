@@ -417,7 +417,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M104 S" + l)
-                    self.log(_("Setting hotend temperature to %f degrees Celsius.") % f)
+                    self.log(_("Setting hotend temperature to %g degrees Celsius.") % f)
                     self.sethotendgui(f)
                 else:
                     self.logError(_("Printer is not online."))
@@ -437,7 +437,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M140 S" + l)
-                    self.log(_("Setting bed temperature to %f degrees Celsius.") % f)
+                    self.log(_("Setting bed temperature to %g degrees Celsius.") % f)
                     self.setbedgui(f)
                 else:
                     self.logError(_("Printer is not online."))
