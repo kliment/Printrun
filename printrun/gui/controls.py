@@ -244,8 +244,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
 
     if root.display_gauges:
         root.hottgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Heater:"), maxval = 300, bgcolor = root.bgcolor)
+        root.hottgauge.SetTarget(root.settings.last_temperature)
+        # root.hsetpoint = root.settings.last_temperature
         add("htemp_gauge", root.hottgauge, flag = wx.EXPAND)
         root.bedtgauge = TempGauge(parentpanel, size = (-1, 24), title = _("Bed:"), maxval = 150, bgcolor = root.bgcolor)
+        root.bedtgauge.SetTarget(root.settings.last_bed_temperature)
+        # root.bsetpoint = root.settings.last_bed_temperature
         add("btemp_gauge", root.bedtgauge, flag = wx.EXPAND)
 
         def scroll_gauge(rot, cmd, setpoint):
@@ -260,6 +264,12 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
             scroll_gauge(e.WheelRotation, root.do_bedtemp, root.bsetpoint)
         root.hottgauge.Bind(wx.EVT_MOUSEWHEEL, hotend_handler)
         root.bedtgauge.Bind(wx.EVT_MOUSEWHEEL, bed_handler)
+
+        def updateGauge(e, gauge):
+            gauge.SetTarget(float(e.String.split()[0]))
+
+        root.htemp.Bind(wx.EVT_TEXT, lambda e: updateGauge(e, root.hottgauge))
+        root.btemp.Bind(wx.EVT_TEXT, lambda e: updateGauge(e, root.bedtgauge))
 
     # Temperature (M105) feedback display #
     root.tempdisp = wx.StaticText(parentpanel, -1, "", style = wx.ST_NO_AUTORESIZE)
