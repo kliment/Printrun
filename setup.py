@@ -15,13 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import os
-from stat import S_IRUSR, S_IWUSR, S_IRGRP, S_IROTH
+import ast
+import glob
 from setuptools import setup
 from setuptools import find_packages
-from distutils.command.install import install as _install
-from distutils.command.install_data import install_data as _install_data
+
 try:
     from Cython.Build import cythonize
     extensions = cythonize("printrun/gcoder_line.pyx")
@@ -34,141 +32,65 @@ except ImportError as e:
     extensions = None
     build_ext = None
 
-from printrun.printcore import __version__ as printcore_version
 
-INSTALLED_FILES = "installed_files"
+with open('README.md') as f:
+    long_description = f.read()
 
-class install (_install):
+with open('requirements.txt') as f:
+    install_requires = f.readlines()
 
-    def run(self):
-        _install.run(self)
-        outputs = self.get_outputs()
-        length = 0
-        if self.root:
-            length += len(self.root)
-        if self.prefix:
-            length += len(self.prefix)
-        if length:
-            for counter in range(len(outputs)):
-                outputs[counter] = outputs[counter][length:]
-        data = "\n".join(outputs)
-        try:
-            file = open(INSTALLED_FILES, "w")
-        except:
-            self.warn("Could not write installed files list %s" %
-                      INSTALLED_FILES)
-            return
-        file.write(data)
-        file.close()
+with open('printrun/printcore.py') as f:
+    for line in f.readlines():
+        if line.startswith("__version__"):
+            __version__ = ast.literal_eval(line.split("=")[1].strip())
 
-class install_data(_install_data):
 
-    def run(self):
-        def chmod_data_file(file):
-            try:
-                os.chmod(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
-            except:
-                self.warn("Could not chmod data file %s" % file)
-        _install_data.run(self)
-        map(chmod_data_file, self.get_outputs())
+def multiglob(*globs):
+    paths = []
+    for g in globs:
+        paths.extend(glob.glob(g))
+    return paths
 
-class uninstall(_install):
 
-    def run(self):
-        try:
-            file = open(INSTALLED_FILES, "r")
-        except:
-            self.warn("Could not read installed files list %s" %
-                      INSTALLED_FILES)
-            return
-        files = file.readlines()
-        file.close()
-        prepend = ""
-        if self.root:
-            prepend += self.root
-        if self.prefix:
-            prepend += self.prefix
-        if len(prepend):
-            for counter in range(len(files)):
-                files[counter] = prepend + files[counter].rstrip()
-        for file in files:
-            print("Uninstalling", file)
-            try:
-                os.unlink(file)
-            except:
-                self.warn("Could not remove file %s" % file)
+data_files = [
+    ('share/pixmaps', multiglob('*.png')),
+    ('share/applications', multiglob('*.desktop')),
+    ('share/metainfo', multiglob('*.appdata.xml')),
+    ('share/pronterface', multiglob('images/*.png',
+                                    'images/*.svg',
+                                    'locale/*/LC_MESSAGES/*.mo')),
+]
 
-ops = ("install", "build", "sdist", "uninstall", "clean", "build_ext")
-
-if len(sys.argv) < 2 or sys.argv[1] not in ops:
-    print("Please specify operation : %s" % " | ".join(ops))
-    raise SystemExit
-
-prefix = None
-if len(sys.argv) > 2:
-    i = 0
-    for o in sys.argv:
-        if o.startswith("--prefix"):
-            if o == "--prefix":
-                if len(sys.argv) >= i:
-                    prefix = sys.argv[i + 1]
-                sys.argv.remove(prefix)
-            elif o.startswith("--prefix=") and len(o[9:]):
-                prefix = o[9:]
-            sys.argv.remove(o)
-        i += 1
-if not prefix and "PREFIX" in os.environ:
-    prefix = os.environ["PREFIX"]
-if not prefix or not len(prefix):
-    prefix = sys.prefix
-
-if sys.argv[1] in("install", "uninstall") and len(prefix):
-    sys.argv += ["--prefix", prefix]
-
-target_images_path = "share/pronterface/images"
-data_files = [('share/pixmaps', ['pronterface.png', 'plater.png', 'pronsole.png']),
-              ('share/applications', ['pronterface.desktop', 'pronsole.desktop', 'plater.desktop']),
-              ('share/metainfo', ['pronterface.appdata.xml', 'pronsole.appdata.xml', 'plater.appdata.xml'])]
-
-for basedir, subdirs, files in os.walk("images"):
-    images = []
-    for filename in files:
-        if filename.find(".svg") or filename.find(".png"):
-            file_path = os.path.join(basedir, filename)
-            images.append(file_path)
-    data_files.append((target_images_path + basedir[len("images/"):], images))
-
-for basedir, subdirs, files in os.walk("locale"):
-    if not basedir.endswith("LC_MESSAGES"):
-        continue
-    destpath = os.path.join("share", "pronterface", basedir)
-    files = (f for f in files if f.endswith(".mo"))
-    files = [os.path.join(basedir, f) for f in files]
-    data_files.append((destpath, files))
-
-extra_data_dirs = ["css"]
-for extra_data_dir in extra_data_dirs:
-    for basedir, subdirs, files in os.walk(extra_data_dir):
-        files = [os.path.join(basedir, x) for x in files]
-        destpath = os.path.join("share", "pronterface", basedir)
-        data_files.append((destpath, files))
-
-cmdclass = {"uninstall": uninstall,
-            "install": install,
-            "install_data": install_data}
-if build_ext:
-    cmdclass['build_ext'] = build_ext
-
-setup(name = "Printrun",
-      version = printcore_version,
-      description = "Host software for 3D printers",
-      author = "Kliment Yanev",
-      url = "http://github.com/kliment/Printrun/",
-      license = "GPLv3",
-      data_files = data_files,
-      packages = find_packages(),
-      scripts = ["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
-      cmdclass = cmdclass,
-      ext_modules = extensions,
-      classifiers=["Programming Language :: Python :: 3 :: Only"],
-      )
+setup(
+    name="Printrun",
+    version=__version__,
+    description="Host software for 3D printers",
+    author="Kliment Yanev, Guillaume Seguin and others",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="http://github.com/kliment/Printrun/",
+    license="GPLv3+",
+    data_files=data_files,
+    packages=find_packages(),
+    scripts=["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
+    ext_modules=extensions,
+    python_requires=">=3.6",
+    install_requires=install_requires,
+    setup_requires=["Cython"],
+    classifiers=[
+        "Environment :: X11 Applications :: GTK",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Manufacturing",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Printing",
+    ],
+    zip_safe=False,
+)
