@@ -1096,7 +1096,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
-                    logging.info(("The progress should be updated on the printer now: " + printer_progress_string))
                     if len(printer_progress_string) > 25:
                         logging.info("Warning: The print progress message might be too long to be displayed properly")
                     #13 chars for up to 99h est.
