@@ -1,0 +1,7 @@
+include COPYING
+include README.*
+include requirements.txt
+include *.ico
+include *.icns
+recursive-include locale *.pot *.po *.mo
+recursive-include printrun *.pyx *.c *.h
