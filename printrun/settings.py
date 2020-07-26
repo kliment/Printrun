@@ -173,13 +173,12 @@ class ComboSetting(wxSetting):
 class SpinSetting(wxSetting):
 
     def __init__(self, name, default, min, max, label = None, help = None, group = None, increment = 0.1):
-        super(SpinSetting, self).__init__(name, default, label, help, group)
+        super().__init__(name, default, label, help, group)
         self.min = min
         self.max = max
         self.increment = increment
 
     def get_specific_widget(self, parent):
-        from wx.lib.agw.floatspin import FloatSpin
         import wx
         self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max)
         self.widget.SetDigits(0)
@@ -188,13 +187,37 @@ class SpinSetting(wxSetting):
         self.widget.GetValue = lambda: int(orig())
         return self.widget
 
+def MySpin(parent, digits, *args, **kw):
+    # in GTK 3.[01], spinner is not large enough to fit text
+    # Could be a class, but use function to avoid load errors if wx
+    # not installed
+    # If native wx.SpinCtrlDouble has problems in different platforms
+    # try agw
+    # from wx.lib.agw.floatspin import FloatSpin
+    import wx
+    sp = wx.SpinCtrlDouble(parent, *args, **kw)
+    # sp = FloatSpin(parent)
+    sp.SetDigits(digits)
+    # sp.SetValue(kw['initial'])
+    def fitValue(ev):
+        text = '%%.%df'% digits % sp.Max
+        # native wx.SpinCtrlDouble does not return good size
+        # in GTK 3.0
+        tex = sp.GetTextExtent(text)
+        tsz = sp.GetSizeFromTextSize(tex.x)
+
+        if sp.MinSize.x < tsz.x:
+            # print('fitValue', getattr(sp, 'setting', None), sp.Value, sp.Digits, tsz.x)
+            sp.MinSize = tsz
+            # sp.Size = tsz
+    # sp.Bind(wx.EVT_TEXT, fitValue)
+    fitValue(None)
+    return sp
+
 class FloatSpinSetting(SpinSetting):
 
     def get_specific_widget(self, parent):
-        from wx.lib.agw.floatspin import FloatSpin
-        import wx
-        self.widget = wx.SpinCtrlDouble(parent, -1, initial = self.value, min = self.min, max = self.max, inc = self.increment)
-        self.widget.SetDigits(2)
+        self.widget = MySpin(parent, 2, initial = self.value, min = self.min, max = self.max, inc = self.increment)
         return self.widget
 
 class BooleanSetting(wxSetting):
@@ -256,10 +279,11 @@ class BuildDimensionsSetting(wxSetting):
         build_dimensions = parse_build_dimensions(self.value)
         self.widgets = []
         def w(val, m, M):
-            self.widgets.append(wx.SpinCtrlDouble(parent, -1, initial = val, min = m, max = M))
-            self.widgets[-1].SetDigits(2)
-        addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
-        addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
+            self.widgets.append(MySpin(parent, 2, initial = val, min = m, max = M))
+        def addlabel(name, pos):
+            self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
+        def addwidget(*pos):
+            self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT | wx.EXPAND, border = 5)
         self.widget = wx.GridBagSizer()
         addlabel(_("Width"), (0, 0))
         w(build_dimensions[0], 0, 2000)
@@ -281,13 +305,13 @@ class BuildDimensionsSetting(wxSetting):
         addwidget(1, 5)
         addlabel(_("X home pos."), (2, 0))
         w(build_dimensions[6], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 1))
+        addwidget(2, 1)
         addlabel(_("Y home pos."), (2, 2))
         w(build_dimensions[7], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 3))
+        addwidget(2, 3)
         addlabel(_("Z home pos."), (2, 4))
         w(build_dimensions[8], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 5))
+        addwidget(2, 5)
         return self.widget
 
     def update(self):
