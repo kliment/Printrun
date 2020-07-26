@@ -1,0 +1,39 @@
+name: Build manylinux1 x86_64 Python package
+
+on:
+  push:
+  pull_request:
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel twine
+    - name: Build manylinux Python wheels
+      uses: RalfG/python-wheels-manylinux-build@v0.3-manylinux1_x86_64
+      with:
+        python-versions: 'cp36-cp36m cp37-cp37m cp38-cp38'
+        build-requirements: 'cython'
+    - name: Upload artifacts for inspection
+      uses: actions/upload-artifact@v2
+      with:
+        name: manylinux1_wheels
+        path: dist/*.whl
+    - name: Publish sdists and wheels to PyPI
+      if: ${{ success() && github.event_name == 'release' && github.event.action == 'created' }}
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_KEY }}
+      run: |
+        twine upload dist/*
