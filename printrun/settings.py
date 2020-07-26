@@ -305,7 +305,7 @@ class Settings:
         self._add(BooleanSetting("tcp_streaming_mode", False, _("TCP streaming mode"), _("When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands. This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
         self._add(BooleanSetting("rpc_server", True, _("RPC server"), _("Enable RPC server to allow remotely querying print status")), root.update_rpc_server)
         self._add(BooleanSetting("dtr", True, _("DTR"), _("Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"), "Printer"))
-        if(sys.platform!="win32"):
+        if sys.platform != "win32":
             self._add(StringSetting("devicepath", "", _("Device name pattern"), _("Custom device pattern: for example /dev/3DP_* "), "Printer"))
         self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"), root.set_temp_preset)
         self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (deg C)"), "Printer"), root.set_temp_preset)
@@ -314,17 +314,15 @@ class Settings:
         self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (mm/min)"), "Printer"))
         self._add(SpinSetting("z_feedrate", 100, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (mm/min)"), "Printer"))
         self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (mm/min)"), "Printer"))
-        defaultslicerpath=""
-        if sys.platform=="darwin" and getattr( sys, 'frozen', False ):
-            defaultslicerpath="/Applications/Slic3r.app/Contents/MacOS/"
-        if sys.platform=="win32" and getattr( sys, 'frozen', False ):
-            defaultslicerpath=".\\slic3r\\"
+        defaultslicerpath = ""
+        if getattr(sys, 'frozen', False):
+            if sys.platform == "darwin":
+                defaultslicerpath = "/Applications/Slic3r.app/Contents/MacOS/"
+            elif sys.platform == "win32":
+                defaultslicerpath = ".\\slic3r\\"
         self._add(StringSetting("slicecommandpath", defaultslicerpath, _("Path to slicer"), _("Path to slicer"), "External"))
-        self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
-        if sys.platform=="win32":
-            self._add(StringSetting("slicecommand", "slic3r-console $s --output $o", _("Slice command"), _("Slice command"), "External"))
-        else:
-            self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        slicer = 'slic3r-console' if sys.platform == 'win32' else 'slic3r'
+        self._add(StringSetting("slicecommand", slicer + ' $s --output $o', _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "slic3r", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("start_command", "", _("Start command"), _("Executable to run when the print is started"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
