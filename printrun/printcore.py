@@ -530,17 +530,12 @@ class printcore():
         self.paused = True
         self.printing = False
 
-        # try joining the print thread: enclose it in try/except because we
-        # might be calling it from the thread itself
-        try:
-            self.print_thread.join()
-        except RuntimeError as e:
-            if e.message == "cannot join current thread":
-                pass
-            else:
+        # ';@pause' in the gcode file calls pause from the print thread
+        if not threading.current_thread() is self.print_thread:
+            try:
+                self.print_thread.join()
+            except:
                 self.logError(traceback.format_exc())
-        except:
-            self.logError(traceback.format_exc())
 
         self.print_thread = None
 
