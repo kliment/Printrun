@@ -46,8 +46,12 @@ from .trackball import trackball, mulquat, axis_to_quat
 from .libtatlin.actors import vec
 from pyglet.gl.glu import gluOrtho2D
 
-BASE_CLASS = wx.Window
-# BASE_CLASS = wx.Panel
+# When Subclassing wx.Window in Windows the focus goes to the wx.Window
+# instead of GLCanvas and it does not draw the focus rectangle and
+# does not consume used keystrokes
+# BASE_CLASS = wx.Window
+# Subclassing Panel solves problem In Windows
+BASE_CLASS = wx.Panel
 # BASE_CLASS = wx.ScrolledWindow
 # BASE_CLASS = glcanvas.GLCanvas
 class wxGLPanel(BASE_CLASS):
