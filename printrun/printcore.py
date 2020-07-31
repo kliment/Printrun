@@ -549,32 +549,25 @@ class printcore():
         self.pauseRelativeE = self.analyzer.relative_e
 
     def resume(self):
-        """Resumes a paused print.
-        """
+        """Resumes a paused print."""
         if not self.paused: return False
-        if self.paused:
-            # restores the status
-            self.send_now("G90")  # go to absolute coordinates
+        # restores the status
+        self.send_now("G90")  # go to absolute coordinates
 
-            xyFeedString = ""
-            zFeedString = ""
-            if self.xy_feedrate is not None:
-                xyFeedString = " F" + str(self.xy_feedrate)
-            if self.z_feedrate is not None:
-                zFeedString = " F" + str(self.z_feedrate)
+        xyFeed = '' if self.xy_feedrate is None else ' F' + str(self.xy_feedrate)
+        zFeed = '' if self.z_feedrate is None else ' F' + str(self.z_feedrate)
 
-            self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY,
-                                            xyFeedString))
-            self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
-            self.send_now("G92 E" + str(self.pauseE))
+        self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY, xyFeed))
+        self.send_now("G1 Z" + str(self.pauseZ) + zFeed)
+        self.send_now("G92 E" + str(self.pauseE))
 
-            # go back to relative if needed
-            if self.pauseRelative:
-                self.send_now("G91")
-            if self.pauseRelativeE:
-                self.send_now('M83')
-            # reset old feed rate
-            self.send_now("G1 F" + str(self.pauseF))
+        # go back to relative if needed
+        if self.pauseRelative:
+            self.send_now("G91")
+        if self.pauseRelativeE:
+            self.send_now('M83')
+        # reset old feed rate
+        self.send_now("G1 F" + str(self.pauseF))
 
         self.paused = False
         self.printing = True
