@@ -85,7 +85,9 @@ class GcodeViewPanel(wxGLPanel):
                                              antialias_samples = antialias_samples)
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
-        self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
+        # self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
+        # in Windows event inspector shows only EVT_CHAR_HOOK events
+        self.canvas.Bind(wx.EVT_CHAR_HOOK, self.keypress)
         self.initialized = 0
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.parent = realparent or parent
@@ -270,7 +272,7 @@ class GcodeViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
-        """gets keypress events and moves/rotates acive shape"""
+        """gets keypress events and moves/rotates active shape"""
         step = event.ControlDown() and 1.05 or 1.1
         key = event.GetKeyCode()
         if key in LAYER_UP_KEYS:
