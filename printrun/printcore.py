@@ -546,6 +546,7 @@ class printcore():
         self.pauseE = self.analyzer.abs_e
         self.pauseF = self.analyzer.current_f
         self.pauseRelative = self.analyzer.relative
+        self.pauseRelativeE = self.analyzer.relative_e
 
     def resume(self):
         """Resumes a paused print.
@@ -568,7 +569,10 @@ class printcore():
             self.send_now("G92 E" + str(self.pauseE))
 
             # go back to relative if needed
-            if self.pauseRelative: self.send_now("G91")
+            if self.pauseRelative:
+                self.send_now("G91")
+            if self.pauseRelativeE:
+                self.send_now('M83')
             # reset old feed rate
             self.send_now("G1 F" + str(self.pauseF))
 
