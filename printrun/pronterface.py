@@ -273,13 +273,14 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         # Create UI
         self.create_menu()
         self.update_recent_files("recentfiles", self.settings.recentfiles)
+        self.splitterwindow = None
         if self.settings.uimode in (_("Tabbed"), _("Tabbed with platers")):
             self.createTabbedGui()
         else:
             self.createGui(self.settings.uimode == _("Compact"),
                            self.settings.controlsmode == "Mini")
 
-        if hasattr(self, "splitterwindow"):
+        if self.splitterwindow:
             self.splitterwindow.SetSashPosition(self.settings.last_sash_position)
 
             def splitter_resize(event):
