@@ -29,11 +29,11 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: manylinux1_wheels
-        path: dist/*.whl
+        path: dist/*-manylinux*.whl
     - name: Publish sdists and wheels to PyPI
       if: ${{ success() && github.event_name == 'release' && github.event.action == 'created' }}
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_KEY }}
       run: |
-        twine upload dist/*
+        twine upload dist/*-manylinux*.whl
