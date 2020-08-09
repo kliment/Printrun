@@ -199,7 +199,7 @@ class Gviz(wx.Panel, BaseViz):
         self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
         self.fades = [wx.Pen(wx.Colour(int(250 - 0.6 ** i * 100), int(250 - 0.6 ** i * 100), int(200 - 0.4 ** i * 50)), penwidth) for i in range(6)]
-        self.penslist = [self.mainpen, self.travelpen, self.hlpen] + self.fades
+        self.penslist = [self.mainpen, self.arcpen, self.travelpen, self.hlpen] + self.fades
         self.bgcolor = wx.Colour()
         self.bgcolor.Set(bgcolor)
         self.blitmap = wx.Bitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
