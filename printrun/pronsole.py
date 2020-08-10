@@ -652,8 +652,9 @@ class pronsole(cmd.Cmd):
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
 
-            config_name = platform.system() == 'Windows' and \
-                        'printrunconf.ini' or 'pronsolerc'
+            config_name = ('printrunconf.ini'
+                            if platform.system() == 'Windows'
+                            else 'pronsolerc')
 
             config = os.path.join(self.config_dir, config_name)
         logging.info('Loading config file ' + config)

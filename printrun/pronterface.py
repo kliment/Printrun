@@ -369,9 +369,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     @property
     def bgcolor(self):
-        return self.settings.bgcolor == 'auto' \
-            and wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME) \
-            or self.settings.bgcolor
+        return (wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
+                if self.settings.bgcolor == 'auto'
+                else self.settings.bgcolor)
 
     #  --------------------------------------------------------------
     #  Main interface actions
