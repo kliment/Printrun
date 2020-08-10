@@ -66,26 +66,34 @@ def set_gcview_params(self, path_width, path_height):
             has_changed = True
     return has_changed
 
+# E selected for Up because is above D
+LAYER_UP_KEYS = ord('U'), ord('E'), wx.WXK_UP
+LAYER_DOWN_KEYS = ord('D'), wx.WXK_DOWN
+ZOOM_IN_KEYS = wx.WXK_PAGEDOWN, 388, wx.WXK_RIGHT, ord('=')
+ZOOM_OUT_KEYS = wx.WXK_PAGEUP, 390, wx.WXK_LEFT, ord('-')
+FIT_KEYS = [ord('F')]
+CURRENT_LAYER_KEYS = [ord('C')]
+RESET_KEYS = [ord('R')]
+
 class GcodeViewPanel(wxGLPanel):
 
-    def __init__(self, parent, id = wx.ID_ANY,
-                 build_dimensions = None, realparent = None,
-                 antialias_samples = 0):
-        super(GcodeViewPanel, self).__init__(parent, id, wx.DefaultPosition,
+    def __init__(self, parent,
+                 build_dimensions = (200, 200, 100, 0, 0, 0),
+                 realparent = None, antialias_samples = 0):
+        super().__init__(parent, wx.DefaultPosition,
                                              wx.DefaultSize, 0,
                                              antialias_samples = antialias_samples)
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
-        self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
+        # self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
+        # in Windows event inspector shows only EVT_CHAR_HOOK events
+        self.canvas.Bind(wx.EVT_CHAR_HOOK, self.keypress)
         self.initialized = 0
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
-        self.parent = realparent if realparent else parent
+        self.parent = realparent or parent
         self.initpos = None
-        if build_dimensions:
-            self.build_dimensions = build_dimensions
-        else:
-            self.build_dimensions = [200, 200, 100, 0, 0, 0]
-        self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
+        self.build_dimensions = build_dimensions
+        self.dist = max(self.build_dimensions[:2])
         self.basequat = [0, 0, 0, 1]
         self.mousepos = [0, 0]
 
@@ -109,13 +117,13 @@ class GcodeViewPanel(wxGLPanel):
         pass
 
     def OnInitGL(self, *args, **kwargs):
-        super(GcodeViewPanel, self).OnInitGL(*args, **kwargs)
-        if hasattr(self.parent, "filenames") and self.parent.filenames:
-            for filename in self.parent.filenames:
+        super().OnInitGL(*args, **kwargs)
+        filenames = getattr(self.parent, 'filenames', None)
+        if filenames:
+            for filename in filenames:
                 self.parent.load_file(filename)
             self.parent.autoplate()
-            if hasattr(self.parent, "loadcb"):
-                self.parent.loadcb()
+            getattr(self.parent, 'loadcb', bool)()
             self.parent.filenames = None
 
     def create_objects(self):
@@ -125,7 +133,7 @@ class GcodeViewPanel(wxGLPanel):
                 obj.model.init()
 
     def update_object_resize(self):
-        '''called when the window recieves only if opengl is initialized'''
+        '''called when the window receives only if opengl is initialized'''
         pass
 
     def draw_objects(self):
@@ -175,8 +183,7 @@ class GcodeViewPanel(wxGLPanel):
         return mvmat
 
     def double(self, event):
-        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
-            self.parent.clickcb(event)
+        getattr(self.parent, 'clickcb', bool)(event)
 
     def move(self, event):
         """react to mouse actions:
@@ -188,22 +195,18 @@ class GcodeViewPanel(wxGLPanel):
             self.canvas.SetFocus()
             event.Skip()
             return
-        if event.Dragging() and event.LeftIsDown():
-            self.handle_rotation(event)
-        elif event.Dragging() and event.RightIsDown():
-            self.handle_translation(event)
-        elif event.LeftUp():
+        if event.Dragging():
+            if event.LeftIsDown():
+                self.handle_rotation(event)
+            elif event.RightIsDown():
+                self.handle_translation(event)
+            self.Refresh(False)
+        elif event.LeftUp() or event.RightUp():
             self.initpos = None
-        elif event.RightUp():
-            self.initpos = None
-        else:
-            event.Skip()
-            return
         event.Skip()
-        wx.CallAfter(self.Refresh)
 
     def layerup(self):
-        if not hasattr(self.parent, "model") or not self.parent.model:
+        if not getattr(self.parent, 'model', False):
             return
         max_layers = self.parent.model.max_layers
         current_layer = self.parent.model.num_layers_to_draw
@@ -216,7 +219,7 @@ class GcodeViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def layerdown(self):
-        if not hasattr(self.parent, "model") or not self.parent.model:
+        if not getattr(self.parent, 'model', False):
             return
         current_layer = self.parent.model.num_layers_to_draw
         new_layer = max(1, current_layer - 1)
@@ -269,35 +272,30 @@ class GcodeViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
-        """gets keypress events and moves/rotates acive shape"""
-        step = 1.1
-        if event.ControlDown():
-            step = 1.05
-        kup = [85, 315]               # Up keys
-        kdo = [68, 317]               # Down Keys
-        kzi = [wx.WXK_PAGEDOWN, 388, 316, 61]        # Zoom In Keys
-        kzo = [wx.WXK_PAGEUP, 390, 314, 45]       # Zoom Out Keys
-        kfit = [70]       # Fit to print keys
-        kshowcurrent = [67]       # Show only current layer keys
-        kreset = [82]       # Reset keys
+        """gets keypress events and moves/rotates active shape"""
+        step = event.ControlDown() and 1.05 or 1.1
         key = event.GetKeyCode()
-        if key in kup:
+        if key in LAYER_UP_KEYS:
             self.layerup()
-        if key in kdo:
+            return  # prevent shifting focus to other controls
+        elif key in LAYER_DOWN_KEYS:
             self.layerdown()
-        x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
-        if key in kzi:
+            return
+        # x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
+        elif key in ZOOM_IN_KEYS:
             self.zoom_to_center(step)
-        if key in kzo:
+            return
+        elif key in ZOOM_OUT_KEYS:
             self.zoom_to_center(1 / step)
-        if key in kfit:
+            return
+        elif key in FIT_KEYS:
             self.fit()
-        if key in kshowcurrent:
+        elif key in CURRENT_LAYER_KEYS:
             if not self.parent.model or not self.parent.model.loaded:
                 return
             self.parent.model.only_current = not self.parent.model.only_current
             wx.CallAfter(self.Refresh)
-        if key in kreset:
+        elif key in RESET_KEYS:
             self.resetview()
         event.Skip()
 
@@ -414,10 +412,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.p = self  # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
         self.platform = actors.Platform(build_dimensions, circular = circular)
-        if objects:
-            self.model = objects[1].model
-        else:
-            self.model = None
+        self.model = objects[1].model if objects else None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
         fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()

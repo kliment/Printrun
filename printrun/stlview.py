@@ -69,10 +69,10 @@ class StlViewPanel(wxGLPanel):
 
     do_lights = False
 
-    def __init__(self, parent, size, id = wx.ID_ANY,
+    def __init__(self, parent, size,
                  build_dimensions = None, circular = False,
                  antialias_samples = 0):
-        super(StlViewPanel, self).__init__(parent, id, wx.DefaultPosition, size, 0,
+        super().__init__(parent, wx.DefaultPosition, size, 0,
                                            antialias_samples = antialias_samples)
         self.batches = []
         self.rot = 0
@@ -90,7 +90,7 @@ class StlViewPanel(wxGLPanel):
                                         circular = circular)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
-        wx.CallAfter(self.forceresize)
+        wx.CallAfter(self.forceresize) #why needed
         self.mousepos = (0, 0)
 
     def OnReshape(self):
@@ -155,8 +155,11 @@ class StlViewPanel(wxGLPanel):
             self.parent.clickcb(event)
 
     def forceresize(self):
-        self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
-        self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] - 1))
+        #print('forceresize')
+        x, y = self.GetClientSize()
+        #TODO: probably not needed
+        self.SetClientSize((x, y+1))
+        self.SetClientSize((x, y))
         self.initialized = False
 
     def move(self, event):
@@ -168,21 +171,16 @@ class StlViewPanel(wxGLPanel):
             with shift move viewport
         """
         self.mousepos = event.GetPosition()
-        if event.Dragging() and event.LeftIsDown():
-            self.handle_rotation(event)
-        elif event.Dragging() and event.RightIsDown():
-            self.handle_translation(event)
-        elif event.ButtonUp(wx.MOUSE_BTN_LEFT):
-            if self.initpos is not None:
-                self.initpos = None
-        elif event.ButtonUp(wx.MOUSE_BTN_RIGHT):
-            if self.initpos is not None:
-                self.initpos = None
-        else:
-            event.Skip()
-            return
+        if event.Dragging():
+            if event.LeftIsDown():
+                self.handle_rotation(event)
+            elif event.RightIsDown():
+                self.handle_translation(event)
+            self.Refresh(False)
+        elif event.ButtonUp(wx.MOUSE_BTN_LEFT) or \
+            event.ButtonUp(wx.MOUSE_BTN_RIGHT):
+            self.initpos = None
         event.Skip()
-        wx.CallAfter(self.Refresh)
 
     def handle_wheel(self, event):
         delta = event.GetWheelRotation()
@@ -257,6 +255,8 @@ class StlViewPanel(wxGLPanel):
         if not self.platform.initialized:
             self.platform.init()
         self.initialized = 1
+        #TODO: this probably creates constant redraw
+        # create_objects is called during OnDraw, remove
         wx.CallAfter(self.Refresh)
 
     def prepare_model(self, m, scale):

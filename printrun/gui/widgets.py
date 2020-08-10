@@ -161,8 +161,9 @@ class PronterOptionsDialog(wx.Dialog):
                     label.SetFont(font)
                 grid.Add(label, pos = (current_row, 0),
                          flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+                expand = 0 if isinstance(widget, (wx.SpinCtrlDouble, wx.Choice, wx.ComboBox)) else wx.EXPAND
                 grid.Add(widget, pos = (current_row, 1),
-                         flag = wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+                         flag = wx.ALIGN_CENTER_VERTICAL | expand)
                 if hasattr(label, "set_default"):
                     label.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
                     if hasattr(widget, "Bind"):
@@ -174,7 +175,7 @@ class PronterOptionsDialog(wx.Dialog):
         panel.SetSizer(sbox)
         topsizer = wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(panel, 1, wx.ALL | wx.EXPAND)
-        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT)
+        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_CENTER)
         self.SetSizerAndFit(topsizer)
         self.SetMinSize(self.GetSize())
 
