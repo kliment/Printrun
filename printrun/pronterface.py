@@ -296,7 +296,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.update_gcview_params()
 
         # Finalize
-        if self.online:
+        if self.p.online:
             self.gui_set_connected()
         if self.ui_ready:
             self.logbox.SetValue(logcontent)
