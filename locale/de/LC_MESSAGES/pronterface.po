@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
 "POT-Creation-Date: 2014-03-30 14:35+CEST\n"
-"PO-Revision-Date: 2020-07-14 23:57+0200\n"
+"PO-Revision-Date: 2020-08-12 09:23+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: <>\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 2.3.1\n"
+"X-Generator: Poedit 2.4.1\n"
 
 #: printrun/excluder.py:26
 msgid "Part excluder: draw rectangles where print instructions should be ignored"
@@ -79,7 +79,7 @@ msgstr "Extruder einschalten"
 
 #: printrun/gui/controls.py:141 printrun/gui/controls.py:161 printrun/gui/controls.py:198
 msgid "Set"
-msgstr "Einstellen"
+msgstr "OK"
 
 #: printrun/gui/controls.py:146 printrun/gui/controls.py:215
 msgid "Bed:"
