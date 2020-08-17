@@ -305,12 +305,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if self.fgcode:
                 self.start_viz_thread()
         self.ui_ready = True
-        self.settings.monitor=temp_monitor
-        self.commandbox.history=read_history_from(self.history_file)
-        self.commandbox.histindex == len(self.commandbox.history)
+        self.settings.monitor = temp_monitor
+        self.commandbox.history = read_history_from(self.history_file)
+        self.commandbox.histindex = len(self.commandbox.history)
         self.Thaw()
         if self.settings.monitor:
-                self.update_monitor()
+            self.update_monitor()
 
     def on_resize(self, event):
         wx.CallAfter(self.on_resize_real)
@@ -529,21 +529,28 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         elif portslist:
             self.serialport.SetValue(portslist[0])
 
+    def appendCommandHistory(self):
+        cmd = self.commandbox.Value
+        hist = self.commandbox.history
+        append = cmd and (not hist or hist[-1] != cmd)
+        if append:
+            self.commandbox.history.append(cmd)
+        return append
+
     def cbkey(self, e):
-        if e.GetKeyCode() == wx.WXK_UP:
+        dir = {wx.WXK_UP: -1, wx.WXK_DOWN: 1}.get(e.KeyCode)
+        if dir:
             if self.commandbox.histindex == len(self.commandbox.history):
-                self.commandbox.history.append(self.commandbox.GetValue())  # save current command
-            if len(self.commandbox.history):
-                self.commandbox.histindex = (self.commandbox.histindex - 1) % len(self.commandbox.history)
-                self.commandbox.SetValue(self.commandbox.history[self.commandbox.histindex])
-                self.commandbox.SetSelection(0, len(self.commandbox.history[self.commandbox.histindex]))
-        elif e.GetKeyCode() == wx.WXK_DOWN:
-            if self.commandbox.histindex == len(self.commandbox.history):
-                self.commandbox.history.append(self.commandbox.GetValue())  # save current command
-            if len(self.commandbox.history):
-                self.commandbox.histindex = (self.commandbox.histindex + 1) % len(self.commandbox.history)
-                self.commandbox.SetValue(self.commandbox.history[self.commandbox.histindex])
-                self.commandbox.SetSelection(0, len(self.commandbox.history[self.commandbox.histindex]))
+                if dir == 1:
+                    # do not cycle top => bottom
+                    return
+                #save unsent command before going back
+                self.appendCommandHistory()
+            self.commandbox.histindex = max(0, min(self.commandbox.histindex + dir, len(self.commandbox.history)))
+            self.commandbox.Value = (self.commandbox.history[self.commandbox.histindex]
+                if self.commandbox.histindex < len(self.commandbox.history)
+                else '')
+            self.commandbox.SetInsertionPointEnd()
         else:
             e.Skip()
 
@@ -733,15 +740,15 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.autoscrolldisable = e.IsChecked()
 
     def sendline(self, e):
-        command = self.commandbox.GetValue()
+        command = self.commandbox.Value
         if not len(command):
             return
         logging.info(">>> " + command)
         line = self.precmd(str(command))
         self.onecmd(line)
-        self.commandbox.SetSelection(0, len(command))
-        self.commandbox.history.append(command)
+        self.appendCommandHistory()
         self.commandbox.histindex = len(self.commandbox.history)
+        self.commandbox.Value = ''
 
     #  --------------------------------------------------------------
     #  Main menu handling & actions
