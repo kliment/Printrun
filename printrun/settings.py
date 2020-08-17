@@ -32,7 +32,7 @@ def setting_add_tooltip(func):
             sep = "\n"
             if helptxt.find("\n") >= 0:
                 sep = "\n\n"
-        if self.default is not "":
+        if self.default != "":
             deftxt = _("Default: ")
             resethelp = _("(Control-doubleclick to reset to default value)")
             if len(repr(self.default)) > 10:
@@ -113,7 +113,7 @@ class wxSetting(Setting):
         self.value = self.widget.GetValue()
 
     def set_default(self, e):
-        if e.CmdDown() and e.ButtonDClick() and self.default is not "":
+        if e.CmdDown() and e.ButtonDClick() and self.default != "":
             self.widget.SetValue(self.default)
         else:
             e.Skip()
