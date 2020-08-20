@@ -1,3 +1,35 @@
+Printrun - 2.0.0rc6
+====================
+
+Pre-release for testing purposes.
+
+### New Features
+
+ - Change the default background color to the theme one (#931)
+ - Add setting for graph background color (#791)
+ - Hide second extruder from graph if not present (#791)
+ - Support for disabling Mate screensaver service (#979)
+ - Armenian translation (#1042)
+ - Don't print the M117 status msg to the console (#1081)
+ - Packages installable by pip are available on PyPI (#921)
+
+### Fixed Bugs
+
+ - Don't ask for exit confirmation on the console when asking in GUI (b48fe7b)
+ - Preset for temperatures does not affect Selection on the main screen (#676)
+ - Several Python 3 related followups, mostly in run_gcode_script
+ - Issue connecting to a remote port (#1027)
+ - Run "Final command" from settings when print is finished (#1014)
+ - Fix a crash in wx at startup due to locale settings (#1015)
+ - Only apply PARITY_ODD workaround where it's actually needed (#1017)
+ - Do not attempt to read extra device name patterns on windows (#1040)
+ - Several Linux packaging fixes
+ - Removed error-causing wxPython horizontal alignment flags (#1052)
+ - Rewrite deprecated Serial functions (#1017), pySerial >= 3 is now needed
+ - 3D Viewer color options don't update (#1054)
+ - Settings change callbacks not called (#1063 and others)
+
+
 Printrun - 2.0.0rc5
 ====================
 

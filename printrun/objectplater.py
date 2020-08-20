@@ -33,14 +33,22 @@ class PlaterPanel(wx.Panel):
     def __init__(self, **kwargs):
         self.destroy_on_done = False
         parent = kwargs.get("parent", None)
-        super(PlaterPanel, self).__init__(parent = parent)
+        super().__init__(parent = parent)
         self.prepare_ui(**kwargs)
 
     def prepare_ui(self, filenames = [], callback = None, parent = None, build_dimensions = None):
         self.filenames = filenames
-        self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        panel = self.menupanel = wx.Panel(self, -1)
+        panel = self.menupanel = wx.Panel(self)
         sizer = self.menusizer = wx.GridBagSizer()
+        # Load button
+        loadbutton = wx.Button(panel, label = _("Load"))
+        loadbutton.Bind(wx.EVT_BUTTON, self.load)
+        sizer.Add(loadbutton, pos = (0, 0), span = (1, 1), flag = wx.EXPAND)
+        # Export button
+        exportbutton = wx.Button(panel, label = _("Export"))
+        exportbutton.Bind(wx.EVT_BUTTON, self.export)
+        sizer.Add(exportbutton, pos = (0, 1), span = (1, 1), flag = wx.EXPAND)
+
         self.l = wx.ListBox(panel)
         sizer.Add(self.l, pos = (1, 0), span = (1, 2), flag = wx.EXPAND)
         sizer.AddGrowableRow(1, 1)
@@ -48,10 +56,6 @@ class PlaterPanel(wx.Panel):
         clearbutton = wx.Button(panel, label = _("Clear"))
         clearbutton.Bind(wx.EVT_BUTTON, self.clear)
         sizer.Add(clearbutton, pos = (2, 0), span = (1, 2), flag = wx.EXPAND)
-        # Load button
-        loadbutton = wx.Button(panel, label = _("Load"))
-        loadbutton.Bind(wx.EVT_BUTTON, self.load)
-        sizer.Add(loadbutton, pos = (0, 0), span = (1, 1), flag = wx.EXPAND)
         # Snap to Z = 0 button
         snapbutton = wx.Button(panel, label = _("Snap to Z = 0"))
         snapbutton.Bind(wx.EVT_BUTTON, self.snap)
@@ -68,10 +72,6 @@ class PlaterPanel(wx.Panel):
         autobutton = wx.Button(panel, label = _("Auto arrange"))
         autobutton.Bind(wx.EVT_BUTTON, self.autoplate)
         sizer.Add(autobutton, pos = (5, 0), span = (1, 2), flag = wx.EXPAND)
-        # Export button
-        exportbutton = wx.Button(panel, label = _("Export"))
-        exportbutton.Bind(wx.EVT_BUTTON, self.export)
-        sizer.Add(exportbutton, pos = (0, 1), span = (1, 1), flag = wx.EXPAND)
         if callback is not None:
             donebutton = wx.Button(panel, label = _("Done"))
             donebutton.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
@@ -81,13 +81,11 @@ class PlaterPanel(wx.Panel):
             sizer.Add(cancelbutton, pos = (6, 1), span = (1, 1), flag = wx.EXPAND)
         self.basedir = "."
         self.models = {}
-        panel.SetSizerAndFit(sizer)
+        panel.SetSizer(sizer)
+        self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainsizer.Add(panel, flag = wx.EXPAND)
         self.SetSizer(self.mainsizer)
-        if build_dimensions:
-            self.build_dimensions = build_dimensions
-        else:
-            self.build_dimensions = [200, 200, 100, 0, 0, 0]
+        self.build_dimensions = build_dimensions or [200, 200, 100, 0, 0, 0]
 
     def set_viewer(self, viewer):
         # Patch handle_rotation on the fly
@@ -110,12 +108,10 @@ class PlaterPanel(wx.Panel):
         if hasattr(viewer, "handle_wheel"):
             def handle_wheel(self, event, orig_handler):
                 if event.ShiftDown():
-                    delta = event.GetWheelRotation()
                     angle = 10
-                    if delta > 0:
-                        self.parent.rotate_shape(angle / 2)
-                    else:
-                        self.parent.rotate_shape(-angle / 2)
+                    if event.GetWheelRotation() < 0:
+                        angle = -angle
+                    self.parent.rotate_shape(angle / 2)
                 else:
                     orig_handler(event)
             patch_method(viewer, "handle_wheel", handle_wheel)

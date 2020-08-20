@@ -25,7 +25,7 @@ from array import array
 gcode_parsed_args = ["x", "y", "e", "f", "z", "i", "j"]
 gcode_parsed_nonargs = ["g", "t", "m", "n"]
 to_parse = "".join(gcode_parsed_args + gcode_parsed_nonargs)
-gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|([%s])([-+]?[0-9]*\.?[0-9]*)" % to_parse)
+gcode_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n|([%s])\s*([-+]?[0-9]*\.?[0-9]*)" % to_parse)
 gcode_strip_comment_exp = re.compile("\([^\(\)]*\)|;.*|[/\*].*\n")
 m114_exp = re.compile("\([^\(\)]*\)|[/\*].*\n|([XYZ]):?([-+]?[0-9]*\.?[0-9]*)")
 specific_exp = "(?:\([^\(\)]*\))|(?:;.*)|(?:[/\*].*\n)|(%s[-+]?[0-9]*\.?[0-9]*)"
@@ -45,6 +45,12 @@ class PyLine:
 
     def __getattr__(self, name):
         return None
+
+    def __copy__(self):
+        result = self.__class__.__new__(self.__class__)
+        for s in self.__slots__:
+            setattr(result, s, getattr(self, s))
+        return result
 
 class PyLightLine:
 
@@ -122,6 +128,7 @@ class GCode:
     append_layer_id = None
 
     imperial = False
+    cutting = False
     relative = False
     relative_e = False
     current_tool = 0
@@ -218,7 +225,9 @@ class GCode:
     layers_count = property(_get_layers_count)
 
     def __init__(self, data = None, home_pos = None,
-                 layer_callback = None, deferred = False):
+                 layer_callback = None, deferred = False,
+                 cutting_as_extrusion = False):
+        self.cutting_as_extrusion = cutting_as_extrusion
         if not deferred:
             self.prepare(data, home_pos, layer_callback)
 
@@ -341,6 +350,7 @@ class GCode:
         offset_e = self.offset_e
         total_e = self.total_e
         max_e = self.max_e
+        cutting = self.cutting
 
         current_e_multi = self.current_e_multi[current_tool]
         offset_e_multi = self.offset_e_multi[current_tool]
@@ -434,6 +444,11 @@ class GCode:
                         self.offset_e_multi+=[0]
                         self.total_e_multi+=[0]
                         self.max_e_multi+=[0]
+                elif line.command == "M3" or line.command == "M4":
+                    cutting = True
+                elif line.command == "M5":
+                    cutting = False
+
                 current_e_multi = self.current_e_multi[current_tool]
                 offset_e_multi = self.offset_e_multi[current_tool]
                 total_e_multi = self.total_e_multi[current_tool]
@@ -510,6 +525,8 @@ class GCode:
                     elif line.command == "G92":
                         offset_e = current_e - line.e
                         offset_e_multi = current_e_multi - line.e
+                if cutting and self.cutting_as_extrusion:
+                    line.extruding = True
 
                 self.current_e_multi[current_tool]=current_e_multi
                 self.offset_e_multi[current_tool]=offset_e_multi
@@ -675,6 +692,7 @@ class GCode:
         self.offset_e_multi[current_tool]=offset_e_multi
         self.max_e_multi[current_tool]=max_e_multi
         self.total_e_multi[current_tool]=total_e_multi
+        self.cutting = cutting
 
 
         # Finalize layers

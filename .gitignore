@@ -16,7 +16,3 @@ printrun/gcoder_line*.pyd
 
 /venv/
 /.vscode/
-/.vs
-/v3
-/slic3rconf.ini
-/dist/locale

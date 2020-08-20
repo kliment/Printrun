@@ -199,7 +199,7 @@ class Gviz(wx.Panel, BaseViz):
         self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
         self.fades = [wx.Pen(wx.Colour(int(250 - 0.6 ** i * 100), int(250 - 0.6 ** i * 100), int(200 - 0.4 ** i * 50)), penwidth) for i in range(6)]
-        self.penslist = [self.mainpen, self.travelpen, self.hlpen] + self.fades
+        self.penslist = [self.mainpen, self.arcpen, self.travelpen, self.hlpen] + self.fades
         self.bgcolor = wx.Colour()
         self.bgcolor.Set(bgcolor)
         self.blitmap = wx.Bitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
@@ -320,7 +320,7 @@ class Gviz(wx.Panel, BaseViz):
         scaled_arcs = [self._arc_scaler(a) for a in arcs]
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         for i in range(len(scaled_arcs)):
-            dc.SetPen(pens[i] if isinstance(pens, list) else pens)
+            dc.SetPen(pens[i] if isinstance(pens, numpy.ndarray) else pens)
             dc.DrawArc(*scaled_arcs[i])
 
     def repaint_everything(self):
@@ -502,7 +502,7 @@ class Gviz(wx.Panel, BaseViz):
 
                 if line is not None:
                     self.lines[viz_layer].append(line)
-                    self.pens[viz_layer].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
+                    self.pens[viz_layer].append(self.mainpen if target[3] != self.lastpos[3] or gline.extruding else self.travelpen)
                 elif arc is not None:
                     self.arcs[viz_layer].append(arc)
                     self.arcpens[viz_layer].append(self.arcpen)

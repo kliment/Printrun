@@ -32,7 +32,7 @@ def setting_add_tooltip(func):
             sep = "\n"
             if helptxt.find("\n") >= 0:
                 sep = "\n\n"
-        if self.default is not "":
+        if self.default != "":
             deftxt = _("Default: ")
             resethelp = _("(Control-doubleclick to reset to default value)")
             if len(repr(self.default)) > 10:
@@ -113,7 +113,7 @@ class wxSetting(Setting):
         self.value = self.widget.GetValue()
 
     def set_default(self, e):
-        if e.CmdDown() and e.ButtonDClick() and self.default is not "":
+        if e.CmdDown() and e.ButtonDClick() and self.default != "":
             self.widget.SetValue(self.default)
         else:
             e.Skip()
@@ -158,19 +158,27 @@ class ComboSetting(wxSetting):
 
     def get_specific_widget(self, parent):
         import wx
-        self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
+        readonly = isinstance(self.choices, tuple)
+        if readonly:
+            # wx.Choice drops its list on click, no need to click down arrow
+            # which is far to the right because of wx.EXPAND
+            self.widget = wx.Choice(parent, -1, choices = self.choices)
+            self.widget.GetValue = lambda: self.choices[self.widget.Selection]
+            self.widget.SetValue = lambda v: self.widget.SetSelection(self.choices.index(v))
+            self.widget.SetValue(self.value)
+        else:
+            self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
         return self.widget
 
 class SpinSetting(wxSetting):
 
     def __init__(self, name, default, min, max, label = None, help = None, group = None, increment = 0.1):
-        super(SpinSetting, self).__init__(name, default, label, help, group)
+        super().__init__(name, default, label, help, group)
         self.min = min
         self.max = max
         self.increment = increment
 
     def get_specific_widget(self, parent):
-        from wx.lib.agw.floatspin import FloatSpin
         import wx
         self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max)
         self.widget.SetDigits(0)
@@ -179,13 +187,37 @@ class SpinSetting(wxSetting):
         self.widget.GetValue = lambda: int(orig())
         return self.widget
 
+def MySpin(parent, digits, *args, **kw):
+    # in GTK 3.[01], spinner is not large enough to fit text
+    # Could be a class, but use function to avoid load errors if wx
+    # not installed
+    # If native wx.SpinCtrlDouble has problems in different platforms
+    # try agw
+    # from wx.lib.agw.floatspin import FloatSpin
+    import wx
+    sp = wx.SpinCtrlDouble(parent, *args, **kw)
+    # sp = FloatSpin(parent)
+    sp.SetDigits(digits)
+    # sp.SetValue(kw['initial'])
+    def fitValue(ev):
+        text = '%%.%df'% digits % sp.Max
+        # native wx.SpinCtrlDouble does not return good size
+        # in GTK 3.0
+        tex = sp.GetTextExtent(text)
+        tsz = sp.GetSizeFromTextSize(tex.x)
+
+        if sp.MinSize.x < tsz.x:
+            # print('fitValue', getattr(sp, 'setting', None), sp.Value, sp.Digits, tsz.x)
+            sp.MinSize = tsz
+            # sp.Size = tsz
+    # sp.Bind(wx.EVT_TEXT, fitValue)
+    fitValue(None)
+    return sp
+
 class FloatSpinSetting(SpinSetting):
 
     def get_specific_widget(self, parent):
-        from wx.lib.agw.floatspin import FloatSpin
-        import wx
-        self.widget = wx.SpinCtrlDouble(parent, -1, initial = self.value, min = self.min, max = self.max, inc = self.increment)
-        self.widget.SetDigits(2)
+        self.widget = MySpin(parent, 2, initial = self.value, min = self.min, max = self.max, inc = self.increment)
         return self.widget
 
 class BooleanSetting(wxSetting):
@@ -247,10 +279,11 @@ class BuildDimensionsSetting(wxSetting):
         build_dimensions = parse_build_dimensions(self.value)
         self.widgets = []
         def w(val, m, M):
-            self.widgets.append(wx.SpinCtrlDouble(parent, -1, initial = val, min = m, max = M))
-            self.widgets[-1].SetDigits(2)
-        addlabel = lambda name, pos: self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
-        addwidget = lambda *pos: self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT, border = 5)
+            self.widgets.append(MySpin(parent, 2, initial = val, min = m, max = M))
+        def addlabel(name, pos):
+            self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
+        def addwidget(*pos):
+            self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT | wx.EXPAND, border = 5)
         self.widget = wx.GridBagSizer()
         addlabel(_("Width"), (0, 0))
         w(build_dimensions[0], 0, 2000)
@@ -272,13 +305,13 @@ class BuildDimensionsSetting(wxSetting):
         addwidget(1, 5)
         addlabel(_("X home pos."), (2, 0))
         w(build_dimensions[6], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 1))
+        addwidget(2, 1)
         addlabel(_("Y home pos."), (2, 2))
         w(build_dimensions[7], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 3))
+        addwidget(2, 3)
         addlabel(_("Z home pos."), (2, 4))
         w(build_dimensions[8], -2000, 2000)
-        self.widget.Add(self.widgets[-1], pos = (2, 5))
+        addwidget(2, 5)
         return self.widget
 
     def update(self):
@@ -296,7 +329,7 @@ class Settings:
         self._add(BooleanSetting("tcp_streaming_mode", False, _("TCP streaming mode"), _("When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands. This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
         self._add(BooleanSetting("rpc_server", True, _("RPC server"), _("Enable RPC server to allow remotely querying print status")), root.update_rpc_server)
         self._add(BooleanSetting("dtr", True, _("DTR"), _("Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"), "Printer"))
-        if(sys.platform!="win32"):
+        if sys.platform != "win32":
             self._add(StringSetting("devicepath", "", _("Device name pattern"), _("Custom device pattern: for example /dev/3DP_* "), "Printer"))
         self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed temperature for ABS"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"), root.set_temp_preset)
         self._add(SpinSetting("bedtemp_pla", 60, 0, 400, _("Bed temperature for PLA"), _("Heated Build Platform temp for PLA (deg C)"), "Printer"), root.set_temp_preset)
@@ -305,17 +338,15 @@ class Settings:
         self._add(SpinSetting("xy_feedrate", 3000, 0, 50000, _("X && Y manual feedrate"), _("Feedrate for Control Panel Moves in X and Y (mm/min)"), "Printer"))
         self._add(SpinSetting("z_feedrate", 100, 0, 50000, _("Z manual feedrate"), _("Feedrate for Control Panel Moves in Z (mm/min)"), "Printer"))
         self._add(SpinSetting("e_feedrate", 100, 0, 1000, _("E manual feedrate"), _("Feedrate for Control Panel Moves in Extrusions (mm/min)"), "Printer"))
-        defaultslicerpath=""
-        if sys.platform=="darwin" and getattr( sys, 'frozen', False ):
-            defaultslicerpath="/Applications/Slic3r.app/Contents/MacOS/"
-        if sys.platform=="win32" and getattr( sys, 'frozen', False ):
-            defaultslicerpath=".\\slic3r\\"
+        defaultslicerpath = ""
+        if getattr(sys, 'frozen', False):
+            if sys.platform == "darwin":
+                defaultslicerpath = "/Applications/Slic3r.app/Contents/MacOS/"
+            elif sys.platform == "win32":
+                defaultslicerpath = ".\\slic3r\\"
         self._add(StringSetting("slicecommandpath", defaultslicerpath, _("Path to slicer"), _("Path to slicer"), "External"))
-        self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
-        if sys.platform=="win32":
-            self._add(StringSetting("slicecommand", "slic3r-console $s --output $o", _("Slice command"), _("Slice command"), "External"))
-        else:
-            self._add(StringSetting("slicecommand", "slic3r $s --output $o", _("Slice command"), _("Slice command"), "External"))
+        slicer = 'slic3r-console' if sys.platform == 'win32' else 'slic3r'
+        self._add(StringSetting("slicecommand", slicer + ' $s --output $o', _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "slic3r", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("start_command", "", _("Start command"), _("Executable to run when the print is started"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))

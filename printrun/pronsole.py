@@ -420,7 +420,7 @@ class pronsole(cmd.Cmd):
                 self.log("Setting bed temp to 0")
             self.p.send_now("M140 S0.0")
         self.log("Disconnecting from printer...")
-        if self.p.printing and l is not "force":
+        if self.p.printing and l != "force":
             self.log(_("Are you sure you want to exit while printing?\n\
 (this will terminate the print)."))
             if not self.confirm():
@@ -631,6 +631,7 @@ class pronsole(cmd.Cmd):
             self.rc_filename = os.path.abspath(rc_filename)
             for rc_cmd in rc:
                 if not rc_cmd.lstrip().startswith("#"):
+                    logging.debug(rc_cmd.rstrip())
                     self.onecmd(rc_cmd)
             rc.close()
             if hasattr(self, "cur_macro_def"):
@@ -642,20 +643,21 @@ class pronsole(cmd.Cmd):
     def load_default_rc(self):
         # Check if a configuration file exists in an "old" location,
         # if not, use the "new" location provided by appdirs
-        if os.path.exists(os.path.expanduser("~/.pronsolerc")):
-            config = os.path.expanduser("~/.pronsolerc")
-        elif os.path.exists(os.path.expanduser("~/printrunconf.ini")):
-            config = os.path.expanduser("~/printrunconf.ini")
+        for f in '~/.pronsolerc', '~/printrunconf.ini':
+            expanded = os.path.expanduser(f)
+            if os.path.exists(expanded):
+                config = expanded
+                break
         else:
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
 
-            if platform.system() == 'Windows':
-                config_name = "printrunconf.ini"
-            else:
-                config_name = "pronsolerc"
+            config_name = ('printrunconf.ini'
+                            if platform.system() == 'Windows'
+                            else 'pronsolerc')
 
             config = os.path.join(self.config_dir, config_name)
+        logging.info('Loading config file ' + config)
 
         # Load the default configuration file
         try:

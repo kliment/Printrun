@@ -79,13 +79,16 @@ class GcodePlaterPanel(PlaterPanel):
 
     def prepare_ui(self, filenames = [], callback = None,
                    parent = None, build_dimensions = None,
-                   circular_platform = False, antialias_samples = 0):
+                   circular_platform = False,
+                   antialias_samples = 0,
+                   grid = (1, 10)):
         super(GcodePlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
                                        antialias_samples = antialias_samples)
         self.set_viewer(viewer)
         self.platform = actors.Platform(self.build_dimensions,
-                                        circular = circular_platform)
+                                        circular = circular_platform,
+                                        grid = grid)
         self.platform_object = gcview.GCObject(self.platform)
 
     def get_objects(self):

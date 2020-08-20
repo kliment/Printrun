@@ -63,7 +63,7 @@ class PronterfaceQuitException(Exception):
 
 from .gui import MainWindow
 from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
-    FloatSpinSetting, BooleanSetting, StaticTextSetting, ColorSetting
+    FloatSpinSetting, BooleanSetting, StaticTextSetting, ColorSetting, ComboSetting
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
@@ -76,14 +76,12 @@ class ConsoleOutputHandler:
         self.stderr = sys.stderr
         sys.stdout = self
         sys.stderr = self
+        self.print_on_stdout = not log_path
         if log_path:
-            self.print_on_stdout = False
             setup_logging(self, log_path, reset_handlers = True)
-            self.target = target
         else:
-            self.print_on_stdout = True
             setup_logging(sys.stdout, reset_handlers = True)
-            self.target = target
+        self.target = target
 
     def __del__(self):
         sys.stdout = self.stdout
@@ -100,17 +98,6 @@ class ConsoleOutputHandler:
     def flush(self):
         if self.stdout:
             self.stdout.flush()
-
-class ComboSetting(wxSetting):
-
-    def __init__(self, name, default, choices, label = None, help = None, group = None):
-        super(ComboSetting, self).__init__(name, default, label, help, group)
-        self.choices = choices
-
-    def get_specific_widget(self, parent):
-        import wx
-        self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
-        return self.widget
 
 class PronterWindow(MainWindow, pronsole.pronsole):
 
@@ -256,8 +243,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def reload_ui(self, *args):
         if not self.window_ready: return
-        temp_monitor=self.settings.monitor
-        self.settings.monitor=False
+        temp_monitor = self.settings.monitor
+        self.settings.monitor = False
         self.update_monitor()
         self.Freeze()
 
@@ -265,37 +252,35 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.ui_ready:
             # Store log console content
             logcontent = self.logbox.GetValue()
-            while self.menustrip.GetMenuCount():
-                self.menustrip.Remove(0)
-            if(len(self.commandbox.history)):
+            self.menustrip.SetMenus([])
+            if len(self.commandbox.history):
                 #save current command box history
-                history = (self.history_file)
-                if not os.path.exists(history):
+                if not os.path.exists(self.history_file):
                     if not os.path.exists(self.cache_dir):
                         os.makedirs(self.cache_dir)
-                write_history_to(history,self.commandbox.history)
+                write_history_to(self.history_file, self.commandbox.history)
             # Create a temporary panel to reparent widgets with state we want
             # to retain across UI changes
             temppanel = wx.Panel(self)
             # TODO: add viz widgets to statefulControls
-            statefuls=self.statefulControls
-            for control in statefuls:
-                    control.GetContainingSizer().Detach(control)
-                    control.Reparent(temppanel)
-            #self.panel.DestroyChildren() #do not destroy children when redrawing so that any timers currently running do not have references to missing objects - they get recreated if necessary anyway
+            for control in self.statefulControls:
+                control.GetContainingSizer().Detach(control)
+                control.Reparent(temppanel)
+            self.panel.DestroyChildren()
             self.gwindow.Destroy()
             self.reset_ui()
 
         # Create UI
         self.create_menu()
         self.update_recent_files("recentfiles", self.settings.recentfiles)
+        self.splitterwindow = None
         if self.settings.uimode in (_("Tabbed"), _("Tabbed with platers")):
             self.createTabbedGui()
         else:
             self.createGui(self.settings.uimode == _("Compact"),
                            self.settings.controlsmode == "Mini")
 
-        if hasattr(self, "splitterwindow"):
+        if self.splitterwindow:
             self.splitterwindow.SetSashPosition(self.settings.last_sash_position)
 
             def splitter_resize(event):
@@ -355,7 +340,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.do_exit("force")
 
     def kill(self, e=None):
-        if(len(self.commandbox.history)):
+        if len(self.commandbox.history):
                 #save current command box history
                 history = (self.history_file)
                 if not os.path.exists(history):
@@ -382,12 +367,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.gwindow.Destroy)
         wx.CallAfter(self.Destroy)
 
-    def _get_bgcolor(self):
-        if self.settings.bgcolor != "auto":
-            return self.settings.bgcolor
-        else:
-            return wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
-    bgcolor = property(_get_bgcolor)
+    @property
+    def bgcolor(self):
+        return (wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWFRAME)
+                if self.settings.bgcolor == 'auto'
+                else self.settings.bgcolor)
 
     #  --------------------------------------------------------------
     #  Main interface actions
@@ -434,7 +418,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M104 S" + l)
-                    self.log(_("Setting hotend temperature to %f degrees Celsius.") % f)
+                    self.log(_("Setting hotend temperature to %g degrees Celsius.") % f)
                     self.sethotendgui(f)
                 else:
                     self.logError(_("Printer is not online."))
@@ -454,7 +438,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M140 S" + l)
-                    self.log(_("Setting bed temperature to %f degrees Celsius.") % f)
+                    self.log(_("Setting bed temperature to %g degrees Celsius.") % f)
                     self.setbedgui(f)
                 else:
                     self.logError(_("Printer is not online."))
@@ -726,7 +710,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             currentLengthOfText = self.logbox.GetLastPosition()
             if self.autoscrolldisable:
                 self.logbox.Freeze()
-                (currentSelectionStart, currentSelectionEnd) = self.logbox.GetSelection()
+                currentSelectionStart, currentSelectionEnd = self.logbox.GetSelection()
                 self.logbox.SetInsertionPointEnd()
                 self.logbox.AppendText(text)
                 self.logbox.SetInsertionPoint(currentCaretPosition)
@@ -920,12 +904,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(BooleanSetting("display_progress_on_printer", False, _("Display progress on printer"), _("Show progress on printers display (sent via M117, might not be supported by all printers)"), "Printer"))
         self.settings._add(SpinSetting("printer_progress_update_interval", 10., 0, 120, _("Printer progress update interval"), _("Interval in which pronterface sends the progress to the printer if enabled, in seconds"), "Printer"))
+        self.settings._add(BooleanSetting("cutting_as_extrusion", True, _("Display cutting moves"), _("Show moves where spindle is active as printing moves"), "Printer"))
         self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), ], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
         #self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), _("Tabbed"), _("Tabbed with platers")], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
-        self.settings._add(ComboSetting("controlsmode", "Standard", ["Standard", "Mini"], _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
+        self.settings._add(ComboSetting("controlsmode", "Standard", ("Standard", "Mini"), _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
-        self.settings._add(ComboSetting("mainviz", "3D", ["2D", "3D", "None"], _("Main visualization"), _("Select visualization for main window."), "Viewer"), self.reload_ui)
+        self.settings._add(ComboSetting("mainviz", "3D", ("2D", "3D", "None"), _("Main visualization"), _("Select visualization for main window."), "Viewer"), self.reload_ui)
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "Viewer"), self.reload_ui)
         self.settings._add(StaticTextSetting("separator_3d_viewer", _("3D viewer options"), "", group = "Viewer"))
         self.settings._add(BooleanSetting("light3d", False, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "Viewer"), self.reload_ui)
@@ -1050,9 +1035,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def update_bed_viz(self, *args):
         """Update bed visualization when size/type changed"""
         if hasattr(self, "gviz") and hasattr(self.gviz, "recreate_platform"):
-            self.gviz.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
+            self.gviz.recreate_platform(self.build_dimensions_list, self.settings.circular_bed,
+                grid = (self.settings.preview_grid_step1, self.settings.preview_grid_step2))
         if hasattr(self, "gwindow") and hasattr(self.gwindow, "recreate_platform"):
-            self.gwindow.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
+            self.gwindow.recreate_platform(self.build_dimensions_list, self.settings.circular_bed,
+                grid = (self.settings.preview_grid_step1, self.settings.preview_grid_step2))
 
     def update_gcview_params(self, *args):
         need_reload = False
@@ -1096,7 +1083,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
                     #":" seems to be some kind of seperator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
-                    logging.info(("The progress should be updated on the printer now: " + printer_progress_string))
                     if len(printer_progress_string) > 25:
                         logging.info("Warning: The print progress message might be too long to be displayed properly")
                     #13 chars for up to 99h est.
@@ -1521,7 +1507,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if self.settings.mainviz == "None":
             gcode = gcoder.LightGCode(deferred = True)
         else:
-            gcode = gcoder.GCode(deferred = True)
+            gcode = gcoder.GCode(deferred = True, cutting_as_extrusion = self.settings.cutting_as_extrusion)
         self.viz_last_yield = 0
         self.viz_last_layer = -1
         self.start_viz_thread(gcode)

@@ -77,6 +77,23 @@ cdef class GLine:
     def __init__(self, line):
         self.raw = line
 
+    def __copy__(self):
+        c = GLine(self.raw)
+        c._command = copy_string(self.command)
+        c._x = self._x
+        c._y = self._y
+        c._z = self._z
+        c._e = self._e
+        c._f = self._f
+        c._i = self._i
+        c._j = self._j
+        c._current_x = self._current_x
+        c._current_y = self._current_y
+        c._current_z = self._current_z
+        c._gcview_end_vertex = self._gcview_end_vertex
+        c._status = self._status
+        return c
+
     def __dealloc__(self):
         if self._raw != NULL: free(self._raw)
         if self._command != NULL: free(self._command)
