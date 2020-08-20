@@ -94,9 +94,8 @@ class Platform:
     """
     Platform on which models are placed.
     """
-    graduations_major = 10
 
-    def __init__(self, build_dimensions, light = False, circular = False):
+    def __init__(self, build_dimensions, light = False, circular = False, grid = (1, 10)):
         self.light = light
         self.circular = circular
         self.width = build_dimensions[0]
@@ -105,6 +104,7 @@ class Platform:
         self.xoffset = build_dimensions[3]
         self.yoffset = build_dimensions[4]
         self.zoffset = build_dimensions[5]
+        self.grid = grid
 
         self.color_grads_minor = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
         self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
@@ -123,9 +123,9 @@ class Platform:
         glTranslatef(self.xoffset, self.yoffset, self.zoffset)
 
         def color(i):
-            if i % self.graduations_major == 0:
+            if i % self.grid[1] == 0:
                 glColor4f(*self.color_grads_major)
-            elif i % (self.graduations_major // 2) == 0:
+            elif i % (self.grid[1] // 2) == 0:
                 glColor4f(*self.color_grads_interm)
             else:
                 if self.light: return False
@@ -135,26 +135,26 @@ class Platform:
         # draw the grid
         glBegin(GL_LINES)
         if self.circular:  # Draw a circular grid
-            for i in range(0, int(math.ceil(self.width + 1))):
+            for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 angle = math.asin(2 * float(i) / self.width - 1)
                 x = (math.cos(angle) + 1) * self.depth / 2
                 if color(i):
                     glVertex3f(float(i), self.depth - x, 0.0)
                     glVertex3f(float(i), x, 0.0)
 
-            for i in range(0, int(math.ceil(self.depth + 1))):
+            for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
                 angle = math.acos(2 * float(i) / self.depth - 1)
                 x = (math.sin(angle) + 1) * self.width / 2
                 if color(i):
                     glVertex3f(self.width - x, float(i), 0.0)
                     glVertex3f(x, float(i), 0.0)
         else:  # Draw a rectangular grid
-            for i in range(0, int(math.ceil(self.width + 1))):
+            for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 if color(i):
                     glVertex3f(float(i), 0.0, 0.0)
                     glVertex3f(float(i), self.depth, 0.0)
 
-            for i in range(0, int(math.ceil(self.depth + 1))):
+            for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
                 if color(i):
                     glVertex3f(0, float(i), 0.0)
                     glVertex3f(self.width, float(i), 0.0)

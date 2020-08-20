@@ -71,7 +71,8 @@ class StlViewPanel(wxGLPanel):
 
     def __init__(self, parent, size,
                  build_dimensions = None, circular = False,
-                 antialias_samples = 0):
+                 antialias_samples = 0,
+                 grid = (1, 10)):
         super().__init__(parent, wx.DefaultPosition, size, 0,
                                            antialias_samples = antialias_samples)
         self.batches = []
@@ -87,7 +88,8 @@ class StlViewPanel(wxGLPanel):
         else:
             self.build_dimensions = [200, 200, 100, 0, 0, 0]
         self.platform = actors.Platform(self.build_dimensions,
-                                        circular = circular)
+                                        circular = circular,
+                                        grid = grid)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.forceresize) #why needed

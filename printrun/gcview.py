@@ -51,8 +51,8 @@ def set_model_colors(model, root):
             if hasattr(root, root_fieldname):
                 setattr(model, field, getattr(root, root_fieldname))
 
-def recreate_platform(self, build_dimensions, circular):
-    self.platform = actors.Platform(build_dimensions, circular = circular)
+def recreate_platform(self, build_dimensions, circular, grid):
+    self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
     self.objects[0].model = self.platform
     wx.CallAfter(self.Refresh)
 
@@ -348,7 +348,7 @@ class GcodeViewLoader:
 from printrun.gviz import BaseViz
 class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
 
-    def __init__(self, parent, build_dimensions, root, circular, antialias_samples):
+    def __init__(self, parent, build_dimensions, root, circular, antialias_samples, grid):
         self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions,
@@ -360,7 +360,8 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
         self.widget = self.glpanel
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self  # Hack for backwards compatibility with gviz API
-        self.platform = actors.Platform(build_dimensions, circular = circular)
+        self.grid = grid
+        self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
         self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
@@ -381,8 +382,8 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
-    def recreate_platform(self, build_dimensions, circular):
-        return recreate_platform(self, build_dimensions, circular)
+    def recreate_platform(self, build_dimensions, circular, grid):
+        return recreate_platform(self, build_dimensions, circular, grid)
 
     def setlayer(self, layer):
         if layer in self.model.layer_idxs_map:
@@ -401,7 +402,8 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
     def __init__(self, parent, ID, title, build_dimensions, objects = None,
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
                  style = wx.DEFAULT_FRAME_STYLE, root = None, circular = False,
-                 antialias_samples = 0):
+                 antialias_samples = 0,
+                 grid = (1, 10)):
         GvizBaseFrame.__init__(self, parent, ID, title,
                                pos, size, style)
         self.root = root
@@ -411,7 +413,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self  # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
-        self.platform = actors.Platform(build_dimensions, circular = circular)
+        self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
         self.model = objects[1].model if objects else None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
@@ -465,8 +467,8 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
-    def recreate_platform(self, build_dimensions, circular):
-        return recreate_platform(self, build_dimensions, circular)
+    def recreate_platform(self, build_dimensions, circular, grid):
+        return recreate_platform(self, build_dimensions, circular, grid)
 
     def addfile(self, gcode = None):
         if self.clonefrom:

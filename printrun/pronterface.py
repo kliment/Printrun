@@ -1034,9 +1034,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def update_bed_viz(self, *args):
         """Update bed visualization when size/type changed"""
         if hasattr(self, "gviz") and hasattr(self.gviz, "recreate_platform"):
-            self.gviz.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
+            self.gviz.recreate_platform(self.build_dimensions_list, self.settings.circular_bed,
+                grid = (self.settings.preview_grid_step1, self.settings.preview_grid_step2))
         if hasattr(self, "gwindow") and hasattr(self.gwindow, "recreate_platform"):
-            self.gwindow.recreate_platform(self.build_dimensions_list, self.settings.circular_bed)
+            self.gwindow.recreate_platform(self.build_dimensions_list, self.settings.circular_bed,
+                grid = (self.settings.preview_grid_step1, self.settings.preview_grid_step2))
 
     def update_gcview_params(self, *args):
         need_reload = False
