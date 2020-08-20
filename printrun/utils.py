@@ -30,16 +30,19 @@ def set_utf8_locale():
     if encoding != 'UTF-8':
         locale.setlocale(locale.LC_CTYPE, (lang, 'UTF-8'))
 
-# Set up Internationalization using gettext
-# searching for installed locales on /usr/share; uses relative folder if not
-# found (windows)
 def install_locale(domain):
+    # Set up Internationalization using gettext
+    # searching for installed locales on /usr/share; uses relative folder if
+    # not found (windows)
+    translation = None
+    lang = locale.getdefaultlocale()
     if os.path.exists('/usr/share/pronterface/locale'):
-        gettext.install(domain, '/usr/share/pronterface/locale')
+        translation = gettext.translation(domain, '/usr/share/pronterface/locale', languages=[lang[0]], fallback= True)
     elif os.path.exists('/usr/local/share/pronterface/locale'):
-        gettext.install(domain, '/usr/local/share/pronterface/locale')
+        translation = gettext.translation(domain, '/usr/local/share/pronterface/locale', languages=[lang[0]], fallback= True)
     else:
-        gettext.install(domain, './locale')
+        translation = gettext.translation(domain, './locale', languages=[lang[0]], fallback= True)
+    translation.install()
 
 class LogFormatter(logging.Formatter):
     def __init__(self, format_default, format_info):
