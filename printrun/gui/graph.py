@@ -61,8 +61,6 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = parent_graph.extruder1targettemps
             self.bedtemps = parent_graph.bedtemps
             self.bedtargettemps = parent_graph.bedtargettemps
-            self.bed1temps = parent_graph.bed1temps #AGe add bed1
-            self.bed1targettemps = parent_graph.bed1targettemps #AGe add bed1
             self.fanpowers=parent_graph.fanpowers
         else:
             self.extruder0temps = [0]
@@ -71,8 +69,6 @@ class Graph(BufferedCanvas):
             self.extruder1targettemps = [0]
             self.bedtemps = [0]
             self.bedtargettemps = [0]
-            self.bed1temps = [0] #AGe add bed1
-            self.bed1targettemps = [0] #AGe add bed1
             self.fanpowers= [0]
 
         self.timer = wx.Timer(self)
@@ -116,8 +112,6 @@ class Graph(BufferedCanvas):
         # print('updateTemperatures')
         self.AddBedTemperature(self.bedtemps[-1])
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
-        self.AddBed1Temperature(self.bed1temps[-1]) #AGe add bed1
-        self.AddBed1TargetTemperature(self.bed1targettemps[-1]) #AGe add bed1
         self.AddExtruder0Temperature(self.extruder0temps[-1])
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
         self.AddExtruder1Temperature(self.extruder1temps[-1])
@@ -314,29 +308,21 @@ class Graph(BufferedCanvas):
         self.drawtemperature(dc, gc, self.bedtargettemps,
                              "Bed Target", 2, 255, 120, 0, 128)
 
-    def drawbed1temp(self, dc, gc): #AGe add bed1
-        self.drawtemperature(dc, gc, self.bed1temps,
-                             "Bed 1", 5, 255, 0, 0, 128)
-
-    def drawbed1targettemp(self, dc, gc): #AGe add bed1
-        self.drawtemperature(dc, gc, self.bed1targettemps,
-                             "Bed 1 Target", 5, 255, 120, 0, 128)
-
     def drawextruder0temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0temps,
-                             "Ex0", 3, 0, 155, 255, 128)
+                             "Ex0", 1, 0, 155, 255, 128)
 
     def drawextruder0targettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0targettemps,
-                             "Ex0 Target", 3, 0, 5, 255, 128)
+                             "Ex0 Target", 2, 0, 5, 255, 128)
 
     def drawextruder1temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder1temps,
-                             "Ex1", 4, 55, 55, 0, 128)
+                             "Ex1", 3, 55, 55, 0, 128)
 
     def drawextruder1targettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder1targettemps,
-                             "Ex1 Target", 4, 55, 55, 0, 128)
+                             "Ex1 Target", 2, 55, 55, 0, 128)
 
     def SetFanPower(self, value):
         self.fanpowers.pop()
@@ -364,24 +350,6 @@ class Graph(BufferedCanvas):
         self.bedtargettemps.append(value)
         if float(len(self.bedtargettemps) - 1) / self.xsteps > 1:
             self.bedtargettemps.pop(0)
-
-    def SetBed1Temperature(self, value): #AGe add bed1
-        self.bed1temps.pop()
-        self.bed1temps.append(value)
-
-    def AddBed1Temperature(self, value): #AGe add bed1
-        self.bed1temps.append(value)
-        if float(len(self.bed1temps) - 1) / self.xsteps > 1:
-            self.bed1temps.pop(0)
-
-    def SetBed1TargetTemperature(self, value): #AGe add bed1
-        self.bed1targettemps.pop()
-        self.bed1targettemps.append(value)
-
-    def AddBed1TargetTemperature(self, value): #AGe add bed1
-        self.bed1targettemps.append(value)
-        if float(len(self.bed1targettemps) - 1) / self.xsteps > 1:
-            self.bed1targettemps.pop(0)
 
     def SetExtruder0Temperature(self, value):
         self.extruder0temps.pop()
@@ -447,9 +415,6 @@ class Graph(BufferedCanvas):
 
         self.drawbedtargettemp(dc, gc)
         self.drawbedtemp(dc, gc)
-        if self.bed1targettemps[-1]>0 or self.bed1temps[-1]>5: #AGe add
-            self.drawbed1targettemp(dc, gc) #AGe add
-            self.drawbed1temp(dc, gc) #AGe add
         self.drawfanpower(dc, gc)
         self.drawextruder0targettemp(dc, gc)
         self.drawextruder0temp(dc, gc)
@@ -492,7 +457,7 @@ class Graph(BufferedCanvas):
                 bounds = self.getBoundsQuick()
                 self.graph.minyvalue, self.graph.maxyvalue = bounds
 
-        def getBounds(self): # AGe to do Check bounds for bed1
+        def getBounds(self):
             """
             Calculates the bounds based on the current temperatures
 
@@ -515,9 +480,6 @@ class Graph(BufferedCanvas):
             bed_min = min(self.graph.bedtemps)
             bed_max = max(self.graph.bedtemps)
             bed_target = self.graph.bedtargettemps[-1]
-            bed1_min = min(self.graph.bed1temps) #AGe add
-            bed1_max = max(self.graph.bed1temps) #AGe add
-            bed1_target = self.graph.bed1targettemps[-1] #AGe add
 
             miny = min(extruder0_min, extruder0_target)
             maxy = max(extruder0_max, extruder0_target)
@@ -527,11 +489,8 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
-            if bed1_target > 0 or bed1_max > 5:  # use HBP2 # AGe Add
-                miny = min(miny, bed1_min, bed1_target) # AGe Add
-                maxy = max(maxy, bed1_max, bed1_target) # AGe Add
-            miny=min(0,miny);
-            maxy=max(260,maxy);
+            miny = min(0, miny)
+            maxy = max(260, maxy)
 
             padding = (maxy - miny) * self.buffer / (1.0 - 2 * self.buffer)
             miny -= padding
@@ -555,9 +514,6 @@ class Graph(BufferedCanvas):
             bed_min = self.graph.bedtemps[-1]
             bed_max = self.graph.bedtemps[-1]
             bed_target = self.graph.bedtargettemps[-1]
-            bed1_min = self.graph.bed1temps[-1] # AGe Add
-            bed1_max = self.graph.bed1temps[-1] # AGe Add
-            bed1_target = self.graph.bed1targettemps[-1] # AGe Add
 
             miny = min(extruder0_min, extruder0_target)
             maxy = max(extruder0_max, extruder0_target)
@@ -567,12 +523,8 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
-            if bed1_target > 0 or bed1_max > 5:  # use HBP1 # AGe Add
-                miny = min(miny, bed1_min, bed1_target) # AGe Add
-                maxy = max(maxy, bed1_max, bed1_target) # AGe Add
-            miny=min(0,miny);
-            maxy=max(260,maxy);
-
+            miny = min(0, miny)
+            maxy = max(260, maxy)
 
             # We have to rescale, so add padding
             bufratio = self.buffer / (1.0 - self.buffer)
