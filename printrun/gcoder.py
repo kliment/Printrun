@@ -46,6 +46,12 @@ class PyLine:
     def __getattr__(self, name):
         return None
 
+    def __copy__(self):
+        result = self.__class__.__new__(self.__class__)
+        for s in self.__slots__:
+            setattr(result, s, getattr(self, s))
+        return result
+
 class PyLightLine:
 
     __slots__ = ('raw', 'command')
