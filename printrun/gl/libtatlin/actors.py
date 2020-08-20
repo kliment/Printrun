@@ -335,6 +335,9 @@ def interpolate_arcs(gline, prev_gline):
         elif gline.command == "G2" and a_delta >= 0:
             a_delta -= math.pi * 2
 
+        z0 = prev_gline.current_z
+        dz = gline.current_z - z0
+
         # max segment size: 0.5mm, max num of segments: 100
         segments = math.ceil(abs(a_delta) * r * 2 / 0.5)
         if segments > 100:
@@ -346,7 +349,7 @@ def interpolate_arcs(gline, prev_gline):
             mid = InterpolationPoint(
                 cx + math.cos(a) * r,
                 cy + math.sin(a) * r,
-                gline.current_z
+                z0 + t / segments * dz
             )
             yield mid
 
