@@ -455,9 +455,9 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
-            if bed1_target > 0 or bed1_max > 5:  # use HBP2 # AGe Add
-                miny = min(miny, bed1_min, bed1_target) # AGe Add
-                maxy = max(maxy, bed1_max, bed1_target) # AGe Add
+           # if bed1_target > 0 or bed1_max > 5:  # use HBP2 # AGe Add
+           #     miny = min(miny, bed1_min, bed1_target) # AGe Add
+           #     maxy = max(maxy, bed1_max, bed1_target) # AGe Add
 
             miny=min(0,miny);
             maxy=max(260,maxy);
@@ -496,9 +496,9 @@ class Graph(BufferedCanvas):
             if bed_target > 0 or bed_max > 5:  # use HBP
                 miny = min(miny, bed_min, bed_target)
                 maxy = max(maxy, bed_max, bed_target)
-            if bed1_target > 0 or bed1_max > 5:  # use HBP1 # AGe Add
-                miny = min(miny, bed1_min, bed1_target) # AGe Add
-                maxy = max(maxy, bed1_max, bed1_target) # AGe Add
+          #  if bed1_target > 0 or bed1_max > 5:  # use HBP1 # AGe Add
+          #      miny = min(miny, bed1_min, bed1_target) # AGe Add
+          #      maxy = max(maxy, bed1_max, bed1_target) # AGe Add
             miny=min(0,miny);
             maxy=max(260,maxy);
 
