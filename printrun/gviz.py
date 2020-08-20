@@ -502,7 +502,7 @@ class Gviz(wx.Panel, BaseViz):
 
                 if line is not None:
                     self.lines[viz_layer].append(line)
-                    self.pens[viz_layer].append(self.mainpen if target[3] != self.lastpos[3] else self.travelpen)
+                    self.pens[viz_layer].append(self.mainpen if target[3] != self.lastpos[3] or gline.extruding else self.travelpen)
                 elif arc is not None:
                     self.arcs[viz_layer].append(arc)
                     self.arcpens[viz_layer].append(self.arcpen)
