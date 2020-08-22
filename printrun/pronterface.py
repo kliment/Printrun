@@ -176,6 +176,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.window_ready = True
         self.Bind(wx.EVT_CLOSE, self.closewin)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key)
         # set feedrates in printcore for pause/resume
         self.p.xy_feedrate = self.settings.xy_feedrate
         self.p.z_feedrate = self.settings.z_feedrate
@@ -334,6 +335,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def on_settings_change(self, changed_settings):
         if self.gviz:
             self.gviz.on_settings_change(changed_settings)
+
+    def on_key(self, event):
+        if not isinstance(event.EventObject, (wx.TextCtrl, wx.ComboBox)) \
+            or event.HasModifiers():
+            ch = chr(event.KeyCode)
+            keys = {'B': self.btemp, 'H': self.htemp, 'J': self.xyb, 'S': self.commandbox,
+                'V': self.gviz}
+            widget = keys.get(ch)
+            #ignore Alt+(S, H), so it can open Settings, Help menu
+            if widget and (ch not in 'SH' or not event.AltDown()):
+                widget.SetFocus()
+        event.Skip()
 
     def closewin(self, e):
         e.StopPropagation()
@@ -759,7 +772,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         # File menu
         m = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open..."), _(" Open file")))
+        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open...\tCtrl+O"), _(" Open file")))
         self.savebtn = m.Append(-1, _("&Save..."), _(" Save file"))
         self.savebtn.Enable(False)
         self.Bind(wx.EVT_MENU, self.savefile, self.savebtn)
@@ -770,7 +783,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
         m.Append(wx.ID_ANY, _("&Recent Files"), recent)
-        self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console"), _(" Clear output console")))
+        self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console\tCtrl+L"), _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
 
@@ -1147,8 +1160,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if self.paused:
             self.p.paused = 0
             self.p.printing = 0
-            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.pausebtn.SetLabel, _("&Pause"))
+            wx.CallAfter(self.printbtn.SetLabel, _("&Print"))
             wx.CallAfter(self.toolbarsizer.Layout)
             self.paused = 0
             if self.sdprinting:
@@ -1177,7 +1190,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.status_thread.join()
             self.status_thread = None
 
-        wx.CallAfter(self.connectbtn.SetLabel, _("Connect"))
+        wx.CallAfter(self.connectbtn.SetLabel, _("&Connect"))
         wx.CallAfter(self.connectbtn.SetToolTip, wx.ToolTip(_("Connect to the printer")))
         wx.CallAfter(self.connectbtn.Bind, wx.EVT_BUTTON, self.connect)
 
@@ -1186,8 +1199,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if self.paused:
             self.p.paused = 0
             self.p.printing = 0
-            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.pausebtn.SetLabel, _("&Pause"))
+            wx.CallAfter(self.printbtn.SetLabel, _("&Print"))
             self.paused = 0
             if self.sdprinting:
                 self.p.send_now("M26 S0")
@@ -1203,10 +1216,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.sethotendgui(0)
             self.setbedgui(0)
             self.p.printing = 0
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.printbtn.SetLabel, _("&Print"))
             if self.paused:
                 self.p.paused = 0
-                wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+                wx.CallAfter(self.pausebtn.SetLabel, _("&Pause"))
                 self.paused = 0
             wx.CallAfter(self.toolbarsizer.Layout)
         dlg.Destroy()
@@ -1216,7 +1229,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     #  --------------------------------------------------------------
 
     def on_startprint(self):
-        wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+        wx.CallAfter(self.pausebtn.SetLabel, _("&Pause"))
         wx.CallAfter(self.pausebtn.Enable)
         wx.CallAfter(self.printbtn.SetLabel, _("Restart"))
         wx.CallAfter(self.toolbarsizer.Layout)
@@ -1303,7 +1316,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 self.p.send_now("M24")
             else:
                 self.p.resume()
-            wx.CallAfter(self.pausebtn.SetLabel, _("Pause"))
+            wx.CallAfter(self.pausebtn.SetLabel, _("&Pause"))
             wx.CallAfter(self.toolbarsizer.Layout)
 
     def recover(self, event):
@@ -1520,18 +1533,18 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def post_gcode_load(self, print_stats = True, failed=False):
         # Must be called in wx.CallAfter for safety
         self.loading_gcode = False
-        if failed == False:
+        if not failed:
             self.SetTitle(_("Pronterface - %s") % self.filename)
             message = _("Loaded %s, %d lines") % (self.filename, len(self.fgcode),)
             self.log(message)
             self.statusbar.SetStatusText(message)
             self.savebtn.Enable(True)
         self.loadbtn.SetLabel(_("Load File"))
-        self.printbtn.SetLabel(_("Print"))
-        self.pausebtn.SetLabel(_("Pause"))
+        self.printbtn.SetLabel(_("&Print"))
+        self.pausebtn.SetLabel(_("&Pause"))
         self.pausebtn.Disable()
         self.recoverbtn.Disable()
-        if failed==False and self.p.online:
+        if not failed and self.p.online:
             self.printbtn.Enable()
         self.toolbarsizer.Layout()
         self.viz_last_layer = None
@@ -1675,7 +1688,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 printer_progress_string = "M117 Finished Print"
                 self.p.send_now(printer_progress_string)
             wx.CallAfter(self.pausebtn.Disable)
-            wx.CallAfter(self.printbtn.SetLabel, _("Print"))
+            wx.CallAfter(self.printbtn.SetLabel, _("&Print"))
             wx.CallAfter(self.toolbarsizer.Layout)
 
     def online(self):
@@ -1685,7 +1698,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def online_gui(self):
         """Callback when printer goes online (graphical bits)"""
-        self.connectbtn.SetLabel(_("Disconnect"))
+        self.connectbtn.SetLabel(_("Dis&connect"))
         self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
 

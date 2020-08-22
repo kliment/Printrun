@@ -273,6 +273,10 @@ class GcodeViewPanel(wxGLPanel):
 
     def keypress(self, event):
         """gets keypress events and moves/rotates active shape"""
+        if event.HasModifiers():
+            # let alt+c bubble up
+            event.Skip()
+            return
         step = event.ControlDown() and 1.05 or 1.1
         key = event.GetKeyCode()
         if key in LAYER_UP_KEYS:
