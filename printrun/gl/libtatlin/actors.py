@@ -346,25 +346,14 @@ def interpolate_arcs(gline, prev_gline):
         for t in range(segments):
             a = t / segments * a_delta + a_start
 
-            mid = InterpolationPoint(
+            mid = (
                 cx + math.cos(a) * r,
                 cy + math.sin(a) * r,
                 z0 + t / segments * dz
             )
             yield mid
 
-    yield gline
-
-class InterpolationPoint:
-    __slots__ = ('current_x', 'current_y', 'current_z')
-
-    def __init__(self, x, y, z):
-        self.current_x = x
-        self.current_y = y
-        self.current_z = z
-
-    def __getattr__(self, name):
-        return None
+    yield (gline.current_x, gline.current_y, gline.current_z)
 
 
 class GcodeModel(Model):
@@ -487,8 +476,7 @@ class GcodeModel(Model):
                     if gline.x is None and gline.y is None and gline.z is None:
                         continue
                     has_movement = True
-                    for point in interpolate_arcs(gline, prev_gline):
-                        current_pos = (point.current_x, point.current_y, point.current_z)
+                    for current_pos in interpolate_arcs(gline, prev_gline):
                         if not gline.extruding:
                             if self.travels.size < (travel_vertex_k + 100 * 6):
                                 # arc interpolation extra points allocation
@@ -966,8 +954,7 @@ class GcodeModelLight(Model):
                         continue
 
                     has_movement = True
-                    for point in interpolate_arcs(gline, prev_gline):
-                        current_pos = (point.current_x, point.current_y, point.current_z)
+                    for current_pos in interpolate_arcs(gline, prev_gline):
 
                         if self.vertices.size < (vertex_k + 100 * 6):
                             # arc interpolation extra points allocation
