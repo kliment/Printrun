@@ -52,7 +52,8 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
     self.Add(root.baud)
 
     if not hasattr(root, "connectbtn"):
-        root.connectbtn = make_autosize_button(parentpanel, _("Connect"), root.connect, _("Connect to the printer"))
+        root.connectbtn_cb_var = root.connect
+        root.connectbtn = make_autosize_button(parentpanel, _("&Connect"), root.connectbtn_cb, _("Connect to the printer"))
         root.statefulControls.append(root.connectbtn)
     else:
         root.connectbtn.Reparent(parentpanel)

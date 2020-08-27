@@ -47,7 +47,9 @@ class ZButtons(FocusCanvas):
         self.bgcolor.Set(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        super().__init__(parent, ID, size=self.bg_bmp.GetSize())
+        # On MS Windows super(style=WANTS_CHARS) prevents tab cycling
+        # pass empty style explicitly
+        super().__init__(parent, ID, size=self.bg_bmp.GetSize(), style=0)
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)

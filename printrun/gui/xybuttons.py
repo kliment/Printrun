@@ -42,7 +42,7 @@ class FocusCanvas(BufferedCanvas):
             pen = wx.Pen(wx.BLACK, 1, wx.PENSTYLE_USER_DASH)
             pen.SetDashes(DASHES)
             dc.Pen = pen
-            dc.Brush = wx.NullBrush
+            dc.Brush = wx.Brush(wx.TRANSPARENT_BRUSH)
             dc.DrawRectangle(self.ClientRect)
 
 class XYButtons(FocusCanvas):
@@ -333,8 +333,12 @@ class XYButtons(FocusCanvas):
                 keypad = self.cycleKeypadIndex(not evt.ShiftDown())
                 self.setKeypadIndex(keypad)
                 if keypad == -1:
-                    # exit widget after largest step 
-                    evt.Skip()
+                    # exit widget after largest step
+                    # evt.Skip()
+                    # On MS Windows if tab event is delivered,
+                    # it is not handled
+                    self.Navigate(not evt.ShiftDown())
+                    return
             elif key == wx.WXK_ESCAPE:
                 self.setKeypadIndex(-1)
             elif key == wx.WXK_UP:

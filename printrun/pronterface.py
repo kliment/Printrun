@@ -346,6 +346,27 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             #ignore Alt+(S, H), so it can open Settings, Help menu
             if widget and (ch not in 'SH' or not event.AltDown()):
                 widget.SetFocus()
+                return
+            # On MSWindows button mnemonics are processed only if the
+            # focus is in the parent panel
+            if event.AltDown() and ch < 'Z':
+                in_toolbar = self.toolbarsizer.GetItem(event.EventObject)
+                candidates = (self.connectbtn, self.connectbtn_cb_var), \
+                            (self.pausebtn, self.pause), \
+                            (self.printbtn, self.printfile)
+                for ctl, cb in candidates:
+                    match = ('&' + ch) in ctl.Label.upper()
+                    handled = in_toolbar and match
+                    if handled:
+                        break
+                    # react to 'P' even for 'Restrart', 'Resume'
+                    # print('match', match, 'handled', handled, ctl.Label, ctl.Enabled)
+                    if (match or ch == 'P' and ctl != self.connectbtn) and ctl.Enabled:
+                        # print('call', ch, cb)
+                        cb()
+                        # react to only 1 of 'P' buttons, prefer Resume
+                        return
+
         event.Skip()
 
     def closewin(self, e):
@@ -1142,6 +1163,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     #  Printer connection handling
     #  --------------------------------------------------------------
 
+    def connectbtn_cb(self, event):
+        # Implement toggle behavior with a single Bind
+        # and switched variable, so we have reference to
+        # the actual callback to use in on_key
+        self.connectbtn_cb_var()
+
     def connect(self, event = None):
         self.log(_("Connecting..."))
         port = None
@@ -1190,11 +1217,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.status_thread.join()
             self.status_thread = None
 
-        wx.CallAfter(self.connectbtn.SetLabel, _("&Connect"))
-        wx.CallAfter(self.connectbtn.SetToolTip, wx.ToolTip(_("Connect to the printer")))
-        wx.CallAfter(self.connectbtn.Bind, wx.EVT_BUTTON, self.connect)
-
-        wx.CallAfter(self.gui_set_disconnected)
+        def toggle():
+            self.connectbtn.SetLabel(_("&Connect"))
+            self.connectbtn.SetToolTip(wx.ToolTip(_("Connect to the printer")))
+            self.connectbtn_cb_var = self.connect
+            self.gui_set_disconnected()
+        wx.CallAfter(toggle)
 
         if self.paused:
             self.p.paused = 0
@@ -1234,7 +1262,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         wx.CallAfter(self.printbtn.SetLabel, _("Restart"))
         wx.CallAfter(self.toolbarsizer.Layout)
 
-    def printfile(self, event):
+    def printfile(self, event=None):
         self.extra_print_time = 0
         if self.paused:
             self.p.paused = 0
@@ -1700,7 +1728,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         """Callback when printer goes online (graphical bits)"""
         self.connectbtn.SetLabel(_("Dis&connect"))
         self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
-        self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
+        self.connectbtn_cb_var = self.disconnect
 
         if hasattr(self, "extrudersel"):
             self.do_tool(self.extrudersel.GetValue())
