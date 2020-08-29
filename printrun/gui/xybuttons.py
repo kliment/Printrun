@@ -23,13 +23,36 @@ def sign(n):
     elif n > 0: return 1
     else: return 0
 
-class XYButtons(BufferedCanvas):
+DASHES = [4, 7]
+# Brush and pen for grey overlay when mouse hovers over
+HOVER_PEN_COLOR = wx.Colour(100, 100, 100, 172)
+HOVER_BRUSH_COLOR = wx.Colour(0, 0, 0, 128)
+
+class FocusCanvas(BufferedCanvas):
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
+        self.Bind(wx.EVT_SET_FOCUS, self.onFocus)
+    
+    def onFocus(self, evt):
+        self.Refresh()
+        evt.Skip()
+
+    def drawFocusRect(self, dc):
+        if self.HasFocus():
+            pen = wx.Pen(wx.BLACK, 1, wx.PENSTYLE_USER_DASH)
+            pen.SetDashes(DASHES)
+            dc.Pen = pen
+            dc.Brush = wx.Brush(wx.TRANSPARENT_BRUSH)
+            dc.DrawRectangle(self.ClientRect)
+
+class XYButtons(FocusCanvas):
     keypad_positions = {
-        0: (106, 100),
+        0: (104, 99),
         1: (86, 83),
         2: (68, 65),
         3: (53, 50)
     }
+    keypad_radius = 9
     corner_size = (49, 49)
     corner_inset = (7, 13)
     label_overlay_positions = {
@@ -55,6 +78,7 @@ class XYButtons(BufferedCanvas):
         self.bg_bmp = wx.Image(imagefile(self.imagename), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.keypad_idx = -1
+        self.hovered_keypad = None
         self.quadrant = None
         self.concentric = None
         self.corner = None
@@ -71,7 +95,7 @@ class XYButtons(BufferedCanvas):
         self.bgcolor.Set(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())
+        super().__init__(parent, ID, size=self.bg_bmp.GetSize())
 
         self.bind_events()
 
@@ -81,15 +105,19 @@ class XYButtons(BufferedCanvas):
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
-        self.Bind(wx.EVT_KEY_UP, self.OnKey)
-        wx.GetTopLevelParent(self).Bind(wx.EVT_CHAR_HOOK, self.OnTopLevelKey)
+        self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
+        self.Bind(wx.EVT_KILL_FOCUS, self.onKillFocus)
+
+    def onKillFocus(self, evt):
+        self.setKeypadIndex(-1)
+        evt.Skip()
 
     def disable(self):
-        self.enabled = False
+        self.Enabled = self.enabled = False
         self.update()
 
     def enable(self):
-        self.enabled = True
+        self.Enabled = self.enabled = True
         self.update()
 
     def repeatLast(self):
@@ -112,21 +140,23 @@ class XYButtons(BufferedCanvas):
     def distanceToPoint(self, x1, y1, x2, y2):
         return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-    def cycleKeypadIndex(self):
-        idx = self.keypad_idx + 1
-        if idx > 2: idx = 0
-        return idx
+    def cycleKeypadIndex(self, forward):
+        idx = self.keypad_idx + (1 if forward else -1)
+        # do not really cycle to allow exiting of jog controls widget
+        return idx if idx < len(self.keypad_positions) else -1
 
     def setKeypadIndex(self, idx):
         self.keypad_idx = idx
         self.update()
 
-    def getMovement(self):
+    def getMovement(self, event):
         xdir = [1, 0, -1, 0, 0, 0][self.quadrant]
         ydir = [0, 1, 0, -1, 0, 0][self.quadrant]
         zdir = [0, 0, 0, 0, 1, -1][self.quadrant]
         magnitude = math.pow(10, self.concentric - 2)
-        if not zdir == 0:
+        magnitude *= event.ShiftDown() and 2 or event.ControlDown() and 0.5 or 1
+
+        if zdir:
             magnitude = min(magnitude, 10)
         return (magnitude * xdir, magnitude * ydir, magnitude * zdir)
 
@@ -141,7 +171,6 @@ class XYButtons(BufferedCanvas):
     def getQuadrantConcentricFromPosition(self, pos):
         rel_x = pos[0] - self.center[0]
         rel_y = pos[1] - self.center[1]
-        radius = math.sqrt(rel_x ** 2 + rel_y ** 2)
         if rel_x > rel_y and rel_x > -rel_y:
             quadrant = 0  # Right
         elif rel_x <= rel_y and rel_x > -rel_y:
@@ -151,13 +180,14 @@ class XYButtons(BufferedCanvas):
         else:
             quadrant = 2  # Left
 
+        radius = math.sqrt(rel_x ** 2 + rel_y ** 2)
         idx = self.lookupConcentric(radius)
         return (quadrant, idx)
 
     def mouseOverKeypad(self, mpos):
-        for idx, kpos in list(self.keypad_positions.items()):
+        for idx, kpos in self.keypad_positions.items():
             radius = self.distanceToPoint(mpos[0], mpos[1], kpos[0], kpos[1])
-            if radius < 9:
+            if radius < XYButtons.keypad_radius:
                 return idx
         return None
 
@@ -172,7 +202,8 @@ class XYButtons(BufferedCanvas):
         gc.DrawPath(path)
 
     def highlightQuadrant(self, gc, quadrant, concentric):
-        assert(quadrant >= 0 and quadrant <= 3)
+        if not 0 <= quadrant <= 3:
+            return
         assert(concentric >= 0 and concentric <= 4)
 
         inner_ring_radius = self.concentric_inset
@@ -247,9 +278,8 @@ class XYButtons(BufferedCanvas):
             gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
 
         if self.enabled and self.IsEnabled():
-            # Brush and pen for grey overlay when mouse hovers over
-            gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
+            gc.SetPen(wx.Pen(HOVER_PEN_COLOR, 4))
+            gc.SetBrush(wx.Brush(HOVER_BRUSH_COLOR))
 
             if self.concentric is not None:
                 if self.concentric < len(self.concentric_circle_radii):
@@ -266,10 +296,15 @@ class XYButtons(BufferedCanvas):
                 pos = (pos[0] - padw / 2 - 3, pos[1] - padh / 2 - 3)
                 gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], padw, padh)
 
+            if self.hovered_keypad is not None and self.hovered_keypad != self.keypad_idx:
+                pos = self.keypad_positions[self.hovered_keypad]
+                r = XYButtons.keypad_radius
+                gc.DrawEllipse(pos[0]-r/2, pos[1]-r/2, r, r)
+
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
             gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128 + 64)))
-            for idx, kpos in list(self.label_overlay_positions.items()):
+            for idx, kpos in self.label_overlay_positions.items():
                 if idx != self.concentric:
                     r = kpos[2]
                     gc.DrawEllipse(kpos[0] - r, kpos[1] - r, r * 2, r * 2)
@@ -277,6 +312,9 @@ class XYButtons(BufferedCanvas):
             gc.SetPen(wx.Pen(self.bgcolor, 0))
             gc.SetBrush(wx.Brush(self.bgcolormask))
             gc.DrawRectangle(0, 0, w, h)
+    
+        self.drawFocusRect(dc)
+
         # Used to check exact position of keypad dots, should we ever resize the bg image
         # for idx, kpos in self.label_overlay_positions.items():
         #    dc.DrawCircle(kpos[0], kpos[1], kpos[2])
@@ -284,43 +322,57 @@ class XYButtons(BufferedCanvas):
     # ------ #
     # Events #
     # ------ #
-    def OnTopLevelKey(self, evt):
-        # Let user press escape on any control, and return focus here
-        if evt.GetKeyCode() == wx.WXK_ESCAPE:
-            self.SetFocus()
-        evt.Skip()
-
     def OnKey(self, evt):
+        # print('XYButtons key', evt.GetKeyCode())
         if not self.enabled:
+            evt.Skip()
             return
+        key = evt.KeyCode
         if self.keypad_idx >= 0:
-            if evt.GetKeyCode() == wx.WXK_TAB:
-                self.setKeypadIndex(self.cycleKeypadIndex())
-            elif evt.GetKeyCode() == wx.WXK_UP:
+            if key == wx.WXK_TAB:
+                keypad = self.cycleKeypadIndex(not evt.ShiftDown())
+                self.setKeypadIndex(keypad)
+                if keypad == -1:
+                    # exit widget after largest step
+                    # evt.Skip()
+                    # On MS Windows if tab event is delivered,
+                    # it is not handled
+                    self.Navigate(not evt.ShiftDown())
+                    return
+            elif key == wx.WXK_ESCAPE:
+                self.setKeypadIndex(-1)
+            elif key == wx.WXK_UP:
                 self.quadrant = 1
-            elif evt.GetKeyCode() == wx.WXK_DOWN:
+            elif key == wx.WXK_DOWN:
                 self.quadrant = 3
-            elif evt.GetKeyCode() == wx.WXK_LEFT:
+            elif key == wx.WXK_LEFT:
                 self.quadrant = 2
-            elif evt.GetKeyCode() == wx.WXK_RIGHT:
+            elif key == wx.WXK_RIGHT:
                 self.quadrant = 0
-            elif evt.GetKeyCode() == wx.WXK_PAGEUP:
+            elif key == wx.WXK_PAGEUP:
                 self.quadrant = 4
-            elif evt.GetKeyCode() == wx.WXK_PAGEDOWN:
+            elif key == wx.WXK_PAGEDOWN:
                 self.quadrant = 5
             else:
                 evt.Skip()
                 return
 
-            self.concentric = self.keypad_idx
-            x, y, z = self.getMovement()
-
-            if x != 0 or y != 0 and self.moveCallback:
-                self.moveCallback(x, y)
-            if z != 0 and self.zCallback:
-                self.zCallback(z)
-        elif evt.GetKeyCode() == wx.WXK_SPACE:
+            self.concentric = self.keypad_idx + 1
+            
+            if self.quadrant is not None:
+                x, y, z = self.getMovement(evt)
+                if (x or y) and self.moveCallback:
+                    self.moveCallback(x, y)
+                if z and self.zCallback:
+                    self.zCallback(z)
+            self.Refresh()
+        elif key == wx.WXK_SPACE:
             self.spacebarCallback()
+        elif key == wx.WXK_TAB:
+            self.setKeypadIndex(len(self.keypad_positions)-1 if evt.ShiftDown() else 0)
+        else:
+            # handle arrows elsewhere
+            evt.Skip()
 
     def OnMotion(self, event):
         if not self.enabled:
@@ -328,12 +380,13 @@ class XYButtons(BufferedCanvas):
 
         oldcorner = self.corner
         oldq, oldc = self.quadrant, self.concentric
+        old_hovered_keypad = self.hovered_keypad
 
         mpos = event.GetPosition()
-        idx = self.mouseOverKeypad(mpos)
+        self.hovered_keypad = self.mouseOverKeypad(mpos)
         self.quadrant = None
         self.concentric = None
-        if idx is None:
+        if self.hovered_keypad is None:
             center = wx.Point(self.center[0], self.center[1])
             riseDist = self.distanceToLine(mpos, center.x - 1, center.y - 1, center.x + 1, center.y + 1)
             fallDist = self.distanceToLine(mpos, center.x - 1, center.y + 1, center.x + 1, center.y - 1)
@@ -353,7 +406,8 @@ class XYButtons(BufferedCanvas):
         if mpos.x < cx and mpos.y >= cy:
             self.corner = 3
 
-        if oldq != self.quadrant or oldc != self.concentric or oldcorner != self.corner:
+        if oldq != self.quadrant or oldc != self.concentric or oldcorner != self.corner \
+            or old_hovered_keypad != self.hovered_keypad:
             self.update()
 
     def OnLeftDown(self, event):
@@ -375,7 +429,7 @@ class XYButtons(BufferedCanvas):
                         self.lastMove = None
                         self.cornerCallback(self.corner_to_axis[-1])
                     elif self.quadrant is not None:
-                        x, y, z = self.getMovement()
+                        x, y, z = self.getMovement(event)
                         if self.moveCallback:
                             self.lastMove = (x, y)
                             self.lastCorner = None
@@ -386,10 +440,7 @@ class XYButtons(BufferedCanvas):
                         self.lastMove = None
                         self.cornerCallback(self.corner_to_axis[self.corner])
         else:
-            if self.keypad_idx == idx:
-                self.setKeypadIndex(-1)
-            else:
-                self.setKeypadIndex(idx)
+            self.setKeypadIndex(-1 if self.keypad_idx == idx else idx)
 
     def OnLeaveWindow(self, evt):
         self.quadrant = None
@@ -486,9 +537,8 @@ class XYButtonsMini(XYButtons):
             gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
 
         if self.enabled and self.IsEnabled():
-            # Brush and pen for grey overlay when mouse hovers over
-            gc.SetPen(wx.Pen(wx.Colour(100, 100, 100, 172), 4))
-            gc.SetBrush(wx.Brush(wx.Colour(0, 0, 0, 128)))
+            gc.SetPen(wx.Pen(HOVER_PEN_COLOR, 4))
+            gc.SetBrush(wx.Brush(HOVER_BRUSH_COLOR))
 
             if self.concentric is not None:
                 if self.concentric < len(self.concentric_circle_radii):

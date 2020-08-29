@@ -29,10 +29,10 @@ class XYZControlsSizer(wx.GridBagSizer):
         super(XYZControlsSizer, self).__init__()
         if not parentpanel: parentpanel = root.panel
         root.xyb = XYButtons(parentpanel, root.moveXY, root.homeButtonClicked, root.spacebarAction, root.bgcolor, zcallback=root.moveZ)
+        root.xyb.SetToolTip(_('[J]og controls. (Shift)+TAB ESC Shift/Ctrl+(arrows PgUp/PgDn)'))
         self.Add(root.xyb, pos = (0, 1), flag = wx.ALIGN_CENTER)
         root.zb = ZButtons(parentpanel, root.moveZ, root.bgcolor)
         self.Add(root.zb, pos = (0, 2), flag = wx.ALIGN_CENTER)
-        wx.CallAfter(root.xyb.SetFocus)
 
 def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode = False):
     standalone_mode = extra_buttons is not None
@@ -135,7 +135,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     add("htemp_off", root.settoff)
 
     root.htemp = wx.ComboBox(parentpanel, style = wx.CB_DROPDOWN, size = (115, -1))
-    root.htemp.SetToolTip(wx.ToolTip(_("Select Temperature for Hotend")))
+    root.htemp.SetToolTip(wx.ToolTip(_("Select Temperature for [H]otend")))
     root.htemp.Bind(wx.EVT_COMBOBOX, root.htemp_change)
 
     add("htemp_val", root.htemp)
@@ -151,7 +151,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     add("btemp_off", root.setboff)
 
     root.btemp = wx.ComboBox(parentpanel, style = wx.CB_DROPDOWN, size = (115, -1))
-    root.btemp.SetToolTip(wx.ToolTip(_("Select Temperature for Heated Bed")))
+    root.btemp.SetToolTip(wx.ToolTip(_("Select Temperature for Heated [B]ed")))
     root.btemp.Bind(wx.EVT_COMBOBOX, root.btemp_change)
     add("btemp_val", root.btemp)
 

@@ -14,7 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
-from .bufferedcanvas import BufferedCanvas
+from printrun.gui.xybuttons import FocusCanvas
 from printrun.utils import imagefile
 
 def sign(n):
@@ -22,7 +22,7 @@ def sign(n):
     elif n > 0: return 1
     else: return 0
 
-class ZButtons(BufferedCanvas):
+class ZButtons(FocusCanvas):
     button_ydistances = [7, 30, 55, 83]  # ,112
     move_values = [0.1, 1, 10]
     center = (30, 118)
@@ -47,19 +47,29 @@ class ZButtons(BufferedCanvas):
         self.bgcolor.Set(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        BufferedCanvas.__init__(self, parent, ID, size=self.bg_bmp.GetSize())
+        # On MS Windows super(style=WANTS_CHARS) prevents tab cycling
+        # pass empty style explicitly
+        super().__init__(parent, ID, size=self.bg_bmp.GetSize(), style=0)
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_DCLICK, self.OnLeftDown)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+        self.Bind(wx.EVT_SET_FOCUS, self.RefreshFocus)
+        self.Bind(wx.EVT_KILL_FOCUS, self.RefreshFocus)
+    
+    def RefreshFocus(self, evt):
+        self.Refresh()
+        evt.Skip()
 
     def disable(self):
+        self.Enabled = False # prevents focus
         self.enabled = False
         self.update()
 
     def enable(self):
+        self.Enabled = True
         self.enabled = True
         self.update()
 
@@ -123,6 +133,7 @@ class ZButtons(BufferedCanvas):
             gc.SetPen(wx.Pen(self.bgcolor, 0))
             gc.SetBrush(wx.Brush(self.bgcolormask))
             gc.DrawRectangle(0, 0, w, h)
+        self.drawFocusRect(dc)
 
     # ------ #
     # Events #
