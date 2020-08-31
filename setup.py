@@ -57,9 +57,12 @@ data_files = [
     ('share/applications', multiglob('*.desktop')),
     ('share/metainfo', multiglob('*.appdata.xml')),
     ('share/pronterface', multiglob('images/*.png',
-                                    'images/*.svg',
-                                    'locale/*/LC_MESSAGES/*.mo')),
+                                    'images/*.svg')),
 ]
+
+for locale in glob.glob('locale/*/LC_MESSAGES/'):
+    data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
+
 
 setup(
     name="Printrun",

@@ -34,10 +34,10 @@ def set_utf8_locale():
 # searching for installed locales on /usr/share; uses relative folder if not
 # found (windows)
 def install_locale(domain):
-    if os.path.exists('/usr/share/pronterface/locale'):
-        gettext.install(domain, '/usr/share/pronterface/locale')
-    elif os.path.exists('/usr/local/share/pronterface/locale'):
-        gettext.install(domain, '/usr/local/share/pronterface/locale')
+    if os.path.exists('/usr/share/locale'):
+        gettext.install(domain, '/usr/share/locale')
+    elif os.path.exists('/usr/local/share/locale'):
+        gettext.install(domain, '/usr/local/share/locale')
     else:
         gettext.install(domain, './locale')
 
