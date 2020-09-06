@@ -1292,7 +1292,7 @@ class pronsole(cmd.Cmd):
 
     def recvcb_report(self, l):
         isreport = REPORT_NONE
-        if "ok C:" in l or "Count" in l \
+        if "ok C:" in l or " Count " in l \
            or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
             self.posreport = l
             isreport = REPORT_POS
