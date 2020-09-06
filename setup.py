@@ -56,7 +56,7 @@ data_files = [
     ('share/pixmaps', multiglob('*.png')),
     ('share/applications', multiglob('*.desktop')),
     ('share/metainfo', multiglob('*.appdata.xml')),
-    ('share/pronterface', multiglob('images/*.png',
+    ('share/pronterface/images', multiglob('images/*.png',
                                     'images/*.svg')),
 ]
 
