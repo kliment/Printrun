@@ -23,6 +23,8 @@ import shlex
 import locale
 import logging
 
+DATADIR = os.path.join(sys.prefix, 'share')
+
 
 def set_utf8_locale():
     """Make sure we read/write all text files in UTF-8"""
@@ -34,10 +36,9 @@ def set_utf8_locale():
 # searching for installed locales on /usr/share; uses relative folder if not
 # found (windows)
 def install_locale(domain):
-    if os.path.exists('/usr/share/pronterface/locale'):
-        gettext.install(domain, '/usr/share/pronterface/locale')
-    elif os.path.exists('/usr/local/share/pronterface/locale'):
-        gettext.install(domain, '/usr/local/share/pronterface/locale')
+    shared_locale_dir = os.path.join(DATADIR, 'locale')
+    if os.path.exists(shared_locale_dir):
+        gettext.install(domain, shared_locale_dir)
     else:
         gettext.install(domain, './locale')
 
@@ -78,11 +79,10 @@ def iconfile(filename):
         return pixmapfile(filename)
 
 def imagefile(filename):
-    for prefix in ['/usr/local/share/pronterface/images',
-                   '/usr/share/pronterface/images']:
-        candidate = os.path.join(prefix, filename)
-        if os.path.exists(candidate):
-            return candidate
+    shared_pronterface_images_dir = os.path.join(DATADIR, 'pronterface/images')
+    candidate = os.path.join(shared_pronterface_images_dir, filename)
+    if os.path.exists(candidate):
+        return candidate
     local_candidate = os.path.join(os.path.dirname(sys.argv[0]),
                                    "images", filename)
     if os.path.exists(local_candidate):
@@ -105,12 +105,12 @@ def lookup_file(filename, prefixes):
     return filename
 
 def pixmapfile(filename):
-    return lookup_file(filename, ['/usr/local/share/pixmaps',
-                                  '/usr/share/pixmaps'])
+    shared_pixmaps_dir = os.path.join(DATADIR, 'pixmaps')
+    return lookup_file(filename, [shared_pixmaps_dir])
 
 def sharedfile(filename):
-    return lookup_file(filename, ['/usr/local/share/pronterface',
-                                  '/usr/share/pronterface'])
+    shared_pronterface_dir = os.path.join(DATADIR, 'pronterface')
+    return lookup_file(filename, [shared_pronterface_dir])
 
 def configfile(filename):
     return lookup_file(filename, [os.path.expanduser("~/.printrun/"), ])

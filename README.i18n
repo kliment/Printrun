@@ -31,16 +31,16 @@ To update a previously created message catalog from the template, use :
 
 As currently coded, the default location for these message catalogs is
 
-  /usr/share/pronterface/locale/
+  /usr/share/locale/
 
 So, to install the catalogs, copy them to there:
 
-  sudo cp -a locale /usr/share/pronterface/
+  sudo cp -a locale /usr/share/
 
 To test pronterface in a new language, you can temporarily set LANG to
 the language you are testing, for example
 
-  LANG=de python pronterface.py
+  LANG=de.UTF-8 python pronterface.py
 
 Further automation for localization and packaging of Printrun would be
 nice to see, but is not here yet.
