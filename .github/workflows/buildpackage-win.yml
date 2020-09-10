@@ -36,7 +36,7 @@ jobs:
         pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
     - name: Make pyinstaller build
       run: |
-	pyinstaller --clean pronterface.spec -y
+        pyinstaller --clean pronterface.spec -y
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
