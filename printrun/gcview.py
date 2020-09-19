@@ -227,7 +227,14 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
+    wheelTimestamp = None
     def handle_wheel(self, event):
+        if self.wheelTimestamp == event.Timestamp:
+            # filter duplicate event delivery in Ubuntu, Debian issue #1110
+            return  
+
+        self.wheelTimestamp = event.Timestamp
+
         delta = event.GetWheelRotation()
         factor = 1.05
         if event.ControlDown():
