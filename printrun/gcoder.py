@@ -108,6 +108,7 @@ class Layer(list):
     def __init__(self, lines, z = None):
         super(Layer, self).__init__(lines)
         self.z = z
+        self.duration = 0
 
 class GCode:
 
@@ -390,14 +391,34 @@ class GCode:
             layer_idxs = self.layer_idxs = []
             line_idxs = self.line_idxs = []
 
-            layer_id = 0
-            layer_line = 0
 
             last_layer_z = None
             prev_z = None
-            prev_base_z = (None, None)
             cur_z = None
             cur_lines = []
+
+            def append_lines(lines, isEnd):
+                if not build_layers:
+                    return
+                nonlocal layerbeginduration, last_layer_z
+                if cur_layer_has_extrusion and prev_z != last_layer_z or not all_layers:
+                    layer = Layer([], prev_z)
+                    last_layer_z = prev_z
+                    finished_layer = len(all_layers)-1 if all_layers else None
+                    all_layers.append(layer)
+                else:
+                    layer = all_layers[-1]
+                    finished_layer = None
+                layer_id = len(all_layers)-1
+                layer_line = len(layer)
+                for i, ln in enumerate(lines):
+                    layer.append(ln)
+                    layer_idxs.append(layer_id)
+                    line_idxs.append(layer_line+i)
+                layer.duration += totalduration - layerbeginduration
+                layerbeginduration = totalduration
+                if layer_callback and finished_layer is not None:
+                    layer_callback(self, finished_layer)
 
         if self.line_class != Line:
             get_line = lambda l: Line(l.raw)
@@ -433,7 +454,7 @@ class GCode:
                         current_tool = int(line.command[1:])
                     except:
                         pass #handle T? by treating it as no tool change
-                    while(current_tool+1>len(self.current_e_multi)):
+                    while current_tool+1 > len(self.current_e_multi):
                         self.current_e_multi+=[0]
                         self.offset_e_multi+=[0]
                         self.total_e_multi+=[0]
@@ -623,47 +644,14 @@ class GCode:
                             else:
                                 cur_z = line.z
 
-                    # FIXME: the logic behind this code seems to work, but it might be
-                    # broken
-                    if cur_z != prev_z:
-                        if prev_z is not None and last_layer_z is not None:
-                            offset = self.est_layer_height if self.est_layer_height else 0.01
-                            if abs(prev_z - last_layer_z) < offset:
-                                if self.est_layer_height is None:
-                                    zs = sorted([l.z for l in all_layers if l.z is not None])
-                                    heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
-                                    heights = [height for height in heights if height]
-                                    if len(heights) >= 2: self.est_layer_height = heights[1]
-                                    elif heights: self.est_layer_height = heights[0]
-                                    else: self.est_layer_height = 0.1
-                                base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
-                            else:
-                                base_z = round(prev_z, 2)
-                        else:
-                            base_z = prev_z
-
-                        if base_z != prev_base_z:
-                            new_layer = Layer(cur_lines, base_z)
-                            new_layer.duration = totalduration - layerbeginduration
-                            layerbeginduration = totalduration
-                            all_layers.append(new_layer)
-                            if cur_layer_has_extrusion and prev_z not in all_zs:
-                                all_zs.add(prev_z)
-                            cur_lines = []
-                            cur_layer_has_extrusion = False
-                            layer_id += 1
-                            layer_line = 0
-                            last_layer_z = base_z
-                            if layer_callback is not None:
-                                layer_callback(self, len(all_layers) - 1)
-
-                        prev_base_z = base_z
+                    if cur_z != prev_z and cur_layer_has_extrusion:
+                        append_lines(cur_lines, False)
+                        all_zs.add(prev_z)
+                        cur_lines = []
+                        cur_layer_has_extrusion = False
 
             if build_layers:
                 cur_lines.append(true_line)
-                layer_idxs.append(layer_id)
-                line_idxs.append(layer_line)
-                layer_line += 1
                 prev_z = cur_z
             # ## Loop done
 
@@ -692,12 +680,8 @@ class GCode:
         # Finalize layers
         if build_layers:
             if cur_lines:
-                new_layer = Layer(cur_lines, prev_z)
-                new_layer.duration = totalduration - layerbeginduration
-                layerbeginduration = totalduration
-                all_layers.append(new_layer)
-                if cur_layer_has_extrusion and prev_z not in all_zs:
-                    all_zs.add(prev_z)
+                append_lines(cur_lines, True)
+                all_zs.add(prev_z)
 
             self.append_layer_id = len(all_layers)
             self.append_layer = Layer([])
