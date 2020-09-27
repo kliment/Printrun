@@ -150,9 +150,14 @@ class GcodeViewPanel(wxGLPanel):
 
         for obj in self.parent.objects:
             if not obj.model \
-               or not obj.model.loaded \
-               or not obj.model.initialized:
+               or not obj.model.loaded:
                 continue
+            # Skip (comment out) initialized check, which safely causes empty 
+            # model during progressive load. This can cause exceptions/garbage
+            # render, but seems fine for now
+            # May need to lock init() and draw_objects() together
+            # if not obj.model.initialized:
+            #     continue
             glPushMatrix()
             glTranslatef(*(obj.offsets))
             glRotatef(obj.rot, 0.0, 0.0, 1.0)
