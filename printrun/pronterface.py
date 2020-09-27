@@ -67,6 +67,18 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
+def format_length(mm, fractional=2):
+    if mm <= 10:
+        units = mm
+        suffix = 'mm'
+    elif mm < 1000:
+        units = mm / 10
+        suffix = 'cm'
+    else:
+        units = mm / 1000
+        suffix = 'm'
+    return '%%.%df' % fractional % units + suffix
+
 class ConsoleOutputHandler:
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
     We also redirect stdout and stderr to ourself to catch print messages and al."""
@@ -1602,7 +1614,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         gcode = self.fgcode
         self.spool_manager.refresh()
 
-        self.log(_("%.2fmm of filament used in this print") % gcode.filament_length)
+        self.log(_("%s of filament used in this print") % format_length(gcode.filament_length))
 
         if len(gcode.filament_length_multi) > 1:
             for i in enumerate(gcode.filament_length_multi):
@@ -1613,12 +1625,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         " from spool '%s' (%.2fmm will remain)" %
                         (self.spool_manager.getSpoolName(i[0]),
                         self.calculate_remaining_filament(i[1], i[0]))))
-        else:
-            if self.spool_manager.getSpoolName(0) != None:
-                self.log(_(
-                    "Using spool '%s' (%.2fmm of filament will remain)" %
+        elif self.spool_manager.getSpoolName(0) != None:
+                self.log(
+                    _("Using spool '%s' (%s of filament will remain)") %
                     (self.spool_manager.getSpoolName(0),
-                    self.calculate_remaining_filament(
+                    format_length(self.calculate_remaining_filament(
                         gcode.filament_length, 0))))
 
         self.log(_("The print goes:"))
