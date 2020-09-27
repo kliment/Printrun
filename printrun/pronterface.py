@@ -1604,7 +1604,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
         self.log(_("%.2fmm of filament used in this print") % gcode.filament_length)
 
-        if(len(gcode.filament_length_multi)>1):
+        if len(gcode.filament_length_multi) > 1:
             for i in enumerate(gcode.filament_length_multi):
                 if self.spool_manager.getSpoolName(i[0]) == None:
                     logging.info("- Extruder %d: %0.02fmm" % (i[0], i[1]))
@@ -1649,13 +1649,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     max_layer = self.viz_last_layer
                     if max_layer is None:
                         break
+                    start_layer = next_layer
                     while next_layer <= max_layer:
-                        assert(next(generator) == next_layer)
+                        assert next(generator) == next_layer
                         next_layer += 1
+                    if next_layer != start_layer:
+                        wx.CallAfter(self.gviz.Refresh)
                     time.sleep(0.1)
                 generator_output = next(generator)
                 while generator_output is not None:
-                    assert(generator_output in (None, next_layer))
+                    assert generator_output == next_layer
                     next_layer += 1
                     generator_output = next(generator)
             else:
