@@ -375,7 +375,8 @@ class GCode:
             # get device caps from firmware: max speed, acceleration/axis
             # (including extruder)
             # calculate the maximum move duration accounting for above ;)
-            lastx = lasty = lastz = laste = lastf = 0.0
+            lastx = lasty = lastz = None
+            laste = lastf = 0
             lastdx = 0
             lastdy = 0
             x = y = e = f = 0.0
@@ -554,11 +555,12 @@ class GCode:
                     if line.is_move:
                         if line.extruding:
                             if line.current_x is not None:
-                                xmin_e = min(xmin_e, line.current_x)
-                                xmax_e = max(xmax_e, line.current_x)
+                                # G0 X10 ; G1 X20 E5 results in 10..20 even as G0 is not extruding
+                                xmin_e = min(xmin_e, line.current_x, xmin_e if lastx is None else lastx)
+                                xmax_e = max(xmax_e, line.current_x, xmax_e if lastx is None else lastx)
                             if line.current_y is not None:
-                                ymin_e = min(ymin_e, line.current_y)
-                                ymax_e = max(ymax_e, line.current_y)
+                                ymin_e = min(ymin_e, line.current_y, ymin_e if lasty is None else lasty)
+                                ymax_e = max(ymax_e, line.current_y, ymax_e if lasty is None else lasty)
                         if max_e <= 0:
                             if line.current_x is not None:
                                 xmin = min(xmin, line.current_x)
@@ -569,9 +571,9 @@ class GCode:
 
                     # Compute duration
                     if line.command == "G0" or line.command == "G1":
-                        x = line.x if line.x is not None else lastx
-                        y = line.y if line.y is not None else lasty
-                        z = line.z if line.z is not None else lastz
+                        x = line.x if line.x is not None else lastx or 0
+                        y = line.y if line.y is not None else lasty or 0
+                        z = line.z if line.z is not None else lastz or 0
                         e = line.e if line.e is not None else laste
                         # mm/s vs mm/m => divide by 60
                         f = line.f / 60.0 if line.f is not None else lastf
@@ -591,15 +593,15 @@ class GCode:
                         # The following code tries to fix it by forcing a full
                         # reacceleration if this move is in the opposite direction
                         # of the previous one
-                        dx = x - lastx
-                        dy = y - lasty
+                        dx = x - (lastx or 0)
+                        dy = y - (lasty or 0)
                         if dx * lastdx + dy * lastdy <= 0:
                             lastf = 0
 
                         currenttravel = math.hypot(dx, dy)
                         if currenttravel == 0:
                             if line.z is not None:
-                                currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
+                                currenttravel = abs(line.z) if line.relative else abs(line.z - (lastz or 0))
                             elif line.e is not None:
                                 currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
                         # Feedrate hasn't changed, no acceleration/decceleration planned
