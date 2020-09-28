@@ -356,7 +356,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 'V': self.gviz}
             widget = keys.get(ch)
             #ignore Alt+(S, H), so it can open Settings, Help menu
-            if widget and (ch not in 'SH' or not event.AltDown()):
+            if widget and (ch not in 'SH' or not event.AltDown()) \
+                and not (event.ControlDown() and ch == 'V'
+                        and event.EventObject is self.commandbox):
                 widget.SetFocus()
                 return
             # On MSWindows button mnemonics are processed only if the
@@ -371,7 +373,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     handled = in_toolbar and match
                     if handled:
                         break
-                    # react to 'P' even for 'Restrart', 'Resume'
+                    # react to 'P' even for 'Restart', 'Resume'
                     # print('match', match, 'handled', handled, ctl.Label, ctl.Enabled)
                     if (match or ch == 'P' and ctl != self.connectbtn) and ctl.Enabled:
                         # print('call', ch, cb)
