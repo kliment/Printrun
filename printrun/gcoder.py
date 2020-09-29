@@ -577,9 +577,9 @@ class GCode:
 
                     # Compute duration
                     if line.command == "G0" or line.command == "G1":
-                        x = line.x if line.x is not None else lastx or 0
-                        y = line.y if line.y is not None else lasty or 0
-                        z = line.z if line.z is not None else lastz or 0
+                        x = line.x if line.x is not None else (lastx or 0)
+                        y = line.y if line.y is not None else (lasty or 0)
+                        z = line.z if line.z is not None else (lastz or 0)
                         e = line.e if line.e is not None else laste
                         # mm/s vs mm/m => divide by 60
                         f = line.f / 60.0 if line.f is not None else lastf
