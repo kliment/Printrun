@@ -402,7 +402,8 @@ class GCode:
                 if not build_layers:
                     return
                 nonlocal layerbeginduration, last_layer_z
-                if cur_layer_has_extrusion and prev_z != last_layer_z or not all_layers:
+                if cur_layer_has_extrusion and prev_z != last_layer_z \
+                        or not all_layers or isEnd:
                     layer = Layer([], prev_z)
                     last_layer_z = prev_z
                     finished_layer = len(all_layers)-1 if all_layers else None
@@ -418,8 +419,13 @@ class GCode:
                     line_idxs.append(layer_line+i)
                 layer.duration += totalduration - layerbeginduration
                 layerbeginduration = totalduration
-                if layer_callback and finished_layer is not None:
-                    layer_callback(self, finished_layer)
+                if layer_callback:
+                    # we finish a layer when inserting the next
+                    if finished_layer is not None:
+                        layer_callback(self, finished_layer)
+                    # notify about end layer, there will not be next
+                    if isEnd:
+                        layer_callback(self, layer_id)
 
         if self.line_class != Line:
             get_line = lambda l: Line(l.raw)
