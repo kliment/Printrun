@@ -108,6 +108,7 @@ class Layer(list):
     def __init__(self, lines, z = None):
         super(Layer, self).__init__(lines)
         self.z = z
+        self.duration = 0
 
 class GCode:
 
@@ -374,7 +375,8 @@ class GCode:
             # get device caps from firmware: max speed, acceleration/axis
             # (including extruder)
             # calculate the maximum move duration accounting for above ;)
-            lastx = lasty = lastz = laste = lastf = 0.0
+            lastx = lasty = lastz = None
+            laste = lastf = 0
             lastdx = 0
             lastdy = 0
             x = y = e = f = 0.0
@@ -390,14 +392,40 @@ class GCode:
             layer_idxs = self.layer_idxs = []
             line_idxs = self.line_idxs = []
 
-            layer_id = 0
-            layer_line = 0
 
             last_layer_z = None
             prev_z = None
-            prev_base_z = (None, None)
             cur_z = None
             cur_lines = []
+
+            def append_lines(lines, isEnd):
+                if not build_layers:
+                    return
+                nonlocal layerbeginduration, last_layer_z
+                if cur_layer_has_extrusion and prev_z != last_layer_z \
+                        or not all_layers or isEnd:
+                    layer = Layer([], prev_z)
+                    last_layer_z = prev_z
+                    finished_layer = len(all_layers)-1 if all_layers else None
+                    all_layers.append(layer)
+                else:
+                    layer = all_layers[-1]
+                    finished_layer = None
+                layer_id = len(all_layers)-1
+                layer_line = len(layer)
+                for i, ln in enumerate(lines):
+                    layer.append(ln)
+                    layer_idxs.append(layer_id)
+                    line_idxs.append(layer_line+i)
+                layer.duration += totalduration - layerbeginduration
+                layerbeginduration = totalduration
+                if layer_callback:
+                    # we finish a layer when inserting the next
+                    if finished_layer is not None:
+                        layer_callback(self, finished_layer)
+                    # notify about end layer, there will not be next
+                    if isEnd:
+                        layer_callback(self, layer_id)
 
         if self.line_class != Line:
             get_line = lambda l: Line(l.raw)
@@ -433,7 +461,7 @@ class GCode:
                         current_tool = int(line.command[1:])
                     except:
                         pass #handle T? by treating it as no tool change
-                    while(current_tool+1>len(self.current_e_multi)):
+                    while current_tool+1 > len(self.current_e_multi):
                         self.current_e_multi+=[0]
                         self.offset_e_multi+=[0]
                         self.total_e_multi+=[0]
@@ -533,11 +561,12 @@ class GCode:
                     if line.is_move:
                         if line.extruding:
                             if line.current_x is not None:
-                                xmin_e = min(xmin_e, line.current_x)
-                                xmax_e = max(xmax_e, line.current_x)
+                                # G0 X10 ; G1 X20 E5 results in 10..20 even as G0 is not extruding
+                                xmin_e = min(xmin_e, line.current_x, xmin_e if lastx is None else lastx)
+                                xmax_e = max(xmax_e, line.current_x, xmax_e if lastx is None else lastx)
                             if line.current_y is not None:
-                                ymin_e = min(ymin_e, line.current_y)
-                                ymax_e = max(ymax_e, line.current_y)
+                                ymin_e = min(ymin_e, line.current_y, ymin_e if lasty is None else lasty)
+                                ymax_e = max(ymax_e, line.current_y, ymax_e if lasty is None else lasty)
                         if max_e <= 0:
                             if line.current_x is not None:
                                 xmin = min(xmin, line.current_x)
@@ -548,9 +577,9 @@ class GCode:
 
                     # Compute duration
                     if line.command == "G0" or line.command == "G1":
-                        x = line.x if line.x is not None else lastx
-                        y = line.y if line.y is not None else lasty
-                        z = line.z if line.z is not None else lastz
+                        x = line.x if line.x is not None else (lastx or 0)
+                        y = line.y if line.y is not None else (lasty or 0)
+                        z = line.z if line.z is not None else (lastz or 0)
                         e = line.e if line.e is not None else laste
                         # mm/s vs mm/m => divide by 60
                         f = line.f / 60.0 if line.f is not None else lastf
@@ -570,15 +599,15 @@ class GCode:
                         # The following code tries to fix it by forcing a full
                         # reacceleration if this move is in the opposite direction
                         # of the previous one
-                        dx = x - lastx
-                        dy = y - lasty
+                        dx = x - (lastx or 0)
+                        dy = y - (lasty or 0)
                         if dx * lastdx + dy * lastdy <= 0:
                             lastf = 0
 
                         currenttravel = math.hypot(dx, dy)
                         if currenttravel == 0:
                             if line.z is not None:
-                                currenttravel = abs(line.z) if line.relative else abs(line.z - lastz)
+                                currenttravel = abs(line.z) if line.relative else abs(line.z - (lastz or 0))
                             elif line.e is not None:
                                 currenttravel = abs(line.e) if line.relative_e else abs(line.e - laste)
                         # Feedrate hasn't changed, no acceleration/decceleration planned
@@ -623,47 +652,14 @@ class GCode:
                             else:
                                 cur_z = line.z
 
-                    # FIXME: the logic behind this code seems to work, but it might be
-                    # broken
-                    if cur_z != prev_z:
-                        if prev_z is not None and last_layer_z is not None:
-                            offset = self.est_layer_height if self.est_layer_height else 0.01
-                            if abs(prev_z - last_layer_z) < offset:
-                                if self.est_layer_height is None:
-                                    zs = sorted([l.z for l in all_layers if l.z is not None])
-                                    heights = [round(zs[i + 1] - zs[i], 3) for i in range(len(zs) - 1)]
-                                    heights = [height for height in heights if height]
-                                    if len(heights) >= 2: self.est_layer_height = heights[1]
-                                    elif heights: self.est_layer_height = heights[0]
-                                    else: self.est_layer_height = 0.1
-                                base_z = round(prev_z - (prev_z % self.est_layer_height), 2)
-                            else:
-                                base_z = round(prev_z, 2)
-                        else:
-                            base_z = prev_z
-
-                        if base_z != prev_base_z:
-                            new_layer = Layer(cur_lines, base_z)
-                            new_layer.duration = totalduration - layerbeginduration
-                            layerbeginduration = totalduration
-                            all_layers.append(new_layer)
-                            if cur_layer_has_extrusion and prev_z not in all_zs:
-                                all_zs.add(prev_z)
-                            cur_lines = []
-                            cur_layer_has_extrusion = False
-                            layer_id += 1
-                            layer_line = 0
-                            last_layer_z = base_z
-                            if layer_callback is not None:
-                                layer_callback(self, len(all_layers) - 1)
-
-                        prev_base_z = base_z
+                    if cur_z != prev_z and cur_layer_has_extrusion:
+                        append_lines(cur_lines, False)
+                        all_zs.add(prev_z)
+                        cur_lines = []
+                        cur_layer_has_extrusion = False
 
             if build_layers:
                 cur_lines.append(true_line)
-                layer_idxs.append(layer_id)
-                line_idxs.append(layer_line)
-                layer_line += 1
                 prev_z = cur_z
             # ## Loop done
 
@@ -692,12 +688,8 @@ class GCode:
         # Finalize layers
         if build_layers:
             if cur_lines:
-                new_layer = Layer(cur_lines, prev_z)
-                new_layer.duration = totalduration - layerbeginduration
-                layerbeginduration = totalduration
-                all_layers.append(new_layer)
-                if cur_layer_has_extrusion and prev_z not in all_zs:
-                    all_zs.add(prev_z)
+                append_lines(cur_lines, True)
+                all_zs.add(prev_z)
 
             self.append_layer_id = len(all_layers)
             self.append_layer = Layer([])

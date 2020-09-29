@@ -67,6 +67,18 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
+def format_length(mm, fractional=2):
+    if mm <= 10:
+        units = mm
+        suffix = 'mm'
+    elif mm < 1000:
+        units = mm / 10
+        suffix = 'cm'
+    else:
+        units = mm / 1000
+        suffix = 'm'
+    return '%%.%df' % fractional % units + suffix
+
 class ConsoleOutputHandler:
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
     We also redirect stdout and stderr to ourself to catch print messages and al."""
@@ -344,7 +356,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 'V': self.gviz}
             widget = keys.get(ch)
             #ignore Alt+(S, H), so it can open Settings, Help menu
-            if widget and (ch not in 'SH' or not event.AltDown()):
+            if widget and (ch not in 'SH' or not event.AltDown()) \
+                and not (event.ControlDown() and ch == 'V'
+                        and event.EventObject is self.commandbox):
                 widget.SetFocus()
                 return
             # On MSWindows button mnemonics are processed only if the
@@ -359,7 +373,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                     handled = in_toolbar and match
                     if handled:
                         break
-                    # react to 'P' even for 'Restrart', 'Resume'
+                    # react to 'P' even for 'Restart', 'Resume'
                     # print('match', match, 'handled', handled, ctl.Label, ctl.Enabled)
                     if (match or ch == 'P' and ctl != self.connectbtn) and ctl.Enabled:
                         # print('call', ch, cb)
@@ -1602,9 +1616,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         gcode = self.fgcode
         self.spool_manager.refresh()
 
-        self.log(_("%.2fmm of filament used in this print") % gcode.filament_length)
+        self.log(_("%s of filament used in this print") % format_length(gcode.filament_length))
 
-        if(len(gcode.filament_length_multi)>1):
+        if len(gcode.filament_length_multi) > 1:
             for i in enumerate(gcode.filament_length_multi):
                 if self.spool_manager.getSpoolName(i[0]) == None:
                     logging.info("- Extruder %d: %0.02fmm" % (i[0], i[1]))
@@ -1613,12 +1627,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         " from spool '%s' (%.2fmm will remain)" %
                         (self.spool_manager.getSpoolName(i[0]),
                         self.calculate_remaining_filament(i[1], i[0]))))
-        else:
-            if self.spool_manager.getSpoolName(0) != None:
-                self.log(_(
-                    "Using spool '%s' (%.2fmm of filament will remain)" %
+        elif self.spool_manager.getSpoolName(0) != None:
+                self.log(
+                    _("Using spool '%s' (%s of filament will remain)") %
                     (self.spool_manager.getSpoolName(0),
-                    self.calculate_remaining_filament(
+                    format_length(self.calculate_remaining_filament(
                         gcode.filament_length, 0))))
 
         self.log(_("The print goes:"))
@@ -1649,13 +1662,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     max_layer = self.viz_last_layer
                     if max_layer is None:
                         break
+                    start_layer = next_layer
                     while next_layer <= max_layer:
-                        assert(next(generator) == next_layer)
+                        assert next(generator) == next_layer
                         next_layer += 1
+                    if next_layer != start_layer:
+                        wx.CallAfter(self.gviz.Refresh)
                     time.sleep(0.1)
                 generator_output = next(generator)
                 while generator_output is not None:
-                    assert(generator_output in (None, next_layer))
+                    assert generator_output == next_layer
                     next_layer += 1
                     generator_output = next(generator)
             else:
