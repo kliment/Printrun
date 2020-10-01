@@ -24,29 +24,17 @@ jobs:
       run: |
         curl https://www.python.org/ftp/python/3.8.6/python-3.8.6-macosx10.9.pkg --output pythonInstaller.pkg
         sudo installer -pkg pythonInstaller.pkg -target /
-        python3 --version
-        python3 -c "import platform; print('macOS version:', platform.mac_ver()[0])"
-    - name: Setup venv
-      run: |
-        python3 -m venv venv
-        source venv/bin/activate
-        python --version
-        python -c "import sys; print('\n'.join(sys.path))"
     - name: Install dependencies
       run: |
-        source venv/bin/activate
-        python -m pip install --upgrade pip pyinstaller setuptools wheel cython cffi -r requirements.txt
+        python3 -m pip install --upgrade pip pyinstaller setuptools wheel cython cffi -r requirements.txt
     - name: Build Cython ext
       run: |
-        source venv/bin/activate
-        python setup.py build_ext --inplace
+        python3 setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
-        source venv/bin/activate
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
     - name: Make pyinstaller build
       run: |
-        source venv/bin/activate
         pyinstaller  --windowed --clean pronterface.spec -y
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
