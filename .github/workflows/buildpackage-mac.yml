@@ -34,15 +34,19 @@ jobs:
         python -c "import sys; print('\n'.join(sys.path))"
     - name: Install dependencies
       run: |
+        source venv/bin/activate
         python -m pip install --upgrade pip pyinstaller setuptools wheel cython cffi -r requirements.txt
     - name: Build Cython ext
       run: |
+        source venv/bin/activate
         python setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
+        source venv/bin/activate
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
     - name: Make pyinstaller build
       run: |
+        source venv/bin/activate
         pyinstaller  --windowed --clean pronterface.spec -y
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
