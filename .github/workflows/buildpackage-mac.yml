@@ -32,10 +32,10 @@ jobs:
         python3 setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
+        /Library/Frameworks/Python.framework/Versions/3.8/bin/pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
     - name: Make pyinstaller build
       run: |
-        pyinstaller  --windowed --clean pronterface.spec -y
+        /Library/Frameworks/Python.framework/Versions/3.8/bin/pyinstaller  --windowed --clean pronterface.spec -y
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
