@@ -20,11 +20,18 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        architecture: ${{ matrix.architecture }}
-        python-version: ${{ matrix.python-version }}
+    - name: Set up Python 3.8.6
+      run: |
+        curl https://www.python.org/ftp/python/3.8.6/python-3.8.6-macosx10.9.pkg --output pythonInstaller.pkg
+        sudo installer -pkg pythonInstaller.pkg -target /
+        python3 --version
+        python3 -c "import platform; print('macOS version:', platform.mac_ver()[0])"
+    - name: Setup venv
+      run: |
+        python3 -m venv venv
+        source venv/bin/activate
+        python --version
+        python -c "import sys; print('\n'.join(sys.path))"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip pyinstaller setuptools wheel cython cffi -r requirements.txt
