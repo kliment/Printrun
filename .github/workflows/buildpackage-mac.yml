@@ -20,22 +20,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Set up Python 3.8.6
-      run: |
-        curl https://www.python.org/ftp/python/3.8.6/python-3.8.6-macosx10.9.pkg --output pythonInstaller.pkg
-        sudo installer -pkg pythonInstaller.pkg -target /
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        architecture: ${{ matrix.architecture }}
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip pyinstaller setuptools wheel cython cffi -r requirements.txt
+        python -m pip install --upgrade pip pyinstaller setuptools wheel cython cffi -r requirements.txt
     - name: Build Cython ext
       run: |
-        python3 setup.py build_ext --inplace
+        python setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
-        /Library/Frameworks/Python.framework/Versions/3.8/bin/pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
     - name: Make pyinstaller build
       run: |
-        /Library/Frameworks/Python.framework/Versions/3.8/bin/pyinstaller  --windowed --clean pronterface.spec -y
+        pyinstaller --clean pronterface.spec -y
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:

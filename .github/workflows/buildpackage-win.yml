@@ -36,7 +36,7 @@ jobs:
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
     - name: Make pyinstaller build
       run: |
-        pyinstaller  --windowed --clean pronterface.spec -y
+        pyinstaller --clean pronterface.spec -y
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
