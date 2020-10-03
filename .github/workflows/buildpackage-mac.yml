@@ -37,6 +37,7 @@ jobs:
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean pronterface.spec -y
+        chmod +x dist/pronterface.app/Contents/macOS/pronterface
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
