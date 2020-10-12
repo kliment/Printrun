@@ -188,7 +188,7 @@ class pronsole(cmd.Cmd):
         self.starttime = 0
         self.extra_print_time = 0
         self.silent = False
-        self.commandprefixes = 'MGT$'
+        self.commandprefixes = 'MGTD$'
         self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
                            "fallback": "%(bold)s%(red)s%(port)s%(white)s PC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
