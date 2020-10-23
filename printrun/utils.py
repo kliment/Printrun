@@ -182,6 +182,8 @@ class RemainingTimeEstimator:
             return (0, 0)
         if idx == self.last_idx:
             return self.last_estimate
+        if idx >= len(self.gcode.layer_idxs):
+            return self.last_estimate
         layer, line = self.gcode.idxs(idx)
         layer_progress = (1 - (float(line + 1) / self.current_layer_lines))
         remaining = layer_progress * self.current_layer_estimate + self.remaining_layers_estimate

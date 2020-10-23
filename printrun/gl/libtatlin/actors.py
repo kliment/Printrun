@@ -346,14 +346,14 @@ def interpolate_arcs(gline, prev_gline):
         for t in range(segments):
             a = t / segments * a_delta + a_start
 
-            mid = (
+            mid = ((
                 cx + math.cos(a) * r,
                 cy + math.sin(a) * r,
                 z0 + t / segments * dz
-            )
+            ), True)
             yield mid
 
-    yield (gline.current_x, gline.current_y, gline.current_z)
+    yield ((gline.current_x, gline.current_y, gline.current_z), False) # last segment of this line
 
 
 class GcodeModel(Model):
@@ -444,6 +444,7 @@ class GcodeModel(Model):
         prev_move_angle = None
         prev_pos = (0, 0, 0)
         prev_gline = None
+        prev_extruding = False
         layer_idx = 0
 
         self.printed_until = 0
@@ -473,10 +474,10 @@ class GcodeModel(Model):
                 for gline_idx, gline in enumerate(layer):
                     if not gline.is_move:
                         continue
-                    if gline.x is None and gline.y is None and gline.z is None:
+                    if gline.x is None and gline.y is None and gline.z is None and gline.j is None and gline.i is None:
                         continue
                     has_movement = True
-                    for current_pos in interpolate_arcs(gline, prev_gline):
+                    for (current_pos, interpolated) in interpolate_arcs(gline, prev_gline):
                         if not gline.extruding:
                             if self.travels.size < (travel_vertex_k + 100 * 6):
                                 # arc interpolation extra points allocation
@@ -507,7 +508,7 @@ class GcodeModel(Model):
                             new_indices = []
                             new_vertices = []
                             new_normals = []
-                            if prev_gline and prev_gline.extruding:
+                            if prev_gline and prev_gline.extruding or prev_extruding:
                                 # Store previous vertices indices
                                 prev_id = vertex_k // 3 - 4
                                 avg_move_normal_x = (prev_move_normal_x + move_normal_x) / 2
@@ -605,7 +606,7 @@ class GcodeModel(Model):
                                                                     first + 2, first + 3)
 
                             next_move = get_next_move(model_data, layer_idx, gline_idx)
-                            next_is_extruding = next_move and next_move.extruding
+                            next_is_extruding = interpolated or next_move and next_move.extruding
                             if not next_is_extruding:
                                 # Compute caps and link everything
                                 p1x = current_pos[0] - path_halfwidth * move_normal_x
@@ -658,7 +659,10 @@ class GcodeModel(Model):
                             prev_move_angle = move_angle
 
                         prev_pos = current_pos
+                        prev_extruding = gline.extruding
+
                     prev_gline = gline
+                    prev_extruding = gline.extruding
                     count_travel_indices.append(travel_vertex_k // 3)
                     count_print_indices.append(index_k)
                     count_print_vertices.append(vertex_k // 3)
@@ -954,7 +958,7 @@ class GcodeModelLight(Model):
                         continue
 
                     has_movement = True
-                    for current_pos in interpolate_arcs(gline, prev_gline):
+                    for (current_pos, interpolated) in interpolate_arcs(gline, prev_gline):
 
                         if self.vertices.size < (vertex_k + 100 * 6):
                             # arc interpolation extra points allocation
