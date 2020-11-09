@@ -493,9 +493,11 @@ class printcore():
         self.printing = True
         self.lineno = 0
         self.resendfrom = -1
-        self._send("M110", -1, True)
+        
         if not gcode or not gcode.lines:
             return True
+        self.clear=False 
+        self._send("M110", -1, True)# this to makesure connection if connection fail will be trap on wait and self.clear should set to false first
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
                                              name = 'print thread',
