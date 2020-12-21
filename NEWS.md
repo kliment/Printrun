@@ -1,3 +1,32 @@
+Printrun - 2.0.0rc7
+====================
+
+Pre-release for testing purposes.
+
+### New Features
+
+ - Live resizing of panels and many other UI improvements (#1073)
+ - Render G2/G3 arcs in 3D view by interpolating them as line segments (#1092 and #1097)
+ - Apply grid size settings to 3d view (#1093)
+ - Visualize moves with laser/spindle active as extrusion (#1094)
+ - Keyboard shortcuts for important UI elements (00a932e)
+ - Keyboard jogging improvements (#1100)
+
+### Fixed Bugs
+
+ - Do not expand setting spinners, combo boxes and dropdown lists (5d42c19)
+ - Build wheels for Windows and manylinux1/2014 correctly (#1087)
+ - Allow spaces between coordinate and value when parsing coordinates in gcode (#1090)
+ - Fix G2/G3 arc rendering error and scaling in 2D view (#1091)
+ - Correct index of appended command in gcoder (#1057)
+ - Fix incorrect string comparisons using "is" (#1096)
+ - Fix D-pad/keyboard jog movements (#1084)
+ - Fix incorrect enabled state of controls on UI settings change (f02f4ef)
+ - Fix command history traversal (9d5620f)
+ - Fix toolbar shortcuts, blank jog, jog tab-out on Windows (1f0290b)
+ - Fix lost messages from Marlin that contain the string "Count" (#1104)
+ - Fix wheel install paths for locales and images (#1101)
+
 Printrun - 2.0.0rc6
 ====================
 

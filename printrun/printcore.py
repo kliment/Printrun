@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "2.0.0rc6"
+__version__ = "2.0.0rc7"
 
 import sys
 if sys.version_info.major < 3:
@@ -530,17 +530,12 @@ class printcore():
         self.paused = True
         self.printing = False
 
-        # try joining the print thread: enclose it in try/except because we
-        # might be calling it from the thread itself
-        try:
-            self.print_thread.join()
-        except RuntimeError as e:
-            if e.message == "cannot join current thread":
-                pass
-            else:
+        # ';@pause' in the gcode file calls pause from the print thread
+        if not threading.current_thread() is self.print_thread:
+            try:
+                self.print_thread.join()
+            except:
                 self.logError(traceback.format_exc())
-        except:
-            self.logError(traceback.format_exc())
 
         self.print_thread = None
 
@@ -551,31 +546,28 @@ class printcore():
         self.pauseE = self.analyzer.abs_e
         self.pauseF = self.analyzer.current_f
         self.pauseRelative = self.analyzer.relative
+        self.pauseRelativeE = self.analyzer.relative_e
 
     def resume(self):
-        """Resumes a paused print.
-        """
+        """Resumes a paused print."""
         if not self.paused: return False
-        if self.paused:
-            # restores the status
-            self.send_now("G90")  # go to absolute coordinates
+        # restores the status
+        self.send_now("G90")  # go to absolute coordinates
 
-            xyFeedString = ""
-            zFeedString = ""
-            if self.xy_feedrate is not None:
-                xyFeedString = " F" + str(self.xy_feedrate)
-            if self.z_feedrate is not None:
-                zFeedString = " F" + str(self.z_feedrate)
+        xyFeed = '' if self.xy_feedrate is None else ' F' + str(self.xy_feedrate)
+        zFeed = '' if self.z_feedrate is None else ' F' + str(self.z_feedrate)
 
-            self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY,
-                                            xyFeedString))
-            self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
-            self.send_now("G92 E" + str(self.pauseE))
+        self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY, xyFeed))
+        self.send_now("G1 Z" + str(self.pauseZ) + zFeed)
+        self.send_now("G92 E" + str(self.pauseE))
 
-            # go back to relative if needed
-            if self.pauseRelative: self.send_now("G91")
-            # reset old feed rate
-            self.send_now("G1 F" + str(self.pauseF))
+        # go back to relative if needed
+        if self.pauseRelative:
+            self.send_now("G91")
+        if self.pauseRelativeE:
+            self.send_now('M83')
+        # reset old feed rate
+        self.send_now("G1 F" + str(self.pauseF))
 
         self.paused = False
         self.printing = True

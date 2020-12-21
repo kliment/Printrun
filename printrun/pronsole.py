@@ -188,7 +188,7 @@ class pronsole(cmd.Cmd):
         self.starttime = 0
         self.extra_print_time = 0
         self.silent = False
-        self.commandprefixes = 'MGT$'
+        self.commandprefixes = 'MGTD$'
         self.promptstrs = {"offline": "%(bold)soffline>%(normal)s ",
                            "fallback": "%(bold)s%(red)s%(port)s%(white)s PC>%(normal)s ",
                            "macro": "%(bold)s..>%(normal)s ",
@@ -1292,7 +1292,7 @@ class pronsole(cmd.Cmd):
 
     def recvcb_report(self, l):
         isreport = REPORT_NONE
-        if "ok C:" in l or "Count" in l \
+        if "ok C:" in l or " Count " in l \
            or ("X:" in l and len(gcoder.m114_exp.findall(l)) == 6):
             self.posreport = l
             isreport = REPORT_POS

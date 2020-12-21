@@ -150,9 +150,14 @@ class GcodeViewPanel(wxGLPanel):
 
         for obj in self.parent.objects:
             if not obj.model \
-               or not obj.model.loaded \
-               or not obj.model.initialized:
+               or not obj.model.loaded:
                 continue
+            # Skip (comment out) initialized check, which safely causes empty 
+            # model during progressive load. This can cause exceptions/garbage
+            # render, but seems fine for now
+            # May need to lock init() and draw_objects() together
+            # if not obj.model.initialized:
+            #     continue
             glPushMatrix()
             glTranslatef(*(obj.offsets))
             glRotatef(obj.rot, 0.0, 0.0, 1.0)
@@ -227,7 +232,14 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
+    wheelTimestamp = None
     def handle_wheel(self, event):
+        if self.wheelTimestamp == event.Timestamp:
+            # filter duplicate event delivery in Ubuntu, Debian issue #1110
+            return  
+
+        self.wheelTimestamp = event.Timestamp
+
         delta = event.GetWheelRotation()
         factor = 1.05
         if event.ControlDown():
@@ -273,6 +285,10 @@ class GcodeViewPanel(wxGLPanel):
 
     def keypress(self, event):
         """gets keypress events and moves/rotates active shape"""
+        if event.HasModifiers():
+            # let alt+c bubble up
+            event.Skip()
+            return
         step = event.ControlDown() and 1.05 or 1.1
         key = event.GetKeyCode()
         if key in LAYER_UP_KEYS:

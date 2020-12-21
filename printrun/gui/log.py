@@ -30,8 +30,16 @@ class LogPane(wx.BoxSizer):
         lbrs = wx.BoxSizer(wx.HORIZONTAL)
         root.commandbox = wx.TextCtrl(bottom_panel, style = wx.TE_PROCESS_ENTER)
         root.commandbox.SetToolTip(wx.ToolTip(_("Send commands to printer\n(Type 'help' for simple\nhelp function)")))
+        root.commandbox.Hint = 'Command to [S]end'
         root.commandbox.Bind(wx.EVT_TEXT_ENTER, root.sendline)
         root.commandbox.Bind(wx.EVT_CHAR, root.cbkey)
+        def deselect(ev):
+            # In Ubuntu 19.10, when focused, all text is selected
+            lp = root.commandbox.LastPosition
+            # print(f"SetSelection({lp}, {lp})")
+            wx.CallAfter(root.commandbox.SetSelection, lp, lp)
+            ev.Skip()
+        root.commandbox.Bind(wx.EVT_SET_FOCUS, deselect)
         root.commandbox.history = [""]
         root.commandbox.histindex = 1
         lbrs.Add(root.commandbox, 1)
