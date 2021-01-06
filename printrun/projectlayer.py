@@ -90,35 +90,34 @@ class DisplayFrame(wx.Frame):
             if self.slicer == 'Slic3r' or self.slicer == 'Skeinforge':
 
                 if self.scale != 1.0:
-                    layercopy = copy.deepcopy(image)
-                    height = float(layercopy.get('height').replace('m', ''))
-                    width = float(layercopy.get('width').replace('m', ''))
+                    image = copy.deepcopy(image)
+                    height = float(image.get('height').replace('m', ''))
+                    width = float(image.get('width').replace('m', ''))
 
-                    layercopy.set('height', str(height * self.scale) + 'mm')
-                    layercopy.set('width', str(width * self.scale) + 'mm')
-                    layercopy.set('viewBox', '0 0 ' + str(width * self.scale) + ' ' + str(height * self.scale))
+                    image.set('height', str(height * self.scale) + 'mm')
+                    image.set('width', str(width * self.scale) + 'mm')
+                    image.set('viewBox', '0 0 ' + str(width * self.scale) + ' ' + str(height * self.scale))
 
-                    g = layercopy.find("{http://www.w3.org/2000/svg}g")
+                    g = image.find("{http://www.w3.org/2000/svg}g")
                     g.set('transform', 'scale(' + str(self.scale) + ')')
-                    stream = io.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(layercopy)))
-                else:
-                    stream = io.StringIO(PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(image)))
 
-                pngImage = wx.ImageFromStream(stream)
+                pngbytes = PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(image))
+                pngImage = wx.Image(io.BytesIO(pngbytes))
 
-                # print "w:", pngImage.Width, ", dpi:", self.dpi, ", w (mm): ",(pngImage.Width / self.dpi) * 25.4
+                #print("w:", pngImage.Width, ", dpi:", self.dpi, ", w (mm): ",(pngImage.Width / self.dpi) * 25.4)
 
                 if self.layer_red:
                     pngImage = pngImage.AdjustChannels(1, 0, 0, 1)
 
-                dc.DrawBitmap(wx.BitmapFromImage(pngImage), self.offset[0], self.offset[1], True)
+                dc.DrawBitmap(wx.Bitmap(pngImage), self.offset[0], self.offset[1], True)
 
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
                 if self.layer_red:
                     image = image.AdjustChannels(1, 0, 0, 1)
-                dc.DrawBitmap(wx.BitmapFromImage(image.Scale(image.Width * self.scale, image.Height * self.scale)), self.offset[0], -self.offset[1], True)
+                bitmap = wx.Bitmap(image.Scale(image.Width * self.scale, image.Height * self.scale))
+                dc.DrawBitmap(bitmap, self.offset[0], -self.offset[1], True)
             else:
                 raise Exception(self.slicer + " is an unknown method.")
 
@@ -398,7 +397,7 @@ class SettingsFrame(wx.Frame):
         first_layer_boxer.Add(self.first_layer, flag = wx.ALIGN_CENTER_VERTICAL)
 
         first_layer_boxer.Add(wx.StaticText(self.panel, -1, " (s):"), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.show_first_layer_timer = wx.SpinCtrlDouble(self.panel, -1, initial = -1, inc = 1, size = (125, -1))
+        self.show_first_layer_timer = wx.SpinCtrlDouble(self.panel, -1, initial = -1, min=-1, inc = 1, size = (125, -1))
         self.show_first_layer_timer.SetDigits(1)
         self.show_first_layer_timer.SetHelpText("How long to display the first layer for. -1 = unlimited.")
         first_layer_boxer.Add(self.show_first_layer_timer, flag = wx.ALIGN_CENTER_VERTICAL)
