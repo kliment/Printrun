@@ -31,7 +31,7 @@ rem **     https://wiki.python.org/moin/WindowsCompilers                   **
 rem **  3. check for latest repository updates at:                         **
 rem **     http://github.com/kliment/Printrun.git                          **
 rem **                                                                     **
-rem **  Author: DivingDuck, 2020-12-13, Status: working                    **
+rem **  Author: DivingDuck, 2021-01-06, Status: working                    **
 rem **                                                                     **
 rem *************************************************************************
 rem *************************************************************************
