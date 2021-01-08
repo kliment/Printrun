@@ -136,7 +136,7 @@ class DisplayFrame(wx.Frame):
         wx.FutureCall(1000 * self.interval, self.hide_pic_and_rise)
 
     def rise(self):
-        if (self.direction == "Top Down"):
+        if self.direction == "Top Down":
             print("Lowering", str(time.clock()))
         else:
             print("Rising", str(time.clock()))
@@ -144,19 +144,19 @@ class DisplayFrame(wx.Frame):
         if self.printer is not None and self.printer.online:
             self.printer.send_now("G91")
 
-            if (self.prelift_gcode):
+            if self.prelift_gcode:
                 for line in self.prelift_gcode.split('\n'):
                     if line:
                         self.printer.send_now(line)
 
-            if (self.direction == "Top Down"):
+            if self.direction == "Top Down":
                 self.printer.send_now("G1 Z-%f F%g" % (self.overshoot, self.z_axis_rate,))
                 self.printer.send_now("G1 Z%f F%g" % (self.overshoot - self.thickness, self.z_axis_rate,))
             else:  # self.direction == "Bottom Up"
                 self.printer.send_now("G1 Z%f F%g" % (self.overshoot, self.z_axis_rate,))
                 self.printer.send_now("G1 Z-%f F%g" % (self.overshoot - self.thickness, self.z_axis_rate,))
 
-            if (self.postlift_gcode):
+            if self.postlift_gcode:
                 for line in self.postlift_gcode.split('\n'):
                     if line:
                         self.printer.send_now(line)
@@ -238,221 +238,223 @@ class SettingsFrame(wx.Frame):
 
     def __init__(self, parent, printer = None):
         wx.Frame.__init__(self, parent, title = "ProjectLayer Control", style = (wx.DEFAULT_FRAME_STYLE | wx.WS_EX_CONTEXTHELP))
-        self.SetExtraStyle(wx.FRAME_EX_CONTEXTHELP)
         self.pronterface = parent
         self.display_frame = DisplayFrame(self, title = "ProjectLayer Display", printer = printer)
 
         self.panel = wx.Panel(self)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        buttonbox = wx.StaticBoxSizer(wx.StaticBox(self.panel, label = "Controls"), wx.HORIZONTAL)
+        # In wxPython 4.1.0 gtk3 (phoenix) wxWidgets 3.1.4
+        # Layout() breaks before Show(), invoke once after Show()
+        def fit(ev):
+            self.Fit()
+            self.Unbind(wx.EVT_ACTIVATE, handler=fit)
+        self.Bind(wx.EVT_ACTIVATE, fit)
 
-        load_button = wx.Button(self.panel, -1, "Load")
+        buttonGroup = wx.StaticBox(self.panel, label = "Controls")
+        buttonbox = wx.StaticBoxSizer(buttonGroup, wx.HORIZONTAL)
+
+        load_button = wx.Button(buttonGroup, -1, "Load")
         load_button.Bind(wx.EVT_BUTTON, self.load_file)
-        load_button.SetHelpText("Choose an SVG file created from Slic3r or Skeinforge, or a zip file of bitmap images (with extension: .3dlp.zip).")
+        load_button.SetToolTip("Choose an SVG file created from Slic3r or Skeinforge, or a zip file of bitmap images (with extension: .3dlp.zip).")
         buttonbox.Add(load_button, flag = wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 5)
 
-        present_button = wx.Button(self.panel, -1, "Present")
+        present_button = wx.Button(buttonGroup, -1, "Present")
         present_button.Bind(wx.EVT_BUTTON, self.start_present)
-        present_button.SetHelpText("Starts the presentation of the slices.")
+        present_button.SetToolTip("Starts the presentation of the slices.")
         buttonbox.Add(present_button, flag = wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 5)
 
-        self.pause_button = wx.Button(self.panel, -1, "Pause")
+        self.pause_button = wx.Button(buttonGroup, -1, "Pause")
         self.pause_button.Bind(wx.EVT_BUTTON, self.pause_present)
-        self.pause_button.SetHelpText("Pauses the presentation. Can be resumed afterwards by clicking this button, or restarted by clicking present again.")
+        self.pause_button.SetToolTip("Pauses the presentation. Can be resumed afterwards by clicking this button, or restarted by clicking present again.")
         buttonbox.Add(self.pause_button, flag = wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 5)
 
-        stop_button = wx.Button(self.panel, -1, "Stop")
+        stop_button = wx.Button(buttonGroup, -1, "Stop")
         stop_button.Bind(wx.EVT_BUTTON, self.stop_present)
-        stop_button.SetHelpText("Stops presenting the slices.")
+        stop_button.SetToolTip("Stops presenting the slices.")
         buttonbox.Add(stop_button, flag = wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 5)
 
-        self.help_button = wx.ContextHelpButton(self.panel)
-        buttonbox.Add(self.help_button, flag = wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 5)
-
-        fieldboxsizer = wx.StaticBoxSizer(wx.StaticBox(self.panel, label = "Settings"), wx.VERTICAL)
+        settingsGroup = wx.StaticBox(self.panel, label = "Settings")
+        fieldboxsizer = wx.StaticBoxSizer(settingsGroup, wx.VERTICAL)
         fieldsizer = wx.GridBagSizer(10, 10)
 
         # Left Column
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Layer (mm):"), pos = (0, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.thickness = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_layer", "0.1")), size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Layer (mm):"), pos = (0, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.thickness = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_layer", "0.1")), size = (125, -1))
         self.thickness.Bind(wx.EVT_TEXT, self.update_thickness)
-        self.thickness.SetHelpText("The thickness of each slice. Should match the value used to slice the model.  SVG files update this value automatically, 3dlp.zip files have to be manually entered.")
+        self.thickness.SetToolTip("The thickness of each slice. Should match the value used to slice the model.  SVG files update this value automatically, 3dlp.zip files have to be manually entered.")
         fieldsizer.Add(self.thickness, pos = (0, 1))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Exposure (s):"), pos = (1, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.interval = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_interval", "0.5")), size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Exposure (s):"), pos = (1, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.interval = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_interval", "0.5")), size = (125, -1))
         self.interval.Bind(wx.EVT_TEXT, self.update_interval)
-        self.interval.SetHelpText("How long each slice should be displayed.")
+        self.interval.SetToolTip("How long each slice should be displayed.")
         fieldsizer.Add(self.interval, pos = (1, 1))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Blank (s):"), pos = (2, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.pause = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_pause", "0.5")), size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Blank (s):"), pos = (2, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.pause = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_pause", "0.5")), size = (125, -1))
         self.pause.Bind(wx.EVT_TEXT, self.update_pause)
-        self.pause.SetHelpText("The pause length between slices. This should take into account any movement of the Z axis, plus time to prepare the resin surface (sliding, tilting, sweeping, etc).")
+        self.pause.SetToolTip("The pause length between slices. This should take into account any movement of the Z axis, plus time to prepare the resin surface (sliding, tilting, sweeping, etc).")
         fieldsizer.Add(self.pause, pos = (2, 1))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Scale:"), pos = (3, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.scale = wx.SpinCtrlDouble(self.panel, -1, initial = self._get_setting('project_scale', 1.0), inc = 0.1, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Scale:"), pos = (3, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.scale = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting('project_scale', 1.0), inc = 0.1, size = (125, -1))
         self.scale.SetDigits(3)
         self.scale.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_scale)
-        self.scale.SetHelpText("The additional scaling of each slice.")
+        self.scale.SetToolTip("The additional scaling of each slice.")
         fieldsizer.Add(self.scale, pos = (3, 1))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Direction:"), pos = (4, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.direction = wx.ComboBox(self.panel, -1, choices = ["Top Down", "Bottom Up"], value = self._get_setting('project_direction', "Top Down"), size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Direction:"), pos = (4, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.direction = wx.ComboBox(settingsGroup, -1, choices = ["Top Down", "Bottom Up"], value = self._get_setting('project_direction', "Top Down"), size = (125, -1))
         self.direction.Bind(wx.EVT_COMBOBOX, self.update_direction)
-        self.direction.SetHelpText("The direction the Z axis should move. Top Down is where the projector is above the model, Bottom up is where the projector is below the model.")
+        self.direction.SetToolTip("The direction the Z axis should move. Top Down is where the projector is above the model, Bottom up is where the projector is below the model.")
         fieldsizer.Add(self.direction, pos = (4, 1), flag = wx.ALIGN_CENTER_VERTICAL)
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Overshoot (mm):"), pos = (5, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.overshoot = wx.SpinCtrlDouble(self.panel, -1, initial = self._get_setting('project_overshoot', 3.0), inc = 0.1, min = 0, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Overshoot (mm):"), pos = (5, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.overshoot = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting('project_overshoot', 3.0), inc = 0.1, min = 0, size = (125, -1))
         self.overshoot.SetDigits(1)
         self.overshoot.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_overshoot)
-        self.overshoot.SetHelpText("How far the axis should move beyond the next slice position for each slice. For Top Down printers this would dunk the model under the resi and then return. For Bottom Up printers this would raise the base away from the vat and then return.")
+        self.overshoot.SetToolTip("How far the axis should move beyond the next slice position for each slice. For Top Down printers this would dunk the model under the resi and then return. For Bottom Up printers this would raise the base away from the vat and then return.")
         fieldsizer.Add(self.overshoot, pos = (5, 1))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Pre-lift Gcode:"), pos = (6, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.prelift_gcode = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_prelift_gcode", "").replace("\\n", '\n')), size = (-1, 35), style = wx.TE_MULTILINE)
-        self.prelift_gcode.SetHelpText("Additional gcode to run before raising the Z axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!")
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Pre-lift Gcode:"), pos = (6, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.prelift_gcode = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_prelift_gcode", "").replace("\\n", '\n')), size = (-1, 35), style = wx.TE_MULTILINE)
+        self.prelift_gcode.SetToolTip("Additional gcode to run before raising the Z axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!")
         self.prelift_gcode.Bind(wx.EVT_TEXT, self.update_prelift_gcode)
         fieldsizer.Add(self.prelift_gcode, pos = (6, 1), span = (2, 1))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Post-lift Gcode:"), pos = (6, 2), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.postlift_gcode = wx.TextCtrl(self.panel, -1, str(self._get_setting("project_postlift_gcode", "").replace("\\n", '\n')), size = (-1, 35), style = wx.TE_MULTILINE)
-        self.postlift_gcode.SetHelpText("Additional gcode to run after raising the Z axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!")
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Post-lift Gcode:"), pos = (6, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.postlift_gcode = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_postlift_gcode", "").replace("\\n", '\n')), size = (-1, 35), style = wx.TE_MULTILINE)
+        self.postlift_gcode.SetToolTip("Additional gcode to run after raising the Z axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!")
         self.postlift_gcode.Bind(wx.EVT_TEXT, self.update_postlift_gcode)
         fieldsizer.Add(self.postlift_gcode, pos = (6, 3), span = (2, 1))
 
         # Right Column
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "X (px):"), pos = (0, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "X (px):"), pos = (0, 2), flag = wx.ALIGN_CENTER_VERTICAL)
         projectX = int(math.floor(float(self._get_setting("project_x", 1920))))
-        self.X = wx.SpinCtrl(self.panel, -1, str(projectX), max = 999999, size = (125, -1))
+        self.X = wx.SpinCtrl(settingsGroup, -1, str(projectX), max = 999999, size = (125, -1))
         self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
-        self.X.SetHelpText("The projector resolution in the X axis.")
+        self.X.SetToolTip("The projector resolution in the X axis.")
         fieldsizer.Add(self.X, pos = (0, 3))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Y (px):"), pos = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Y (px):"), pos = (1, 2), flag = wx.ALIGN_CENTER_VERTICAL)
         projectY = int(math.floor(float(self._get_setting("project_y", 1200))))
-        self.Y = wx.SpinCtrl(self.panel, -1, str(projectY), max = 999999, size = (125, -1))
+        self.Y = wx.SpinCtrl(settingsGroup, -1, str(projectY), max = 999999, size = (125, -1))
         self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
-        self.Y.SetHelpText("The projector resolution in the Y axis.")
+        self.Y.SetToolTip("The projector resolution in the Y axis.")
         fieldsizer.Add(self.Y, pos = (1, 3))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetX (mm):"), pos = (2, 2), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.offset_X = wx.SpinCtrlDouble(self.panel, -1, initial = self._get_setting("project_offset_x", 0.0), inc = 1, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "OffsetX (mm):"), pos = (2, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.offset_X = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_offset_x", 0.0), inc = 1, size = (125, -1))
         self.offset_X.SetDigits(1)
         self.offset_X.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_offset)
-        self.offset_X.SetHelpText("How far the slice should be offset from the edge in the X axis.")
+        self.offset_X.SetToolTip("How far the slice should be offset from the edge in the X axis.")
         fieldsizer.Add(self.offset_X, pos = (2, 3))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "OffsetY (mm):"), pos = (3, 2), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.offset_Y = wx.SpinCtrlDouble(self.panel, -1, initial = self._get_setting("project_offset_y", 0.0), inc = 1, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "OffsetY (mm):"), pos = (3, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.offset_Y = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_offset_y", 0.0), inc = 1, size = (125, -1))
         self.offset_Y.SetDigits(1)
         self.offset_Y.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_offset)
-        self.offset_Y.SetHelpText("How far the slice should be offset from the edge in the Y axis.")
+        self.offset_Y.SetToolTip("How far the slice should be offset from the edge in the Y axis.")
         fieldsizer.Add(self.offset_Y, pos = (3, 3))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "ProjectedX (mm):"), pos = (4, 2), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.projected_X_mm = wx.SpinCtrlDouble(self.panel, -1, initial = self._get_setting("project_projected_x", 505.0), inc = 1, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "ProjectedX (mm):"), pos = (4, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.projected_X_mm = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_projected_x", 505.0), inc = 1, size = (125, -1))
         self.projected_X_mm.SetDigits(1)
         self.projected_X_mm.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_projected_Xmm)
-        self.projected_X_mm.SetHelpText("The actual width of the entire projected image. Use the Calibrate grid to show the full size of the projected image, and measure the width at the same level where the slice will be projected onto the resin.")
+        self.projected_X_mm.SetToolTip("The actual width of the entire projected image. Use the Calibrate grid to show the full size of the projected image, and measure the width at the same level where the slice will be projected onto the resin.")
         fieldsizer.Add(self.projected_X_mm, pos = (4, 3))
 
-        fieldsizer.Add(wx.StaticText(self.panel, -1, "Z Axis Speed (mm/min):"), pos = (5, 2), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.z_axis_rate = wx.SpinCtrl(self.panel, -1, str(self._get_setting("project_z_axis_rate", 200)), max = 9999, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, "Z Axis Speed (mm/min):"), pos = (5, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.z_axis_rate = wx.SpinCtrl(settingsGroup, -1, str(self._get_setting("project_z_axis_rate", 200)), max = 9999, size = (125, -1))
         self.z_axis_rate.Bind(wx.EVT_SPINCTRL, self.update_z_axis_rate)
-        self.z_axis_rate.SetHelpText("Speed of the Z axis in mm/minute. Take into account that slower rates may require a longer pause value.")
+        self.z_axis_rate.SetToolTip("Speed of the Z axis in mm/minute. Take into account that slower rates may require a longer pause value.")
         fieldsizer.Add(self.z_axis_rate, pos = (5, 3))
 
         fieldboxsizer.Add(fieldsizer)
 
         # Display
 
-        displayboxsizer = wx.StaticBoxSizer(wx.StaticBox(self.panel, label = "Display"), wx.VERTICAL)
+        displayGroup = wx.StaticBox(self.panel, -1, "Display")
+        displayboxsizer = wx.StaticBoxSizer(displayGroup)
         displaysizer = wx.GridBagSizer(10, 10)
 
-        displaysizer.Add(wx.StaticText(self.panel, -1, "Fullscreen:"), pos = (0, 0), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.fullscreen = wx.CheckBox(self.panel, -1)
+        self.fullscreen = wx.CheckBox(displayGroup, -1, "Fullscreen")
         self.fullscreen.Bind(wx.EVT_CHECKBOX, self.update_fullscreen)
-        self.fullscreen.SetHelpText("Toggles the project screen to full size.")
-        displaysizer.Add(self.fullscreen, pos = (0, 1), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.fullscreen.SetToolTip("Toggles the project screen to full size.")
+        displaysizer.Add(self.fullscreen, pos = (0, 0), flag = wx.ALIGN_CENTER_VERTICAL)
 
-        displaysizer.Add(wx.StaticText(self.panel, -1, "Calibrate:"), pos = (0, 2), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.calibrate = wx.CheckBox(self.panel, -1)
+        self.calibrate = wx.CheckBox(displayGroup, -1, "Calibrate:")
         self.calibrate.Bind(wx.EVT_CHECKBOX, self.show_calibrate)
-        self.calibrate.SetHelpText("Toggles the calibration grid. Each grid should be 10mmx10mm in size. Use the grid to ensure the projected size is correct. See also the help for the ProjectedX field.")
-        displaysizer.Add(self.calibrate, pos = (0, 3), flag = wx.ALIGN_CENTER_VERTICAL)
-
-        displaysizer.Add(wx.StaticText(self.panel, -1, "1st Layer:"), pos = (0, 4), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.calibrate.SetToolTip("Toggles the calibration grid. Each grid should be 10mmx10mm in size. Use the grid to ensure the projected size is correct. See also the help for the ProjectedX field.")
+        displaysizer.Add(self.calibrate, pos = (0, 1), flag = wx.ALIGN_CENTER_VERTICAL)
 
         first_layer_boxer = wx.BoxSizer(wx.HORIZONTAL)
-        self.first_layer = wx.CheckBox(self.panel, -1)
+        self.first_layer = wx.CheckBox(displayGroup, -1, "1st Layer")
         self.first_layer.Bind(wx.EVT_CHECKBOX, self.show_first_layer)
-        self.first_layer.SetHelpText("Displays the first layer of the model. Use this to project the first layer for longer so it holds to the base. Note: this value does not affect the first layer when the \"Present\" run is started, it should be used manually.")
+        self.first_layer.SetToolTip("Displays the first layer of the model. Use this to project the first layer for longer so it holds to the base. Note: this value does not affect the first layer when the \"Present\" run is started, it should be used manually.")
 
         first_layer_boxer.Add(self.first_layer, flag = wx.ALIGN_CENTER_VERTICAL)
 
-        first_layer_boxer.Add(wx.StaticText(self.panel, -1, " (s):"), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.show_first_layer_timer = wx.SpinCtrlDouble(self.panel, -1, initial = -1, min=-1, inc = 1, size = (125, -1))
+        first_layer_boxer.Add(wx.StaticText(displayGroup, -1, " (s):"), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.show_first_layer_timer = wx.SpinCtrlDouble(displayGroup, -1, initial = -1, min=-1, inc = 1, size = (125, -1))
         self.show_first_layer_timer.SetDigits(1)
-        self.show_first_layer_timer.SetHelpText("How long to display the first layer for. -1 = unlimited.")
+        self.show_first_layer_timer.SetToolTip("How long to display the first layer for. -1 = unlimited.")
         first_layer_boxer.Add(self.show_first_layer_timer, flag = wx.ALIGN_CENTER_VERTICAL)
-        displaysizer.Add(first_layer_boxer, pos = (0, 6), flag = wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.Add(first_layer_boxer, pos = (0, 2), flag = wx.ALIGN_CENTER_VERTICAL)
 
-        displaysizer.Add(wx.StaticText(self.panel, -1, "Red:"), pos = (0, 7), flag = wx.ALIGN_CENTER_VERTICAL)
-        self.layer_red = wx.CheckBox(self.panel, -1)
+        self.layer_red = wx.CheckBox(displayGroup, -1, "Red")
         self.layer_red.Bind(wx.EVT_CHECKBOX, self.show_layer_red)
-        self.layer_red.SetHelpText("Toggles whether the image should be red. Useful for positioning whilst resin is in the printer as it should not cause a reaction.")
-        displaysizer.Add(self.layer_red, pos = (0, 8), flag = wx.ALIGN_CENTER_VERTICAL)
+        self.layer_red.SetToolTip("Toggles whether the image should be red. Useful for positioning whilst resin is in the printer as it should not cause a reaction.")
+        displaysizer.Add(self.layer_red, pos = (0, 3), flag = wx.ALIGN_CENTER_VERTICAL)
 
         displayboxsizer.Add(displaysizer)
 
         # Info
-        infosizer = wx.StaticBoxSizer(wx.StaticBox(self.panel, label = "Info"), wx.VERTICAL)
+        infoGroup = wx.StaticBox(self.panel, label = "Info")
+        infosizer = wx.StaticBoxSizer(infoGroup, wx.VERTICAL)
 
         infofieldsizer = wx.GridBagSizer(10, 10)
 
-        filelabel = wx.StaticText(self.panel, -1, "File:")
-        filelabel.SetHelpText("The name of the model currently loaded.")
+        filelabel = wx.StaticText(infoGroup, -1, "File:")
+        filelabel.SetToolTip("The name of the model currently loaded.")
         infofieldsizer.Add(filelabel, pos = (0, 0))
-        self.filename = wx.StaticText(self.panel, -1, "")
-
+        self.filename = wx.StaticText(infoGroup, -1, "")
         infofieldsizer.Add(self.filename, pos = (0, 1))
 
-        totallayerslabel = wx.StaticText(self.panel, -1, "Total Layers:")
-        totallayerslabel.SetHelpText("The total number of layers found in the model.")
+        totallayerslabel = wx.StaticText(infoGroup, -1, "Total Layers:")
+        totallayerslabel.SetToolTip("The total number of layers found in the model.")
         infofieldsizer.Add(totallayerslabel, pos = (1, 0))
-        self.total_layers = wx.StaticText(self.panel, -1)
+        self.total_layers = wx.StaticText(infoGroup, -1)
 
         infofieldsizer.Add(self.total_layers, pos = (1, 1))
 
-        currentlayerlabel = wx.StaticText(self.panel, -1, "Current Layer:")
-        currentlayerlabel.SetHelpText("The current layer being displayed.")
+        currentlayerlabel = wx.StaticText(infoGroup, -1, "Current Layer:")
+        currentlayerlabel.SetToolTip("The current layer being displayed.")
         infofieldsizer.Add(currentlayerlabel, pos = (2, 0))
-        self.current_layer = wx.StaticText(self.panel, -1, "0")
+        self.current_layer = wx.StaticText(infoGroup, -1, "0")
         infofieldsizer.Add(self.current_layer, pos = (2, 1))
 
-        estimatedtimelabel = wx.StaticText(self.panel, -1, "Estimated Time:")
-        estimatedtimelabel.SetHelpText("An estimate of the remaining time until print completion.")
+        estimatedtimelabel = wx.StaticText(infoGroup, -1, "Estimated Time:")
+        estimatedtimelabel.SetToolTip("An estimate of the remaining time until print completion.")
         infofieldsizer.Add(estimatedtimelabel, pos = (3, 0))
-        self.estimated_time = wx.StaticText(self.panel, -1, "")
+        self.estimated_time = wx.StaticText(infoGroup, -1, "")
         infofieldsizer.Add(self.estimated_time, pos = (3, 1))
 
         infosizer.Add(infofieldsizer)
 
         #
-
+        vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(buttonbox, flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, border = 10)
         vbox.Add(fieldboxsizer, flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 10)
         vbox.Add(displayboxsizer, flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 10)
         vbox.Add(infosizer, flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border = 10)
 
-        self.panel.SetSizer(vbox)
-        self.panel.Fit()
+        self.panel.SetSizerAndFit(vbox)
+        bs = wx.BoxSizer(wx.VERTICAL)
+        bs.Add(self.panel, flag=wx.EXPAND)
+        self.SetSizerAndFit(bs)
         self.Fit()
         self.SetPosition((0, 0))
         self.Show()
@@ -492,7 +494,7 @@ class SettingsFrame(wx.Frame):
         zlast = 0
         zdiff = 0
         ol = []
-        if (slicer == 'Slic3r'):
+        if slicer == 'Slic3r':
             height = et.getroot().get('height').replace('m', '')
             width = et.getroot().get('width').replace('m', '')
 
@@ -662,7 +664,7 @@ class SettingsFrame(wx.Frame):
             self.display_frame.draw_layer(gridBitmap.ConvertToImage())
 
     def present_first_layer(self, event):
-        if (self.first_layer.GetValue()):
+        if self.first_layer.GetValue():
             if not hasattr(self, "layers"):
                 print("No model loaded!")
                 self.first_layer.SetValue(False)
@@ -674,6 +676,7 @@ class SettingsFrame(wx.Frame):
             self.display_frame.dpi = self.get_dpi()
             self.display_frame.draw_layer(copy.deepcopy(self.layers[0][0]))
             self.calibrate.SetValue(False)
+            self.display_frame.Refresh()
             if self.show_first_layer_timer != -1.0:
                 def unpresent_first_layer():
                     self.display_frame.clear_layer()
@@ -749,7 +752,7 @@ class SettingsFrame(wx.Frame):
         self._set_setting('project_direction', direction)
 
     def update_fullscreen(self, event):
-        if (self.fullscreen.GetValue()):
+        if self.fullscreen.GetValue():
             self.display_frame.ShowFullScreen(1)
         else:
             self.display_frame.ShowFullScreen(0)
@@ -778,7 +781,7 @@ class SettingsFrame(wx.Frame):
         self.pause_button.SetLabel("Pause")
         self.set_current_layer(0)
         self.display_frame.Raise()
-        if (self.fullscreen.GetValue()):
+        if self.fullscreen.GetValue():
             self.display_frame.ShowFullScreen(1)
         self.display_frame.slicer = self.layers[2]
         self.display_frame.dpi = self.get_dpi()
@@ -814,8 +817,6 @@ class SettingsFrame(wx.Frame):
             self.display_frame.next_img()
 
 if __name__ == "__main__":
-    provider = wx.SimpleHelpProvider()
-    wx.HelpProvider_Set(provider)
     a = wx.App()
-    SettingsFrame(None).Show()
+    SettingsFrame(None)
     a.MainLoop()
