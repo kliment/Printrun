@@ -493,10 +493,12 @@ class printcore():
         self.printing = True
         self.lineno = 0
         self.resendfrom = -1
-        self._send("M110", -1, True)
         if not gcode or not gcode.lines:
             return True
+
         self.clear = False
+        self._send("M110", -1, True)
+
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
                                              name = 'print thread',
