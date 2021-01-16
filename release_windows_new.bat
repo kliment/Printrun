@@ -84,7 +84,7 @@ if exist v3 (
    rem Looks like we don't need this fix any longer
    REM pip uninstall pyinstaller
    REM pip install https://github.com/pyinstaller/pyinstaller/archive/develop.zip
-
+   pip install pyinstaller
    pip install pypiwin32
    pip install polygon3
    )
