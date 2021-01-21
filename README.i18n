@@ -12,6 +12,8 @@ and was generated using
 
   pygettext -o locale/pronterface.pot *.py printrun/*.py printrun/*/*.py
 
+on some systems you have to replace the pygettext with pygettext2 or pygettext3..
+
 followed by minor edits to the generated header.
 
 This template is the basis for all pronterface mesage catalogs.  Right
