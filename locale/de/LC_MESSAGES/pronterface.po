@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2021-01-21 02:35+0100\n"
-"PO-Revision-Date: 2021-01-26 00:13+0100\n"
+"PO-Revision-Date: 2021-01-26 00:29+0100\n"
 "Last-Translator: Christian Metzen <metzench@ccux-linux.de>\n"
 "Language-Team: DE <LL@li.org>\n"
 "Language: de\n"
@@ -590,7 +590,7 @@ msgstr "Druckstart-Rückruffunktion fehlgeschlagen mit:"
 
 #: printrun/printcore.py:623
 msgid "Print end callback failed with:"
-msgstr "Rückmeldung am Druckende fehlgeschlagen mit:"
+msgstr "Druckende-Rückruffunktion fehlgeschlagen mit:"
 
 #: printrun/printcore.py:626
 msgid "Print thread died due to the following error:"
@@ -2435,7 +2435,7 @@ msgstr ""
 
 #: printrun/settings.py:423
 msgid "Failed to run callback after setting \"%s\":"
-msgstr ""
+msgstr "Scheitern der Rückruffunktion  nach dem Einstellen \"%s\":"
 
 #: printrun/stlplater.py:218
 msgid "STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"
