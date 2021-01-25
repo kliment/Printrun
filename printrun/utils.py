@@ -37,10 +37,14 @@ def set_utf8_locale():
 # found (windows)
 def install_locale(domain):
     shared_locale_dir = os.path.join(DATADIR, 'locale')
+    translation = None
+    lang = locale.getdefaultlocale()
+
     if os.path.exists(shared_locale_dir):
-        gettext.install(domain, shared_locale_dir)
+        translation = gettext.translation(domain, shared_locale_dir, languages=[lang[0]], fallback= True)
     else:
-        gettext.install(domain, './locale')
+        translation = gettext.translation(domain, './locale', languages=[lang[0]], fallback= True)
+    translation.install()
 
 class LogFormatter(logging.Formatter):
     def __init__(self, format_default, format_info):
