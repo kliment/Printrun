@@ -240,7 +240,7 @@ class Graph(BufferedCanvas):
             if not (rc.bottom < rs.top or rc.top > rs.bottom)),
             key=wx.Rect.GetLeft)
         self.boundRect(res)
-        # search to the left for gaps large enough to accomodate res
+        # search to the left for gaps large enough to accommodate res
         rci = bisect_left(reserved, res)
 
         for i in range(rci, len(reserved)-1):
@@ -423,7 +423,7 @@ class Graph(BufferedCanvas):
             self.drawextruder1temp(dc, gc)
 
     class _YBounds:
-        """Small helper class to claculate y bounds dynamically"""
+        """Small helper class to calculate y bounds dynamically"""
 
         def __init__(self, graph, minimum_scale=5.0, buffer=0.10):
             """_YBounds(Graph,float,float)

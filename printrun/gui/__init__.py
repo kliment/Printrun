@@ -280,7 +280,7 @@ class MainWindow(wx.Frame):
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
 
         self.mainsizer.Layout()
-        # This prevents resizing below a reasonnable value
+        # This prevents resizing below a reasonable value
         # We sum the lowersizer (left pane / viz / log) min size
         # the toolbar height and the statusbar/menubar sizes
         minsize = [0, 0]

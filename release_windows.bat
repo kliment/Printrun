@@ -51,7 +51,7 @@ if exist v3 (
    ) else (
 
    echo **********************************************************************
-   echo ****** No virtual environment named v3 avaliable                ******
+   echo ****** No virtual environment named v3 available                ******
    echo ****** Will create first a new virtual environment with name v3 ******
    echo **********************************************************************
    py -3.7 -m venv v3
@@ -90,7 +90,7 @@ if exist v3 (
    )
 
 echo ********************************************
-echo ****** upgrate virtual environment v3 ******
+echo ****** upgrade virtual environment v3 ******
 echo ********************************************
 pip install --upgrade virtualenv
 

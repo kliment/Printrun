@@ -203,7 +203,7 @@ class StlViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def keypress(self, event):
-        """gets keypress events and moves/rotates acive shape"""
+        """gets keypress events and moves/rotates active shape"""
         keycode = event.GetKeyCode()
         step = 5
         angle = 18
@@ -270,7 +270,7 @@ class StlViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def update_object_resize(self):
-        '''called when the window recieves only if opengl is initialized'''
+        '''called when the window receives only if opengl is initialized'''
         pass
 
     def draw_objects(self):
