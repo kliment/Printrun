@@ -40,10 +40,10 @@ def install_locale(domain):
     translation = None
     lang = locale.getdefaultlocale()
 
-    if os.path.exists(shared_locale_dir):
-        translation = gettext.translation(domain, shared_locale_dir, languages=[lang[0]], fallback= True)
-    else:
+    if os.path.exists('./locale'):
         translation = gettext.translation(domain, './locale', languages=[lang[0]], fallback= True)
+    else:
+        translation = gettext.translation(domain, shared_locale_dir, languages=[lang[0]], fallback= True)
     translation.install()
 
 class LogFormatter(logging.Formatter):
