@@ -326,7 +326,7 @@ class wxGLPanel(BASE_CLASS):
         pass
 
     def update_object_resize(self):
-        '''called when the window recieves only if opengl is initialized'''
+        '''called when the window receives only if opengl is initialized'''
         pass
 
     def draw_objects(self):

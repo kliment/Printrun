@@ -136,7 +136,7 @@ class PlaterPanel(wx.Panel):
         return True
 
     def rotate_shape(self, angle):
-        """rotates acive shape
+        """rotates active shape
         positive angle is clockwise
         """
         name = self.l.GetSelection()
