@@ -12,6 +12,8 @@ and was generated using
 
   pygettext -o locale/pronterface.pot *.py printrun/*.py printrun/*/*.py
 
+on some systems you have to replace the pygettext with pygettext2 or pygettext3..
+
 followed by minor edits to the generated header.
 
 This template is the basis for all pronterface mesage catalogs.  Right
@@ -22,7 +24,7 @@ now there is only one, for German.  New ones can be created:
   mkdir -p locale/${newlang}/LC_MESSAGES
   cp locale/pronterface.pot locale/${newlanguage}/LC_MESSAGES/pronterface.po
   cd locale/${newlanguage}/LC_MESSAGES/
-  # Edit the .po file to add messages for newlang
+  # Edit the .po file to add messages for newlang (debian offers e.g.: poedit or gtranslator)
   msgfmt -o pronterface.mo pronterface.po
 
 To update a previously created message catalog from the template, use :
