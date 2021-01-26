@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface jm1\n"
 "POT-Creation-Date: 2021-01-21 02:35+0100\n"
-"PO-Revision-Date: 2021-01-26 03:53+0100\n"
+"PO-Revision-Date: 2021-01-26 11:09+0100\n"
 "Last-Translator: Christian Metzen <metzench@ccux-linux.de>\n"
 "Language-Team: DE <LL@li.org>\n"
 "Language: de\n"
@@ -69,9 +69,8 @@ msgstr ""
 "WX >=4 ist nicht installiert. Dieses Programm erfordert WX >= 4 zum Starten."
 
 #: printrun/gui/__init__.py:185
-#, fuzzy
 msgid "Commands"
-msgstr "Kommando"
+msgstr "Befehle"
 
 #: printrun/gui/__init__.py:186
 msgid "Status"
@@ -2152,7 +2151,7 @@ msgstr "Drucker ist jetzt Online."
 
 #: printrun/pronterface.py:1748
 msgid "Dis&connect"
-msgstr "Trennen&Verbinden"
+msgstr "Trennen"
 
 #: printrun/pronterface.py:2007
 msgid "click to add new custom button"
@@ -2320,11 +2319,11 @@ msgstr ""
 
 #: printrun/settings.py:333
 msgid "Custom device pattern: for example /dev/3DP_* "
-msgstr "Individuelle Geräte Struktur: zum Beispiel /dev/3DP_* "
+msgstr "Individuelles Geräte Muster: zum Beispiel /dev/3DP_* "
 
 #: printrun/settings.py:333
 msgid "Device name pattern"
-msgstr "Struktur des Gerätenamen"
+msgstr "Muster des Gerätenamen"
 
 #: printrun/settings.py:334
 msgid "Bed temperature for ABS"
