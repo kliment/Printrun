@@ -126,7 +126,7 @@ class showstl(wx.Window):
             event.Skip()
 
     def rotate_shape(self, angle):
-        """rotates acive shape
+        """rotates active shape
         positive angle is clockwise
         """
         self.i += angle
@@ -135,7 +135,7 @@ class showstl(wx.Window):
             threading.Thread(target = self.cr).start()
 
     def keypress(self, event):
-        """gets keypress events and moves/rotates acive shape"""
+        """gets keypress events and moves/rotates active shape"""
         keycode = event.GetKeyCode()
         step = 5
         angle = 18

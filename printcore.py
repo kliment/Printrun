@@ -63,7 +63,7 @@ if __name__ == '__main__':
                 print("ValueError:")
                 print("\tInvalid BAUD_RATE value '%s'" % a)
                 print("\tBAUD_RATE must be an integer\n")
-                # FIXME: This should output a more apropiate error message when
+                # FIXME: This should output a more appropriate error message when
                 #        not a good baud rate is passed as an argument
                 #        i.e: when baud <= 1000 or > 225000
                 print(usage)

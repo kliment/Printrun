@@ -1136,7 +1136,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if self.settings.display_progress_on_printer and time.time() - self.printer_progress_time >= self.settings.printer_progress_update_interval:
                     self.printer_progress_time = time.time()
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
-                    #":" seems to be some kind of seperator for G-CODE"
+                    #":" seems to be some kind of separator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
                     if len(printer_progress_string) > 25:
                         logging.info("Warning: The print progress message might be too long to be displayed properly")
@@ -1675,7 +1675,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     next_layer += 1
                     generator_output = next(generator)
             else:
-                # If GCode is not being loaded asynchroneously, it is already
+                # If GCode is not being loaded asynchronously, it is already
                 # loaded, so let's make visualization sequentially
                 gcode = self.fgcode
                 self.gviz.addfile(gcode)
@@ -1705,7 +1705,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
             open(name, "w").write("\n".join((line.raw for line in self.fgcode)))
-            self.log(_("G-Code succesfully saved to %s") % name)
+            self.log(_("G-Code successfully saved to %s") % name)
         dlg.Destroy()
 
     #  --------------------------------------------------------------
