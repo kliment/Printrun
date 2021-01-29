@@ -22,8 +22,7 @@ import objc
 
 def SetUpIOFramework():
     # load the IOKit library
-    framework = ctypes.cdll.LoadLibrary(
-        '/System/Library/Frameworks/IOKit.framework/IOKit')
+    framework = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/IOKit.framework/IOKit')
 
     # declare parameters as described in IOPMLib.h
     framework.IOPMAssertionCreateWithName.argtypes = [

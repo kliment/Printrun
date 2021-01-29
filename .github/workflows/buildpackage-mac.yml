@@ -33,12 +33,16 @@ jobs:
         python setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
-        pyi-makespec -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean pronterface.spec -y
+        ls -l dist/pronterface.app/Contents/macOS/pronterface
+        chmod +x dist/pronterface.app/Contents/macOS/pronterface
+        ls -l dist/pronterface.app/Contents/macOS/pronterface
+        zip -r -X pronterface-app.zip dist
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
         name: macosapp_${{ matrix.os }}_${{ matrix.architecture }}_${{ matrix.python-version }}
-        path: dist/*
+        path: pronterface-app.zip
