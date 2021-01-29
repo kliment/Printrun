@@ -51,6 +51,7 @@ jobs:
         ls -l dist/pronterface.app/Contents/macOS/pronterface
         chmod +x dist/pronterface.app/Contents/macOS/pronterface
         ls -l dist/pronterface.app/Contents/macOS/pronterface
+        rm dist/pronterface
         zip -r -X pronterface-app.zip dist
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
