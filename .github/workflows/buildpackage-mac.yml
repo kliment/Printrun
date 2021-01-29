@@ -1,4 +1,4 @@
-name: Build Mac OS X app
+name: Build macOS app
 
 on:
   push:
@@ -35,10 +35,12 @@ jobs:
       run: |
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
         # Edit spec file
+        export git_hash=$(git rev-parse --short "$GITHUB_SHA")
         sed -i '' '$ s/.$//' pronterface.spec
         cat >> pronterface.spec <<EOL
         ,
         info_plist={
+            'CFBundleShortVersionString': '$git_hash',
             'NSPrincipalClass': 'NSApplication',
             'NSAppleScriptEnabled': False,
             'NSAppSleepDisabled': True,
@@ -48,13 +50,11 @@ jobs:
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean pronterface.spec -y
-        ls -l dist/pronterface.app/Contents/macOS/pronterface
-        chmod +x dist/pronterface.app/Contents/macOS/pronterface
-        ls -l dist/pronterface.app/Contents/macOS/pronterface
-        rm dist/pronterface
-        zip -r -X pronterface-app.zip dist
+        # Zip app manually to avoid losing execute permissions for binary file in app
+        cd dist
+        zip -r -X pronterface-app.zip pronterface.app
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
         name: macosapp_${{ matrix.os }}_${{ matrix.architecture }}_${{ matrix.python-version }}
-        path: pronterface-app.zip
+        path: dist/pronterface-app.zip
