@@ -16,14 +16,13 @@ If you want the newest, shiniest features, you can run Printrun from source usin
 
 ## Windows
 
-A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
+A precompiled version is available at https://github.com/kliment/Printrun/releases
 
-## Mac OS X
+## MacOS
 
-A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
+A precompiled version is available at https://github.com/kliment/Printrun/releases
 
-Note for OSX users: if OSX tells you the file is corrupted, you don't need to redownload it. Instead, you need to allow OSX to run unsigned apps. To do this, run 
-`sudo spctl --master-disable`
+Note for OSX users: if OSX tells you `"pronterface.app" cannot be opened because the developer cannot be verified.`, you don't need to redownload it. Instead, you need to allow OSX to run the unsigned app. To do this, right click the application in Finder and select `Open`. Then click `Open` in the popup window that appears. You only need to do this once.
 
 
 ## Linux
@@ -31,15 +30,15 @@ Note for OSX users: if OSX tells you the file is corrupted, you don't need to re
 
 There is currently no package for Printrun 2. It must be [run from source](https://github.com/kliment/Printrun/tree/master#running-from-source).
 
-### Chrome OS 
+### Chrome OS
 
 You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install printrun with the line given above for Ubuntu/Debian.
 
 By default you have no access to the serial port under Chrome OS crouton, so you cannot connect to your 3D printer. Add yourself to the serial group within the linux environment to fix this
 
-`sudo usermod -G serial -a <username>` 
+`sudo usermod -G serial -a <username>`
 
-where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer. 
+where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer.
 
 ### Fedora
 
@@ -79,12 +78,12 @@ To use pronterface, you need:
   * numpy (for 3D view)
   * pycairo (to use Projector feature)
   * cairosvg (to use Projector feature)
-  * dbus (to inhibit sleep on some Linux systems) 
+  * dbus (to inhibit sleep on some Linux systems)
 
 ### Use Python virtual environment
 
 Easiest way to run Printrun from source is to create and use a Python [virtual environment](https://docs.python.org/3/tutorial/venv.html).
-The following section assumes Linux. Please see specific instructions for Windows and macOS X below.
+The following section assumes Linux. Please see specific instructions for Windows and macOS below.
 
 **Ubuntu/Debian note:** You might need to install `python3-venv` first.
 
@@ -149,7 +148,7 @@ Download and install [Python 3.6](https://www.python.org/downloads/) and follow 
 ```
 
 
-### macOS X
+### macOS
 
 Install Python 3, you can use Brew:
 
@@ -157,7 +156,17 @@ Install Python 3, you can use Brew:
 $ brew install python3
 ```
 
-And follow the above **Python virtual environment** section. You don't need to search for wxPython wheel, macOS wheels are available from the Python Package Index.
+Then continue to install and set up Printrun:
+
+```console
+$ git clone https://github.com/kliment/Printrun.git  # clone the repository
+$ cd Printrun  # change to Printrun directory
+$ python3 -m venv venv  # create an virtual environment
+$ . venv/bin/activate  # activate the virtual environment (notice the space after the dot)
+(venv) $ python -m pip install -r requirements.txt  # install the rest of dependencies
+# follow instructions for cython gcoder here if desired
+(venv) $ python pronterface.py  # run Pronterface
+```
 
 
 # USING PRINTRUN
@@ -393,7 +402,7 @@ For example, following macro toggles the diagnostic information similarily to th
 
 Macro parameters are available in '!'-escaped python code as locally defined list variable: arg[0] arg[1] ... arg[N]
 
-All python code is executed in the context of the pronsole (or PronterWindow) object, 
+All python code is executed in the context of the pronsole (or PronterWindow) object,
 so it is possible to use all internal variables and methods, which provide great deal of functionality.
 However the internal variables and methods are not very well documented and may be subject of change, as the program is developed.
 Therefore it is best to use pronsole commands, which easily contain majority of the functionality that might be needed.
@@ -401,7 +410,7 @@ Therefore it is best to use pronsole commands, which easily contain majority of 
 Some useful python-mode-only variables:
 
 ```python
-!self.settings - contains all settings, e.g. 
+!self.settings - contains all settings, e.g.
   port (!self.settings.port), baudrate, xy_feedrate, e_feedrate, slicecommand, final_command, build_dimensions
   You can set them also via pronsole command "set", but you can query the values only via python code.
 !self.p - printcore object (see USING PRINTCORE section for using printcore object)
@@ -412,7 +421,7 @@ Some useful python-mode-only variables:
 Some useful methods:
 
 ```python
-!self.onecmd - invokes raw command, e.g. 
+!self.onecmd - invokes raw command, e.g.
     !self.onecmd("move x 10")
     !self.onecmd("!print self.p.loud")
     !self.onecmd("button "+self.cur_button+" fanOFF /C cyan M107")
@@ -484,4 +493,3 @@ along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 ```
 
 All scripts should contain this license note, if not, feel free to ask us. Please note that files where it is difficult to state this license note (such as images) are distributed under the same terms.
-
