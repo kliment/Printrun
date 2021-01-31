@@ -22,7 +22,7 @@ A precompiled version is available at https://github.com/kliment/Printrun/releas
 
 A precompiled version is available at https://github.com/kliment/Printrun/releases
 
-Note for OSX users: if OSX tells you `“pronterface.app” cannot be opened because the developer cannot be verified.`, you don't need to redownload it. Instead, you need to allow OSX to run the unsigned app. To do this, right click the application in Finder and select `Open`. Then click `Open` in the popup window that appears. You only need to do this once.
+Note for OSX users: if OSX tells you `"pronterface.app" cannot be opened because the developer cannot be verified.`, you don't need to redownload it. Instead, you need to allow OSX to run the unsigned app. To do this, right click the application in Finder and select `Open`. Then click `Open` in the popup window that appears. You only need to do this once.
 
 
 ## Linux
