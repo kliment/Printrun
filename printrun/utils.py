@@ -14,6 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import platform
 import sys
 import re
 import gettext
@@ -39,12 +40,20 @@ def install_locale(domain):
     shared_locale_dir = os.path.join(DATADIR, 'locale')
     translation = None
     lang = locale.getdefaultlocale()
+    osPlatform = platform.system()
 
-    if os.path.exists('./locale'):
-        translation = gettext.translation(domain, './locale', languages=[lang[0]], fallback= True)
+    if osPlatform == "Darwin":
+        # improvised workaround for macOS crash with gettext.translation, see issue #1154
+        if os.path.exists(shared_locale_dir): 
+            gettext.install(domain, shared_locale_dir) 
+        else: 
+            gettext.install(domain, './locale') 
     else:
-        translation = gettext.translation(domain, shared_locale_dir, languages=[lang[0]], fallback= True)
-    translation.install()
+        if os.path.exists('./locale'):
+            translation = gettext.translation(domain, './locale', languages=[lang[0]], fallback= True)
+        else:
+            translation = gettext.translation(domain, shared_locale_dir, languages=[lang[0]], fallback= True)
+        translation.install()
 
 class LogFormatter(logging.Formatter):
     def __init__(self, format_default, format_info):
