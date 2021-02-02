@@ -252,7 +252,7 @@ class GcodeViewPanel(wxGLPanel):
                 if delta > 0: self.layerup()
                 else: self.layerdown()
             return
-        x, y = event.GetPosition()
+        x, y = event.GetPosition() * self.GetContentScaleFactor()
         x, y, _ = self.mouse_to_3d(x, y)
         if delta > 0:
             self.zoom(factor, (x, y))
