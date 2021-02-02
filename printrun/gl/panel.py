@@ -205,7 +205,7 @@ class wxGLPanel(BASE_CLASS):
 
     def OnReshape(self):
         """Reshape the OpenGL viewport based on the size of the window"""
-        size = self.GetClientSize()
+        size = self.GetClientSize() * self.GetContentScaleFactor()
         oldwidth, oldheight = self.width, self.height
         width, height = size.width, size.height
         if width < 1 or height < 1:
@@ -428,12 +428,13 @@ class wxGLPanel(BASE_CLASS):
         return mulquat(rotz,rota)
 
     def handle_rotation(self, event):
+        content_scale_factor = self.GetContentScaleFactor()
         if self.initpos is None:
-            self.initpos = event.GetPosition()
+            self.initpos = event.GetPosition() * content_scale_factor
         else:
             p1 = self.initpos
-            p2 = event.GetPosition()
-            sz = self.GetClientSize()
+            p2 = event.GetPosition() * content_scale_factor
+            sz = self.GetClientSize() * content_scale_factor
             p1x = p1[0] / (sz[0] / 2) - 1
             p1y = 1 - p1[1] / (sz[1] / 2)
             p2x = p2[0] / (sz[0] / 2) - 1
@@ -447,11 +448,12 @@ class wxGLPanel(BASE_CLASS):
             self.initpos = p2
 
     def handle_translation(self, event):
+        content_scale_factor = self.GetContentScaleFactor()
         if self.initpos is None:
-            self.initpos = event.GetPosition()
+            self.initpos = event.GetPosition() * content_scale_factor
         else:
             p1 = self.initpos
-            p2 = event.GetPosition()
+            p2 = event.GetPosition() * content_scale_factor
             if self.orthographic:
                 x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
                 x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
