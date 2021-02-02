@@ -403,11 +403,12 @@ class GCode:
                     return
                 nonlocal layerbeginduration, last_layer_z
                 if cur_layer_has_extrusion and prev_z != last_layer_z \
-                        or not all_layers or isEnd:
+                        or not all_layers:
                     layer = Layer([], prev_z)
                     last_layer_z = prev_z
                     finished_layer = len(all_layers)-1 if all_layers else None
                     all_layers.append(layer)
+                    all_zs.add(prev_z)
                 else:
                     layer = all_layers[-1]
                     finished_layer = None
@@ -543,7 +544,7 @@ class GCode:
 
                         max_e = max(max_e, total_e)
                         max_e_multi=max(max_e_multi, total_e_multi)
-                        cur_layer_has_extrusion |= line.extruding
+                        cur_layer_has_extrusion |= line.extruding and (line.x is not None or line.y is not None)
                     elif line.command == "G92":
                         offset_e = current_e - line.e
                         offset_e_multi = current_e_multi - line.e
@@ -654,7 +655,6 @@ class GCode:
 
                     if cur_z != prev_z and cur_layer_has_extrusion:
                         append_lines(cur_lines, False)
-                        all_zs.add(prev_z)
                         cur_lines = []
                         cur_layer_has_extrusion = False
 
@@ -689,7 +689,6 @@ class GCode:
         if build_layers:
             if cur_lines:
                 append_lines(cur_lines, True)
-                all_zs.add(prev_z)
 
             self.append_layer_id = len(all_layers)
             self.append_layer = Layer([])

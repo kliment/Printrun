@@ -1,3 +1,34 @@
+Printrun - 2.0.0rc8
+====================
+
+Pre-release for test purposes
+
+### New Features
+
+ - Improved layer detection algorithm (#1111)
+ - Support for D-codes (#1119)
+ - Improvements to macos build (#1117)
+ - Improvements to windows build (#1146)
+ - Improved German translation (#1144)
+ - Improved arc rendering (#1131)
+
+### Fixed Bugs
+
+ - Mouse wheel events duplicated (#1110)
+ - Correctly resume files with relative extrusion (#1114)
+ - Projector used deprecated/obsolete API (#1140)
+ - Send/clear race condition causing stuck prints (#1124)
+ - Fix mouse interaction with dpi scaling (#1156)
+ - Fix internationalization (95e6830)
+ - Fix projector tooltips and layout (8d0510d)
+ - Fix incorrect layer count (#1155)
+
+### Administrative matters
+
+ - Correctly attribute ownership of gcoder to printrun project (#1048)
+ - Add github actions to build mac app and windows exe (#1106, #1108)
+
+
 Printrun - 2.0.0rc7
 ====================
 
