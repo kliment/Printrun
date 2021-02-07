@@ -514,13 +514,12 @@ class printcore():
 
     # run a simple script if it exists, no multithreading
     def runSmallScript(self, filename):
-        if filename is None: return
-        f = None
+        if not filename: return
         try:
             with open(filename) as f:
                 for i in f:
                     l = i.replace("\n", "")
-                    l = l[:l.find(";")]  # remove comments
+                    l = l.partition(';')[0]  # remove comments
                     self.send_now(l)
         except:
             pass
