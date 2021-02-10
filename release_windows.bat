@@ -110,7 +110,7 @@ python setup.py build_ext --inplace
 echo ****************************************
 echo ****** Collect all data for build ******
 echo ****************************************
-pyi-makespec -F --hidden-import=cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py 
+pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py 
 
 echo *******************************
 echo ****** Build Pronterface ******
