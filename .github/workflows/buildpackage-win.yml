@@ -27,7 +27,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip pyinstaller setuptools wheel cython cffi -r requirements.txt
+        python -m pip install --upgrade pip pyinstaller setuptools wheel simplejson polygon3 cython cffi -r requirements.txt
     - name: Build Cython ext
       run: |
         python setup.py build_ext --inplace
