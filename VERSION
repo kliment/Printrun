@@ -1,0 +1,33 @@
+This is a dummy file for pyinstaller to compile Pronterface.Cairocffiand cairosvg won't find
+the GTK3 runtime libraries needed for running Projector under Windows w / o this file. You can find
+suitable versions for your OS here :
+
+https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer
+and
+https ://gtk-win.sourceforge.io/home/index.php/Main/Home
+
+Download the version your OS needand install it.Add the GTK3 binary installation path to your
+system environment variable path.
+Example : Path = C : \GTK3\bin; ...
+
+List of used DLL's for Projector based on Windows 10 64bit (names may varying):
+
+libbrotlicommon.dll
+libbrotlidec.dll
+libbz2 - 1.dll
+libcairo - 2.dll
+libexpat - 1.dll
+libfontconfig - 1.dll
+libfreetype - 6.dll
+libgcc_s_seh - 1.dll
+libglib - 2.0 - 0.dll
+libgraphite2.dll
+libharfbuzz - 0.dll
+libiconv - 2.dll
+libintl - 8.dll
+libpcre - 1.dll
+libpixman - 1 - 0.dll
+libpng16 - 16.dll
+libstdc++ - 6.dll
+libwinpthread - 1.dll
+zlib1.dll

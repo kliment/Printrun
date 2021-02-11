@@ -33,7 +33,7 @@ jobs:
         python setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean pronterface.spec -y
