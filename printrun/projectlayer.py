@@ -130,16 +130,16 @@ class DisplayFrame(wx.Frame):
             pass
 
     def show_img_delay(self, image):
-        print("Showing", str(time.clock()))
+        print("Showing", str(time.perf_counter()))
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
-        wx.FutureCall(1000 * self.interval, self.hide_pic_and_rise)
+        wx.CallLater(1000 * self.interval, self.hide_pic_and_rise)
 
     def rise(self):
         if self.direction == "Top Down":
-            print("Lowering", str(time.clock()))
+            print("Lowering", str(time.perf_counter()))
         else:
-            print("Rising", str(time.clock()))
+            print("Rising", str(time.perf_counter()))
 
         if self.printer is not None and self.printer.online:
             self.printer.send_now("G91")
@@ -165,15 +165,15 @@ class DisplayFrame(wx.Frame):
         else:
             time.sleep(self.pause)
 
-        wx.FutureCall(1000 * self.pause, self.next_img)
+        wx.CallLater(1000 * self.pause, self.next_img)
 
     def hide_pic(self):
-        print("Hiding", str(time.clock()))
+        print("Hiding", str(time.perf_counter()))
         self.pic.Hide()
 
     def hide_pic_and_rise(self):
         wx.CallAfter(self.hide_pic)
-        wx.FutureCall(500, self.rise)
+        wx.CallLater(500, self.rise)
 
     def next_img(self):
         if not self.running:
