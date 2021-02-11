@@ -1,0 +1,23 @@
+
+You can find the latest version of this software at https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer 
+You may reach the packager (Tom Schoonjans and Alexander Shaduri) by email at tom.schoonjans 'at' gmail.com and ashaduri 'at' gmail.com
+
+The authors make NO WARRANTY or representation, either express or implied, with respect to this software, its quality, accuracy, merchantability, or fitness for a particular purpose.  This software is provided "AS IS", and you, its user, assume the entire risk as to its quality and accuracy.
+
+This package contains the following software (or pieces of it):
+GTK+, ATK, Pango, GLib, gdk_pixbuf, atkmm, glibmm, gtkmm, pangomm, libsigc++: http://www.gtk.org/;
+Cairo, pixman, cairomm: http://cairographics.org/;
+Libxml2: http://xmlsoft.org/;
+Fontconfig: http://www.fontconfig.org/;
+Freetype2: http://www.freetype.org/;
+intl library (from gettext): http://www.gnu.org/software/gettext/;
+libiconv: https://code.google.com/p/win-iconv/;
+libpng: http://www.libpng.org/pub/png/libpng.html;
+harfbuzz: http://www.freedesktop.org/wiki/Software/HarfBuzz/;
+libffi: https://sourceware.org/libffi/;
+zlib: http://www.zlib.net/.
+
+You may obtain the respective sources as well as their corresponding licenses at the URLs listed above.
+
+All binaries contained within this installer were compiled by the author using GCC 4.9.2 64-bit provided by the TDM-GCC project (http://tdm-gcc.tdragon.net/).
+

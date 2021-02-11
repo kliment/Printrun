@@ -1,0 +1,29 @@
+This directory contains an extract of DLL's from 
+gtk3-runtime-3.24.24-2021-01-30-ts-win64.exe 
+
+ Pronterface for Windows 10-x64 only
+
+File list:
+libbrotlicommon.dll
+libbrotlidec.dll
+libbz2 - 1.dll
+libcairo - 2.dll
+libexpat - 1.dll
+libfontconfig - 1.dll
+libfreetype - 6.dll
+libgcc_s_seh - 1.dll
+libglib - 2.0 - 0.dll
+libgraphite2.dll
+libharfbuzz - 0.dll
+libiconv - 2.dll
+libintl - 8.dll
+libpcre - 1.dll
+libpixman - 1 - 0.dll
+libpng16 - 16.dll
+libstdc++ - 6.dll
+libwinpthread - 1.dll
+zlib1.dll
+
+Link to original source:
+https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer
+

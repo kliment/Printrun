@@ -113,7 +113,11 @@ python setup.py build_ext --inplace
 echo ****************************************
 echo ****** Collect all data for build ******
 echo ****************************************
-pyi-makespec -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+rem With external GTK3: 
+rem pyi-makespec -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+
+rem GTK3 included in Pronterface (Windows10 x64 only):
+pyi-makespec -F --add-binary GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
 
 echo *******************************
 echo ****** Build Pronterface ******
