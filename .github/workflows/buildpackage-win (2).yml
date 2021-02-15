@@ -1,4 +1,4 @@
-name: Build Windows Executable - Test only!
+name: Build Windows Executable - Test only !
 
 on:
   push:
