@@ -2,6 +2,8 @@ name: Build Windows Executable - Test only !
 
 on:
   push:
+    # AGe new only for branch test
+    branches: [ test ] # AGe new
   pull_request:
   release:
     types:
@@ -20,6 +22,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:                   #AGe new, test import submodules
+        submodules: recursive #AGe new
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
