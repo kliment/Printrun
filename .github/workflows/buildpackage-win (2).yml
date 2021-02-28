@@ -1,4 +1,4 @@
-name: Build Windows Executable - Test only !
+name: Build Windows Executable - for branch test (GTK3 for Projector) only !
 
 on:
   push:
@@ -17,13 +17,15 @@ jobs:
       matrix:
         os: [windows-latest]
         architecture: [x64, x86]
-        python-version: [3.7]
+        # Add Python version 3.7 and 3.9 for being able to test issue #1170 and maybe #1174
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-      with:                   #AGe new, test import submodules
-        submodules: recursive #AGe new
+      # Import submodule PrintrunGTK3
+      with:
+        submodules: recursive
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
