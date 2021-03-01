@@ -47,11 +47,11 @@ jobs:
       run: |
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-binary "PrintrunGTK3/GTK3Windows10-64/*.dll;." --add-data "VERSION;cairocffi" --add-data "VERSION;cairosvg" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
     - name: Make pyinstaller spec with GTK3 x32 bundle
-      if: matrix.arch == 'x32' hashFiles('PrintrunGTK3') != ''
+      if: matrix.arch == 'x32' && hashFiles('PrintrunGTK3') != ''
       run: |
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-binary "PrintrunGTK3/GTK3Windows10-32/*.dll;." --add-data "VERSION;cairocffi" --add-data "VERSION;cairosvg" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
     - name: Make pyinstaller spec without GTK3 bundle
-      if: hashFiles('PrintrunGTK3') = ''
+      if: hashFiles('PrintrunGTK3') == ''
       run: |
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "VERSION;cairocffi" --add-data "VERSION;cairosvg" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
     - name: Make pyinstaller build
