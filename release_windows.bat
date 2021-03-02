@@ -25,20 +25,27 @@ rem **                                                                          
 rem **  Steps, you need to do manually before running this batch:                     **
 rem **                                                                                **
 rem **  1. install python 3.7.9                                                       **
-rem **     https://www.python.org/downloads/release/python-378/                       **
+rem **     https://www.python.org/downloads/release/python-379/                       **
 rem **  2. install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
 rem **  3. check for latest repository updates at:                                    **
 rem **     http://github.com/kliment/Printrun.git                                     **
 rem **  4. Projector needs GTK+ for Windows Runtime Environment installed.            **
 rem **     There are different compilations, depending on the installed               **
-rem **     Windows Version, available. Follow the instructions from:                  **
-rem **     https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer  **
-rem **     Add your GTK3 bineries installation path to system                         **
-rem **     environment variable Path (like Path=c:\GTK3\bin). You can find as         **
-rem **     reference a listing of all used cairo DLL's in file VERSION                **
+rem **     Windows Version, available. You can find a striped version of GTK3         **
+rem **     with all needed DLL binary files in directory PrintrunGTK. Please run      **
+rem **     following git commands before you run this batch in case you don't find    **
+rem **     this directory in your repository:                                         **
+rem **       git checkout master                                                      ** 
+rem **       git submodule add https ://github.com/DivingDuck/PrintrunGTK3            **
+rem **       git submodule update --init --recursive                                  **
+rem **     You can find a listing of all used DLL's in file VERSION as reference and  **
+rem **     further informations about the linked submodule here:                      **
+rem **     https://github.com/DivingDuck/PrintrunGTK3                                 **
+rem **     
+rem **     Follow the instructions at section 'Collect all data for build' below      **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2021-02-11, Status: working                               **
+rem **  Author: DivingDuck, 2021-02-28, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -92,11 +99,21 @@ echo ********************************************
 echo ****** upgrade virtual environment v3 ******
 echo ********************************************
 pip install --upgrade virtualenv
-
+ 
 echo ****************************************************
 echo ****** check for and update outdated modules  ******
 echo ****************************************************
 for /F "skip=2 delims= " %%i in ('pip list --outdated') do pip install --upgrade %%i
+
+rem echo ***************************************************************
+rem echo ****** Bug on wxPython 4.1.x workaround for Python 3.8.x ******
+rem echo ***************************************************************
+rem wxPython 4.1.1 cause a crash under Windows 10, Issue #1170
+rem Relevant only in combination with Python 3.8.x.
+rem Further information:
+rem https://discuss.wxpython.org/t/wxpython4-1-1-python3-8-locale-wxassertionerror/35168
+rem pip uninstall wxPython
+rem pip install wxPython>=4.0,<4.1
 
 echo ******************************************************************
 echo ****** Compile G-Code parser gcoder_line.cp37-win_amd64.pyd ******
@@ -113,11 +130,30 @@ python setup.py build_ext --inplace
 echo ****************************************
 echo ****** Collect all data for build ******
 echo ****************************************
-rem With external GTK3: 
+
+rem **** Select witch version you want to build: ****
+rem The Pronterface Projector feature need some external DLL binaries from the GTK3.
+rem You can build Pronterface with or w/o these binaries. In addition you need
+rem different binaries depending if you build a Windows 10 x32 or x64 version.
+rem Remove 'rem' before pyi-makespec for the build of your choice and add 'rem' for
+rem for all other versions. you can't bundle x32 and x46 into the same Pronterface binary file.
+rem Only one active version is allowed. 
+
+rem **** Default setup: Version 3, GTK3 bundle included for Windows 10 x64 bit.  ****
+
+rem Version 1: With external GTK3 or w/o GTK3 support: 
+rem Choose this pyi-makespec in case you don't have the GTK3 Toolkit files, or want them stay separately
+rem or don't want to bundle these within Pronterface.exe. You can install them separately and 
+rem set the path location via Windows system environment variable (like Path=c:\GTK3\bin). 
 rem pyi-makespec -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
 
-rem GTK3 included in Pronterface (Windows10 x64 only):
-pyi-makespec -F --add-binary GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+rem Version 2: GTK3 included in Pronterface (Windows10 x32 only):
+rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files for Windows10 x32 only
+rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+
+rem Version 3: GTK3 included in Pronterface (Windows10 x64 only):
+rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files for Windows10 x64 only
+pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
 
 echo *******************************
 echo ****** Build Pronterface ******

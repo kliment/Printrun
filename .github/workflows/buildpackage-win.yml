@@ -15,11 +15,16 @@ jobs:
       matrix:
         os: [windows-latest]
         architecture: [x64, x86]
-        python-version: [3.8]
+        # Change from Python 3.8 to 3.7 or 3.9 for being able to check for issue #1170 and maybe #1174
+        python-version: [3.7]
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      # Import submodule PrintrunGTK3
+      with:
+        submodules: recursive
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -31,9 +36,22 @@ jobs:
     - name: Build Cython ext
       run: |
         python setup.py build_ext --inplace
-    - name: Make pyinstaller spec
+    # Build pyinstaller spec depending on GTK3 x32/x64 binaries or w/o GTK3 bundle
+    # for running Projector. The user can install the GTK3 libraries external and 
+    # set the environment path to the installation manually if the bundle is not 
+    # included or found (last option) via submodules
+    - name: Make pyinstaller spec with GTK3 x64 bundle
+      if: ${{ matrix.architecture == 'x64' && hashFiles('PrintrunGTK3/GTK3Windows10-64') != '' }}
       run: |
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-binary "GTK3Windows10-64/*.dll;." --add-data "VERSION;cairocffi" --add-data "VERSION;cairosvg" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-binary "PrintrunGTK3/GTK3Windows10-64/*.dll;." --add-data "VERSION;cairocffi" --add-data "VERSION;cairosvg" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
+    - name: Make pyinstaller spec with GTK3 x32 bundle
+      if: ${{ matrix.architecture == 'x86' && hashFiles('PrintrunGTK3/GTK3Windows10-32') != '' }}
+      run: |
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-binary "PrintrunGTK3/GTK3Windows10-32/*.dll;." --add-data "VERSION;cairocffi" --add-data "VERSION;cairosvg" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
+    - name: Make pyinstaller spec without GTK3 bundle
+      if: ${{ hashFiles('PrintrunGTK3') == '' }}
+      run: |
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "VERSION;cairocffi" --add-data "VERSION;cairosvg" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean pronterface.spec -y
