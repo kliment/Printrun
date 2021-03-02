@@ -45,7 +45,7 @@ rem **     https://github.com/DivingDuck/PrintrunGTK3                           
 rem **     
 rem **     Follow the instructions at section 'Collect all data for build' below      **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2021-02-28, Status: working                               **
+rem **  Author: DivingDuck, 2021-03-02, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
