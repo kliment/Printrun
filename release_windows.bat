@@ -26,6 +26,8 @@ rem **  Steps, you need to do manually before running this batch:               
 rem **                                                                                **
 rem **  1. install python 3.7.9                                                       **
 rem **     https://www.python.org/downloads/release/python-379/                       **
+rem **     In case you use an other Python version, check line 73 and adjust          **
+rem **     the parameter accordingly to build your virtual environment.               **
 rem **  2. install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
 rem **  3. check for latest repository updates at:                                    **
@@ -37,15 +39,15 @@ rem **     with all needed DLL binary files in directory PrintrunGTK. Please run
 rem **     following git commands before you run this batch in case you don't find    **
 rem **     this directory in your repository:                                         **
 rem **       git checkout master                                                      ** 
-rem **       git submodule add https ://github.com/DivingDuck/PrintrunGTK3            **
+rem **       git submodule add https://github.com/DivingDuck/PrintrunGTK3             **
 rem **       git submodule update --init --recursive                                  **
 rem **     You can find a listing of all used DLL's in file VERSION as reference and  **
 rem **     further informations about the linked submodule here:                      **
 rem **     https://github.com/DivingDuck/PrintrunGTK3                                 **
-rem **     
+rem **                                                                                **
 rem **     Follow the instructions at section 'Collect all data for build' below      **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2021-03-02, Status: working                               **
+rem **  Author: DivingDuck, 2021-03-20, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -105,15 +107,17 @@ echo ****** check for and update outdated modules  ******
 echo ****************************************************
 for /F "skip=2 delims= " %%i in ('pip list --outdated') do pip install --upgrade %%i
 
-rem echo ***************************************************************
-rem echo ****** Bug on wxPython 4.1.x workaround for Python 3.8.x ******
-rem echo ***************************************************************
+echo ***************************************************************
+echo ****** Bug on wxPython 4.1.x workaround for Python 3.8.x ******
+echo ***************************************************************
 rem wxPython 4.1.1 cause a crash under Windows 10, Issue #1170
-rem Relevant only in combination with Python 3.8.x.
-rem Further information:
+rem Relevant in combination with Python 3.8.x. Further information:
 rem https://discuss.wxpython.org/t/wxpython4-1-1-python3-8-locale-wxassertionerror/35168
-rem pip uninstall wxPython
-rem pip install wxPython>=4.0,<4.1
+rem  pip uninstall wxPython
+rem  pip install wxPython>=4.0,<4.1
+rem Using the latest development version seems to correct the problem with wxPython.
+rem The workaround below need to be check again as soon as there is a 
+rem new version >4.1.1 available.
 pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
 
 
