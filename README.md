@@ -211,9 +211,15 @@ sender, or the following code example:
 #to send a file of gcode to the printer
 from printrun.printcore import printcore
 from printrun import gcoder
-p=printcore('/dev/ttyUSB0',115200) # or p.printcore('COM3',115200) on Windows
+import time
+p=printcore('/dev/ttyUSB0', 115200) # or p.printcore('COM3',115200) on Windows
 gcode=[i.strip() for i in open('filename.gcode')] # or pass in your own array of gcode lines instead of reading from a file
 gcode = gcoder.LightGCode(gcode)
+
+# startprint silently exits if not connected yet
+while not p.online:
+  time.sleep(0.1)
+
 p.startprint(gcode) # this will start a print
 
 #If you need to interact with the printer:
