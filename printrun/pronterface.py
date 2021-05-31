@@ -660,7 +660,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def tool_change(self, event):
         self.do_tool(self.extrudersel.GetValue())
 
-    def show_viz_window(self, event):
+    def show_viz_window(self, event = None):
         if self.fgcode:
             self.gwindow.Show(True)
             self.gwindow.SetToolTip(wx.ToolTip("Mousewheel zooms the display\nShift / Mousewheel scrolls layers"))
@@ -840,6 +840,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.recoverbtn = m.Append(-1, _("Recover"), _(" Recover previous print after a disconnect (homes X, Y, restores Z and E status)"))
         self.recoverbtn.Disable = lambda *a: self.recoverbtn.Enable(False)
         self.Bind(wx.EVT_MENU, self.recover, self.recoverbtn)
+
+        self.print_layer_btn = m.Append(-1, _("Print from layer"), _("Start print from the standalone 3D view layer slider position"))
+        self.Bind(wx.EVT_MENU, self.print_from_layer, self.print_layer_btn)
+
         self.menustrip.Append(m, _("&Advanced"))
 
         if self.settings.slic3rintegration:
@@ -1278,6 +1282,67 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         wx.CallAfter(self.pausebtn.Enable)
         wx.CallAfter(self.printbtn.SetLabel, _("Restart"))
         wx.CallAfter(self.toolbarsizer.Layout)
+
+    def print_from_layer(self, event):
+        if not self.fgcode:
+            self.loadfile(None)
+            return
+
+        top_layer = self.gwindow.model.num_layers_to_draw - 1
+        if self.gwindow.model:
+            if top_layer not in self.fgcode.layer_idxs:
+                self.show_viz_window()
+                msg = _("Select a layer with the slider from which to continue printing")
+                self.gwindow.SetToolTip(wx.ToolTip(msg))
+                self.gwindow.SetStatusText(msg)
+                return
+
+        if not self.p.online:
+            # wx.CallAfter(self.statusbar.SetStatusText, _("Not connected to printer."))
+            dialog = wx.MessageDialog(self, _("Connect to %s?" % self.serialport.Value), style = wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+            if dialog.ShowModal() == wx.ID_YES:
+                self.connect()
+            else:
+                return
+
+        # replay skipped commands to track E, coords relativity, temp
+        first_layer_line = self.fgcode.layer_idxs.index(top_layer)
+
+        # collect the last values of state changing cmds and apply them
+        last_cmds = {}
+        tracked_cmds = 'M190', 'M104', 'M109'
+        cmds = []
+        for ln in self.fgcode.lines[:first_layer_line]:
+            if ln.command in tracked_cmds:
+                last_cmds[ln.command] = ln
+        for cmd in tracked_cmds:
+            if cmd in last_cmds:
+                # self.p.send_now(last_cmds[cmd].raw)
+                cmds.append(last_cmds[cmd].raw)
+
+        self.p.analyzer._preprocess(self.fgcode.lines[:first_layer_line])
+        # explicit handling for cmds canceling each other
+        cmds.append('G20' if self.p.analyzer.imperial else 'G21')
+        cmds.append('G91' if self.p.analyzer.relative else 'G90')
+        cmds.append('M83' if self.p.analyzer.relative_e else 'M82')
+
+        if not self.p.analyzer.relative_e:
+            # the printer did not extrude anything till now,
+            # so pretend it did, otherwise it will extrude all the skipped
+            # filament on the next extrusion
+            cmds.append('G92 E' + str(self.p.analyzer.abs_e))
+
+        dialog = wx.MessageDialog(self,
+            _("Confirm starting commands") + ':\n'
+            + '\n'.join(cmds + [ln.raw for ln in self.fgcode.lines[first_layer_line:first_layer_line + 10]]),
+            style = wx.OK | wx.CANCEL | wx.CANCEL_DEFAULT | wx.ICON_QUESTION)
+        if dialog.ShowModal() == wx.ID_OK:
+            for cmd in cmds:
+                self.p.send_now(cmd)
+
+            self.gviz.model.num_layers_to_draw = self.gviz.model.max_layers + 1
+            self.p.startprint(self.fgcode, first_layer_line)
+            self.on_startprint()
 
     def printfile(self, event=None):
         self.extra_print_time = 0
