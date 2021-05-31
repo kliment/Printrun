@@ -1,0 +1,34 @@
+# -*- mode: python ; coding: utf-8 -*-
+
+
+block_cipher = None
+
+
+a = Analysis(['pronsole.py'],
+             pathex=['C:\\Users\\Armin\\Source\\Repos\\DivingDuck\\Printrun'],
+             binaries=[('PrintrunGTK3/GTK3Windows10-64/*.dll', '.')],
+             datas=[('VERSION', 'cairocffi'), ('VERSION', 'cairosvg'), ('images/*', 'images'), ('*.png', '.'), ('*.ico', '.')],
+             hiddenimports=[],
+             hookspath=[],
+             runtime_hooks=[],
+             excludes=[],
+             win_no_prefer_redirects=False,
+             win_private_assemblies=False,
+             cipher=block_cipher,
+             noarchive=False)
+pyz = PYZ(a.pure, a.zipped_data,
+             cipher=block_cipher)
+exe = EXE(pyz,
+          a.scripts,
+          a.binaries,
+          a.zipfiles,
+          a.datas,
+          [],
+          name='pronsole',
+          debug=False,
+          bootloader_ignore_signals=False,
+          strip=False,
+          upx=True,
+          upx_exclude=[],
+          runtime_tmpdir=None,
+          console=True , icon='pronsole.ico')
