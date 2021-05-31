@@ -459,17 +459,17 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
 
     def update_status(self, extra):
         layer = self.model.num_layers_to_draw
-        filtered = [k for k, v in self.model.layer_idxs_map.items() if v == layer]
-        if filtered:
-            true_layer = filtered[0]
-            z = self.model.gcode.all_layers[true_layer].z
-            message = _("Layer %d -%s Z = %.03f mm") % (layer, extra, z)
-        else:
+        true_layer = next((k for k, v in self.model.layer_idxs_map.items() if v == layer), -1)
+        if true_layer == -1:
             message = _("Entire object")
+        else:
+            z = self.model.gcode.all_layers[true_layer].z
+            # count the first layer as 0 to match slicer gcode comments
+            message = _("Layer %d -%s Z = %.03f mm") % (layer-1, extra, z)
         wx.CallAfter(self.SetStatusText, message, 0)
 
     def process_slider(self, event):
-        new_layer = self.layerslider.GetValue()
+        new_layer = self.layerslider.Value
         new_layer = min(self.model.max_layers + 1, new_layer)
         new_layer = max(1, new_layer)
         self.model.num_layers_to_draw = new_layer
