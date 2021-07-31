@@ -208,7 +208,8 @@ class Graph(BufferedCanvas):
 
     def drawtemperature(self, dc, gc, temperature_list,
                         text, text_xoffset, color):
-        dc.SetPen(wx.Pen(wx.Colour(color), 1))
+        rgba = wx.Colour(color if self.timer.IsRunning() else '#80808080')
+        dc.SetPen(wx.Pen(rgba, 1))
 
         x_add = float(self.width) / self.xsteps
         x_pos = 0.0
@@ -227,9 +228,8 @@ class Graph(BufferedCanvas):
         if text:
             font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD)
             # font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-            gc.SetFont(font, wx.Colour(color))
+            gc.SetFont(font, wx.Colour(rgba.RGB))
 
-            text_size = len(text) * text_xoffset + 1
             pos = self.layoutText(text, lastxvalue, lastyvalue, gc)
             gc.DrawText(text, pos.x, pos.y)
 
