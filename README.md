@@ -28,7 +28,18 @@ Note for OSX users: if OSX tells you `"pronterface.app" cannot be opened because
 ## Linux
 ### Ubuntu/Debian
 
-There is currently no package for Printrun 2. It must be [run from source](https://github.com/kliment/Printrun/tree/master#running-from-source).
+You can install Printrun from official packages. Install the whole package using
+
+```
+sudo apt update
+sudo apt install printrun
+```
+
+Or get only apps you need by
+
+`sudo apt install pronsole` or `pronterface` or `plater`
+
+Only Printrun 1 is currently available for users running Debian 10, Ubuntu 18.04 or any earlier versions. Printrun 2 must be [run from source](https://github.com/kliment/Printrun/tree/master#running-from-source).
 
 ### Chrome OS
 

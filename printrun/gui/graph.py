@@ -140,10 +140,10 @@ class Graph(BufferedCanvas):
         # gc.DrawLines(wx.Point(0, 0), wx.Point(50, 10))
 
         font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD)
-        gc.SetFont(font, wx.Colour(23, 44, 44))
+        gc.SetFont(font, wx.Colour(self.root.settings.graph_color_text))
 
         # draw vertical bars
-        dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
+        dc.SetPen(wx.Pen(wx.Colour(self.root.settings.graph_color_grid), 1))
         xscale = float(self.width - 1) / (self.xbars - 1)
         for x in range(self.xbars + 1):
             x = x * xscale
@@ -154,7 +154,7 @@ class Graph(BufferedCanvas):
         yspan = self.maxyvalue - self.minyvalue
         ybars = int(yspan / spacing)  # Should be close to self.ybars
         firstbar = int(ceil(self.minyvalue / spacing))  # in degrees
-        dc.SetPen(wx.Pen(wx.Colour(225, 225, 225), 1))
+        dc.SetPen(wx.Pen(wx.Colour(self.root.settings.graph_color_grid), 1))
         for y in range(firstbar, firstbar + ybars + 1):
             # y_pos = y*(float(self.height)/self.ybars)
             degrees = y * spacing
@@ -207,9 +207,9 @@ class Graph(BufferedCanvas):
             return 10 ** (exponent + 1)
 
     def drawtemperature(self, dc, gc, temperature_list,
-                        text, text_xoffset, r, g, b, a):
-        color = self.timer.IsRunning() and (r, g, b, a) or [128] * 4
-        dc.SetPen(wx.Pen(color, 1))
+                        text, text_xoffset, color):
+        rgba = wx.Colour(color if self.timer.IsRunning() else '#80808080')
+        dc.SetPen(wx.Pen(rgba, 1))
 
         x_add = float(self.width) / self.xsteps
         x_pos = 0.0
@@ -228,9 +228,8 @@ class Graph(BufferedCanvas):
         if text:
             font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD)
             # font = wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-            gc.SetFont(font, color[:3])
+            gc.SetFont(font, wx.Colour(rgba.RGB))
 
-            text_size = len(text) * text_xoffset + 1
             pos = self.layoutText(text, lastxvalue, lastyvalue, gc)
             gc.DrawText(text, pos.x, pos.y)
 
@@ -298,31 +297,31 @@ class Graph(BufferedCanvas):
 
     def drawfanpower(self, dc, gc):
         self.drawtemperature(dc, gc, self.fanpowers,
-                             "Fan", 1, 0, 0, 0, 128)
+                             "Fan", 1, self.root.settings.graph_color_fan)
 
     def drawbedtemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.bedtemps,
-                             "Bed", 2, 255, 0, 0, 128)
+                             "Bed", 2, self.root.settings.graph_color_bedtemp)
 
     def drawbedtargettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.bedtargettemps,
-                             "Bed Target", 2, 255, 120, 0, 128)
+                             "Bed Target", 2, self.root.settings.graph_color_bedtarget)
 
     def drawextruder0temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0temps,
-                             "Ex0", 1, 0, 155, 255, 128)
+                             "Ex0", 1, self.root.settings.graph_color_ex0temp)
 
     def drawextruder0targettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder0targettemps,
-                             "Ex0 Target", 2, 0, 5, 255, 128)
+                             "Ex0 Target", 2, self.root.settings.graph_color_ex0target)
 
     def drawextruder1temp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder1temps,
-                             "Ex1", 3, 55, 55, 0, 128)
+                             "Ex1", 3, self.root.settings.graph_color_ex1temp)
 
     def drawextruder1targettemp(self, dc, gc):
         self.drawtemperature(dc, gc, self.extruder1targettemps,
-                             "Ex1 Target", 2, 55, 55, 0, 128)
+                             "Ex1 Target", 2, self.root.settings.graph_color_ex1target)
 
     def SetFanPower(self, value):
         self.fanpowers.pop()
