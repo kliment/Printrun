@@ -615,9 +615,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def plate_gcode(self, e):
         from . import gcodeplater as plater
         self.log(_("G-Code plate function activated"))
+        bd = self.build_dimensions_list
         plater.GcodePlater(size = (800, 580), callback = self.platecb,
                            parent = self,
-                           build_dimensions = self.build_dimensions_list,
+                           build_dimensions = bd,
                            circular_platform = self.settings.circular_bed,
                            antialias_samples = int(self.settings.antialias3dsamples)).Show()
 
