@@ -350,24 +350,28 @@ class printcore():
             self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
                               "\n" + _("Maybe a bad baudrate?"))
             return None
-        except SelectError as e:
-            if 'Bad file descriptor' in e.args[1]:
-                self.logError(_("Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
-                return None
-            else:
-                self.logError(_("SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
-                raise
         except SerialException as e:
             self.logError(_("Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
             return None
         except socket.error as e:
             self.logError(_("Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
             return None
-        except OSError as e:
-            if e.errno == errno.EAGAIN:  # Not a real error, no data was available
-                return ""
-            self.logError(_("Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
-            return None
+        except (OSError, SelectError) as e:
+            # OSError and SelectError are the same thing since python 3.3
+            if self.printer_tcp:
+                # SelectError branch, assume select is used only for socket printers
+                if len(e.args) > 1 and 'Bad file descriptor' in e.args[1]:
+                    self.logError(_("Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                    return None
+                else:
+                    self.logError(_("SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+                    raise
+            else:
+                # OSError branch, serial printers
+                if e.errno == errno.EAGAIN:  # Not a real error, no data was available
+                    return ""
+                self.logError(_("Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
+                return None
 
     def _listen_can_continue(self):
         if self.printer_tcp:
