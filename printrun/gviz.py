@@ -192,7 +192,7 @@ class Gviz(wx.Panel, BaseViz):
         self.filament_width = extrusion_width  # set it to 0 to disable scaling lines with zoom
         self.update_basescale()
         self.scale = self.basescale
-        penwidth = max(1.0, self.filament_width * ((self.scale[0] + self.scale[1]) / 2.0))
+        penwidth = max(1, int(self.filament_width * ((self.scale[0] + self.scale[1]) / 2.0)))
         self.translate = [0.0, 0.0]
         self.mainpen = wx.Pen(wx.Colour(0, 0, 0), penwidth)
         self.arcpen = wx.Pen(wx.Colour(255, 0, 0), penwidth)
@@ -292,17 +292,17 @@ class Gviz(wx.Panel, BaseViz):
 
         self.translate = [x - (x - self.translate[0]) * factor,
                           y - (y - self.translate[1]) * factor]
-        penwidth = max(1.0, self.filament_width * ((self.scale[0] + self.scale[1]) / 2.0))
+        penwidth = max(1, int(self.filament_width * ((self.scale[0] + self.scale[1]) / 2.0)))
         for pen in self.penslist:
             pen.SetWidth(penwidth)
         self.dirty = True
         wx.CallAfter(self.Refresh)
 
     def _line_scaler(self, x):
-        return (self.scale[0] * x[0],
-                self.scale[1] * x[1],
-                self.scale[0] * x[2],
-                self.scale[1] * x[3],)
+        return (int(self.scale[0] * x[0]),
+                int(self.scale[1] * x[1]),
+                int(self.scale[0] * x[2]),
+                int(self.scale[1] * x[3]),)
 
     def _arc_scaler(self, x):
         return (self.scale[0] * x[0],
@@ -326,7 +326,7 @@ class Gviz(wx.Panel, BaseViz):
     def repaint_everything(self):
         width = self.scale[0] * self.build_dimensions[0]
         height = self.scale[1] * self.build_dimensions[1]
-        self.blitmap = wx.Bitmap(width + 1, height + 1, -1)
+        self.blitmap = wx.Bitmap(int(width) + 1, int(height) + 1, -1)
         dc = wx.MemoryDC()
         dc.SelectObject(self.blitmap)
         dc.SetBackground(wx.Brush((250, 250, 200)))
@@ -336,19 +336,19 @@ class Gviz(wx.Panel, BaseViz):
             if grid_unit > 0:
                 for x in range(int(self.build_dimensions[0] / grid_unit) + 1):
                     draw_x = self.scale[0] * x * grid_unit
-                    dc.DrawLine(draw_x, 0, draw_x, height)
+                    dc.DrawLine(int(draw_x), 0, int(draw_x), int(height))
                 for y in range(int(self.build_dimensions[1] / grid_unit) + 1):
                     draw_y = self.scale[1] * (self.build_dimensions[1] - y * grid_unit)
-                    dc.DrawLine(0, draw_y, width, draw_y)
+                    dc.DrawLine(0, int(draw_y), int(width), int(draw_y))
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
 
         if not self.showall:
             # Draw layer gauge
             dc.SetBrush(wx.Brush((43, 144, 255)))
-            dc.DrawRectangle(width - 15, 0, 15, height)
+            dc.DrawRectangle(int(width) - 15, 0, 15, int(height))
             dc.SetBrush(wx.Brush((0, 255, 0)))
             if self.layers:
-                dc.DrawRectangle(width - 14, (1.0 - (1.0 * (self.layerindex + 1)) / len(self.layers)) * height, 13, height - 1)
+                dc.DrawRectangle(int(width) - 14, int((1.0 - (1.0 * (self.layerindex + 1)) / len(self.layers)) * height), 13, int(height) - 1)
 
         if self.showall:
             for i in range(len(self.layersz)):
@@ -410,7 +410,7 @@ class Gviz(wx.Panel, BaseViz):
         dc = wx.PaintDC(self)
         dc.SetBackground(wx.Brush(self.bgcolor))
         dc.Clear()
-        dc.DrawBitmap(self.blitmap, self.translate[0], self.translate[1])
+        dc.DrawBitmap(self.blitmap, int(self.translate[0]), int(self.translate[1]))
         if self.paint_overlay:
             self.paint_overlay(dc)
 

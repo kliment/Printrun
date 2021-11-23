@@ -192,7 +192,7 @@ class XYButtons(FocusCanvas):
         return None
 
     def drawPartialPie(self, gc, center, r1, r2, angle1, angle2):
-        p1 = wx.Point(center.x + r1 * math.cos(angle1), center.y + r1 * math.sin(angle1))
+        p1 = wx.Point(int(center.x + r1 * math.cos(angle1)), int(center.y + r1 * math.sin(angle1)))
 
         path = gc.CreatePath()
         path.MoveToPoint(p1.x, p1.y)
