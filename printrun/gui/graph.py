@@ -147,7 +147,7 @@ class Graph(BufferedCanvas):
         xscale = float(self.width - 1) / (self.xbars - 1)
         for x in range(self.xbars + 1):
             x = x * xscale
-            dc.DrawLine(x, 0, x, self.height)
+            dc.DrawLine(int(x), 0, int(x), self.height)
 
         # draw horizontal bars
         spacing = self._calculate_spacing()  # spacing between bars, in degrees
@@ -159,7 +159,7 @@ class Graph(BufferedCanvas):
             # y_pos = y*(float(self.height)/self.ybars)
             degrees = y * spacing
             y_pos = self._y_pos(degrees)
-            dc.DrawLine(0, y_pos, self.width, y_pos)
+            dc.DrawLine(0, int(y_pos), self.width, int(y_pos))
             label = str(y * spacing)
             label_y = y_pos - font.GetPointSize() / 2
             self.layoutText(label, 1, label_y, gc)
@@ -219,7 +219,7 @@ class Graph(BufferedCanvas):
         for temperature in temperature_list:
             y_pos = self._y_pos(temperature)
             if x_pos > 0:  # One need 2 points to draw a line.
-                dc.DrawLine(lastxvalue, lastyvalue, x_pos, y_pos)
+                dc.DrawLine(int(lastxvalue), int(lastyvalue), int(x_pos), int(y_pos))
 
             lastxvalue = x_pos
             x_pos += x_add
@@ -291,7 +291,7 @@ class Graph(BufferedCanvas):
 
     def layoutText(self, text, x, y, gc):
         ext = gc.GetTextExtent(text)
-        rc = self.layoutRect(wx.Rect(x, y, *ext))
+        rc = self.layoutRect(wx.Rect(int(x), int(y), int(ext[0]), int(ext[1])))
         # print('layoutText', text, rc.TopLeft)
         return rc
 
