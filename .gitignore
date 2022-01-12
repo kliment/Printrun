@@ -25,3 +25,4 @@ printrun/gcoder_line*.pyd
 /dist
 /slic3rconf.ini
 /PrusaSlicer.ini
+/pronsole.spec
