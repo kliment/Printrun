@@ -658,7 +658,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
     def tool_change(self, event):
-        self.do_tool(self.extrudersel.GetValue())
+        self.do_tool(self.extrudersel.Value)
 
     def show_viz_window(self, event):
         if self.fgcode:
@@ -1865,36 +1865,31 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def update_tempdisplay(self):
         try:
             temps = parse_temperature_report(self.tempreadings)
-            if "T0" in temps and temps["T0"][0]:
-                hotend_temp = float(temps["T0"][0])
-            elif "T" in temps and temps["T"][0]:
-                hotend_temp = float(temps["T"][0])
-            else:
-                hotend_temp = None
-            if hotend_temp is not None:
-                if self.display_graph: wx.CallAfter(self.graph.SetExtruder0Temperature, hotend_temp)
-                if self.display_gauges: wx.CallAfter(self.hottgauge.SetValue, hotend_temp)
-                setpoint = None
-                if "T0" in temps and temps["T0"][1]: setpoint = float(temps["T0"][1])
-                elif temps["T"][1]: setpoint = float(temps["T"][1])
-                if setpoint is not None:
-                    if self.display_graph: wx.CallAfter(self.graph.SetExtruder0TargetTemperature, setpoint)
-                    if self.display_gauges: wx.CallAfter(self.hottgauge.SetTarget, setpoint)
-            if "T1" in temps:
-                hotend_temp = float(temps["T1"][0])
-                if self.display_graph: wx.CallAfter(self.graph.SetExtruder1Temperature, hotend_temp)
-                setpoint = temps["T1"][1]
-                if setpoint and self.display_graph:
-                    wx.CallAfter(self.graph.SetExtruder1TargetTemperature, float(setpoint))
-            bed_temp = float(temps["B"][0]) if "B" in temps and temps["B"][0] else None
-            if bed_temp is not None:
-                if self.display_graph: wx.CallAfter(self.graph.SetBedTemperature, bed_temp)
-                if self.display_gauges: wx.CallAfter(self.bedtgauge.SetValue, bed_temp)
-                setpoint = temps["B"][1]
-                if setpoint:
-                    setpoint = float(setpoint)
-                    if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, setpoint)
-                    if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, setpoint)
+
+            for name in 'T', 'T0', 'T1', 'B':
+                if name not in temps:
+                    continue
+                current = float(temps[name][0])
+                target = float(temps[name][1]) if temps[name][1] else None
+                if name == 'T':
+                    name = 'T0'
+                if self.display_graph:
+                    prefix = 'Set' + name.replace('T', 'Extruder').replace('B', 'Bed')
+                    wx.CallAfter(getattr(self.graph, prefix + 'Temperature'), current)
+                    if target is not None:
+                        wx.CallAfter(getattr(self.graph, prefix + 'TargetTemperature'), target)
+                if self.display_gauges:
+                    if name[0] == 'T':
+                        if name[1] == str(self.current_tool):
+                            def update(c, t):
+                                self.hottgauge.SetValue(c)
+                                self.hottgauge.SetTarget(t or 0)
+                                self.hottgauge.title = _('Heater%s:') % (str(self.current_tool) if self.settings.extruders > 1 else '')
+                            wx.CallAfter(update, current, target)
+                    else:
+                        wx.CallAfter(self.bedtgauge.SetValue, current)
+                        if target is not None:
+                            wx.CallAfter(self.bedtgauge.SetTarget, target)
         except:
             self.logError(traceback.format_exc())
 
