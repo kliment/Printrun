@@ -658,7 +658,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         wx.CallAfter(self.btemp.SetInsertionPoint, 0)
 
     def tool_change(self, event):
-        self.do_tool(self.extrudersel.Value)
+        self.do_tool(self.extrudersel.GetValue())
 
     def show_viz_window(self, event):
         if self.fgcode:
