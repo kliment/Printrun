@@ -59,7 +59,7 @@ try:
 except:
     READLINE = False  # neither readline module is available
 
-tempreading_exp = re.compile("(^T:| T:)")
+tempreading_exp = re.compile('\\bT\d*:')
 
 REPORT_NONE = 0
 REPORT_POS = 1
