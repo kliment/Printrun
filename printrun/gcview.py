@@ -79,7 +79,9 @@ class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent,
                  build_dimensions = (200, 200, 100, 0, 0, 0),
-                 realparent = None, antialias_samples = 0):
+                 realparent = None, antialias_samples = 0, perspective=False):
+        if perspective:
+            self.orthographic=False
         super().__init__(parent, wx.DefaultPosition,
                                              wx.DefaultSize, 0,
                                              antialias_samples = antialias_samples)
@@ -364,11 +366,11 @@ class GcodeViewLoader:
 from printrun.gviz import BaseViz
 class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
 
-    def __init__(self, parent, build_dimensions, root, circular, antialias_samples, grid):
+    def __init__(self, parent, build_dimensions, root, circular, antialias_samples, grid, perspective=False):
         self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions,
-                                      antialias_samples = antialias_samples)
+                                      antialias_samples = antialias_samples, perspective=perspective)
         self.glpanel.SetMinSize((150, 150))
         if self.root and hasattr(self.root, "gcview_color_background"):
             self.glpanel.color_background = self.root.gcview_color_background
@@ -419,7 +421,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
                  pos = wx.DefaultPosition, size = wx.DefaultSize,
                  style = wx.DEFAULT_FRAME_STYLE, root = None, circular = False,
                  antialias_samples = 0,
-                 grid = (1, 10)):
+                 grid = (1, 10), perspective=False):
         GvizBaseFrame.__init__(self, parent, ID, title,
                                pos, size, style)
         self.root = root
@@ -441,7 +443,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.glpanel = GcodeViewPanel(panel,
                                       build_dimensions = build_dimensions,
                                       realparent = self,
-                                      antialias_samples = antialias_samples)
+                                      antialias_samples = antialias_samples, perspective=perspective)
         vbox.Add(self.glpanel, 1, flag = wx.EXPAND)
 
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
