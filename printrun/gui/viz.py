@@ -73,7 +73,8 @@ class VizPane(wx.BoxSizer):
                     root = root,
                     circular = root.settings.circular_bed,
                     antialias_samples = int(root.settings.antialias3dsamples),
-                    grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2))
+                    grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
+                    perspective = root.settings.perspective)
                 root.gviz.clickcb = root.show_viz_window
             except:
                 use2dview = True
@@ -104,7 +105,8 @@ class VizPane(wx.BoxSizer):
                     root = root,
                     circular = root.settings.circular_bed,
                     antialias_samples = int(root.settings.antialias3dsamples),
-                    grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2))
+                    grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
+                    perspective=root.settings.perspective)
             except:
                 use3dview = False
                 logging.error("3D view mode requested, but we failed to initialize it.\n"
