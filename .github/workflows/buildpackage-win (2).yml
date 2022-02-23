@@ -39,12 +39,12 @@ jobs:
       # Latest development version for x86 and Python 3.6 is for now (2021-12-18) 4.1.2a1.dev5226+a843ed14
       if: ${{ matrix.architecture == 'x86' || matrix.python-version == '3.6' }}
       run: |
-        python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython==4.1.2a1.dev5226+a843ed14 --use-deprecated=html5lib
+        python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython==4.1.2a1.dev5226+a843ed14
     - name: Update to wxPython latest Version for x64
       # Latest development version for x64 and Python 3.7 to 3.10
       if: ${{ matrix.architecture == 'x64' && matrix.python-version >= '3.7' }}
       run: |
-        python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython --use-deprecated=html5lib
+        python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
 
     - name: Build Cython ext
       run: |
