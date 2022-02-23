@@ -129,7 +129,7 @@ rem  pip install wxPython>=4.0,<4.1
 rem Using the latest development version seems to correct the problem with wxPython.
 rem The workaround below need to be check again as soon as there is a 
 rem new version >4.1.1 available.
-pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
+pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython --use-deprecated=html5lib
 
 
 echo ******************************************************************
