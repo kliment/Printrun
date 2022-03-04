@@ -1,19 +1,20 @@
-# Armenian Pronterface Message Catalog
-#
+# Pronterface
+# Copyright (C) 2011 Jonathan Marsden
+# Jonathan Marsden <jmarsden@fastmail.fm>, 2011.
+# Armenian pronterface translation
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2014-03-30 14:35+CEST\n"
-"PO-Revision-Date: 2020-04-17 22:36+0400\n"
+"POT-Creation-Date: 2021-01-21 02:35+0100\n"
+"PO-Revision-Date: 2022-02-27 18:29+0400\n"
+"Last-Translator: Ավագ Սայան <info@armath.am>\n"
+"Language-Team: HY <info@armath.am>\n"
+"Language: hy\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
-"Last-Translator: Avag Sayan <info@armath.am>\n"
-"Language-Team: Armath Engineering Labs, info@armath.am\n"
-"X-Generator: Poedit 2.0.6\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"Language: hy_AM\n"
+"X-Generator: Poedit 2.4.2\n"
 
 #: printrun/excluder.py:26
 msgid "Part excluder: draw rectangles where print instructions should be ignored"
@@ -61,12 +62,12 @@ msgstr "Գլխիկ՝"
 
 #: printrun/gui/controls.py:129
 msgid "Switch Hotend Off"
-msgstr "Անջատել տաքացումը"
+msgstr "Անջատել գլխիկի տաքացումը"
 
 #: printrun/gui/controls.py:129 printrun/gui/controls.py:149
 #: printrun/gui/toolbar.py:85
 msgid "Off"
-msgstr "ԱՆջատել"
+msgstr "Անջ․"
 
 #: printrun/gui/controls.py:137
 msgid "Select Temperature for Hotend"
@@ -74,20 +75,20 @@ msgstr "Նշել Ջերմաստիճանը Hotend-ի համար"
 
 #: printrun/gui/controls.py:141
 msgid "Switch Hotend On"
-msgstr "Միացնել գլխիկը"
+msgstr "Միացնել գլխիկի տաքացումը"
 
 #: printrun/gui/controls.py:141 printrun/gui/controls.py:161
 #: printrun/gui/controls.py:198
 msgid "Set"
-msgstr "Հաստատել"
+msgstr "Գործել"
 
 #: printrun/gui/controls.py:146 printrun/gui/controls.py:215
 msgid "Bed:"
-msgstr "Հարթակ՝"
+msgstr "Հատակ՝"
 
 #: printrun/gui/controls.py:149
 msgid "Switch Heated Bed Off"
-msgstr "Անջատել տաքացվող հարթակը"
+msgstr "Անջատել հարթակի տաքացումը"
 
 #: printrun/gui/controls.py:157
 msgid "Select Temperature for Heated Bed"
@@ -95,11 +96,11 @@ msgstr "Նշել Տաքացվող հարթակի Ջերմաստիճանը"
 
 #: printrun/gui/controls.py:161
 msgid "Switch Heated Bed On"
-msgstr "Միացնել տաքացվող հարթակը"
+msgstr "Միացնել հարթակը տաքացումը"
 
 #: printrun/gui/controls.py:187
 msgid "Print speed:"
-msgstr "Տպիչի արագություն ՝"
+msgstr "Տպիչի արագ.՝"
 
 #: printrun/gui/controls.py:192 printrun/gui/controls.py:207
 msgid "%d%%"
@@ -115,7 +116,7 @@ msgstr "Տաքացուցիչ`"
 
 #: printrun/gui/controls.py:265
 msgid "Length:"
-msgstr "Երկարություն`"
+msgstr "Երկ.`"
 
 #: printrun/gui/controls.py:267
 msgid "mm"
@@ -135,13 +136,15 @@ msgstr "Դուրս մղել / Հետ քաշել (մմ/ր)"
 
 #: printrun/gui/controls.py:278
 msgid "Speed:"
-msgstr "Արագություն:"
+msgstr "Արագ.`"
 
 #: printrun/gui/controls.py:279
 msgid ""
 "mm/\n"
 "min"
-msgstr " մմ/ր"
+msgstr ""
+"մմ/\n"
+"ր"
 
 #: printrun/gui/controls.py:290
 msgid "Tool:"
@@ -207,15 +210,15 @@ msgid ""
 "Click to rescan ports"
 msgstr ""
 "Հաղորդակցման կարգավորումներ\n"
-"Կտտացրեք port-ը կրկին սկանավորելու համար"
+"Սեղմեք կայանը կրկին սկանավորելու համար"
 
 #: printrun/gui/toolbar.py:32
 msgid "Port"
-msgstr "Port"
+msgstr "Կայան"
 
 #: printrun/gui/toolbar.py:37
 msgid "Select Port Printer is connected to"
-msgstr "Տպիչի նշված Port-ը միացված է"
+msgstr "Տպիչի տվյալ կայանըը միացված է"
 
 #: printrun/gui/toolbar.py:46
 msgid "Select Baud rate for printer communication"
@@ -417,7 +420,7 @@ msgstr "Կատարված"
 
 #: printrun/objectplater.py:151
 msgid "Autoplating"
-msgstr "Autoplating"
+msgstr "Ինքապատում"
 
 #: printrun/objectplater.py:199
 msgid "Bed full, sorry sir :("
@@ -497,7 +500,7 @@ msgstr "Անհնար է միանալ %s  %sbaudrate-ին`"
 
 #: printrun/printcore.py:192
 msgid "Serial error: %s"
-msgstr "Serial-ի սխալ` %s "
+msgstr "Serial-ի սխալ` %s"
 
 #: printrun/printcore.py:197
 msgid "IO error: %s"
@@ -564,7 +567,7 @@ msgstr "Հնարավոր չէ գրանցել տպիչը (մի գուցե միա�
 
 #: printrun/printcore.py:610
 msgid "Socket connection broken, disconnected. ({0}): {1}"
-msgstr "Աղբյուրի միացումը անջատվեց, միացված չե: ({0}): {1}"
+msgstr "Միացման աղբյուրն անջատվեց, միացված չէ: ({0}): {1}"
 
 #: printrun/pronsole.py:72
 msgid "Default: "
@@ -580,7 +583,7 @@ msgstr "Իրոք ցանկանում եք զրոացնել կարգավորում
 
 #: printrun/pronsole.py:108
 msgid "Confirm set default"
-msgstr "Հաստատել լռելայնի անցումը"
+msgstr "Հաստատել սկզբնադիր սահմանումը"
 
 #: printrun/pronsole.py:258
 msgid "Width"
@@ -596,15 +599,15 @@ msgstr "Բարձրություն"
 
 #: printrun/pronsole.py:267
 msgid "X offset"
-msgstr "X offset"
+msgstr "X֊ի զրո"
 
 #: printrun/pronsole.py:270
 msgid "Y offset"
-msgstr "Y offset"
+msgstr "Y֊ի զրո"
 
 #: printrun/pronsole.py:273
 msgid "Z offset"
-msgstr "Y offset"
+msgstr "Z-ի զրո"
 
 #: printrun/pronsole.py:276
 msgid "X home pos."
@@ -620,11 +623,11 @@ msgstr "Z սկզբնական դիրք"
 
 #: printrun/pronsole.py:301
 msgid "Port used to communicate with printer"
-msgstr "Port-ը օգտագործվում է տպիչին միանալու համար"
+msgstr "Կայանը օգտագործման մեջ է և կապակցված է տպիչին"
 
 #: printrun/pronsole.py:301
 msgid "Serial port"
-msgstr "Հաջորդական port"
+msgstr "Հաջորդական կայան"
 
 #: printrun/pronsole.py:302
 msgid "Baud rate"
@@ -1356,7 +1359,7 @@ msgstr "Բացում է նիշքը"
 
 #: printrun/pronterface.py:655
 msgid "&Open..."
-msgstr "&Բացել…"
+msgstr "Բացել…"
 
 #: printrun/pronterface.py:663
 msgid " Clear output console"
@@ -1376,7 +1379,7 @@ msgstr "Ելք"
 
 #: printrun/pronterface.py:665
 msgid "&File"
-msgstr "&Նիշք"
+msgstr "Նիշք"
 
 #: printrun/pronterface.py:668
 msgid " Edit open file"
@@ -1384,7 +1387,7 @@ msgstr "Խմբագրել բացվող նիշքը"
 
 #: printrun/pronterface.py:668
 msgid "&Edit..."
-msgstr "&Խմբագրել…"
+msgstr "Խմբագրել…"
 
 #: printrun/pronterface.py:669
 msgid " Compose 3D models into a single plate"
@@ -1420,7 +1423,7 @@ msgstr "Պրոյեկտոր"
 
 #: printrun/pronterface.py:673
 msgid "&Tools"
-msgstr "&Գործիքներ"
+msgstr "Գործիքներ"
 
 #: printrun/pronterface.py:676
 msgid " Recover previous print after a disconnect (homes X, Y, restores Z and E status)"
@@ -1432,7 +1435,7 @@ msgstr "Վերականգնել"
 
 #: printrun/pronterface.py:679
 msgid "&Advanced"
-msgstr "&Ընդլայնված"
+msgstr "Ընդլայնված"
 
 #: printrun/pronterface.py:686
 msgid "Print &settings"
@@ -1440,15 +1443,15 @@ msgstr "Տպիչի &կարգավորումներ"
 
 #: printrun/pronterface.py:687
 msgid "&Filament"
-msgstr "&Լցանյութ"
+msgstr "Լցանյութ"
 
 #: printrun/pronterface.py:688
 msgid "&Printer"
-msgstr "&Տպիչ"
+msgstr "Տպիչ"
 
 #: printrun/pronterface.py:694
 msgid "&Slic3r"
-msgstr "&Slic3r"
+msgstr "Slic3r"
 
 #: printrun/pronterface.py:696
 msgid "Failed to load Slic3r configuration:"
@@ -1456,11 +1459,11 @@ msgstr "Չհաջողվեց բեռնել Slic3r -ի կարգաբերումը:"
 
 #: printrun/pronterface.py:702
 msgid "&Macros"
-msgstr "&Macros"
+msgstr "Macros"
 
 #: printrun/pronterface.py:703
 msgid "<&New...>"
-msgstr "<&Նոր…>"
+msgstr "<Նոր…>"
 
 #: printrun/pronterface.py:704
 msgid " Options dialog"
@@ -1468,7 +1471,7 @@ msgstr "Ընտրանքի զրուցարան"
 
 #: printrun/pronterface.py:704
 msgid "&Options"
-msgstr "&Ընտրանքներ"
+msgstr "Ընտրանքներ"
 
 #: printrun/pronterface.py:706
 msgid " Adjust slicing settings"
@@ -1488,11 +1491,11 @@ msgstr "Տպել տպիչից ուղարկած և ստացած բոլոր G-code
 
 #: printrun/pronterface.py:713
 msgid "&Settings"
-msgstr "&Կարգավորումներ"
+msgstr "Կարգավորումներ"
 
 #: printrun/pronterface.py:719
 msgid "&About Printrun"
-msgstr "&Printrun-ի մասին"
+msgstr "Printrun-ի մասին"
 
 #: printrun/pronterface.py:719
 msgid "Show about dialog"
@@ -1500,7 +1503,7 @@ msgstr "Ցուցադրել «մեր մասին» երկխոսությունը"
 
 #: printrun/pronterface.py:720
 msgid "&Help"
-msgstr "&Օգնություն"
+msgstr "Օգնություն"
 
 #: printrun/pronterface.py:746
 msgid "Printrun is a pure Python 3D printing (and other types of CNC) host software."
@@ -1520,9 +1523,7 @@ msgstr "Պարբերաբար դիտարկել տպիչի ջերմաստիճան�
 
 #: printrun/pronterface.py:782
 msgid "Path to the simarrange binary to use in the STL plater"
-msgstr ""
-"Путь к двоичному файлу симарранж для использования в платтере STL\n"
-"STL նիշքի հարթության համահարթեցման երկուական ուղղությունը:"
+msgstr "STL նիշքի հարթության համահարթեցման երկուական ուղղությունը:"
 
 #: printrun/pronterface.py:782
 msgid "Simarrange command"
@@ -1664,11 +1665,11 @@ msgstr "Արտամղման հաստության նախադիտում"
 
 #: printrun/pronterface.py:805
 msgid "Fine Grid Spacing"
-msgstr "Fine Grid Spacing"
+msgstr "Ցանցի փոքր տարածություն"
 
 #: printrun/pronterface.py:805
 msgid "Fine grid spacing"
-msgstr "Fine grid spacing"
+msgstr "Ցանցի փոքր տարածություն"
 
 #: printrun/pronterface.py:806
 msgid "Coarse Grid Spacing"
@@ -1750,6 +1751,14 @@ msgstr "Հիմնական կարգավորումների փոփոխություն
 msgid "Note:"
 msgstr "Նշում ՝"
 
+#: printrun/pronterface.py:820
+msgid "&Recent Files"
+msgstr "Վերջին նիշքերը"
+
+#: printrun/pronterface.py:821
+msgid "Clear console\tCtrl+L"
+msgstr "Մաքրել տերմինալը\tCtrl+L"
+
 #: printrun/pronterface.py:822
 msgid "automatically try to connect to printer on startup"
 msgstr "մեկնարկի ժամանակ ինքնեկ կերպով փորձել միանալ տպիչին"
@@ -1804,7 +1813,7 @@ msgstr "Չհաջողվեց վերլուծել և ստանալ baud rate-ը:"
 
 #: printrun/pronterface.py:1013 printrun/pronterface.py:1023
 msgid "Error: You are trying to connect to a non-existing port."
-msgstr "Սխալ` դուք ցանկանում եք միանալ գոյություն չունեցող տպիչի port-ին."
+msgstr "Սխալ` դուք ցանկանում եք միանալ գոյություն չունեցող տպիչի կայանին։"
 
 #: printrun/pronterface.py:1015
 msgid "Error: You don't have permission to open %s."
@@ -1828,7 +1837,7 @@ msgstr "Իրո՞ք ցանկանում եք վերատեղադրել տպիչը:"
 
 #: printrun/pronterface.py:1072
 msgid "Reset?"
-msgstr "Վերատեղադրել?"
+msgstr "Վերատեղադրե՞լ"
 
 #: printrun/pronterface.py:1093
 msgid "Restart"
@@ -1980,7 +1989,7 @@ msgstr "Macro-ի անուն`"
 
 #: printrun/pronterface.py:2013
 msgid "Ok"
-msgstr "Ok"
+msgstr "Լավ"
 
 #: printrun/pronterface.py:2035
 msgid "Macro name may contain only ASCII alphanumeric symbols and underscores"
