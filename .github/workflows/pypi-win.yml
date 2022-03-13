@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: [windows-latest]
         architecture: [x64, x86]
-        python-version: [3.6, 3.7, 3.8]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
     - name: Checkout
