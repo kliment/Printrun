@@ -17,9 +17,9 @@ jobs:
       matrix:
         os: [windows-latest]
         architecture: [x64, x86]
-        # remove python '3.10' because numpy is not ready for Python 3.10 (2021-12-21)
+        # remove python '3.10' because numpy is not ready for Python 3.10 (2022-03-17)
         # remove python '3.6' because not longer supported (2022-03-17)
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9']
 
     steps:
     - name: Checkout
