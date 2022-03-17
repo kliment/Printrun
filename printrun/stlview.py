@@ -72,9 +72,12 @@ class StlViewPanel(wxGLPanel):
     def __init__(self, parent, size,
                  build_dimensions = None, circular = False,
                  antialias_samples = 0,
-                 grid = (1, 10)):
+                 grid = (1, 10), perspective=False):
+        if perspective:
+            self.orthographic=False
         super().__init__(parent, wx.DefaultPosition, size, 0,
                                            antialias_samples = antialias_samples)
+        
         self.batches = []
         self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
