@@ -1,12 +1,16 @@
 # PRINTRUN 2.X
 
-The master branch holds the development of Printrun 2.x. This new version of Printrun supports Python 3 and wxPython 4. All new features and developments should be merged to it.
+The master branch holds the development of Printrun 2.x. This version of Printrun supports Python 3 and wxPython 4. All new features and developments should be merged to it.
 
 Printrun consists of printcore, pronsole and pronterface, and a small collection of helpful scripts.
 
   * printcore.py is a library that makes writing reprap hosts easy
   * pronsole.py is an interactive command-line host software with tabcompletion goodness
   * pronterface.py is a graphical host software with the same functionality as pronsole
+
+# CONTRIBUTORS
+
+An enormous number of people helped make Printrun. See the list [here](CONTRIBUTORS.md)
 
 # GETTING PRINTRUN
 
@@ -494,7 +498,7 @@ List of available commands:
 # LICENSE
 
 ```
-Copyright (C) 2011-2020 Kliment Yanev, Guillaume Seguin
+Copyright (C) 2011-2022 Kliment Yanev, Guillaume Seguin, and the other contributors listed in CONTRIBUTORS.md
 
 Printrun is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
