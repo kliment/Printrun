@@ -197,7 +197,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     def speedslider_spin(event):
         value = root.speed_spin.GetValue()
         root.speed_setbtn.SetBackgroundColour("red")
-        root.speed_slider.SetValue(value)
+        root.speed_slider.SetValue(int(value))
     root.speed_spin.Bind(wx.EVT_SPINCTRLDOUBLE, speedslider_spin)
 
     def speedslider_scroll(event):
@@ -231,7 +231,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     def flowslider_spin(event):
         value = root.flow_spin.GetValue()
         root.flow_setbtn.SetBackgroundColour("red")
-        root.flow_slider.SetValue(value)
+        root.flow_slider.SetValue(int(value))
     root.flow_spin.Bind(wx.EVT_SPINCTRLDOUBLE, flowslider_spin)
 
     def flowslider_scroll(event):
