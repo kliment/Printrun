@@ -38,7 +38,6 @@ jobs:
         export git_hash=$(git rev-parse --short "$GITHUB_SHA")
         sed -i '' '$ s/.$//' pronterface.spec
         cat >> pronterface.spec <<EOL
-        ,
         info_plist={
             'CFBundleShortVersionString': '$git_hash',
             'NSPrincipalClass': 'NSApplication',
