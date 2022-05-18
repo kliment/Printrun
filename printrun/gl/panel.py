@@ -268,14 +268,14 @@ class wxGLPanel(BASE_CLASS):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         self.setup_lights()
-        if self.orthographic:
-            wratio = self.width / self.dist
-            hratio = self.height / self.dist
-            minratio = float(min(wratio, hratio))
-            self.zoom_factor = 1.0
-            self.zoomed_width = wratio / minratio
-            self.zoomed_height = hratio / minratio
-            glScalef(factor * minratio, factor * minratio, 1)
+
+        wratio = self.width / self.dist
+        hratio = self.height / self.dist
+        minratio = float(min(wratio, hratio))
+        self.zoom_factor = 1.0
+        self.zoomed_width = wratio / minratio
+        self.zoomed_height = hratio / minratio
+        glScalef(factor * minratio, factor * minratio, 1)
 
     def DrawCanvas(self):
         """Draw the window."""
