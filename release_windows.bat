@@ -27,7 +27,7 @@ rem **  Steps, you need to do manually before running this batch:               
 rem **                                                                                **
 rem **  1. install python (3.7.9 is actually preferred version)                       **
 rem **     https://www.python.org/downloads/release/python-379/                       **
-rem **     In case you use an other Python version, check line 73 and adjust          **
+rem **     In case you use an other Python version, check line 87  and adjust         **
 rem **     the parameter accordingly to build your virtual environment.               **
 rem **  2. install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
@@ -48,7 +48,12 @@ rem **     https://github.com/DivingDuck/PrintrunGTK3                           
 rem **                                                                                **
 rem **     Follow the instructions at section 'Collect all data for build' below      **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2021-09-05, Status: working                               **
+rem **   Remark: wxPython drops support x32 builders. Only x64 versions for now       **
+rem **                                                                                **
+rem **   https://github.com/wxWidgets/Phoenix/commit/d3bdb14365ca754e83732cccd04e94a2ded5029f
+rem **                                                                                **
+rem **                                                                                **
+rem **  Author: DivingDuck, 2022-05-30, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -77,7 +82,7 @@ if exist v3 (
    rem In case you use Python 3.9.x, you need in addition change line 2 in
    rem requirements.txt from wxPython (== 4.1.0) to wxPython (>= 4.1.1)
    rem to prevent a compiler error / crash as wxPython 4.1.1 seems to be 
-   rem the minimum version
+   rem the minimum version. Only Python x64 versions are supported.
 
    py -3.7 -m venv v3
    rem py -3.8 -m venv v3
@@ -88,7 +93,7 @@ if exist v3 (
    echo *********************************************
    call v3\Scripts\activate
 
-   pip install --upgrade pip
+   py -m pip install --upgrade pip
    pip install --upgrade setuptools
 
    pip install wheel
@@ -116,7 +121,7 @@ pip install --upgrade virtualenv
 echo ****************************************************
 echo ****** check for and update outdated modules  ******
 echo ****************************************************
-for /F "skip=2 delims= " %%i in ('pip list --outdated') do pip install --upgrade %%i
+for /F "skip=2 delims= " %%i in ('pip list --outdated') do py -m pip install --upgrade %%i
 
 echo ****************************************************************************
 echo ****** Bug on wxPython 4.1.x workaround for Python 3.x and Windows 10 ******
@@ -166,7 +171,7 @@ rem set the path location via Windows system environment variable (like Path=c:\
 rem pyi-makespec -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
 rem pyi-makespec -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
 
-rem Version 2: GTK3 included in Pronterface (Windows10 x32 only):
+rem Version 2: GTK3 included in Pronterface (Windows10 x32 only) NOT Supported for now (see wxPython remark line 51):
 rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files for Windows10 x32 only
 
 rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
