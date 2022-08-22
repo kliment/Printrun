@@ -84,9 +84,10 @@ if exist v3 (
    rem to prevent a compiler error / crash as wxPython 4.1.1 seems to be 
    rem the minimum version. Only Python x64 versions are supported.
 
-   py -3.7 -m venv v3
+   rem py -3.7 -m venv v3
    rem py -3.8 -m venv v3
    rem py -3.9 -m venv v3
+   py -3.10 -m venv v3
    
    echo *********************************************
    echo ****** Activate virtual environment v3 ******
@@ -134,8 +135,10 @@ rem  pip install wxPython>=4.0,<4.1
 rem Using the latest development version seems to correct the problem with wxPython.
 rem The workaround below need to be check again as soon as there is a 
 rem new version >4.1.1 available.
-pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython --use-deprecated=html5lib
-
+rem pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython --use-deprecated=html5lib
+rem --use-deprecated=html5lib is deprecated too now
+rem wxPython 4.2.0 is avilable now. snapshot version is not needed now. Hopefully.  #2022-08-05
+rem pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
 
 echo ******************************************************************
 echo ****** Compile G-Code parser gcoder_line.cp37-win_amd64.pyd ******

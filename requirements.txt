@@ -1,5 +1,13 @@
 pyserial (>= 3.0)
-wxPython (>= 4.1.0)
+#wxPython >= 4.1.0 ; python_version < '3.10'
+wxPython >= 4.1.0 ; sys_platform != 'win32'
+wxPython >= '4.2'; python_version >= '3.7' and sys_platform == 'win32'
+
+# In case latest development snapshot of wxPython >= '4.2.0a1 is needed 
+# For Python >= 3.10 Windows 10 (only x64 is supported)
+# -f https://wxpython.org/Phoenix/snapshot-builds/
+# wxPython >= '4.2.0a1'; python_version >= '3.10' and sys_platform == 'win32'
+
 numpy (>= 1.8.2)
 pyglet (>= 1.1)
 cffi
