@@ -88,13 +88,8 @@ def setup_logging(out, filepath = None, reset_handlers = False):
 def iconfile(filename):
     '''
     Get the full path to filename by checking in standard icon locations
-    ("pixmaps" directories) or use the frozen executable if applicable.
-    
-    Sequential arguments:
-    filename -- Provide a filename without the path.
-    
-    Returns:
-    The full path.
+    ("pixmaps" directories) or use the frozen executable if applicable
+    (See the lookup_file function's documentation for behavior).
     '''
     if hasattr(sys, "frozen") and sys.frozen == "windows_exe":
         return sys.executable
