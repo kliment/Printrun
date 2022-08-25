@@ -106,7 +106,7 @@ def imagefile(filename):
         os.path.dirname(os.path.dirname(sys.argv[0])),
         "share",
         "pronterface"
-    )
+    )  # Used by pip install
     image_dirs = [
         os.path.join(DATADIR, 'pronterface', 'images'),
         os.path.join(os.path.dirname(sys.argv[0]), "images"),
@@ -114,7 +114,7 @@ def imagefile(filename):
         os.path.join(
             getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),
             "images"
-        ),  # INFO: lookup_file checks in frozen but not in frozen /images
+        ),  # Check manually since lookup_file checks in frozen but not /images
     ]
     path = lookup_file(filename, image_dirs)
     if path == filename:
@@ -160,7 +160,7 @@ def pixmapfile(filename):
         os.path.dirname(os.path.dirname(sys.argv[0])),
         "share",
         "pixmaps"
-    )
+    )  # Used by pip install
     pixmaps_dirs = [shared_pixmaps_dir, local_pixmaps_dir]
     return lookup_file(filename, pixmaps_dirs)
 
