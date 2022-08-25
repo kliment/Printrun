@@ -130,10 +130,10 @@ def imagefile(filename):
 
 def lookup_file(filename, prefixes):
     '''
-    Look for an icon file in one or more prefixes in the given list,
-    or in the frozen data if applicable. If a result from this (or
-    from callers such as imagefile) is used for the wx.Image
-    constructor and filename doesn't exist as-is, the C++ part of wx
+    Get the full path to filename by checking one or more prefixes,
+    or in the frozen data if applicable. If a result from this
+    (or from callers such as imagefile) is used for the wx.Image
+    constructor and filename isn't found, the C++ part of wx
     will raise an exception (wx._core.wxAssertionError): "invalid
     image".
     
