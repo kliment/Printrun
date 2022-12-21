@@ -9,33 +9,34 @@ rem **  Pronterface- and Pronsole file for Windows 10.                          
 rem **                                                                                **
 rem **  Steps that are automated:                                                     **
 rem **                                                                                **
-rem **   1. clean up previous compilations (directory .\dist)                         **
-rem **   2. check for virtual environment called v3 and generate it, if               **
+rem **   1. Clean up previous compilations (directory .\dist)                         **
+rem **   2. Check for virtual environment called v3 and generate it, if               **
 rem **      not available (start from scratch)                                        **
-rem **   3. install all needed additional modules via pip                             **
-rem **   4. check for outdated modules that need to be updated and                    **
+rem **   3. Install all needed additional modules via pip                             **
+rem **   4. Check for outdated modules that need to be updated and                    **
 rem **      update them                                                               **
 rem **   5. Check if virtual environment needs an update and do it                    **
-rem **   6. check for existing variants of gcoder_line.cp??-win_amd??.pyd             **
+rem **   6. Check for existing variants of gcoder_line.cp??-win_amd??.pyd             **
 rem **      and delete them (to prevent errors and incompatibilities)                 **
-rem **   7. compile Pronterface.exe                                                   **
-rem **   8. compile Pronsole.exe                                                      **
-rem **   9. copy localization files to .\dist                                         **
-rem **  10. go to directory .\dist, list files and ends the activity                  **
+rem **   7. Compile Pronterface.exe                                                   **
+rem **   8. Compile Pronsole.exe                                                      **
+rem **   9. Copy localization files to .\dist                                         **
+rem **  10. Go to directory .\dist, list files and ends the activity                  **
 rem **                                                                                **
 rem **  Steps, you need to do manually before running this batch:                     **
 rem **                                                                                **
-rem **  1. install python (3.7.9 is actually preferred version)                       **
+rem **  1. Install python 64-bit (3.10.x is actually preferred version for            **
+rem **     Windows 10 and newer)                                                      **
 rem **     https://www.python.org/downloads/release/python-379/                       **
-rem **     In case you use an other Python version, check line 87  and adjust         **
+rem **     In case you use an other Python version, check line 88  and adjust         **
 rem **     the parameter accordingly to build your virtual environment.               **
-rem **  2. install C-compiler environment                                             **
+rem **  2. Install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
-rem **  3. check for latest repository updates at:                                    **
+rem **  3. Check for latest repository updates at:                                    **
 rem **     http://github.com/kliment/Printrun.git                                     **
 rem **  4. Projector needs GTK+ for Windows Runtime Environment installed.            **
 rem **     There are different compilations, depending on the installed               **
-rem **     Windows Version, available. You can find a striped version of GTK3         **
+rem **     Windows version, available. You can find a striped version of GTK3         **
 rem **     with all needed DLL binary files in directory PrintrunGTK. Please run      **
 rem **     following git commands before you run this batch in case you don't find    **
 rem **     this directory in your local repository:                                   **
@@ -53,7 +54,7 @@ rem **                                                                          
 rem **   https://github.com/wxWidgets/Phoenix/commit/d3bdb14365ca754e83732cccd04e94a2ded5029f
 rem **                                                                                **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2022-05-30, Status: working                               **
+rem **  Author: DivingDuck, 2022-12-14, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -127,18 +128,15 @@ for /F "skip=2 delims= " %%i in ('pip list --outdated') do py -m pip install --u
 echo ****************************************************************************
 echo ****** Bug on wxPython 4.1.x workaround for Python 3.x and Windows 10 ******
 echo ****************************************************************************
-rem wxPython 4.1.1 cause a crash under Windows 10, see Issue #1170 #1174 
-rem Relevant in combination with Python >=3.7.x. Further information:
-rem https://discuss.wxpython.org/t/wxpython4-1-1-python3-8-locale-wxassertionerror/35168
-rem  pip uninstall wxPython
-rem  pip install wxPython>=4.0,<4.1
-rem Using the latest development version seems to correct the problem with wxPython.
-rem The workaround below need to be check again as soon as there is a 
-rem new version >4.1.1 available.
-rem pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython --use-deprecated=html5lib
-rem --use-deprecated=html5lib is deprecated too now
 rem wxPython 4.2.0 is avilable now. snapshot version is not needed now. Hopefully.  #2022-08-05
 rem pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
+
+echo *************************************************************************
+echo ****** pyglet workaround, needs to be below 2.0 (isn't compatible) ******
+echo *************************************************************************
+rem # 2022-11-01
+pip uninstall pyglet -y
+pip install pyglet==1.5.27
 
 echo ******************************************************************
 echo ****** Compile G-Code parser gcoder_line.cp37-win_amd64.pyd ******

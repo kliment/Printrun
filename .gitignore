@@ -27,3 +27,4 @@ printrun/gcoder_line*.pyd
 /slic3rconf.ini
 /PrusaSlicer.ini
 /.eggs
+/SuperSlicer.ini
