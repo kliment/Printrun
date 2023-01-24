@@ -20,7 +20,7 @@ if sys.version_info.major < 3:
     print("You need to run this on Python 3")
     sys.exit(-1)
 
-from serial import Serial, SerialException, PARITY_ODD, PARITY_NONE
+import serial
 from select import error as SelectError
 import threading
 from queue import Queue, Empty as QueueEmpty
@@ -289,16 +289,16 @@ class printcore():
                 self.printer_tcp = None
                 try:
                     if self.needs_parity_workaround:
-                        self.printer = Serial(port = self.port,
+                        self.printer = serial.Serial(port = self.port,
                                               baudrate = self.baud,
                                               timeout = 0.25,
-                                              parity = PARITY_ODD)
+                                              parity = serial.PARITY_ODD)
                         self.printer.close()
-                        self.printer.parity = PARITY_NONE
+                        self.printer.parity = serial.PARITY_NONE
                     else:
-                        self.printer = Serial(baudrate = self.baud,
+                        self.printer = serial.Serial(baudrate = self.baud,
                                               timeout = 0.25,
-                                              parity = PARITY_NONE)
+                                              parity = serial.PARITY_NONE)
                         self.printer.port = self.port
                     try:  #this appears not to work on many platforms, so we're going to call it but not care if it fails
                         self.printer.dtr = dtr
@@ -306,7 +306,7 @@ class printcore():
                         #self.logError(_("Could not set DTR on this platform")) #not sure whether to output an error message
                         pass
                     self.printer.open()
-                except SerialException as e:
+                except serial.SerialException as e:
                     self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
                                   "\n" + _("Serial error: %s") % e)
                     self.printer = None
@@ -402,7 +402,7 @@ class printcore():
             self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
                               "\n" + _("Maybe a bad baudrate?"))
             return None
-        except SerialException as e:
+        except serial.SerialException as e:
             self.logError(_("Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
             return None
         except socket.error as e:
@@ -872,7 +872,7 @@ class printcore():
                 else:
                     self.logError(_("Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
-            except SerialException as e:
+            except serial.SerialException as e:
                 self.logError(_("Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
                 self.writefailures += 1
             except RuntimeError as e:
