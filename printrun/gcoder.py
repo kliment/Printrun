@@ -312,8 +312,27 @@ class GCode:
         return commands[::-1]
 
     def append(self, command, store = True):
+        '''Add a G-code command to the list
+
+        Parameters
+        ----------
+        command : str
+            Command to be added, e.g. "G1 X10".
+        store : bool, default: True
+            If True, `command` is appended to the current list of
+            commands. If False, processed command is returned but not
+            added to the list.
+
+        Returns
+        -------
+        Line
+            A `printrun.gcoder.Line` object containing the processed
+            `command`.
+
+        '''
         command = command.strip()
         if not command:
+            # TODO: return None or empty gline? Pylint #R1710
             return
         gline = Line(command)
         self._preprocess([gline])
