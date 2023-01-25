@@ -222,10 +222,10 @@ class printcore():
                     self.printer_tcp = None
                 self.printer.close()
             except socket.error:
-                logger.error(traceback.format_exc())
+                logging.error(traceback.format_exc())
                 pass
             except OSError:
-                logger.error(traceback.format_exc())
+                logging.error(traceback.format_exc())
                 pass
         for handler in self.event_handler:
             try: handler.on_disconnect()
