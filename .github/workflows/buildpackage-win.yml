@@ -2,8 +2,6 @@ name: Build Windows Executable - for branch test (GTK3 for Projector) only !
 
 on:
   push:
-    # AGe new only for branch test
-    # branches: [ testPython3.10 ] # AGe new
   pull_request:
   release:
     types:
