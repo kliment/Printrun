@@ -1,4 +1,4 @@
-name: Build Windows Executable - for branch test (GTK3 for Projector) only !
+name: Build Windows Executable
 
 on:
   push:
