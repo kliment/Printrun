@@ -138,6 +138,12 @@ rem # 2022-11-01
 pip uninstall pyglet -y
 pip install pyglet==1.5.27
 
+rem # 2023-01-30 cairosvg 2.6.0 have problems with locale,
+rem so we will stay to 2.5.2 as workaround for now
+pip uninstall cairosvg -y
+pip install cairosvg==2.5.2
+
+
 echo ******************************************************************
 echo ****** Compile G-Code parser gcoder_line.cp37-win_amd64.pyd ******
 echo ******************************************************************
