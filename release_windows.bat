@@ -5,7 +5,7 @@ rem ****************************************************************************
 rem *********************  ---> New batch file starts here <---  ***********************
 rem **                                                                                **
 rem **  This batch will compile automated via command line an executable              **
-rem **  Pronterface- and Pronsole file for Windows 10.                                              **
+rem **  Pronterface- and Pronsole file for Windows 10.                                **
 rem **                                                                                **
 rem **  Steps that are automated:                                                     **
 rem **                                                                                **
@@ -54,7 +54,7 @@ rem **                                                                          
 rem **   https://github.com/wxWidgets/Phoenix/commit/d3bdb14365ca754e83732cccd04e94a2ded5029f
 rem **                                                                                **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2022-12-14, Status: working                               **
+rem **  Author: DivingDuck, 2023-01-31, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -80,10 +80,8 @@ if exist v3 (
    rem Select your Python version below. Remove 'rem' before 'rem py -3.x ...' for
    rem your Python version of choice and add 'rem' for all other versions.
    rem Attention: 
-   rem In case you use Python 3.9.x, you need in addition change line 2 in
-   rem requirements.txt from wxPython (== 4.1.0) to wxPython (>= 4.1.1)
-   rem to prevent a compiler error / crash as wxPython 4.1.1 seems to be 
-   rem the minimum version. Only Python x64 versions are supported.
+   rem Minimum version for wxPython is >= 4.2 and with this version only
+   rem Python x64 versions are supported.
 
    rem py -3.7 -m venv v3
    rem py -3.8 -m venv v3
@@ -128,7 +126,7 @@ for /F "skip=2 delims= " %%i in ('pip list --outdated') do py -m pip install --u
 echo ****************************************************************************
 echo ****** Bug on wxPython 4.1.x workaround for Python 3.x and Windows 10 ******
 echo ****************************************************************************
-rem wxPython 4.2.0 is avilable now. snapshot version is not needed now. Hopefully.  #2022-08-05
+rem wxPython 4.2.0 is available. Snapshot version is not needed now. Hopefully.  #2022-08-05
 rem pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
 
 echo *************************************************************************
@@ -138,8 +136,12 @@ rem # 2022-11-01
 pip uninstall pyglet -y
 pip install pyglet==1.5.27
 
-rem # 2023-01-30 cairosvg 2.6.0 have problems with locale,
-rem so we will stay to 2.5.2 as workaround for now
+
+echo *****************************************************************************
+echo ****** cairosvg workaround, needs to be below 2.6.0 (isn't compatible) ******
+echo *****************************************************************************
+rem # 2023-01-30
+rem cairosvg 2.6.0 have problems with locale, so we will stay to 2.5.2 as workaround for now
 pip uninstall cairosvg -y
 pip install cairosvg==2.5.2
 
