@@ -14,9 +14,12 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        architecture: [x64, x86]
-        # Change from Python 3.8 to 3.7 or 3.9 for being able to check for issue #1170 and maybe #1174
-        python-version: [3.7]
+        # remove x86 builds for now as there are no snapshot builds of wxPython available
+        #architecture: [x64, x86]
+        architecture: [x64]
+        # add python '3.10' because wxPython 4.2 is now available (2022-08-21)
+        # remove python '3.6' because not longer supported (2022-03-17)
+        python-version: ['3.7', '3.8', '3.9','3.10']
 
     steps:
     - name: Checkout
@@ -33,6 +36,30 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip pyinstaller setuptools wheel simplejson polygon3 cython cffi -r requirements.txt
+
+   # - name: Update to wxPython Version for x86 and py 3.8
+   #   # Latest development version for x86 and Python 3.6 is for now (2021-12-18) 4.1.2a1.dev5226+a843ed14
+   #   # Latest development version for x86 and Python 3.8+3.9 is for now (2022-03-17) 4.1.2a1.dev5226+a843ed14
+   #   # Remove Python 3.6
+   #   if: ${{ matrix.architecture == 'x86' && matrix.python-version == '3.8' }}
+   #   run: |
+   #     python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython==4.1.2a1.dev5226+a843ed14
+   # - name: Update to wxPython Version for x86 and py 3.9
+   #   # Latest development version for x86 and Python 3.6 is for now (2021-12-18) 4.1.2a1.dev5226+a843ed14
+   #   # Latest development version for x86 and Python 3.8+3.9 is for now (2022-03-17) 4.1.2a1.dev5226+a843ed14
+   #   # Remove Python 3.6
+   #   if: ${{ matrix.architecture == 'x86' && matrix.python-version == '3.9' }}
+   #   run: |
+   #     python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython==4.1.2a1.dev5226+a843ed14
+   # 
+   #     
+    - name: Update to wxPython latest Version for x64
+      # Latest development version for x64 and Python 3.7 to 3.10, can be removed if requirements.txt is fixed
+      if: ${{ matrix.architecture == 'x64' && matrix.python-version >= '3.7' }}
+      run: |
+        # python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
+        python -m pip install -U wxPython
+
     - name: Build Cython ext
       run: |
         python setup.py build_ext --inplace

@@ -109,7 +109,9 @@ class DisplayFrame(wx.Frame):
                 if self.layer_red:
                     pngImage = pngImage.AdjustChannels(1, 0, 0, 1)
 
-                dc.DrawBitmap(wx.Bitmap(pngImage), self.offset[0], self.offset[1], True)
+                # AGE2022-07-31 Python 3.10 and DrawBitmap expects offset 
+                # as integer value. Convert float values to int
+                dc.DrawBitmap(wx.Bitmap(pngImage), int(self.offset[0]), int(self.offset[1]), True)
 
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
@@ -133,7 +135,9 @@ class DisplayFrame(wx.Frame):
         print("Showing", str(time.perf_counter()))
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
-        wx.CallLater(1000 * self.interval, self.hide_pic_and_rise)
+        # AGe 2022-07-31 Python 3.10 and CallLater expects delay in millyseconds as 
+        # integer value instead of float. Convert float value to int
+        wx.CallLater(int(1000 * self.interval), self.hide_pic_and_rise)
 
     def rise(self):
         if self.direction == "Top Down":
@@ -165,7 +169,8 @@ class DisplayFrame(wx.Frame):
         else:
             time.sleep(self.pause)
 
-        wx.CallLater(1000 * self.pause, self.next_img)
+        # AGe 2022-07-31 Python 3.10 expects delay in millyseconds as integer value instead of float. Convert float value to int
+        wx.CallLater(int(1000 * self.pause), self.next_img)
 
     def hide_pic(self):
         print("Hiding", str(time.perf_counter()))
