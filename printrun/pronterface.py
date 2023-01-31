@@ -760,7 +760,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             max_length = 20000
             current_length = self.logbox.GetLastPosition()
             if current_length > max_length:
-                self.logbox.Remove(0, current_length / 10)
+                self.logbox.Remove(0, current_length // 10)
             currentCaretPosition = self.logbox.GetInsertionPoint()
             currentLengthOfText = self.logbox.GetLastPosition()
             if self.autoscrolldisable:
@@ -775,8 +775,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.logbox.SetInsertionPointEnd()
                 self.logbox.AppendText(text)
 
-        except:
+        except UnicodeError:
             self.log(_("Attempted to write invalid text to console, which could be due to an invalid baudrate"))
+        except Exception as e:
+            self.log(_("Unhanded exception: "), repr(e))
 
     def clear_log(self, e):
         self.logbox.Clear()

@@ -75,6 +75,10 @@ class ExcluderWindow(gviz.GvizWindow):
             event.Skip()
 
     def _line_scaler(self, orig):
+        # Arguments:
+        #   orig: coordinates of two corners of a rectangle (x0, y0, x1, y1)
+        # Returns:
+        #   rectangle coordinates as (x, y, width, height)
         x0, y0 = self.gcode_to_real(orig[0], orig[1])
         x0 = self.p.scale[0] * x0 + self.p.translate[0]
         y0 = self.p.scale[1] * y0 + self.p.translate[1]
@@ -83,7 +87,8 @@ class ExcluderWindow(gviz.GvizWindow):
         y1 = self.p.scale[1] * y1 + self.p.translate[1]
         width = max(x0, x1) - min(x0, x1) + 1
         height = max(y0, y1) - min(y0, y1) + 1
-        return (min(x0, x1), min(y0, y1), width, height,)
+        rectangle = (min(x0, x1), min(y0, y1), width, height)
+        return tuple(map(int, rectangle))
 
     def paint_selection(self, dc):
         dc = wx.GCDC(dc)
