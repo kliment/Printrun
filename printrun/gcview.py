@@ -471,12 +471,15 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         wx.CallAfter(self.SetStatusText, message, 0)
 
     def process_slider(self, event):
-        new_layer = self.layerslider.GetValue()
-        new_layer = min(self.model.max_layers + 1, new_layer)
-        new_layer = max(1, new_layer)
-        self.model.num_layers_to_draw = new_layer
-        self.update_status("")
-        wx.CallAfter(self.Refresh)
+        if self.model is not None:
+            new_layer = self.layerslider.GetValue()
+            new_layer = min(self.model.max_layers + 1, new_layer)
+            new_layer = max(1, new_layer)
+            self.model.num_layers_to_draw = new_layer
+            self.update_status("")
+            wx.CallAfter(self.Refresh)
+        else:
+            logging.info(_("G-Code view, can't process slider. Please wait until model is loaded completely."))
 
     def set_current_gline(self, gline):
         if gline.is_move and gline.gcview_end_vertex is not None \

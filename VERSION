@@ -1,0 +1,61 @@
+This is a dummy file for pyinstaller to compile Pronterface.Cairocffi and cairosvg won't find
+the GTK3 runtime libraries needed for running Projector under Windows w / o this file.
+
+You can find a suitable version of GTK3 for Windows 10 here : https://github.com/DivingDuck/PrintrunGTK3.
+For further information please follow the links.PrintrunGTK3 is a submodule of Printrun.
+
+The DLL binaries are based on https ://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer
+for 64 Bit version and http ://www.tarnyko.net/dl/gtk.htm for 32 Bit version and are not modified.
+
+	Please run following git commands in case you can't find the directory 'PrintrunGTK' in your repository:
+	git checkout master
+	git submodule add https ://github.com/DivingDuck/PrintrunGTK3
+git submodule update --init --recursive
+
+For updating an existing submodule to latest version run :
+git submodule update --remote
+
+Compiling Pronterface manually :
+Follow the instructions in release_windows.bat and activate the correct pyi - makespec version depending on your needs.
+
+
+List of DLL's for Projector based on Windows 10 for 64bit program version:
+--------------------------------------------------------------------------
+https ://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer
+    https ://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/download/2021-01-30/gtk3-runtime-3.24.24-2021-01-30-ts-win64.exe
+
+	libbrotlicommon.dll
+	libbrotlidec.dll
+	libbz2 - 1.dll
+	libcairo - 2.dll
+	libexpat - 1.dll
+	libfontconfig - 1.dll
+	libfreetype - 6.dll
+	libgcc_s_seh - 1.dll
+	libglib - 2.0 - 0.dll
+	libgraphite2.dll
+	libharfbuzz - 0.dll
+	libiconv - 2.dll
+	libintl - 8.dll
+	libpcre - 1.dll
+	libpixman - 1 - 0.dll
+	libpng16 - 16.dll
+	libstdc++ - 6.dll
+	libwinpthread - 1.dll
+	zlib1.dll
+
+
+	List of DLL's for Projector based on Windows 10 for 32bit program version:
+	--------------------------------------------------------------------------
+	http ://www.tarnyko.net/dl/gtk.htm
+http://www.tarnyko.net/repo/gtk3_build_system/gtk+-bundle_3.6.4-20130513_win32.zip
+
+File list :
+libcairo - 2.dll
+libexpat - 1.dll
+libfontconfig - 1.dll
+libfreetype - 6.dll
+libpixman - 1 - 0.dll
+libpng15 - 15.dll
+Remark.txt
+zlib1.dll

@@ -109,7 +109,9 @@ class DisplayFrame(wx.Frame):
                 if self.layer_red:
                     pngImage = pngImage.AdjustChannels(1, 0, 0, 1)
 
-                dc.DrawBitmap(wx.Bitmap(pngImage), self.offset[0], self.offset[1], True)
+                # AGE2022-07-31 Python 3.10 and DrawBitmap expects offset 
+                # as integer value. Convert float values to int
+                dc.DrawBitmap(wx.Bitmap(pngImage), int(self.offset[0]), int(self.offset[1]), True)
 
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
@@ -130,16 +132,18 @@ class DisplayFrame(wx.Frame):
             pass
 
     def show_img_delay(self, image):
-        print("Showing", str(time.clock()))
+        print("Showing", str(time.perf_counter()))
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
-        wx.FutureCall(1000 * self.interval, self.hide_pic_and_rise)
+        # AGe 2022-07-31 Python 3.10 and CallLater expects delay in millyseconds as 
+        # integer value instead of float. Convert float value to int
+        wx.CallLater(int(1000 * self.interval), self.hide_pic_and_rise)
 
     def rise(self):
         if self.direction == "Top Down":
-            print("Lowering", str(time.clock()))
+            print("Lowering", str(time.perf_counter()))
         else:
-            print("Rising", str(time.clock()))
+            print("Rising", str(time.perf_counter()))
 
         if self.printer is not None and self.printer.online:
             self.printer.send_now("G91")
@@ -165,15 +169,16 @@ class DisplayFrame(wx.Frame):
         else:
             time.sleep(self.pause)
 
-        wx.FutureCall(1000 * self.pause, self.next_img)
+        # AGe 2022-07-31 Python 3.10 expects delay in millyseconds as integer value instead of float. Convert float value to int
+        wx.CallLater(int(1000 * self.pause), self.next_img)
 
     def hide_pic(self):
-        print("Hiding", str(time.clock()))
+        print("Hiding", str(time.perf_counter()))
         self.pic.Hide()
 
     def hide_pic_and_rise(self):
         wx.CallAfter(self.hide_pic)
-        wx.FutureCall(500, self.rise)
+        wx.CallLater(500, self.rise)
 
     def next_img(self):
         if not self.running:
