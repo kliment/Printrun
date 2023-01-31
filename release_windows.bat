@@ -54,7 +54,7 @@ rem **                                                                          
 rem **   https://github.com/wxWidgets/Phoenix/commit/d3bdb14365ca754e83732cccd04e94a2ded5029f
 rem **                                                                                **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2023-01-30, Status: working                               **
+rem **  Author: DivingDuck, 2023-01-31, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -80,10 +80,8 @@ if exist v3 (
    rem Select your Python version below. Remove 'rem' before 'rem py -3.x ...' for
    rem your Python version of choice and add 'rem' for all other versions.
    rem Attention: 
-   rem In case you use Python 3.9.x, you need in addition change line 2 in
-   rem requirements.txt from wxPython (== 4.1.0) to wxPython (>= 4.1.1)
-   rem to prevent a compiler error / crash as wxPython 4.1.1 seems to be 
-   rem the minimum version. Only Python x64 versions are supported.
+   rem Minimum version for wxPython is >= 4.2 and with this version only
+   rem Python x64 versions are supported.
 
    rem py -3.7 -m venv v3
    rem py -3.8 -m venv v3
