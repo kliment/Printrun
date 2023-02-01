@@ -875,6 +875,7 @@ class printcore():
             except serial.SerialException as e:
                 self.logError(_("Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
                 self.writefailures += 1
-            except RuntimeError as e:
-                self.logError(_("Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+            except RuntimeError:
+                self.logError("Socket connection broken, disconnected.\n" +
+                              traceback.format_exc())
                 self.writefailures += 1
