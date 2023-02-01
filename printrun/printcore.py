@@ -282,6 +282,7 @@ class printcore():
                                   "\n" + _("Socket error %s:") % e.errno +
                                   "\n" + e.strerror)
                     self.printer = None
+                    self.printer_tcp.close()
                     self.printer_tcp = None
                     return
             else:
