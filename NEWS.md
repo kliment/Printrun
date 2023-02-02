@@ -1,3 +1,39 @@
+Printrun - 2.0.0
+====================
+
+Stable release supporting Python 3.10 and wxPython 4.2.
+
+See changes in previous pre-releases below for a full change log from previous
+stable release.
+
+### New Features
+
+ - Dropped support for Windows 32-bit executable (0c296ba)
+ - Added PrintrunGTK3 sub-module. Windows libraries (0c296ba)
+ - CairoSVG >= 2.6.0 not supported (0c296ba)
+ - Port to wxPython 4.2 (0c296ba)
+ - Pyglet >= 2.0 not supported (#1291)
+ - Added option for perspective transformation on gcode rendering (#1240)
+ - Port to Python 3.10 (#1224)
+ - Revised Pronterface graph color configuration (#1206)
+
+### Fixed Bugs
+
+ - Errors on Projector tool (0c296ba)
+ - Errors on Excluder tool (#1307)
+ - Unresponsive GUI (#1303)
+ - Icon/images not found. Wrong paths (#1285)
+ - Error on adjusting speed and flow rate (#1262)
+ - Fixed Armenian translation (#1244, #1245)
+ - Temperature graph empty or missing extruders (#1237)
+ - Princore runSmallScript incorrectly handled comments (#1163)
+
+### Administration
+
+ - Updated Windows and macOS CI/CD procedures
+ - Added CONTRIBUTORS.md to properly credit all the community (#1249)
+
+
 Printrun - 2.0.0rc8
 ====================
 
