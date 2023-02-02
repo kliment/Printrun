@@ -155,15 +155,28 @@ cd Printrun
 
 ### Windows
 
-Download and install [Python 3.6](https://www.python.org/downloads/) and follow the **Python virtual environment** section above except use the following to create and activate the virtual environment and install dependencies:
+First download and install [GIT for Windows](https://git-scm.com/downloads), [Python 3.10](https://www.python.org/downloads/) and a [C-compiler environment](https://wiki.python.org/moin/WindowsCompilers/).
+For the next steps we need a CMD window or a PowerShell window. You can use Windows Terminal for this as well.
+Create and navigate to a directory of your choice where you want to download the source files of this repository and follow the next steps:
 
 ```cmd
-> py -3 -m venv venv
-> venv\Scripts\activate
-> python -m pip install -r requirements.txt
-> python pronterface.py
+> git clone https://github.com/kliment/Printrun.git
+> cd Printrun
+> git submodule update --init --recursive
+> release_windows.bat
+```
+```ps
+> git clone https://github.com/kliment/Printrun.git
+> cd Printrun
+> git submodule update --init --recursive
+> ./release_windows.bat
 ```
 
+The script above will clone this repository and the submodule PrintrunGTK3. The script 'release_windows.bat' will install a virtual environment named v3, download all needed python libraries and compile the binaries for Pronterface.exe and Pronsole.exe.
+You will find the files in the new created directory 'dist'. You will find further and more detailed information in the script release_windows.bat. Further information for the linked submodul: [PrintrunGTK3](https://github.com/DivingDuck/PrintrunGTK3)
+Run Pronterface or Pronsole from the binary files or from source calling pronterface.py for the GUI version and pronsole.py for the commandline version.
+
+Run 'release_windows.bat' when you make changes or updates. With each new run it will compile the binaries and update all involved libraries in the virtual environment if needed. Delete the virtual environment if you have problems with it. Use 'git submodule update --init --recursive' for updating the submodule
 
 ### macOS
 
