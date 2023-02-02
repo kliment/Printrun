@@ -10,13 +10,15 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
 
 # CONTRIBUTORS
 
-An enormous number of people helped make Printrun. See the list [here](CONTRIBUTORS.md)
+An enormous number of people helped make Printrun. See the list
+[here](CONTRIBUTORS.md).
 
 # GETTING PRINTRUN
 
-This section suggests using precompiled binaries, this way you get everything bundled into one single package for an easy installation.
-
-If you want the newest, shiniest features, you can run Printrun from source using the instructions further down this README.
+This section suggests using precompiled binaries, this way you get everything
+bundled into one single package for an easy installation. If you want the
+newest, shiniest features, you can [run Printrun from
+source](#running-from-source).
 
 ## Windows
 
@@ -32,7 +34,8 @@ Note for OSX users: if OSX tells you `"pronterface.app" cannot be opened because
 ## Linux
 ### Ubuntu/Debian
 
-You can install Printrun from official packages. Install the whole package using
+You can install Printrun from official packages. Install the whole package
+using:
 
 ```
 sudo apt update
@@ -42,8 +45,6 @@ sudo apt install printrun
 Or get only apps you need by
 
 `sudo apt install pronsole` or `pronterface` or `plater`
-
-Only Printrun 1 is currently available for users running Debian 10, Ubuntu 18.04 or any earlier versions. Printrun 2 must be [run from source](https://github.com/kliment/Printrun/tree/master#running-from-source).
 
 ### Chrome OS
 
@@ -84,7 +85,7 @@ Run Printrun for source if you want to test out the latest features.
 
 To use pronterface, you need:
 
-  * Python 3 (ideally 3.6),
+  * Python 3 (ideally 3.10),
   * pyserial (or python3-serial on ubuntu/debian)
   * pyreadline (not needed on Linux)
   * wxPython 4
@@ -207,7 +208,7 @@ If the Slic3r integration option (_Settings_ > _Options_ > _User interface_ > _E
 
 To use pronsole, you need:
 
-  * Python 3 (ideally 3.6),
+  * Python 3 (ideally 3.10),
   * pyserial (or python3-serial on ubuntu/debian) and
   * pyreadline (not needed on Linux)
 
@@ -219,7 +220,7 @@ The "skeinforge" folder must be in the same folder as pronsole.py
 
 ## USING PRINTCORE
 
-To use printcore you need Python 3 (ideally 3.6) and pyserial (or python3-serial on ubuntu/debian)
+To use printcore you need Python 3 (ideally 3.10) and pyserial (or python3-serial on ubuntu/debian)
 See pronsole for an example of a full-featured host, the bottom of printcore.py for a simple command-line
 sender, or the following code example:
 
