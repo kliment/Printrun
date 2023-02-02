@@ -40,7 +40,7 @@ def mock_sttyhup(cls):
     # Needed to avoid error:
     # "stty: /mocked/port: No such file or directory"
     cls.enterClassContext(
-        mock.patch("printrun.printcore.control_ttyhup"))
+        mock.patch("printrun.device.Device._disable_ttyhup"))
 
 
 def mock_serial(test, read_function=slow_printer):
