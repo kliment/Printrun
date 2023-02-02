@@ -159,12 +159,15 @@ First download and install [GIT for Windows](https://git-scm.com/downloads), [Py
 For the next steps we need a CMD window or a PowerShell window. You can use Windows Terminal for this as well.
 Create and navigate to a directory of your choice where you want to download the source files of this repository and follow the next steps:
 
+CMD
 ```cmd
 > git clone https://github.com/kliment/Printrun.git
 > cd Printrun
 > git submodule update --init --recursive
 > release_windows.bat
 ```
+
+PowerShell:
 ```ps
 > git clone https://github.com/kliment/Printrun.git
 > cd Printrun
@@ -176,7 +179,7 @@ The script above will clone this repository and the submodule PrintrunGTK3. The 
 You will find the files in the new created directory 'dist'. You will find further and more detailed information in the script release_windows.bat. Further information for the linked submodul: [PrintrunGTK3](https://github.com/DivingDuck/PrintrunGTK3)
 Run Pronterface or Pronsole from the binary files or from source calling pronterface.py for the GUI version and pronsole.py for the commandline version.
 
-Run 'release_windows.bat' when you make changes or updates. With each new run it will compile the binaries and update all involved libraries in the virtual environment if needed. Delete the virtual environment if you have problems with it. Use 'git submodule update --init --recursive' for updating the submodule
+Run 'release_windows.bat' when ever you make changes or updates. With each new run it will compile the binaries and update all involved libraries in the virtual environment if needed. Delete the virtual environment if you have problems with it. Use 'git submodule update --init --recursive' for updating the submodule
 
 ### macOS
 
