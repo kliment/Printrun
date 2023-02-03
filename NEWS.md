@@ -9,7 +9,8 @@ stable release.
 ### New Features
 
  - Dropped support for Windows 32-bit executable (0c296ba)
- - Added PrintrunGTK3 sub-module. Windows libraries (0c296ba)
+ - Added PrintrunGTK3 sub-module (0c296ba)
+   * Bundled Windows GTK3 libraries for the Projector tool
  - CairoSVG >= 2.6.0 not supported (0c296ba)
  - Port to wxPython 4.2 (0c296ba)
  - Pyglet >= 2.0 not supported (#1291)
