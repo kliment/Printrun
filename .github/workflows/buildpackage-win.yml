@@ -19,7 +19,7 @@ jobs:
         architecture: [x64]
         # add python '3.10' because wxPython 4.2 is now available (2022-08-21)
         # supported versions: ['3.7', '3.8', '3.9','3.10']
-        python-version: ['3.7', '3.8', '3.9','3.10']
+        python-version: ['3.10']
 
     steps:
     - name: Checkout
