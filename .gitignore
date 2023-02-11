@@ -2,12 +2,14 @@
 .pronsolerc
 *.swp
 *.bak
+*.mo
 uploads
 .DS_Store
 .vagrant
 prontserve-env
 pronterface.spec
 pronsole.spec
+plater.spec
 printrun/gcoder_line.c
 printrun/gcoder_line*.so
 printrun/gcoder_line*.pyd

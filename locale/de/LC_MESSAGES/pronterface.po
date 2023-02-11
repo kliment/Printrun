@@ -4,626 +4,643 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Pronterface jm1\n"
-"POT-Creation-Date: 2021-01-21 02:35+0100\n"
-"PO-Revision-Date: 2021-01-26 11:09+0100\n"
-"Last-Translator: Christian Metzen <metzench@ccux-linux.de>\n"
-"Language-Team: DE <LL@li.org>\n"
+"Project-Id-Version: Pronterface\n"
+"POT-Creation-Date: 2023-02-04 17:27+0100\n"
+"PO-Revision-Date: 2023-02-05 13:00+0100\n"
+"Last-Translator: DivingDuck\n"
+"Language-Team: <>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 2.4.2\n"
+"X-Generator: Poedit 3.2.2\n"
 
-#: printrun/excluder.py:26
+#: printrun\excluder.py:26
 msgid ""
 "Part excluder: draw rectangles where print instructions should be ignored"
 msgstr ""
-"Part excluder: Zeichnen Sie Rechtecke, bei denen Druckanweisungen ignoriert "
-"werden sollten"
+"Druckteileausschluss: Zeichne Rechtecke um Teile, die ignoriert werden sollen"
 
-#: printrun/excluder.py:27 printrun/excluder.py:29
+#: printrun\excluder.py:27 printrun\excluder.py:29
 msgid "Reset selection"
-msgstr "Auswahl zurücksetzen"
+msgstr "Auswahl aufheben"
 
-#: printrun/gcodeplater.py:77 printrun/gcodeplater.py:78
+#: printrun\gcodeplater.py:77 printrun\gcodeplater.py:78
 msgid "GCODE files (*.gcode;*.GCODE;*.g)"
 msgstr "GCODE Dateien (*.gcode;*.GCODE;*.g)"
 
-#: printrun/gcodeplater.py:199 printrun/gcodeplater.py:236
+#: printrun\gcodeplater.py:199 printrun\gcodeplater.py:236
 msgid "Exported merged G-Codes to %s"
-msgstr ""
+msgstr "Exportiere zusammengeführte G-Codes nach %s"
 
-#: printrun/gcview.py:106
+#: printrun\gcview.py:108
 msgid "Invalid layer for injection"
 msgstr "Ungültige Schicht zur Injektion"
 
-#: printrun/gcview.py:114
+#: printrun\gcview.py:116
 msgid "Invalid layer for edition"
-msgstr "Ungültige Schicht zur Edition"
+msgstr "Ungültige Schicht zur Bearbeitung"
 
-#: printrun/gcview.py:437
+#: printrun\gcview.py:439
 msgid "Fit to plate"
-msgstr ""
+msgstr "Auf Druckplatte platzieren"
 
-#: printrun/gcview.py:438
+#: printrun\gcview.py:440
 msgid "Fit to plate [F]"
-msgstr ""
+msgstr "Auf Druckplatte platzieren [F]"
 
-#: printrun/gcview.py:466
+#: printrun\gcview.py:468
 msgid "Layer %d -%s Z = %.03f mm"
-msgstr ""
+msgstr "Schicht %d -%s Z = %.03f mm"
 
-#: printrun/gcview.py:468 printrun/gcview.py:497
+#: printrun\gcview.py:470 printrun\gcview.py:502
 msgid "Entire object"
 msgstr "Gesamtes Objekt"
 
-#: printrun/gl/panel.py:172
-msgid "OpenGL failed, disabling it:"
+#: printrun\gcview.py:482
+msgid ""
+"G-Code view, can't process slider. Please wait until model is loaded "
+"completely."
 msgstr ""
+"G-Code-Ansicht, Schieber kann nicht verarbeitet werden. Bitte warten Sie, "
+"bis das Modell vollständig geladen ist."
 
-#: printrun/gui/__init__.py:23 printrun/pronterface.py:49
+#: printrun\gl\panel.py:172
+msgid "OpenGL failed, disabling it:"
+msgstr "OpenGL ist fehlgeschlagen und wurde deaktiviert:"
+
+#: printrun\gui\__init__.py:23 printrun\pronterface.py:49
 msgid "WX >= 4 is not installed. This program requires WX >= 4 to run."
 msgstr ""
 "WX >=4 ist nicht installiert. Dieses Programm erfordert WX >= 4 zum Starten."
 
-#: printrun/gui/__init__.py:185
+#: printrun\gui\__init__.py:185
 msgid "Commands"
 msgstr "Befehle"
 
-#: printrun/gui/__init__.py:186
+#: printrun\gui\__init__.py:186
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
-#: printrun/gui/__init__.py:187 printrun/pronterface.py:290
-#: printrun/pronterface.py:627
+#: printrun\gui\__init__.py:187 printrun\pronterface.py:290
+#: printrun\pronterface.py:627
 msgid "Tabbed with platers"
 msgstr ""
 
-#: printrun/gui/__init__.py:203 printrun/pronterface.py:828
+#: printrun\gui\__init__.py:203 printrun\pronterface.py:830
 msgid "Plater"
-msgstr "Zusammenstellung (Plater)"
+msgstr "Druckplatte"
 
-#: printrun/gui/__init__.py:204 printrun/pronterface.py:829
+#: printrun\gui\__init__.py:204 printrun\pronterface.py:831
 msgid "G-Code Plater"
-msgstr "G-Code Zusammenstellung (Plater)"
+msgstr "G-Code Druckplatte"
 
-#: printrun/gui/controls.py:32
+#: printrun\gui\controls.py:32
 msgid "[J]og controls. (Shift)+TAB ESC Shift/Ctrl+(arrows PgUp/PgDn)"
 msgstr ""
 
-#: printrun/gui/controls.py:131
+# Check
+#: printrun\gui\controls.py:131
 msgid "Heat:"
-msgstr "Hitze:"
+msgstr "Extruder:"
 
-#: printrun/gui/controls.py:133
+#: printrun\gui\controls.py:133
 msgid "Switch Hotend Off"
-msgstr "Hotend ausschalten"
+msgstr "Extruder ausschalten"
 
-#: printrun/gui/controls.py:133 printrun/gui/controls.py:149
-#: printrun/gui/toolbar.py:86
+#: printrun\gui\controls.py:133 printrun\gui\controls.py:149
+#: printrun\gui\toolbar.py:86
 msgid "Off"
 msgstr "Aus"
 
-#: printrun/gui/controls.py:138
+#: printrun\gui\controls.py:138
 msgid "Select Temperature for [H]otend"
-msgstr "Wählen Sie die Temperatur für [H] otend"
+msgstr "Wählen Sie die Temperatur für [H]otend"
 
-#: printrun/gui/controls.py:142
+#: printrun\gui\controls.py:142
 msgid "Switch Hotend On"
-msgstr "Hotend einschalten"
+msgstr "Extruder einschalten"
 
-#: printrun/gui/controls.py:142 printrun/gui/controls.py:158
-#: printrun/gui/controls.py:191 printrun/gui/controls.py:225
+#: printrun\gui\controls.py:142 printrun\gui\controls.py:158
+#: printrun\gui\controls.py:191 printrun\gui\controls.py:225
 msgid "Set"
-msgstr "Ein"
+msgstr "OK"
 
-#: printrun/gui/controls.py:147 printrun/gui/controls.py:250
+#: printrun\gui\controls.py:147 printrun\gui\controls.py:250
 msgid "Bed:"
-msgstr "Bett:"
+msgstr "Druckbett:"
 
-#: printrun/gui/controls.py:149
+#: printrun\gui\controls.py:149
 msgid "Switch Heated Bed Off"
-msgstr "Heizbett ausschalten"
+msgstr "Heizung Druckbett ausschalten"
 
-#: printrun/gui/controls.py:154
+#: printrun\gui\controls.py:154
 msgid "Select Temperature for Heated [B]ed"
-msgstr "Wählen Sie Temperatur für das beheizte [B] ett"
+msgstr "Wählen Sie Temperatur für das beheizte [B]ett"
 
-#: printrun/gui/controls.py:158
+#: printrun\gui\controls.py:158
 msgid "Switch Heated Bed On"
-msgstr "Heizbett einschalten"
+msgstr "Heizung Druckbett einschalten"
 
-#: printrun/gui/controls.py:177
+#: printrun\gui\controls.py:177
 msgid "Print speed:"
 msgstr "Druckgeschwindigkeit:"
 
-#: printrun/gui/controls.py:185 printrun/gui/controls.py:219
+#: printrun\gui\controls.py:185 printrun\gui\controls.py:219
 msgid "%"
 msgstr ""
 
-#: printrun/gui/controls.py:191
+#: printrun\gui\controls.py:191
 msgid "Set print speed factor"
-msgstr "Stellen Sie den Druckgeschwindigkeitsfaktor ein"
+msgstr "Druckgeschwindigkeitsfaktor einstellen"
 
-#: printrun/gui/controls.py:212
+#: printrun\gui\controls.py:212
 msgid "Print flow:"
 msgstr "Druckfluss:"
 
-#: printrun/gui/controls.py:225
+#: printrun\gui\controls.py:225
 msgid "Set print flow factor"
 msgstr "Druckflussfaktor einstellen"
 
-#: printrun/gui/controls.py:246
+#: printrun\gui\controls.py:246
 msgid "Heater:"
-msgstr "Heizelement:"
+msgstr "Extruder:"
 
-#: printrun/gui/controls.py:307
+#: printrun\gui\controls.py:307
 msgid "Length:"
 msgstr "Länge:"
 
-#: printrun/gui/controls.py:309
+#: printrun\gui\controls.py:309
 msgid "mm"
 msgstr "mm"
 
-#: printrun/gui/controls.py:309
+#: printrun\gui\controls.py:309
 msgid "mm @"
-msgstr ""
+msgstr "mm @"
 
-#: printrun/gui/controls.py:311
+#: printrun\gui\controls.py:311
 msgid "Amount to Extrude or Retract (mm)"
-msgstr ""
+msgstr "Länge Extrudieren oder Zurückziehen (mm)"
 
-#: printrun/gui/controls.py:316
+#: printrun\gui\controls.py:316
 msgid "Extrude / Retract speed (mm/min)"
-msgstr ""
+msgstr "Geschwindigkeit Extrudieren/Zurückziehen (mm/min)"
 
-#: printrun/gui/controls.py:321
+#: printrun\gui\controls.py:321
 msgid "Speed:"
 msgstr "Geschwindigkeit:"
 
-#: printrun/gui/controls.py:322
+#: printrun\gui\controls.py:322
 msgid ""
 "mm/\n"
 "min"
 msgstr ""
+"mm/\n"
+"min"
 
-#: printrun/gui/controls.py:333
+#: printrun\gui\controls.py:333
 msgid "Tool:"
-msgstr ""
+msgstr "Werkzeug:"
 
-#: printrun/gui/controls.py:336
+#: printrun\gui\controls.py:336
 msgid "Click to switch current extruder"
-msgstr "Klicken Sie hier, um den Extruder zu wechseln"
+msgstr "Klicken zum Wechsel des aktuellen Extruder"
 
-#: printrun/gui/controls.py:353
+#: printrun\gui\controls.py:353
 msgid "Select current extruder"
-msgstr "Wählen Sie den aktuellen Extruder"
+msgstr "Auswahl des aktuellen Extruders"
 
-#: printrun/gui/controls.py:414
+#: printrun\gui\controls.py:414
 msgid "Set Maximum Speed for X & Y axes (mm/min)"
-msgstr ""
+msgstr "Maximalgeschwindigkeit für X & Y Achsen einstellen (mm/min)"
 
-#: printrun/gui/controls.py:415
+#: printrun\gui\controls.py:415
 msgid "XY:"
 msgstr "XY:"
 
-#: printrun/gui/controls.py:417
+#: printrun\gui\controls.py:417
 msgid "mm/min Z:"
 msgstr "mm/min Z:"
 
-#: printrun/gui/controls.py:419
+#: printrun\gui\controls.py:419
 msgid "Set Maximum Speed for Z axis (mm/min)"
-msgstr ""
+msgstr "Maximalgeschwindigkeit für Z Achse einstellen (mm/min)"
 
-#: printrun/gui/graph.py:27
+#: printrun\gui\graph.py:27
 msgid "Temperature graph"
 msgstr "Temperaturdiagramm"
 
-#: printrun/gui/log.py:32
+#: printrun\gui\log.py:32
 msgid ""
 "Send commands to printer\n"
 "(Type 'help' for simple\n"
 "help function)"
 msgstr ""
-"Befehle an den Drucker senden\n"
-"(Tippe 'help' ein für eine simple\n"
-"Hilfenfunktion)"
+"Senden Befehle an den Drucker\n"
+"(Geben Sie 'help' für einfache\n"
+"Hilfefunktionen ein)"
 
-#: printrun/gui/log.py:46
+#: printrun\gui\log.py:46
 msgid "Send"
 msgstr "Senden"
 
-#: printrun/gui/log.py:46
+#: printrun\gui\log.py:46
 msgid "Send Command to Printer"
 msgstr "Befehl an Drucker senden"
 
-#: printrun/gui/toolbar.py:23
+#: printrun\gui\toolbar.py:23
 msgid "Lock"
 msgstr "Sperren"
 
-#: printrun/gui/toolbar.py:25
+#: printrun\gui\toolbar.py:25
 msgid "Lock graphical interface"
 msgstr "Grafische Oberfläche sperren"
 
-#: printrun/gui/toolbar.py:32
+#: printrun\gui\toolbar.py:32
 msgid ""
 "Communication Settings\n"
 "Click to rescan ports"
 msgstr ""
-"Kommunikationseinstellungen\n"
-"Klicken Sie hier, um die Ports erneut zu scannen"
+"Kommunikationseinstellungen,\n"
+"klicken um die Ports erneut zu scannen"
 
-#: printrun/gui/toolbar.py:32
+#: printrun\gui\toolbar.py:32
 msgid "Port"
 msgstr "Port"
 
-#: printrun/gui/toolbar.py:37
+#: printrun\gui\toolbar.py:37
 msgid "Select Port Printer is connected to"
-msgstr ""
+msgstr "Auswahl des Ports, an dem der Drucker angeschlossen ist"
 
-#: printrun/gui/toolbar.py:46
+#: printrun\gui\toolbar.py:46
 msgid "Select Baud rate for printer communication"
-msgstr ""
+msgstr "Auswahl der Baudrate für die Druckerkommunikation"
 
-#: printrun/gui/toolbar.py:56 printrun/pronterface.py:1238
+#: printrun\gui\toolbar.py:56 printrun\pronterface.py:1370
 msgid "&Connect"
 msgstr "&Verbinden"
 
-#: printrun/gui/toolbar.py:56 printrun/pronterface.py:1239
+#: printrun\gui\toolbar.py:56 printrun\pronterface.py:1371
 msgid "Connect to the printer"
-msgstr "Drucker Verbinden"
+msgstr "Mit dem Drucker verbinden"
 
-#: printrun/gui/toolbar.py:62
+#: printrun\gui\toolbar.py:62
 msgid "Reset"
 msgstr "Zurücksetzen"
 
-#: printrun/gui/toolbar.py:62
+#: printrun\gui\toolbar.py:62
 msgid "Reset the printer"
-msgstr "Setzen Sie den Drucker zurück"
+msgstr "Drucker resetten"
 
-#: printrun/gui/toolbar.py:70
+#: printrun\gui\toolbar.py:70
 msgid "Load a 3D model file"
-msgstr "Laden Sie eine 3D-Modelldatei"
+msgstr "Eine 3D-Modelldatei laden"
 
-#: printrun/gui/toolbar.py:70 printrun/pronterface.py:1446
+#: printrun\gui\toolbar.py:70 printrun\pronterface.py:1578
 msgid "Load file"
 msgstr "Datei laden"
 
-#: printrun/gui/toolbar.py:71
+#: printrun\gui\toolbar.py:71
 msgid "SD"
 msgstr "SD"
 
-#: printrun/gui/toolbar.py:71
+#: printrun\gui\toolbar.py:71
 msgid "SD Card Printing"
-msgstr "SD-Kartendruck"
+msgstr "SD-Karten Druck"
 
-#: printrun/gui/toolbar.py:75
+#: printrun\gui\toolbar.py:75
 msgid "Print"
 msgstr "Drucken"
 
-#: printrun/gui/toolbar.py:75
+#: printrun\gui\toolbar.py:75
 msgid "Start Printing Loaded File"
-msgstr "Starten des Druck der geladenen Datei"
+msgstr "Druckstart der geladenen Datei"
 
-#: printrun/gui/toolbar.py:81
+#: printrun\gui\toolbar.py:81
 msgid "Pause"
 msgstr "Pause"
 
-#: printrun/gui/toolbar.py:81
+#: printrun\gui\toolbar.py:81
 msgid "Pause Current Print"
-msgstr "Aktuellen Druck anhalten"
+msgstr "Aktueller Druck pausieren"
 
-#: printrun/gui/toolbar.py:86
+#: printrun\gui\toolbar.py:86
 msgid "Turn printer off"
-msgstr "Schalten Sie den Drucker aus"
+msgstr "Drucker ausschalten"
 
-#: printrun/gui/viz.py:90
+#: printrun\gui\viz.py:91
 msgid ""
 "Click to examine / edit\n"
 "  layers of loaded file"
 msgstr ""
-"Klicken Sie zum Überprüfen / Bearbeiten\n"
-"  der Ebenen der geladenen Datei"
+"Klicken zum Überprüfen / Bearbeiten\n"
+"von Schichten der geladenen Datei"
 
-#: printrun/gui/widgets.py:35
+#: printrun\gui\widgets.py:35
 msgid "Find"
 msgstr "Finden"
 
-#: printrun/gui/widgets.py:37
+#: printrun\gui\widgets.py:37
 msgid "Save"
 msgstr "Speichern"
 
-#: printrun/gui/widgets.py:42 printrun/objectplater.py:79
-#: printrun/pronterface.py:1449 printrun/pronterface.py:2300
+#: printrun\gui\widgets.py:42 printrun\objectplater.py:79
+#: printrun\pronterface.py:1581 printrun\pronterface.py:2427
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: printrun/gui/widgets.py:68
+#: printrun\gui\widgets.py:68
 msgid "Not Found!"
 msgstr "Nicht gefunden!"
 
-#: printrun/gui/widgets.py:119
+#: printrun\gui\widgets.py:119
 msgid "Printer settings"
 msgstr "Druckereinstellungen"
 
-#: printrun/gui/widgets.py:120
+#: printrun\gui\widgets.py:120
 msgid "User interface"
-msgstr "Benutzeroberfläche"
+msgstr "Benutzerschnittstelle"
 
-#: printrun/gui/widgets.py:121
+#: printrun\gui\widgets.py:121
 msgid "Viewer"
-msgstr "Ansicht"
+msgstr "Betrachter"
 
-#: printrun/gui/widgets.py:122
+#: printrun\gui\widgets.py:122
 msgid "Colors"
 msgstr "Farben"
 
-#: printrun/gui/widgets.py:123
+#: printrun\gui\widgets.py:123
 msgid "External commands"
 msgstr "Externe Befehle"
 
-#: printrun/gui/widgets.py:128
+#: printrun\gui\widgets.py:128
 msgid "Edit settings"
 msgstr "Einstellungen bearbeiten"
 
-#: printrun/gui/widgets.py:131
+#: printrun\gui\widgets.py:131
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: printrun/gui/widgets.py:202
+#: printrun\gui\widgets.py:202
 msgid "Custom button"
-msgstr "Individueller Button"
+msgstr "Benutzerdefinierte Schaltfläche"
 
-#: printrun/gui/widgets.py:208
+#: printrun\gui\widgets.py:208
 msgid "Button title"
-msgstr "Button Titel"
+msgstr "Schaltflächentitel"
 
-#: printrun/gui/widgets.py:211
+#: printrun\gui\widgets.py:211
 msgid "Command"
-msgstr "Kommando"
+msgstr "Befehl"
 
-#: printrun/gui/widgets.py:220
+#: printrun\gui\widgets.py:220
 msgid "Color"
 msgstr "Farbe"
 
-#: printrun/gviz.py:31
+#: printrun\gviz.py:31
 msgid "Layer number and Z position show here when you scroll"
-msgstr ""
-"Die Layernummer und die Z-Position werden hier angezeigt, wenn Sie scrollen"
+msgstr "Die Schichtnummer und Z-Position werden hier beim Blättern angezeigt"
 
-#: printrun/gviz.py:41
+#: printrun\gviz.py:41
 msgid "Zoom In [+]"
 msgstr "Hineinzoomen [+]"
 
-#: printrun/gviz.py:42
+#: printrun\gviz.py:42
 msgid "Zoom Out [-]"
-msgstr "Rauszoomen [-]"
+msgstr "Herauszoomen [-]"
 
-#: printrun/gviz.py:44
+#: printrun\gviz.py:44
 msgid "Move Up a Layer [U]"
-msgstr ""
+msgstr "Eine Schicht nach oben bewegen [U]"
 
-#: printrun/gviz.py:45
+#: printrun\gviz.py:45
 msgid "Move Down a Layer [D]"
-msgstr ""
+msgstr "Eine Schicht nach unten bewegen [D]"
 
-#: printrun/gviz.py:46
+#: printrun\gviz.py:46
 msgid "Reset view"
 msgstr "Ansicht zurücksetzen"
 
-#: printrun/gviz.py:48
+#: printrun\gviz.py:48
 msgid "Inject G-Code"
-msgstr "Injiziere den G-Code"
+msgstr "G-Code Einfügen"
 
-#: printrun/gviz.py:48
+#: printrun\gviz.py:48
 msgid "Insert code at the beginning of this layer"
-msgstr ""
+msgstr "Code am Anfang dieser Schicht einfügen"
 
-#: printrun/gviz.py:49
+#: printrun\gviz.py:49
 msgid "Edit layer"
-msgstr ""
+msgstr "Schicht bearbeiten"
 
-#: printrun/gviz.py:49
+#: printrun\gviz.py:49
 msgid "Edit the G-Code of this layer"
-msgstr ""
+msgstr "Bearbeite den G-Code dieser Schicht"
 
-#: printrun/gviz.py:73
+#: printrun\gviz.py:73
 msgid "Gcode view, shift to move view, mousewheel to set layer"
 msgstr ""
+"G-Code Ansicht, schieben, um die Ansicht zu verschieben, Mausrad, um die "
+"Schicht festzulegen"
 
-#: printrun/gviz.py:109
+#: printrun\gviz.py:109
 msgid "Layer %d - Z = %.03f mm"
-msgstr ""
+msgstr "Schicht %d - Z = %.03f mm"
 
-#: printrun/gviz.py:251
+#: printrun\gviz.py:251
 msgid "Layer %d - Going Up - Z = %.03f mm"
-msgstr ""
+msgstr "Schicht %d - Nach oben - Z = %.03f mm"
 
-#: printrun/gviz.py:260
+#: printrun\gviz.py:260
 msgid "Layer %d - Going Down - Z = %.03f mm"
-msgstr ""
+msgstr "Schicht %d - Nach unten - Z = %.03f mm"
 
-#: printrun/injectgcode.py:27
+#: printrun\injectgcode.py:27
 msgid "Inject G-Code at layer %d (Z = %.03f)"
-msgstr ""
+msgstr "G-Code in Schicht %d einfügen (Z = %.03f)"
 
-#: printrun/injectgcode.py:35
+#: printrun\injectgcode.py:35
 msgid "Edit G-Code of layer %d (Z = %.03f)"
-msgstr ""
+msgstr "Bearbeite G-Code der Schicht %d (Z = %.03f)"
 
-#: printrun/injectgcode.py:40
+#: printrun\injectgcode.py:40
 msgid "Successfully injected %d lines at beginning of layer %d"
-msgstr ""
+msgstr "%d Zeilen am Anfang von Schicht %d erfolgreich eingefügt"
 
-#: printrun/injectgcode.py:45
+#: printrun\injectgcode.py:45
 msgid "Successfully edited layer %d (which now contains %d lines)"
-msgstr ""
+msgstr "Schicht %d erfolgreich bearbeitet (die jetzt %d Zeilen enthält)"
 
-#: printrun/objectplater.py:44
+#: printrun\objectplater.py:44
 msgid "Load"
 msgstr "Laden"
 
-#: printrun/objectplater.py:48
+#: printrun\objectplater.py:48
 msgid "Export"
 msgstr "Exportieren"
 
-#: printrun/objectplater.py:56
+#: printrun\objectplater.py:56
 msgid "Clear"
-msgstr "Leeren"
+msgstr "Bereinigen"
 
-#: printrun/objectplater.py:60
+#: printrun\objectplater.py:60
 msgid "Snap to Z = 0"
-msgstr ""
+msgstr "Einrasten auf Z = 0"
 
-#: printrun/objectplater.py:64
+#: printrun\objectplater.py:64
 msgid "Put at center"
-msgstr "Platziere es in der Mitte"
+msgstr "In der Mitte platzieren"
 
-#: printrun/objectplater.py:68
+#: printrun\objectplater.py:68
 msgid "Delete"
 msgstr "Löschen"
 
-#: printrun/objectplater.py:72
+#: printrun\objectplater.py:72
 msgid "Auto arrange"
 msgstr "Automatisch anordnen"
 
-#: printrun/objectplater.py:76
+#: printrun\objectplater.py:76
 msgid "Done"
 msgstr "Fertig"
 
-#: printrun/objectplater.py:150
+#: printrun\objectplater.py:150
 msgid "Autoplating"
-msgstr ""
+msgstr "Autoplatzierung"
 
-#: printrun/objectplater.py:197
+#: printrun\objectplater.py:197
 msgid "Bed full, sorry sir :("
 msgstr "Das Bett ist voll, tut mir leid :("
 
-#: printrun/objectplater.py:209
+#: printrun\objectplater.py:209
 msgid ""
 "Are you sure you want to clear the grid? All unsaved changes will be lost."
 msgstr ""
+"Sind Sie sicher, dass Sie das Raster leeren möchten? Alle nicht "
+"gespeicherten Änderungen gehen verloren."
 
-#: printrun/objectplater.py:210
+#: printrun\objectplater.py:210
 msgid "Clear the grid?"
-msgstr "Raster löschen?"
+msgstr "Das Raster leeren?"
 
-#: printrun/objectplater.py:260
+#: printrun\objectplater.py:260
 msgid "Pick file to load"
-msgstr "Wählen Sie die zu ladende Datei aus"
+msgstr "Datei zum laden auswählen"
 
-#: printrun/objectplater.py:271
+#: printrun\objectplater.py:271
 msgid "Pick file to save to"
-msgstr "Wählen Sie die Datei zum Speichern aus"
+msgstr "Datei zum Speichern auswählen"
 
-#: printrun/objectplater.py:288
+#: printrun\objectplater.py:288
 msgid "Plate building tool"
-msgstr ""
+msgstr "Druckplattenaufbauwerkzeug"
 
-#: printrun/printcore.py:235
+#: printrun\printcore.py:235
 msgid "Could not connect to %s:%s:"
-msgstr ""
+msgstr "Konnte keine Verbindung herstellen zu %s:%s:"
 
-#: printrun/printcore.py:236
+#: printrun\printcore.py:236
 msgid "Socket error %s:"
-msgstr ""
+msgstr "Socket-Fehler %s:"
 
-#: printrun/printcore.py:264 printrun/printcore.py:269
+#: printrun\printcore.py:264 printrun\printcore.py:269
 msgid "Could not connect to %s at baudrate %s:"
-msgstr ""
+msgstr "Konnte keine Verbindung zu %s mit Baudrate %s herstellen:"
 
-#: printrun/printcore.py:265
+#: printrun\printcore.py:265
 msgid "Serial error: %s"
-msgstr ""
+msgstr "Serieller Fehler: %s"
 
-#: printrun/printcore.py:270
+#: printrun\printcore.py:270
 msgid "IO error: %s"
-msgstr ""
+msgstr "IO Fehler: %s"
 
-#: printrun/printcore.py:335
+#: printrun\printcore.py:335
 msgid "Can't read from printer (disconnected?). line_bytes is None"
-msgstr ""
+msgstr "Kann nicht vom Drucker lesen (nicht verbunden?) Line_bytes ist None"
 
-#: printrun/printcore.py:350
+#: printrun\printcore.py:350
 msgid "Got rubbish reply from %s at baudrate %s:"
-msgstr ""
+msgstr "Unsinnige Antwort von %s bei Baudrate %s erhalten:"
 
-#: printrun/printcore.py:351
+#: printrun\printcore.py:351
 msgid "Maybe a bad baudrate?"
-msgstr ""
+msgstr "Vielleicht eine schlechte Baudrate?"
 
-#: printrun/printcore.py:355
-msgid "Can't read from printer (disconnected?) (SelectError {0}): {1}"
-msgstr ""
-
-#: printrun/printcore.py:358
-msgid "SelectError ({0}): {1}"
-msgstr ""
-
-#: printrun/printcore.py:361
+#: printrun\printcore.py:354
 msgid "Can't read from printer (disconnected?) (SerialException): {0}"
-msgstr ""
+msgstr "Kann nicht vom Drucker lesen (nicht verbunden?) (SerialException): {0}"
 
-#: printrun/printcore.py:364
+#: printrun\printcore.py:357
 msgid "Can't read from printer (disconnected?) (Socket error {0}): {1}"
 msgstr ""
+"Kann nicht vom Drucker lesen (nicht verbunden?) (Socket error {0}): {1}"
 
-#: printrun/printcore.py:369
-msgid "Can't read from printer (disconnected?) (OS Error {0}): {1}"
+#: printrun\printcore.py:364
+msgid "Can't read from printer (disconnected?) (SelectError {0}): {1}"
 msgstr ""
+"Kann nicht vom Drucker lesen (nicht verbunden?) (Auswahlfehler {0}): {1}"
 
-#: printrun/printcore.py:383
+#: printrun\printcore.py:367
+msgid "SelectError ({0}): {1}"
+msgstr "Auswahlfehler ({0}): {1}"
+
+#: printrun\printcore.py:373
+msgid "Can't read from printer (disconnected?) (OS Error {0}): {1}"
+msgstr "Kann nicht vom Drucker lesen (nicht verbunden?) (OS Error {0}): {1}"
+
+#: printrun\printcore.py:387
 msgid "Aborting connection attempt after 4 failed writes."
 msgstr ""
+"Abbruch des Verbindungsversuchs nach 4 fehlgeschlagenen Schreibvorgängen."
 
-#: printrun/printcore.py:589 printrun/printcore.py:597
-#: printrun/pronsole.py:1043 printrun/pronsole.py:1101
-#: printrun/pronterface.py:223 printrun/pronterface.py:1161
-#: printrun/pronterface.py:1297 printrun/pronterface.py:1370
+#: printrun\printcore.py:594 printrun\printcore.py:602
+#: printrun\pronsole.py:1043 printrun\pronsole.py:1101
+#: printrun\pronterface.py:223 printrun\pronterface.py:1293
+#: printrun\pronterface.py:1429 printrun\pronterface.py:1502
 msgid "Not connected to printer."
 msgstr "Keine Verbindung zum Drucker."
 
-#: printrun/printcore.py:609
+#: printrun\printcore.py:614
 msgid "Print start callback failed with:"
-msgstr "Druckstart-Rückruffunktion fehlgeschlagen mit:"
+msgstr "Rückruf Druckstart fehlgeschlagen mit:"
 
-#: printrun/printcore.py:623
+#: printrun\printcore.py:628
 msgid "Print end callback failed with:"
-msgstr "Druckende-Rückruffunktion fehlgeschlagen mit:"
+msgstr "Rückruf Druckende fehlgeschlagen mit:"
 
-#: printrun/printcore.py:626
+#: printrun\printcore.py:631
 msgid "Print thread died due to the following error:"
-msgstr ""
+msgstr "Druckauftrag ist aufgrund des folgenden Fehlers abgebrochen worden:"
 
-#: printrun/printcore.py:730
+#: printrun\printcore.py:735
 msgid "Could not analyze command %s:"
-msgstr ""
+msgstr "Befehl konnte nicht zerlegt werden %s:"
 
-#: printrun/printcore.py:751
+#: printrun\printcore.py:756
 msgid "Can't write to printer (disconnected ?):"
 msgstr "Kann nicht auf Drucker schreiben (nicht verbunden?):"
 
-#: printrun/printcore.py:754
+#: printrun\printcore.py:759
 msgid "Can't write to printer (disconnected?) (Socket error {0}): {1}"
 msgstr ""
 "Kann nicht auf Drucker schreiben (nicht verbunden?) (Socket error {0}): {1}"
 
-#: printrun/printcore.py:757
+#: printrun\printcore.py:762
 msgid "Can't write to printer (disconnected?) (SerialException): {0}"
 msgstr ""
 "Kann nicht auf Drucker schreiben (nicht verbunden?) (SerialException): {0}"
 
-#: printrun/printcore.py:760
+#: printrun\printcore.py:765
 msgid "Socket connection broken, disconnected. ({0}): {1}"
-msgstr ""
+msgstr "Socket-Verbindung unterbrochen, getrennt. ({0}): {1}"
 
-#: printrun/pronsole.py:183
+#: printrun\pronsole.py:183
 msgid "Build dimensions"
-msgstr "Bau Dimensionen"
+msgstr "Maße Plattform"
 
-#: printrun/pronsole.py:183
+# Nicht sicher, wie optional switch position zu übersetzen ist.
+#: printrun\pronsole.py:183
 msgid ""
 "Dimensions of Build Platform\n"
 " & optional offset of origin\n"
@@ -636,9 +653,8 @@ msgid ""
 "XXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"
 msgstr ""
 "Abmessungen der Bauplattform\n"
-" & optional Versatz vom Ausgangspunkt\n"
-" & optional switch position\n"
-"\n"
+" & optionaler Versatz vom Ausgangspunkt\n"
+" & optionaler Versatz für Startposition\n"
 "\n"
 "Beispiel:\n"
 "   XXXxYYY\n"
@@ -646,638 +662,674 @@ msgstr ""
 "   XXXxYYYxZZZ+OffX+OffY+OffZ\n"
 "XXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"
 
-#: printrun/pronsole.py:213
+#: printrun\pronsole.py:213
 msgid ""
 "Welcome to the printer console! Type \"help\" for a list of available "
 "commands."
 msgstr ""
-"Willkommen in der Druckerkonsole! Geben Sie \"help\" ein, um eine Liste der "
+"Willkommen an der Druckerkonsole! Geben Sie 'help' ein, um eine Liste der "
 "verfügbaren Befehle anzuzeigen."
 
-#: printrun/pronsole.py:401 printrun/pronsole.py:409 printrun/pronsole.py:1452
-#: printrun/pronsole.py:1479 printrun/pronsole.py:1551
-#: printrun/pronterface.py:472 printrun/pronterface.py:492
-#: printrun/pronterface.py:509 printrun/pronterface.py:524
+#: printrun\pronsole.py:401 printrun\pronsole.py:409 printrun\pronsole.py:1452
+#: printrun\pronsole.py:1479 printrun\pronsole.py:1551
+#: printrun\pronterface.py:472 printrun\pronterface.py:492
+#: printrun\pronterface.py:509 printrun\pronterface.py:524
 msgid "Printer is not online."
 msgstr "Drucker ist nicht online."
 
-#: printrun/pronsole.py:424
+#: printrun\pronsole.py:424
 msgid ""
 "Are you sure you want to exit while printing?\n"
 "(this will terminate the print)."
 msgstr ""
-"Sie sind sicher, dass Sie beenden wollen während des Druckens?\n"
-"(Dadurch wird der Druckvorgang beendet)."
+"Möchten Sie den Drucker wirklich zurücksetzen?\n"
+"(Hierdurch wird der Druckvorgang beendet)."
 
-#: printrun/pronsole.py:428
+#: printrun\pronsole.py:428
 msgid "Exiting program. Goodbye!"
-msgstr ""
+msgstr "Programm beenden. Auf Wiedersehen!"
 
-#: printrun/pronsole.py:434
+#: printrun\pronsole.py:434
 msgid "Disconnects from the printer and exits the program."
 msgstr "Trennt die Verbindung zum Drucker und beendet das Programm."
 
-#: printrun/pronsole.py:591
+#: printrun\pronsole.py:591
 msgid "Unknown variable '%s'"
 msgstr "Unbekannte Variable '%s'"
 
-#: printrun/pronsole.py:594
+#: printrun\pronsole.py:594
 msgid "Bad value %s for variable '%s': %s"
 msgstr "Ungültiger Wert %s für Variable '%s': %s"
 
-#: printrun/pronsole.py:596
+#: printrun\pronsole.py:596
 msgid "Bad value for variable '%s', expecting %s (%s)"
-msgstr "Ungültiger Wert für Variable '%s', erwartet %s (%s)"
+msgstr "Ungültiger Wert für Variable '%s', erwarte %s (%s)"
 
-#: printrun/pronsole.py:752
+#: printrun\pronsole.py:752
 msgid "increase verbosity"
 msgstr "Ausführlichkeit erhöhen"
 
-#: printrun/pronsole.py:753
+#: printrun\pronsole.py:753
 msgid ""
 "load this file on startup instead of .pronsolerc ; you may chain config "
 "files, if so settings auto-save will use the last specified file"
 msgstr ""
+"Diese Datei beim Start anstelle von .pronsolerc laden. Sie können "
+"Konfigurationsdateien verketten. In diesem Fall wird beim automatischen "
+"Speichern der Einstellungen die zuletzt angegebene Datei verwendet"
 
-#: printrun/pronsole.py:754
+#: printrun\pronsole.py:754
 msgid ""
 "executes command after configuration/.pronsolerc is loaded ; macros/settings "
 "from these commands are not autosaved"
 msgstr ""
+"führt den Befehl aus, nachdem configuration/.pronsolerc geladen wurde; "
+"Makros/Einstellungen aus diesen Befehlen werden nicht automatisch gespeichert"
 
-#: printrun/pronsole.py:755
+#: printrun\pronsole.py:755
 msgid "file to load"
 msgstr "zu ladende Datei"
 
-#: printrun/pronsole.py:799 printrun/pronsole.py:809
+#: printrun\pronsole.py:799 printrun\pronsole.py:809
 msgid "Error: You are trying to connect to a non-existing port."
 msgstr ""
 "Fehler: Sie versuchen, eine Verbindung zu einem nicht vorhandenen Port "
 "herzustellen."
 
-#: printrun/pronsole.py:801
+#: printrun\pronsole.py:801
 msgid "Error: You don't have permission to open %s."
-msgstr "Fehler: Sie haben keine Berechtigung zum Öffnen von %s."
+msgstr "Fehler: Sie haben keine Berechtigung zum öffnen von %s."
 
-#: printrun/pronsole.py:802
+#: printrun\pronsole.py:802
 msgid "You might need to add yourself to the dialout group."
-msgstr ""
+msgstr "Möglicherweise müssen Sie sich der Einwahlgruppe hinzufügen."
 
-#: printrun/pronsole.py:911
+#: printrun\pronsole.py:911
 msgid "Disconnecting after 4 failed writes."
-msgstr "Trennen der Verbindung nach 4 fehlgeschlagenen Schreibvorgängen."
+msgstr "Verbindungsabbruch nach 4 fehlgeschlagenen Schreibvorgängen."
 
-#: printrun/pronsole.py:951 printrun/pronterface.py:1534
+#: printrun\pronsole.py:951 printrun\pronterface.py:1666
 msgid "Loading file: %s"
-msgstr "Lade Datei %s"
+msgstr "Lade Datei: %s"
 
-#: printrun/pronsole.py:956
+#: printrun\pronsole.py:956
 msgid "Loaded %s, %d lines."
-msgstr "Geladen %s, %d Zeilen."
+msgstr "%s geladen, %d Zeilen."
 
-#: printrun/pronsole.py:957 printrun/pronterface.py:1641
+#: printrun\pronsole.py:957 printrun\pronterface.py:1773
 msgid "Estimated duration: %d layers, %s"
-msgstr "Geschätzte Dauer: %d Schichten, %s"
+msgstr "Geschätze Dauer: %d Schichten, %s"
 
-#: printrun/pronsole.py:986
+#: printrun\pronsole.py:986
 msgid "No file name given."
 msgstr "Kein Dateiname angegeben."
 
-#: printrun/pronsole.py:992
+#: printrun\pronsole.py:992
 msgid "Slicing file: %s"
 msgstr "Slicing Datei: %s"
 
-#: printrun/pronsole.py:994 printrun/pronterface.py:1502
+#: printrun\pronsole.py:994 printrun\pronterface.py:1634
 msgid "File not found!"
 msgstr "Datei nicht gefunden!"
 
-#: printrun/pronsole.py:999
+#: printrun\pronsole.py:999
 msgid "Entering slicer settings: %s"
-msgstr ""
+msgstr "Eingabe Slicer-Einstellungen: %s"
 
-#: printrun/pronsole.py:1009
+#: printrun\pronsole.py:1009
 msgid "Loading sliced file."
-msgstr "Sliced Datei laden."
+msgstr "Slicer-Datei laden."
 
-#: printrun/pronsole.py:1012
+#: printrun\pronsole.py:1012
 msgid "Slicing failed: %s"
 msgstr "Slicing fehlgeschlagen: %s"
 
-#: printrun/pronsole.py:1025
+#: printrun\pronsole.py:1025
 msgid ""
 "Creates a gcode file from an stl model using the slicer (with tab-completion)"
 msgstr ""
+"Erstellt eine Gcode-Datei aus einem STL-Modell mit dem Slicer (mit Tab-"
+"Vervollständigung)."
 
-#: printrun/pronsole.py:1026
+#: printrun\pronsole.py:1026
 msgid "slice filename.stl - create gcode file"
-msgstr ""
+msgstr "slice filename.stl - Gcode-Datei erstellen"
 
-#: printrun/pronsole.py:1027
+#: printrun\pronsole.py:1027
 msgid ""
 "slice filename.stl view - create gcode file and view using skeiniso (if "
 "using skeinforge)"
 msgstr ""
+"slice filename.stl view - Gcode-Datei erstellen und mit skeiniso anzeigen "
+"(wenn Sie skeinforge verwenden)."
 
-#: printrun/pronsole.py:1028
-#, fuzzy
+#: printrun\pronsole.py:1028
 msgid "slice set - adjust slicer settings"
-msgstr " Slicing Einstellungen anpassen"
+msgstr "Slicer-Einstellung - Slicing Einstellungen anpassen"
 
-#: printrun/pronsole.py:1040
+#: printrun\pronsole.py:1040
 msgid "Please enter target name in 8.3 format."
-msgstr ""
+msgstr "Geben Sie den Zielnamen im 8.3-Format ein."
 
-#: printrun/pronsole.py:1046
+#: printrun\pronsole.py:1046
 msgid "Uploading as %s"
 msgstr "Hochladen als %s"
 
-#: printrun/pronsole.py:1047
+#: printrun\pronsole.py:1047
 msgid "Uploading %s"
 msgstr "Hochladen %s"
 
-#: printrun/pronsole.py:1049
+#: printrun\pronsole.py:1049
 msgid "Press Ctrl-C to interrupt upload."
 msgstr "Drücken Sie Strg-C, um den Upload zu unterbrechen."
 
-#: printrun/pronsole.py:1052
+#: printrun\pronsole.py:1052
 msgid "Progress: "
 msgstr "Fortschritt: "
 
-#: printrun/pronsole.py:1063
+#: printrun\pronsole.py:1063
 msgid "Upload completed. %s should now be on the card."
 msgstr "Upload abgeschlossen. %s sollte jetzt auf der Karte sein."
 
-#: printrun/pronsole.py:1067
+#: printrun\pronsole.py:1067
 msgid "...interrupted!"
-msgstr "... unterbrochen!"
+msgstr "… unterbrochen!"
 
-#: printrun/pronsole.py:1069
+#: printrun\pronsole.py:1069
 msgid "Something wrong happened while uploading:"
 msgstr "Beim Hochladen ist ein Fehler aufgetreten:"
 
-#: printrun/pronsole.py:1075
+#: printrun\pronsole.py:1075
 msgid "A partial file named %s may have been written to the sd card."
 msgstr ""
 "Möglicherweise wurde eine Teildatei mit dem Namen %s auf die SD-Karte "
 "geschrieben."
 
-#: printrun/pronsole.py:1092
+#: printrun\pronsole.py:1092
 msgid ""
 "Send a loaded gcode file to the printer. Load a file with the load command "
 "first."
 msgstr ""
+"Sendet eine geladene Gcode-Datei an den Drucker. Laden Sie zuerst eine Datei "
+"mit dem Befehl load."
 
-#: printrun/pronsole.py:1094
+#: printrun\pronsole.py:1094
 msgid "Send a loaded gcode file to the printer. You have %s loaded right now."
 msgstr ""
-"Sende eine geladene Gcode-Datei an den Drucker. Sie haben %s gerade geladen."
+"Sendet eine geladene Gcode-Datei an den Drucker. Sie haben %s gerade geladen."
 
-#: printrun/pronsole.py:1098 printrun/pronterface.py:899
-#: printrun/pronterface.py:1294
+#: printrun\pronsole.py:1098 printrun\pronterface.py:901
+#: printrun\pronterface.py:1426
 msgid "No file loaded. Please use load first."
 msgstr "Keine Datei geladen. Benutze zuerst laden."
 
-#: printrun/pronsole.py:1103
+#: printrun\pronsole.py:1103
 msgid "Printing %s"
-msgstr "Drucken: %s"
+msgstr "Drucken %s"
 
-#: printrun/pronsole.py:1104
+#: printrun\pronsole.py:1104
 msgid "You can monitor the print with the monitor command."
-msgstr ""
+msgstr "Sie können den Druck mit dem Monitorbefehl überwachen."
 
-#: printrun/pronsole.py:1113
+#: printrun\pronsole.py:1113
 msgid "Not printing, cannot pause."
-msgstr "Bin nicht am Drucken, kann nicht pausieren."
+msgstr "Nicht am drucken, kann nicht pausieren."
 
-#: printrun/pronsole.py:1119
+#: printrun\pronsole.py:1119
 msgid "Pauses a running print"
-msgstr "Pausiert einen laufenden Druck"
+msgstr "Pausiert einen laufenden Druck an"
 
-#: printrun/pronsole.py:1126
+#: printrun\pronsole.py:1126
 msgid "Not paused, unable to resume. Start a print first."
 msgstr ""
-"Nicht pausiert, kann nicht fortgesetzt werden. Starten Sie zuerst einen "
+"Nicht am pausieren, kann nicht fortgesetzt werden. Starten Sie zuerst einen "
 "Druck."
 
-#: printrun/pronsole.py:1136
+#: printrun\pronsole.py:1136
 msgid "Resumes a paused print."
-msgstr "Setzt einen pausierten Druck fort."
+msgstr "Einen pausierenden Druck fortsetzen."
 
-#: printrun/pronsole.py:1145
+#: printrun\pronsole.py:1145
 msgid "Files on SD card:"
 msgstr "Dateien auf SD-Karte:"
 
-#: printrun/pronsole.py:1160 printrun/pronsole.py:1202
-#: printrun/pronsole.py:1495
+#: printrun\pronsole.py:1160 printrun\pronsole.py:1202
+#: printrun\pronsole.py:1495
 msgid "Printer is not online. Please connect to it first."
-msgstr "Drucker ist nicht online. Stellen Sie zuerst eine Verbindung her."
+msgstr ""
+"Drucker ist nicht online. Bitte stellen Sie zuerst eine Verbindung her."
 
-#: printrun/pronsole.py:1165
+#: printrun\pronsole.py:1165
 msgid "Lists files on the SD card"
-msgstr "Listet Dateien auf der SD-Karte auf"
+msgstr "Listet Dateien der SD-Karte auf"
 
-#: printrun/pronsole.py:1169 printrun/pronterface.py:1965
+#: printrun\pronsole.py:1169 printrun\pronterface.py:2092
 msgid "Opening file failed."
 msgstr "Datei öffnen fehlgeschlagen."
 
-#: printrun/pronsole.py:1175 printrun/pronterface.py:1971
+#: printrun\pronsole.py:1175 printrun\pronterface.py:2098
 msgid "Starting print"
 msgstr "Starte Druck"
 
-#: printrun/pronsole.py:1198
+#: printrun\pronsole.py:1198
 msgid "Resets the printer."
 msgstr "Setzt den Drucker zurück."
 
-#: printrun/pronsole.py:1208
+#: printrun\pronsole.py:1208
 msgid "File is not present on card. Please upload it first."
-msgstr "Datei ist nicht auf der Karte vorhanden. Bitte zuerst hochladen."
+msgstr ""
+"Datei ist nicht auf der Karte vorhanden. Bitte laden Sie diese zuerst hoch."
 
-#: printrun/pronsole.py:1212
+#: printrun\pronsole.py:1212
 msgid "Printing file: %s from SD card."
-msgstr "Drucke Datei: %s von der SD-Karte."
+msgstr "Druckdatei: %s von SD-Karte."
 
-#: printrun/pronsole.py:1213
+#: printrun\pronsole.py:1213
 msgid "Requesting SD print..."
-msgstr "SD-Druck anfordern ..."
+msgstr "SD-Druck anfordern..."
 
-#: printrun/pronsole.py:1217
+#: printrun\pronsole.py:1217
 msgid "Print a file from the SD card. Tab completes with available file names."
 msgstr ""
+"Drucken einer Datei von SD-Karte. Tab vervollständigt verfügbare Dateinamen."
 
-#: printrun/pronsole.py:1218
+#: printrun\pronsole.py:1218
 msgid "sdprint filename.g"
-msgstr ""
+msgstr "sdprint Dateiname.g"
 
-#: printrun/pronsole.py:1235
+#: printrun\pronsole.py:1235
 msgid "Print resumed at: %s"
-msgstr "Druckvorgang fortgesetzt um: %s"
+msgstr "Druck fortgesetzt bei: %s"
 
-#: printrun/pronsole.py:1237
+#: printrun\pronsole.py:1237
 msgid "Print started at: %s"
-msgstr "Druckvorgang gestartet um: %s"
+msgstr "Druck gestartet bei: %s"
 
-#: printrun/pronsole.py:1253 printrun/pronsole.py:1260
+#: printrun\pronsole.py:1253 printrun\pronsole.py:1260
 msgid "Failed to set power settings:"
-msgstr "Fehler beim Einstellen der Energieeinstellungen:"
+msgstr "Fehler beim Festlegen der Energieeinstellungen:"
 
-#: printrun/pronsole.py:1264
+#: printrun\pronsole.py:1264
 msgid "Print ended at: %(end_time)s and took %(duration)s"
-msgstr ""
+msgstr "Druck beendet um: %(end_time)s und dauerte %(duration)s"
 
-#: printrun/pronsole.py:1324 printrun/pronterface.py:1924
+#: printrun\pronsole.py:1324 printrun\pronterface.py:2051
 msgid "Received command %s"
-msgstr "Empfangenes Kommando: %s"
+msgstr "Empfangener Befehl: %s"
 
-#: printrun/pronsole.py:1390
+#: printrun\pronsole.py:1390
 msgid "Printer is not currently printing. No ETA available."
-msgstr "Der Drucker druckt derzeit nicht. Keine ETA verfügbar."
+msgstr ""
+"Der Drucker druckt derzeit nicht. Keine Fertigstellungszeit (ETA) verfügbar."
 
-#: printrun/pronsole.py:1393
+#: printrun\pronsole.py:1393
 msgid "Est: %s of %s remaining"
 msgstr "Erw: %s von %s verbleibend"
 
-#: printrun/pronsole.py:1398
+#: printrun\pronsole.py:1398
 msgid "Displays estimated remaining print time."
 msgstr "Zeigt die geschätzte verbleibende Druckzeit an."
 
-#: printrun/pronsole.py:1425 printrun/pronsole.py:1427
+#: printrun\pronsole.py:1425 printrun\pronsole.py:1427
 msgid "Hotend: %s%s/%s%s"
-msgstr ""
+msgstr "Hotend: %s%s/%s%s"
 
-#: printrun/pronsole.py:1428
+#: printrun\pronsole.py:1428
 msgid "Bed:    %s%s/%s%s"
 msgstr "Bett:    %s%s/%s%s"
 
-#: printrun/pronsole.py:1431
+#: printrun\pronsole.py:1431
 msgid "Read the extruder and bed temperature."
-msgstr "Lesen Sie die Extruder- und Betttemperatur ab."
+msgstr "Zeigt die Extruder- und Druckbetttemperatur."
 
-#: printrun/pronsole.py:1440 printrun/pronsole.py:1473
+#: printrun\pronsole.py:1440 printrun\pronsole.py:1473
 msgid "You must enter a temperature."
 msgstr "Sie müssen eine Temperatur eingeben."
 
-#: printrun/pronsole.py:1445
+#: printrun\pronsole.py:1445
 msgid ""
 "%s is a high temperature to set your extruder to. Are you sure you want to "
 "do that?"
 msgstr ""
-"% s ist eine hohe Temperatur, auf die Ihr Extruder eingestellt werden soll. "
-"Bist du sicher, dass du das machen willst?"
+"%s ist eine hohe Temperatur, auf die der Extruder eingestellt werden soll. "
+"Sind Sie sicher, dass Sie das tun möchten?"
 
-#: printrun/pronsole.py:1450
+#: printrun\pronsole.py:1450
 msgid "Setting hotend temperature to %s degrees Celsius."
-msgstr "Stelle die Hotend-Temperatur auf %s Grad Celsius."
+msgstr "Setze Extruder Temperatur auf %s Grad Celsius."
 
-#: printrun/pronsole.py:1454 printrun/pronterface.py:474
+#: printrun\pronsole.py:1454 printrun\pronterface.py:474
 msgid ""
 "You cannot set negative temperatures. To turn the hotend off entirely, set "
 "its temperature to 0."
 msgstr ""
-"Sie können keine negativen Temperaturen einstellen. Um das Hotend ganz "
-"auszuschalten, Temperatur auf 0 setzen."
+"Sie können keine negativen Temperaturen einstellen. Die Temperatur auf 0 "
+"setzen um das Hotend ganz auszuschalten."
 
-#: printrun/pronsole.py:1457
+#: printrun\pronsole.py:1457
 msgid "Sets the hotend temperature to the value entered."
-msgstr "Stellt die Hotend-Temperatur auf den eingegebenen Wert ein."
+msgstr "Setzt die Extruder-Temperatur auf den eingegebenen Wert."
 
-#: printrun/pronsole.py:1458 printrun/pronsole.py:1485
+#: printrun\pronsole.py:1458 printrun\pronsole.py:1485
 msgid "Enter either a temperature in celsius or one of the following keywords"
 msgstr ""
 "Geben Sie entweder eine Temperatur in Celsius oder eines der folgenden "
 "Schlüsselwörter ein"
 
-#: printrun/pronsole.py:1477
+#: printrun\pronsole.py:1477
 msgid "Setting bed temperature to %s degrees Celsius."
-msgstr "Setze Bett Temperatur auf %s Grad Celsius."
+msgstr "Stellt die Druckbett Temperatur auf %s Grad Celsius ein."
 
-#: printrun/pronsole.py:1481 printrun/pronterface.py:494
+#: printrun\pronsole.py:1481 printrun\pronterface.py:494
 msgid ""
 "You cannot set negative temperatures. To turn the bed off entirely, set its "
 "temperature to 0."
 msgstr ""
-"Sie können keine negativen Temperaturen einstellen. Um das Bett ganz "
+"Sie können keine negativen Temperaturen einstellen. Um das Druckbett ganz "
 "auszuschalten, Temperatur auf 0 setzen."
 
-#: printrun/pronsole.py:1484
+#: printrun\pronsole.py:1484
 msgid "Sets the bed temperature to the value entered."
-msgstr "Setze die Bett-Temperatur auf den eingegebenen Wert."
+msgstr "Setzt die Druckbett-Temperatur auf den eingegebenen Wert ein."
 
-#: printrun/pronsole.py:1498
+#: printrun\pronsole.py:1498
 msgid "Printer is not printing. Please print something before monitoring."
 msgstr ""
+"Der Drucker druckt nicht. Bitte drucken Sie vor der Überwachung etwas aus."
 
-#: printrun/pronsole.py:1500
+#: printrun\pronsole.py:1500
 msgid "Monitoring printer, use ^C to interrupt."
-msgstr "Überwache Drucker., mit ^C unterbrechen."
+msgstr "Überwache den Drucker, mit ^C unterbrechen."
 
-#: printrun/pronsole.py:1505 printrun/pronterface.py:438
+#: printrun\pronsole.py:1505 printrun\pronterface.py:438
 msgid "Invalid period given."
-msgstr "Ungültiger Abschnitt angegeben."
+msgstr "Ungültiger Zeitraum angegeben."
 
-#: printrun/pronsole.py:1506
+#: printrun\pronsole.py:1506
 msgid "Updating values every %f seconds."
 msgstr "Aktualisieren der Werte alle %f Sekunden."
 
-#: printrun/pronsole.py:1516
+#: printrun\pronsole.py:1516
 msgid "Print progress: "
 msgstr "Druckfortschritt: "
 
-#: printrun/pronsole.py:1519
+#: printrun\pronsole.py:1519
 msgid "SD print progress: "
 msgstr "SD-Druckfortschritt: "
 
-#: printrun/pronsole.py:1527 printrun/pronterface.py:442
+#: printrun\pronsole.py:1527 printrun\pronterface.py:442
 msgid "Done monitoring."
 msgstr "Überwachung abgeschlossen."
 
-#: printrun/pronsole.py:1531
+#: printrun\pronsole.py:1531
 msgid "Monitor a machine's temperatures and an SD print's status."
 msgstr ""
-"Überwachen Sie die Temperaturen eines Geräts und den Status eines SD-Drucks."
+"Überwacht die Temperaturen des Druckers und den Status des Drucks über SD-"
+"Karte."
 
-#: printrun/pronsole.py:1532
+#: printrun\pronsole.py:1532
 msgid ""
 "monitor - Reports temperature and SD print status (if SD printing) every 5 "
 "seconds"
 msgstr ""
+"monitor - Meldet alle 5 Sekunden Temperatur und SD-Druckstatus (bei Druck "
+"über SD-Karte)"
 
-#: printrun/pronsole.py:1533
+#: printrun\pronsole.py:1533
 msgid ""
 "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 "
 "seconds"
 msgstr ""
+"monitor 2 - Meldet alle 2 Sekunden Temperatur und SD-Druckstatus (bei Druck "
+"über SD-Karte)"
 
-#: printrun/pronsole.py:1544
+#: printrun\pronsole.py:1544
 msgid "You must specify the tool index as an integer."
-msgstr ""
+msgstr "Sie müssen den Werkzeugindex als ganzzahlige Zahl angeben."
 
-#: printrun/pronsole.py:1548
+#: printrun\pronsole.py:1548
 msgid "Using tool %d."
-msgstr ""
+msgstr "Verwende Werkzeug %d."
 
-#: printrun/pronsole.py:1553
+#: printrun\pronsole.py:1553
 msgid "You cannot set negative tool numbers."
-msgstr ""
+msgstr "Sie können keine negativen Werkzeugnummern festlegen."
 
-#: printrun/pronsole.py:1556
+#: printrun\pronsole.py:1556
 msgid ""
 "Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."
 msgstr ""
+"Wechselt zum angegebenen Werkzeug (z.B. gibt Werkzeug 1 den G-Code T1 aus)."
 
-#: printrun/pronsole.py:1560
+#: printrun\pronsole.py:1560
 msgid "No move specified."
-msgstr ""
+msgstr "Keine Bewegung angegeben."
 
-#: printrun/pronsole.py:1563 printrun/pronsole.py:1625
-#: printrun/pronsole.py:1674 printrun/pronsole.py:1701
+#: printrun\pronsole.py:1563 printrun\pronsole.py:1625
+#: printrun\pronsole.py:1674 printrun\pronsole.py:1701
 msgid ""
 "Printer is currently printing. Please pause the print before you issue "
 "manual commands."
 msgstr ""
-"Der Drucker druckt gerade. Bitte pausieren sie den Druckvorgang, bevor Sie "
+"Der Drucker druckt gerade. Bitte pausieren Sie den Druckvorgang, bevor Sie "
 "manuelle Befehle erteilen."
 
-#: printrun/pronsole.py:1566 printrun/pronsole.py:1698
+#: printrun\pronsole.py:1566 printrun\pronsole.py:1698
 msgid "Printer is not online. Unable to move."
-msgstr "Drucker ist nicht online. Bewegungsunfähig."
+msgstr "Drucker ist nicht online. Keine Bewegungen möglich."
 
-#: printrun/pronsole.py:1582
+#: printrun\pronsole.py:1582
 msgid "Unknown axis."
 msgstr "Unbekannte Achse."
 
-#: printrun/pronsole.py:1587
+#: printrun\pronsole.py:1587
 msgid "Invalid distance"
 msgstr "Ungültiger Abstand"
 
-#: printrun/pronsole.py:1598
+#: printrun\pronsole.py:1598
 msgid "Move an axis. Specify the name of the axis and the amount. "
-msgstr ""
+msgstr "Bewegt eine Achse. Geben Sie den Namen der Achse und den Betrag an. "
 
-#: printrun/pronsole.py:1599
+#: printrun\pronsole.py:1599
 msgid ""
 "move X 10 will move the X axis forward by 10mm at %s mm/min (default XY "
 "speed)"
 msgstr ""
+"Bewegen X 10 bewegt die X-Achse um 10 mm bei %s mm/min (Standard-XY-"
+"Geschwindigkeit) vorwärts"
 
-#: printrun/pronsole.py:1600
+#: printrun\pronsole.py:1600
 msgid "move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"
-msgstr ""
+msgstr "Bewegen Y 10 5000 bewegt die Y-Achse um 10 mm bei 5000mm/min vorwärts"
 
-#: printrun/pronsole.py:1601
+#: printrun\pronsole.py:1601
 msgid ""
 "move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)"
 msgstr ""
+"Bewegen Z -1 bewegt die Z-Achse um 1 mm bei %s mm/min (Standard-Z-"
+"Geschwindigkeit) nach unten"
 
-#: printrun/pronsole.py:1602
+#: printrun\pronsole.py:1602
 msgid "Common amounts are in the tabcomplete list."
-msgstr ""
+msgstr "Übliche Beträge finden Sie in der Tab-Vollständigen Liste."
 
-#: printrun/pronsole.py:1632 printrun/pronsole.py:1681
+#: printrun\pronsole.py:1632 printrun\pronsole.py:1681
 msgid "Invalid length given."
-msgstr "Ungültige Länge angegeben."
+msgstr "Ungültiger Länge angegeben."
 
-#: printrun/pronsole.py:1637 printrun/pronsole.py:1686
+#: printrun\pronsole.py:1637 printrun\pronsole.py:1686
 msgid "Invalid speed given."
 msgstr "Ungültige Geschwindigkeit angegeben."
 
-#: printrun/pronsole.py:1645
+#: printrun\pronsole.py:1645
 msgid "Extruding %fmm of filament."
-msgstr ""
+msgstr "Extrudiere %fmm Filament."
 
-#: printrun/pronsole.py:1647
+#: printrun\pronsole.py:1647
 msgid "Reversing %fmm of filament."
-msgstr ""
+msgstr "Einzug von %fmm Filament."
 
-#: printrun/pronsole.py:1649
+#: printrun\pronsole.py:1649
 msgid "Length is 0, not doing anything."
-msgstr ""
+msgstr "Länge ist 0, nichts zu tun."
 
-#: printrun/pronsole.py:1661
+#: printrun\pronsole.py:1661
 msgid ""
 "Extrudes a length of filament, 5mm by default, or the number of mm given as "
 "a parameter"
 msgstr ""
+"Extrudiert eine Länge Filament, standardmäßig 5 mm, oder die als Parameter "
+"angegebene Länge in mm"
 
-#: printrun/pronsole.py:1662
+#: printrun\pronsole.py:1662
 msgid "extrude - extrudes 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "extrude - extrudiert 5 mm Filament mit 300 mm/min (5 mm/s)"
 
-#: printrun/pronsole.py:1663
+#: printrun\pronsole.py:1663
 msgid "extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "extrude 20 - extrudiert 20 mm Filament mit 300 mm/min (5 mm/s)"
 
-#: printrun/pronsole.py:1664
+#: printrun\pronsole.py:1664
 msgid "extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "extrude -5 - zieht 5 mm Filament zurück mit 300 mm/min (5 mm/s)"
 
-#: printrun/pronsole.py:1665
+#: printrun\pronsole.py:1665
 msgid "extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
-msgstr ""
+msgstr "extrude 10 210 - extrudiert 10 mm Filament mit 210 mm/min (3.5 mm/s)"
 
-#: printrun/pronsole.py:1671
+#: printrun\pronsole.py:1671
 msgid "Printer is not online. Unable to reverse."
-msgstr ""
-"Drucker ist nicht online. Es ist nicht möglich den Extrudermotor rückwärts "
-"anzutreiben."
+msgstr "Drucker ist nicht online. Einzug nicht möglich."
 
-#: printrun/pronsole.py:1690
+#: printrun\pronsole.py:1690
 msgid ""
 "Reverses the extruder, 5mm by default, or the number of mm given as a "
 "parameter"
 msgstr ""
+"Einzug (zurückziehen) einer Länge Filament, standardmäßig 5 mm, oder die als "
+"Parameter angegebene Länge in mm"
 
-#: printrun/pronsole.py:1691
+#: printrun\pronsole.py:1691
 msgid "reverse - reverses 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "reverse - Einzug von 5 mm Filament mit 300 mm/min (5 mm/s)"
 
-#: printrun/pronsole.py:1692
+#: printrun\pronsole.py:1692
 msgid "reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "reverse 20 - Einzug von 20 mm Filament mit 300 mm/min (5 mm/s)"
 
-#: printrun/pronsole.py:1693
+#: printrun\pronsole.py:1693
 msgid "reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
-msgstr ""
+msgstr "reverse 10 210 - Einzug von 10 mm Filament mit 210 mm/min (3.5 mm/s)"
 
-#: printrun/pronsole.py:1694
+#: printrun\pronsole.py:1694
 msgid "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
-msgstr ""
+msgstr "reverse -5 - Extrudiert 5 mm Filament mit 300 mm/min (5 mm/s)"
 
-#: printrun/pronsole.py:1716
+#: printrun\pronsole.py:1716
 msgid "Homes the printer"
-msgstr ""
+msgstr "Referenzieren des Druckers"
 
-#: printrun/pronsole.py:1717
+#: printrun\pronsole.py:1717
 msgid "home - homes all axes and zeroes the extruder(Using G28 and G92)"
 msgstr ""
+"Home - Referenziert alle Achsen und stellt Extruder-Position auf 0 (mit G28 "
+"und G92)"
 
-#: printrun/pronsole.py:1718
+#: printrun\pronsole.py:1718
 msgid "home xy - homes x and y axes (Using G28)"
-msgstr ""
+msgstr "Home xy- Referenziert x- und y-Achse (mit G28)"
 
-#: printrun/pronsole.py:1719
+#: printrun\pronsole.py:1719
 msgid "home z - homes z axis only (Using G28)"
-msgstr ""
+msgstr "Home z- Referenziert z-Achse (mit G28)"
 
-#: printrun/pronsole.py:1720
+#: printrun\pronsole.py:1720
 msgid "home e - set extruder position to zero (Using G92)"
-msgstr ""
+msgstr "Home e- Setzt Extruder-Position auf 0 (mit G92)"
 
-#: printrun/pronsole.py:1721
+#: printrun\pronsole.py:1721
 msgid "home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"
 msgstr ""
+"Home xyze - Referenziert alle Achsen und stellt Extruder-Position auf 0 (mit "
+"G28 und G92)"
 
-#: printrun/pronsole.py:1729
+#: printrun\pronsole.py:1729
 msgid "; Motors off"
 msgstr "; Motoren aus"
 
-#: printrun/pronsole.py:1731
+#: printrun\pronsole.py:1731
 msgid "; Extruder off"
 msgstr "; Extruder aus"
 
-#: printrun/pronsole.py:1733
+#: printrun\pronsole.py:1733
 msgid "; Heatbed off"
-msgstr "; Heizbett aus"
+msgstr "; Druckbett aus"
 
-#: printrun/pronsole.py:1735
+#: printrun\pronsole.py:1735
 msgid "; Fan off"
-msgstr "; Ventilator aus"
+msgstr "; Lüfter aus"
 
-#: printrun/pronsole.py:1737
+#: printrun\pronsole.py:1737
 msgid "; Power supply off"
 msgstr "; Stromversorgung aus"
 
-#: printrun/pronsole.py:1740
+#: printrun\pronsole.py:1740
 msgid "Printer is not online. Unable to turn it off."
-msgstr "Drucker ist nicht online. Kann nicht ausgeschaltet werden."
+msgstr "Drucker ist nicht online. Ausschalten nicht möglich."
 
-#: printrun/pronsole.py:1743
+#: printrun\pronsole.py:1743
 msgid "Turns off everything on the printer"
-msgstr "Schaltet alles am Drucker aus"
+msgstr "Schaltet am Drucker alles aus"
 
-#: printrun/pronsole.py:1754
+#: printrun\pronsole.py:1754
 msgid "G-Code calling host command \"%s\""
-msgstr ""
+msgstr "G-Code ruft den Host-Befehl \"%s\" auf"
 
-#: printrun/pronsole.py:1763
+#: printrun\pronsole.py:1763
 msgid ""
 "Runs a custom script. Current gcode filename can be given using $s token."
 msgstr ""
+"Führt ein benutzerdefiniertes Skript aus. Der aktuelle G-Code-Dateiname kann "
+"mit dem Merkmal $s angegeben werden."
 
-#: printrun/pronsole.py:1773
+#: printrun\pronsole.py:1773
 msgid ""
 "Runs a custom script which output gcode which will in turn be executed. "
 "Current gcode filename can be given using $s token."
 msgstr ""
+"Führt ein benutzerdefiniertes Skript aus, welches einen G-Code ausgibt, der "
+"wiederum ausgeführt wird. Der aktuelle G-Code-Dateiname kann mit dem Merkmal "
+"$s angegeben werden."
 
-#: printrun/pronterface.py:160
+#: printrun\pronterface.py:160
 msgid "Motors off"
 msgstr "Motoren aus"
 
-#: printrun/pronterface.py:160
+#: printrun\pronterface.py:160
 msgid "Switch all motors off"
 msgstr "Schalte alle Motoren aus"
 
-#: printrun/pronterface.py:161
+#: printrun\pronterface.py:161
 msgid "Advance extruder by set length"
-msgstr "Extruder um eingestellte Länge vorschieben"
+msgstr "Extrudieren mit eingestellter Länge"
 
-#: printrun/pronterface.py:161
+#: printrun\pronterface.py:161
 msgid "Extrude"
 msgstr "Extrudieren"
 
-#: printrun/pronterface.py:162
+#: printrun\pronterface.py:162
 msgid "Reverse"
-msgstr "Rückwärts"
+msgstr "Zurückziehen"
 
-#: printrun/pronterface.py:162
+#: printrun\pronterface.py:162
 msgid "Reverse extruder by set length"
-msgstr "Extruder um eingestellte Länge zurücksetzen"
+msgstr "Zurückziehen mit eingestellter Länge"
 
-#: printrun/pronterface.py:183
+#: printrun\pronterface.py:183
 msgid "Pronterface"
 msgstr "Pronterface"
 
-#: printrun/pronterface.py:208
+#: printrun\pronterface.py:208
 msgid ""
 "# I moved all your custom buttons into .pronsolerc.\n"
 "# Please don't add them here any more.\n"
@@ -1287,7 +1339,7 @@ msgstr ""
 "# Bitte fügen Sie sie hier nicht mehr ein.\n"
 "# Backup Ihrer alten Buttons befindet sich in custombtn.old\n"
 
-#: printrun/pronterface.py:213
+#: printrun\pronterface.py:213
 msgid ""
 "Note!!! You have specified custom buttons in both custombtn.txt and ."
 "pronsolerc"
@@ -1295,346 +1347,364 @@ msgstr ""
 "Achtung! Sie haben benutzerdefinierte Buttons in custombtn.txt und ."
 "pronsolerc angegeben"
 
-#: printrun/pronterface.py:214
+#: printrun\pronterface.py:214
 msgid ""
 "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
 msgstr ""
 "Ignoriere custombtn.txt. Alle aktuellen Buttons entfernen um wieder zu "
 "custombtn.txt zurückzukehren"
 
-#: printrun/pronterface.py:290 printrun/pronterface.py:627
+#: printrun\pronterface.py:290 printrun\pronterface.py:627
 msgid "Tabbed"
 msgstr ""
 
-#: printrun/pronterface.py:293 printrun/pronterface.py:963
+#: printrun\pronterface.py:293 printrun\pronterface.py:1085
 msgid "Compact"
 msgstr "Kompakt"
 
-#: printrun/pronterface.py:399
+#: printrun\pronterface.py:399
 msgid "Exit"
-msgstr ""
+msgstr "Beenden"
 
-#: printrun/pronterface.py:399
+#: printrun\pronterface.py:399
 msgid "Print in progress ! Are you really sure you want to quit ?"
-msgstr "Drucken in Bearbeitung! Sicher, dass du aufhören willst?"
+msgstr "Druck läuft! Sind Sie wirklich sicher, dass Sie aufhören wollen?"
 
-#: printrun/pronterface.py:440
+#: printrun\pronterface.py:440
 msgid "Monitoring printer."
 msgstr "Überwache Drucker."
 
-#: printrun/pronterface.py:446
+#: printrun\pronterface.py:446
 msgid "Please pause or stop print before extruding."
 msgstr ""
 "Bitte pausieren oder stoppen Sie den Druckvorgang, bevor Sie extrudieren."
 
-#: printrun/pronterface.py:453
+#: printrun\pronterface.py:453
 msgid "Please pause or stop print before reversing."
 msgstr ""
+"Bitte pausieren oder stoppen Sie den Druckvorgang, bevor Sie einziehen."
 
-#: printrun/pronterface.py:469
+#: printrun\pronterface.py:469
 msgid "Setting hotend temperature to %g degrees Celsius."
-msgstr "Setze Hotend Temperatur auf %g Grad Celsius."
+msgstr "Setze Extruder Temperatur auf %g Grad Celsius."
 
-#: printrun/pronterface.py:476 printrun/pronterface.py:496
+#: printrun\pronterface.py:476 printrun\pronterface.py:496
 msgid "You must enter a temperature. (%s)"
 msgstr "Sie müssen eine Temperatur eingeben. (%s)"
 
-#: printrun/pronterface.py:489
+#: printrun\pronterface.py:489
 msgid "Setting bed temperature to %g degrees Celsius."
-msgstr "Setze Betttemperatur auf %g Grad Celsius."
+msgstr "Stellt die Druckbett Temperatur auf %g Grad Celsius ein."
 
-#: printrun/pronterface.py:507
+#: printrun\pronterface.py:507
 msgid "Setting print speed factor to %d%%."
-msgstr "Setze Druckgeschwindigkeitsfaktors auf %d%%."
+msgstr "Setze Druckgeschwindigkeit auf %d%%."
 
-#: printrun/pronterface.py:511
+#: printrun\pronterface.py:511
 msgid "You must enter a speed. (%s)"
 msgstr "Sie müssen eine Geschwindigkeit eingeben. (%s)"
 
-#: printrun/pronterface.py:522
+#: printrun\pronterface.py:522
 msgid "Setting print flow factor to %d%%."
-msgstr ""
+msgstr "Setze Druckflussfaktor auf %d%%."
 
-#: printrun/pronterface.py:526
+#: printrun\pronterface.py:526
 msgid "You must enter a flow. (%s)"
-msgstr "Sie müssen einen Flow eingeben. (%s)"
+msgstr "Sie müssen den Flussfaktor eingeben. (%s)"
 
-#: printrun/pronterface.py:607
+#: printrun\pronterface.py:607
 msgid "Plate function activated"
-msgstr ""
+msgstr "Funktion Druckplatte aktiviert"
 
-#: printrun/pronterface.py:617
+#: printrun\pronterface.py:617
 msgid "G-Code plate function activated"
-msgstr ""
+msgstr "Funktion G-Code Druckplatte aktiviert"
 
-#: printrun/pronterface.py:625
+# Check
+#: printrun\pronterface.py:625
 msgid "Plated %s"
-msgstr ""
+msgstr "Platziert %s"
 
-#: printrun/pronterface.py:642
+#: printrun\pronterface.py:642
 msgid "SD Upload"
 msgstr "SD Laden"
 
-#: printrun/pronterface.py:646
+#: printrun\pronterface.py:646
 msgid "SD Print"
 msgstr "SD Drucken"
 
-#: printrun/pronterface.py:710
+#: printrun\pronterface.py:710
 msgid ""
 "Manual move outside of the build volume prevented (see the \"Clamp manual "
 "moves\" option)."
 msgstr ""
-"Manuelle Bewegung außerhalb des Build-Volumens verhindert (siehe Option "
-"\"Clamp manual moves\")."
+"Manuelle Bewegung außerhalb des Druckbettvolumens verhindert (siehe Option "
+"\"Manuelle Bewegungen begrenzen\")."
 
-#: printrun/pronterface.py:779
+#: printrun\pronterface.py:779
 msgid ""
 "Attempted to write invalid text to console, which could be due to an invalid "
 "baudrate"
 msgstr ""
+"Es wurde versucht, einen ungültigen Text in die Konsole zu schreiben, was "
+"auf eine ungültige Baudrate zurückzuführen sein könnte"
 
-#: printrun/pronterface.py:810
+#: printrun\pronterface.py:781
+msgid "Unhanded exception: "
+msgstr "Unbehandelte Ausnahme: "
+
+#: printrun\pronterface.py:812
 msgid " Open file"
 msgstr " Öffne Datei"
 
-#: printrun/pronterface.py:810
+#: printrun\pronterface.py:812
 msgid "&Open...\tCtrl+O"
 msgstr "&Öffnen...\tStrg+O"
 
-#: printrun/pronterface.py:811
+#: printrun\pronterface.py:813
 msgid " Save file"
-msgstr " Speicher eine Datei"
+msgstr " Datei speichern"
 
-#: printrun/pronterface.py:811
+#: printrun\pronterface.py:813
 msgid "&Save..."
 msgstr "&Speichern..."
 
-#: printrun/pronterface.py:820
+#: printrun\pronterface.py:822
 msgid "&Recent Files"
 msgstr "&Letzte Dateien"
 
-#: printrun/pronterface.py:821
+#: printrun\pronterface.py:823
 msgid " Clear output console"
 msgstr " Ausgabe Konsole leeren"
 
-#: printrun/pronterface.py:821
+#: printrun\pronterface.py:823
 msgid "Clear console\tCtrl+L"
 msgstr "Konsole leeren\tStrg+L"
 
-#: printrun/pronterface.py:822
+#: printrun\pronterface.py:824
 msgid " Closes the Window"
-msgstr " Schliesst das Fenster"
+msgstr " Schließt das Fenster"
 
-#: printrun/pronterface.py:822
+#: printrun\pronterface.py:824
 msgid "E&xit"
-msgstr "&Verlassen"
+msgstr "&Beenden"
 
-#: printrun/pronterface.py:823
+#: printrun\pronterface.py:825
 msgid "&File"
 msgstr "&Datei"
 
-#: printrun/pronterface.py:827
+#: printrun\pronterface.py:829
 msgid " Edit open file"
 msgstr " Offene Datei bearbeiten"
 
-#: printrun/pronterface.py:827
+#: printrun\pronterface.py:829
 msgid "&Edit..."
-msgstr "&Bearbeiten..."
+msgstr "&Editor..."
 
-#: printrun/pronterface.py:828
+#: printrun\pronterface.py:830
 msgid " Compose 3D models into a single plate"
-msgstr ""
+msgstr " 3D-Modelle zu einem Druckauftrag zusammenstellen"
 
-#: printrun/pronterface.py:829
+#: printrun\pronterface.py:831
 msgid " Compose G-Codes into a single plate"
-msgstr ""
+msgstr " G-Code-Modelle zu einem Druckauftrag zusammenstellen"
 
-#: printrun/pronterface.py:830
+#: printrun\pronterface.py:832
 msgid " Exclude parts of the bed from being printed"
-msgstr ""
+msgstr " Schließe Teile auf dem Druckbett vom Druck aus"
 
-#: printrun/pronterface.py:830
+# Besseren Begriff suchen
+#: printrun\pronterface.py:832
 msgid "Excluder"
-msgstr ""
+msgstr "Ausschließer"
 
-#: printrun/pronterface.py:831
+#: printrun\pronterface.py:833
 msgid " Project slices"
 msgstr " Projekt Slices"
 
-#: printrun/pronterface.py:831
+#: printrun\pronterface.py:833
 msgid "Projector"
 msgstr "Projektor"
 
-#: printrun/pronterface.py:834
+#: printrun\pronterface.py:836
 msgid "Spool Manager"
 msgstr "Spulenmanager"
 
-#: printrun/pronterface.py:835
+#: printrun\pronterface.py:837
 msgid " Manage different spools of filament"
 msgstr " Verwalten Sie verschiedene Filamentspulen"
 
-#: printrun/pronterface.py:836
+#: printrun\pronterface.py:838
 msgid "&Tools"
 msgstr "&Werkzeuge"
 
-#: printrun/pronterface.py:840
+#: printrun\pronterface.py:842
 msgid ""
 " Recover previous print after a disconnect (homes X, Y, restores Z and E "
 "status)"
 msgstr ""
+" Wiederherstellung des vorheriger Drucks nach einer Trennung (Referenziert "
+"zuerst X, Y, Wiederherstellung des Z- und E-Status)"
 
-#: printrun/pronterface.py:840
+#: printrun\pronterface.py:842
 msgid "Recover"
-msgstr ""
+msgstr "Wiederherstellung"
 
-#: printrun/pronterface.py:843
+#: printrun\pronterface.py:845
 msgid "&Advanced"
 msgstr "&Erweitert"
 
-#: printrun/pronterface.py:850
+#: printrun\pronterface.py:852
 msgid "Print &settings"
-msgstr "Druck &Einstellungen"
+msgstr "Druckein&stellungen"
 
-#: printrun/pronterface.py:851
+#: printrun\pronterface.py:853
 msgid "&Filament"
 msgstr "&Filament"
 
-#: printrun/pronterface.py:852
+#: printrun\pronterface.py:854
 msgid "&Printer"
 msgstr "&Drucker"
 
-#: printrun/pronterface.py:858
+#: printrun\pronterface.py:860
 msgid "&Slic3r"
-msgstr ""
+msgstr "&Slic3r"
 
-#: printrun/pronterface.py:860
+#: printrun\pronterface.py:862
 msgid "Failed to load Slic3r configuration:"
-msgstr ""
+msgstr "Fehler beim Laden der Slic3r-Konfiguration:"
 
-#: printrun/pronterface.py:866
+#: printrun\pronterface.py:868
 msgid "&Macros"
 msgstr "&Makros"
 
-#: printrun/pronterface.py:867
+#: printrun\pronterface.py:869
 msgid "<&New...>"
 msgstr "<&Neu...>"
 
-#: printrun/pronterface.py:868
+#: printrun\pronterface.py:870
 msgid " Options dialog"
 msgstr " Optionen Dialog"
 
-#: printrun/pronterface.py:868
+#: printrun\pronterface.py:870
 msgid "&Options"
 msgstr "&Optionen"
 
-#: printrun/pronterface.py:870
+#: printrun\pronterface.py:872
 msgid " Adjust slicing settings"
 msgstr " Slicing Einstellungen anpassen"
 
-#: printrun/pronterface.py:870
+#: printrun\pronterface.py:872
 msgid "Slicing settings"
 msgstr "Slicing Einstellungen"
 
-#: printrun/pronterface.py:872
+#: printrun\pronterface.py:874
 msgid "Debug communications"
-msgstr "Debugge die Kommunikationen"
+msgstr "Kommunikationsüberwachung"
 
-#: printrun/pronterface.py:873
+#: printrun\pronterface.py:875
 msgid "Print all G-code sent to and received from the printer."
 msgstr ""
+"Druckt den gesamten G-Code, der an den Drucker gesendet und empfangen wird, "
+"aus."
 
-#: printrun/pronterface.py:877
+#: printrun\pronterface.py:879
 msgid "Don't autoscroll"
-msgstr "Kein automatisches scrollen"
+msgstr "Automatischer Bildlauf ausschalten"
 
-#: printrun/pronterface.py:878
+#: printrun\pronterface.py:880
 msgid "Disables automatic scrolling of the console when new text is added"
 msgstr ""
+"Deaktiviert das automatische Scrollen der Konsole, wenn neuer Text "
+"hinzugefügt wird"
 
-#: printrun/pronterface.py:882
+#: printrun\pronterface.py:884
 msgid "&Settings"
-msgstr "&Einstellungen"
+msgstr "Ein&stellungen"
 
-#: printrun/pronterface.py:888
+#: printrun\pronterface.py:890
 msgid "&About Printrun"
 msgstr "&Über Printrun"
 
-#: printrun/pronterface.py:888
+#: printrun\pronterface.py:890
 msgid "Show about dialog"
-msgstr "Über Dialog anzeigen"
+msgstr "Über Printrun anzeigen"
 
-#: printrun/pronterface.py:889
+#: printrun\pronterface.py:891
 msgid "&Help"
 msgstr "&Hilfe"
 
-#: printrun/pronterface.py:920
+#: printrun\pronterface.py:922
 msgid ""
 "Printrun is a pure Python 3D printing (and other types of CNC) host software."
 msgstr ""
-"Printrun ist eine reine Python Hostsoftware für 3D-Druck (und andere Arten "
-"von CNC)."
+"Printrun ist eine reine Python 3D-Druck- (und andere Arten von CNC)-"
+"Hostsoftware."
 
-#: printrun/pronterface.py:924
+#: printrun\pronterface.py:926
 msgid "%.02fmm of filament have been extruded during prints"
-msgstr "%.02fmm Filament in Druck genutzt"
+msgstr "Während des Druckvorgangs wurden %.02fmm Filament extrudiert"
 
-#: printrun/pronterface.py:955
+#: printrun\pronterface.py:1077
 msgid "Monitor printer status"
-msgstr "Druckerstatus überwachen"
+msgstr "Überwachung des Druckerstatus"
 
-#: printrun/pronterface.py:955
+#: printrun\pronterface.py:1077
 msgid ""
 "Regularly monitor printer temperatures (required to have functional "
 "temperature graph or gauges)"
 msgstr ""
+"Regelmäßige Überwachung der Druckertemperaturen (erforderlich, um "
+"funktionale Temperaturdiagramme oder Messgeräte zu erzeugen)"
 
-#: printrun/pronterface.py:956
+#: printrun\pronterface.py:1078
 msgid "Path to the simarrange binary to use in the STL plater"
 msgstr ""
+"Pfad zur Simarrange-Binärdatei, die beim STL-Plater verwendet werden soll"
 
-#: printrun/pronterface.py:956
+#: printrun\pronterface.py:1078
 msgid "Simarrange command"
-msgstr ""
+msgstr "Simarrange Befehl"
 
-#: printrun/pronterface.py:957
+#: printrun\pronterface.py:1079
 msgid "Circular build platform"
-msgstr ""
+msgstr "Runde Druckplatte"
 
-#: printrun/pronterface.py:957
+#: printrun\pronterface.py:1079
 msgid "Draw a circular (or oval) build platform instead of a rectangular one"
 msgstr ""
 "Zeichnet eine kreisförmige (oder ovale) Plattform anstelle einer rechteckigen"
 
-#: printrun/pronterface.py:958
+#: printrun\pronterface.py:1080
 msgid "Extruders count"
-msgstr "Extruder Anzahl"
+msgstr "Anzahl Extruder"
 
-#: printrun/pronterface.py:958
+#: printrun\pronterface.py:1080
 msgid "Number of extruders"
-msgstr "Anzahl der Extruder"
+msgstr "Anzahl der vorhandenen Extruder"
 
-#: printrun/pronterface.py:959
+#: printrun\pronterface.py:1081
 msgid "Clamp manual moves"
-msgstr ""
+msgstr "Manuelle Bewegungen begrenzen"
 
-#: printrun/pronterface.py:959
+#: printrun\pronterface.py:1081
 msgid "Prevent manual moves from leaving the specified build dimensions"
 msgstr ""
-"Verhindere, dass manuelle Bewegungen die angegebenen Bauabmessungen verlassen"
+"Verhindert manuelle Bewegungen, die die Maße der Druckplattform verlassen"
 
-#: printrun/pronterface.py:960
+#: printrun\pronterface.py:1082
 msgid "Display progress on printer"
 msgstr "Fortschritt auf dem Drucker anzeigen"
 
-#: printrun/pronterface.py:960
+#: printrun\pronterface.py:1082
 msgid ""
 "Show progress on printers display (sent via M117, might not be supported by "
 "all printers)"
 msgstr ""
-"Fortschritt auf der Druckeranzeige anzeigen (über M117 gesendet, wird "
+"Fortschritt auf dem Druckerdisplay anzeigen (über M117 gesendet, wird "
 "möglicherweise nicht von allen Druckern unterstützt)"
 
-#: printrun/pronterface.py:961
+#: printrun\pronterface.py:1083
 msgid ""
 "Interval in which pronterface sends the progress to the printer if enabled, "
 "in seconds"
@@ -1642,431 +1712,540 @@ msgstr ""
 "Intervall, in dem Pronterface den Fortschritt in Sekunden an den Drucker "
 "sendet, falls aktiviert"
 
-#: printrun/pronterface.py:961
+#: printrun\pronterface.py:1083
 msgid "Printer progress update interval"
-msgstr "Aktualisierungsintervall für den Druckerfortschritt"
+msgstr "Aktualisierungsintervall für den Druckfortschritt"
 
-#: printrun/pronterface.py:962
+#: printrun\pronterface.py:1084
 msgid "Display cutting moves"
-msgstr ""
+msgstr "Schnittbewegungen anzeigen"
 
-#: printrun/pronterface.py:962
+#: printrun\pronterface.py:1084
 msgid "Show moves where spindle is active as printing moves"
 msgstr ""
+"Bewegungen, bei denen die Spindel aktiv ist, als Druckbewegung anzeigen"
 
-#: printrun/pronterface.py:963
+#: printrun\pronterface.py:1085
 msgid "Interface mode"
-msgstr "Bedienoberflächen-Modus"
+msgstr "Anzeigemodus"
 
-#: printrun/pronterface.py:963
+#: printrun\pronterface.py:1085
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
-#: printrun/pronterface.py:963
+#: printrun\pronterface.py:1085
 msgid ""
 "Standard interface is a one-page, three columns layout with controls/"
 "visualization/log\n"
 "Compact mode is a one-page, two columns layout with controls + log/"
 "visualization"
 msgstr ""
+"Standard Modus ist ein einseitiges Layout mit drei Spalten für "
+"Steuerelementen / Visualisierung / Protokoll\n"
+"Kompakt Modus ist ein einseitiges Layout mit zwei Spalte für Steuerelementen "
+"+ Protokoll / Visualisierung"
 
-#: printrun/pronterface.py:965
+#: printrun\pronterface.py:1087
 msgid "Controls mode"
-msgstr "Steuerungs-Modus"
+msgstr "Steuerungsmodus"
 
-#: printrun/pronterface.py:965
+#: printrun\pronterface.py:1087
 msgid ""
 "Standard controls include all controls needed for printer setup and "
 "calibration, while Mini controls are limited to the ones needed for daily "
 "printing"
 msgstr ""
+"Standard umfassen alle Steuerelemente, die für die Druckereinrichtung und -"
+"kalibrierung erforderlich sind, während bei Mini die Steuerelemente auf die, "
+"für den täglichen Druck erforderlichen Elemente beschränkt sind"
 
-#: printrun/pronterface.py:966
+#: printrun\pronterface.py:1088
 msgid "Add a menu to select Slic3r profiles directly from Pronterface"
-msgstr ""
+msgstr "Menü zur Auswahl von Slic3r-Profilen direkt aus Pronterface hinzufügen"
 
-#: printrun/pronterface.py:966
+#: printrun\pronterface.py:1088
 msgid "Enable Slic3r integration"
-msgstr "Aktiviere die Slic3r-Integration"
+msgstr "Slic3r-Integration aktivieren"
 
-#: printrun/pronterface.py:967
+#: printrun\pronterface.py:1089
 msgid "Update Slic3r default presets"
-msgstr "Aktualisiere Slic3r Standard-Voreinstellungen"
+msgstr "Aktualisiert die Slic3r-Standardvoreinstellungen"
 
-#: printrun/pronterface.py:967
+#: printrun\pronterface.py:1089
 msgid ""
 "When selecting a profile in Slic3r integration menu, also save it as the "
 "default Slic3r preset"
 msgstr ""
+"Wenn ein Profil im Slic3r-Integrationsmenü ausgewählt wird, speichern Sie es "
+"ebenfalls als Standardvoreinstellung für Slic3r"
 
-#: printrun/pronterface.py:968
+#: printrun\pronterface.py:1090
 msgid "Main visualization"
-msgstr "Hauptvisualisierung"
+msgstr "Visualisierung"
 
-#: printrun/pronterface.py:968
+#: printrun\pronterface.py:1090
 msgid "Select visualization for main window."
-msgstr "Wählen Sie die Visualisierung für das Hauptfenster."
+msgstr "Wählen Sie den Visualisierungstyp für das Hauptfenster aus."
 
-#: printrun/pronterface.py:969
+#: printrun\pronterface.py:1091
 msgid "Use 3D in GCode viewer window"
-msgstr "Benutze 3D im GCode Ansichtsfenster"
+msgstr "Verwendet 3D im Fenster des G-Code-Betrachters"
 
-#: printrun/pronterface.py:969
+#: printrun\pronterface.py:1091
 msgid "Use 3D mode instead of 2D layered mode in the visualization window"
 msgstr ""
+"Verwendet den 3D-Modus anstelle des 2D-Ebenenmodus im Visualisierungsfenster"
 
-#: printrun/pronterface.py:970
+#: printrun\pronterface.py:1092
 msgid "3D viewer options"
-msgstr "3D Ansichtsoptionen"
+msgstr "3D-Ansicht Optionen"
 
-#: printrun/pronterface.py:971
+#: printrun\pronterface.py:1093
 msgid "Use a lighter 3D visualization"
-msgstr ""
+msgstr "Verwendet eine vereinfachte 3D-Visualisierung"
 
-#: printrun/pronterface.py:971
+#: printrun\pronterface.py:1093
 msgid ""
 "Use a lighter visualization with simple lines instead of extruded paths for "
 "3D viewer"
 msgstr ""
+"Verwendet für den 3D-Betrachter eine vereinfachte Visualisierung mit "
+"einfachen Linien anstelle von extrudierten Pfaden"
 
-#: printrun/pronterface.py:972
+#: printrun\pronterface.py:1094
+msgid ""
+"A perspective view looks more realistic, but is a bit more confusing to "
+"navigate"
+msgstr ""
+"Eine perspektivische Ansicht sieht realistischer aus, ist jedoch etwas "
+"verwirrender zu navigieren"
+
+#: printrun\pronterface.py:1094
+msgid "Use a perspective view instead of orthographic"
+msgstr "Verwende eine perspektivische Ansicht anstelle einer orthogonalen"
+
+#: printrun\pronterface.py:1095
 msgid "Amount of anti-aliasing samples used in the 3D viewer"
-msgstr ""
+msgstr "Menge der im 3D-Viewer verwendeten Anti-Aliasing Muster"
 
-#: printrun/pronterface.py:972
+#: printrun\pronterface.py:1095
 msgid "Number of anti-aliasing samples"
-msgstr "Zahl der Kantenglättung Muster"
+msgstr "Anzahl der Kantenglättung Muster"
 
-#: printrun/pronterface.py:973
+#: printrun\pronterface.py:1096
 msgid "Track current layer in main 3D view"
-msgstr "Verfolge die aktuelle Schicht im Haupt-3D-Fenster"
+msgstr "Verfolgt aktuelle Druckschicht in der 3D Ansicht"
 
-#: printrun/pronterface.py:973
+#: printrun\pronterface.py:1096
 msgid "Track the currently printing layer in the main 3D visualization"
-msgstr ""
+msgstr "Verfolgen der aktuellen Druckschicht im Fenster der 3D-Visualisierung"
 
-#: printrun/pronterface.py:974
+#: printrun\pronterface.py:1097
 msgid "Extrusion width for 3D viewer"
-msgstr "Extrusionsbreite für die 3D-Ansicht"
+msgstr "Extrusionsbreite für 3D Betrachter"
 
-#: printrun/pronterface.py:974
+#: printrun\pronterface.py:1097
 msgid "Width of printed path in 3D viewer"
-msgstr "Breite des gedruckten Pfades in der 3D-Ansicht"
+msgstr "Breite des gedruckten Pfads in der 3D-Ansicht"
 
-#: printrun/pronterface.py:975
+#: printrun\pronterface.py:1098
 msgid "Height of printed path in 3D viewer"
-msgstr "Höhe des gedruckten Pfades in der 3D-Ansicht"
+msgstr "Schichthöhe des gedruckten Pfades in der 3D-Ansicht"
 
-#: printrun/pronterface.py:975
+#: printrun\pronterface.py:1098
 msgid "Layer height for 3D viewer"
-msgstr "Ebenenhöhe für 3D-Ansicht"
+msgstr "Schichthöhe für 3D-Ansicht"
 
-#: printrun/pronterface.py:976
+#: printrun\pronterface.py:1099
 msgid "Display temperature graph"
-msgstr "Temperaturdiagramm anzeigen"
+msgstr "Anzeige des Temperaturdiagrams"
 
-#: printrun/pronterface.py:976
+#: printrun\pronterface.py:1099
 msgid "Display time-lapse temperature graph"
-msgstr "Zeitraffertemperaturdiagramm anzeigen"
+msgstr "Zeitraffer-Temperaturdiagramm anzeigen"
 
-#: printrun/pronterface.py:977
+#: printrun\pronterface.py:1100
 msgid "Display graphical gauges for temperatures visualization"
-msgstr "Zeige grafische Pegel für die Temperaturanzeige"
+msgstr "Grafische Messgeräte für die Temperaturvisualisierung anzeigen"
 
-#: printrun/pronterface.py:977
+#: printrun\pronterface.py:1100
 msgid "Display temperature gauges"
-msgstr "Zeige Temperaturpegel"
+msgstr "Temperaturmessgeräte anzeigen"
 
-#: printrun/pronterface.py:978
+#: printrun\pronterface.py:1101
 msgid "Display a checkbox that, when check, locks most of Pronterface"
 msgstr ""
-"Zeige ein Kontrollkästchen an, dass beim Aktivieren den größten Teil von "
-"Pronterface sperrt"
+"Kontrollkästchen einblenden, welches bei Aktivierung bis auf das Menü und "
+"dieses Kontrollkästchen, alle direkten Steuerelemente in Pronterface sperrt"
 
-#: printrun/pronterface.py:978
+#: printrun\pronterface.py:1101
 msgid "Display interface lock checkbox"
-msgstr "Anzeigen des Bedienoberflächensperrauswahlkästchens"
+msgstr "Kontrollkästchen Anzeigesperre anzeigen"
 
-#: printrun/pronterface.py:979
+#: printrun\pronterface.py:1102
 msgid "If lock checkbox is enabled, lock the interface when starting a print"
 msgstr ""
+"Bei Aktivierung des Kontrollkästchen wird das Benutzerinterface beim Start "
+"eines Druckvorgangs gesperrt"
 
-#: printrun/pronterface.py:979
+#: printrun\pronterface.py:1102
 msgid "Lock interface upon print start"
-msgstr "Sperre die Bedienoberfläche beim Druckstart"
+msgstr "Benutzerschnittstelle beim Druckstart sperren"
 
-#: printrun/pronterface.py:980
+#: printrun\pronterface.py:1103
 msgid "Regularly update visualization during the load of a G-Code file"
 msgstr ""
+"Regelmäßige Aktualisierung der Visualisierung während des Ladens einer G-"
+"Code-Datei"
 
-#: printrun/pronterface.py:980
+#: printrun\pronterface.py:1103
 msgid "Update UI during G-Code load"
-msgstr "Aktualiere UI während des Ladens des G-Code"
+msgstr "Aktualisiere UI beim Ladens des G-Code"
 
-#: printrun/pronterface.py:989
+#: printrun\pronterface.py:1112
 msgid "2D viewer options"
-msgstr "2D-Viewer-Optionen"
+msgstr "2D-Ansicht Optionen"
 
-#: printrun/pronterface.py:990
+#: printrun\pronterface.py:1113
 msgid "Preview extrusion width"
-msgstr "Vorschau der Extrusionsbreite"
+msgstr "Vorschau Extrusionsbreite"
 
-#: printrun/pronterface.py:990
+#: printrun\pronterface.py:1113
 msgid "Width of Extrusion in Preview"
-msgstr "Breite der Extrudierung in der Vorschau"
+msgstr "Breite der Extrusion in der Vorschau"
 
-#: printrun/pronterface.py:991
+#: printrun\pronterface.py:1114
 msgid "Fine Grid Spacing"
-msgstr "Feiner Rasterabstand"
+msgstr "Abstand Feinraster"
 
-#: printrun/pronterface.py:991
+#: printrun\pronterface.py:1114
 msgid "Fine grid spacing"
-msgstr "Feiner Rasterabstand"
+msgstr "Abstand Feinraster"
 
-#: printrun/pronterface.py:992
+#: printrun\pronterface.py:1115
 msgid "Coarse Grid Spacing"
 msgstr "Grober Rasterabstand"
 
-#: printrun/pronterface.py:992
+#: printrun\pronterface.py:1115
 msgid "Coarse grid spacing"
 msgstr "Grober Rasterabstand"
 
-#: printrun/pronterface.py:993
+#: printrun\pronterface.py:1116
 msgid "Background color"
 msgstr "Hintergrundfarbe"
 
-#: printrun/pronterface.py:993
+#: printrun\pronterface.py:1116
 msgid "Pronterface background color"
 msgstr "Pronterface Hintergrundfarbe"
 
-#: printrun/pronterface.py:994
+#: printrun\pronterface.py:1117
 msgid "Color of the temperature graph background"
-msgstr "Farbe des Temperaturgraphenhintergrunds"
+msgstr "Hintergrundfarbe des Temperaturdiagramms"
 
-#: printrun/pronterface.py:994
+#: printrun\pronterface.py:1117
 msgid "Graph background color"
-msgstr "Graphenhintergrundfarbe"
+msgstr "Diagramm Hintergrundfarbe"
 
-#: printrun/pronterface.py:995
+#: printrun\pronterface.py:1118
+msgid "Color of the temperature graph text"
+msgstr "Textfarbe des Temperaturdiagramms"
+
+#: printrun\pronterface.py:1118
+msgid "Graph text color"
+msgstr "Diagramm Textfarbe"
+
+#: printrun\pronterface.py:1119
+msgid "Color of the temperature graph grid"
+msgstr "Gitterfarbe des Temperaturdiagramms"
+
+#: printrun\pronterface.py:1119
+msgid "Graph grid color"
+msgstr "Diagramm Rasterfarbe"
+
+#: printrun\pronterface.py:1120
+msgid "Color of the temperature graph fan speed line"
+msgstr "Linienfarbe der Lüftergeschwindigkeitskurve"
+
+#: printrun\pronterface.py:1120
+msgid "Graph fan line color"
+msgstr "Diagramm Linienfarbe Lüfter"
+
+#: printrun\pronterface.py:1121
+msgid "Color of the temperature graph bed temperature line"
+msgstr "Farbe der Betttemperaturlinie des Temperaturdiagramms"
+
+#: printrun\pronterface.py:1121
+msgid "Graph bed line color"
+msgstr "Diagramm Linienfarbe Temperatur Bett"
+
+#: printrun\pronterface.py:1122
+msgid "Color of the temperature graph bed temperature target line"
+msgstr "Linienfarbe der Zielbetttemperatur im Temperaturdiagramm"
+
+#: printrun\pronterface.py:1122
+msgid "Graph bed target line color"
+msgstr "Diagramm Linienfarbe Zieltemperatur Bett"
+
+#: printrun\pronterface.py:1123
+msgid "Color of the temperature graph extruder 0 temperature line"
+msgstr "Linienfarbe der Temperaturkurve von Extruder 0"
+
+#: printrun\pronterface.py:1123
+msgid "Graph ex0 line color"
+msgstr "Diagramm Linienfarbe Temperatur Extruder 2"
+
+#: printrun\pronterface.py:1124
+msgid "Color of the temperature graph extruder 0 target temperature line"
+msgstr "Linienfarbe der Zieltemperaturkurve von Extruder 0"
+
+#: printrun\pronterface.py:1124
+msgid "Graph ex0 target line color"
+msgstr "Diagramm Linienfarbe Zieltemperatur Extruder 2"
+
+#: printrun\pronterface.py:1125
+msgid "Color of the temperature graph extruder 1 temperature line"
+msgstr "Linienfarbe der Temperaturkurve von Extruder 1"
+
+#: printrun\pronterface.py:1125
+msgid "Graph ex1 line color color"
+msgstr "Diagramm Linienfarbe Temperatur Extruder1"
+
+#: printrun\pronterface.py:1126
+msgid "Color of the temperature graph extruder 1 temperature target line"
+msgstr "Linienfarbe der Zieltemperaturkurve von Extruder 1"
+
+#: printrun\pronterface.py:1126
+msgid "Graph ex1 target line color"
+msgstr "Diagramm Linienfarbe Zieltemperatur Extruder 1"
+
+#: printrun\pronterface.py:1127
 msgid "3D view background color"
-msgstr "Hintergrundfarbe der 3D-Ansicht"
+msgstr "3D-Ansicht Hintergrundfarbe"
 
-#: printrun/pronterface.py:995
+#: printrun\pronterface.py:1127
 msgid "Color of the 3D view background"
-msgstr "Farbe des 3D-Ansichtshintergrunds"
+msgstr "Farbe des Hintergrunds in der 3D-Ansicht"
 
-#: printrun/pronterface.py:996
+#: printrun\pronterface.py:1128
 msgid "3D view travel moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Reisebewegungen"
 
-#: printrun/pronterface.py:996
+#: printrun\pronterface.py:1128
 msgid "Color of travel moves in 3D view"
-msgstr ""
+msgstr "Farbe der Reisebewegungen in der 3D-Ansicht"
 
-#: printrun/pronterface.py:997
+#: printrun\pronterface.py:1129
 msgid "3D view print moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen"
 
-#: printrun/pronterface.py:997
+#: printrun\pronterface.py:1129
 msgid "Color of print moves with tool 0 in 3D view"
 msgstr ""
+"Farbe der Druckbewegungen mit Werkzeug 0 bzw. Extruder 0 in der 3D-Ansicht"
 
-#: printrun/pronterface.py:998
+#: printrun\pronterface.py:1130
 msgid "3D view tool 1 moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen für Werkzeug 1"
 
-#: printrun/pronterface.py:998
+#: printrun\pronterface.py:1130
 msgid "Color of print moves with tool 1 in 3D view"
 msgstr ""
+"Farbe der Druckbewegungen mit Werkzeug 1 bzw. Extruder 1 in der 3D-Ansicht"
 
-#: printrun/pronterface.py:999
+#: printrun\pronterface.py:1131
 msgid "3D view tool 2 moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen für Werkzeug 2"
 
-#: printrun/pronterface.py:999
+#: printrun\pronterface.py:1131
 msgid "Color of print moves with tool 2 in 3D view"
 msgstr ""
+"Farbe der Druckbewegungen mit Werkzeug 2 bzw. Extruder 2 in der 3D-Ansicht"
 
-#: printrun/pronterface.py:1000
+#: printrun\pronterface.py:1132
 msgid "3D view tool 3 moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen für Werkzeug 3"
 
-#: printrun/pronterface.py:1000
+#: printrun\pronterface.py:1132
 msgid "Color of print moves with tool 3 in 3D view"
 msgstr ""
+"Farbe der Druckbewegungen mit Werkzeug 3 bzw. Extruder 3 in der 3D-Ansicht"
 
-#: printrun/pronterface.py:1001
+#: printrun\pronterface.py:1133
 msgid "3D view tool 4 moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen für Werkzeug 4"
 
-#: printrun/pronterface.py:1001
+#: printrun\pronterface.py:1133
 msgid "Color of print moves with tool 4 in 3D view"
 msgstr ""
+"Farbe der Druckbewegungen mit Werkzeug 4 bzw. Extruder 4 in der 3D-Ansicht"
 
-#: printrun/pronterface.py:1002
+#: printrun\pronterface.py:1134
 msgid "3D view printed moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe gedruckte Bewegungen"
 
-#: printrun/pronterface.py:1002
+#: printrun\pronterface.py:1134
 msgid "Color of printed moves in 3D view"
-msgstr ""
+msgstr "Farbe der gedruckten Bewegungen in der 3D-Ansicht"
 
-#: printrun/pronterface.py:1003
+#: printrun\pronterface.py:1135
 msgid "3D view current layer moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe Druckbewegungen der aktuellen Ebene"
 
-#: printrun/pronterface.py:1003
+#: printrun\pronterface.py:1135
 msgid "Color of moves in current layer in 3D view"
-msgstr ""
+msgstr "Farbe der Bewegungen auf der aktuellen Ebene in der 3D-Ansicht"
 
-#: printrun/pronterface.py:1004
+#: printrun\pronterface.py:1136
 msgid "3D view printed current layer moves color"
-msgstr ""
+msgstr "3D -Ansicht Farbe bereits gedruckter Bewegungen der aktuellen Ebene"
 
-#: printrun/pronterface.py:1004
+#: printrun\pronterface.py:1136
 msgid "Color of already printed moves from current layer in 3D view"
 msgstr ""
+"Farbe der bereits gedruckten Bewegungen auf der aktuellen Ebene in der 3D-"
+"Ansicht"
 
-#: printrun/pronterface.py:1005
+#: printrun\pronterface.py:1137
 msgid "Changing some of these settings might require a restart to get effect"
 msgstr ""
 "Das Ändern einiger dieser Einstellungen erfordert möglicherweise einen "
-"Neustart, um wirksam zu werden"
+"Neustart, damit sie wirksam werden"
 
-#: printrun/pronterface.py:1005
+#: printrun\pronterface.py:1137
 msgid "Note:"
 msgstr "Hinweis:"
 
-#: printrun/pronterface.py:1019
+#: printrun\pronterface.py:1151
 msgid "automatically try to connect to printer on startup"
 msgstr ""
-"Versuche beim Start automatisch, eine Verbindung zum Drucker herzustellen"
+"versucht beim Start automatisch eine Verbindung zum Drucker herzustellen"
 
-#: printrun/pronterface.py:1032 printrun/pronterface.py:1513
+#: printrun\pronterface.py:1164 printrun\pronterface.py:1645
 msgid "Failed to load recent files list:"
 msgstr "Fehler beim Laden der Liste der zuletzt verwendeten Dateien:"
 
-#: printrun/pronterface.py:1125
+#: printrun\pronterface.py:1257
 msgid "SD upload: %04.2f%% |"
-msgstr "SD-Upload: %04.2f%% |"
+msgstr "SD Upload: %04.2f%% |"
 
-#: printrun/pronterface.py:1126 printrun/pronterface.py:1131
+#: printrun\pronterface.py:1258 printrun\pronterface.py:1263
 msgid " Line# %d of %d lines |"
 msgstr " Zeile# %d von %d Zeilen |"
 
-#: printrun/pronterface.py:1128
+#: printrun\pronterface.py:1260
 msgid "SD printing: %04.2f%% |"
-msgstr "SD Drucken: %04.2f%% |"
+msgstr "SD Druck: %04.2f%%"
 
-#: printrun/pronterface.py:1130
+#: printrun\pronterface.py:1262
 msgid "Printing: %04.2f%% |"
 msgstr "Drucken: %04.2f%% |"
 
-#: printrun/pronterface.py:1133
+#: printrun\pronterface.py:1265
 msgid " Est: %s of %s remaining | "
 msgstr " Erw: %s von %s verbleibend | "
 
-#: printrun/pronterface.py:1135
+#: printrun\pronterface.py:1267
 msgid " Z: %.3f mm"
-msgstr " Z: %0.3f mm"
+msgstr " Z: %.3f mm"
 
-#: printrun/pronterface.py:1171
+#: printrun\pronterface.py:1303
 msgid "Locking interface."
-msgstr "Sperre Interface."
+msgstr "Schnittstelle sperren."
 
-#: printrun/pronterface.py:1175
+#: printrun\pronterface.py:1307
 msgid "Unlocking interface."
-msgstr "Entsperre Interface."
+msgstr "Schnittstelle freigeben."
 
-#: printrun/pronterface.py:1190
+#: printrun\pronterface.py:1322
 msgid "Connecting..."
 msgstr "Verbinde..."
 
-#: printrun/pronterface.py:1202
+#: printrun\pronterface.py:1334
 msgid "Could not parse baud rate: "
-msgstr ""
+msgstr "Baudrate konnte nicht erkannt werden: "
 
-#: printrun/pronterface.py:1207 printrun/pronterface.py:1247
-#: printrun/pronterface.py:1267 printrun/pronterface.py:1277
-#: printrun/pronterface.py:1364 printrun/pronterface.py:1589
+#: printrun\pronterface.py:1339 printrun\pronterface.py:1379
+#: printrun\pronterface.py:1399 printrun\pronterface.py:1409
+#: printrun\pronterface.py:1496 printrun\pronterface.py:1721
 msgid "&Pause"
 msgstr "&Pause"
 
-#: printrun/pronterface.py:1208 printrun/pronterface.py:1248
-#: printrun/pronterface.py:1264 printrun/pronterface.py:1588
-#: printrun/pronterface.py:1738
+#: printrun\pronterface.py:1340 printrun\pronterface.py:1380
+#: printrun\pronterface.py:1396 printrun\pronterface.py:1720
+#: printrun\pronterface.py:1870
 msgid "&Print"
 msgstr "&Drucken"
 
-#: printrun/pronterface.py:1228
+#: printrun\pronterface.py:1360
 msgid "Disconnected."
 msgstr "Getrennt."
 
-#: printrun/pronterface.py:1257
+#: printrun\pronterface.py:1389
 msgid "Reset."
 msgstr "Zurücksetzen."
 
-#: printrun/pronterface.py:1258
+#: printrun\pronterface.py:1390
 msgid "Are you sure you want to reset the printer?"
 msgstr "Möchten Sie den Drucker wirklich zurücksetzen?"
 
-#: printrun/pronterface.py:1258
+#: printrun\pronterface.py:1390
 msgid "Reset?"
 msgstr "Zurücksetzen?"
 
-#: printrun/pronterface.py:1279
+#: printrun\pronterface.py:1411
 msgid "Restart"
 msgstr "Neustart"
 
-#: printrun/pronterface.py:1313
+#: printrun\pronterface.py:1445
 msgid "Pick SD filename"
 msgstr "Wähle SD Dateiname"
 
-#: printrun/pronterface.py:1331
+#: printrun\pronterface.py:1463
 msgid "File upload complete"
 msgstr "Datei Upload komplett"
 
-#: printrun/pronterface.py:1338
+#: printrun\pronterface.py:1470
 msgid "Print paused at: %s"
-msgstr "Druck pausiert um: %s"
+msgstr "Druck pausiert bei: % s"
 
-#: printrun/pronterface.py:1352
+#: printrun\pronterface.py:1484
 msgid "Resume"
 msgstr "Fortsetzen"
 
-#: printrun/pronterface.py:1355
+#: printrun\pronterface.py:1487
 msgid "Resuming."
-msgstr "Setze fort."
+msgstr "Fortsetzen."
 
-#: printrun/pronterface.py:1384
+#: printrun\pronterface.py:1516
 msgid "Pick SD file"
 msgstr "Wähle SD Datei"
 
-#: printrun/pronterface.py:1384
+#: printrun\pronterface.py:1516
 msgid "Select the file to print"
 msgstr "Wähle Druckdatei"
 
-#: printrun/pronterface.py:1419
+# Check
+#: printrun\pronterface.py:1551
 msgid "Running "
-msgstr "In Betrieb "
+msgstr "Läuft "
 
-#: printrun/pronterface.py:1428
+#: printrun\pronterface.py:1560
 msgid "Failed to execute slicing software: "
 msgstr "Fehler beim Ausführen der Slicing Software: "
 
-#: printrun/pronterface.py:1435
+#: printrun\pronterface.py:1567
 msgid "Slicing..."
 msgstr "Slicing..."
 
-#: printrun/pronterface.py:1451
+#: printrun\pronterface.py:1583
 msgid "Slicing "
 msgstr "Slicing "
 
-#: printrun/pronterface.py:1488
+#: printrun\pronterface.py:1620
 msgid "Open file to print"
 msgstr "Öffne zu druckende Datei"
 
-#: printrun/pronterface.py:1489
+#: printrun\pronterface.py:1621
 msgid ""
 "OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*."
 "gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|GCODE files (*.gcode;*.gco;*.g)|*."
@@ -2074,536 +2253,474 @@ msgid ""
 "OBJ|All Files (*.*)|*.*"
 msgstr ""
 "OBJ,STL und GCODE Dateien (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*."
-"gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|GCODE files (*.gcode;*.gco;*.g)|*."
+"gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|GCODE Dateien (*.gcode;*.gco;*.g)|*."
 "gcode;*.gco;*.g|OBJ, STL Dateien (*.stl;*.STL;*.obj;*.OBJ)|*.stl;*.STL;*.obj;"
-"*.OBJ|All Files (*.*)|*.*"
+"*.OBJ|Alle Dateien (*.*)|*.*"
 
-#: printrun/pronterface.py:1522
+#: printrun\pronterface.py:1654
 msgid "Could not update recent files list:"
 msgstr ""
+"Liste der zuletzt verwendeten Dateien konnte nicht aktualisiert werden:"
 
-#: printrun/pronterface.py:1559
+#: printrun\pronterface.py:1691
 msgid "Loading %s: %d layers loaded (%d lines)"
-msgstr ""
+msgstr "%s wird geladen: %d Schichten geladen (%d Zeilen)"
 
-#: printrun/pronterface.py:1568
+#: printrun\pronterface.py:1700
 msgid "Loading %s..."
 msgstr "Laden von %s..."
 
-#: printrun/pronterface.py:1582
+#: printrun\pronterface.py:1714
 msgid "Pronterface - %s"
-msgstr ""
+msgstr "Pronterface - %s"
 
-#: printrun/pronterface.py:1583
+#: printrun\pronterface.py:1715
 msgid "Loaded %s, %d lines"
-msgstr "Geladen %s, %d Zeilen"
+msgstr "%s geladen, %d Zeilen"
 
-#: printrun/pronterface.py:1587
+#: printrun\pronterface.py:1719
 msgid "Load File"
 msgstr "Datei laden"
 
-#: printrun/pronterface.py:1619
+#: printrun\pronterface.py:1751
 msgid "%s of filament used in this print"
-msgstr "%s an Filament in diesem Druck genutzt"
+msgstr "%s Filament werden in diesem Druck verwendet"
 
-#: printrun/pronterface.py:1632
+#: printrun\pronterface.py:1764
 msgid "Using spool '%s' (%s of filament will remain)"
-msgstr "Benutze die Spule '%s' (%s an Filament wird  übrig bleiben)"
+msgstr "Verwende die Spule '%s' (%s Filament werden übrig bleiben)"
 
-#: printrun/pronterface.py:1637
+#: printrun\pronterface.py:1769
 msgid "The print goes:"
-msgstr ""
+msgstr "Der Druck verläuft:"
 
-#: printrun/pronterface.py:1638
+#: printrun\pronterface.py:1770
 msgid "- from %.2f mm to %.2f mm in X and is %.2f mm wide"
-msgstr ""
-"Der Druck verläuft von %.2f mm bis %.2f mm in X\n"
-"und ist %.2f mm breit"
+msgstr "- von %.2f mm bis %.2f mm in X und ist %.2f mm breit"
 
-#: printrun/pronterface.py:1639
+#: printrun\pronterface.py:1771
 msgid "- from %.2f mm to %.2f mm in Y and is %.2f mm deep"
-msgstr ""
-"Der Druck verläuft von %.2f mm bis %.2f mm in Y\n"
-"und ist %.2f mm tief"
+msgstr "- von %.2f mm bis %.2f mm in Y und ist %.2f mm tief"
 
-#: printrun/pronterface.py:1640
+#: printrun\pronterface.py:1772
 msgid "- from %.2f mm to %.2f mm in Z and is %.2f mm high"
-msgstr ""
-"Der Druck verläuft von %.2f mm bis %.2f mm in Z\n"
-"und ist %.2f mm hoch"
+msgstr "- von %.2f mm bis %.2f mm in Z und ist %.2f mm hoch"
 
-#: printrun/pronterface.py:1703
+#: printrun\pronterface.py:1835
 msgid "Save as"
 msgstr "Speichern als"
 
-#: printrun/pronterface.py:1704
+#: printrun\pronterface.py:1836
 msgid "GCODE files (*.gcode;*.gco;*.g)|*.gcode;*.gco;*.g|All Files (*.*)|*.*"
 msgstr ""
 "GCODE Dateien (*.gcode;*.gco;*.g)|*.gcode;*.gco;*.g|All Files (*.*)|*.*"
 
-#: printrun/pronterface.py:1708
-msgid "G-Code succesfully saved to %s"
+#: printrun\pronterface.py:1840
+msgid "G-Code successfully saved to %s"
 msgstr "G-Code erfolgreich in %s gespeichert"
 
-#: printrun/pronterface.py:1743
+#: printrun\pronterface.py:1875
 msgid "Printer is now online."
 msgstr "Drucker ist jetzt Online."
 
-#: printrun/pronterface.py:1748
+#: printrun\pronterface.py:1880
 msgid "Dis&connect"
-msgstr "Trennen"
+msgstr "&Trennen"
 
-#: printrun/pronterface.py:2007
+#: printrun\pronterface.py:2010
+msgid "Heater%s:"
+msgstr "Extruder%s:"
+
+#: printrun\pronterface.py:2134
 msgid "click to add new custom button"
-msgstr "Individuellen Button hinzufügen"
+msgstr "Klicken um benutzerdefinierte Schaltfläche hinzuzufügen"
 
-#: printrun/pronterface.py:2013
+#: printrun\pronterface.py:2140
 msgid "Execute command: "
-msgstr "Kommando ausführen: "
+msgstr "Befehl ausführen: "
 
-#: printrun/pronterface.py:2033
+#: printrun\pronterface.py:2160
 msgid ""
 "Defines custom button. Usage: button <num> \"title\" [/c \"colour\"] command"
 msgstr ""
-"Definiert einen individuellen Button. Nutzung: button <num> \"title\" [/c "
-"\"colour\"] command"
+"Definiert eine benutzerdefinierte Schaltfläche. Gebrauch: button <num> "
+"\"Titel\" [/c \"Farbe\"] Befehl"
 
-#: printrun/pronterface.py:2055
+#: printrun\pronterface.py:2182
 msgid "Custom button number should be between 0 and 63"
-msgstr "Nummer des individuellen Button sollte zwischen 0 und 63 sein"
+msgstr ""
+"Nummer der benutzerdefinierten Schaltfläche sollte zwischen 0 und 63 liegen"
 
-#: printrun/pronterface.py:2139
+#: printrun\pronterface.py:2266
 msgid "Edit custom button '%s'"
-msgstr "Individuellen Button '%s' bearbeiten"
+msgstr "Benutzerdefinierte Schaltfläche '%s' bearbeiten"
 
-#: printrun/pronterface.py:2141
+#: printrun\pronterface.py:2268
 msgid "Move left <<"
 msgstr "Links bewegen <<"
 
-#: printrun/pronterface.py:2144
+#: printrun\pronterface.py:2271
 msgid "Move right >>"
 msgstr "Rechts bewegen >>"
 
-#: printrun/pronterface.py:2148
+#: printrun\pronterface.py:2275
 msgid "Remove custom button '%s'"
-msgstr "Individuellen Button '%s' entfernen"
+msgstr "Benutzerdefinierte Schaltfläche '%s' entfernen"
 
-#: printrun/pronterface.py:2151
+#: printrun\pronterface.py:2278
 msgid "Add custom button"
-msgstr "Individuellen Button hinzufuegen"
+msgstr "Benutzerdefinierte Schaltfläche hinzufügen"
 
-#: printrun/pronterface.py:2259
+#: printrun\pronterface.py:2386
 msgid "Failed to handle button"
-msgstr ""
+msgstr "Schaltfläche konnte nicht verarbeitet werden"
 
-#: printrun/pronterface.py:2272
+#: printrun\pronterface.py:2399
 msgid "Do you want to erase the macro?"
 msgstr "Möchten Sie das Makro löschen?"
 
-#: printrun/pronterface.py:2276
+#: printrun\pronterface.py:2403
 msgid "Cancelled."
 msgstr "Abgebrochen."
 
-#: printrun/pronterface.py:2294
+#: printrun\pronterface.py:2421
 msgid "Enter macro name"
 msgstr "Makro Name eingeben"
 
-#: printrun/pronterface.py:2295
+#: printrun\pronterface.py:2422
 msgid "Macro name:"
 msgstr "Makro Name:"
 
-#: printrun/pronterface.py:2297
+#: printrun\pronterface.py:2424
 msgid "Ok"
 msgstr "Ok"
 
-#: printrun/pronterface.py:2337
+#: printrun\pronterface.py:2464
 msgid "Macro name may contain only ASCII alphanumeric symbols and underscores"
-msgstr ""
-"Makro Name darf nur ASCII alphanumerische Zeichen und Unterstriche enthalten"
+msgstr "Makro Name darf nur alphanumerische Zeichen und Unterstriche enthalten"
 
-#: printrun/pronterface.py:2340
+#: printrun\pronterface.py:2467
 msgid "Name '%s' is being used by built-in command"
-msgstr "Name '%s' wird durch eingebautes Kommando genutzt"
+msgstr "Name '%s' wird durch eingebauten Befehl genutzt"
 
-#: printrun/rpc.py:39
+#: printrun\rpc.py:39
 msgid "RPC server bound on non-default port %d"
 msgstr "RPC-Server an nicht standardmäßigen Port %d gebunden"
 
-#: printrun/settings.py:36
+#: printrun\settings.py:36
 msgid "Default: "
-msgstr "Standard: "
+msgstr "Standardwerte: "
 
-#: printrun/settings.py:37
+#: printrun\settings.py:37
 msgid "(Control-doubleclick to reset to default value)"
-msgstr "(Strg-Doppelklick um den Standardwert wiederherzustellen)"
+msgstr ""
+"(Doppelklick bei gedrückter Ctrl-Taste, um Standardwert wiederherzustellen)"
 
-#: printrun/settings.py:288
+#: printrun\settings.py:288
 msgid "Width"
 msgstr "Breite"
 
-#: printrun/settings.py:291
+#: printrun\settings.py:291
 msgid "Depth"
 msgstr "Tiefe"
 
-#: printrun/settings.py:294
+#: printrun\settings.py:294
 msgid "Height"
 msgstr "Höhe"
 
-#: printrun/settings.py:297
+#: printrun\settings.py:297
 msgid "X offset"
-msgstr ""
+msgstr "X Versatz"
 
-#: printrun/settings.py:300
+#: printrun\settings.py:300
 msgid "Y offset"
-msgstr ""
+msgstr "Y Versatz"
 
-#: printrun/settings.py:303
+#: printrun\settings.py:303
 msgid "Z offset"
-msgstr ""
+msgstr "Z Versatz"
 
-#: printrun/settings.py:306
+#: printrun\settings.py:306
 msgid "X home pos."
-msgstr ""
+msgstr "Ausgangsposition X."
 
-#: printrun/settings.py:309
+#: printrun\settings.py:309
 msgid "Y home pos."
-msgstr ""
+msgstr "Ausgangsposition Y."
 
-#: printrun/settings.py:312
+#: printrun\settings.py:312
 msgid "Z home pos."
-msgstr ""
+msgstr "Ausgangsposition Z."
 
-#: printrun/settings.py:327
+#: printrun\settings.py:327
 msgid "Port used to communicate with printer"
-msgstr "Port für Druckerkommunikation"
+msgstr "Anschluss für Druckerkommunikation"
 
-#: printrun/settings.py:327
+#: printrun\settings.py:327
 msgid "Serial port"
-msgstr "Serieller Port"
+msgstr "Serielle Schnittstelle"
 
-#: printrun/settings.py:328
+#: printrun\settings.py:328
 msgid "Baud rate"
-msgstr ""
+msgstr "Baudrate"
 
-#: printrun/settings.py:328
+#: printrun\settings.py:328
 msgid "Communications Speed"
 msgstr "Kommunikationsgeschwindigkeit"
 
-#: printrun/settings.py:329
+#: printrun\settings.py:329
 msgid "TCP streaming mode"
-msgstr ""
+msgstr "TCP Streaming Modus"
 
-#: printrun/settings.py:329
+#: printrun\settings.py:329
 msgid ""
 "When using a TCP connection to the printer, the streaming mode will not wait "
 "for acks from the printer to send new commands. This will break things such "
 "as ETA prediction, but can result in smoother prints."
 msgstr ""
+"Bei Verwendung einer TCP-Verbindung zum Drucker wartet der Streaming-Modus "
+"beim senden neuer Befehle nicht auf Bestätigungsmeldungen des Druckers. Dies "
+"führt zu Problemen wie der ETA-Vorhersage, kann jedoch zu glatteren "
+"Ausdrucken führen."
 
-#: printrun/settings.py:330
+#: printrun\settings.py:330
 msgid "Enable RPC server to allow remotely querying print status"
 msgstr ""
+"RPC-Server aktivieren um die Fernabfrage des Druckstatus zu ermöglichen"
 
-#: printrun/settings.py:330
+#: printrun\settings.py:330
 msgid "RPC server"
-msgstr ""
+msgstr "RPC Server"
 
-#: printrun/settings.py:331
+#: printrun\settings.py:331
 msgid "DTR"
-msgstr ""
+msgstr "DTR"
 
-#: printrun/settings.py:331
+#: printrun\settings.py:331
 msgid ""
 "Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"
 msgstr ""
+"Deaktivieren von DTR würde verhindern, dass Arduino (RAMPS) beim Verbinden "
+"zurückgesetzt wird"
 
-#: printrun/settings.py:333
+#: printrun\settings.py:333
 msgid "Custom device pattern: for example /dev/3DP_* "
 msgstr "Individuelles Geräte Muster: zum Beispiel /dev/3DP_* "
 
-#: printrun/settings.py:333
+#: printrun\settings.py:333
 msgid "Device name pattern"
 msgstr "Muster des Gerätenamen"
 
-#: printrun/settings.py:334
+#: printrun\settings.py:334
 msgid "Bed temperature for ABS"
 msgstr "Betttemperatur für ABS"
 
-#: printrun/settings.py:334
+#: printrun\settings.py:334
 msgid "Heated Build Platform temp for ABS (deg C)"
-msgstr "Erhitzte Bauplattformtemperatur für ABS (Grad Celsius)"
+msgstr "Druckbett Temp. für ABS (Grad Celsius)"
 
-#: printrun/settings.py:335
+#: printrun\settings.py:335
 msgid "Bed temperature for PLA"
 msgstr "Betttemperatur für PLA"
 
-#: printrun/settings.py:335
+#: printrun\settings.py:335
 msgid "Heated Build Platform temp for PLA (deg C)"
-msgstr "Erhitzte Bauplattformtemperatur für PLA (Grad Celsius)"
+msgstr "Druckbett Temp. für PLA (Grad Celsius)"
 
-#: printrun/settings.py:336
+#: printrun\settings.py:336
 msgid "Extruder temp for ABS (deg C)"
 msgstr "Extruder Temperatur für ABS (Grad Celsius)"
 
-#: printrun/settings.py:336
+#: printrun\settings.py:336
 msgid "Extruder temperature for ABS"
-msgstr "Extruder Temperatur für ABS (Grad Celsius)"
+msgstr "Extruder Temperatur für ABS"
 
-#: printrun/settings.py:337
+#: printrun\settings.py:337
 msgid "Extruder temp for PLA (deg C)"
 msgstr "Extruder Temperatur für PLA (Grad Celsius)"
 
-#: printrun/settings.py:337
+#: printrun\settings.py:337
 msgid "Extruder temperature for PLA"
-msgstr "Extruder Temperatur für PLA (Grad Celsius)"
+msgstr "Extruder Temperatur für PLA"
 
-#: printrun/settings.py:338
+#: printrun\settings.py:338
 msgid "Feedrate for Control Panel Moves in X and Y (mm/min)"
 msgstr "Vorschub Control Panel Bewegungen X und Y (mm/min)"
 
-#: printrun/settings.py:338
+#: printrun\settings.py:338
 msgid "X && Y manual feedrate"
 msgstr "X && Y manueller Vorschub"
 
-#: printrun/settings.py:339
+#: printrun\settings.py:339
 msgid "Feedrate for Control Panel Moves in Z (mm/min)"
 msgstr "Vorschub Control Panel Bewegungen Z (mm/min)"
 
-#: printrun/settings.py:339
+#: printrun\settings.py:339
 msgid "Z manual feedrate"
 msgstr "Z manueller Vorschub"
 
-#: printrun/settings.py:340
+#: printrun\settings.py:340
 msgid "E manual feedrate"
 msgstr "E manueller Vorschub"
 
-#: printrun/settings.py:340
+#: printrun\settings.py:340
 msgid "Feedrate for Control Panel Moves in Extrusions (mm/min)"
-msgstr "Vorschub Control Panel Bewegungen Extrudierung (mm/min)"
+msgstr "Extrudervorschub für Control Panel Bewegungen (mm/min)"
 
-#: printrun/settings.py:347
+#: printrun\settings.py:347
 msgid "Path to slicer"
-msgstr "Pfad zu slicer"
+msgstr "Pfad zum Slicer"
 
-#: printrun/settings.py:349
+#: printrun\settings.py:349
 msgid "Slice command"
-msgstr "Slice-Befehl"
+msgstr "Befehl für Slicer"
 
-#: printrun/settings.py:350
+#: printrun\settings.py:350
 msgid "Slice settings command"
-msgstr "Slice-Einstellungskommando"
+msgstr "Befehl für Slicing Einstellungen"
 
-#: printrun/settings.py:350
+#: printrun\settings.py:350
 msgid "Slicer options command"
-msgstr "Slicer-Optionen-Befehl"
+msgstr "Befehl für Slicer Optionen"
 
-#: printrun/settings.py:351
+#: printrun\settings.py:351
 msgid "Executable to run when the print is started"
-msgstr ""
+msgstr "Auszuführende Anwendung, nachdem der Druck gestartet wurde"
 
-#: printrun/settings.py:351
+#: printrun\settings.py:351
 msgid "Start command"
 msgstr "Start-Befehl"
 
-#: printrun/settings.py:352
+#: printrun\settings.py:352
 msgid "Executable to run when the print is finished"
-msgstr ""
+msgstr "Auszuführender Anwendung, wenn der Druck abgeschlossen ist"
 
-#: printrun/settings.py:352
+#: printrun\settings.py:352
 msgid "Final command"
-msgstr "Schluss-Befehl"
+msgstr "Letzter Befehl"
 
-#: printrun/settings.py:353
+#: printrun\settings.py:353
 msgid "Error command"
-msgstr "Fehler-Befehl"
+msgstr "Befehl bei Fehler"
 
-#: printrun/settings.py:353
+#: printrun\settings.py:353
 msgid "Executable to run when an error occurs"
-msgstr ""
+msgstr "Im Fehlerfall auszuführender Befehl"
 
-#: printrun/settings.py:354
+#: printrun\settings.py:354
 msgid "Log path"
 msgstr "Protokollpfad"
 
-#: printrun/settings.py:354
+#: printrun\settings.py:354
 msgid "Path to the log file. An empty path will log to the console."
 msgstr ""
-"Pfad zur Protokolldatei. Ein leerer Pfad führt zu einem Protokoll in der "
-"Konsole."
+"Pfad zur Protokolldatei. Ein leerer Pfad wird die Protokollausgabe zur "
+"Konsole umleiten."
 
-#: printrun/settings.py:423
+#: printrun\settings.py:423
 msgid "Failed to run callback after setting \"%s\":"
-msgstr "Scheitern der Rückruffunktion  nach dem Einstellen \"%s\":"
+msgstr "Fehler beim Ausführen des Rückrufs nach der Einstellung \"%s\":"
 
-#: printrun/stlplater.py:218
+#: printrun\stlplater.py:218
 msgid "STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"
-msgstr ""
+msgstr "STL Dateien (*.stl;*.STL)|*.stl;*.STL|OpenSCAD Dateien (*.scad)|*.scad"
 
-#: printrun/stlplater.py:219
+#: printrun\stlplater.py:219
 msgid "STL files (*.stl;*.STL)|*.stl;*.STL"
-msgstr ""
+msgstr "STL Dateien (*.stl;*.STL)|*.stl;*.STL"
 
-#: printrun/stlplater.py:235
+#: printrun\stlplater.py:235
 msgid "Cut along:"
-msgstr "Schneide entlang:"
+msgstr "Schnitt entlang:"
 
-#: printrun/stlplater.py:237
+#: printrun\stlplater.py:237
 msgid "Confirm cut"
 msgstr "Schnitt bestätigen"
 
-#: printrun/stlplater.py:245
+#: printrun\stlplater.py:245
 msgid ">X"
 msgstr ""
 
-#: printrun/stlplater.py:248
+#: printrun\stlplater.py:248
 msgid ">Y"
 msgstr ""
 
-#: printrun/stlplater.py:251
+#: printrun\stlplater.py:251
 msgid ">Z"
 msgstr ""
 
-#: printrun/stlplater.py:254
+#: printrun\stlplater.py:254
 msgid "<X"
 msgstr ""
 
-#: printrun/stlplater.py:257
+#: printrun\stlplater.py:257
 msgid "<Y"
 msgstr ""
 
-#: printrun/stlplater.py:260
+#: printrun\stlplater.py:260
 msgid "<Z"
 msgstr ""
 
-#: printrun/stlplater.py:291
+#: printrun\stlplater.py:291
 msgid "Cutting %s alongside %s axis"
-msgstr ""
+msgstr "Schneiden %s längsseits %s Achse"
 
-#: printrun/stlplater.py:374
+#: printrun\stlplater.py:374
 msgid "Loading STL file failed"
-msgstr "Öffnen der STL-Datei fehlgeschlagen"
+msgstr "Laden der STL-Datei fehlgeschlagen"
 
-#: printrun/stlplater.py:375 printrun/stlplater.py:385
+#: printrun\stlplater.py:375 printrun\stlplater.py:385
 msgid "Error:"
-msgstr ""
+msgstr "Fehler:"
 
-#: printrun/stlplater.py:378
+#: printrun\stlplater.py:378
 msgid "Loading STL file failed:"
 msgstr "Laden der STL-Datei fehlgeschlagen:"
 
-#: printrun/stlplater.py:384
+#: printrun\stlplater.py:384
 msgid "Loading OpenSCAD file failed"
-msgstr "Laden der OpenSCAD-Datei fehlgeschlagen"
+msgstr "OpenSCAD Datei öffnen fehlgeschlagen"
 
-#: printrun/stlplater.py:388
+#: printrun\stlplater.py:388
 msgid "Loading OpenSCAD file failed:"
-msgstr "Laden der OpenSCAD-Datei fehlgeschlagen.:"
+msgstr "Laden der OpenSCAD-Datei fehlgeschlagen:"
 
-#: printrun/stlplater.py:420
+#: printrun\stlplater.py:420
 msgid "Couldn't load non-existing file %s"
-msgstr "Konnte nicht vorhandene Datei %s nicht laden"
+msgstr "Nicht vorhandene Datei konnte nicht geladen werden %s"
 
-#: printrun/stlplater.py:470
+#: printrun\stlplater.py:470
 msgid "Wrote plate to %s"
-msgstr ""
+msgstr "Schreibe Druckplatte in %s"
 
-#: printrun/stlplater.py:477
+#: printrun\stlplater.py:477
 msgid ""
 "Failed to use simarrange for plating, falling back to the standard method. "
 "The error was: "
 msgstr ""
+"Simarrange konnte nicht zum Platzieren verwendet werden, es wurde auf die "
+"Standardmethode zurückgegriffen. Der Fehler war: "
 
-#: printrun/stlplater.py:485
+#: printrun\stlplater.py:485
 msgid "Autoplating using simarrange"
-msgstr ""
+msgstr "Automatisches Platzieren mit Simarrange"
 
-#: printrun/stlplater.py:500
+#: printrun\stlplater.py:500
 msgid "Plate full, please remove some objects"
-msgstr ""
+msgstr "Druckplatte voll, bitte einige Objekte entfernen"
 
-#: printrun/stlplater.py:517
+#: printrun\stlplater.py:517
 msgid "simarrange failed"
-msgstr ""
+msgstr "Simarrange fehlgeschlagen"
 
-#: printrun/utils.py:225
+#: printrun\utils.py:292
 msgid "Color must be specified as #RGB"
-msgstr "Die Farbe muss angegeben werden als #RGB"
+msgstr "Die Farbe muss als #RGB angegeben werden"
 
-#: printrun/utils.py:231
+#: printrun\utils.py:298
 msgid "Color must be specified as #RGBA"
-msgstr "Die Farbe muss angegeben werden als #RGBA"
+msgstr "Die Farbe muss als #RGBA angegeben werden"
 
 #: pronsole.py:58
 msgid "Caught an exception, exiting:"
-msgstr ""
-
-#, fuzzy
-#~ msgid ""
-#~ "Are you sure you want to reset the setting to the default value: {0!r} ?"
-#~ msgstr "Möchten Sie den Drucker wirklich zurücksetzen?"
-
-#, fuzzy
-#~ msgid "Slicing: "
-#~ msgstr "Slicing"
-
-#~ msgid "Setting hotend temperature to %f degrees Celsius."
-#~ msgstr "Setze Hotend Temperatur auf %f Grad Celsius."
-
-#~ msgid "Setting bed temperature to %f degrees Celsius."
-#~ msgstr "Setze Heizbett Temperatur auf %f Grad Celsius."
-
-#~ msgid "event object missing"
-#~ msgstr "Ereigniss Objekt fehlt"
-
-#~ msgid "Folder of last opened file"
-#~ msgstr "Verzeichniss der zuletzt geöffneten Datei"
-
-#~ msgid "Check temp"
-#~ msgstr "Temperatur prüfen"
-
-#~ msgid "Mini mode"
-#~ msgstr "Mini-Modus"
-
-#~ msgid "Compose"
-#~ msgstr "Zusammenstellen"
-
-#~ msgid "Z:"
-#~ msgstr "Z:"
-
-#~ msgid "Full mode"
-#~ msgstr "Voll-Modus"
-
-#~ msgid "Printer is online. "
-#~ msgstr "Drucker ist online. "
-
-#~ msgid "Bed"
-#~ msgstr "Heizbett"
-
-#~ msgid "Hotend"
-#~ msgstr "Hotend"
-
-#~ msgid ", %d lines"
-#~ msgstr ", %d Zeilen"
-
-#~ msgid "Paused."
-#~ msgstr "Pausiert."
-
-#~ msgid ""
-#~ "Slice command\n"
-#~ "   default:\n"
-#~ "       python skeinforge/skeinforge_application/skeinforge_utilities/"
-#~ "skeinforge_craft.py $s)"
-#~ msgstr ""
-#~ "Kommando Slicing\n"
-#~ "   Vorgabe:\n"
-#~ "       python skeinforge/skeinforge_application/skeinforge_utilities/"
-#~ "skeinforge_craft.py $s)"
-
-#~ msgid ""
-#~ "Slice settings command\n"
-#~ "   default:\n"
-#~ "       python skeinforge/skeinforge_application/skeinforge.py"
-#~ msgstr ""
-#~ "Kommando Slicing Einstellungen\n"
-#~ "   Vorgabe:\n"
-#~ "       python skeinforge/skeinforge_application/skeinforge.py"
+msgstr "Eine Ausnahme abgefangen, beendet mit:"
