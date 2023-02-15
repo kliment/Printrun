@@ -24,6 +24,8 @@ import shlex
 import locale
 import logging
 
+from pathlib import Path
+
 DATADIR = os.path.join(sys.prefix, 'share')
 
 
@@ -80,6 +82,11 @@ def setup_logging(out, filepath = None, reset_handlers = False):
     if filepath:
         if os.path.isdir(filepath):
             filepath = os.path.join(filepath, "printrun.log")
+        else:
+            # Fallback for logging path of non console windows applications:
+            # Use users home directory in case the file path in printrunconf.ini
+            # is not valid or do not exist, see issue #1300
+            filepath = os.path.join(Path.home(), "printrun.log")
         formatter = LogFormatter("%(asctime)s - [%(levelname)s] %(message)s", "%(asctime)s - %(message)s")
         logging_handler = logging.FileHandler(filepath)
         logging_handler.setFormatter(formatter)

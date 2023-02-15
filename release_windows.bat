@@ -25,10 +25,10 @@ rem **  10. Go to directory .\dist, list files and ends the activity            
 rem **                                                                                **
 rem **  Steps, you need to do manually before running this batch:                     **
 rem **                                                                                **
-rem **  1. Install python 64-bit (3.10.x is actually preferred version for            **
-rem **     Windows 10 and newer)                                                      **
-rem **     https://www.python.org/downloads/release/python-379/                       **
-rem **     In case you use an other Python version, check line 88  and adjust         **
+rem **  1. Install python 64-bit (3.10.x is actually preferred and standard version   **
+rem **     for Windows 10)                                                            **
+rem **     https://www.python.org/downloads/release                                   **
+rem **     In case you use an other Python version, check line 91 and adjust          **
 rem **     the parameter accordingly to build your virtual environment.               **
 rem **  2. Install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
@@ -40,9 +40,11 @@ rem **     Windows version, available. You can find a striped version of GTK3   
 rem **     with all needed DLL binary files in directory PrintrunGTK. Please run      **
 rem **     following git commands before you run this batch in case you don't find    **
 rem **     this directory in your local repository:                                   **
-rem **       git checkout master                                                      ** 
-rem **       git submodule add https://github.com/DivingDuck/PrintrunGTK3             **
-rem **       git submodule update --init --recursive                                  **
+rem **        git checkout master                                                     ** 
+rem **        git submodule add https://github.com/DivingDuck/PrintrunGTK3            **
+rem **        git submodule update --init --recursive                                 **
+rem **     In case the directory PrintrunGTK3 exist but is empty:                     **
+rem **        git submodule update --init --recursive                                 **
 rem **     You can find a listing of all used DLL's in file VERSION as reference and  **
 rem **     further informations about the linked submodule here:                      **
 rem **     https://github.com/DivingDuck/PrintrunGTK3                                 **
@@ -54,7 +56,7 @@ rem **                                                                          
 rem **   https://github.com/wxWidgets/Phoenix/commit/d3bdb14365ca754e83732cccd04e94a2ded5029f
 rem **                                                                                **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2023-01-31, Status: working                               **
+rem **  Author: DivingDuck, 2023-02-02, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -123,9 +125,9 @@ echo ****** check for and update outdated modules  ******
 echo ****************************************************
 for /F "skip=2 delims= " %%i in ('pip list --outdated') do py -m pip install --upgrade %%i
 
-echo ****************************************************************************
-echo ****** Bug on wxPython 4.1.x workaround for Python 3.x and Windows 10 ******
-echo ****************************************************************************
+rem echo ****************************************************************************
+rem echo ****** Bug on wxPython 4.1.x workaround for Python 3.x and Windows 10 ******
+rem echo ****************************************************************************
 rem wxPython 4.2.0 is available. Snapshot version is not needed now. Hopefully.  #2022-08-05
 rem pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
 

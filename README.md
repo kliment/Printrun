@@ -10,13 +10,15 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
 
 # CONTRIBUTORS
 
-An enormous number of people helped make Printrun. See the list [here](CONTRIBUTORS.md)
+An enormous number of people helped make Printrun. See the list
+[here](CONTRIBUTORS.md).
 
 # GETTING PRINTRUN
 
-This section suggests using precompiled binaries, this way you get everything bundled into one single package for an easy installation.
-
-If you want the newest, shiniest features, you can run Printrun from source using the instructions further down this README.
+This section suggests using precompiled binaries, this way you get everything
+bundled into one single package for an easy installation. If you want the
+newest, shiniest features, you can [run Printrun from
+source](#running-from-source).
 
 ## Windows
 
@@ -32,7 +34,8 @@ Note for OSX users: if OSX tells you `"pronterface.app" cannot be opened because
 ## Linux
 ### Ubuntu/Debian
 
-You can install Printrun from official packages. Install the whole package using
+You can install Printrun from official packages. Install the whole package
+using:
 
 ```
 sudo apt update
@@ -42,8 +45,6 @@ sudo apt install printrun
 Or get only apps you need by
 
 `sudo apt install pronsole` or `pronterface` or `plater`
-
-Only Printrun 1 is currently available for users running Debian 10, Ubuntu 18.04 or any earlier versions. Printrun 2 must be [run from source](https://github.com/kliment/Printrun/tree/master#running-from-source).
 
 ### Chrome OS
 
@@ -84,7 +85,7 @@ Run Printrun for source if you want to test out the latest features.
 
 To use pronterface, you need:
 
-  * Python 3 (ideally 3.6),
+  * Python 3 (ideally 3.10),
   * pyserial (or python3-serial on ubuntu/debian)
   * pyreadline (not needed on Linux)
   * wxPython 4
@@ -154,15 +155,31 @@ cd Printrun
 
 ### Windows
 
-Download and install [Python 3.6](https://www.python.org/downloads/) and follow the **Python virtual environment** section above except use the following to create and activate the virtual environment and install dependencies:
+First download and install [GIT for Windows](https://git-scm.com/downloads), [Python 3.10](https://www.python.org/downloads/) and a [C-compiler environment](https://wiki.python.org/moin/WindowsCompilers/).
+For the next steps we need a CMD window or a PowerShell window. You can use Windows Terminal for this as well.
+Create and navigate to a directory of your choice where you want to download the source files of this repository and follow the next steps:
 
+CMD
 ```cmd
-> py -3 -m venv venv
-> venv\Scripts\activate
-> python -m pip install -r requirements.txt
-> python pronterface.py
+> git clone https://github.com/kliment/Printrun.git
+> cd Printrun
+> git submodule update --init --recursive
+> release_windows.bat
 ```
 
+PowerShell:
+```ps
+> git clone https://github.com/kliment/Printrun.git
+> cd Printrun
+> git submodule update --init --recursive
+> ./release_windows.bat
+```
+
+The script above will clone this repository and the submodule PrintrunGTK3. The script 'release_windows.bat' will install a virtual environment named v3, download all needed python libraries and compile the binaries for Pronterface.exe and Pronsole.exe.
+You will find the files in the new created directory 'dist'. You will find further and more detailed information in the script release_windows.bat. Further information for the linked submodul: [PrintrunGTK3](https://github.com/DivingDuck/PrintrunGTK3)
+Run Pronterface or Pronsole from the binary files or from source calling pronterface.py for the GUI version and pronsole.py for the commandline version.
+
+Run 'release_windows.bat' when ever you make changes or updates. With each new run it will compile the binaries and update all involved libraries in the virtual environment if needed. Delete the virtual environment if you have problems with it. Use 'git submodule update --init --recursive' for updating the submodule
 
 ### macOS
 
@@ -207,7 +224,7 @@ If the Slic3r integration option (_Settings_ > _Options_ > _User interface_ > _E
 
 To use pronsole, you need:
 
-  * Python 3 (ideally 3.6),
+  * Python 3 (ideally 3.10),
   * pyserial (or python3-serial on ubuntu/debian) and
   * pyreadline (not needed on Linux)
 
@@ -219,7 +236,7 @@ The "skeinforge" folder must be in the same folder as pronsole.py
 
 ## USING PRINTCORE
 
-To use printcore you need Python 3 (ideally 3.6) and pyserial (or python3-serial on ubuntu/debian)
+To use printcore you need Python 3 (ideally 3.10) and pyserial (or python3-serial on ubuntu/debian)
 See pronsole for an example of a full-featured host, the bottom of printcore.py for a simple command-line
 sender, or the following code example:
 
