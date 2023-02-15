@@ -8,6 +8,9 @@ stable release.
 
 ### New Features
 
+ - Windows binaries restricted to Python 3.10 only (#1311)
+ - Improved German translation (#1311)
+ - Updated translation templates (#1311)
  - Dropped support for Windows 32-bit executable (0c296ba)
  - Added PrintrunGTK3 sub-module (0c296ba)
    * Bundled Windows GTK3 libraries for the Projector tool
@@ -20,6 +23,7 @@ stable release.
 
 ### Fixed Bugs
 
+ - Invalid log file path crashed the Windows app (#1300)
  - Errors on Projector tool (0c296ba)
  - Errors on Excluder tool (#1307)
  - Unresponsive GUI (#1303)
