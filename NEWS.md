@@ -8,6 +8,7 @@ stable release.
 
 ### New Features
 
+ - Separate binaries provided for macOS versions 10, 11 and 12 (#1317)
  - Windows binaries restricted to Python 3.10 only (#1311)
  - Improved German translation (#1311)
  - Updated translation templates (#1311)
@@ -33,7 +34,7 @@ stable release.
  - Temperature graph empty or missing extruders (#1237)
  - Princore runSmallScript incorrectly handled comments (#1163)
 
-### Administration
+### Administrative
 
  - Updated Windows and macOS CI/CD procedures
  - Added CONTRIBUTORS.md to properly credit all the community (#1249)
