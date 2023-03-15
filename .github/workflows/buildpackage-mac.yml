@@ -55,5 +55,5 @@ jobs:
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
-        name: macosapp_${{ matrix.os }}_${{ matrix.architecture }}_${{ matrix.python-version }}
+        name: ${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: dist/pronterface-app.zip

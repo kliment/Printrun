@@ -85,5 +85,5 @@ jobs:
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
-        name: exe_${{ matrix.os }}_${{ matrix.architecture }}_${{ matrix.python-version }}
+        name: ${{ github.ref_name }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: dist/pronterface.exe
