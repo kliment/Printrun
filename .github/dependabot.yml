@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"  # location of `.github/workflows`
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+
+  - package-ecosystem: "pip"
+    directory: "/"  # location of `requirements.txt` and/or `pyproject.toml`
+    schedule:
+      interval: "weekly"
+      day: "thursday"
