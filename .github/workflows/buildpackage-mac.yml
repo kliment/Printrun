@@ -52,8 +52,24 @@ jobs:
         # Zip app manually to avoid losing execute permissions for binary file in app
         cd dist
         zip -r -X pronterface-app.zip pronterface.app
+
+    - name: Configuration for releases
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        echo "EXE_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+
+    - name: Configuration for pushes
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        echo "EXE_NAME='printrun-nightly'" >> $GITHUB_ENV
+
+    - name: Configuration for pull requests
+      if: ${{ github.event_name != 'release' && github.event_name != 'push' }}
+      run: |
+        echo "EXE_NAME='printrun-test'" >> $GITHUB_ENV
+
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}
+        name: ${{ env.EXE_NAME }}_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: dist/pronterface-app.zip
