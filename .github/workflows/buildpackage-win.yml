@@ -82,8 +82,24 @@ jobs:
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean pronterface.spec -y
+
+    - name: Configuration for releases
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        "EXE_NAME=${{ github.ref_name }}" >> $env:GITHUB_ENV
+
+    - name: Configuration for pushes
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        "EXE_NAME=printrun-nightly" >> $env:GITHUB_ENV
+
+    - name: Configuration for pull requests
+      if: ${{ github.event_name != 'release' && github.event_name != 'push' }}
+      run: |
+        "EXE_NAME=printrun-test" >> $env:GITHUB_ENV
+
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ github.ref_name }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
+        name: ${{ env.EXE_NAME }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: dist/pronterface.exe
