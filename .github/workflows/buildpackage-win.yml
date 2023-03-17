@@ -86,17 +86,17 @@ jobs:
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
       run: |
-        echo "EXE_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+        "EXE_NAME=${{ github.ref_name }}" >> $env:GITHUB_ENV
 
     - name: Configuration for pushes
       if: ${{ github.event_name == 'push' }}
       run: |
-        echo "EXE_NAME=printrun-nightly" >> $GITHUB_ENV
+        "EXE_NAME=printrun-nightly" >> $env:GITHUB_ENV
 
     - name: Configuration for pull requests
       if: ${{ github.event_name != 'release' && github.event_name != 'push' }}
       run: |
-        echo "EXE_NAME=printrun-test" >> $GITHUB_ENV
+        "EXE_NAME=printrun-test" >> $env:GITHUB_ENV
 
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v2
