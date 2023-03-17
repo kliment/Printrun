@@ -99,7 +99,7 @@ jobs:
         "EXE_NAME=printrun-test" >> $env:GITHUB_ENV
 
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ env.EXE_NAME }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: dist/pronterface.exe

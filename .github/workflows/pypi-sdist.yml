@@ -24,7 +24,7 @@ jobs:
       run: |
         python setup.py sdist
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: sdist
         path: dist/*.tar.gz
