@@ -49,7 +49,7 @@ except:
     logging.error(_("WX >= 4 is not installed. This program requires WX >= 4 to run."))
     raise
 
-from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit
+from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit, getSpace
 
 winsize = (800, 500)
 layerindex = 0
@@ -1077,6 +1077,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
         self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"), self.update_bed_viz)
+        #self.settings._add(ComboSetting("extruders", "1", ("0", "1", "2", "3", "4", "5"), _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(BooleanSetting("display_progress_on_printer", False, _("Display progress on printer"), _("Show progress on printers display (sent via M117, might not be supported by all printers)"), "Printer"))
@@ -1084,15 +1085,15 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("cutting_as_extrusion", True, _("Display cutting moves"), _("Show moves where spindle is active as printing moves"), "Printer"))
         self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), ], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
         #self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), _("Tabbed"), _("Tabbed with platers")], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
-        self.settings._add(ComboSetting("controlsmode", "Standard", ("Standard", "Mini"), _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
+        self.settings._add(ComboSetting("controlsmode", _("Standard"), (_("Standard"), _("Mini"), ), _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
-        self.settings._add(ComboSetting("mainviz", "3D", ("2D", "3D", "None"), _("Main visualization"), _("Select visualization for main window."), "Viewer"), self.reload_ui)
+        self.settings._add(ComboSetting("mainviz", "3D", ("2D", "3D", _("None")), _("Main visualization"), _("Select visualization for main window."), "Viewer"), self.reload_ui)
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "Viewer"), self.reload_ui)
         self.settings._add(StaticTextSetting("separator_3d_viewer", _("3D viewer options"), "", group = "Viewer"))
         self.settings._add(BooleanSetting("light3d", False, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "Viewer"), self.reload_ui)
         self.settings._add(BooleanSetting("perspective", False, _("Use a perspective view instead of orthographic"), _("A perspective view looks more realistic, but is a bit more confusing to navigate"), "Viewer"), self.reload_ui)
-        self.settings._add(ComboSetting("antialias3dsamples", "0", ["0", "2", "4", "8"], _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "Viewer"), self.reload_ui)
+        self.settings._add(ComboSetting("antialias3dsamples", "0", ("0", "2", "4", "8"), _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "Viewer"), self.reload_ui)
         self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "Viewer"))
         self.settings._add(FloatSpinSetting("gcview_path_width", 0.4, 0.01, 2, _("Extrusion width for 3D viewer"), _("Width of printed path in 3D viewer"), "Viewer", increment = 0.05), self.update_gcview_params)
         self.settings._add(FloatSpinSetting("gcview_path_height", 0.3, 0.01, 2, _("Layer height for 3D viewer"), _("Height of printed path in 3D viewer"), "Viewer", increment = 0.05), self.update_gcview_params)
@@ -1113,7 +1114,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(FloatSpinSetting("preview_extrusion_width", 0.5, 0, 10, _("Preview extrusion width"), _("Width of Extrusion in Preview"), "Viewer", increment = 0.1), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "Viewer"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "Viewer"), self.update_gviz_params)
+        self.settings._add(StaticTextSetting("separator_colors1", _("General"), "", group = "Colors"))
         self.settings._add(ColorSetting("bgcolor", self._preferred_bgcolour_hex(), _("Background color"), _("Pronterface background color"), "Colors", isRGBA=False), self.reload_ui)
+        self.settings._add(StaticTextSetting("separator_colors2", _("Temperature Graph"), "", group = "Colors"))
         self.settings._add(ColorSetting("graph_color_background", "#FAFAC7", _("Graph background color"), _("Color of the temperature graph background"), "Colors", isRGBA=False), self.reload_ui)
         self.settings._add(ColorSetting("graph_color_text", "#172C2C", _("Graph text color"), _("Color of the temperature graph text"), "Colors", isRGBA=False), self.reload_ui)
         self.settings._add(ColorSetting("graph_color_grid", "#5A5A5A", _("Graph grid color"), _("Color of the temperature graph grid"), "Colors", isRGBA=False), self.reload_ui)
@@ -1124,6 +1127,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(ColorSetting("graph_color_ex0target", "#0005FF80", _("Graph ex0 target line color"), _("Color of the temperature graph extruder 0 target temperature line"), "Colors"), self.reload_ui)
         self.settings._add(ColorSetting("graph_color_ex1temp", "#37370080", _("Graph ex1 line color color"), _("Color of the temperature graph extruder 1 temperature line"), "Colors"), self.reload_ui)
         self.settings._add(ColorSetting("graph_color_ex1target", "#37370080", _("Graph ex1 target line color"), _("Color of the temperature graph extruder 1 temperature target line"), "Colors"), self.reload_ui)
+        self.settings._add(StaticTextSetting("separator_colors3", _("3D Viewer"), "", group = "Colors"))
         self.settings._add(ColorSetting("gcview_color_background", "#FAFAC7FF", _("3D view background color"), _("Color of the 3D view background"), "Colors"), self.update_gcview_colors)
         self.settings._add(ColorSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors)
         self.settings._add(ColorSetting("gcview_color_tool0", "#FF000099", _("3D view print moves color"), _("Color of print moves with tool 0 in 3D view"), "Colors"), self.update_gcview_colors)
@@ -2130,8 +2134,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if btndef is None:
                 if i == len(custombuttons) - 1:
                     self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (35, 18), style = wx.BU_EXACTFIT)
-                    b.SetForegroundColour("#4444ff")
-                    b.SetToolTip(wx.ToolTip(_("click to add new custom button")))
+                    #b.SetForegroundColour("#4444ff")
+                    b.SetToolTip(wx.ToolTip(_("Click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
                 else:
                     b = wx.StaticText(self.panel, -1, "")
@@ -2140,8 +2144,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 b.SetToolTip(wx.ToolTip(_("Execute command: ") + btndef.command))
                 if btndef.background:
                     b.SetBackgroundColour(btndef.background)
-                    rr, gg, bb, aa = b.GetBackgroundColour().Get() #last item is alpha
-                    if 0.3 * rr + 0.59 * gg + 0.11 * bb < 60:
+                    if b.GetBackgroundColour().GetLuminance() < 0.5:
                         b.SetForegroundColour("#ffffff")
                 b.custombutton = i
                 b.properties = btndef
@@ -2219,7 +2222,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
                     else:
                         colour = wx.Colour(colour).GetAsString(wx.C2S_NAME | wx.C2S_HTML_SYNTAX)
-                bedit.color.SetValue(colour)
+                bedit.use_colour.SetValue(True)
+                bedit.color.Enable()
+                bedit.color.SetColour(colour)
         else:
             n = len(self.custombuttons)
             while n > 0 and self.custombuttons[n - 1] is None:
@@ -2228,8 +2233,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if n == len(self.custombuttons):
                 self.custombuttons.append(None)
             self.custombuttons[n] = SpecialButton(bedit.name.GetValue().strip(), bedit.command.GetValue().strip(), custom = True)
-            if bedit.color.GetValue().strip() != "":
-                self.custombuttons[n].background = bedit.color.GetValue()
+            if bedit.use_colour.GetValue():
+                self.custombuttons[n].background = bedit.color.GetColour().GetAsString(wx.C2S_CSS_SYNTAX)
             self.cbutton_save(n, self.custombuttons[n])
         wx.CallAfter(bedit.Destroy)
         wx.CallAfter(self.cbuttons_reload)
@@ -2271,6 +2276,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 item = popupmenu.Append(-1, _("Move right >>"))
                 self.Bind(wx.EVT_MENU, lambda e, button = e.GetEventObject(): self.cbutton_order(e, button, 1), item)
                 if obj.custombutton == 63: item.Enable(False)
+                buttonscount = len(getattr(self, "custombuttons_widgets", [])) - 2
+                if obj.custombutton == buttonscount: item.Enable(False)
                 pos = self.panel.ScreenToClient(e.GetEventObject().ClientToScreen(pos))
                 item = popupmenu.Append(-1, _("Remove custom button '%s'") % e.GetEventObject().GetLabelText())
                 self.Bind(wx.EVT_MENU, lambda e, button = e.GetEventObject(): self.cbutton_remove(e, button), item)
@@ -2419,34 +2426,30 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def new_macro(self, e = None):
         dialog = wx.Dialog(self, -1, _("Enter macro name"))
-        text = wx.StaticText(dialog, -1, _("Macro name:"))
-        namectrl = wx.TextCtrl(dialog, -1, style = wx.TE_PROCESS_ENTER)
-        okb = wx.Button(dialog, wx.ID_OK, _("Ok"))
+        panel = wx.Panel(dialog)
+        textsizer = wx.BoxSizer(wx.HORIZONTAL)
+        text = wx.StaticText(panel, -1, _("Macro name:"))
+        namectrl = wx.TextCtrl(panel, -1, style = wx.TE_PROCESS_ENTER)
         dialog.Bind(wx.EVT_TEXT_ENTER,
             lambda e: dialog.EndModal(wx.ID_OK), namectrl)
-        cancel_button = wx.Button(dialog, wx.ID_CANCEL, _("Cancel"))
-
         # Layout
-        ## Group the buttons horizontally
-        buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        buttons_sizer.Add(okb, 0)
-        buttons_sizer.Add(cancel_button, 0)
         ## Set a minimum size for the name control box
         min_size = namectrl.GetTextExtent('Default Long Macro Name')
         namectrl.SetMinSize(wx.Size(min_size.width, -1))
         ## Group the text and the name control box horizontally
-        name_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        name_sizer.Add(text, 0, flag = wx.ALIGN_CENTER)
-        name_sizer.AddSpacer(10)
-        name_sizer.Add(namectrl, 1, wx.EXPAND)
+        topsizer = wx.BoxSizer(wx.VERTICAL)
+        textsizer.Add(text, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT)
+        textsizer.AddSpacer(getSpace('minor'))
+        textsizer.Add(namectrl, 1, wx.EXPAND | wx.ALIGN_LEFT)
+        panel.SetSizer(textsizer)
+        topsizer.Add(panel,1, wx.ALL, getSpace('major'))
         ## Group everything vertically
-        dialog_sizer = wx.BoxSizer(wx.VERTICAL)
-        dialog_sizer.Add(name_sizer, 0, border = 10,
-            flag = wx.LEFT | wx.TOP | wx.RIGHT)
-        dialog_sizer.Add(buttons_sizer, 0, border = 10,
-            flag = wx.ALIGN_CENTER | wx.ALL)
-        dialog.SetSizerAndFit(dialog_sizer)
-        dialog.Centre()
+        topsizer.Add(wx.StaticLine(dialog, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
+        topsizer.Add(dialog.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('minor'))
+        dialog.SetSizer(topsizer)
+        topsizer.Fit(dialog)
+        dialog.CentreOnParent()
+        namectrl.SetFocus()
 
         macro = ""
         if dialog.ShowModal() == wx.ID_OK:
