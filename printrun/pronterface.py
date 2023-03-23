@@ -1077,7 +1077,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("monitor", True, _("Monitor printer status"), _("Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"), "Printer"), self.update_monitor)
         self.settings._add(StringSetting("simarrange_path", "", _("Simarrange command"), _("Path to the simarrange binary to use in the STL plater"), "External"))
         self.settings._add(BooleanSetting("circular_bed", False, _("Circular build platform"), _("Draw a circular (or oval) build platform instead of a rectangular one"), "Printer"), self.update_bed_viz)
-        #self.settings._add(ComboSetting("extruders", "1", ("0", "1", "2", "3", "4", "5"), _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(SpinSetting("extruders", 0, 1, 5, _("Extruders count"), _("Number of extruders"), "Printer"))
         self.settings._add(BooleanSetting("clamp_jogging", False, _("Clamp manual moves"), _("Prevent manual moves from leaving the specified build dimensions"), "Printer"))
         self.settings._add(BooleanSetting("display_progress_on_printer", False, _("Display progress on printer"), _("Show progress on printers display (sent via M117, might not be supported by all printers)"), "Printer"))
@@ -2134,7 +2133,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             if btndef is None:
                 if i == len(custombuttons) - 1:
                     self.newbuttonbutton = b = wx.Button(self.centerpanel, -1, "+", size = (35, 18), style = wx.BU_EXACTFIT)
-                    #b.SetForegroundColour("#4444ff")
                     b.SetToolTip(wx.ToolTip(_("Click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
                 else:
@@ -2276,7 +2274,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 item = popupmenu.Append(-1, _("Move right >>"))
                 self.Bind(wx.EVT_MENU, lambda e, button = e.GetEventObject(): self.cbutton_order(e, button, 1), item)
                 if obj.custombutton == 63: item.Enable(False)
-                buttonscount = len(getattr(self, "custombuttons_widgets", [])) - 2
+                buttonscount = len(self.custombuttons_widgets) - 2
                 if obj.custombutton == buttonscount: item.Enable(False)
                 pos = self.panel.ScreenToClient(e.GetEventObject().ClientToScreen(pos))
                 item = popupmenu.Append(-1, _("Remove custom button '%s'") % e.GetEventObject().GetLabelText())
@@ -2445,7 +2443,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         topsizer.Add(panel,1, wx.ALL, getSpace('major'))
         ## Group everything vertically
         topsizer.Add(wx.StaticLine(dialog, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        topsizer.Add(dialog.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('minor'))
+        topsizer.Add(dialog.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
         dialog.SetSizer(topsizer)
         topsizer.Fit(dialog)
         dialog.CentreOnParent()

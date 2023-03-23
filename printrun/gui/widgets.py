@@ -15,9 +15,10 @@
 
 import wx
 import re
+import platform
 
 def getSpace(a):
-    #this method is used to dehardcode and unify borders and gaps of the interface
+    # This method is used to de-hardcode and unify the borders and gaps of the interface.
     match a:
         case 'major': #e.g. outer border of dialog boxes
             return 12
@@ -25,6 +26,15 @@ def getSpace(a):
             return 8
         case 'mini':
             return 4
+        case 'stddlg':
+            # Differentiation is necessary because wxPyhton behaves slightly differently on different systems.
+            platformname = platform.system()
+            if platformname == 'Windows':
+                return 8
+            elif platformname == 'Darwin':
+                return 4
+            else:
+                return 4 # Not sure yet which value should be used for linux systems
         case 'none':
             return 0
 
@@ -73,7 +83,7 @@ class MacroEditor(wx.Dialog):
         btnsizer.AddButton(self.savebtn)
         btnsizer.AddButton(self.cancelbtn)
         btnsizer.Realize()
-        topsizer.Add(btnsizer, 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('minor'))
+        topsizer.Add(btnsizer, 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
         self.SetSizer(topsizer)
         self.SetMinClientSize((230,150))
         topsizer.Fit(self)
@@ -88,7 +98,7 @@ class MacroEditor(wx.Dialog):
         selection = self.e.GetStringSelection()
         if selection:
             self.finddata.SetFindString(selection)
-        self.finddialog = wx.FindReplaceDialog(self.e, self.finddata, _("Find and replace"), wx.FR_NOWHOLEWORD) #wx.FR_REPLACEDIALOG
+        self.finddialog = wx.FindReplaceDialog(self.e, self.finddata, _("Find..."), wx.FR_NOWHOLEWORD) #wx.FR_REPLACEDIALOG
         # TODO: Setup ReplaceDialog, Setup WholeWord Search, deactivated for now...
         self.finddialog.Show()
 
@@ -240,7 +250,7 @@ class PronterOptionsDialog(wx.Dialog):
         topsizer = wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(notebook, 1, wx.EXPAND | wx.ALL, getSpace('minor'))
         topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('minor'))
+        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
         self.SetSizer(topsizer)
         self.Fit()
         self.CentreOnParent()
@@ -268,19 +278,14 @@ class ButtonEdit(wx.Dialog):
         wx.Dialog.__init__(self, None, title = _("Custom button"),
                            style = wx.DEFAULT_DIALOG_STYLE)
         self.pronterface = pronterface
-        # All widgets except ok/cancel are grouped into a static box for aesthetic and ux reasons
         panel = wx.Panel(self)
-        #panelsizer = wx.BoxSizer
-        #self.sbox = wx.StaticBox(self)
-        #sboxsizer = wx.StaticBoxSizer(self.sbox, wx.VERTICAL)
         grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = getSpace('minor'), vgap = getSpace('minor'))
         grid.AddGrowableCol(1, 1)
         ## Title of the button
         grid.Add(wx.StaticText(panel, -1, _("Button title:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
         self.name = wx.TextCtrl(panel, -1, "")
-        min_size = self.name.GetTextExtent('Default Long Button Name')
-        min_size.width = 260 #overwrite width to make the dialog a bit wider
-        self.name.SetMinSize(wx.Size(min_size.width, -1))
+        dlg_size = 260
+        self.name.SetMinSize(wx.Size(dlg_size, -1))
         grid.Add(self.name, 1, wx.EXPAND)
         ## Colour of the button
         grid.Add(wx.StaticText(panel, -1, _("Colour:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
@@ -310,13 +315,11 @@ class ButtonEdit(wx.Dialog):
         self.macrobtn.Bind(wx.EVT_BUTTON, self.macrob_handler)
         commandsizer.Add(self.macrobtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, getSpace('minor'))
         grid.Add(commandsizer, 1, wx.EXPAND)
-        ## Put it in a box and add ok/cancel buttons
-        #panel.Add(grid, 1, wx.EXPAND | wx.ALL, getSpace('mini'))
         panel.SetSizer(grid)
         topsizer = wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(panel, 0, wx.EXPAND | wx.ALL, getSpace('major'))
         topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('minor'))
+        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
         self.SetSizer(topsizer)
         topsizer.Fit(self)
         self.CentreOnParent()
