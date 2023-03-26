@@ -48,7 +48,8 @@ class DisplayFrame(wx.Frame):
         self.SetBackgroundColour("black")
         self.pic.Hide()
         self.SetDoubleBuffered(True)
-        self.SetPosition((self.control_frame.GetSize().x, 0))
+        #self.SetPosition((self.control_frame.GetSize().x, 0))
+        self.CentreOnParent()
         self.Show()
 
         self.scale = scale
@@ -461,7 +462,8 @@ class SettingsFrame(wx.Frame):
         bs.Add(self.panel, flag=wx.EXPAND)
         self.SetSizerAndFit(bs)
         self.Fit()
-        self.SetPosition((0, 0))
+        #self.SetPosition((0, 0))
+        self.CentreOnParent()
         self.Show()
 
     def __del__(self):

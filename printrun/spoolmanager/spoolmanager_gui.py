@@ -17,6 +17,7 @@
 
 import wx
 from . import spoolmanager
+from printrun.gui.widgets import getSpace
 
 class SpoolManagerMainWindow(wx.Frame):
     """
@@ -28,8 +29,8 @@ class SpoolManagerMainWindow(wx.Frame):
 
     def __init__(self, parent, spool_manager):
         wx.Frame.__init__(self, parent,
-            title = "Spool Manager",
-            style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_FLOAT_ON_PARENT)
+            title = _("Spool Manager"),
+            style = wx.DEFAULT_FRAME_STYLE)
 
         self.statusbar = self.CreateStatusBar()
 
@@ -48,38 +49,45 @@ class SpoolManagerMainWindow(wx.Frame):
 
         # Generate the buttons
         self.new_button = wx.Button(self, wx.ID_ADD)
-        self.new_button.SetToolTip("Add a new spool")
+        self.new_button.SetToolTip(_("Add a new spool"))
         self.edit_button = wx.Button(self, wx.ID_EDIT)
-        self.edit_button.SetToolTip("Edit the selected spool")
+        self.edit_button.SetToolTip(_("Edit the selected spool"))
         self.delete_button = wx.Button(self, wx.ID_DELETE)
-        self.delete_button.SetToolTip("Delete the selected spool")
+        self.delete_button.SetToolTip(_("Delete the selected spool"))
+        
+        self.close_button = wx.Button(self, wx.ID_CLOSE)
 
         # "Program" the buttons
         self.new_button.Bind(wx.EVT_BUTTON, self.onClickAdd)
         self.edit_button.Bind(wx.EVT_BUTTON, self.onClickEdit)
         self.delete_button.Bind(wx.EVT_BUTTON, self.onClickDelete)
+        
+        self.close_button.Bind(wx.EVT_BUTTON, self.onClickClose)
 
         # Layout
         ## Group the buttons
         self.button_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.button_sizer.Add(self.new_button, 1,
-            wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
-        self.button_sizer.Add(self.edit_button, 1,
-            wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
-        self.button_sizer.Add(self.delete_button, 1,
-            wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
+        self.button_sizer.Add(self.new_button, 0,
+            wx.FIXED_MINSIZE | wx.EXPAND | wx.LEFT | wx.BOTTOM, getSpace('minor'))
+        self.button_sizer.Add(self.edit_button, 0,
+            wx.FIXED_MINSIZE | wx.EXPAND | wx.LEFT | wx.BOTTOM, getSpace('minor'))
+        self.button_sizer.Add(self.delete_button, 0,
+            wx.FIXED_MINSIZE | wx.EXPAND | wx.LEFT, getSpace('minor'))
 
         ## Group the buttons with the spool list
-        self.list_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.list_sizer = wx.StaticBoxSizer(wx.HORIZONTAL, self, label = "Spool List")
         self.list_sizer.Add(self.spool_list, 1, wx.EXPAND)
-        self.list_sizer.Add(self.button_sizer, 0, wx.ALIGN_CENTER)
+        self.list_sizer.Add(self.button_sizer, 0, wx.ALIGN_TOP)
 
         ## Layout the whole thing
-        self.full_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.full_sizer.Add(self.current_spools_dialog, 0, wx.EXPAND)
-        self.full_sizer.Add(self.list_sizer, 1, wx.ALL | wx.EXPAND, 10)
+        self.topsizer = wx.BoxSizer(wx.VERTICAL)
+        self.topsizer.Add(self.current_spools_dialog, 0, wx.EXPAND)
+        self.topsizer.Add(self.list_sizer, 1, wx.ALL | wx.EXPAND, getSpace('minor'))
+        self.topsizer.Add(self.close_button, 0, 
+                          wx.FIXED_MINSIZE | wx.ALIGN_RIGHT | wx.BOTTOM | wx.RIGHT, getSpace('minor'))
 
-        self.SetSizerAndFit(self.full_sizer)
+        self.SetSizerAndFit(self.topsizer)
+        self.CentreOnParent()
 
     def onClickAdd(self, event):
         """Open the window for customizing the new spool."""
@@ -92,7 +100,7 @@ class SpoolManagerMainWindow(wx.Frame):
         spool_index = self.spool_list.GetFirstSelected()
         if spool_index == -1 :
             self.statusbar.SetStatusText(
-                "Could not load the spool. No spool selected.")
+                _("Could not load the spool. No spool selected."))
             return 0
         else:
             spool_name = self.spool_list.GetItemText(spool_index)
@@ -102,7 +110,7 @@ class SpoolManagerMainWindow(wx.Frame):
         spool_extruder = self.spool_manager.isLoaded(spool_name)
         if spool_extruder > -1:
             self.statusbar.SetStatusText(
-                "Spool '%s' is already loaded for Extruder %d." % 
+                _("Spool '%s' is already loaded for Extruder %d.") % 
                 (spool_name, spool_extruder))
             return 0
 
@@ -110,7 +118,7 @@ class SpoolManagerMainWindow(wx.Frame):
         self.spool_manager.load(spool_name, extruder)
         self.current_spools_dialog.refreshDialog(self.spool_manager)
         self.statusbar.SetStatusText(
-            "Loaded spool '%s' for Extruder %d." % (spool_name, extruder))
+            _("Loaded spool '%s' for Extruder %d.") % (spool_name, extruder))
 
     def onClickUnload(self, event, extruder):
         """Unload the spool from the correspondent extruder."""
@@ -120,10 +128,10 @@ class SpoolManagerMainWindow(wx.Frame):
             self.spool_manager.unload(extruder)
             self.current_spools_dialog.refreshDialog(self.spool_manager)
             self.statusbar.SetStatusText(
-                "Unloaded spool from Extruder %d." % extruder)
+                _("Unloaded spool from Extruder %d.") % extruder)
         else:
             self.statusbar.SetStatusText(
-                "There is no spool loaded for Extruder %d." % extruder)
+                _("There is no spool loaded for Extruder %d.") % extruder)
 
     def onClickEdit(self, event):
         """Open the window for editing the data of the selected spool."""
@@ -132,7 +140,7 @@ class SpoolManagerMainWindow(wx.Frame):
         spool_index = self.spool_list.GetFirstSelected()
         if spool_index == -1 :
             self.statusbar.SetStatusText(
-                "Could not edit the spool. No spool selected.")
+                _("Could not edit the spool. No spool selected."))
             return 0
 
         # Open the edit window
@@ -148,7 +156,7 @@ class SpoolManagerMainWindow(wx.Frame):
         spool_index = self.spool_list.GetFirstSelected()
         if spool_index == -1 :
             self.statusbar.SetStatusText(
-                "Could not delete the spool. No spool selected.")
+                _("Could not delete the spool. No spool selected."))
             return 0
         else:
             spool_name = self.spool_list.GetItemText(spool_index)
@@ -156,9 +164,9 @@ class SpoolManagerMainWindow(wx.Frame):
 
         # Ask confirmation for deleting
         delete_dialog = wx.MessageDialog(self,
-            message = "Are you sure you want to delete the '%s' spool" %
+            message = _("Are you sure you want to delete the '%s' spool") %
                 spool_name,
-            caption = "Delete Spool",
+            caption = _("Delete Spool"),
             style = wx.YES_NO | wx.ICON_EXCLAMATION)
 
         if delete_dialog.ShowModal() == wx.ID_YES:
@@ -167,8 +175,10 @@ class SpoolManagerMainWindow(wx.Frame):
             self.spool_list.refreshList(self.spool_manager)
             self.current_spools_dialog.refreshDialog(self.spool_manager)
             self.statusbar.SetStatusText(
-                "Deleted spool '%s'." % spool_name)
-
+                _("Deleted spool '%s'.") % spool_name)
+    
+    def onClickClose(self, event):
+        self.Destroy()
 
 class SpoolListView(wx.ListView):
     """
@@ -178,8 +188,8 @@ class SpoolListView(wx.ListView):
     def __init__(self, parent, spool_manager):
         wx.ListView.__init__(self, parent,
             style = wx.LC_REPORT | wx.LC_SINGLE_SEL)
-        self.InsertColumn(0, "Spool", width = wx.LIST_AUTOSIZE_USEHEADER)
-        self.InsertColumn(1, "Filament", width = wx.LIST_AUTOSIZE_USEHEADER)
+        self.InsertColumn(0, _("Spool"), width = wx.LIST_AUTOSIZE_USEHEADER)
+        self.InsertColumn(1, _("Filament"), width = wx.LIST_AUTOSIZE_USEHEADER)
         self.populateList(spool_manager)
 
         # "Program" the layout
@@ -216,11 +226,11 @@ class CurrentSpoolDialog(wx.Panel):
         self.parent = parent
         self.extruders = spool_manager.getExtruderCount()
 
-        full_sizer = wx.BoxSizer(wx.VERTICAL)
+        topsizer = wx.BoxSizer(wx.VERTICAL)
 
         # Calculate the minimum size needed to properly display the
         # extruder information
-        min_size = self.GetTextExtent("    Remaining filament: 0000000.00")
+        min_size = self.GetTextExtent(_("Default Very Long Spool Name"))
 
         # Generate a dialog for every extruder
         self.extruder_dialog = []
@@ -230,17 +240,19 @@ class CurrentSpoolDialog(wx.Panel):
         dialog_sizer = []
         for i in range(self.extruders):
             # Generate the dialog with the spool information
+            textlabel = wx.StaticText(self, label = _("Name:\nRemaining filament:"),
+                          style = wx.ALIGN_RIGHT)
             self.extruder_dialog.append(
                 wx.StaticText(self, style = wx.ST_ELLIPSIZE_END))
             self.extruder_dialog[i].SetMinSize(wx.Size(min_size.width, -1))
 
             # Generate the "load" and "unload" buttons
-            load_button.append(wx.Button(self, label = "Load"))
+            load_button.append(wx.Button(self, label = _("Load")))
             load_button[i].SetToolTip(
-                "Load selected spool for Extruder %d" % i)
-            unload_button.append(wx.Button(self, label = "Unload"))
+                _("Load selected spool for Extruder %d") % i)
+            unload_button.append(wx.Button(self, label = _("Unload")))
             unload_button[i].SetToolTip(
-                "Unload the spool for Extruder %d" % i)
+                _("Unload the spool for Extruder %d") % i)
 
             # "Program" the buttons
             load_button[i].Bind(wx.EVT_BUTTON,
@@ -251,21 +263,22 @@ class CurrentSpoolDialog(wx.Panel):
             # Layout
             button_sizer.append(wx.BoxSizer(wx.VERTICAL))
             button_sizer[i].Add(load_button[i], 0,
-                wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
+                wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.BOTTOM, getSpace('minor'))
             button_sizer[i].Add(unload_button[i], 0,
                 wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
 
-            dialog_sizer.append(wx.BoxSizer(wx.HORIZONTAL))
-            dialog_sizer[i].Add(self.extruder_dialog[i], 1, wx.ALIGN_CENTER)
-            dialog_sizer[i].AddSpacer(10)
+            dialog_sizer.append(wx.StaticBoxSizer(wx.HORIZONTAL, self, label = _("Spool for Extruder %d:") % i))
+            dialog_sizer[i].Add(textlabel, 0, wx.ALIGN_TOP)
+            dialog_sizer[i].AddSpacer(getSpace('major'))
+            dialog_sizer[i].Add(self.extruder_dialog[i], 1, wx.ALIGN_TOP)
+            dialog_sizer[i].AddSpacer(getSpace('major'))
             dialog_sizer[i].Add(button_sizer[i], 0, wx.EXPAND)
 
-            full_sizer.Add(dialog_sizer[i], 0, wx.ALL | wx.EXPAND, 10)
+            topsizer.Add(dialog_sizer[i], 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, getSpace('major'))
 
         self.refreshDialog(spool_manager)
 
-        self.SetSizerAndFit(full_sizer)
-
+        self.SetSizerAndFit(topsizer)
 
     def refreshDialog(self, spool_manager):
         """Retrieve the current spools from the Spool Manager."""
@@ -273,9 +286,8 @@ class CurrentSpoolDialog(wx.Panel):
         for i in range(self.extruders):
             spool_name = spool_manager.getSpoolName(i)
             spool_filament = spool_manager.getRemainingFilament(i)
-            label = ("Spool for Extruder %d:\n" % i +
-                     "    Name:               %s\n" % spool_name +
-                     "    Remaining filament: %.2f" % spool_filament)
+            label = ("%s\n" % spool_name +
+                     "%.2f mm" % spool_filament)
             self.extruder_dialog[i].SetLabelText(label)
 
 
@@ -284,10 +296,10 @@ def checkOverwrite(parent, spool_name):
     """Ask the user whether or not to overwrite the existing spool."""
 
     overwrite_dialog = wx.MessageDialog(parent,
-        message = "A spool with the name '%s'' already exists." %
+        message = _("A spool with the name '%s'' already exists.") %
             spool_name +
-            "Do you wish to overwrite it?",
-        caption = "Overwrite",
+            _("Do you wish to overwrite it?"),
+        caption = _("Overwrite"),
         style = wx.YES_NO | wx.ICON_EXCLAMATION)
 
     if overwrite_dialog.ShowModal() == wx.ID_YES:
@@ -300,45 +312,60 @@ def getFloat(parent, number):
     Check whether the input number is a float. Either return the number or
     return False.
     """
+    if ',' in number:
+        parent.parent.statusbar.SetStatusText(_("Value contains a comma, please use a point for decimal values: %s") % number)
+        return False
+
     try:
         return float(number)
     except ValueError:
-        parent.statusbar.SetStatusText("Unrecognized number: %s" % number)
+        parent.parent.statusbar.SetStatusText(_("Unrecognized number: %s") % number)
         return False
 
-
 # ---------------------------------------------------------------------------
-class SpoolManagerAddWindow(wx.Frame):
+class SpoolManagerAddWindow(wx.Dialog):
     """Window for adding spools."""
 
     def __init__(self, parent):
 
-        wx.Frame.__init__(self, parent,
-            title = "Add Spool",
-            style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_FLOAT_ON_PARENT)
-
-        self.statusbar = self.CreateStatusBar()
+        wx.Dialog.__init__(self, parent,
+            title = _("Add Spool"),
+            style = wx.DEFAULT_DIALOG_STYLE)
 
         self.parent = parent
 
         self.SetIcon(parent.GetIcon())
 
         # Generate the dialogs
-        self.name_dialog = LabeledTextCtrl(self,
-            "Name", "Default Spool", "")
-        self.diameter_dialog = LabeledTextCtrl(self,
-            "Diameter", "1.75", "mm")
-        self.diameter_dialog.SetToolTip(
-            "Typically, either 1.75 mm or 2.85 mm (a.k.a '3')")
-        self.weight_dialog = LabeledTextCtrl(self,
-            "Weight", "1", "Kg")
-        self.density_dialog = LabeledTextCtrl(self,
-            "Density", "1.25", "g/cm^3")
-        self.density_dialog.SetToolTip(
-            "Typical densities are 1.25 g/cm^3 for PLA and 1.08 g/cm^3 for" +
-            " ABS")
-        self.length_dialog = LabeledTextCtrl(self,
-            "Length", "332601.35", "mm")
+        # The wx.TextCtrl variabels need to be declared before the loop, empty
+        self.name_dialog = wx.TextCtrl(self, -1)
+        self.diameter_dialog = wx.TextCtrl(self, -1)
+        self.weight_dialog = wx.TextCtrl(self, -1)
+        self.density_dialog = wx.TextCtrl(self, -1)
+        self.length_dialog = wx.TextCtrl(self, -1)
+
+        # The list contains field-description, textctrl variabel, default value, unit, tooltip;
+        name_dlg = [_("Name:"), self.name_dialog, _("Default Spool"), "", ""]
+        diameter_dlg = [_("Diameter:"), self.diameter_dialog, "1.75", "mm", _("Typically, either 1.75 mm or 2.85 mm")]
+        weight_dlg = [_("Weight:"), self.weight_dialog, "1.0", "kg", ""]
+        density_dlg = [_("Density:"), self.density_dialog, "1.25", "g/cm^3", _("Typical densities are 1.25 g/cm^3 for PLA,\n1.27 g/cm^3 for PETG or 1.08 g/cm^3 for ABS")]
+        length_dlg = [_("Length"), self.length_dialog, "332601.35", "mm", ""]
+        dialog_list = [name_dlg, diameter_dlg, weight_dlg, density_dlg, length_dlg]
+
+        minwidth = self.GetTextExtent('Default Long Spool Name').width
+        grid = wx.FlexGridSizer(rows = 0, cols = 3, hgap = getSpace('minor'), vgap = getSpace('minor'))
+
+        for dialog in dialog_list:
+            grid.Add(wx.StaticText(self, -1, dialog[0], size = (-1, -1), style = wx.TE_RIGHT), 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+            dialog[1].ChangeValue(dialog[2])
+            dialog[1].SetMinSize((minwidth, -1))
+            if dialog[4] != "":
+                dialog[1].SetToolTip(dialog[4])
+            grid.Add(dialog[1])
+            if dialog[3] == "":
+                grid.Add((0,0))
+            else:
+                grid.Add(wx.StaticText(self, -1, dialog[3], size = (-1, -1)), wx.ALIGN_CENTER_VERTICAL)
 
         # "Program" the dialogs
         self.diameter_dialog.Bind(wx.EVT_TEXT, self.calculateLength)
@@ -352,48 +379,44 @@ class SpoolManagerAddWindow(wx.Frame):
 
         # "Program" the bottom buttons
         self.add_button.Bind(wx.EVT_BUTTON, self.onClickAdd)
+        self.add_button.SetDefault()
         self.cancel_button.Bind(wx.EVT_BUTTON, self.onClickCancel)
 
         # Layout
-        ## Group the bottom buttons
-        self.bottom_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.bottom_buttons_sizer.Add(self.add_button, 0, wx.FIXED_MINSIZE)
-        self.bottom_buttons_sizer.Add(self.cancel_button, 0, wx.FIXED_MINSIZE)
+        ## Setup the bottom buttons
+        self.bottom_buttons_sizer = wx.StdDialogButtonSizer()
+        self.bottom_buttons_sizer.SetAffirmativeButton(self.add_button)
+        self.bottom_buttons_sizer.AddButton(self.cancel_button)
+
+        self.bottom_buttons_sizer.Realize()
 
         ## Group the whole window
-        self.full_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.full_sizer.Add(self.name_dialog, 0,
-            wx.TOP | wx.BOTTOM | wx.EXPAND,  10)
-        self.full_sizer.Add(self.diameter_dialog, 0, wx.EXPAND)
-        self.full_sizer.Add(self.weight_dialog, 0, wx.EXPAND)
-        self.full_sizer.Add(self.density_dialog, 0, wx.EXPAND)
-        self.full_sizer.Add(self.length_dialog, 0, wx.EXPAND)
-        self.full_sizer.Add(self.bottom_buttons_sizer, 0,
-            wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 10)
+        self.topsizer = wx.BoxSizer(wx.VERTICAL)
+        self.topsizer.Add(grid, 1, wx.EXPAND | wx.ALL, getSpace('major'))
+        self.topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
+        self.topsizer.Add(self.bottom_buttons_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
 
-        self.SetSizerAndFit(self.full_sizer)
+        self.SetSizerAndFit(self.topsizer)
+        self.CentreOnParent()
+        self.name_dialog.SetFocus()
 
-        # Don't allow this window to be resized in height
-        add_window_size = self.GetSize()
-        self.SetMaxSize((-1, add_window_size.height))
-
-    def onClickAdd(self, event):
+    def onClickAdd(self, ev):
         """Add the new spool and close the window."""
 
-        spool_name = self.name_dialog.field.GetValue()
-        spool_length = getFloat(self, self.length_dialog.field.GetValue())
+        spool_name = self.name_dialog.GetValue()
+        spool_length = getFloat(self, self.length_dialog.GetValue())
 
         # Check whether the length is actually a number
         if not spool_length:
-            self.statusbar.SetStatusText(
-                "ERROR: Unrecognized length: %s." %
-                    self.length_dialog.field.GetValue())
+            self.parent.statusbar.SetStatusText(
+                _("ERROR: Unrecognized length: %s.") %
+                    self.length_dialog.GetValue())
             return -1
 
         # The remaining filament should always be a positive number
         if not spool_length > 0:
-            self.statusbar.SetStatusText(
-                "ERROR: Length is zero or negative: %.2f." % spool_length)
+            self.parent.statusbar.SetStatusText(
+                _("ERROR: Length is zero or negative: %.2f.") % spool_length)
             return -1
 
         # Check whether the name is already used. If it is used, prompt the
@@ -411,32 +434,33 @@ class SpoolManagerAddWindow(wx.Frame):
         self.parent.current_spools_dialog.refreshDialog(
                 self.parent.spool_manager)
         self.parent.statusbar.SetStatusText(
-            "Added new spool '%s'" % spool_name +
-            " with %.2f mm of remaining filament." % spool_length)
+            _("Added new spool '%s'") % spool_name +
+            _(" with %.2f mm of remaining filament.") % spool_length)
 
-        self.Close(True)
+        self.Destroy()
 
     def onClickCancel(self, event):
         """Do nothing and close the window."""
-        self.Close(True)
-        self.parent.statusbar.SetStatusText("")
+        self.Destroy()
 
     def calculateLength(self, event):
         """
         Calculate the length of the filament given the mass, diameter and
         density of the filament. Set the 'Length' field to this quantity.
         """
-
-        mass = getFloat(self, self.weight_dialog.field.GetValue())
-        diameter = getFloat(self, self.diameter_dialog.field.GetValue())
-        density = getFloat(self, self.density_dialog.field.GetValue())
+        print(self.weight_dialog.GetValue())
+        print(self.diameter_dialog.GetValue())
+        print(self.density_dialog.GetValue())
+        mass = getFloat(self, self.weight_dialog.GetValue())
+        diameter = getFloat(self, self.diameter_dialog.GetValue())
+        density = getFloat(self, self.density_dialog.GetValue())
         if mass and diameter and density:
             pi = 3.14159265359
             length = 4e6 * mass / pi / diameter**2 / density
-            self.length_dialog.field.ChangeValue("%.2f" % length)
-            self.statusbar.SetStatusText("")
+            self.parent.statusbar.SetStatusText("")
+            self.length_dialog.ChangeValue("%.2f" % length)
         else:
-            self.length_dialog.field.ChangeValue("---")
+            self.length_dialog.ChangeValue("---")
 
     def calculateWeight(self, event):
         """
@@ -444,52 +468,26 @@ class SpoolManagerAddWindow(wx.Frame):
         density of the filament. Set the 'Weight' field to this value.
         """
 
-        length = getFloat(self, self.length_dialog.field.GetValue())
-        diameter = getFloat(self, self.diameter_dialog.field.GetValue())
-        density = getFloat(self, self.density_dialog.field.GetValue())
+        length = getFloat(self, self.length_dialog.GetValue())
+        diameter = getFloat(self, self.diameter_dialog.GetValue())
+        density = getFloat(self, self.density_dialog.GetValue())
         if length and diameter and density:
             pi = 3.14159265359
             mass = length * pi * diameter**2 * density / 4e6
-            self.weight_dialog.field.ChangeValue("%.2f" % mass)
-            self.statusbar.SetStatusText("")
+            self.parent.statusbar.SetStatusText("")
+            self.weight_dialog.ChangeValue("%.2f" % mass)
         else:
-            self.weight_dialog.field.ChangeValue("---")
-
-
-class LabeledTextCtrl(wx.Panel):
-    """
-    Group together a wxTextCtrl with a preceding and a subsequent wxStaticText.
-    """
-
-    def __init__(self, parent, preceding_text, field_value, subsequent_text):
-        wx.Panel.__init__(self, parent)
-        self.pretext = wx.StaticText(self, label = preceding_text,
-            style = wx.ALIGN_RIGHT)
-        self.field = wx.TextCtrl(self, value = field_value)
-        self.subtext = wx.StaticText(self, label = subsequent_text)
-
-        # Layout the panel
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.sizer.Add(self.pretext, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 10)
-        self.sizer.SetItemMinSize(self.pretext, (80, -1))
-        self.sizer.Add(self.field, 1, wx.EXPAND)
-        self.sizer.Add(self.subtext, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 10)
-        self.sizer.SetItemMinSize(self.subtext, (50, -1))
-
-        self.SetSizerAndFit(self.sizer)
-
+            self.weight_dialog.ChangeValue("---")
 
 # ---------------------------------------------------------------------------
-class SpoolManagerEditWindow(wx.Frame):
+class SpoolManagerEditWindow(wx.Dialog):
     """Window for editing the name or the length of a spool."""
 
     def __init__(self, parent, spool_name, spool_length):
 
-        wx.Frame.__init__(self, parent,
-            title = "Edit Spool",
-            style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_FLOAT_ON_PARENT)
-
-        self.statusbar = self.CreateStatusBar()
+        wx.Dialog.__init__(self, parent,
+            title = _("Edit Spool"),
+            style = wx.DEFAULT_DIALOG_STYLE)
 
         self.parent = parent
 
@@ -501,25 +499,33 @@ class SpoolManagerEditWindow(wx.Frame):
         # Set how many millimeters will the buttons add or subtract
         self.quantities = [-100.0, -50.0, -10.0, 10.0, 50.0, 100.0]
 
+        # All widgets go into a sizer which is assigned to this panel
+        self.panel = wx.Panel(self)
+
         # Generate the name field
-        self.name_field = LabeledTextCtrl(self,
-            "Name", self.old_spool_name, "")
+        self.name_title = wx.StaticText(self.panel, -1, _("Name:"))
+        minwidth = self.GetTextExtent('Default Very Long Spool Name').width
+        self.name_field = wx.TextCtrl(self.panel, -1, self.old_spool_name, style = wx.TE_RIGHT)
+        self.name_field.SetMinSize((minwidth, -1))
 
         # Generate the length field and buttons
-        self.length_title = wx.StaticText(self, label = "Remaining filament:")
-        self.minus3_button = wx.Button(self,
+        self.length_title = wx.StaticText(self.panel, label = _("Remaining filament:"), style = wx.ALIGN_RIGHT)
+        self.length_field = wx.TextCtrl(self.panel, -1,
+            value = str(self.old_spool_length), style = wx.TE_RIGHT)
+        self.length_field.SetMinSize((minwidth, -1))
+        
+        self.minus3_button = wx.Button(self.panel,
             label = str(self.quantities[0]), style = wx.BU_EXACTFIT)
-        self.minus2_button = wx.Button(self,
+        self.minus2_button = wx.Button(self.panel,
             label = str(self.quantities[1]), style = wx.BU_EXACTFIT)
-        self.minus1_button = wx.Button(self,
+        self.minus1_button = wx.Button(self.panel,
             label = str(self.quantities[2]), style = wx.BU_EXACTFIT)
-        self.length_field = wx.TextCtrl(self,
-            value = str(self.old_spool_length))
-        self.plus1_button = wx.Button(self,
+
+        self.plus1_button = wx.Button(self.panel,
             label = "+" + str(self.quantities[3]), style = wx.BU_EXACTFIT)
-        self.plus2_button = wx.Button(self,
+        self.plus2_button = wx.Button(self.panel,
             label = "+" + str(self.quantities[4]), style = wx.BU_EXACTFIT)
-        self.plus3_button = wx.Button(self,
+        self.plus3_button = wx.Button(self.panel,
             label = "+" + str(self.quantities[5]), style = wx.BU_EXACTFIT)
 
         # "Program" the length buttons
@@ -530,8 +536,9 @@ class SpoolManagerEditWindow(wx.Frame):
         self.plus2_button.Bind(wx.EVT_BUTTON, self.changeLength)
         self.plus3_button.Bind(wx.EVT_BUTTON, self.changeLength)
 
-        # Generate the bottom buttons
+        # Generate the bottom buttons        
         self.save_button = wx.Button(self, wx.ID_SAVE)
+        self.save_button.SetDefault()
         self.cancel_button = wx.Button(self, wx.ID_CANCEL)
 
         # "Program" the bottom buttons
@@ -539,66 +546,82 @@ class SpoolManagerEditWindow(wx.Frame):
         self.cancel_button.Bind(wx.EVT_BUTTON, self.onClickCancel)
 
         # Layout
-        ## Group the length field and its correspondent buttons
-        self.length_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.length_sizer.Add(self.minus3_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
-        self.length_sizer.Add(self.minus2_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
-        self.length_sizer.Add(self.minus1_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
-        self.length_sizer.Add(self.length_field, 1, wx.EXPAND)
-        self.length_sizer.Add(self.plus1_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
-        self.length_sizer.Add(self.plus2_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
-        self.length_sizer.Add(self.plus3_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
+        ## Group the length field and its correspondent buttons             
+        self.btn_sizer = wx.StaticBoxSizer(wx.HORIZONTAL, self.panel)
+        self.btn_sizer.Add(self.minus3_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.RIGHT, getSpace('mini'))
+        self.btn_sizer.Add(self.minus2_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.RIGHT, getSpace('mini'))
+        self.btn_sizer.Add(self.minus1_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.RIGHT, getSpace('mini'))
+        self.btn_sizer.AddSpacer(getSpace('major'))
+        self.btn_sizer.Add(self.plus1_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT, getSpace('mini'))
+        self.btn_sizer.Add(self.plus2_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT, getSpace('mini'))
+        self.btn_sizer.Add(self.plus3_button, 0,
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT, getSpace('mini'))
 
         ## Group the bottom buttons
-        self.bottom_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.bottom_buttons_sizer.Add(self.save_button, 0, wx.EXPAND)
-        self.bottom_buttons_sizer.Add(self.cancel_button, 0, wx.EXPAND)
+        self.bottom_buttons_sizer = wx.StdDialogButtonSizer()
+
+        self.bottom_buttons_sizer.AddButton(self.save_button)
+        self.bottom_buttons_sizer.AddButton(self.cancel_button)
+        self.save_button.SetDefault()
+
+        self.bottom_buttons_sizer.Realize()
 
         ## Lay out the whole window
-        self.full_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.full_sizer.Add(self.name_field, 0, wx.EXPAND)
-        self.full_sizer.AddSpacer(10)
-        self.full_sizer.Add(self.length_title, 0,
-            wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
-        self.full_sizer.Add(self.length_sizer, 0,
-            wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
-        self.full_sizer.AddSpacer(10)
-        self.full_sizer.Add(self.bottom_buttons_sizer, 0, wx.ALIGN_CENTER)
+        grid = wx.GridBagSizer(hgap = getSpace('minor'), vgap = getSpace('minor'))
+        
+        grid.Add((getSpace('mini'),getSpace('mini')), pos = (0, 0), span = (1, 4),
+                                    border = 0, flag = 0) #pos = row, col, span = rowspan, colspan
+        grid.Add(self.name_title, pos = (1, 1), span = (1, 1),
+                                    border = 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+        grid.Add(self.name_field, pos = (1, 2), span = (1, 1),
+                                    border = 0, flag = wx.ALIGN_LEFT)
+        grid.Add(self.length_title, pos = (2, 1), span = (1, 1),
+                                    border = 0, flag = wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+        grid.Add(self.length_field, pos = (2, 2), span = (1, 1),
+                                    border = 0, flag = wx.ALIGN_LEFT)
+        grid.Add(self.btn_sizer, pos = (3, 1), span = (1, 2),
+                                    border = 0, flag = wx.ALIGN_CENTER | wx.EXPAND)
+        grid.Add((getSpace('mini'),getSpace('mini')), pos = (3, 3), span = (1, 1),
+                                    border = 0, flag = 0)
 
-        self.SetSizerAndFit(self.full_sizer)
+        self.panel.SetSizer(grid)
+        topsizer = wx.BoxSizer(wx.VERTICAL)
+        topsizer.Add(self.panel, wx.EXPAND)
+        topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND | wx.TOP, getSpace('mini'))
+        topsizer.Add(self.bottom_buttons_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
 
-        # Don't allow this window to be resized in height
-        edit_window_size = self.GetSize()
-        self.SetMaxSize((-1, edit_window_size.height))
+        self.SetSizer(topsizer)
+        self.Fit()
+        self.CentreOnParent()
+        self.name_field.SetFocus()
 
     def changeLength(self, event):
         new_length = getFloat(self, self.length_field.GetValue())
         if new_length:
             new_length = new_length + float(event.GetEventObject().GetLabel())
             self.length_field.ChangeValue("%.2f" % new_length)
-            self.statusbar.SetStatusText("")
+            #self.statusbar.SetStatusText("")
 
     def onClickSave(self, event):
 
-        new_spool_name = self.name_field.field.GetValue()
+        new_spool_name = self.name_field.GetValue()
         new_spool_length = getFloat(self, self.length_field.GetValue())
 
         # Check whether the length is actually a number
         if not new_spool_length:
             self.statusbar.SetStatusText(
-                "ERROR: Unrecognized length: %s." %
+                _("ERROR: Unrecognized length: %s.") %
                     self.length_field.GetValue())
             return -1
 
         if not new_spool_length > 0:
             self.statusbar.SetStatusText(
-                "ERROR: Length is zero or negative: %.2f." % new_spool_length)
+                _("ERROR: Length is zero or negative: %.2f.") % new_spool_length)
             return -1
 
         # Check whether the "old" spool was loaded
@@ -629,11 +652,11 @@ class SpoolManagerEditWindow(wx.Frame):
         self.parent.current_spools_dialog.refreshDialog(
             self.parent.spool_manager)
         self.parent.statusbar.SetStatusText(
-            "Edited spool '%s'" % new_spool_name +
-            " with %.2f mm of remaining filament." % new_spool_length)
+            _("Edited spool '%s'") % new_spool_name +
+            _(" with %.2f mm of remaining filament.") % new_spool_length)
 
-        self.Close(True)
+        self.Destroy()
 
     def onClickCancel(self, event):
-            self.Close(True)
+            self.Destroy()
             self.parent.statusbar.SetStatusText("")
