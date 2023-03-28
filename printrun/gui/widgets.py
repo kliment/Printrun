@@ -15,65 +15,135 @@
 
 import wx
 import re
+import platform
+
+def getSpace(a):
+    # This method is used to de-hardcode and unify the borders and gaps of the interface.
+    match a:
+        case 'major': #e.g. outer border of dialog boxes
+            return 12
+        case 'minor': #e.g. border of inner elements
+            return 8
+        case 'mini':
+            return 4
+        case 'stddlg':
+            # Differentiation is necessary because wxPyhton behaves slightly differently on different systems.
+            platformname = platform.system()
+            if platformname == 'Windows':
+                return 8
+            elif platformname == 'Darwin':
+                return 4
+            else:
+                return 4 # Not sure yet which value should be used for linux systems
+        case 'none':
+            return 0
 
 class MacroEditor(wx.Dialog):
     """Really simple editor to edit macro definitions"""
 
     def __init__(self, macro_name, definition, callback, gcode = False):
         self.indent_chars = "  "
-        title = "  macro %s"
+        title = "  Macro %s"
         if gcode:
             title = "  %s"
         self.gcode = gcode
         wx.Dialog.__init__(self, None, title = title % macro_name,
                            style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         self.callback = callback
-        self.panel = wx.Panel(self, -1)
+        panel = wx.Panel(self)
+        panelsizer = wx.BoxSizer(wx.VERTICAL)
         titlesizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.titletext = wx.StaticText(self.panel, -1, "              _")  # title%macro_name)
-        titlesizer.Add(self.titletext, 1)
-        self.findb = wx.Button(self.panel, -1, _("Find"), style = wx.BU_EXACTFIT)  # New button for "Find" (Jezmy)
-        self.findb.Bind(wx.EVT_BUTTON, self.find)
-        self.okb = wx.Button(self.panel, -1, _("Save"), style = wx.BU_EXACTFIT)
-        self.okb.Bind(wx.EVT_BUTTON, self.save)
+        self.titletext = wx.StaticText(panel, -1, "              _")  # title%macro_name)
+        titlesizer.Add(self.titletext, 1, wx.ALIGN_CENTER_VERTICAL)
+        self.findbtn = wx.Button(panel, -1, _(" Find "), style = wx.BU_EXACTFIT)  # New button for "Find" (Jezmy)
+        self.findbtn.Bind(wx.EVT_BUTTON, self.on_find)
+        self.Bind(wx.EVT_FIND, self.on_find_find)
+        self.Bind(wx.EVT_FIND_NEXT, self.on_find_find)
+        self.Bind(wx.EVT_FIND_CLOSE, self.on_find_cancel)
         self.Bind(wx.EVT_CLOSE, self.close)
-        titlesizer.Add(self.findb)
-        titlesizer.Add(self.okb)
-        self.cancelb = wx.Button(self.panel, -1, _("Cancel"), style = wx.BU_EXACTFIT)
-        self.cancelb.Bind(wx.EVT_BUTTON, self.close)
-        titlesizer.Add(self.cancelb)
-        topsizer = wx.BoxSizer(wx.VERTICAL)
-        topsizer.Add(titlesizer, 0, wx.EXPAND)
-        self.e = wx.TextCtrl(self.panel, style = wx.HSCROLL | wx.TE_MULTILINE | wx.TE_RICH2, size = (400, 400))
+        titlesizer.Add(self.findbtn, 0, wx.ALIGN_CENTER_VERTICAL)
+        panelsizer.Add(titlesizer, 0, wx.EXPAND | wx.ALL, getSpace('minor'))
+        self.e = wx.TextCtrl(panel, style = wx.HSCROLL | wx.TE_MULTILINE | wx.TE_RICH2, size = (400, 400)) #style = wx.HSCROLL | 
         if not self.gcode:
             self.e.SetValue(self.unindent(definition))
         else:
             self.e.SetValue("\n".join(definition))
-        topsizer.Add(self.e, 1, wx.ALL | wx.EXPAND)
-        self.panel.SetSizer(topsizer)
-        topsizer.Layout()
+        panelsizer.Add(self.e, 1, wx.EXPAND)
+        panel.SetSizer(panelsizer)
+        topsizer = wx.BoxSizer(wx.VERTICAL)
+        topsizer.Add(panel, 1, wx.EXPAND | wx.ALL, getSpace('none'))
+        # No StaticLine in this case bc the TextCtrl acts as a divider
+        #topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
+        btnsizer = wx.StdDialogButtonSizer()
+        self.savebtn = wx.Button(self, wx.ID_SAVE)
+        self.savebtn.SetDefault()
+        self.savebtn.Bind(wx.EVT_BUTTON, self.save)
+        self.cancelbtn = wx.Button(self, wx.ID_CANCEL)
+        self.cancelbtn.Bind(wx.EVT_BUTTON, self.close)
+        btnsizer.AddButton(self.savebtn)
+        btnsizer.AddButton(self.cancelbtn)
+        btnsizer.Realize()
+        topsizer.Add(btnsizer, 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
+        self.SetSizer(topsizer)
+        self.SetMinClientSize((230,150))
         topsizer.Fit(self)
+        self.CentreOnParent()
         self.Show()
         self.e.SetFocus()
 
-    def find(self, ev):
+    def on_find(self, ev):
         # Ask user what to look for, find it and point at it ...  (Jezmy)
-        S = self.e.GetStringSelection()
-        if not S:
-            S = "Z"
-        FindValue = wx.GetTextFromUser('Please enter a search string:', caption = "Search", default_value = S, parent = None)
-        somecode = self.e.GetValue()
-        position = somecode.find(FindValue, self.e.GetInsertionPoint())
-        if position == -1:
-            self.titletext.SetLabel(_("Not Found!"))
-        else:
-            self.titletext.SetLabel(str(position))
+        self.findbtn.Disable()
+        self.finddata = wx.FindReplaceData(wx.FR_DOWN)   # initializes and holds search parameters #wx.FR_DOWN
+        selection = self.e.GetStringSelection()
+        if selection:
+            self.finddata.SetFindString(selection)
+        self.finddialog = wx.FindReplaceDialog(self.e, self.finddata, _("Find..."), wx.FR_NOWHOLEWORD) #wx.FR_REPLACEDIALOG
+        # TODO: Setup ReplaceDialog, Setup WholeWord Search, deactivated for now...
+        self.finddialog.Show()
 
-            # ananswer = wx.MessageBox(str(numLines)+" Lines detected in file\n"+str(position), "OK")
-            self.e.SetFocus()
-            self.e.SetInsertionPoint(position)
-            self.e.SetSelection(position, position + len(FindValue))
-            self.e.ShowPosition(position)
+    def on_find_cancel(self, ev):
+        self.findbtn.Enable()
+        self.titletext.SetLabel("              _")
+        self.finddialog.Destroy()
+    
+    def on_find_find(self, ev):
+        findstring = self.finddata.GetFindString()
+        macrocode = self.e.GetValue()
+        
+        if self.e.GetStringSelection().lower() == findstring.lower():
+            # If the desired string is already selected, change the position to jump to the next one.
+            if self.finddata.GetFlags() % 2 == 1:
+                self.e.SetInsertionPoint(self.e.GetInsertionPoint() + len(findstring))
+            else:
+                self.e.SetInsertionPoint(self.e.GetInsertionPoint() - len(findstring))
+        
+        if int(self.finddata.GetFlags() / 4) != 1:
+            # When search is not case-sensitve, convert the whole string to lowercase
+            findstring = findstring.casefold()
+            macrocode = macrocode.casefold()
+
+        # The user can choose to search upwards or downwards
+        if self.finddata.GetFlags() % 2 == 1:
+            stringpos = macrocode.find(findstring, self.e.GetInsertionPoint())
+        else:
+            stringpos = macrocode.rfind(findstring, 0, self.e.GetInsertionPoint())
+        
+        if stringpos == -1 and self.finddata.GetFlags() % 2 == 1:
+            self.titletext.SetLabel(_("End of macro, jumped to first line"))
+            stringpos = 0 #jump to the beginning
+            self.e.SetInsertionPoint(stringpos)
+            self.e.ShowPosition(stringpos)
+        elif stringpos == -1 and self.finddata.GetFlags() % 2 == 0:
+            self.titletext.SetLabel(_("Begin of macro, jumped to last line"))
+            stringpos = self.e.GetLastPosition() #jump to the end
+            self.e.SetInsertionPoint(stringpos)
+            self.e.ShowPosition(stringpos)
+        else:
+            # TODO: Implement a Not Found state when no single match was found
+            self.titletext.SetLabel(_("Found!"))
+            self.e.SetSelection(stringpos, stringpos + len(findstring))
+            self.e.ShowPosition(stringpos)
 
     def ShowMessage(self, ev, message):
         dlg = wx.MessageDialog(self, message,
@@ -126,11 +196,8 @@ class PronterOptionsDialog(wx.Dialog):
     """Options editor"""
     def __init__(self, pronterface):
         wx.Dialog.__init__(self, parent = None, title = _("Edit settings"),
-                           size = (400, 500), style = wx.DEFAULT_DIALOG_STYLE)
-        panel = wx.Panel(self)
-        header = wx.StaticBox(panel, label = _("Settings"))
-        sbox = wx.StaticBoxSizer(header, wx.VERTICAL)
-        self.notebook = notebook = wx.Notebook(panel)
+                           size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE)
+        self.notebook = notebook = wx.Notebook(self)
         all_settings = pronterface.settings._all_settings()
         group_list = []
         groups = {}
@@ -143,27 +210,33 @@ class PronterOptionsDialog(wx.Dialog):
                 groups[setting.group] = []
             groups[setting.group].append(setting)
         for group in group_list:
-            grouppanel = wx.Panel(notebook, -1)
+            grouppanel = wx.ScrolledWindow(notebook, -1, style = wx.VSCROLL)
+            # Setting the scrollrate based on the systemfont
+            fontsize = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT).GetPixelSize()
+            grouppanel.SetScrollRate(fontsize.x, fontsize.y)
             notebook.AddPage(grouppanel, SETTINGS_GROUPS[group])
             settings = groups[group]
-            grid = wx.GridBagSizer(hgap = 8, vgap = 2)
+            grid = wx.GridBagSizer(hgap = getSpace('minor'), vgap = getSpace('mini'))
             current_row = 0
+            # This gives the first entry on the page a tiny bit of extra space to the top
+            grid.Add((12, getSpace('mini')), pos = (current_row, 0), span = (1, 2))
+            current_row += 1
             for setting in settings:
                 if setting.name.startswith("separator_"):
                     sep = wx.StaticLine(grouppanel, size = (-1, 5), style = wx.LI_HORIZONTAL)
                     grid.Add(sep, pos = (current_row, 0), span = (1, 2),
-                             border = 3, flag = wx.ALIGN_CENTER | wx.ALL | wx.EXPAND)
+                             border = getSpace('mini'), flag = wx.ALIGN_CENTER | wx.ALL | wx.EXPAND)
                     current_row += 1
                 label, widget = setting.get_label(grouppanel), setting.get_widget(grouppanel)
                 if setting.name.startswith("separator_"):
                     font = label.GetFont()
                     font.SetWeight(wx.BOLD)
                     label.SetFont(font)
-                grid.Add(label, pos = (current_row, 0),
-                         flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+                grid.Add(label, pos = (current_row, 0), border = getSpace('minor'),
+                         flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT)
                 expand = 0 if isinstance(widget, (wx.SpinCtrlDouble, wx.Choice, wx.ComboBox)) else wx.EXPAND
-                grid.Add(widget, pos = (current_row, 1),
-                         flag = wx.ALIGN_CENTER_VERTICAL | expand)
+                grid.Add(widget, pos = (current_row, 1), border = getSpace('minor'),
+                         flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | expand)
                 if hasattr(label, "set_default"):
                     label.Bind(wx.EVT_MOUSE_EVENTS, label.set_default)
                     if hasattr(widget, "Bind"):
@@ -171,13 +244,16 @@ class PronterOptionsDialog(wx.Dialog):
                 current_row += 1
             grid.AddGrowableCol(1)
             grouppanel.SetSizer(grid)
-        sbox.Add(notebook, 1, wx.EXPAND)
-        panel.SetSizer(sbox)
+            # The size of the options dialog is determined by the first panel 'Printer settings'
+            if group == group_list[0]:
+                grouppanel.SetMinSize(grid.ComputeFittingWindowSize(grouppanel))
         topsizer = wx.BoxSizer(wx.VERTICAL)
-        topsizer.Add(panel, 1, wx.ALL | wx.EXPAND)
-        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_CENTER)
-        self.SetSizerAndFit(topsizer)
-        self.SetMinSize(self.GetSize())
+        topsizer.Add(notebook, 1, wx.EXPAND | wx.ALL, getSpace('minor'))
+        topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
+        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
+        self.SetSizer(topsizer)
+        self.Fit()
+        self.CentreOnParent()
 
 notebookSelection = 0
 def PronterOptions(pronterface):
@@ -200,30 +276,54 @@ class ButtonEdit(wx.Dialog):
     """Custom button edit dialog"""
     def __init__(self, pronterface):
         wx.Dialog.__init__(self, None, title = _("Custom button"),
-                           style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+                           style = wx.DEFAULT_DIALOG_STYLE)
         self.pronterface = pronterface
-        topsizer = wx.BoxSizer(wx.VERTICAL)
-        grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = 4, vgap = 2)
+        panel = wx.Panel(self)
+        grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = getSpace('minor'), vgap = getSpace('minor'))
         grid.AddGrowableCol(1, 1)
-        grid.Add(wx.StaticText(self, -1, _("Button title")), 0, wx.BOTTOM | wx.RIGHT)
-        self.name = wx.TextCtrl(self, -1, "")
+        ## Title of the button
+        grid.Add(wx.StaticText(panel, -1, _("Button title:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.name = wx.TextCtrl(panel, -1, "")
+        dlg_size = 260
+        self.name.SetMinSize(wx.Size(dlg_size, -1))
         grid.Add(self.name, 1, wx.EXPAND)
-        grid.Add(wx.StaticText(self, -1, _("Command")), 0, wx.BOTTOM | wx.RIGHT)
-        self.command = wx.TextCtrl(self, -1, "")
-        xbox = wx.BoxSizer(wx.HORIZONTAL)
-        xbox.Add(self.command, 1, wx.EXPAND)
+        ## Colour of the button
+        grid.Add(wx.StaticText(panel, -1, _("Colour:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        coloursizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.use_colour = wx.CheckBox(panel,-1)
+        self.color = wx.ColourPickerCtrl(panel, colour=( 255, 255, 255), style=wx.CLRP_USE_TEXTCTRL)
+        self.color.Disable()
+        self.use_colour.Bind(wx.EVT_CHECKBOX, self.onColourCheckbox)
+        coloursizer.Add(self.use_colour,0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, getSpace('minor'))
+        coloursizer.Add(self.color, 1, wx.EXPAND)
+        grid.Add(coloursizer,1, wx.EXPAND)
+        ## Enter commands or choose a macro
+        macrotooltip = _("Type short commands directly, enter a name for a new macro or select an existing macro from the list.")
+        commandfield = wx.StaticText(panel, -1, _("Command:"))
+        commandfield.SetToolTip(wx.ToolTip(macrotooltip))
+        grid.Add(commandfield, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        macrochoices = list(self.pronterface.macros.keys()) #add the available macros to the dropdown
+        macrochoices.insert(0,"") #add an empty field, so that a new macro name can be entered
+        self.command = wx.ComboBox(panel, -1, "", choices = macrochoices, style = wx.CB_DROPDOWN)
+        self.command.SetToolTip(wx.ToolTip(macrotooltip))
+        commandsizer = wx.BoxSizer(wx.HORIZONTAL)
+        commandsizer.Add(self.command, 1, wx.EXPAND)
         self.command.Bind(wx.EVT_TEXT, self.macrob_enabler)
-        self.macrob = wx.Button(self, -1, "..", style = wx.BU_EXACTFIT)
-        self.macrob.Bind(wx.EVT_BUTTON, self.macrob_handler)
-        xbox.Add(self.macrob, 0)
-        grid.Add(xbox, 1, wx.EXPAND)
-        grid.Add(wx.StaticText(self, -1, _("Color")), 0, wx.BOTTOM | wx.RIGHT)
-        self.color = wx.TextCtrl(self, -1, "")
-        grid.Add(self.color, 1, wx.EXPAND)
-        topsizer.Add(grid, 0, wx.EXPAND)
-        topsizer.Add((0, 0), 1)
-        topsizer.Add(self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_CENTER)
+        self.macrobtn = wx.Button(panel, -1, "...", style = wx.BU_EXACTFIT)
+        self.macrobtn.SetMinSize((self.macrobtn.GetTextExtent('AAA').width, -1))
+        self.macrobtn.SetToolTip(wx.ToolTip(_("Create a new macro or edit an existing one.")))
+        self.macrobtn.Bind(wx.EVT_BUTTON, self.macrob_handler)
+        commandsizer.Add(self.macrobtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, getSpace('minor'))
+        grid.Add(commandsizer, 1, wx.EXPAND)
+        panel.SetSizer(grid)
+        topsizer = wx.BoxSizer(wx.VERTICAL)
+        topsizer.Add(panel, 0, wx.EXPAND | wx.ALL, getSpace('major'))
+        topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
+        topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
         self.SetSizer(topsizer)
+        topsizer.Fit(self)
+        self.CentreOnParent()
+        self.name.SetFocus()
 
     def macrob_enabler(self, e):
         macro = self.command.GetValue()
@@ -248,7 +348,7 @@ class ButtonEdit(wx.Dialog):
                 valid = False
             else:
                 valid = True
-        self.macrob.Enable(valid)
+        self.macrobtn.Enable(valid)
 
     def macrob_handler(self, e):
         macro = self.command.GetValue()
@@ -256,6 +356,13 @@ class ButtonEdit(wx.Dialog):
         self.command.SetValue(macro)
         if self.name.GetValue() == "":
             self.name.SetValue(macro)
+
+    def onColourCheckbox(self, e):
+        status = self.use_colour.GetValue()
+        if status:
+            self.color.Enable()
+        else:
+            self.color.Disable()
 
 class TempGauge(wx.Panel):
 
