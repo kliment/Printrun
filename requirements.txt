@@ -10,4 +10,4 @@ lxml (>= 2.9.1)
 appdirs (>= 1.4.0)
 dbus-python >= 1.2.0 ; sys_platform == 'linux'
 pyobjc-framework-Cocoa ; sys_platform == 'darwin'
-pyreadline ; sys_platform == 'win32'
+pyreadline3 ; sys_platform == 'win32'
