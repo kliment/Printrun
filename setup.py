@@ -19,6 +19,7 @@ import ast
 import glob
 from setuptools import setup
 from setuptools import find_packages
+from printrun.msgfmt import make as msgfmt
 
 try:
     from Cython.Build import cythonize
@@ -59,6 +60,10 @@ data_files = [
     ('share/pronterface/images', multiglob('images/*.png',
                                     'images/*.svg')),
 ]
+
+# Compile translation files. From '.po' files to '.mo' files
+for po_file in glob.glob('locale/*/LC_MESSAGES/*.po'):
+    msgfmt(po_file, None)
 
 for locale in glob.glob('locale/*/LC_MESSAGES/'):
     data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
