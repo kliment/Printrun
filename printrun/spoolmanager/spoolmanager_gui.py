@@ -88,15 +88,15 @@ class SpoolManagerMainWindow(wx.Frame):
 
         ## Group the buttons with the spool list
         self.list_sizer = wx.StaticBoxSizer(wx.HORIZONTAL, self.panel, label = _("Spool List"))
-        self.list_sizer.Add(self.spool_list, 1, wx.EXPAND)
-        self.list_sizer.Add(self.list_button_sizer, 0, wx.ALIGN_TOP)
+        self.list_sizer.Add(self.spool_list, 1, wx.EXPAND | wx.ALL, getSpace('staticbox'))
+        self.list_sizer.Add(self.list_button_sizer, 0, wx.ALIGN_TOP | wx.ALL, getSpace('staticbox'))
 
         ## Layout the whole thing
         widgetsizer = wx.BoxSizer(wx.VERTICAL)
         widgetsizer.Add(self.list_sizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, getSpace('minor'))
         widgetsizer.Add(self.current_spools_dialog, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, getSpace('minor'))
         widgetsizer.Add(wx.StaticLine(self.panel, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        widgetsizer.Add(self.bottom_button_sizer, 0, wx.EXPAND | wx.ALL, getSpace('major'))
+        widgetsizer.Add(self.bottom_button_sizer, 0, wx.EXPAND | wx.ALL, getSpace('stddlg-frame'))
 
         ## Make sure the frame has the right size when it open, but is still resizeable
         self.panel.SetSizer(widgetsizer)      
@@ -236,7 +236,7 @@ class SpoolListView(wx.ListView):
     def onResizeList(self, event):
         list_size = self.GetSize()
         self.SetColumnWidth(1, -2)
-        filament_column_width = self.GetColumnWidth(1) + 16
+        filament_column_width = self.GetColumnWidth(1)
         self.SetColumnWidth(col = 0,
                             width = list_size.width - filament_column_width)
         event.Skip()
@@ -307,11 +307,11 @@ class CurrentSpoolDialog(wx.Panel):
                 wx.FIXED_MINSIZE | wx.ALIGN_CENTER)
 
             dialog_sizer.append(wx.StaticBoxSizer(wx.HORIZONTAL, self, label = _("Spool for Extruder %d:") % i))
-            dialog_sizer[i].Add(textlabel, 0, wx.ALIGN_TOP)
+            dialog_sizer[i].Add(textlabel, 0, wx.ALIGN_TOP | wx.ALL, getSpace('staticbox'))
+            dialog_sizer[i].AddSpacer(getSpace('minor'))
+            dialog_sizer[i].Add(self.extruder_dialog[i], 1, wx.ALIGN_TOP | wx.TOP, getSpace('staticbox'))
             dialog_sizer[i].AddSpacer(getSpace('major'))
-            dialog_sizer[i].Add(self.extruder_dialog[i], 1, wx.ALIGN_TOP)
-            dialog_sizer[i].AddSpacer(getSpace('major'))
-            dialog_sizer[i].Add(button_sizer[i], 0, wx.EXPAND)
+            dialog_sizer[i].Add(button_sizer[i], 0, wx.EXPAND | wx.RIGHT, getSpace('staticbox'))
 
             csd_sizer.Add(dialog_sizer[i], 0, wx.EXPAND | wx.TOP, getSpace('minor'))
 
@@ -562,27 +562,27 @@ class SpoolManagerEditWindow(wx.Dialog):
         self.length_field.SetMinSize((minwidth, -1))
         
         # Generate the buttons
+        button_min_width = self.GetTextExtent('  +000.0  ').width
         self.minus3_button = wx.Button(self,
-            label = str(self.quantities[0]), style = wx.BU_EXACTFIT)
+            label = str(self.quantities[0]))
         self.minus2_button = wx.Button(self,
-            label = str(self.quantities[1]), style = wx.BU_EXACTFIT)
+            label = str(self.quantities[1]))
         self.minus1_button = wx.Button(self,
-            label = str(self.quantities[2]), style = wx.BU_EXACTFIT)
+            label = str(self.quantities[2]))
 
         self.plus1_button = wx.Button(self,
-            label = "+" + str(self.quantities[3]), style = wx.BU_EXACTFIT)
+            label = "+" + str(self.quantities[3]))
         self.plus2_button = wx.Button(self,
-            label = "+" + str(self.quantities[4]), style = wx.BU_EXACTFIT)
+            label = "+" + str(self.quantities[4]))
         self.plus3_button = wx.Button(self,
-            label = "+" + str(self.quantities[5]), style = wx.BU_EXACTFIT)
+            label = "+" + str(self.quantities[5]))
         
-        button_min_width = self.GetTextExtent(' +000.0 ').width
-        self.minus1_button.SetMinSize((button_min_width, -1))
-        self.minus2_button.SetMinSize((button_min_width, -1))
-        self.minus3_button.SetMinSize((button_min_width, -1))
-        self.plus1_button.SetMinSize((button_min_width, -1))
-        self.plus2_button.SetMinSize((button_min_width, -1))
-        self.plus3_button.SetMinSize((button_min_width, -1))
+        self.minus3_button.SetSize((button_min_width, -1))
+        self.minus2_button.SetSize((button_min_width, -1))
+        self.minus1_button.SetSize((button_min_width, -1))
+        self.plus1_button.SetSize((button_min_width, -1))
+        self.plus2_button.SetSize((button_min_width, -1))
+        self.plus3_button.SetSize((button_min_width, -1))
 
         # "Program" the length buttons
         self.minus3_button.Bind(wx.EVT_BUTTON, self.changeLength)
@@ -605,18 +605,18 @@ class SpoolManagerEditWindow(wx.Dialog):
         ## Group the length field and its correspondent buttons             
         self.btn_sizer = wx.StaticBoxSizer(wx.HORIZONTAL, self)
         self.btn_sizer.Add(self.minus3_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.RIGHT, getSpace('mini'))
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT | wx.TOP | wx.BOTTOM, getSpace('staticbox'))
         self.btn_sizer.Add(self.minus2_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.RIGHT, getSpace('mini'))
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT, getSpace('mini'))
         self.btn_sizer.Add(self.minus1_button, 0,
                               wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.RIGHT, getSpace('mini'))
         self.btn_sizer.AddSpacer(getSpace('major'))
         self.btn_sizer.Add(self.plus1_button, 0,
                               wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT, getSpace('mini'))
         self.btn_sizer.Add(self.plus2_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT, getSpace('mini'))
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT, getSpace('mini'))
         self.btn_sizer.Add(self.plus3_button, 0,
-                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.LEFT, getSpace('mini'))
+                              wx.FIXED_MINSIZE | wx.ALIGN_CENTER | wx.RIGHT, getSpace('staticbox'))
 
         ## Group the bottom buttons
         self.bottom_buttons_sizer = wx.StdDialogButtonSizer()

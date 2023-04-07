@@ -20,21 +20,39 @@ import platform
 def getSpace(a):
     # This method is used to de-hardcode and unify the borders and gaps of the interface.
     match a:
-        case 'major': #e.g. outer border of dialog boxes
+        case 'major': # e.g. outer border of dialog boxes
             return 12
-        case 'minor': #e.g. border of inner elements
+        case 'minor': # e.g. border of inner elements
             return 8
         case 'mini':
             return 4
         case 'stddlg':
-            # Differentiation is necessary because wxPyhton behaves slightly differently on different systems.
+            # Differentiation is necessary because wxPython behaves slightly differently on different systems.
             platformname = platform.system()
             if platformname == 'Windows':
                 return 8
             elif platformname == 'Darwin':
                 return 4
             else:
-                return 4 # Not sure yet which value should be used for linux systems
+                return 4 # Linux systems
+        case 'stddlg-frame':
+            # Border for std dialog buttons when used with frames.
+            platformname = platform.system()
+            if platformname == 'Windows':
+                return 8
+            elif platformname == 'Darwin':
+                return 12
+            else:
+                return 8 # Linux systems
+        case 'staticbox':
+            # Border between StaticBoxSizers and the elements inside.
+            platformname = platform.system()
+            if platformname == 'Windows':
+                return 4
+            elif platformname == 'Darwin':
+                return 0
+            else:
+                return 0 # Linux systems
         case 'none':
             return 0
 
@@ -63,7 +81,7 @@ class MacroEditor(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.close)
         titlesizer.Add(self.findbtn, 0, wx.ALIGN_CENTER_VERTICAL)
         panelsizer.Add(titlesizer, 0, wx.EXPAND | wx.ALL, getSpace('minor'))
-        self.e = wx.TextCtrl(panel, style = wx.HSCROLL | wx.TE_MULTILINE | wx.TE_RICH2, size = (400, 400)) #style = wx.HSCROLL | 
+        self.e = wx.TextCtrl(panel, style = wx.HSCROLL | wx.TE_MULTILINE | wx.TE_RICH2, size = (400, 400))
         if not self.gcode:
             self.e.SetValue(self.unindent(definition))
         else:
