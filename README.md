@@ -515,7 +515,7 @@ List of available commands:
 # LICENSE
 
 ```
-Copyright (C) 2011-2022 Kliment Yanev, Guillaume Seguin, and the other contributors listed in CONTRIBUTORS.md
+Copyright (C) 2011-2023 Kliment Yanev, Guillaume Seguin, and the other contributors listed in CONTRIBUTORS.md
 
 Printrun is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
