@@ -32,7 +32,7 @@ class SpoolManagerMainWindow(wx.Frame):
             title = _("Spool Manager"),
             style = wx.DEFAULT_FRAME_STYLE)
 
-        # wx.Frame looks better with a panel in it
+        # An empty wx.Frame has a darker background on win, but filled with a panel it looks native
         self.panel = wx.Panel(self, -1)
 
         self.SetIcon(parent.GetIcon())
@@ -88,8 +88,8 @@ class SpoolManagerMainWindow(wx.Frame):
 
         ## Group the buttons with the spool list
         self.list_sizer = wx.StaticBoxSizer(wx.HORIZONTAL, self.panel, label = _("Spool List"))
-        self.list_sizer.Add(self.spool_list, 1, wx.EXPAND | wx.ALL, getSpace('staticbox'))
-        self.list_sizer.Add(self.list_button_sizer, 0, wx.ALIGN_TOP | wx.ALL, getSpace('staticbox'))
+        self.list_sizer.Add(self.spool_list, 1, wx.EXPAND | wx.LEFT | wx.TOP | wx.BOTTOM, getSpace('staticbox'))
+        self.list_sizer.Add(self.list_button_sizer, 0, wx.ALIGN_TOP | wx.TOP | wx.RIGHT, getSpace('staticbox'))
 
         ## Layout the whole thing
         widgetsizer = wx.BoxSizer(wx.VERTICAL)
@@ -98,7 +98,7 @@ class SpoolManagerMainWindow(wx.Frame):
         widgetsizer.Add(wx.StaticLine(self.panel, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
         widgetsizer.Add(self.bottom_button_sizer, 0, wx.EXPAND | wx.ALL, getSpace('stddlg-frame'))
 
-        ## Make sure the frame has the right size when it open, but is still resizeable
+        ## Make sure the frame has the right size when it opens, but can still be resized
         self.panel.SetSizer(widgetsizer)      
         topsizer = wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(self.panel, -1, wx.EXPAND)
@@ -186,7 +186,7 @@ class SpoolManagerMainWindow(wx.Frame):
 
         # Ask confirmation for deleting
         delete_dialog = wx.MessageDialog(self,
-            message = _("Are you sure you want to delete the '%s' spool") %
+            message = _("Are you sure you want to delete the '%s' spool?") %
                 spool_name,
             caption = _("Delete Spool"),
             style = wx.YES_NO | wx.ICON_EXCLAMATION)
@@ -248,7 +248,6 @@ class SpoolListView(wx.ListView):
     def onItemDeselect(self, event):
         self.Parent.edit_button.Disable()
         self.Parent.delete_button.Disable()
-
 
 class CurrentSpoolDialog(wx.Panel):
     """
@@ -493,6 +492,7 @@ class SpoolManagerAddWindow(wx.Dialog):
 
     def onClickCancel(self, event):
         """Do nothing and close the window."""
+        self.parent.statusbar.SetLabel("")
         self.Destroy()
 
     def calculateLength(self, event):
@@ -711,5 +711,5 @@ class SpoolManagerEditWindow(wx.Dialog):
         self.Destroy()
 
     def onClickCancel(self, event):
-            self.Destroy()
             self.parent.statusbar.SetLabel("")
+            self.Destroy()

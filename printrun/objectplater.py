@@ -73,7 +73,7 @@ class PlaterPanel(wx.Panel):
 
         selection_sizer = wx.StaticBoxSizer(wx.VERTICAL, panel, label = "Selection")
         # Snap to Z = 0 button
-        self.snapbutton = wx.Button(panel, label = _("Snap to Z = 0"))
+        self.snapbutton = wx.Button(panel, label = _("Snap to Zero"))
         self.snapbutton.Bind(wx.EVT_BUTTON, self.snap)
         self.snapbutton.Disable()
         h2_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -91,7 +91,7 @@ class PlaterPanel(wx.Panel):
         selection_sizer.Add(self.deletebutton,  0, wx.EXPAND | wx.ALL, getSpace('none'))
         
         grid.Add(selection_sizer, pos = (1, 0), span = (1, 1), 
-                 flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border = getSpace('mini'))
+                 flag = wx.EXPAND | wx.ALL, border = getSpace('mini'))
 
         self.basedir = "."
         self.models = {}
@@ -109,8 +109,10 @@ class PlaterPanel(wx.Panel):
         self.build_dimensions = build_dimensions or [200, 200, 100, 0, 0, 0]
 
     def set_viewer(self, viewer):
+        print("debug: set_viewer patch")
         # Patch handle_rotation on the fly
         if hasattr(viewer, "handle_rotation"):
+            print("debug: handle_rot")
             def handle_rotation(self, event, orig_handler):
                 if self.initpos is None:
                     self.initpos = event.GetPosition()
@@ -127,6 +129,7 @@ class PlaterPanel(wx.Panel):
             patch_method(viewer, "handle_rotation", handle_rotation)
         # Patch handle_wheel on the fly
         if hasattr(viewer, "handle_wheel"):
+            print("debug: handle_wheel")
             def handle_wheel(self, event, orig_handler):
                 if event.ShiftDown():
                     angle = 10
@@ -240,6 +243,7 @@ class PlaterPanel(wx.Panel):
             self.Refresh()
 
     def enable_buttons(self, value):
+            # A little helper method to give the user a cue which tools are available
             self.autobutton.Enable(value)
             self.clearbutton.Enable(value)
             self.exportbutton.Enable(value)
