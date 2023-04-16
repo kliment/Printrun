@@ -792,7 +792,7 @@ class SettingsFrame(wx.Dialog):
         pause = self.pause.GetValue()
 
         if ',' in pause:
-            self.statusbar.SetLabel(_("'Blank' contains a comma, please HHHHHHHHHHHHHHHHHHHHuse a point for decimal values."))
+            self.statusbar.SetLabel(_("'Blank' contains a comma, please use a point for decimal values."))
             self.Layout() # Layout() is needed to ellipsize possible overlength status
             return False
 

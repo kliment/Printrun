@@ -32,6 +32,7 @@ import re
 import traceback
 import subprocess
 from copy import copy
+from .gui.widgets import getSpace
 
 from printrun import stltool
 from printrun.objectplater import make_plater, PlaterPanel
@@ -42,7 +43,7 @@ if glview:
         from printrun import stlview
     except:
         glview = False
-        logging.warning("Could not load 3D viewer for plater:"
+        logging.warning(_("Could not load 3D viewer for plater:")
                         + "\n" + traceback.format_exc())
 
 
@@ -219,9 +220,11 @@ class StlPlaterPanel(PlaterPanel):
     save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
 
     def prepare_ui(self, filenames = [], callback = None,
-                   parent = None, build_dimensions = None, circular_platform = False,
-                   simarrange_path = None, antialias_samples = 0):
-        super().prepare_ui(filenames, callback, parent, build_dimensions)
+                   parent = None, build_dimensions = None, 
+                   circular_platform = False,
+                   simarrange_path = None, 
+                   antialias_samples = 0):
+        super(StlPlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions)
         self.cutting = False
         self.cutting_axis = None
         self.cutting_dist = None
@@ -230,48 +233,60 @@ class StlPlaterPanel(PlaterPanel):
                                           build_dimensions = self.build_dimensions,
                                           circular = circular_platform,
                                           antialias_samples = antialias_samples)
-            # Cutting tool
-            nrows = self.menusizer.GetRows()
-            self.menusizer.Add(wx.StaticText(self.menupanel, -1, _("Cut along:")),
-                               pos = (nrows, 0), span = (1, 1), flag = wx.ALIGN_CENTER)
-            cutconfirmbutton = wx.Button(self.menupanel, label = _("Confirm cut"))
-            cutconfirmbutton.Bind(wx.EVT_BUTTON, self.cut_confirm)
-            cutconfirmbutton.Disable()
-            self.cutconfirmbutton = cutconfirmbutton
-            self.menusizer.Add(cutconfirmbutton, pos = (nrows, 1), span = (1, 1), flag = wx.EXPAND)
+            
+            # Insert Cutting tool
             cutpanel = wx.Panel(self.menupanel)
-            cutsizer = self.cutsizer = wx.BoxSizer(wx.HORIZONTAL)
-            cutpanel.SetSizer(cutsizer)
-            cutxplusbutton = wx.ToggleButton(cutpanel, label = _(">X"), style = wx.BU_EXACTFIT)
+            cutsizer = wx.StaticBoxSizer(wx.VERTICAL, cutpanel, label = _("Cutting Tool"))
+            ## Prepare buttons for all cut axis
+            axis_sizer = self.axis_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            cutxplusbutton = wx.ToggleButton(cutpanel, label = _("+X"), style = wx.BU_EXACTFIT)
             cutxplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "x", 1))
-            cutsizer.Add(cutxplusbutton, 1, flag = wx.EXPAND)
-            cutzplusbutton = wx.ToggleButton(cutpanel, label = _(">Y"), style = wx.BU_EXACTFIT)
-            cutzplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", 1))
-            cutsizer.Add(cutzplusbutton, 1, flag = wx.EXPAND)
-            cutzplusbutton = wx.ToggleButton(cutpanel, label = _(">Z"), style = wx.BU_EXACTFIT)
+            axis_sizer.Add(cutxplusbutton, 1, wx.EXPAND | wx.RIGHT, getSpace('mini'))
+            cutyplusbutton = wx.ToggleButton(cutpanel, label = _("+Y"), style = wx.BU_EXACTFIT)
+            cutyplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", 1))
+            axis_sizer.Add(cutyplusbutton, 1, wx.EXPAND | wx.RIGHT, getSpace('mini'))
+            cutzplusbutton = wx.ToggleButton(cutpanel, label = _("+Z"), style = wx.BU_EXACTFIT)
             cutzplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "z", 1))
-            cutsizer.Add(cutzplusbutton, 1, flag = wx.EXPAND)
-            cutxminusbutton = wx.ToggleButton(cutpanel, label = _("<X"), style = wx.BU_EXACTFIT)
+            axis_sizer.Add(cutzplusbutton, 1, wx.EXPAND | wx.RIGHT, getSpace('mini'))
+            cutxminusbutton = wx.ToggleButton(cutpanel, label = _("-X"), style = wx.BU_EXACTFIT)
             cutxminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "x", -1))
-            cutsizer.Add(cutxminusbutton, 1, flag = wx.EXPAND)
-            cutzminusbutton = wx.ToggleButton(cutpanel, label = _("<Y"), style = wx.BU_EXACTFIT)
-            cutzminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", -1))
-            cutsizer.Add(cutzminusbutton, 1, flag = wx.EXPAND)
-            cutzminusbutton = wx.ToggleButton(cutpanel, label = _("<Z"), style = wx.BU_EXACTFIT)
+            axis_sizer.Add(cutxminusbutton, 1, wx.EXPAND | wx.RIGHT, getSpace('mini'))
+            cutyminusbutton = wx.ToggleButton(cutpanel, label = _("-Y"), style = wx.BU_EXACTFIT)
+            cutyminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", -1))
+            axis_sizer.Add(cutyminusbutton, 1, wx.EXPAND | wx.RIGHT, getSpace('mini'))
+            cutzminusbutton = wx.ToggleButton(cutpanel, label = _("-Z"), style = wx.BU_EXACTFIT)
             cutzminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "z", -1))
-            cutsizer.Add(cutzminusbutton, 1, flag = wx.EXPAND)
-            self.menusizer.Add(cutpanel, pos = (nrows + 1, 0), span = (1, 2), flag = wx.EXPAND)
+            axis_sizer.Add(cutzminusbutton, 1, flag = wx.EXPAND)
+
+            cutsizer.Add(wx.StaticText(cutpanel, -1, _("Choose axis to cut along:")), 0, wx.BOTTOM, getSpace('minor'))
+            cutsizer.Add(axis_sizer, 0, wx.EXPAND, wx.BOTTOM, getSpace('minor'))
+            cutsizer.Add(wx.StaticText(cutpanel, -1, _("Doubleclick to set the cutting plane.")), 0, wx.TOP | wx.BOTTOM, getSpace('minor'))
+            # Process cut button
+            cut_processbutton = wx.Button(cutpanel, label = _("Process Cut"))
+            cut_processbutton.Bind(wx.EVT_BUTTON, self.cut_confirm)
+            cut_processbutton.Disable()
+            self.cut_processbutton = cut_processbutton
+            cutsizer.Add(cut_processbutton, 0, flag = wx.EXPAND)
+
+            cutpanel.SetSizer(cutsizer)
+            nrows = self.menusizer.GetRows()
+            self.menusizer.Add(cutpanel, pos = (nrows, 0), span = (1, 1), 
+                               flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border = getSpace('mini'))
+
         else:
             viewer = showstl(self, (580, 580), (0, 0))
         self.simarrange_path = simarrange_path
         self.set_viewer(viewer)
+        self.Layout()
+        self.SetMinClientSize((self.menupanel.GetEffectiveMinSize().width, 
+                               self.menupanel.GetEffectiveMinSize().height + 48))
 
     def start_cutting_tool(self, event, axis, direction):
         toggle = event.EventObject
         self.cutting = toggle.Value
         if toggle.Value:
             # Disable the other toggles
-            for child in self.cutsizer.Children:
+            for child in self.axis_sizer.Children:
                 child = child.Window
                 if child != toggle:
                     child.Value = False
@@ -300,12 +315,12 @@ class StlPlaterPanel(PlaterPanel):
         cut.centeroffset = [0, 0, 0]
         self.s.prepare_model(cut, 2)
         self.models[name] = cut
-        self.cutconfirmbutton.Disable()
+        self.cut_processbutton.Disable()
         self.cutting = False
         self.cutting_axis = None
         self.cutting_dist = None
         self.cutting_direction = None
-        for child in self.cutsizer.GetChildren():
+        for child in self.axis_sizer.GetChildren():
             child = child.GetWindow()
             child.SetValue(False)
 
@@ -322,7 +337,7 @@ class StlPlaterPanel(PlaterPanel):
         self.cutting_dist, _, _ = self.s.get_cutting_plane(axis, None,
                                                            local_transform = True)
         if self.cutting_dist is not None:
-            self.cutconfirmbutton.Enable()
+            self.cut_processbutton.Enable()
 
     def clickcb_rebase(self, event):
         x, y = event.GetPosition()
@@ -466,7 +481,8 @@ class StlPlaterPanel(PlaterPanel):
                                                 model.filename))
                 model = model.transform(transformation_matrix(model))
                 facets += model.facets
-            stltool.emitstl(name, facets, "plater_export")
+            logging.error("The function 'stltool.emitstl' has been deactivated due to an unresolved bug.")
+            #stltool.emitstl(name, facets, "plater_export") #this brakes atm
             logging.info(_("Wrote plate to %s") % name)
 
     def autoplate(self, event = None):

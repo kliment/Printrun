@@ -23,14 +23,21 @@ class ExcluderWindow(gviz.GvizWindow):
 
     def __init__(self, excluder, *args, **kwargs):
         super(ExcluderWindow, self).__init__(*args, **kwargs)
-        self.SetTitle(_("Part excluder: draw rectangles where print instructions should be ignored"))
-        self.toolbar.AddTool(128, " " + _("Reset selection"),
-                             wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
-                             _("Reset selection"))
-        self.Bind(wx.EVT_TOOL, self.reset_selection, id = 128)
+        self.SetTitle(_("Print Excluder"))
         self.parent = excluder
+       
+        self.toolbar.ClearTools()
+        self.build_toolbar(excluder = True)
+        self.toolbar.Realize()
+        minsize = self.toolbar.GetEffectiveMinSize().width
+        self.SetMinClientSize((minsize, minsize))
+        self.p.SetToolTip(
+            "Draw rectangles where print instructions should be ignored.\nExcluder always affects all layers, layer settings is disregarded.")#*
+
         self.p.paint_overlay = self.paint_selection
         self.p.layerup()
+
+        #self.CenterOnParent()
 
     def real_to_gcode(self, x, y):
         return (x + self.p.build_dimensions[3],
@@ -96,11 +103,6 @@ class ExcluderWindow(gviz.GvizWindow):
         dc.DrawRectangleList([self._line_scaler(rect)
                               for rect in self.parent.rectangles],
                              None, wx.Brush((200, 200, 200, 150)))
-
-    def reset_selection(self, event):
-        self.parent.rectangles = []
-        wx.CallAfter(self.p.Refresh)
-
 class Excluder:
 
     def __init__(self):

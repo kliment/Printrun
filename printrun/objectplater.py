@@ -20,6 +20,7 @@ import logging
 import os
 import types
 import wx
+from .gui.widgets import getSpace
 
 def patch_method(obj, method, replacement):
     orig_handler = getattr(obj, method)
@@ -39,52 +40,72 @@ class PlaterPanel(wx.Panel):
     def prepare_ui(self, filenames = [], callback = None, parent = None, build_dimensions = None):
         self.filenames = filenames
         panel = self.menupanel = wx.Panel(self)
-        sizer = self.menusizer = wx.GridBagSizer()
+        grid = self.menusizer = wx.GridBagSizer(vgap = getSpace('mini'), hgap = getSpace('mini'))
+        list_sizer = wx.StaticBoxSizer(wx.VERTICAL, panel, label = "Models")
         # Load button
-        loadbutton = wx.Button(panel, label = _("Load"))
+        loadbutton = wx.Button(panel, label = _("+ Add Model"))
         loadbutton.Bind(wx.EVT_BUTTON, self.load)
-        sizer.Add(loadbutton, pos = (0, 0), span = (1, 1), flag = wx.EXPAND)
-        # Export button
-        exportbutton = wx.Button(panel, label = _("Export"))
-        exportbutton.Bind(wx.EVT_BUTTON, self.export)
-        sizer.Add(exportbutton, pos = (0, 1), span = (1, 1), flag = wx.EXPAND)
-
+        list_sizer.Add(loadbutton,  0, wx.EXPAND | wx.BOTTOM, getSpace('mini'))
+        # Model list
         self.l = wx.ListBox(panel)
-        sizer.Add(self.l, pos = (1, 0), span = (1, 2), flag = wx.EXPAND)
-        sizer.AddGrowableRow(1, 1)
-        # Clear button
-        clearbutton = wx.Button(panel, label = _("Clear"))
-        clearbutton.Bind(wx.EVT_BUTTON, self.clear)
-        sizer.Add(clearbutton, pos = (2, 0), span = (1, 2), flag = wx.EXPAND)
-        # Snap to Z = 0 button
-        snapbutton = wx.Button(panel, label = _("Snap to Z = 0"))
-        snapbutton.Bind(wx.EVT_BUTTON, self.snap)
-        sizer.Add(snapbutton, pos = (3, 0), span = (1, 1), flag = wx.EXPAND)
-        # Put at center button
-        centerbutton = wx.Button(panel, label = _("Put at center"))
-        centerbutton.Bind(wx.EVT_BUTTON, self.center)
-        sizer.Add(centerbutton, pos = (3, 1), span = (1, 1), flag = wx.EXPAND)
-        # Delete button
-        deletebutton = wx.Button(panel, label = _("Delete"))
-        deletebutton.Bind(wx.EVT_BUTTON, self.delete)
-        sizer.Add(deletebutton, pos = (4, 0), span = (1, 1), flag = wx.EXPAND)
+        list_sizer.Add(self.l,  1, wx.EXPAND | wx.BOTTOM, getSpace('mini'))
         # Auto arrange button
-        autobutton = wx.Button(panel, label = _("Auto arrange"))
-        autobutton.Bind(wx.EVT_BUTTON, self.autoplate)
-        sizer.Add(autobutton, pos = (5, 0), span = (1, 2), flag = wx.EXPAND)
-        if callback is not None:
-            donebutton = wx.Button(panel, label = _("Done"))
-            donebutton.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback))
-            sizer.Add(donebutton, pos = (6, 0), span = (1, 1), flag = wx.EXPAND)
-            cancelbutton = wx.Button(panel, label = _("Cancel"))
-            cancelbutton.Bind(wx.EVT_BUTTON, lambda e: self.Destroy())
-            sizer.Add(cancelbutton, pos = (6, 1), span = (1, 1), flag = wx.EXPAND)
+        self.autobutton = wx.Button(panel, label = _("Auto Arrange"))
+        self.autobutton.Bind(wx.EVT_BUTTON, self.autoplate)
+        self.autobutton.Disable()
+        list_sizer.Add(self.autobutton,  0, wx.EXPAND | wx.BOTTOM, getSpace('minor'))
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        # Clear button
+        self.clearbutton = wx.Button(panel, label = _("Clear All"))
+        self.clearbutton.Bind(wx.EVT_BUTTON, self.clear)
+        self.clearbutton.Disable()
+        h_sizer.Add(self.clearbutton,  1, wx.EXPAND | wx.RIGHT, getSpace('minor'))
+        # Export button
+        self.exportbutton = wx.Button(panel, label = _("Export"))
+        self.exportbutton.Bind(wx.EVT_BUTTON, self.export)
+        self.exportbutton.Disable()
+        h_sizer.Add(self.exportbutton,  1, wx.EXPAND)
+        list_sizer.Add(h_sizer,  0, wx.EXPAND)
+
+        grid.Add(list_sizer, pos = (0, 0), span = (1, 1), 
+                 flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border = getSpace('mini'))
+        grid.AddGrowableRow(0)
+
+        selection_sizer = wx.StaticBoxSizer(wx.VERTICAL, panel, label = "Selection")
+        # Snap to Z = 0 button
+        self.snapbutton = wx.Button(panel, label = _("Snap to Z = 0"))
+        self.snapbutton.Bind(wx.EVT_BUTTON, self.snap)
+        self.snapbutton.Disable()
+        h2_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h2_sizer.Add(self.snapbutton,  1, wx.EXPAND | wx.RIGHT, getSpace('minor'))
+        # Put at center button
+        self.centerbutton = wx.Button(panel, label = _("Put at Center"))
+        self.centerbutton.Bind(wx.EVT_BUTTON, self.center)
+        self.centerbutton.Disable()
+        h2_sizer.Add(self.centerbutton,  1, wx.EXPAND)
+        selection_sizer.Add(h2_sizer,  0, wx.EXPAND | wx.BOTTOM, getSpace('minor'))
+        # Delete button
+        self.deletebutton = wx.Button(panel, label = _("Delete"))
+        self.deletebutton.Bind(wx.EVT_BUTTON, self.delete)
+        self.deletebutton.Disable()
+        selection_sizer.Add(self.deletebutton,  0, wx.EXPAND | wx.ALL, getSpace('none'))
+        
+        grid.Add(selection_sizer, pos = (1, 0), span = (1, 1), 
+                 flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border = getSpace('mini'))
+
         self.basedir = "."
         self.models = {}
-        panel.SetSizer(sizer)
-        self.mainsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.mainsizer.Add(panel, flag = wx.EXPAND)
-        self.SetSizer(self.mainsizer)
+        panel.SetSizer(grid)      
+        self.topsizer = wx.BoxSizer(wx.VERTICAL)
+        self.topsizer.Add(panel, -1, wx.EXPAND)
+        self.topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
+        
+        if callback is not None:
+            self.topsizer.Add(self.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
+            self.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback), id=wx.ID_OK)
+            self.Bind(wx.EVT_BUTTON, lambda e: self.Destroy(), id=wx.ID_CANCEL)
+
+        self.SetSizer(self.topsizer)
         self.build_dimensions = build_dimensions or [200, 200, 100, 0, 0, 0]
 
     def set_viewer(self, viewer):
@@ -116,7 +137,10 @@ class PlaterPanel(wx.Panel):
                     orig_handler(event)
             patch_method(viewer, "handle_wheel", handle_wheel)
         self.s = viewer
-        self.mainsizer.Add(self.s, 1, wx.EXPAND)
+        self.s.SetMinSize((150, 150))
+        nrows = self.menusizer.GetRows()
+        self.menusizer.Add(self.s, pos = (0, 1), span = (nrows, 1), flag = wx.EXPAND)
+        self.menusizer.AddGrowableCol(1)
 
     def move_shape(self, delta):
         """moves shape (selected in l, which is list ListBox of shapes)
@@ -212,7 +236,16 @@ class PlaterPanel(wx.Panel):
         if result == 2:
             self.models = {}
             self.l.Clear()
+            self.enable_buttons(False)
             self.Refresh()
+
+    def enable_buttons(self, value):
+            self.autobutton.Enable(value)
+            self.clearbutton.Enable(value)
+            self.exportbutton.Enable(value)
+            self.snapbutton.Enable(value)
+            self.deletebutton.Enable(value)
+            self.centerbutton.Enable(value)
 
     def center(self, event):
         i = self.l.GetSelection()
@@ -236,6 +269,8 @@ class PlaterPanel(wx.Panel):
             del self.models[self.l.GetString(i)]
             self.l.Delete(i)
             self.l.Select(self.l.GetCount() - 1)
+            if self.l.GetCount() < 1:
+                self.enable_buttons(False)
             self.Refresh()
 
     def add_model(self, name, model):
@@ -255,12 +290,14 @@ class PlaterPanel(wx.Panel):
             self.l.Select(0)
 
         self.l.Select(self.l.GetCount() - 1)
+        self.enable_buttons(True)
 
     def load(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         dlg.SetWildcard(self.load_wildcard)
         if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
+            self.enable_buttons(True)
             self.load_file(name)
         dlg.Destroy()
 
@@ -278,16 +315,19 @@ class PlaterPanel(wx.Panel):
     def export_to(self, name):
         raise NotImplementedError
 
-class Plater(wx.Frame):
+class Plater(wx.Dialog):
     def __init__(self, **kwargs):
         self.destroy_on_done = True
         parent = kwargs.get("parent", None)
         size = kwargs.get("size", (800, 580))
         if "size" in kwargs:
             del kwargs["size"]
-        wx.Frame.__init__(self, parent, title = _("Plate building tool"), size = size)
+        wx.Dialog.__init__(self, parent, title = _("STL Plate Builder"), 
+                           size = size, style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
         self.prepare_ui(**kwargs)
+        self.CenterOnParent()
+
 
 def make_plater(panel_class):
     name = panel_class.__name__.replace("Panel", "")

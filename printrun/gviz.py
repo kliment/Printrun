@@ -20,6 +20,7 @@ import wx
 import time
 from . import gcoder
 from .injectgcode import injector, injector_edit
+from .gui.widgets import getSpace
 
 from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
@@ -30,36 +31,42 @@ class GvizBaseFrame(wx.Frame):
         self.CreateStatusBar(1)
         self.SetStatusText(_("Layer number and Z position show here when you scroll"))
 
-        hpanel = wx.Panel(self, -1)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        panel = wx.Panel(self, -1)
+        v_sizer = wx.BoxSizer(wx.VERTICAL)
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        panel = wx.Panel(hpanel, -1)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
         self.toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
+        self.build_toolbar(excluder = False)
+        self.toolbar.Realize()
+        v_sizer.Add(self.toolbar, 0, wx.EXPAND)
+        v_sizer.Add(h_sizer, 1, wx.EXPAND)
+
+        self.layerslider = wx.Slider(panel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
+        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
+        panel.SetSizer(v_sizer)
+
+        return panel, h_sizer
+
+    def build_toolbar(self, excluder):
+        self.toolbar.SetMargins(getSpace('minor'), getSpace('mini'))
+        self.toolbar.SetToolPacking(getSpace('minor'))
         self.toolbar.AddTool(1, '', wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"),)
         self.toolbar.AddTool(2, '', wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"))
+        self.toolbar.AddTool(3, _("Reset View"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset View"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(3, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
-        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
-        self.toolbar.AddTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"))
+        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
+        self.toolbar.AddTool(5, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(6, '', wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
-        self.toolbar.AddTool(7, '', wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Edit layer"), longHelp = _("Edit the G-Code of this layer"))
-
-        vbox.Add(self.toolbar, 0, border = 5)
-
-        panel.SetSizer(vbox)
-
-        hbox.Add(panel, 1, flag = wx.EXPAND)
-        self.layerslider = wx.Slider(hpanel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
-        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
-        hbox.Add(self.layerslider, 0, border = 5, flag = wx.LEFT | wx.EXPAND)
-        hpanel.SetSizer(hbox)
-
-        return panel, vbox
-
+        if not excluder: # This is added to the 'GCode Viewer' Toolbar
+            self.toolbar.AddTool(6, 'Inject', wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
+            self.toolbar.AddTool(7, 'Edit', wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Edit Layer"), longHelp = _("Edit the G-Code of this layer"))
+        else: # This is added to the 'Excluder' Toolbar
+            self.toolbar.AddTool(8, _('Reset Selection'), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset Selection"))
+        self.toolbar.AddStretchableSpace()
+        self.toolbar.AddSeparator()
+        #self.toolbar.AddTool(10, _('Help'), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Quick Info Panel"))
+        self.toolbar.AddTool(9, _('Close'), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Close Window"))
+   
     def setlayercb(self, layer):
         self.layerslider.SetValue(layer)
 
@@ -69,24 +76,32 @@ class GvizBaseFrame(wx.Frame):
 ID_ABOUT = 101
 ID_EXIT = 110
 class GvizWindow(GvizBaseFrame):
-    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
-        super(GvizWindow, self).__init__(None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
+    def __init__(self, f = None, size = (550, 550), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
+        super(GvizWindow, self).__init__(None, title = _("GCode Viewer"), size = size, style = wx.DEFAULT_FRAME_STYLE)
 
-        panel, vbox = self.create_base_ui()
+        panel, h_sizer = self.create_base_ui()
 
         self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
+        h_sizer.Add(self.p, 1, wx.EXPAND)
+        h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, getSpace('minor'))
+        self.p.SetToolTip("Shift to move view, mousewheel to set layer")#*
 
-        self.toolbar.Realize()
-        vbox.Add(self.p, 1, wx.EXPAND)
+        self.Layout()
+        size = (size[0] + self.layerslider.GetEffectiveMinSize().width,
+                size[1] + self.toolbar.GetEffectiveMinSize().height)
+        minsize = self.toolbar.GetEffectiveMinSize().width
+        self.SetMinClientSize((minsize, minsize))
+        self.SetClientSize(size)
 
-        self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
         self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1 / 1.2), id = 2)
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 3)
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 4)
-        self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
+        self.Bind(wx.EVT_TOOL, self.reset_view, id = 3)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 4)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 5)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.inject(), id = 6)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.editlayer(), id = 7)
+        self.Bind(wx.EVT_TOOL, self.reset_selection, id = 8)
+        self.Bind(wx.EVT_TOOL, lambda x: self.Close(), id = 9)
 
         self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
@@ -100,20 +115,26 @@ class GvizWindow(GvizBaseFrame):
             gcode = gcoder.GCode(f, get_home_pos(self.p.build_dimensions))
             self.p.addfile(gcode)
 
+        self.CenterOnParent()
+
     def set_current_gline(self, gline):
         return
 
     def process_slider(self, event):
         self.p.layerindex = self.layerslider.GetValue()
         z = self.p.get_currentz()
-        wx.CallAfter(self.SetStatusText, _("Layer %d - Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
+        wx.CallAfter(self.SetStatusText, _("Layer %d: Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
         self.p.dirty = True
         wx.CallAfter(self.p.Refresh)
 
-    def resetview(self, event):
+    def reset_view(self, event):
         self.p.translate = [0.0, 0.0]
         self.p.scale = self.p.basescale
         self.p.zoom(0, 0, 1.0)
+
+    def reset_selection(self, event):
+        self.parent.rectangles = []
+        wx.CallAfter(self.p.Refresh)
 
     def mouse(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT) or event.ButtonUp(wx.MOUSE_BTN_RIGHT):
@@ -204,7 +225,7 @@ class Gviz(wx.Panel, BaseViz):
         self.bgcolor.Set(bgcolor)
         self.blitmap = wx.Bitmap(self.GetClientSize()[0], self.GetClientSize()[1], -1)
         self.paint_overlay = None
-
+  
     def inject(self):
         layer = self.layers[self.layerindex]
         injector(self.gcode, self.layerindex, layer)
@@ -248,7 +269,7 @@ class Gviz(wx.Panel, BaseViz):
         if self.layerindex + 1 < len(self.layers):
             self.layerindex += 1
             z = self.get_currentz()
-            wx.CallAfter(self.parent.SetStatusText, _("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, z), 0)
+            wx.CallAfter(self.parent.SetStatusText, _("Layer %d: Z = %.03f mm") % (self.layerindex + 1, z), 0)
             self.dirty = True
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
@@ -257,7 +278,7 @@ class Gviz(wx.Panel, BaseViz):
         if self.layerindex > 0:
             self.layerindex -= 1
             z = self.get_currentz()
-            wx.CallAfter(self.parent.SetStatusText, _("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, z), 0)
+            wx.CallAfter(self.parent.SetStatusText, _("Layer %d: Z = %.03f mm") % (self.layerindex + 1, z), 0)
             self.dirty = True
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
