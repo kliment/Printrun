@@ -14,7 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 from .utils import install_locale, iconfile
-install_locale('plater')
+install_locale('pronterface')
 
 import logging
 import os
