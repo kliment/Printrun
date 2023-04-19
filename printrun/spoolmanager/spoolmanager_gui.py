@@ -428,6 +428,7 @@ class SpoolManagerAddWindow(wx.Dialog):
         # "Program" the bottom buttons
         self.add_button.Bind(wx.EVT_BUTTON, self.onClickAdd)
         self.add_button.SetDefault()
+        self.SetAffirmativeId(wx.ID_ADD)
         self.cancel_button.Bind(wx.EVT_BUTTON, self.onClickCancel)
 
         # Layout
@@ -488,11 +489,13 @@ class SpoolManagerAddWindow(wx.Dialog):
             _(" with %.2f mm of remaining filament.") % spool_length)
         self.parent.Layout() # Layout() is needed to ellipsize possible overlength status
 
+        self.EndModal(True)
         self.Destroy()
 
     def onClickCancel(self, event):
         """Do nothing and close the window."""
         self.parent.statusbar.SetLabel("")
+        self.EndModal(True)
         self.Destroy()
 
     def calculateLength(self, event):
@@ -594,12 +597,13 @@ class SpoolManagerEditWindow(wx.Dialog):
 
         # Generate the bottom buttons        
         self.save_button = wx.Button(self, wx.ID_SAVE)
-        self.save_button.SetDefault()
         self.cancel_button = wx.Button(self, wx.ID_CANCEL)
 
         # "Program" the bottom buttons
         self.save_button.Bind(wx.EVT_BUTTON, self.onClickSave)
         self.cancel_button.Bind(wx.EVT_BUTTON, self.onClickCancel)
+        self.save_button.SetDefault()
+        self.SetAffirmativeId(wx.ID_SAVE)
 
         # Layout
         ## Group the length field and its correspondent buttons             
@@ -622,7 +626,6 @@ class SpoolManagerEditWindow(wx.Dialog):
         self.bottom_buttons_sizer = wx.StdDialogButtonSizer()
         self.bottom_buttons_sizer.AddButton(self.save_button)
         self.bottom_buttons_sizer.AddButton(self.cancel_button)
-        self.save_button.SetDefault()
         self.bottom_buttons_sizer.Realize()
 
         ## Lay out the whole window
@@ -707,9 +710,10 @@ class SpoolManagerEditWindow(wx.Dialog):
             _("Edited spool '%s'") % new_spool_name +
             _(" with %.2f mm of remaining filament.") % new_spool_length)
         self.parent.Layout() # Layout() is needed to ellipsize possible overlength status
-
+        self.EndModal(True)
         self.Destroy()
 
     def onClickCancel(self, event):
             self.parent.statusbar.SetLabel("")
+            self.EndModal(True)
             self.Destroy()
