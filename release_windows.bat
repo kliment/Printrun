@@ -5,7 +5,7 @@ rem ****************************************************************************
 rem *********************  ---> New batch file starts here <---  ***********************
 rem **                                                                                **
 rem **  This batch will compile automated via command line an executable              **
-rem **  Pronterface- and Pronsole file for Windows 10.                                **
+rem **  Pronterface, Pronsole and Plater file for Windows 10.                         **
 rem **                                                                                **
 rem **  Steps that are automated:                                                     **
 rem **                                                                                **
@@ -43,7 +43,7 @@ rem **     this directory in your local repository:                             
 rem **        git checkout master                                                     ** 
 rem **        git submodule add https://github.com/DivingDuck/PrintrunGTK3            **
 rem **        git submodule update --init --recursive                                 **
-rem **     In case the directory PrintrunGTK3 exist but is empty:                     **
+rem **     In case the directory PrintrunGTK3 exist but is empty please run:          **
 rem **        git submodule update --init --recursive                                 **
 rem **     You can find a listing of all used DLL's in file VERSION as reference and  **
 rem **     further informations about the linked submodule here:                      **
@@ -79,8 +79,8 @@ if exist v3 (
    echo ****** No virtual environment named v3 available                ******
    echo ****** Will create first a new virtual environment with name v3 ******
    echo **********************************************************************
-   rem Select your Python version below. Remove 'rem' before 'rem py -3.x ...' for
-   rem your Python version of choice and add 'rem' for all other versions.
+   rem Select your Python version below. Remove 'rem' before 'rem py -3.x ...'
+   rem for your Python version of choice and add 'rem' for all other versions.
    rem Attention: 
    rem Minimum version for wxPython is >= 4.2 and with this version only
    rem Python x64 versions are supported.
@@ -125,11 +125,6 @@ echo ****** check for and update outdated modules  ******
 echo ****************************************************
 for /F "skip=2 delims= " %%i in ('pip list --outdated') do py -m pip install --upgrade %%i
 
-rem echo ****************************************************************************
-rem echo ****** Bug on wxPython 4.1.x workaround for Python 3.x and Windows 10 ******
-rem echo ****************************************************************************
-rem wxPython 4.2.0 is available. Snapshot version is not needed now. Hopefully.  #2022-08-05
-rem pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
 
 echo *************************************************************************
 echo ****** pyglet workaround, needs to be below 2.0 (isn't compatible) ******
@@ -143,13 +138,14 @@ echo ***************************************************************************
 echo ****** cairosvg workaround, needs to be below 2.6.0 (isn't compatible) ******
 echo *****************************************************************************
 rem # 2023-01-30
-rem cairosvg 2.6.0 have problems with locale, so we will stay to 2.5.2 as workaround for now
+rem cairosvg >=2.6.0 generate a crash problem with locale in module projectlayer.py (Projector), 
+rem so we will stay to 2.5.2 as workaround for now
 pip uninstall cairosvg -y
 pip install cairosvg==2.5.2
 
 
 echo ******************************************************************
-echo ****** Compile G-Code parser gcoder_line.cp37-win_amd64.pyd ******
+echo ****** Compile G-Code parser gcoder_line.cp??-win_amd64.pyd ******
 echo ******************************************************************
 rem For safety reasons delete existing version first to prevent errors
 if exist printrun\gcoder_line.cp??-win_amd??.pyd (
@@ -193,16 +189,21 @@ rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files 
 
 pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
 pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
 
-echo ********************************************************
-echo ****** Build Pronterface and Pronsole executables ******
-echo ********************************************************
+echo ***************************************************************
+echo ****** Build Pronterface, Pronsole an Plater executables ******
+echo ***************************************************************
 echo
 echo ** Build Pronterface executable **
 pyinstaller --clean pronterface.spec -y
 echo 
 echo ** Build Pronsole executable **
 pyinstaller --clean pronsole.spec -y
+echo 
+echo ** Build Plater executable **
+pyinstaller --clean plater.spec -y
+
 
 echo ********************************
 echo ****** Add language files ******
