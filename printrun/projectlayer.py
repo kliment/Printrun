@@ -120,6 +120,8 @@ class DisplayFrame(wx.Frame):
                     image = wx.Image(image)
                 if self.layer_red:
                     image = image.AdjustChannels(1, 0, 0, 1)
+                # AGE2023-04-19 Python 3.10 and DrawBitmap expects offset 
+                # as integer value. Convert float values to int
                 bitmap = wx.Bitmap(image.Scale(int(image.Width * self.scale), int(image.Height * self.scale))) #*
                 dc.DrawBitmap(bitmap, int(self.offset[0]), int(-self.offset[1]), True)
             else:
@@ -137,7 +139,7 @@ class DisplayFrame(wx.Frame):
         self.Parent.statusbar.SetLabel(_("Showing, Timestamp %s s") % str(time.perf_counter()))
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
-        # AGe 2022-07-31 Python 3.10 and CallLater expects delay in millyseconds as 
+        # AGe 2022-07-31 Python 3.10 and CallLater expects delay in milliseconds as 
         # integer value instead of float. Convert float value to int
         wx.CallLater(int(1000 * self.interval), self.hide_pic_and_rise)
 
@@ -244,7 +246,7 @@ class SettingsFrame(wx.Dialog):
             return val
 
     def __init__(self, parent, printer = None):
-        wx.Dialog.__init__(self, parent, title = _("ProjectLayer Control"), style = (wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_EX_CONTEXTHELP))
+        wx.Dialog.__init__(self, parent, title = _("ProjectLayer Control"), style = (wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT))
         self.pronterface = parent
         self.display_frame = DisplayFrame(self, title = _("ProjectLayer Display"), printer = printer)
 
@@ -273,7 +275,7 @@ class SettingsFrame(wx.Dialog):
 
         self.pause_button = wx.Button(buttonGroup, -1, self.getButtonLabel('pause'))
         self.pause_button.Bind(wx.EVT_BUTTON, self.pause_present)
-        self.pause_button.SetToolTip(_("Pauses the presentation. Can be resumed afterwards by clicking this button, or restarted by clicking present again."))
+        self.pause_button.SetToolTip(_("Pauses the presentation. Can be resumed afterwards by clicking this button, or restarted by clicking start again."))
         buttonbox.Add(self.pause_button, 1, flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border = getSpace('mini'))
         self.pause_button.Disable()
 
@@ -315,7 +317,6 @@ class SettingsFrame(wx.Dialog):
         fieldsizer.Add(self.scale, pos = (3, 1))
 
         fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Direction:")), pos = (4, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        #self.direction = wx.ComboBox(settingsGroup, -1, choices = ['Top Down', 'Bottom Up'], value = self._get_setting('project_direction', 'Top Down'), size = (125, -1), style = wx.CB_READONLY)
         self.direction = wx.Choice(settingsGroup, -1, choices = [_('Top Down'), _('Bottom Up')], size = (125, -1))
         saved_direction = self._get_setting('project_direction', 0)
         if not saved_direction.isdigit(): # This setting used to be a string, so older settings need to be overwritten
@@ -394,38 +395,41 @@ class SettingsFrame(wx.Dialog):
 
         displayGroup = wx.StaticBox(self.panel, -1, _("Display"))
         displayboxsizer = wx.StaticBoxSizer(displayGroup)
-        displaysizer = wx.GridBagSizer(vgap = getSpace('minor'), hgap = getSpace('minor'))
+        displaysizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.fullscreen = wx.CheckBox(displayGroup, -1, _("Fullscreen"))
         self.fullscreen.Bind(wx.EVT_CHECKBOX, self.update_fullscreen)
         self.fullscreen.SetToolTip(_("Toggles the project screen to full size."))
-        displaysizer.Add(self.fullscreen, pos = (0, 0), flag = wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.Add(self.fullscreen, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, getSpace('staticbox'))
+        displaysizer.AddStretchSpacer(1)
 
         self.calibrate = wx.CheckBox(displayGroup, -1, _("Calibrate"))
         self.calibrate.Bind(wx.EVT_CHECKBOX, self.show_calibrate)
         self.calibrate.SetToolTip(_("Toggles the calibration grid. Each grid should be 10mmx10mm in size. Use the grid to ensure the projected size is correct. See also the help for the ProjectedX field."))
-        displaysizer.Add(self.calibrate, pos = (0, 1), flag = wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.Add(self.calibrate, 0, wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.AddStretchSpacer(1)
 
         first_layer_boxer = wx.BoxSizer(wx.HORIZONTAL)
         self.first_layer = wx.CheckBox(displayGroup, -1, _("1st Layer"))
         self.first_layer.Bind(wx.EVT_CHECKBOX, self.show_first_layer)
-        self.first_layer.SetToolTip(_("Displays the first layer of the model. Use this to project the first layer for longer so it holds to the base. Note: this value does not affect the first layer when the \"Present\" run is started, it should be used manually."))
+        self.first_layer.SetToolTip(_("Displays the first layer of the model. Use this to project the first layer for longer so it holds to the base. Note: this value does not affect the first layer when the \"Start\" run is started, it should be used manually."))
 
         first_layer_boxer.Add(self.first_layer, flag = wx.ALIGN_CENTER_VERTICAL)
 
-        first_layer_boxer.Add(wx.StaticText(displayGroup, -1, " (s):"), flag = wx.ALIGN_CENTER_VERTICAL)
+        first_layer_boxer.Add(wx.StaticText(displayGroup, -1, "(s):"), flag = wx.ALIGN_CENTER_VERTICAL)
         self.show_first_layer_timer = wx.SpinCtrlDouble(displayGroup, -1, initial = -1, min = -1, inc = 1, size = (125, -1))
         self.show_first_layer_timer.SetDigits(1)
         self.show_first_layer_timer.SetToolTip(_("How long to display the first layer for. -1 = unlimited."))
-        first_layer_boxer.Add(self.show_first_layer_timer, flag = wx.ALIGN_CENTER_VERTICAL)
-        displaysizer.Add(first_layer_boxer, pos = (0, 2), flag = wx.ALIGN_CENTER_VERTICAL)
+        first_layer_boxer.Add(self.show_first_layer_timer, flag = wx.ALIGN_CENTER_VERTICAL | wx.LEFT, border = getSpace('mini'))
+        displaysizer.Add(first_layer_boxer, 0, wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.AddStretchSpacer(1)
 
         self.layer_red = wx.CheckBox(displayGroup, -1, _("Red"))
         self.layer_red.Bind(wx.EVT_CHECKBOX, self.show_layer_red)
         self.layer_red.SetToolTip(_("Toggles whether the image should be red. Useful for positioning whilst resin is in the printer as it should not cause a reaction."))
-        displaysizer.Add(self.layer_red, pos = (0, 3), flag = wx.ALIGN_CENTER_VERTICAL)
+        displaysizer.Add(self.layer_red, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, getSpace('staticbox'))
 
-        displayboxsizer.Add(displaysizer)
+        displayboxsizer.Add(displaysizer, 1, wx.EXPAND)
 
         # Info
         infoGroup = wx.StaticBox(self.panel, label = _("Info"))
@@ -492,7 +496,6 @@ class SettingsFrame(wx.Dialog):
 
         self.SetSizerAndFit(topsizer)
         self.Fit()
-        #self.SetPosition((0, 0))
         self.CentreOnParent()
         self.Show()
 
@@ -625,9 +628,9 @@ class SettingsFrame(wx.Dialog):
                 layerHeight = float(self.thickness.GetValue())
             else:
                 layers = self.parse_svg(name)
-                #layerHeight = layers[1]
-                # Caution: *1000000 is a special adjustment to dislpay the Slic3r .svg files correctly.
-                layerHeight = float(f"{layers[1]*1000000:.2f}")
+                layerHeight = float(f"{layers[1]:.2f}") # layer[1] formatted
+                # Caution: *1000000 is a special adjustment to dislpay the Slic3r 1.3.0 *.svg files correctly.
+                # layerHeight = float(f"{layers[1]*1000000:.2f}")
                 self.thickness.SetValue(str(layerHeight))
                 self.statusbar.SetLabel(_("Layer thickness detected: %s mm") % layerHeight)
             self.statusbar.SetLabel(_("%s layers found, total height %s mm") % (len(layers[0]), layerHeight * len(layers[0])))
@@ -722,7 +725,8 @@ class SettingsFrame(wx.Dialog):
                 def unpresent_first_layer():
                     self.display_frame.clear_layer()
                     self.first_layer.SetValue(False)
-                wx.CallLater(self.show_first_layer_timer.GetValue() * 1000, unpresent_first_layer)
+                # AGE2023-04-19 Python 3.10 expects delay in milliseconds as integer value instead of float. Convert float value to int
+                wx.CallLater(int(self.show_first_layer_timer.GetValue() * 1000), unpresent_first_layer)
 
     def update_offset(self, event):
 
@@ -751,7 +755,6 @@ class SettingsFrame(wx.Dialog):
             float(layer)
         except ValueError:
             self.statusbar.SetLabel(_("Unrecognized number in 'Layer': %s") % layer)
-            #self.Layout() # Layout() is needed to ellipsize possible overlength status
             return False
         else:
             self.statusbar.SetLabel("")
@@ -957,7 +960,7 @@ class SettingsFrame(wx.Dialog):
             for setting in std_settings:
                 self.reset_setting(event, setting[0], setting[1], setting[2])
 
-            # Direction is separate because it can't be set with SetValue but SetSelection instead
+            # Direction is not in the std_settings list because it can't be set with SetValue but SetSelection instead
             #[ self.direction, 0, self.update_direction]
             if not 0 == self.direction.GetSelection():
                 self.direction.SetSelection(0)

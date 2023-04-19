@@ -82,7 +82,7 @@ class GcodePlaterPanel(PlaterPanel):
                    circular_platform = False,
                    antialias_samples = 0,
                    grid = (1, 10)):
-        super(GcodePlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions)
+        super(GcodePlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
                                        antialias_samples = antialias_samples)
         self.set_viewer(viewer)
@@ -91,8 +91,7 @@ class GcodePlaterPanel(PlaterPanel):
                                         grid = grid)
         self.platform_object = gcview.GCObject(self.platform)
         self.Layout()
-        self.SetMinClientSize((self.menupanel.GetEffectiveMinSize().width, 
-                               self.menupanel.GetEffectiveMinSize().height + 48))
+        self.SetMinClientSize(self.topsizer.CalcMin())
         self.SetTitle("G-Code Plate Builder")
 
     def get_objects(self):

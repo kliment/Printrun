@@ -109,7 +109,7 @@ class SpoolManagerMainWindow(wx.Frame):
 
     def onClickAdd(self, event):
         """Open the window for customizing the new spool."""
-        SpoolManagerAddWindow(self).Show(True)
+        SpoolManagerAddWindow(self).ShowModal()
 
     def onClickLoad(self, event, extruder):
         """Load the selected spool to the correspondent extruder."""
@@ -168,7 +168,7 @@ class SpoolManagerMainWindow(wx.Frame):
         # Open the edit window
         spool_name = self.spool_list.GetItemText(spool_index)
         spool_length = self.spool_list.GetItemText(spool_index, 1)
-        SpoolManagerEditWindow(self, spool_name, spool_length).Show(True)
+        SpoolManagerEditWindow(self, spool_name, spool_length).ShowModal()
         self.statusbar.SetLabel("")
 
     def onClickDelete(self, event):
