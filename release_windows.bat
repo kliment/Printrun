@@ -192,7 +192,7 @@ pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VE
 pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
 
 echo ***************************************************************
-echo ****** Build Pronterface, Pronsole an Plater executables ******
+echo ****** Build Pronterface, Pronsole and Plater executables *****
 echo ***************************************************************
 echo
 echo ** Build Pronterface executable **
