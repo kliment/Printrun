@@ -20,7 +20,7 @@ if sys.version_info.major < 3:
     print("You need to run this on Python 3")
     sys.exit(-1)
 
-from serial import Serial, SerialException, PARITY_ODD, PARITY_NONE
+import serial
 from select import error as SelectError
 import threading
 from queue import Queue, Empty as QueueEmpty
@@ -72,9 +72,55 @@ SYS_EOF = b''  #python's marker for EOF
 SYS_AGAIN = None #python's marker for timeout/no data
 
 class printcore():
+    """Core 3D printer host functionality.
+
+    If `port` and `baud` are specified, `connect` is called immediately.
+
+    Parameters
+    ----------
+    port : str, optional
+        Either a device name, such as '/dev/ttyUSB0' or 'COM3', or an URL with
+        port, such as '192.168.0.10:80' or 'http://www.example.com:8080'. Only
+        required if it was not provided already.
+    baud : int, optional
+        Communication speed in bit/s, such as 9600, 115200 or 250000. Only
+        required if it was not provided already.
+    dtr : bool, optional
+        On serial connections, enable/disable hardware DTR flow
+        control. (Default is None)
+
+    Attributes (WIP)
+    ----------
+    analyzer : GCode
+        A `printrun.gcoder.GCode` object containing all the G-code commands
+        sent to the printer.
+    baud
+    dtr
+    event_handler : list of PrinterEventHandler
+        Collection of event-handling objects. The relevant method of each
+        handler on this list will be triggered at the relevant process
+        stage. See `printrun.eventhandler.PrinterEventHandler`.
+    mainqueue : GCode
+        The main command queue. A `printrun.gcoder.GCode` object containing an
+        array of G-code commands. A call to `startprint` will populate this
+        list and `printcore` will then gradually send the commands in this
+        queue to the printer.
+    online : bool
+        True if the printer has responded to the initial command and is
+        active.
+    paused : bool
+        True if there is a print currently on pause.
+    port
+    printing : bool
+        True if there is a print currently running.
+    priqueue : Queue
+        The priority command queue. Commands in this queue will be gradually
+        sent to the printer. If there are commands in the `mainqueue` the ones
+        in `priqueue` will be sent ahead of them. See `queue.Queue`.
+
+    """
+
     def __init__(self, port = None, baud = None, dtr=None):
-        """Initializes a printcore instance. Pass the port and baud rate to
-           connect immediately"""
         self.baud = None
         self.dtr = None
         self.port = None
@@ -176,10 +222,10 @@ class printcore():
                     self.printer_tcp = None
                 self.printer.close()
             except socket.error:
-                logger.error(traceback.format_exc())
+                logging.error(traceback.format_exc())
                 pass
             except OSError:
-                logger.error(traceback.format_exc())
+                logging.error(traceback.format_exc())
                 pass
         for handler in self.event_handler:
             try: handler.on_disconnect()
@@ -236,6 +282,7 @@ class printcore():
                                   "\n" + _("Socket error %s:") % e.errno +
                                   "\n" + e.strerror)
                     self.printer = None
+                    self.printer_tcp.close()
                     self.printer_tcp = None
                     return
             else:
@@ -243,16 +290,16 @@ class printcore():
                 self.printer_tcp = None
                 try:
                     if self.needs_parity_workaround:
-                        self.printer = Serial(port = self.port,
+                        self.printer = serial.Serial(port = self.port,
                                               baudrate = self.baud,
                                               timeout = 0.25,
-                                              parity = PARITY_ODD)
+                                              parity = serial.PARITY_ODD)
                         self.printer.close()
-                        self.printer.parity = PARITY_NONE
+                        self.printer.parity = serial.PARITY_NONE
                     else:
-                        self.printer = Serial(baudrate = self.baud,
+                        self.printer = serial.Serial(baudrate = self.baud,
                                               timeout = 0.25,
-                                              parity = PARITY_NONE)
+                                              parity = serial.PARITY_NONE)
                         self.printer.port = self.port
                     try:  #this appears not to work on many platforms, so we're going to call it but not care if it fails
                         self.printer.dtr = dtr
@@ -260,7 +307,7 @@ class printcore():
                         #self.logError(_("Could not set DTR on this platform")) #not sure whether to output an error message
                         pass
                     self.printer.open()
-                except SerialException as e:
+                except serial.SerialException as e:
                     self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
                                   "\n" + _("Serial error: %s") % e)
                     self.printer = None
@@ -280,7 +327,13 @@ class printcore():
             self._start_sender()
 
     def reset(self):
-        """Reset the printer
+        """Attempt to reset the connection to the printer.
+
+        Warnings
+        --------
+        Current implementation resets a serial connection by disabling
+        hardware DTR flow control. It has no effect on socket connections.
+
         """
         if self.printer and not self.printer_tcp:
             self.printer.dtr = 1
@@ -350,7 +403,7 @@ class printcore():
             self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
                               "\n" + _("Maybe a bad baudrate?"))
             return None
-        except SerialException as e:
+        except serial.SerialException as e:
             self.logError(_("Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
             return None
         except socket.error as e:
@@ -484,11 +537,29 @@ class printcore():
         return reduce(lambda x, y: x ^ y, map(ord, command))
 
     def startprint(self, gcode, startindex = 0):
-        """Start a print, gcode is an array of gcode commands.
-        returns True on success, False if already printing.
-        The print queue will be replaced with the contents of the data array,
-        the next line will be set to 0 and the firmware notified. Printing
-        will then start in a parallel thread.
+        """Start a print.
+
+        The `mainqueue` is populated and then commands are gradually sent to
+        the printer. Printing starts in a parallel thread, this function
+        launches the print and returns immediately, it does not wait/block
+        until printing has finished.
+
+        Parameters
+        ----------
+        gcode : GCode
+            A `printrun.gcoder.GCode` object containing the array of G-code
+            commands. The print queue `mainqueue` will be replaced with the
+            contents of `gcode`.
+        startindex : int, default: 0
+            The index from the `gcode` array from which the printing will be
+            started.
+
+        Returns
+        -------
+        bool
+            True on successful print start, False if already printing or
+            offline.
+
         """
         if self.printing or not self.online or not self.printer:
             return False
@@ -511,6 +582,7 @@ class printcore():
         return True
 
     def cancelprint(self):
+        """Cancel an ongoing print."""
         self.pause()
         self.paused = False
         self.mainqueue = None
@@ -529,7 +601,16 @@ class printcore():
             pass
 
     def pause(self):
-        """Pauses the print, saving the current position.
+        """Pauses an ongoing print.
+
+        The current position of the print is saved to be able to go back to it
+        when resuming.
+
+        Returns
+        -------
+        bool
+            False if not printing.
+
         """
         if not self.printing: return False
         self.paused = True
@@ -554,7 +635,18 @@ class printcore():
         self.pauseRelativeE = self.analyzer.relative_e
 
     def resume(self):
-        """Resumes a paused print."""
+        """Resumes a paused print.
+
+        `printcore` will first attempt to set the position and conditions it
+        had when the print was paused and then resume the print right where it
+        was.
+
+        Returns
+        -------
+        bool
+            False if print not paused.
+
+        """
         if not self.paused: return False
         # restores the status
         self.send_now("G90")  # go to absolute coordinates
@@ -582,9 +674,21 @@ class printcore():
         self.print_thread.start()
 
     def send(self, command, wait = 0):
-        """Adds a command to the checksummed main command queue if printing, or
-        sends the command immediately if not printing"""
+        """Adds a command to the main queue.
 
+        If a print is ongoing, `command` is appended at the end of
+        `mainqueue`. If not printing, the command is added to the priority
+        queue `priqueue`. The `command` is added to a queue and is sent on a
+        parallel thread. This function is non-blocking.
+
+        Parameters
+        ----------
+        command : str
+            Command to be sent, e.g. "M105" or "G1 X10 Y10".
+        wait
+            Ignored. Do not use.
+
+        """
         if self.online:
             if self.printing:
                 self.mainqueue.append(command)
@@ -594,8 +698,19 @@ class printcore():
             self.logError(_("Not connected to printer."))
 
     def send_now(self, command, wait = 0):
-        """Sends a command to the printer ahead of the command queue, without a
-        checksum"""
+        """Adds a command to the priority queue.
+
+        Command is appended to `priqueue`. The `command` is added to a queue
+        and is sent on a parallel thread. This function is non-blocking.
+
+        Parameters
+        ----------
+        command : str
+            Command to be sent, e.g. "M105" or "G1 X10 Y10".
+        wait
+            Ignored. Do not use.
+
+        """
         if self.online:
             self.priqueue.put_nowait(command)
         else:
@@ -758,9 +873,10 @@ class printcore():
                 else:
                     self.logError(_("Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
                 self.writefailures += 1
-            except SerialException as e:
+            except serial.SerialException as e:
                 self.logError(_("Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
                 self.writefailures += 1
-            except RuntimeError as e:
-                self.logError(_("Socket connection broken, disconnected. ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
+            except RuntimeError:
+                self.logError("Socket connection broken, disconnected.\n" +
+                              traceback.format_exc())
                 self.writefailures += 1
