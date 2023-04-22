@@ -49,14 +49,13 @@ if os.name == "nt":
         import winreg
     except:
         pass
+
 READLINE = True
 try:
     import readline
-    try:
-        readline.rl.mode.show_all_if_ambiguous = "on"  # config pyreadline on windows
-    except:
-        pass
-except:
+    if os.name == "nt":   # config pyreadline on Windows
+        readline.rl.mode.show_all_if_ambiguous = "on"
+except ImportError:
     READLINE = False  # neither readline module is available
 
 tempreading_exp = re.compile('\\bT\d*:')
@@ -226,20 +225,16 @@ class pronsole(cmd.Cmd):
 
         self.preloop()
         if self.use_rawinput and self.completekey:
-            try:
-                import readline
-                self.old_completer = readline.get_completer()
-                readline.set_completer(self.complete)
-                readline.parse_and_bind(self.completekey + ": complete")
-                history = (self.history_file)
-                if not os.path.exists(history):
-                    if not os.path.exists(self.cache_dir):
-                        os.makedirs(self.cache_dir)
-                    history = os.path.join(self.cache_dir, "history")
-                if os.path.exists(history):
-                    readline.read_history_file(history)
-            except ImportError:
-                pass
+            self.old_completer = readline.get_completer()
+            readline.set_completer(self.complete)
+            readline.parse_and_bind(self.completekey + ": complete")
+            history = (self.history_file)
+            if not os.path.exists(history):
+                if not os.path.exists(self.cache_dir):
+                    os.makedirs(self.cache_dir)
+                history = os.path.join(self.cache_dir, "history")
+            if os.path.exists(history):
+                readline.read_history_file(history)
         try:
             if intro is not None:
                 self.intro = intro
@@ -273,12 +268,8 @@ class pronsole(cmd.Cmd):
             self.postloop()
         finally:
             if self.use_rawinput and self.completekey:
-                try:
-                    import readline
-                    readline.set_completer(self.old_completer)
-                    readline.write_history_file(self.history_file)
-                except ImportError:
-                    pass
+                readline.set_completer(self.old_completer)
+                readline.write_history_file(self.history_file)
 
     def confirm(self):
         y_or_n = input("y/n: ")
