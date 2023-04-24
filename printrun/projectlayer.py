@@ -319,7 +319,9 @@ class SettingsFrame(wx.Dialog):
         fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Direction:")), pos = (4, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
         self.direction = wx.Choice(settingsGroup, -1, choices = [_('Top Down'), _('Bottom Up')], size = (125, -1))
         saved_direction = self._get_setting('project_direction', 0)
-        if not saved_direction.isdigit(): # This setting used to be a string, so older settings need to be overwritten
+        try:
+            int(saved_direction) # This setting used to be a string, so older settings need to be overwritten
+        except:    
             saved_direction = 0
             self._set_setting('project_direction', saved_direction)
         self.direction.SetSelection(int(saved_direction))
