@@ -238,12 +238,10 @@ class TestReadSerial(unittest.TestCase):
 
     def _fake_read(self, **kargs):
         # Allows mocking a serial read operation for different return values
-        # serial.Serial.in_waiting is mocked to signal 1 byte is available
         with patch_serial("readline", **kargs) as mocked_read:
-            with patch_serial("in_waiting", new=1):
-                data = self.dev.readline()
-                mocked_read.assert_called_once()
-                return data
+            data = self.dev.readline()
+            mocked_read.assert_called_once()
+            return data
 
     def test_calls_readline(self):
         """serial.Serial.readline is called"""
@@ -261,9 +259,8 @@ class TestReadSerial(unittest.TestCase):
 
     def test_read_empty(self):
         """READ_EMPTY is returned when there's nothing to read"""
-        # Test reading when in_waiting signals zero bytes available
-        with patch_serial("in_waiting", new=0):
-            self.assertEqual(self.dev.readline(), device.READ_EMPTY)
+        # Serial.readline() returns b'' (aka `READ_EMPTY`) on timeout
+        self.assertEqual(self._fake_read(return_value=b''), device.READ_EMPTY)
 
 
 class TestReadSocket(unittest.TestCase):
