@@ -272,9 +272,8 @@ class Device():
 
     def _readline_serial(self):
         try:
-            if self._device.in_waiting:
-                return self._device.readline()
-            return READ_EMPTY
+            # Serial.readline() returns b'' (aka `READ_EMPTY`) on timeout
+            return self._device.readline()
         except (serial.SerialException, OSError) as e:
             msg = f"Unable to read from serial port '{self.port}'"
             raise DeviceError(msg) from e
