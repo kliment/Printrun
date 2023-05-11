@@ -38,19 +38,14 @@ def set_utf8_locale():
 def install_locale(domain):
     # Set up Internationalization using gettext
 
-    local_path = Path('./locale')
-    if local_path.exists():
-        # First try to find a translation in a local directory
-        if gettext.find(domain, local_path) is not None:
-            return gettext.install(domain, local_path)
+    local_path = Path(Path.cwd(), 'locale')
+    if gettext.find(domain, local_path) is not None:
+        # Install the translation found in the local directory
+        gettext.install(domain, local_path)
     else:
-        # Search for a translation in system directories
-        if gettext.find(domain) is not None:
-            return gettext.install(domain)
-
-    # If no translations were found above, just install a dummy/empty one
-    # This is required to ensure that the function `_()` is installed
-    return gettext.NullTranslations().install()
+        # Install the translation found in system directories
+        # (or fallback to a dummy/empty one)
+        gettext.install(domain)
 
 
 class LogFormatter(logging.Formatter):
