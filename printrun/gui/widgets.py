@@ -15,9 +15,10 @@
 
 import wx
 import re
-import platform
+import platform # Used by the getSpace method for platform specific spacing
+import logging
 
-def getSpace(a):
+def getSpace_old(a): #TODO: Delete this after the replacement was tested
     # This method is used to de-hardcode and unify the borders and gaps of the interface.
     match a:
         case 'major': # e.g. outer border of dialog boxes
@@ -55,6 +56,35 @@ def getSpace(a):
                 return 0 # Linux systems
         case 'none':
             return 0
+        case 'settings':
+            return 16
+
+def getSpace(a):
+    spacing_values = {
+        'major': 12, # e.g. outer border of dialog boxes
+        'minor': 8, # e.g. border of inner elements
+        'mini': 4,
+        'stddlg': 4,
+        'stddlg-frame': 8, # Border for std dialog buttons when used with frames.
+        'staticbox': 0, # Border between StaticBoxSizers and the elements inside.
+        'settings': 16, # How wide setting elements can be (multiples of this)
+        'none': 0
+    }
+
+    # Platform specific overrides
+    if platform.system() == 'Windows':
+        spacing_values['stddlg'] = 8
+        spacing_values['staticbox'] = 4
+
+    if platform.system() == 'Darwin':
+        spacing_values['stddlg-frame'] = 12
+
+    try:
+        return spacing_values[a]
+    except KeyError:
+        logging.warning("getSpace cannot return spacing value, will return 0 instead. No entry: %s", a)
+        return 0
+
 
 class MacroEditor(wx.Dialog):
     """Really simple editor to edit macro definitions"""
@@ -91,7 +121,6 @@ class MacroEditor(wx.Dialog):
         topsizer = wx.BoxSizer(wx.VERTICAL)
         topsizer.Add(panel, 1, wx.EXPAND | wx.ALL, getSpace('none'))
         # No StaticLine in this case bc the TextCtrl acts as a divider
-        #topsizer.Add(wx.StaticLine(self, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
         btnsizer = wx.StdDialogButtonSizer()
         self.savebtn = wx.Button(self, wx.ID_SAVE)
         self.savebtn.SetDefault()
@@ -124,18 +153,18 @@ class MacroEditor(wx.Dialog):
         self.findbtn.Enable()
         self.titletext.SetLabel("              _")
         self.finddialog.Destroy()
-    
+
     def on_find_find(self, ev):
         findstring = self.finddata.GetFindString()
         macrocode = self.e.GetValue()
-        
+
         if self.e.GetStringSelection().lower() == findstring.lower():
             # If the desired string is already selected, change the position to jump to the next one.
             if self.finddata.GetFlags() % 2 == 1:
                 self.e.SetInsertionPoint(self.e.GetInsertionPoint() + len(findstring))
             else:
                 self.e.SetInsertionPoint(self.e.GetInsertionPoint() - len(findstring))
-        
+
         if int(self.finddata.GetFlags() / 4) != 1:
             # When search is not case-sensitve, convert the whole string to lowercase
             findstring = findstring.casefold()
@@ -146,7 +175,7 @@ class MacroEditor(wx.Dialog):
             stringpos = macrocode.find(findstring, self.e.GetInsertionPoint())
         else:
             stringpos = macrocode.rfind(findstring, 0, self.e.GetInsertionPoint())
-        
+
         if stringpos == -1 and self.finddata.GetFlags() % 2 == 1:
             self.titletext.SetLabel(_("End of macro, jumped to first line"))
             stringpos = 0 #jump to the beginning
