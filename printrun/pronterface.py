@@ -966,7 +966,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         info.AddDeveloper('Maja M. @SparkyCola (code)')
         info.AddDeveloper('Francesco Santini @fsantini (code)')
         info.AddDeveloper('Cristopher Olah @colah (code)')
-        
+
         info.AddDeveloper('Jeremy Kajikawa (code)')
         info.AddDeveloper('Markus Hitter (code)')
         info.AddDeveloper('SkateBoss (code)')
@@ -1054,10 +1054,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         info.AddDeveloper('l4nce0 (code)')
         info.AddDeveloper('palob (code)')
         info.AddDeveloper('russ (code)')
-        
+
         info.AddArtist('Ahmet Cem TURAN @ahmetcemturan (icons, code)')
         info.AddArtist('Duane Johnson (code,graphics)')
-        
+
         info.AddTranslator('freddii (German translation)')
         info.AddTranslator('Christian Metzen @metzench (German translation)')
         info.AddTranslator('Cyril Laguilhon-Debat (French translation)')
@@ -1066,7 +1066,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         info.AddTranslator('Ruben Lubbes (NL translation)')
         info.AddTranslator('aboobed (Arabic translation)')
         info.AddTranslator('Alessandro Ranellucci @alranel (Italian translation)')
-        
+
         wx.adv.AboutBox(info)
 
     #  --------------------------------------------------------------
@@ -1087,12 +1087,12 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(ComboSetting("controlsmode", _("Standard"), (_("Standard"), _("Mini"), ), _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
-        self.settings._add(ComboSetting("mainviz", "3D", ("2D", "3D", _("None")), _("Main visualization"), _("Select visualization for main window."), "Viewer"), self.reload_ui)
+        self.settings._add(ComboSetting("mainviz", "3D", ("2D", "3D", _("None")), _("Main visualization"), _("Select visualization for main window."), "Viewer", 4*getSpace('settings')), self.reload_ui)
         self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "Viewer"), self.reload_ui)
         self.settings._add(StaticTextSetting("separator_3d_viewer", _("3D viewer options"), "", group = "Viewer"))
         self.settings._add(BooleanSetting("light3d", False, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "Viewer"), self.reload_ui)
         self.settings._add(BooleanSetting("perspective", False, _("Use a perspective view instead of orthographic"), _("A perspective view looks more realistic, but is a bit more confusing to navigate"), "Viewer"), self.reload_ui)
-        self.settings._add(ComboSetting("antialias3dsamples", "0", ("0", "2", "4", "8"), _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "Viewer"), self.reload_ui)
+        self.settings._add(ComboSetting("antialias3dsamples", "0", ("0", "2", "4", "8"), _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "Viewer", 4*getSpace('settings')), self.reload_ui)
         self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "Viewer"))
         self.settings._add(FloatSpinSetting("gcview_path_width", 0.4, 0.01, 2, _("Extrusion width for 3D viewer"), _("Width of printed path in 3D viewer"), "Viewer", increment = 0.05), self.update_gcview_params)
         self.settings._add(FloatSpinSetting("gcview_path_height", 0.3, 0.01, 2, _("Layer height for 3D viewer"), _("Height of printed path in 3D viewer"), "Viewer", increment = 0.05), self.update_gcview_params)

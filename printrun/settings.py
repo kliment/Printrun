@@ -20,8 +20,9 @@ import sys
 
 from functools import wraps
 
-from .utils import parse_build_dimensions
 from pathlib import Path
+from .utils import parse_build_dimensions
+from .gui.widgets import getSpace
 
 def setting_add_tooltip(func):
     @wraps(func)
@@ -132,7 +133,55 @@ def wxColorToStr(color, withAlpha = True):
         + ('{0.alpha:02X}' if withAlpha else '')
     return format.format(color)
 
+class DirSetting(wxSetting):
+    '''Adds a setting type that works similar to the StringSetting but with
+    an additional 'Browse' button that opens an directory chooser dialog.'''
+
+    def get_widget(self, parent):
+        import wx
+
+        """Create the text control"""
+        self.text_ctrl = wx.TextCtrl(parent, -1, str(self.value))
+
+        """Create the browse-button control"""
+        button = wx.Button(parent, -1, "Browse")
+        button.Bind(wx.EVT_BUTTON, self.on_browse)
+
+        self.widget = wx.BoxSizer(wx.HORIZONTAL)
+        self.widget.Add(self.text_ctrl, 1)
+        self.widget.Add(button, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, getSpace('mini'))
+
+        return self.widget
+
+    def on_browse (self, event = None):
+        import wx
+
+        """ Going to browse for file... """
+        directory = self.text_ctrl.GetValue()
+        if not os.path.isdir(directory):
+            directory = '.'
+
+        message = _("Choose Directory...")
+        dlg = wx.DirDialog (None, message, directory,
+                    wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+        dlg.SetMessage(message)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.text_ctrl.SetValue(dlg.GetPath())
+        dlg.Destroy()
+
+    def _set_value(self, value):
+        self._value = value
+        if self.text_ctrl:
+            self.text_ctrl.SetValue(value)
+
+    value = property(wxSetting._get_value, _set_value)
+
+    def update(self):
+        self.value = self.text_ctrl.GetValue()
+
 class ColorSetting(wxSetting):
+
     def __init__(self, name, default, label = None, help = None, group = None, isRGBA=True):
         super().__init__(name, default, label, help, group)
         self.isRGBA = isRGBA
@@ -153,22 +202,22 @@ class ColorSetting(wxSetting):
 
 class ComboSetting(wxSetting):
 
-    def __init__(self, name, default, choices, label = None, help = None, group = None):
+    def __init__(self, name, default, choices, label = None, help = None, group = None, size = 6*getSpace('settings')): # size: Default length is set here, can be overwritten on creation.
         super(ComboSetting, self).__init__(name, default, label, help, group)
         self.choices = choices
+        self.size = size
 
     def get_specific_widget(self, parent):
         import wx
         readonly = isinstance(self.choices, tuple)
         if readonly:
             # wx.Choice drops its list on click, no need to click down arrow
-            # which is far to the right because of wx.EXPAND
-            self.widget = wx.Choice(parent, -1, choices = self.choices)
+            self.widget = wx.Choice(parent, -1, choices = self.choices, size = (self.size, -1))
             self.widget.GetValue = lambda: self.choices[self.widget.Selection]
             self.widget.SetValue = lambda v: self.widget.SetSelection(self.choices.index(v))
             self.widget.SetValue(self.value)
         else:
-            self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN)
+            self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices, style = wx.CB_DROPDOWN, size = (self.size, -1))
         return self.widget
 
 class SpinSetting(wxSetting):
@@ -181,7 +230,7 @@ class SpinSetting(wxSetting):
 
     def get_specific_widget(self, parent):
         import wx
-        self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max)
+        self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max, size = (4*getSpace('settings'), -1))
         self.widget.SetDigits(0)
         self.widget.SetValue(self.value)
         orig = self.widget.GetValue
@@ -218,7 +267,7 @@ def MySpin(parent, digits, *args, **kw):
 class FloatSpinSetting(SpinSetting):
 
     def get_specific_widget(self, parent):
-        self.widget = MySpin(parent, 2, initial = self.value, min = self.min, max = self.max, inc = self.increment)
+        self.widget = MySpin(parent, 2, initial = self.value, min = self.min, max = self.max, inc = self.increment, size = (4*getSpace('settings'), -1))
         return self.widget
 
 class BooleanSetting(wxSetting):
@@ -275,42 +324,41 @@ class BuildDimensionsSetting(wxSetting):
             self.widgets[i].SetValue(build_dimensions_list[i])
 
     def get_widget(self, parent):
-        from wx.lib.agw.floatspin import FloatSpin
         import wx
         build_dimensions = parse_build_dimensions(self.value)
         self.widgets = []
         def w(val, m, M):
-            self.widgets.append(MySpin(parent, 2, initial = val, min = m, max = M))
+            self.widgets.append(MySpin(parent, 2, initial = val, min = m, max = M, size = (5*getSpace('settings'), -1)))
         def addlabel(name, pos):
-            self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, border = 5)
+            self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.ALIGN_RIGHT, border = getSpace('mini'))
         def addwidget(*pos):
-            self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT | wx.EXPAND, border = 5)
-        self.widget = wx.GridBagSizer()
-        addlabel(_("Width"), (0, 0))
+            self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT | wx.EXPAND, border = getSpace('mini'))
+        self.widget = wx.GridBagSizer(vgap = getSpace('mini'), hgap = getSpace('mini'))
+        addlabel(_("Width:"), (0, 0))
         w(build_dimensions[0], 0, 2000)
         addwidget(0, 1)
-        addlabel(_("Depth"), (0, 2))
+        addlabel(_("Depth:"), (0, 2))
         w(build_dimensions[1], 0, 2000)
         addwidget(0, 3)
-        addlabel(_("Height"), (0, 4))
+        addlabel(_("Height:"), (0, 4))
         w(build_dimensions[2], 0, 2000)
         addwidget(0, 5)
-        addlabel(_("X offset"), (1, 0))
+        addlabel(_("X Offset:"), (1, 0))
         w(build_dimensions[3], -2000, 2000)
         addwidget(1, 1)
-        addlabel(_("Y offset"), (1, 2))
+        addlabel(_("Y Offset:"), (1, 2))
         w(build_dimensions[4], -2000, 2000)
         addwidget(1, 3)
-        addlabel(_("Z offset"), (1, 4))
+        addlabel(_("Z Offset:"), (1, 4))
         w(build_dimensions[5], -2000, 2000)
         addwidget(1, 5)
-        addlabel(_("X home pos."), (2, 0))
+        addlabel(_("X Home Pos.:"), (2, 0))
         w(build_dimensions[6], -2000, 2000)
         addwidget(2, 1)
-        addlabel(_("Y home pos."), (2, 2))
+        addlabel(_("Y Home Pos.:"), (2, 2))
         w(build_dimensions[7], -2000, 2000)
         addwidget(2, 3)
-        addlabel(_("Z home pos."), (2, 4))
+        addlabel(_("Z Home Pos.:"), (2, 4))
         w(build_dimensions[8], -2000, 2000)
         addwidget(2, 5)
         return self.widget
@@ -345,14 +393,14 @@ class Settings:
                 defaultslicerpath = "/Applications/Slic3r.app/Contents/MacOS/"
             elif sys.platform == "win32":
                 defaultslicerpath = ".\\slic3r\\"
-        self._add(StringSetting("slicecommandpath", defaultslicerpath, _("Path to slicer"), _("Path to slicer"), "External"))
+        self._add(DirSetting("slicecommandpath", defaultslicerpath, _("Path to slicer"), _("Path to slicer"), "External"))
         slicer = 'slic3r-console' if sys.platform == 'win32' else 'slic3r'
         self._add(StringSetting("slicecommand", slicer + ' $s --output $o', _("Slice command"), _("Slice command"), "External"))
         self._add(StringSetting("sliceoptscommand", "slic3r", _("Slicer options command"), _("Slice settings command"), "External"))
         self._add(StringSetting("start_command", "", _("Start command"), _("Executable to run when the print is started"), "External"))
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
         self._add(StringSetting("error_command", "", _("Error command"), _("Executable to run when an error occurs"), "External"))
-        self._add(StringSetting("log_path", str(Path.home()), _("Log path"), _("Path to the log file. An empty path will log to the console."), "UI"))
+        self._add(DirSetting("log_path", str(Path.home()), _("Log path"), _("Path to the log file. An empty path will log to the console."), "UI"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))
@@ -362,7 +410,7 @@ class Settings:
         self._add(HiddenSetting("project_x", 1024))
         self._add(HiddenSetting("project_y", 768))
         self._add(HiddenSetting("project_projected_x", 150.0))
-        self._add(HiddenSetting("project_direction", "Top Down"))
+        self._add(HiddenSetting("project_direction", 0)) # 0: Top Down
         self._add(HiddenSetting("project_overshoot", 3.0))
         self._add(HiddenSetting("project_z_axis_rate", 200))
         self._add(HiddenSetting("project_layer", 0.1))
