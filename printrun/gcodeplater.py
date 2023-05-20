@@ -15,11 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-# Set up Internationalization using gettext
-# searching for installed locales on /usr/share; uses relative folder if not found (windows)
-from .utils import install_locale, get_home_pos
-install_locale('pronterface')
-
 import wx
 import sys
 import os
@@ -35,6 +30,11 @@ from printrun.gl.libtatlin import actors
 import printrun.gui.viz  # NOQA
 from printrun import gcview
 
+from .utils import install_locale, get_home_pos
+install_locale('pronterface')
+# Set up Internationalization using gettext
+# searching for installed locales on /usr/share; uses relative folder if not found (windows)
+
 def extrusion_only(gline):
     return gline.e is not None \
         and (gline.x, gline.y, gline.z) == (None, None, None)
@@ -43,6 +43,7 @@ def extrusion_only(gline):
 def gcoder_write(self, f, line, store = False):
     f.write(line)
     self.append(line, store = store)
+
 
 rewrite_exp = re.compile("(%s)" % "|".join(["X([-+]?[0-9]*\.?[0-9]*)",
                                             "Y([-+]?[0-9]*\.?[0-9]*)"]))
@@ -66,23 +67,24 @@ def rewrite_gline(centeroffset, gline, cosr, sinr):
         new = {"X": new_x, "Y": new_y}
         new_line = rewrite_exp.sub(lambda ax: new[ax.group()[0]], gline.raw)
         new_line = new_line.split(";")[0]
-        if gline.x is None: new_line += " " + new_x
-        if gline.y is None: new_line += " " + new_y
+        if gline.x is None:
+            new_line += " " + new_x
+        if gline.y is None:
+            new_line += " " + new_y
         return new_line
-    else:
-        return gline.raw
+    return gline.raw
 
 class GcodePlaterPanel(PlaterPanel):
 
-    load_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
-    save_wildcard = _("GCODE files (*.gcode;*.GCODE;*.g)") + "|*.gcode;*.gco;*.g"
+    load_wildcard = _("GCODE files") + " (*.gcode;*.GCODE;*.g)|*.gcode;*.gco;*.g"
+    save_wildcard = load_wildcard
 
     def prepare_ui(self, filenames = [], callback = None,
                    parent = None, build_dimensions = None,
                    circular_platform = False,
                    antialias_samples = 0,
                    grid = (1, 10)):
-        super(GcodePlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
+        super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
                                        antialias_samples = antialias_samples)
         self.set_viewer(viewer)
@@ -99,8 +101,8 @@ class GcodePlaterPanel(PlaterPanel):
     objects = property(get_objects)
 
     def load_file(self, filename):
-        gcode = gcoder.GCode(open(filename, "rU"),
-                             get_home_pos(self.build_dimensions))
+        with open(filename, "r", newline = '') as file:
+            gcode = gcoder.GCode(file, get_home_pos(self.build_dimensions))
         model = actors.GcodeModel()
         if gcode.filament_length > 0:
             model.display_travels = False
@@ -145,7 +147,7 @@ class GcodePlaterPanel(PlaterPanel):
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
         return self.export_combined(name)
-        return self.export_sequential(name)
+        # return self.export_sequential(name)
 
     def export_combined(self, name):
         models = list(self.models.values())
@@ -153,9 +155,13 @@ class GcodePlaterPanel(PlaterPanel):
         # Sort models by Z max to print smaller objects first
         models.sort(key = lambda x: x.dims[-1])
         alllayers = []
+
+        def add_offset(layer):
+            if layer.z is not None:
+                return layer.z + model.offsets[2]
+            return layer.z
+
         for (model_i, model) in enumerate(models):
-            def add_offset(layer):
-                return layer.z + model.offsets[2] if layer.z is not None else layer.z
             alllayers += [(add_offset(layer), model_i, layer_i)
                           for (layer_i, layer) in enumerate(model.gcode.all_layers) if add_offset(layer) is not None]
         alllayers.sort()
@@ -237,6 +243,7 @@ class GcodePlaterPanel(PlaterPanel):
                                               - trans[2] + gline.current_z)
                         break
         logging.info(_("Exported merged G-Codes to %s") % name)
+
 
 GcodePlater = make_plater(GcodePlaterPanel)
 

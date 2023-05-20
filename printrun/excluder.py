@@ -22,22 +22,23 @@ install_locale('pronterface')
 class ExcluderWindow(gviz.GvizWindow):
 
     def __init__(self, excluder, *args, **kwargs):
-        super(ExcluderWindow, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.SetTitle(_("Print Excluder"))
         self.parent = excluder
-       
+
         self.toolbar.ClearTools()
         self.build_toolbar(excluder = True)
         self.toolbar.Realize()
         minsize = self.toolbar.GetEffectiveMinSize().width
         self.SetMinClientSize((minsize, minsize))
         self.p.SetToolTip(
-            "Draw rectangles where print instructions should be ignored.\nExcluder always affects all layers, layer settings is disregarded.")#*
+            _("Draw rectangles where print instructions should be ignored.") +
+            _("\nExcluder always affects all layers, layer setting is disregarded."))
 
         self.p.paint_overlay = self.paint_selection
         self.p.layerup()
 
-        #self.CenterOnParent()
+        self.CenterOnParent()
 
     def real_to_gcode(self, x, y):
         return (x + self.p.build_dimensions[3],
@@ -123,6 +124,7 @@ class Excluder:
         if self.window:
             self.window.Destroy()
             self.window = None
+
 
 if __name__ == '__main__':
     import sys
