@@ -2,7 +2,7 @@
 Type=Application
 Name=Pronsole
 GenericName=Printer console
-Comment=Controls your 3D printer form console
+Comment=Controls your 3D printer from the console
 Icon=pronsole
 Exec=/usr/bin/pronsole.py
 StartupNotify=true
