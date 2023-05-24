@@ -1,3 +1,13 @@
+Printrun - 2.0.1
+================
+
+Patch release. Dropped support for Python 3.6 wheels and macOS 10.
+
+### Fixed Bugs
+
+ - C++ assertion error due to unknown locale (#1351)
+
+
 Printrun - 2.0.0
 ====================
 
