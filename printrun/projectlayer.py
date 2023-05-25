@@ -28,6 +28,9 @@ import re
 from collections import OrderedDict
 import math
 from printrun.gui.widgets import get_space
+from .utils import install_locale
+install_locale('pronterface')
+# Set up Internationalization using gettext
 
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res = (1024, 768), printer = None, scale = 1.0, offset = (0, 0)):
@@ -644,9 +647,9 @@ class SettingsFrame(wx.Dialog):
                 layerHeight = float(self.thickness.GetValue())
             else:
                 layers = self.parse_svg(name)
-                layerHeight = float(f"{layers[1]:.3f}")
+                layerHeight = round(layers[1], 3)
                 self.thickness.SetValue(str(layerHeight))
-                self.statusbar.SetLabel(_("Layer thickness detected: {0:.2f} mm").format(layerHeight))
+                self.statusbar.SetLabel(_("Layer thickness detected: {0} mm").format(layerHeight))
             self.statusbar.SetLabel(_("{0} layers found, total height {1:.2f} mm").format(len(layers[0]), layerHeight * len(layers[0])))
             self.layers = layers
             self.set_total_layers(len(layers[0]))

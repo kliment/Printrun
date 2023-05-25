@@ -101,7 +101,7 @@ class GcodePlaterPanel(PlaterPanel):
     objects = property(get_objects)
 
     def load_file(self, filename):
-        with open(filename, "r", newline = '') as file:
+        with open(filename, "r") as file:
             gcode = gcoder.GCode(file, get_home_pos(self.build_dimensions))
         model = actors.GcodeModel()
         if gcode.filament_length > 0:
@@ -147,7 +147,6 @@ class GcodePlaterPanel(PlaterPanel):
     # but the end goal is to have a clean per-layer merge
     def export_to(self, name):
         return self.export_combined(name)
-        # return self.export_sequential(name)
 
     def export_combined(self, name):
         models = list(self.models.values())
@@ -208,6 +207,10 @@ class GcodePlaterPanel(PlaterPanel):
         logging.info(_("Exported merged G-Codes to %s") % name)
 
     def export_sequential(self, name):
+        '''
+        Initial implementation of the gcode exporter,
+        which prints objects sequentially. No longer used.
+        '''
         models = list(self.models.values())
         last_real_position = None
         # Sort models by Z max to print smaller objects first

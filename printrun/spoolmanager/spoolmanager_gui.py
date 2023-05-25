@@ -17,6 +17,9 @@
 
 import wx
 from printrun.gui.widgets import get_space
+from printrun.utils import install_locale
+install_locale('pronterface')
+# Set up Internationalization using gettext
 
 class SpoolManagerMainWindow(wx.Frame):
     """
