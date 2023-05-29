@@ -20,6 +20,8 @@ import wx
 import time
 from . import gcoder
 from .injectgcode import injector, injector_edit
+from printrun.gui.viz import BaseViz
+from .gui.widgets import get_space
 
 from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
@@ -30,35 +32,42 @@ class GvizBaseFrame(wx.Frame):
         self.CreateStatusBar(1)
         self.SetStatusText(_("Layer number and Z position show here when you scroll"))
 
-        hpanel = wx.Panel(self, -1)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        panel = wx.Panel(self, -1)
+        v_sizer = wx.BoxSizer(wx.VERTICAL)
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        panel = wx.Panel(hpanel, -1)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
         self.toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
+        self.build_toolbar(excluder = False)
+        self.toolbar.Realize()
+        v_sizer.Add(self.toolbar, 0, wx.EXPAND)
+        v_sizer.Add(h_sizer, 1, wx.EXPAND)
+
+        self.layerslider = wx.Slider(panel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
+        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
+        panel.SetSizer(v_sizer)
+
+        return panel, h_sizer
+
+    def build_toolbar(self, excluder):
+        self.toolbar.SetMargins(get_space('minor'), get_space('mini'))
+        self.toolbar.SetToolPacking(get_space('minor'))
         self.toolbar.AddTool(1, '', wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"),)
         self.toolbar.AddTool(2, '', wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"))
+        self.toolbar.AddTool(3, _("Reset View"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset View"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(3, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
-        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
-        self.toolbar.AddTool(5, " " + _("Reset view"), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset view"))
+        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
+        self.toolbar.AddTool(5, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(6, '', wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
-        self.toolbar.AddTool(7, '', wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), wx.NullBitmap, shortHelp = _("Edit layer"), longHelp = _("Edit the G-Code of this layer"))
-
-        vbox.Add(self.toolbar, 0, border = 5)
-
-        panel.SetSizer(vbox)
-
-        hbox.Add(panel, 1, flag = wx.EXPAND)
-        self.layerslider = wx.Slider(hpanel, style = wx.SL_VERTICAL | wx.SL_AUTOTICKS | wx.SL_LEFT | wx.SL_INVERSE)
-        self.layerslider.Bind(wx.EVT_SCROLL, self.process_slider)
-        hbox.Add(self.layerslider, 0, border = 5, flag = wx.LEFT | wx.EXPAND)
-        hpanel.SetSizer(hbox)
-
-        return panel, vbox
+        if not excluder:  # This is added to the 'GCode Viewer' Toolbar
+            self.toolbar.AddTool(6, 'Inject', wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                                 wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
+            self.toolbar.AddTool(7, 'Edit', wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                                 wx.NullBitmap, shortHelp = _("Edit Layer"), longHelp = _("Edit the G-Code of this layer"))
+        else:  # This is added to the 'Excluder' Toolbar
+            self.toolbar.AddTool(8, _('Reset Selection'), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset Selection"))
+        self.toolbar.AddStretchableSpace()
+        self.toolbar.AddSeparator()
+        self.toolbar.AddTool(9, _('Close'), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Close Window"))
 
     def setlayercb(self, layer):
         self.layerslider.SetValue(layer)
@@ -66,27 +75,36 @@ class GvizBaseFrame(wx.Frame):
     def process_slider(self, event):
         raise NotImplementedError
 
+
 ID_ABOUT = 101
 ID_EXIT = 110
 class GvizWindow(GvizBaseFrame):
-    def __init__(self, f = None, size = (600, 600), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
-        super(GvizWindow, self).__init__(None, title = _("Gcode view, shift to move view, mousewheel to set layer"), size = size)
+    def __init__(self, f = None, size = (550, 550), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
+        super().__init__(None, title = _("GCode Viewer"), size = size, style = wx.DEFAULT_FRAME_STYLE)
 
-        panel, vbox = self.create_base_ui()
+        panel, h_sizer = self.create_base_ui()
 
         self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
+        h_sizer.Add(self.p, 1, wx.EXPAND)
+        h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
+        self.p.SetToolTip("Shift + Click to move view, scroll to change layer")
 
-        self.toolbar.Realize()
-        vbox.Add(self.p, 1, wx.EXPAND)
+        self.Layout()
+        size = (size[0] + self.layerslider.GetEffectiveMinSize().width,
+                size[1] + self.toolbar.GetEffectiveMinSize().height)
+        minsize = self.toolbar.GetEffectiveMinSize().width
+        self.SetMinClientSize((minsize, minsize))
+        self.SetClientSize(size)
 
-        self.SetMinSize(self.ClientToWindowSize(vbox.GetMinSize()))
         self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1.2), id = 1)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1 / 1.2), id = 2)
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 3)
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 4)
-        self.Bind(wx.EVT_TOOL, self.resetview, id = 5)
+        self.Bind(wx.EVT_TOOL, self.reset_view, id = 3)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 4)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 5)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.inject(), id = 6)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.editlayer(), id = 7)
+        self.Bind(wx.EVT_TOOL, self.reset_selection, id = 8)
+        self.Bind(wx.EVT_TOOL, lambda x: self.Close(), id = 9)
 
         self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)
@@ -100,20 +118,26 @@ class GvizWindow(GvizBaseFrame):
             gcode = gcoder.GCode(f, get_home_pos(self.p.build_dimensions))
             self.p.addfile(gcode)
 
+        self.CenterOnParent()
+
     def set_current_gline(self, gline):
         return
 
     def process_slider(self, event):
         self.p.layerindex = self.layerslider.GetValue()
         z = self.p.get_currentz()
-        wx.CallAfter(self.SetStatusText, _("Layer %d - Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
+        wx.CallAfter(self.SetStatusText, _("Layer %d: Z = %.03f mm") % (self.p.layerindex + 1, z), 0)
         self.p.dirty = True
         wx.CallAfter(self.p.Refresh)
 
-    def resetview(self, event):
+    def reset_view(self, event):
         self.p.translate = [0.0, 0.0]
         self.p.scale = self.p.basescale
         self.p.zoom(0, 0, 1.0)
+
+    def reset_selection(self, event):
+        self.parent.rectangles = []
+        wx.CallAfter(self.p.Refresh)
 
     def mouse(self, event):
         if event.ButtonUp(wx.MOUSE_BTN_LEFT) or event.ButtonUp(wx.MOUSE_BTN_RIGHT):
@@ -151,13 +175,17 @@ class GvizWindow(GvizBaseFrame):
     def zoom(self, event):
         z = event.GetWheelRotation()
         if event.ShiftDown():
-            if z > 0: self.p.layerdown()
-            elif z < 0: self.p.layerup()
+            if z > 0:
+                self.p.layerdown()
+            elif z < 0:
+                self.p.layerup()
         else:
-            if z > 0: self.p.zoom(event.GetX(), event.GetY(), 1.2)
-            elif z < 0: self.p.zoom(event.GetX(), event.GetY(), 1 / 1.2)
+            if z > 0:
+                self.p.zoom(event.GetX(), event.GetY(), 1.2)
+            elif z < 0:
+                self.p.zoom(event.GetX(), event.GetY(), 1 / 1.2)
 
-from printrun.gui.viz import BaseViz
+
 class Gviz(wx.Panel, BaseViz):
 
     # Mark canvas as dirty when setting showall
@@ -248,7 +276,7 @@ class Gviz(wx.Panel, BaseViz):
         if self.layerindex + 1 < len(self.layers):
             self.layerindex += 1
             z = self.get_currentz()
-            wx.CallAfter(self.parent.SetStatusText, _("Layer %d - Going Up - Z = %.03f mm") % (self.layerindex + 1, z), 0)
+            wx.CallAfter(self.parent.SetStatusText, _("Layer %d: Z = %.03f mm") % (self.layerindex + 1, z), 0)
             self.dirty = True
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
@@ -257,7 +285,7 @@ class Gviz(wx.Panel, BaseViz):
         if self.layerindex > 0:
             self.layerindex -= 1
             z = self.get_currentz()
-            wx.CallAfter(self.parent.SetStatusText, _("Layer %d - Going Down - Z = %.03f mm") % (self.layerindex + 1, z), 0)
+            wx.CallAfter(self.parent.SetStatusText, _("Layer %d: Z = %.03f mm") % (self.layerindex + 1, z), 0)
             self.dirty = True
             self.parent.setlayercb(self.layerindex)
             wx.CallAfter(self.Refresh)
@@ -319,9 +347,9 @@ class Gviz(wx.Panel, BaseViz):
     def _drawarcs(self, dc, arcs, pens):
         scaled_arcs = [self._arc_scaler(a) for a in arcs]
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        for i in range(len(scaled_arcs)):
+        for i, arc in enumerate(scaled_arcs):
             dc.SetPen(pens[i] if isinstance(pens, numpy.ndarray) else pens)
-            dc.DrawArc(*scaled_arcs[i])
+            dc.DrawArc(*arc)
 
     def repaint_everything(self):
         width = self.scale[0] * self.build_dimensions[0]
@@ -441,25 +469,25 @@ class Gviz(wx.Panel, BaseViz):
         target = start_pos[:]
         target[5] = 0.0
         target[6] = 0.0
-        if gline.current_x is not None: target[0] = gline.current_x
-        if gline.current_y is not None: target[1] = gline.current_y
-        if gline.current_z is not None: target[2] = gline.current_z
+        if gline.current_x is not None:
+            target[0] = gline.current_x
+        if gline.current_y is not None:
+            target[1] = gline.current_y
+        if gline.current_z is not None:
+            target[2] = gline.current_z
         if gline.e is not None:
             if gline.relative_e:
                 target[3] += gline.e
             else:
                 target[3] = gline.e
-        if gline.f is not None: target[4] = gline.f
-        if gline.i is not None: target[5] = gline.i
-        if gline.j is not None: target[6] = gline.j
+        if gline.f is not None:
+            target[4] = gline.f
+        if gline.i is not None:
+            target[5] = gline.i
+        if gline.j is not None:
+            target[6] = gline.j
 
-        if gline.command in ["G0", "G1"]:
-            line = [self._x(start_pos[0]),
-                    self._y(start_pos[1]),
-                    self._x(target[0]),
-                    self._y(target[1])]
-            return target, line, None
-        elif gline.command in ["G2", "G3"]:
+        if gline.command in ["G2", "G3"]:
             # startpos, endpos, arc center
             arc = [self._x(start_pos[0]), self._y(start_pos[1]),
                    self._x(target[0]), self._y(target[1]),
@@ -467,6 +495,13 @@ class Gviz(wx.Panel, BaseViz):
             if gline.command == "G2":  # clockwise, reverse endpoints
                 arc[0], arc[1], arc[2], arc[3] = arc[2], arc[3], arc[0], arc[1]
             return target, None, arc
+
+        # ["G0", "G1"]:
+        line = [self._x(start_pos[0]),
+                self._y(start_pos[1]),
+                self._x(target[0]),
+                self._y(target[1])]
+        return target, line, None
 
     def _y(self, y):
         return self.build_dimensions[1] - (y - self.build_dimensions[4])
@@ -547,9 +582,11 @@ class Gviz(wx.Panel, BaseViz):
         self.hilightpos = target
         wx.CallAfter(self.Refresh)
 
+
 if __name__ == '__main__':
     import sys
     app = wx.App(False)
-    main = GvizWindow(open(sys.argv[1], "rU"))
+    with open(sys.argv[1], "r") as arg:
+        main = GvizWindow(arg)
     main.Show()
     app.MainLoop()
