@@ -14,7 +14,6 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import platform
 import sys
 import re
 import gettext
@@ -35,27 +34,19 @@ def set_utf8_locale():
     if encoding != 'UTF-8':
         locale.setlocale(locale.LC_CTYPE, (lang, 'UTF-8'))
 
-# Set up Internationalization using gettext
-# searching for installed locales on /usr/share; uses relative folder if not
-# found (windows)
-def install_locale(domain):
-    shared_locale_dir = os.path.join(DATADIR, 'locale')
-    translation = None
-    lang = locale.getdefaultlocale()
-    osPlatform = platform.system()
 
-    if osPlatform == "Darwin":
-        # improvised workaround for macOS crash with gettext.translation, see issue #1154
-        if os.path.exists(shared_locale_dir): 
-            gettext.install(domain, shared_locale_dir) 
-        else: 
-            gettext.install(domain, './locale') 
+def install_locale(domain):
+    # Set up Internationalization using gettext
+
+    local_path = Path(Path.cwd(), 'locale')
+    if gettext.find(domain, local_path) is not None:
+        # Install the translation found in the local directory
+        gettext.install(domain, local_path)
     else:
-        if os.path.exists('./locale'):
-            translation = gettext.translation(domain, './locale', languages=[lang[0]], fallback= True)
-        else:
-            translation = gettext.translation(domain, shared_locale_dir, languages=[lang[0]], fallback= True)
-        translation.install()
+        # Install the translation found in system directories
+        # (or fallback to a dummy/empty one)
+        gettext.install(domain)
+
 
 class LogFormatter(logging.Formatter):
     def __init__(self, format_default, format_info):
