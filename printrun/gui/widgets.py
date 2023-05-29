@@ -15,51 +15,10 @@
 
 import wx
 import re
-import platform # Used by the getSpace method for platform specific spacing
+import platform # Used by get_space() for platform specific spacing
 import logging
 
-def get_space_old(a): #TODO: Delete this after the replacement was tested
-    '''
-    Takes key (str), returns spacing value (int).
-    Provides correct spacing in pixel for borders and sizers.
-    '''
-    match a:
-        case 'major':  # e.g. outer border of dialog boxes
-            return 12
-        case 'minor':  # e.g. border of inner elements
-            return 8
-        case 'mini':
-            return 4
-        case 'stddlg':
-            # Differentiation is necessary because wxPython behaves slightly differently on different systems.
-            platformname = platform.system()
-            if platformname == 'Windows':
-                return 8
-            if platformname == 'Darwin':
-                return 4
-            return 4  # Linux systems
-        case 'stddlg-frame':
-            # Border for std dialog buttons when used with frames.
-            platformname = platform.system()
-            if platformname == 'Windows':
-                return 8
-            if platformname == 'Darwin':
-                return 12
-            return 8  # Linux systems
-        case 'staticbox':
-            # Border between StaticBoxSizers and the elements inside.
-            platformname = platform.system()
-            if platformname == 'Windows':
-                return 4
-            if platformname == 'Darwin':
-                return 0
-            return 0  # Linux systems
-        case 'none':
-            return 0
-        case 'settings':
-            return 16
-
-def getSpace(a):
+def get_space(key):
     spacing_values = {
         'major': 12, # e.g. outer border of dialog boxes
         'minor': 8, # e.g. border of inner elements
@@ -71,18 +30,20 @@ def getSpace(a):
         'none': 0
     }
 
-    # Platform specific overrides
+    # Platform specific overrides, Windows
     if platform.system() == 'Windows':
         spacing_values['stddlg'] = 8
         spacing_values['staticbox'] = 4
 
+    # Platform specific overrides, macOS
     if platform.system() == 'Darwin':
         spacing_values['stddlg-frame'] = 12
 
     try:
-        return spacing_values[a]
+        return spacing_values[key]
     except KeyError:
-        logging.warning("getSpace cannot return spacing value, will return 0 instead. No entry: %s", a)
+        logging.warning("get_space() cannot return spacing value,"
+                        "will return 0 instead. No entry: %s", key)
         return 0
 
 
@@ -234,16 +195,16 @@ class MacroEditor(wx.Dialog):
         return reindented
 
 
-SETTINGS_GROUPS = {"Printer": _("Printer settings"),
-                   "UI": _("User interface"),
+SETTINGS_GROUPS = {"Printer": _("Printer Settings"),
+                   "UI": _("User Interface"),
                    "Viewer": _("Viewer"),
                    "Colors": _("Colors"),
-                   "External": _("External commands")}
+                   "External": _("External Commands")}
 
 class PronterOptionsDialog(wx.Dialog):
     """Options editor"""
     def __init__(self, pronterface):
-        wx.Dialog.__init__(self, parent = None, title = _("Edit settings"),
+        wx.Dialog.__init__(self, parent = None, title = _("Edit Settings"),
                            size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE)
         self.notebook = notebook = wx.Notebook(self)
         all_settings = pronterface.settings._all_settings()

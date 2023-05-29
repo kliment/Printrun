@@ -22,7 +22,7 @@ from functools import wraps
 
 from pathlib import Path
 from .utils import parse_build_dimensions
-from .gui.widgets import getSpace
+from .gui.widgets import get_space
 
 def setting_add_tooltip(func):
     @wraps(func)
@@ -149,7 +149,7 @@ class DirSetting(wxSetting):
 
         self.widget = wx.BoxSizer(wx.HORIZONTAL)
         self.widget.Add(self.text_ctrl, 1)
-        self.widget.Add(button, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, getSpace('mini'))
+        self.widget.Add(button, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, get_space('mini'))
 
         return self.widget
 
@@ -202,7 +202,7 @@ class ColorSetting(wxSetting):
 
 class ComboSetting(wxSetting):
 
-    def __init__(self, name, default, choices, label = None, help = None, group = None, size = 6*getSpace('settings')): # size: Default length is set here, can be overwritten on creation.
+    def __init__(self, name, default, choices, label = None, help = None, group = None, size = 7*get_space('settings')): # size: Default length is set here, can be overwritten on creation.
         super(ComboSetting, self).__init__(name, default, label, help, group)
         self.choices = choices
         self.size = size
@@ -230,7 +230,7 @@ class SpinSetting(wxSetting):
 
     def get_specific_widget(self, parent):
         import wx
-        self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max, size = (4*getSpace('settings'), -1))
+        self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max, size = (4*get_space('settings'), -1))
         self.widget.SetDigits(0)
         self.widget.SetValue(self.value)
         orig = self.widget.GetValue
@@ -267,7 +267,7 @@ def MySpin(parent, digits, *args, **kw):
 class FloatSpinSetting(SpinSetting):
 
     def get_specific_widget(self, parent):
-        self.widget = MySpin(parent, 2, initial = self.value, min = self.min, max = self.max, inc = self.increment, size = (4*getSpace('settings'), -1))
+        self.widget = MySpin(parent, 2, initial = self.value, min = self.min, max = self.max, inc = self.increment, size = (4*get_space('settings'), -1))
         return self.widget
 
 class BooleanSetting(wxSetting):
@@ -328,12 +328,12 @@ class BuildDimensionsSetting(wxSetting):
         build_dimensions = parse_build_dimensions(self.value)
         self.widgets = []
         def w(val, m, M):
-            self.widgets.append(MySpin(parent, 2, initial = val, min = m, max = M, size = (5*getSpace('settings'), -1)))
+            self.widgets.append(MySpin(parent, 2, initial = val, min = m, max = M, size = (5*get_space('settings'), -1)))
         def addlabel(name, pos):
-            self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.ALIGN_RIGHT, border = getSpace('mini'))
+            self.widget.Add(wx.StaticText(parent, -1, name), pos = pos, flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.ALIGN_RIGHT, border = get_space('mini'))
         def addwidget(*pos):
-            self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT | wx.EXPAND, border = getSpace('mini'))
-        self.widget = wx.GridBagSizer(vgap = getSpace('mini'), hgap = getSpace('mini'))
+            self.widget.Add(self.widgets[-1], pos = pos, flag = wx.RIGHT | wx.EXPAND, border = get_space('mini'))
+        self.widget = wx.GridBagSizer(vgap = get_space('mini'), hgap = get_space('mini'))
         addlabel(_("Width:"), (0, 0))
         w(build_dimensions[0], 0, 2000)
         addwidget(0, 1)
@@ -375,7 +375,9 @@ class Settings:
         # the initial value determines the type
         self._add(StringSetting("port", "", _("Serial port"), _("Port used to communicate with printer")))
         self._add(ComboSetting("baudrate", 115200, self.__baudrate_list(), _("Baud rate"), _("Communications Speed")))
-        self._add(BooleanSetting("tcp_streaming_mode", False, _("TCP streaming mode"), _("When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands. This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
+        self._add(BooleanSetting("tcp_streaming_mode", False, _("TCP streaming mode"),
+                                 _("When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands."
+                                   "This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
         self._add(BooleanSetting("rpc_server", True, _("RPC server"), _("Enable RPC server to allow remotely querying print status")), root.update_rpc_server)
         self._add(BooleanSetting("dtr", True, _("DTR"), _("Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"), "Printer"))
         if sys.platform != "win32":
@@ -401,6 +403,9 @@ class Settings:
         self._add(StringSetting("final_command", "", _("Final command"), _("Executable to run when the print is finished"), "External"))
         self._add(StringSetting("error_command", "", _("Error command"), _("Executable to run when an error occurs"), "External"))
         self._add(DirSetting("log_path", str(Path.home()), _("Log path"), _("Path to the log file. An empty path will log to the console."), "UI"))
+        # self._add(ComboSetting("language", _("Automatic"), (_("Automatic"), "German", "French", "Dutch"), _("Language"),
+        #                       _("The interface language is set automatically based on your system locale. You can force a specific language here."),
+        #                       "UI"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))

@@ -42,20 +42,29 @@ def install_locale(domain):
     shared_locale_dir = os.path.join(DATADIR, 'locale')
     translation = None
     lang = locale.getdefaultlocale()
+    get_lang_setting()
     osPlatform = platform.system()
 
     if osPlatform == "Darwin":
         # improvised workaround for macOS crash with gettext.translation, see issue #1154
-        if os.path.exists(shared_locale_dir): 
-            gettext.install(domain, shared_locale_dir) 
-        else: 
-            gettext.install(domain, './locale') 
+        if os.path.exists(shared_locale_dir):
+            gettext.install(domain, shared_locale_dir)
+        else:
+            gettext.install(domain, './locale')
     else:
         if os.path.exists('./locale'):
             translation = gettext.translation(domain, './locale', languages=[lang[0]], fallback= True)
         else:
             translation = gettext.translation(domain, shared_locale_dir, languages=[lang[0]], fallback= True)
         translation.install()
+
+def get_lang_setting():
+    '''
+    Reads the language setting and returns (lang, enc)
+    '''
+    # lang = locale.getdefaultlocale()
+    # getattr(settings, 'language')
+    NotImplemented
 
 class LogFormatter(logging.Formatter):
     def __init__(self, format_default, format_info):
@@ -138,11 +147,11 @@ def lookup_file(filename, prefixes):
     constructor and filename isn't found, the C++ part of wx
     will raise an exception (wx._core.wxAssertionError): "invalid
     image".
-    
+
     Sequential arguments:
     filename -- a filename without the path.
     prefixes -- a list of paths.
-    
+
     Returns:
     The full path if found, or filename if not found.
     '''
