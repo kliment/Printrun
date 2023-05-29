@@ -17,11 +17,6 @@
 
 import os
 
-# Set up Internationalization using gettext
-# searching for installed locales on /usr/share; uses relative folder if not found (windows)
-from .utils import install_locale
-install_locale('pronterface')
-
 import wx
 import time
 import logging
@@ -32,19 +27,23 @@ import re
 import traceback
 import subprocess
 from copy import copy
-from .gui.widgets import getSpace
 
 from printrun import stltool
 from printrun.objectplater import make_plater, PlaterPanel
+
+from .utils import install_locale
+install_locale('pronterface')
+# Set up Internationalization using gettext
+# searching for installed locales on /usr/share; uses relative folder if not found (windows)
 
 glview = '--no-gl' not in sys.argv
 if glview:
     try:
         from printrun import stlview
-    except:
+    except ImportError:
         glview = False
-        logging.warning(_("Could not load 3D viewer for plater:")
-                        + "\n" + traceback.format_exc())
+        logging.warning(_("Could not load 3D viewer for plater:") +
+                        "\n" + traceback.format_exc())
 
 
 def evalme(s):
@@ -182,7 +181,7 @@ class showstl(wx.Window):
         if self.prevsel != s:
             self.i = 0
             self.prevsel = s
-        self.rotate_shape(-1 if z < 0 else 1) #TEST
+        self.rotate_shape(-1 if z < 0 else 1)
 
     def repaint(self, event):
         dc = wx.PaintDC(self)
@@ -220,11 +219,11 @@ class StlPlaterPanel(PlaterPanel):
     save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
 
     def prepare_ui(self, filenames = [], callback = None,
-                   parent = None, build_dimensions = None, 
+                   parent = None, build_dimensions = None,
                    circular_platform = False,
-                   simarrange_path = None, 
+                   simarrange_path = None,
                    antialias_samples = 0):
-        super(StlPlaterPanel, self).prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = True)
+        super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = True)
         self.cutting = False
         self.cutting_axis = None
         self.cutting_dist = None
@@ -238,25 +237,33 @@ class StlPlaterPanel(PlaterPanel):
             viewer = showstl(self, (580, 580), (0, 0))
         self.simarrange_path = simarrange_path
         self.set_viewer(viewer)
-        self.cut_processbutton.Disable()
+        self.enable_cut_button(False)
         self.SetMinClientSize(self.topsizer.CalcMin())
-
 
     def start_cutting_tool(self, event, axis, direction):
         toggle = event.EventObject
         self.cutting = toggle.Value
         if toggle.Value:
             # Disable the other toggles
-            for child in self.axis_sizer.Children:
-                child = child.Window
-                if child != toggle:
-                    child.Value = False
+            for button in self.cut_axis_buttons:
+                if button != toggle:
+                    button.Value = False
             self.cutting_axis = axis
             self.cutting_direction = direction
         else:
             self.cutting_axis = None
             self.cutting_direction = None
+            self.enable_cut_button(False)
         self.cutting_dist = None
+
+    def end_cutting_tool(self):
+        self.cutting = False
+        self.cutting_dist = None
+        self.cutting_axis = None
+        self.cutting_direction = None
+        self.enable_cut_button(False)
+        for button in self.cut_axis_buttons:
+            button.SetValue(False)
 
     def cut_confirm(self, event):
         name = self.l.GetSelection()
@@ -280,11 +287,9 @@ class StlPlaterPanel(PlaterPanel):
         self.cutting_axis = None
         self.cutting_dist = None
         self.cutting_direction = None
-        for child in self.axis_sizer.GetChildren():
-            child = child.GetWindow()
-            child.SetValue(False)
-        self.cut_processbutton.Disable()
-        self.Raise()
+        for button in self.cut_axis_buttons:
+            button.SetValue(False)
+        self.enable_cut_button(False)
 
     def clickcb(self, event, single = False):
         if not isinstance(self.s, stlview.StlViewPanel):
@@ -299,9 +304,7 @@ class StlPlaterPanel(PlaterPanel):
         self.cutting_dist, _, _ = self.s.get_cutting_plane(axis, None,
                                                            local_transform = True)
         if self.cutting_dist is not None:
-            self.cut_processbutton.Enable()
-            self.Refresh()
-            self.Update()
+            self.enable_cut_button(True)
 
     def clickcb_rebase(self, event):
         x, y = event.GetPosition()
@@ -333,7 +336,6 @@ class StlPlaterPanel(PlaterPanel):
                                      0]
             self.s.prepare_model(newmodel, 2)
             self.models[best_match] = newmodel
-            self.cut_processbutton.Enable()
             wx.CallAfter(self.Refresh)
 
     def done(self, event, cb):
@@ -355,8 +357,8 @@ class StlPlaterPanel(PlaterPanel):
                                        _("Error:") + traceback.format_exc(),
                                        wx.OK)
                 dlg.ShowModal()
-                logging.error(_("Loading STL file failed:")
-                              + "\n" + traceback.format_exc())
+                logging.error(_("Loading STL file failed:") +
+                              "\n" + traceback.format_exc())
         elif filename.lower().endswith(".scad"):
             try:
                 self.load_scad(filename)
@@ -365,13 +367,12 @@ class StlPlaterPanel(PlaterPanel):
                                        _("Error:") + traceback.format_exc(),
                                        wx.OK)
                 dlg.ShowModal()
-                logging.error(_("Loading OpenSCAD file failed:")
-                              + "\n" + traceback.format_exc())
+                logging.error(_("Loading OpenSCAD file failed:") +
+                              "\n" + traceback.format_exc())
 
     def load_scad(self, name):
-        lf = open(name)
-        s = [i.replace("\n", "").replace("\r", "").replace(";", "") for i in lf if "stl" in i]
-        lf.close()
+        with open(name) as lf:
+            s = [i.replace("\n", "").replace("\r", "").replace(";", "") for i in lf if "stl" in i]
 
         for i in s:
             parts = i.split()
@@ -446,8 +447,7 @@ class StlPlaterPanel(PlaterPanel):
                                                 model.filename))
                 model = model.transform(transformation_matrix(model))
                 facets += model.facets
-            #logging.error("The function 'stltool.emitstl' has been deactivated due to an unresolved bug.")
-            stltool.emitstl(name, facets, "plater_export") # FIXME: this brakes atm?
+            stltool.emitstl(name, facets, "plater_export")
             logging.info(_("Wrote plate to %s") % name)
 
     def autoplate(self, event = None):
@@ -458,9 +458,9 @@ class StlPlaterPanel(PlaterPanel):
                 logging.warning(_("Failed to use simarrange for plating, "
                                   "falling back to the standard method. "
                                   "The error was: ") + e)
-                super(StlPlaterPanel, self).autoplate()
+                super().autoplate()
         else:
-            super(StlPlaterPanel, self).autoplate()
+            super().autoplate()
 
     def autoplate_simarrange(self):
         logging.info(_("Autoplating using simarrange"))
@@ -496,5 +496,6 @@ class StlPlaterPanel(PlaterPanel):
                         break
         if p.wait() != 0:
             raise RuntimeError(_("simarrange failed"))
+
 
 StlPlater = make_plater(StlPlaterPanel)

@@ -49,7 +49,7 @@ except:
     logging.error(_("WX >= 4 is not installed. This program requires WX >= 4 to run."))
     raise
 
-from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit, getSpace
+from .gui.widgets import SpecialButton, MacroEditor, PronterOptions, ButtonEdit, get_space
 
 winsize = (800, 500)
 layerindex = 0
@@ -60,6 +60,7 @@ pronterface_quitting = False
 
 class PronterfaceQuitException(Exception):
     pass
+
 
 from .gui import MainWindow
 from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
@@ -142,8 +143,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.ui_ready = False
         self._add_settings(size)
 
-        self.pauseScript = None #"pause.gcode"
-        self.endScript = None #"end.gcode"
+        self.pauseScript = None  # "pause.gcode"
+        self.endScript = None  # "end.gcode"
 
         self.filename = filename
 
@@ -267,7 +268,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             logcontent = self.logbox.GetValue()
             self.menustrip.SetMenus([])
             if len(self.commandbox.history):
-                #save current command box history
+                # save current command box history
                 if not os.path.exists(self.history_file):
                     if not os.path.exists(self.cache_dir):
                         os.makedirs(self.cache_dir)
@@ -355,7 +356,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             keys = {'B': self.btemp, 'H': self.htemp, 'J': self.xyb, 'S': self.commandbox,
                 'V': self.gviz}
             widget = keys.get(ch)
-            #ignore Alt+(S, H), so it can open Settings, Help menu
+            # ignore Alt+(S, H), so it can open Settings, Help menu
             if widget and (ch not in 'SH' or not event.AltDown()) \
                 and not (event.ControlDown() and ch == 'V'
                         and event.EventObject is self.commandbox):
@@ -369,7 +370,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                             (self.pausebtn, self.pause), \
                             (self.printbtn, self.printfile)
                 for ctl, cb in candidates:
-                    match = ('&' + ch) in ctl.Label.upper()
+                    match = '&' + ch in ctl.Label.upper()
                     handled = in_toolbar and match
                     if handled:
                         break
@@ -389,16 +390,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def kill(self, e=None):
         if len(self.commandbox.history):
-                #save current command box history
-                history = (self.history_file)
-                if not os.path.exists(history):
-                    if not os.path.exists(self.cache_dir):
-                        os.makedirs(self.cache_dir)
-                write_history_to(history,self.commandbox.history)
+            # save current command box history
+            history = self.history_file
+            if not os.path.exists(history):
+                if not os.path.exists(self.cache_dir):
+                    os.makedirs(self.cache_dir)
+            write_history_to(history, self.commandbox.history)
+
         if self.p.printing or self.p.paused:
             dlg = wx.MessageDialog(self, _("Print in progress ! Are you really sure you want to quit ?"), _("Exit"), wx.YES_NO | wx.ICON_WARNING)
             if dlg.ShowModal() == wx.ID_NO:
                 return
+
         pronsole.pronsole.kill(self)
         global pronterface_quitting
         pronterface_quitting = True
@@ -592,7 +595,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 if dir == 1:
                     # do not cycle top => bottom
                     return
-                #save unsent command before going back
+                # save unsent command before going back
                 self.appendCommandHistory()
             self.commandbox.histindex = max(0, min(self.commandbox.histindex + dir, len(self.commandbox.history)))
             self.commandbox.Value = (self.commandbox.history[self.commandbox.histindex]
@@ -786,7 +789,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def set_verbose_communications(self, e):
         self.p.loud = e.IsChecked()
 
-    def set_autoscrolldisable(self,e):
+    def set_autoscrolldisable(self, e):
         self.autoscrolldisable = e.IsChecked()
 
     def sendline(self, e):
@@ -1083,7 +1086,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(SpinSetting("printer_progress_update_interval", 10., 0, 120, _("Printer progress update interval"), _("Interval in which pronterface sends the progress to the printer if enabled, in seconds"), "Printer"))
         self.settings._add(BooleanSetting("cutting_as_extrusion", True, _("Display cutting moves"), _("Show moves where spindle is active as printing moves"), "Printer"))
         self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), ], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
-        #self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), _("Tabbed"), _("Tabbed with platers")], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
+        # self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), _("Tabbed"), _("Tabbed with platers")], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
         self.settings._add(ComboSetting("controlsmode", _("Standard"), (_("Standard"), _("Mini"), ), _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"), self.reload_ui)
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
@@ -1271,11 +1274,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if self.settings.display_progress_on_printer and time.time() - self.printer_progress_time >= self.settings.printer_progress_update_interval:
                     self.printer_progress_time = time.time()
                     printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
-                    #":" seems to be some kind of separator for G-CODE"
+                    # ":" seems to be some kind of separator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
                     if len(printer_progress_string) > 25:
                         logging.info("Warning: The print progress message might be too long to be displayed properly")
-                    #13 chars for up to 99h est.
+                    # 13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
         wx.CallAfter(self.statusbar.SetStatusText, status_string)
@@ -1544,7 +1547,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def slice_func(self):
         try:
             output_filename = self.model_to_gcode_filename(self.filename)
-            pararray = prepare_command(self.settings.slicecommandpath+self.settings.slicecommand,
+            pararray = prepare_command(self.settings.slicecommandpath + self.settings.slicecommand,
                                        {"$s": self.filename, "$o": output_filename})
             if self.settings.slic3rintegration:
                 for cat, config in self.slic3r_configs.items():
@@ -1623,9 +1626,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             dlg = wx.FileDialog(self, _("Open file to print"), basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
             dlg.SetWildcard(_("OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|GCODE files (*.gcode;*.gco;*.g)|*.gcode;*.gco;*.g|OBJ, STL files (*.stl;*.STL;*.obj;*.OBJ)|*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"))
             try:
-              dlg.SetFilterIndex(self.settings.last_file_filter)
+                dlg.SetFilterIndex(self.settings.last_file_filter)
             except:
-              pass
+                pass
         if filename or dlg.ShowModal() == wx.ID_OK:
             if filename:
                 name = filename
@@ -1678,7 +1681,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             return
         except Exception as e:
             self.log(str(e))
-            wx.CallAfter(self.post_gcode_load,False,True)
+            wx.CallAfter(self.post_gcode_load, False, True)
             return
         wx.CallAfter(self.post_gcode_load)
 
@@ -1755,19 +1758,19 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
         if len(gcode.filament_length_multi) > 1:
             for i in enumerate(gcode.filament_length_multi):
-                if self.spool_manager.getSpoolName(i[0]) == None:
+                if self.spool_manager.getSpoolName(i[0]) is None:
                     logging.info("- Extruder %d: %0.02fmm" % (i[0], i[1]))
                 else:
                     logging.info(("- Extruder %d: %0.02fmm" % (i[0], i[1]) +
                         " from spool '%s' (%.2fmm will remain)" %
                         (self.spool_manager.getSpoolName(i[0]),
                         self.calculate_remaining_filament(i[1], i[0]))))
-        elif self.spool_manager.getSpoolName(0) != None:
-                self.log(
-                    _("Using spool '%s' (%s of filament will remain)") %
-                    (self.spool_manager.getSpoolName(0),
-                    format_length(self.calculate_remaining_filament(
-                        gcode.filament_length, 0))))
+        elif self.spool_manager.getSpoolName(0) is not None:
+            self.log(
+                _("Using spool '%s' (%s of filament will remain)") %
+                (self.spool_manager.getSpoolName(0),
+                format_length(self.calculate_remaining_filament(
+                    gcode.filament_length, 0))))
 
         self.log(_("The print goes:"))
         self.log(_("- from %.2f mm to %.2f mm in X and is %.2f mm wide") % (gcode.xmin, gcode.xmax, gcode.width))
@@ -1911,10 +1914,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if self.display_gauges: wx.CallAfter(self.bedtgauge.SetTarget, temp)
                 if self.display_graph: wx.CallAfter(self.graph.SetBedTargetTemperature, temp)
         elif gline.command in ["M106"]:
-            gline_s=gcoder.S(gline)
-            fanpow=255
+            gline_s = gcoder.S(gline)
+            fanpow = 255
             if gline_s is not None:
-                fanpow=gline_s
+                fanpow = gline_s
             if self.display_graph: wx.CallAfter(self.graph.SetFanPower, fanpow)
         elif gline.command in ["M107"]:
             if self.display_graph: wx.CallAfter(self.graph.SetFanPower, 0)
@@ -2088,7 +2091,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.recvlisteners.remove(self.listfiles)
             wx.CallAfter(self.filesloaded)
         elif self.sdlisting:
-            self.sdfiles.append(re.sub(" \d+$","",line.strip().lower()))
+            self.sdfiles.append(re.sub(" \d+$", "", line.strip().lower()))  # NOQA
 
     def waitforsdresponse(self, l):
         if "file.open failed" in l:
@@ -2297,9 +2300,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     return
             if not hasattr(self, "dragging"):
                 # init dragging of the custom button
-                if hasattr(obj, "custombutton") and (not hasattr(obj,"properties") or obj.properties is not None):
+                if hasattr(obj, "custombutton") and (not hasattr(obj, "properties") or obj.properties is not None):
                     for b in self.custombuttons_widgets:
-                        if not hasattr(b,"properties") or b.properties is None:
+                        if not hasattr(b, "properties") or b.properties is None:
                             b.Enable()
                             b.SetLabel("")
                             b.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
@@ -2361,7 +2364,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if b.GetScreenRect().Contains(scrpos):
                     dst = b
                     break
-            if dst is not None and hasattr(dst,"custombutton"):
+            if dst is not None and hasattr(dst, "custombutton"):
                 src_i = src.custombutton
                 dst_i = dst.custombutton
                 self.custombuttons[src_i], self.custombuttons[dst_i] = self.custombuttons[dst_i], self.custombuttons[src_i]
@@ -2437,13 +2440,13 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         ## Group the text and the name control box horizontally
         topsizer = wx.BoxSizer(wx.VERTICAL)
         textsizer.Add(text, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT)
-        textsizer.AddSpacer(getSpace('minor'))
+        textsizer.AddSpacer(get_space('minor'))
         textsizer.Add(namectrl, 1, wx.EXPAND | wx.ALIGN_LEFT)
         panel.SetSizer(textsizer)
-        topsizer.Add(panel,1, wx.ALL, getSpace('major'))
+        topsizer.Add(panel, 1, wx.ALL, get_space('major'))
         ## Group everything vertically
         topsizer.Add(wx.StaticLine(dialog, -1, style = wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        topsizer.Add(dialog.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, getSpace('stddlg'))
+        topsizer.Add(dialog.CreateButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALIGN_RIGHT | wx.ALL, get_space('stddlg'))
         dialog.SetSizer(topsizer)
         topsizer.Fit(dialog)
         dialog.CentreOnParent()
@@ -2503,11 +2506,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.slic3r_configpath = configpath
             configfile = os.path.join(configpath, "slic3r.ini")
         if not os.path.exists(configfile):
-            self.settings.slic3rintegration=False;
+            self.settings.slic3rintegration = False
             return
         self.app.SetAppName(orig_appname)
         config = self.read_slic3r_config(configfile)
-        version = config.get("dummy", "version") # Slic3r version
+        version = config.get("dummy", "version")  # Slic3r version
         self.slic3r_configs = {}
         for cat in menus:
             menu = menus[cat]
@@ -2516,7 +2519,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             try:
                 preset = config.get("presets", cat)
                 # Starting from Slic3r 1.3.0, preset names have no extension
-                if version.split(".") >= ["1","3","0"]: preset += ".ini"
+                if version.split(".") >= ["1", "3", "0"]:
+                    preset += ".ini"
                 self.slic3r_configs[cat] = preset
             except:
                 preset = None
@@ -2558,10 +2562,10 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.slic3r_configs[cat] = file
         if self.settings.slic3rupdate:
             config = self.read_slic3r_config(configfile)
-            version = config.get("dummy", "version") # Slic3r version
+            version = config.get("dummy", "version")  # Slic3r version
             preset = os.path.basename(file)
             # Starting from Slic3r 1.3.0, preset names have no extension
-            if version.split(".") >= ["1","3","0"]:
+            if version.split(".") >= ["1", "3", "0"]:
                 preset = os.path.splitext(preset)[0]
             config.set("presets", cat, preset)
             f = StringIO.StringIO()
@@ -2577,7 +2581,7 @@ class PronterApp(wx.App):
     mainwindow = None
 
     def __init__(self, *args, **kwargs):
-        super(PronterApp, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.SetAppName("Pronterface")
         self.locale = wx.Locale(wx.Locale.GetSystemLanguage())
         self.mainwindow = PronterWindow(self)
