@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import xml.etree.ElementTree
+import xml.etree.ElementTree as ET
 import wx
 import os
 import time
@@ -62,16 +62,13 @@ class DisplayFrame(wx.Frame):
         self.layer_red = False
 
     def clear_layer(self):
-        try:
-            dc = wx.MemoryDC()
-            dc.SelectObject(self.bitmap)
-            dc.SetBackground(wx.Brush("black"))
-            dc.Clear()
-            self.pic.SetBitmap(self.bitmap)
-            self.pic.Show()
-            self.Refresh()
-        except:
-            raise
+        dc = wx.MemoryDC()
+        dc.SelectObject(self.bitmap)
+        dc.SetBackground(wx.Brush("black"))
+        dc.Clear()
+        self.pic.SetBitmap(self.bitmap)
+        self.pic.Show()
+        self.Refresh()
 
     def resize(self, res = (1024, 768)):
         self.bitmap = wx.Bitmap(*res)
@@ -83,56 +80,53 @@ class DisplayFrame(wx.Frame):
         dc.SelectObject(wx.NullBitmap)
 
     def draw_layer(self, image):
-        try:
-            dc = wx.MemoryDC()
-            dc.SelectObject(self.bitmap)
-            dc.SetBackground(wx.Brush("black"))
-            dc.Clear()
+        dc = wx.MemoryDC()
+        dc.SelectObject(self.bitmap)
+        dc.SetBackground(wx.Brush("black"))
+        dc.Clear()
 
-            if self.slicer in ['Slic3r', 'Skeinforge']:
+        if self.slicer in ['Slic3r', 'Skeinforge']:
 
-                if self.scale != 1.0:
-                    image = copy.deepcopy(image)
-                    height = float(image.get('height').replace('m', ''))
-                    width = float(image.get('width').replace('m', ''))
+            if self.scale != 1.0:
+                image = copy.deepcopy(image)
+                height = float(image.get('height').replace('m', ''))
+                width = float(image.get('width').replace('m', ''))
 
-                    image.set('height', str(height * self.scale) + 'mm')
-                    image.set('width', str(width * self.scale) + 'mm')
-                    image.set('viewBox', '0 0 ' + str(width * self.scale) + ' ' + str(height * self.scale))
+                image.set('height', str(height * self.scale) + 'mm')
+                image.set('width', str(width * self.scale) + 'mm')
+                image.set('viewBox', '0 0 ' + str(width * self.scale) + ' ' + str(height * self.scale))
 
-                    g = image.find("{http://www.w3.org/2000/svg}g")
-                    g.set('transform', 'scale(' + str(self.scale) + ')')
+                g = image.find("{http://www.w3.org/2000/svg}g")
+                g.set('transform', 'scale(' + str(self.scale) + ')')
 
-                pngbytes = PNGSurface.convert(dpi = self.dpi, bytestring = xml.etree.ElementTree.tostring(image))
-                pngImage = wx.Image(io.BytesIO(pngbytes))
+            pngbytes = PNGSurface.convert(dpi = self.dpi, bytestring = ET.tostring(image))
+            pngImage = wx.Image(io.BytesIO(pngbytes))
 
-                self.Parent.statusbar.SetLabel(f"Width: {pngImage.Width}, dpi: {self.dpi:.2f} -> Width: {((pngImage.Width / self.dpi) * 25.4):.3f} mm")
+            self.Parent.statusbar.SetLabel(f"Width: {pngImage.Width}, dpi: {self.dpi:.2f} -> Width: {((pngImage.Width / self.dpi) * 25.4):.3f} mm")
 
-                if self.layer_red:
-                    pngImage = pngImage.AdjustChannels(1, 0, 0, 1)
+            if self.layer_red:
+                pngImage = pngImage.AdjustChannels(1, 0, 0, 1)
 
-                # AGE2022-07-31 Python 3.10 and DrawBitmap expects offset
-                # as integer value. Convert float values to int
-                dc.DrawBitmap(wx.Bitmap(pngImage), int(self.offset[0]), int(self.offset[1]), True)
+            # AGE2022-07-31 Python 3.10 and DrawBitmap expects offset
+            # as integer value. Convert float values to int
+            dc.DrawBitmap(wx.Bitmap(pngImage), int(self.offset[0]), int(self.offset[1]), True)
 
-            elif self.slicer == 'bitmap':
-                if isinstance(image, str):
-                    image = wx.Image(image)
-                if self.layer_red:
-                    image = image.AdjustChannels(1, 0, 0, 1)
-                # AGE2023-04-19 Python 3.10 and DrawBitmap expects offset
-                # as integer value. Convert float values to int
-                bitmap = wx.Bitmap(image.Scale(int(image.Width * self.scale), int(image.Height * self.scale)))
-                dc.DrawBitmap(bitmap, int(self.offset[0]), int(-self.offset[1]), True)
-            else:
-                raise Exception(self.slicer + _(" is an unknown method."))
+        elif self.slicer == 'bitmap':
+            if isinstance(image, str):
+                image = wx.Image(image)
+            if self.layer_red:
+                image = image.AdjustChannels(1, 0, 0, 1)
+            # AGE2023-04-19 Python 3.10 and DrawBitmap expects offset
+            # as integer value. Convert float values to int
+            bitmap = wx.Bitmap(image.Scale(int(image.Width * self.scale), int(image.Height * self.scale)))
+            dc.DrawBitmap(bitmap, int(self.offset[0]), int(-self.offset[1]), True)
+        else:
+            self.Parent.statusbar.SetLabel(_("No valid file loaded."))
+            return
 
-            self.pic.SetBitmap(self.bitmap)
-            self.pic.Show()
-            self.Refresh()
-
-        except:
-            raise
+        self.pic.SetBitmap(self.bitmap)
+        self.pic.Show()
+        self.Refresh()
 
     def show_img_delay(self, image):
         self.Parent.statusbar.SetLabel(_("Showing, Timestamp %s s") % str(time.perf_counter()))
@@ -544,10 +538,11 @@ class SettingsFrame(wx.Dialog):
         self.estimated_time.SetLabel(time.strftime("%H:%M:%S", time.gmtime(estimated_time)))
 
     def parse_svg(self, name):
-        et = xml.etree.ElementTree.ElementTree(file = name)
-        # xml.etree.ElementTree.dump(et)
+        et = ET.ElementTree(file = name)
 
-        slicer = 'Slic3r' if et.getroot().find('{http://www.w3.org/2000/svg}metadata') is None else 'Skeinforge'
+        namespaces = dict(node for (_, node) in ET.iterparse(name, events=['start-ns']))
+        slicer = 'Slic3r' if 'slic3r' in namespaces.keys() else \
+                 'Skeinforge' if et.getroot().find('{http://www.w3.org/2000/svg}metadata') else 'None'
         zlast = 0
         zdiff = 0
         ol = []
@@ -560,7 +555,7 @@ class SettingsFrame(wx.Dialog):
                 zdiff = z - zlast
                 zlast = z
 
-                svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
+                svgSnippet = ET.Element('{http://www.w3.org/2000/svg}svg')
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
 
@@ -569,8 +564,8 @@ class SettingsFrame(wx.Dialog):
                 svgSnippet.append(i)
 
                 ol += [svgSnippet]
-        else:
 
+        elif slicer == 'Skeinforge':
             slice_layers = et.findall("{http://www.w3.org/2000/svg}metadata")[0].findall("{http://www.reprap.org/slice}layers")[0]
             minX = slice_layers.get('minX')
             maxX = slice_layers.get('maxX')
@@ -596,7 +591,7 @@ class SettingsFrame(wx.Dialog):
                 zdiff = z - zlast
                 zlast = z
 
-                svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
+                svgSnippet = ET.Element('{http://www.w3.org/2000/svg}svg')
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
 
@@ -609,7 +604,8 @@ class SettingsFrame(wx.Dialog):
 
     def parse_3DLP_zip(self, name):
         if not zipfile.is_zipfile(name):
-            raise Exception(name + _(" is not a zip file!"))
+            self.statusbar.SetLabel(_(f"{os.path.split(name)[1]} is not a zip file."))
+            return 0, -1, "None"
         accepted_image_types = ['gif', 'tiff', 'jpg', 'jpeg', 'bmp', 'png']
         with zipfile.ZipFile(name, 'r') as zipFile:
             self.image_dir = tempfile.mkdtemp()
@@ -642,14 +638,27 @@ class SettingsFrame(wx.Dialog):
             if not os.path.exists(name):
                 self.status.SetStatusText(_("File not found!"))
                 return
-            if name.endswith(".3dlp.zip"):
-                layers = self.parse_3DLP_zip(name)
-                layerHeight = float(self.thickness.GetValue())
-            else:
+            if name.endswith(('.svg', '.SVG')):
                 layers = self.parse_svg(name)
+                if layers[2] == 'None':
+                    self.statusbar.SetLabel(_(f"{os.path.split(name)[1]} is not a sliced svg-file."))
+                    self.display_filename("")
+                    self.set_total_layers("")
+                    self.set_current_layer(0)
+                    self.estimated_time.SetLabel("")
+                    return
                 layerHeight = round(layers[1], 3)
                 self.thickness.SetValue(str(layerHeight))
                 self.statusbar.SetLabel(_("Layer thickness detected: {0} mm").format(layerHeight))
+            else:
+                layers = self.parse_3DLP_zip(name)
+                if layers[2] == 'None':
+                    self.display_filename("")
+                    self.set_total_layers("")
+                    self.set_current_layer(0)
+                    self.estimated_time.SetLabel("")
+                    return
+                layerHeight = float(self.thickness.GetValue())
             self.statusbar.SetLabel(_("{0} layers found, total height {1:.2f} mm").format(len(layers[0]), layerHeight * len(layers[0])))
             self.layers = layers
             self.set_total_layers(len(layers[0]))
@@ -943,10 +952,13 @@ class SettingsFrame(wx.Dialog):
 
     def reset_all(self, event):
         # Ask confirmation for deleting
-        reset_dialog = wx.MessageDialog(self,
-            message = _("Are you sure you want to reset all the settings to the defaults?") + "\n" +
-            _("Be aware that the defaults are not guaranteed to work well with your machine."),
-            caption = _("Reset ProjectLayer Settings"), style = wx.YES_NO | wx.ICON_EXCLAMATION)
+        reset_dialog = wx.MessageDialog(
+            self,
+            message = _("Are you sure you want to reset all the settings "
+                        "to the defaults?\nBe aware that the defaults are "
+                        "not guaranteed to work well with your machine."),
+            caption = _("Reset ProjectLayer Settings"),
+            style = wx.YES_NO | wx.ICON_EXCLAMATION)
 
         if reset_dialog.ShowModal() == wx.ID_YES:
             # Reset all settings
