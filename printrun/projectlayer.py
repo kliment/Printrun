@@ -19,7 +19,6 @@ import os
 import time
 import zipfile
 import tempfile
-import shutil
 from cairosvg.surface import PNGSurface
 import io
 import imghdr
@@ -29,8 +28,9 @@ from collections import OrderedDict
 import math
 from printrun.gui.widgets import get_space
 from .utils import install_locale
-install_locale('pronterface')
+
 # Set up Internationalization using gettext
+install_locale('pronterface')
 
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res = (1024, 768), printer = None, scale = 1.0, offset = (0, 0)):
@@ -40,7 +40,7 @@ class DisplayFrame(wx.Frame):
         self.pic = wx.StaticBitmap(self)
         self.bitmap = wx.Bitmap(*res)
         self.bbitmap = wx.Bitmap(*res)
-        self.slicer = 'bitmap'
+        self.slicer = 'Bitmap'
         self.dpi = 96
         dc = wx.MemoryDC()
         dc.SelectObject(self.bbitmap)
@@ -102,7 +102,8 @@ class DisplayFrame(wx.Frame):
             pngbytes = PNGSurface.convert(dpi = self.dpi, bytestring = ET.tostring(image))
             pngImage = wx.Image(io.BytesIO(pngbytes))
 
-            self.Parent.statusbar.SetLabel(f"Width: {pngImage.Width}, dpi: {self.dpi:.2f} -> Width: {((pngImage.Width / self.dpi) * 25.4):.3f} mm")
+            self.Parent.statusbar.SetLabel(f"Width: {pngImage.Width}, dpi: {self.dpi:.2f} -> "
+                                           f"Width: {((pngImage.Width / self.dpi) * 25.4):.3f} mm")
 
             if self.layer_red:
                 pngImage = pngImage.AdjustChannels(1, 0, 0, 1)
@@ -111,7 +112,7 @@ class DisplayFrame(wx.Frame):
             # as integer value. Convert float values to int
             dc.DrawBitmap(wx.Bitmap(pngImage), int(self.offset[0]), int(self.offset[1]), True)
 
-        elif self.slicer == 'bitmap':
+        elif self.slicer in ('Bitmap', 'PrusaSlicer'):
             if isinstance(image, str):
                 image = wx.Image(image)
             if self.layer_red:
@@ -186,6 +187,7 @@ class DisplayFrame(wx.Frame):
             wx.CallAfter(self.show_img_delay, self.layers[self.index])
             self.index += 1
         else:
+            self.Parent.stop_present(wx.wxEVT_NULL)
             self.Parent.statusbar.SetLabel(_("End"))
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
@@ -240,10 +242,11 @@ class SettingsFrame(wx.Dialog):
             return val
 
     def __init__(self, parent, printer = None):
-        wx.Dialog.__init__(self, parent, title = _("ProjectLayer Control"),
+        wx.Dialog.__init__(self, parent, title = _("Layer Projector Control"),
                            style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT)
         self.pronterface = parent
-        self.display_frame = DisplayFrame(self, title = _("ProjectLayer Display"), printer = printer)
+        self.image_dir = ''
+        self.display_frame = DisplayFrame(self, title = _("Layer Projector Display"), printer = printer)
 
         self.panel = wx.Panel(self)
 
@@ -257,10 +260,11 @@ class SettingsFrame(wx.Dialog):
         buttonGroup = wx.StaticBox(self.panel, label = _("Controls"))
         buttonbox = wx.StaticBoxSizer(buttonGroup, wx.HORIZONTAL)
 
-        load_button = wx.Button(buttonGroup, -1, _("Load"))
-        load_button.Bind(wx.EVT_BUTTON, self.load_file)
-        load_button.SetToolTip(_("Choose an SVG file created from Slic3r or Skeinforge, or a zip file of bitmap images (Extension: .3dlp.zip)."))
-        buttonbox.Add(load_button, 1,
+        self.load_button = wx.Button(buttonGroup, -1, _("Load"))
+        self.load_button.Bind(wx.EVT_BUTTON, self.load_file)
+        self.load_button.SetToolTip(_("Choose a SVG file created from Slic3r or Skeinforge, a PrusaSlicer SL1-file "
+                                      "or a zip file of bitmap images (Extension: .3dlp.zip)."))
+        buttonbox.Add(self.load_button, 1,
                       flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border = get_space('mini'))
 
         self.present_button = wx.Button(buttonGroup, -1, _("Start"))
@@ -272,8 +276,8 @@ class SettingsFrame(wx.Dialog):
 
         self.pause_button = wx.Button(buttonGroup, -1, self.get_btn_label('pause'))
         self.pause_button.Bind(wx.EVT_BUTTON, self.pause_present)
-        self.pause_button.SetToolTip(_("Pauses the presentation. Can be resumed afterwards by clicking this button,") +
-                                     _(" or restarted by clicking start again."))
+        self.pause_button.SetToolTip(_("Pauses the presentation. Can be resumed afterwards by "
+                                       "clicking this button, or restarted by clicking start again."))
         buttonbox.Add(self.pause_button, 1,
                       flag = wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border = get_space('mini'))
         self.pause_button.Disable()
@@ -290,34 +294,40 @@ class SettingsFrame(wx.Dialog):
         fieldsizer = wx.GridBagSizer(vgap = get_space('minor'), hgap = get_space('minor'))
 
         # Left Column
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Layer (mm):")), pos = (0, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Layer (mm):")), pos = (0, 0),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
         self.thickness = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_layer", "0.1")), size = (125, -1))
         self.thickness.Bind(wx.EVT_TEXT, self.update_thickness)
-        self.thickness.SetToolTip(_("The thickness of each slice. Should match the value used to slice the model.") +
-                                  _(" SVG files update this value automatically, 3dlp.zip files have to be manually entered."))
+        self.thickness.SetToolTip(_("The thickness of each slice. Should match the value used to slice the model. "
+                                    "SVG files update this value automatically, 3dlp.zip files have to be manually entered."))
         fieldsizer.Add(self.thickness, pos = (0, 1))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Exposure (s):")), pos = (1, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Exposure (s):")), pos = (1, 0),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
         self.interval = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_interval", "0.5")), size = (125, -1))
         self.interval.Bind(wx.EVT_TEXT, self.update_interval)
         self.interval.SetToolTip(_("How long each slice should be displayed."))
         fieldsizer.Add(self.interval, pos = (1, 1))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Blank (s):")), pos = (2, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Blank (s):")), pos = (2, 0),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
         self.pause = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_pause", "0.5")), size = (125, -1))
         self.pause.Bind(wx.EVT_TEXT, self.update_pause)
-        self.pause.SetToolTip(_("The pause length between slices. This should take into account any movement of the Z axis,") +
-                              _(" plus time to prepare the resin surface (sliding, tilting, sweeping, etc)."))
+        self.pause.SetToolTip(_("The pause length between slices. This should take into account any movement of the Z axis, "
+                                "plus time to prepare the resin surface (sliding, tilting, sweeping, etc)."))
         fieldsizer.Add(self.pause, pos = (2, 1))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Scale:")), pos = (3, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.scale = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting('project_scale', 1.0), inc = 0.1, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Scale:")), pos = (3, 0),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.scale = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting('project_scale', 1.0),
+                                       inc = 0.1, size = (125, -1))
         self.scale.SetDigits(3)
         self.scale.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_scale)
         self.scale.SetToolTip(_("The additional scaling of each slice."))
         fieldsizer.Add(self.scale, pos = (3, 1))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Direction:")), pos = (4, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Direction:")), pos = (4, 0),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
         self.direction = wx.Choice(settingsGroup, -1, choices = [_('Top Down'), _('Bottom Up')], size = (125, -1))
         saved_direction = self._get_setting('project_direction', 0)
         try:  # This setting used to be a string, older values need to be replaced with an index
@@ -330,29 +340,38 @@ class SettingsFrame(wx.Dialog):
             self._set_setting('project_direction', saved_direction)
         self.direction.SetSelection(int(saved_direction))
         self.direction.Bind(wx.EVT_CHOICE, self.update_direction)
-        self.direction.SetToolTip(_("The direction the Z axis should move. Top Down is where the projector is above") +
-                                  _(" the model, Bottom up is where the projector is below the model."))
+        self.direction.SetToolTip(_("The direction the Z axis should move. Top Down is where the projector is above "
+                                    "the model, Bottom up is where the projector is below the model."))
         fieldsizer.Add(self.direction, pos = (4, 1), flag = wx.ALIGN_CENTER_VERTICAL)
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Overshoot (mm):")), pos = (5, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.overshoot = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting('project_overshoot', 3.0), inc = 0.1, min = 0, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Overshoot (mm):")), pos = (5, 0),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.overshoot = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting('project_overshoot', 3.0),
+                                           inc = 0.1, min = 0, size = (125, -1))
         self.overshoot.SetDigits(1)
         self.overshoot.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_overshoot)
-        self.overshoot.SetToolTip(_("How far the axis should move beyond the next slice position for each slice. For Top Down printers this would dunk") +
-                                  _(" the model under the resi and then return. For Bottom Up printers this would raise the base away from the vat and then return."))
+        self.overshoot.SetToolTip(_("How far the axis should move beyond the next slice position for each slice. "
+                                    "For Top Down printers this would dunk the model under the resi and then return. "
+                                    "For Bottom Up printers this would raise the base away from the vat and then return."))
         fieldsizer.Add(self.overshoot, pos = (5, 1))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Pre-lift Gcode:")), pos = (6, 0), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.prelift_gcode = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_prelift_gcode", "").replace("\\n", '\n')), size = (-1, 35), style = wx.TE_MULTILINE)
-        self.prelift_gcode.SetToolTip(_("Additional gcode to run before raising the Z-axis.") +
-                                      _(" Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!"))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Pre-lift Gcode:")), pos = (6, 0),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.prelift_gcode = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_prelift_gcode", "").replace("\\n", '\n')),
+                                         size = (-1, 35), style = wx.TE_MULTILINE)
+        self.prelift_gcode.SetToolTip(_("Additional gcode to run before raising the Z-axis. "
+                                        "Be sure to take into account any additional time needed "
+                                        "in the pause value, and be careful what gcode is added!"))
         self.prelift_gcode.Bind(wx.EVT_TEXT, self.update_prelift_gcode)
         fieldsizer.Add(self.prelift_gcode, pos = (6, 1), span = (2, 1), flag = wx.EXPAND)
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Post-lift Gcode:")), pos = (6, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.postlift_gcode = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_postlift_gcode", "").replace("\\n", '\n')), size = (-1, 35), style = wx.TE_MULTILINE)
-        self.postlift_gcode.SetToolTip(_("Additional gcode to run after raising the Z-axis.") +
-                                       _(" Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!"))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Post-lift Gcode:")), pos = (6, 2),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.postlift_gcode = wx.TextCtrl(settingsGroup, -1, str(self._get_setting("project_postlift_gcode", "").replace("\\n", '\n')),
+                                          size = (-1, 35), style = wx.TE_MULTILINE)
+        self.postlift_gcode.SetToolTip(_("Additional gcode to run after raising the Z-axis. Be sure to take "
+                                         "into account any additional time needed in the pause value, "
+                                         "and be careful what gcode is added!"))
         self.postlift_gcode.Bind(wx.EVT_TEXT, self.update_postlift_gcode)
         fieldsizer.Add(self.postlift_gcode, pos = (6, 3), span = (2, 1), flag = wx.EXPAND)
 
@@ -371,32 +390,42 @@ class SettingsFrame(wx.Dialog):
         self.Y.SetToolTip(_("The projector resolution in the Y axis."))
         fieldsizer.Add(self.Y, pos = (1, 3))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Offset X (mm):")), pos = (2, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.offset_X = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_offset_x", 0.0), inc = 1, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Offset X (mm):")), pos = (2, 2),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.offset_X = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_offset_x", 0.0),
+                                          inc = 1, size = (125, -1))
         self.offset_X.SetDigits(1)
         self.offset_X.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_offset)
         self.offset_X.SetToolTip(_("How far the slice should be offset from the edge in the X axis."))
         fieldsizer.Add(self.offset_X, pos = (2, 3))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Offset Y (mm):")), pos = (3, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.offset_Y = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_offset_y", 0.0), inc = 1, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Offset Y (mm):")), pos = (3, 2),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.offset_Y = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_offset_y", 0.0),
+                                          inc = 1, size = (125, -1))
         self.offset_Y.SetDigits(1)
         self.offset_Y.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_offset)
         self.offset_Y.SetToolTip(_("How far the slice should be offset from the edge in the Y axis."))
         fieldsizer.Add(self.offset_Y, pos = (3, 3))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Projected X (mm):")), pos = (4, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.projected_X_mm = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_projected_x", 505.0), inc = 1, size = (125, -1))
-        self.projected_X_mm.SetDigits(1)
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Projected X (mm):")), pos = (4, 2),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.projected_X_mm = wx.SpinCtrlDouble(settingsGroup, -1, initial = self._get_setting("project_projected_x", 100.0),
+                                                inc = 0.5, size = (125, -1), min = 1.0, max = 999.9, style = wx.SP_ARROW_KEYS)
+        self.projected_X_mm.SetDigits(2)
         self.projected_X_mm.Bind(wx.EVT_SPINCTRLDOUBLE, self.update_projected_Xmm)
-        self.projected_X_mm.SetToolTip(_("The actual width of the entire projected image. Use the Calibrate grid to show the full size of the projected image,") +
-                                       _(" and measure the width at the same level where the slice will be projected onto the resin."))
+        self.projected_X_mm.SetToolTip(_("The actual width of the entire projected image. Use the Calibrate "
+                                         "grid to show the full size of the projected image, and measure "
+                                         "the width at the same level where the slice will be projected onto the resin."))
         fieldsizer.Add(self.projected_X_mm, pos = (4, 3))
 
-        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Z-Axis Speed (mm/min):")), pos = (5, 2), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
-        self.z_axis_rate = wx.SpinCtrl(settingsGroup, -1, str(self._get_setting("project_z_axis_rate", 200)), max = 9999, size = (125, -1))
+        fieldsizer.Add(wx.StaticText(settingsGroup, -1, _("Z-Axis Speed (mm/min):")), pos = (5, 2),
+                       flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
+        self.z_axis_rate = wx.SpinCtrl(settingsGroup, -1, str(self._get_setting("project_z_axis_rate", 200)),
+                                       max = 9999, size = (125, -1))
         self.z_axis_rate.Bind(wx.EVT_SPINCTRL, self.update_z_axis_rate)
-        self.z_axis_rate.SetToolTip(_("Speed of the Z axis in mm/minute. Take into account that slower rates may require a longer pause value."))
+        self.z_axis_rate.SetToolTip(_("Speed of the Z axis in mm/minute. Take into account that "
+                                      "slower rates may require a longer pause value."))
         fieldsizer.Add(self.z_axis_rate, pos = (5, 3))
 
         fieldboxsizer.Add(fieldsizer)
@@ -415,15 +444,18 @@ class SettingsFrame(wx.Dialog):
         self.calibrate = wx.CheckBox(displayGroup, -1, _("Calibrate"))
         self.calibrate.Bind(wx.EVT_CHECKBOX, self.show_calibrate)
         self.calibrate.SetToolTip(_("Toggles the calibration grid. Each grid should be 10mmx10mm in size.") +
-                                  _(" Use the grid to ensure the projected size is correct. See also the help for the ProjectedX field."))
+                                  _(" Use the grid to ensure the projected size is correct. "
+                                    "See also the help for the ProjectedX field."))
         displaysizer.Add(self.calibrate, 0, wx.ALIGN_CENTER_VERTICAL)
         displaysizer.AddStretchSpacer(1)
 
         first_layer_boxer = wx.BoxSizer(wx.HORIZONTAL)
         self.first_layer = wx.CheckBox(displayGroup, -1, _("1st Layer"))
         self.first_layer.Bind(wx.EVT_CHECKBOX, self.show_first_layer)
-        self.first_layer.SetToolTip(_("Displays the first layer of the model. Use this to project the first layer for longer so it holds to the base.") +
-                                    _(" Note: this value does not affect the first layer when the \"Start\" run is started, it should be used manually."))
+        self.first_layer.SetToolTip(_("Displays the first layer of the model. Use this to project "
+                                      "the first layer for longer so it holds to the base. Note: "
+                                      "this value does not affect the first layer when the 'Start' "
+                                      "run is started, it should be used manually."))
 
         first_layer_boxer.Add(self.first_layer, flag = wx.ALIGN_CENTER_VERTICAL)
 
@@ -437,7 +469,8 @@ class SettingsFrame(wx.Dialog):
 
         self.layer_red = wx.CheckBox(displayGroup, -1, _("Red"))
         self.layer_red.Bind(wx.EVT_CHECKBOX, self.show_layer_red)
-        self.layer_red.SetToolTip(_("Toggles whether the image should be red. Useful for positioning whilst resin is in the printer as it should not cause a reaction."))
+        self.layer_red.SetToolTip(_("Toggles whether the image should be red. Useful for positioning "
+                                    "whilst resin is in the printer as it should not cause a reaction."))
         displaysizer.Add(self.layer_red, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, get_space('staticbox'))
 
         displayboxsizer.Add(displaysizer, 1, wx.EXPAND)
@@ -511,10 +544,13 @@ class SettingsFrame(wx.Dialog):
         self.Show()
 
     def __del__(self):
-        if hasattr(self, 'image_dir') and self.image_dir != '':
-            shutil.rmtree(self.image_dir)
+        self.cleanup_temp()
         if self.display_frame:
             self.display_frame.Destroy()
+
+    def cleanup_temp(self):
+        if isinstance(self.image_dir, tempfile.TemporaryDirectory):
+            self.image_dir.cleanup()
 
     def set_total_layers(self, total):
         self.total_layers.SetLabel(str(total))
@@ -539,8 +575,8 @@ class SettingsFrame(wx.Dialog):
 
     def parse_svg(self, name):
         et = ET.ElementTree(file = name)
-
         namespaces = dict(node for (_, node) in ET.iterparse(name, events=['start-ns']))
+
         slicer = 'Slic3r' if 'slic3r' in namespaces.keys() else \
                  'Skeinforge' if et.getroot().find('{http://www.w3.org/2000/svg}metadata') else 'None'
         zlast = 0
@@ -604,62 +640,159 @@ class SettingsFrame(wx.Dialog):
 
     def parse_3DLP_zip(self, name):
         if not zipfile.is_zipfile(name):
-            self.statusbar.SetLabel(_(f"{os.path.split(name)[1]} is not a zip file."))
-            return 0, -1, "None"
+            self.statusbar.SetLabel(_("{0} is not a zip file.").format(os.path.split(name)[1]))
+            return -1, -1, "None"
+
         accepted_image_types = ['gif', 'tiff', 'jpg', 'jpeg', 'bmp', 'png']
         with zipfile.ZipFile(name, 'r') as zipFile:
-            self.image_dir = tempfile.mkdtemp()
-            zipFile.extractall(self.image_dir)
+            # Make sure to clean up an exisiting temp dir before creating a new one
+            if isinstance(self.image_dir, tempfile.TemporaryDirectory):
+                self.image_dir.cleanup()
+            self.image_dir = tempfile.TemporaryDirectory()
+            zipFile.extractall(self.image_dir.name)
         ol = []
 
         # Note: the following funky code extracts any numbers from the filenames, matches
         # them with the original then sorts them. It allows for filenames of the
         # format: abc_1.png, which would be followed by abc_10.png alphabetically.
-        os.chdir(self.image_dir)
+        os.chdir(self.image_dir.name)
         vals = [f for f in os.listdir('.') if os.path.isfile(f)]
-        keys = (int(re.search('\d+', p).group()) for p in vals)
+        keys = (int(re.search(r'\d+', p).group()) for p in vals)
         imagefilesDict = dict(zip(keys, vals))
         imagefilesOrderedDict = OrderedDict(sorted(imagefilesDict.items(), key = lambda t: t[0]))
 
         for f in imagefilesOrderedDict.values():
-            path = os.path.join(self.image_dir, f)
+            path = os.path.join(self.image_dir.name, f)
             if os.path.isfile(path) and imghdr.what(path) in accepted_image_types:
                 ol.append(path)
 
-        return ol, -1, "bitmap"
+        return ol, -1, 'Bitmap'
+
+    def parse_sl1(self, name):
+        if not zipfile.is_zipfile(name):
+            self.statusbar.SetLabel(_("{0} is not a zip file.").format(os.path.split(name)[1]))
+            return -1, -1, 'None'
+
+        accepted_image_types = ('gif', 'tiff', 'jpg', 'jpeg', 'bmp', 'png')
+
+        with zipfile.ZipFile(name, 'r') as zippy:
+            settings = self.load_sl1_config(zippy)
+            # Make sure to clean up an exisiting temp dir before creating a new one
+            if isinstance(self.image_dir, tempfile.TemporaryDirectory):
+                self.image_dir.cleanup()
+            self.image_dir = tempfile.TemporaryDirectory()
+            for f in zippy.namelist():
+                if f.lower().endswith(accepted_image_types) and 'thumbnail' not in f:
+                    zippy.extract(f, self.image_dir.name)
+        ol = []
+        for f in sorted(os.listdir(self.image_dir.name)):
+            path = os.path.join(self.image_dir.name, f)
+            if os.path.isfile(path) and imghdr.what(path) in accepted_image_types:
+                ol.append(path)
+
+        return ol, -1, 'PrusaSlicer', settings
+
+    def load_sl1_config(self, zip_object: zipfile.ZipFile):
+
+        files = zip_object.namelist()
+        settings = {}
+        if 'prusaslicer.ini' in files:
+            relevant_keys = ['display_height', 'display_width', 'display_orientation',
+                             'display_pixels_x', 'display_pixels_y',
+                             'display_mirror_x', 'display_mirror_y',
+                             'exposure_time', 'initial_exposure_time',
+                             'layer_height', 'printer_model', 'printer_technology',
+                             'material_colour']
+            with zip_object.open('prusaslicer.ini', 'r') as lines:
+                for line in lines:
+                    element = line.decode('UTF-8').rstrip().split(' = ')
+                    if element[0] in relevant_keys:
+                        settings[element[0]] = element[1]
+            return settings
+
+        if 'config.ini' in files:
+            relevant_keys = ['expTime', 'expTimeFirst', 'layerHeight', 'printerModel']
+            key_names = ['exposure_time', 'initial_exposure_time', 'layer_height', 'printer_model']
+            with zip_object.open('config.ini', 'r') as lines:
+                for line in lines:
+                    element = line.decode('UTF-8').rstrip().split(' = ')
+                    if element[0] in relevant_keys:
+                        index = relevant_keys.index(element[0])
+                        settings[key_names[index]] = element[1]
+        return settings
+
+    def apply_sl1_settings(self, layers: list):
+        thickness = layers[3].get('layer_height')
+        if thickness is not None:
+            self.thickness.SetValue(thickness)
+            self.update_thickness(wx.wxEVT_NULL)
+        else:
+            self.statusbar.SetLabel(_("Could not load .sl1 config."))
+            return False
+        interval = layers[3].get('exposure_time')
+        if interval is not None:
+            self.interval.SetValue(interval)
+            self.update_interval(wx.wxEVT_NULL)
+        init_exp = layers[3].get('initial_exposure_time')
+        if init_exp is not None:
+            self.show_first_layer_timer.SetValue(init_exp)
+        x_res = layers[3].get('display_pixels_x')
+        if x_res is not None:
+            self.X.SetValue(x_res)
+            self.update_resolution(wx.wxEVT_NULL)
+        y_res = layers[3].get('display_pixels_y')
+        if y_res is not None:
+            self.Y.SetValue(y_res)
+            self.update_resolution(wx.wxEVT_NULL)
+        real_width = layers[3].get('display_width')
+        real_height = layers[3].get('display_height')
+        if real_width and real_height is not None:
+            if float(real_width) > float(real_height):
+                self.projected_X_mm.SetValue(real_width.replace('.', ','))
+            else:
+                self.projected_X_mm.SetValue(real_height.replace('.', ','))
+            self.update_projected_Xmm(wx.wxEVT_NULL)
+        return True
 
     def load_file(self, event):
+        self.reset_loaded_file()
         dlg = wx.FileDialog(self, _("Open file to print"), style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         # On macOS, the wildcard for *.3dlp.zip is not recognised, so it is just *.zip.
-        load_wildcard = _("Slic3r or Skeinforge SVG files") + " (*.svg)|*.svg|" + _("3DLP Zip files") + " (*.3dlp.zip)|*.zip"
-        dlg.SetWildcard(load_wildcard)
+        dlg.SetWildcard(_("Slic3r or Skeinforge SVG files") + " (*.svg)|*.svg|" +
+                        _("3DLP Zip files") + " (*.3dlp.zip)|*.zip|" +
+                        _("Prusa SL1 files") + " (*.sl1;*.sl1s)|*.sl1;*.sl1s")
         if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
             if not os.path.exists(name):
-                self.status.SetStatusText(_("File not found!"))
+                self.statusbar.SetLabel(_("File not found!"))
                 return
-            if name.endswith(('.svg', '.SVG')):
+
+            if name.lower().endswith('.svg'):
                 layers = self.parse_svg(name)
-                if layers[2] == 'None':
-                    self.statusbar.SetLabel(_(f"{os.path.split(name)[1]} is not a sliced svg-file."))
-                    self.display_filename("")
-                    self.set_total_layers("")
-                    self.set_current_layer(0)
-                    self.estimated_time.SetLabel("")
-                    return
+            elif name.lower().endswith(('.sl1', '.sl1s')):
+                layers = self.parse_sl1(name)
+            elif name.lower().endswith('.3dlp.zip'):
+                layers = self.parse_3DLP_zip(name)
+            else:
+                self.statusbar.SetLabel(_("{0} is not a sliced svg-file or zip-file.").format(os.path.split(name)[1]))
+                return
+
+            if layers[2] in ('Slic3r', 'Skeinforge'):
                 layerHeight = round(layers[1], 3)
                 self.thickness.SetValue(str(layerHeight))
-                self.statusbar.SetLabel(_("Layer thickness detected: {0} mm").format(layerHeight))
-            else:
-                layers = self.parse_3DLP_zip(name)
-                if layers[2] == 'None':
-                    self.display_filename("")
-                    self.set_total_layers("")
-                    self.set_current_layer(0)
-                    self.estimated_time.SetLabel("")
-                    return
+            elif layers[2] == 'PrusaSlicer':
+                if self.apply_sl1_settings(layers):
+                    layerHeight = float(layers[3]['layer_height'])
+                else:
+                    layerHeight = float(self.thickness.GetValue())
+            elif layers[2] == 'Bitmap':
                 layerHeight = float(self.thickness.GetValue())
-            self.statusbar.SetLabel(_("{0} layers found, total height {1:.2f} mm").format(len(layers[0]), layerHeight * len(layers[0])))
+            else:
+                self.statusbar.SetLabel(_(f"{os.path.split(name)[1]} is not a sliced svg-file or zip-file."))
+                return
+
+            self.statusbar.SetLabel(_("{0} layers found, total height {1:.2f} mm").format(len(layers[0]),
+                                                                                          layerHeight * len(layers[0])))
             self.layers = layers
             self.set_total_layers(len(layers[0]))
             self.set_current_layer(0)
@@ -669,6 +802,14 @@ class SettingsFrame(wx.Dialog):
             self.display_frame.slicer = self.slicer
             self.present_button.Enable()
         dlg.Destroy()
+
+    def reset_loaded_file(self):
+        if hasattr(self, 'layers'):
+            delattr(self, 'layers')
+        self.display_filename("")
+        self.set_total_layers("")
+        self.set_current_layer(0)
+        self.estimated_time.SetLabel("")
 
     def show_calibrate(self, event):
         if self.calibrate.IsChecked():
@@ -729,7 +870,7 @@ class SettingsFrame(wx.Dialog):
                     dc.DrawLine(int(x * (pixelsXPerMM * 10)), 0, int(x * (pixelsXPerMM * 10)), resolution_y_pixels)
 
             self.first_layer.SetValue(False)
-            self.display_frame.slicer = 'bitmap'
+            self.display_frame.slicer = 'Bitmap'
             self.display_frame.draw_layer(gridBitmap.ConvertToImage())
         self.Raise()
 
@@ -911,6 +1052,7 @@ class SettingsFrame(wx.Dialog):
                                    offset = (float(self.offset_X.GetValue()), float(self.offset_Y.GetValue())),
                                    layer_red = self.layer_red.IsChecked())
         self.present_button.Disable()
+        self.load_button.Disable()
         self.Raise()
 
     def stop_present(self, event):
@@ -919,6 +1061,7 @@ class SettingsFrame(wx.Dialog):
         self.pause_button.SetLabel(self.get_btn_label('pause'))
         self.set_current_layer(0)
         self.present_button.Enable()
+        self.load_button.Enable()
         self.pause_button.Disable()
         self.stop_button.Disable()
         self.statusbar.SetLabel(_("Stop"))
@@ -936,6 +1079,7 @@ class SettingsFrame(wx.Dialog):
 
     def on_close(self, event):
         self.stop_present(event)
+        self.cleanup_temp()
         if self.display_frame:
             self.display_frame.Destroy()
         self.Destroy()
@@ -957,7 +1101,7 @@ class SettingsFrame(wx.Dialog):
             message = _("Are you sure you want to reset all the settings "
                         "to the defaults?\nBe aware that the defaults are "
                         "not guaranteed to work well with your machine."),
-            caption = _("Reset ProjectLayer Settings"),
+            caption = _("Reset Layer Projector Settings"),
             style = wx.YES_NO | wx.ICON_EXCLAMATION)
 
         if reset_dialog.ShowModal() == wx.ID_YES:
@@ -981,7 +1125,7 @@ class SettingsFrame(wx.Dialog):
                 [self.fullscreen, False, self.update_fullscreen],
                 [self.calibrate, False, self.show_calibrate],
                 [self.first_layer, False, self.show_first_layer],
-                [self.show_first_layer_timer, -1.0, self.show_first_layer_timer],
+                [self.show_first_layer_timer, -1.0, self.show_first_layer],
                 [self.layer_red, False, self.show_layer_red]
             ]
 
@@ -994,11 +1138,8 @@ class SettingsFrame(wx.Dialog):
                 self.direction.SetSelection(0)
                 self.update_direction(event)
 
-            self.filename.SetLabel("")
-            self.total_layers.SetLabel("")
-            self.current_layer.SetLabel("0")
-            self.estimated_time.SetLabel("")
-            self.statusbar.SetLabel(_("ProjectLayer Settings reset"))
+            self.reset_loaded_file()
+            self.statusbar.SetLabel(_("Layer Projector settings reset"))
 
     def reset_setting(self, event, name, value, update_function):
         # First check if the user actually changed the setting
