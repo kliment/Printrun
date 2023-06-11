@@ -15,12 +15,11 @@
 
 import xml.etree.ElementTree as ET
 import wx
+import wx.svg
 import os
 import time
 import zipfile
 import tempfile
-from cairosvg.surface import PNGSurface
-import io
 import imghdr
 import copy
 import re
@@ -89,28 +88,34 @@ class DisplayFrame(wx.Frame):
 
             if self.scale != 1.0:
                 image = copy.deepcopy(image)
-                height = float(image.get('height').replace('m', ''))
                 width = float(image.get('width').replace('m', ''))
+                height = float(image.get('height').replace('m', ''))
 
-                image.set('height', str(height * self.scale) + 'mm')
-                image.set('width', str(width * self.scale) + 'mm')
-                image.set('viewBox', '0 0 ' + str(width * self.scale) + ' ' + str(height * self.scale))
+                new_width = str(round(width * self.scale, 3))
+                new_height = str(round(height * self.scale, 3))
+
+                image.set('width', new_width + 'mm')
+                image.set('height', new_height + 'mm')
+                image.set('viewBox', '0 0 ' + new_width + ' ' + new_height)
 
                 g = image.find("{http://www.w3.org/2000/svg}g")
                 g.set('transform', 'scale(' + str(self.scale) + ')')
 
-            pngbytes = PNGSurface.convert(dpi = self.dpi, bytestring = ET.tostring(image))
-            pngImage = wx.Image(io.BytesIO(pngbytes))
-
-            self.Parent.statusbar.SetLabel(f"Width: {pngImage.Width}, dpi: {self.dpi:.2f} -> "
-                                           f"Width: {((pngImage.Width / self.dpi) * 25.4):.3f} mm")
-
             if self.layer_red:
-                pngImage = pngImage.AdjustChannels(1, 0, 0, 1)
+                image.set('style', 'background-color: black; fill: red;')
+                for element in image.findall('{http://www.w3.org/2000/svg}g')[0]:
+                    if element.get('fill') == 'white':
+                        element.set('fill', 'red')
+                    if element.get('style') == 'fill: white':
+                        element.set('style', 'fill: red')
 
-            # AGE2022-07-31 Python 3.10 and DrawBitmap expects offset
-            # as integer value. Convert float values to int
-            dc.DrawBitmap(wx.Bitmap(pngImage), int(self.offset[0]), int(self.offset[1]), True)
+            svg_image = wx.svg.SVGimage.CreateFromBytes(ET.tostring(image), units = 'px', dpi = self.dpi)
+
+            self.Parent.statusbar.SetLabel(f"Width: {round(svg_image.width, 2)}, dpi: {self.dpi:.2f} -> "
+                                           f"Width: {((round(svg_image.width, 2) / self.dpi) * 25.4):.3f} mm")
+
+            ctx = wx.GraphicsContext.Create(dc)
+            svg_image.RenderToGC(ctx)
 
         elif self.slicer in ('Bitmap', 'PrusaSlicer'):
             if isinstance(image, str):
@@ -583,6 +588,7 @@ class SettingsFrame(wx.Dialog):
         zdiff = 0
         ol = []
         if slicer == 'Slic3r':
+            ET.register_namespace("", "http://www.w3.org/2000/svg")
             height = et.getroot().get('height').replace('m', '')
             width = et.getroot().get('width').replace('m', '')
 
