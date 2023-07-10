@@ -30,6 +30,7 @@ from pyglet.gl import glPushMatrix, glPopMatrix, \
 
 from .gviz import GvizBaseFrame
 
+from .gui.widgets import get_space
 from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
 
@@ -154,7 +155,7 @@ class GcodeViewPanel(wxGLPanel):
             if not obj.model \
                or not obj.model.loaded:
                 continue
-            # Skip (comment out) initialized check, which safely causes empty 
+            # Skip (comment out) initialized check, which safely causes empty
             # model during progressive load. This can cause exceptions/garbage
             # render, but seems fine for now
             # May need to lock init() and draw_objects() together
@@ -238,7 +239,7 @@ class GcodeViewPanel(wxGLPanel):
     def handle_wheel(self, event):
         if self.wheelTimestamp == event.Timestamp:
             # filter duplicate event delivery in Ubuntu, Debian issue #1110
-            return  
+            return
 
         self.wheelTimestamp = event.Timestamp
 
@@ -251,8 +252,10 @@ class GcodeViewPanel(wxGLPanel):
                 return
             count = 1 if not event.ControlDown() else 10
             for i in range(count):
-                if delta > 0: self.layerup()
-                else: self.layerdown()
+                if delta > 0:
+                    self.layerup()
+                else:
+                    self.layerdown()
             return
         x, y = event.GetPosition() * self.GetContentScaleFactor()
         x, y, _ = self.mouse_to_3d(x, y)
@@ -426,7 +429,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
                                pos, size, style)
         self.root = root
 
-        panel, vbox = self.create_base_ui()
+        panel, h_sizer = self.create_base_ui()
 
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self  # Hack for backwards compatibility with gviz API
@@ -436,24 +439,31 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.objects = [GCObject(self.platform), GCObject(None)]
 
         fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        self.toolbar.InsertTool(6, 8, " " + _("Fit to plate"), fit_image,
-                                     shortHelp = _("Fit to plate [F]"),
-                                     longHelp = '')
+        tool_pos = self.toolbar.GetToolPos(3) + 1
+        self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to plate"), fit_image,
+                                shortHelp = _("Fit to plate [F]"), longHelp = '')
         self.toolbar.Realize()
         self.glpanel = GcodeViewPanel(panel,
                                       build_dimensions = build_dimensions,
                                       realparent = self,
                                       antialias_samples = antialias_samples, perspective=perspective)
-        vbox.Add(self.glpanel, 1, flag = wx.EXPAND)
+        h_sizer.Add(self.glpanel, 1, wx.EXPAND)
+        h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
+        self.glpanel.SetToolTip("Left-click to pan, right-click to move the view "
+                                "and shift + scroll to change the layer")
 
-        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 1)
-        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1 / 1.2), id = 2)
-        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerup(), id = 3)
+        minsize = self.toolbar.GetEffectiveMinSize().width
+        self.SetMinClientSize((minsize, minsize))
+
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1 / 1.2), id = 1)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.zoom_to_center(1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 3)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerdown(), id = 4)
-        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.resetview(), id = 5)
-        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 8)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.layerup(), id = 5)
+        self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.fit(), id = 10)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.inject(), id = 6)
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.editlayer(), id = 7)
+        self.Bind(wx.EVT_TOOL, lambda x: self.Close(), id = 9)
 
     def setlayercb(self, layer):
         self.layerslider.SetValue(layer)
@@ -465,9 +475,9 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         if filtered:
             true_layer = filtered[0]
             z = self.model.gcode.all_layers[true_layer].z
-            message = _("Layer %d -%s Z = %.03f mm") % (layer, extra, z)
+            message = _("Layer %d: %s Z = %.03f mm") % (layer, extra, z)
         else:
-            message = _("Entire object")
+            message = _("Last layer: Object complete")
         wx.CallAfter(self.SetStatusText, message, 0)
 
     def process_slider(self, event):
@@ -479,7 +489,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
             self.update_status("")
             wx.CallAfter(self.Refresh)
         else:
-            logging.info(_("G-Code view, can't process slider. Please wait until model is loaded completely."))
+            logging.info(_("G-Code Viewer: Can't process slider. Please wait until model is loaded completely."))
 
     def set_current_gline(self, gline):
         if gline.is_move and gline.gcview_end_vertex is not None \
@@ -499,7 +509,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
             GcodeViewLoader.addfile(self, gcode)
         self.layerslider.SetRange(1, self.model.max_layers + 1)
         self.layerslider.SetValue(self.model.max_layers + 1)
-        wx.CallAfter(self.SetStatusText, _("Entire object"), 0)
+        wx.CallAfter(self.SetStatusText, _("Last layer: Object complete"), 0)
         wx.CallAfter(self.Refresh)
 
     def clear(self):
@@ -511,7 +521,7 @@ if __name__ == "__main__":
     import sys
     app = wx.App(redirect = False)
     build_dimensions = [200, 200, 100, 0, 0, 0]
-    title = 'Gcode view, shift to move view, mousewheel to set layer'
+    title = 'G-Code Viewer'
     frame = GcodeViewFrame(None, wx.ID_ANY, title, size = (400, 400),
                            build_dimensions = build_dimensions)
     gcode = gcoder.GCode(open(sys.argv[1]), get_home_pos(build_dimensions))

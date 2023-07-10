@@ -98,7 +98,7 @@ class VizPane(wx.BoxSizer):
                 objects = None
                 if isinstance(root.gviz, printrun.gcview.GcodeViewMainWrapper):
                     objects = root.gviz.objects
-                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'Gcode view, shift to move view, mousewheel to set layer',
+                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'G-Code Viewer',
                     size = (600, 600),
                     build_dimensions = root.build_dimensions_list,
                     objects = objects,

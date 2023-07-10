@@ -26,8 +26,12 @@ class ExcluderWindow(gviz.GvizWindow):
         self.SetTitle(_("Print Excluder"))
         self.parent = excluder
 
-        self.toolbar.ClearTools()
-        self.build_toolbar(excluder = True)
+        tool_pos = self.toolbar.GetToolPos(6)
+        self.toolbar.InsertTool(tool_pos, 8, _('Reset Selection'),
+                                wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                                shortHelp = _("Reset Selection"))
+        self.toolbar.DeleteTool(6)
+        self.toolbar.DeleteTool(7)
         self.toolbar.Realize()
         minsize = self.toolbar.GetEffectiveMinSize().width
         self.SetMinClientSize((minsize, minsize))
