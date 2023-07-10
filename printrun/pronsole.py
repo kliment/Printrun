@@ -167,8 +167,8 @@ class pronsole(cmd.Cmd):
         self.paused = False
         self.sdprinting = 0
         self.uploading = 0  # Unused, just for pronterface generalization
-        self.temps = {"pla": "185", "abs": "230", "off": "0"}
-        self.bedtemps = {"pla": "60", "abs": "110", "off": "0"}
+        self.temps = {"PLA": "185", "ABS": "230", "Off": "0"}
+        self.bedtemps = {"PLA": "60", "ABS": "110", "Off": "0"}
         self.percentdone = 0
         self.posreport = ""
         self.tempreadings = ""
@@ -180,7 +180,7 @@ class pronsole(cmd.Cmd):
         self.processing_rc = False
         self.processing_args = False
         self.settings = Settings(self)
-        self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build dimensions"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"), self.update_build_dimensions)
+        self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build Dimensions:"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"), self.update_build_dimensions)
         self.settings._port_list = self.scanserial
         self.update_build_dimensions(None, self.settings.build_dimensions)
         self.update_tcp_streaming_mode(None, self.settings.tcp_streaming_mode)
