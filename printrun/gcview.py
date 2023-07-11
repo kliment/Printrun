@@ -447,6 +447,10 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
                                       build_dimensions = build_dimensions,
                                       realparent = self,
                                       antialias_samples = antialias_samples, perspective=perspective)
+
+        if self.root and hasattr(self.root, "gcview_color_background"):
+            self.glpanel.color_background = self.root.gcview_color_background
+
         h_sizer.Add(self.glpanel, 1, wx.EXPAND)
         h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
         self.glpanel.SetToolTip("Left-click to pan, right-click to move the view "
