@@ -239,7 +239,7 @@ class RemainingTimeEstimator:
         self.current_layer_estimate = 0
         self.current_layer_lines = 0
         self.gcode = gcode
-        self.last_idx = 0
+        self.last_idx = -1
         self.last_estimate = None
         self.remaining_layers_estimate = sum(layer.duration for layer in gcode.all_layers)
         if len(gcode) > 0:
