@@ -5,11 +5,19 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/Printrun?logo=pypi&label=PyPI)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/Printrun?logo=pypi)
 
-Printrun consists of printcore, pronsole and pronterface, and a small collection of helpful scripts.
+Printrun consists of a suite of hosts for 3D printers and other CNC machines
+(printcore, pronsole and pronterface) and a small collection of helpful
+scripts.
 
-  * printcore.py is a library that makes writing reprap hosts easy
-  * pronsole.py is an interactive command-line host software with tabcompletion goodness
-  * pronterface.py is a graphical host software with the same functionality as pronsole
+  * **printcore.py** is a library that makes writing [RepRap][1] hosts easy
+  * **pronsole.py** is an interactive command-line host with tab-completion
+    goodness
+  * **pronterface.py** is a graphical host with the same functionality as
+    pronsole
+
+
+[1]: https://en.wikipedia.org/wiki/RepRap
+
 
 # CONTRIBUTORS
 
