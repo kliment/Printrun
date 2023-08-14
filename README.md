@@ -1,6 +1,9 @@
-# PRINTRUN 2.X
-
-The master branch holds the development of Printrun 2.x. This version of Printrun supports Python 3 and wxPython 4. All new features and developments should be merged to it.
+# PRINTRUN
+![License](https://img.shields.io/github/license/kliment/Printrun)
+![GitHub - Downloads](https://img.shields.io/github/downloads/kliment/Printrun/total?logo=github)
+![GitHub contributors](https://img.shields.io/github/contributors/kliment/Printrun?logo=github)
+![PyPI - Version](https://img.shields.io/pypi/v/Printrun?logo=pypi&label=PyPI)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/Printrun?logo=pypi)
 
 Printrun consists of printcore, pronsole and pronterface, and a small collection of helpful scripts.
 
