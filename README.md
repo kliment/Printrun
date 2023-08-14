@@ -19,11 +19,6 @@ scripts.
 [1]: https://en.wikipedia.org/wiki/RepRap
 
 
-# CONTRIBUTORS
-
-An enormous number of people helped make Printrun. See the list
-[here](CONTRIBUTORS.md).
-
 # GETTING PRINTRUN
 
 This section suggests using precompiled binaries, this way you get everything
@@ -522,6 +517,13 @@ List of available commands:
 - `home [axis]`
 - `off`: turns off fans, motors, extruder, heatbed, power supply
 - `exit`
+
+
+# CONTRIBUTORS
+
+An enormous number of people helped make Printrun. See the list
+[here](CONTRIBUTORS.md).
+
 
 # LICENSE
 
