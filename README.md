@@ -21,38 +21,36 @@ scripts.
 
 # GETTING PRINTRUN
 
-This section suggests using precompiled binaries, this way you get everything
-bundled into one single package for an easy installation. If you want the
-newest, shiniest features, you can [run Printrun from
-source](#running-from-source).
+Installation of Printrun can be done in several ways, either installing a
+pre-compiled binary, via distribution-specific packages from official
+repositories or from PyPI. If you want the newest, shiniest features, you can
+[run Printrun from source](#running-from-source).
 
-## Windows
+## Distributed Binaries and Packages
 
-A precompiled version is available at https://github.com/kliment/Printrun/releases
+### Windows and macOS pre-compiled binaries
 
-## MacOS
+Everything bundled into one single package for easy installation. Downloads
+available at: https://github.com/kliment/Printrun/releases/latest
 
-A precompiled version is available at https://github.com/kliment/Printrun/releases
+> Note for OSX users: if OSX tells you `"pronterface.app" cannot be opened
+> because the developer cannot be verified.`, you don't need to redownload
+> it. Instead, you need to allow OSX to run the unsigned app. To do this,
+> right click the application in Finder and select `Open`. Then click `Open`
+> in the popup window that appears. You only need to do this once.
 
-Note for OSX users: if OSX tells you `"pronterface.app" cannot be opened because the developer cannot be verified.`, you don't need to redownload it. Instead, you need to allow OSX to run the unsigned app. To do this, right click the application in Finder and select `Open`. Then click `Open` in the popup window that appears. You only need to do this once.
+
+### Linux packages from official repositories
+
+#### Ubuntu / Mint / Raspberry Pi OS / Debian
+
+Install the full suite: `sudo apt install printrun`
+
+Or only the apps you need: `sudo apt install pronsole` or `pronterface` or
+`plater`
 
 
-## Linux
-### Ubuntu/Debian
-
-You can install Printrun from official packages. Install the whole package
-using:
-
-```
-sudo apt update
-sudo apt install printrun
-```
-
-Or get only apps you need by
-
-`sudo apt install pronsole` or `pronterface` or `plater`
-
-### Chrome OS
+#### Chrome OS
 
 You can use Printrun via crouton ( https://github.com/dnschneid/crouton ). Assuming you want Ubuntu Trusty, you used probably `sudo sh -e ~/Downloads/crouton -r trusty -t xfce` to install Ubuntu. Fetch and install printrun with the line given above for Ubuntu/Debian.
 
@@ -62,28 +60,45 @@ By default you have no access to the serial port under Chrome OS crouton, so you
 
 where `<username>` should be your username. Log out and in to make this group change active and allow communication with your printer.
 
-### Fedora
 
-You can install Printrun from official packages. Install the whole package using
+#### Fedora
 
-`sudo dnf install printrun`
+Install the full suite: `sudo dnf install printrun`
 
-Or get only apps you need by
+Or only the apps you need: `sudo dnf install pronsole` or `pronterface` or
+`plater`
 
-`sudo dnf install pronsole` or `pronterface` or `plater`
+> Adding `--enablerepo updates-testing` option to `dnf` might sometimes give
+> you newer packages (but also not very tested).
 
-Adding `--enablerepo updates-testing` option to `dnf` might sometimes give you newer packages (but also not very tested).
 
-
-### Archlinux
+#### Arch Linux
 
 Packages are available in AUR. Just run
 
 `yaourt printrun`
 
-and enjoy the `pronterface`, `pronsole`, ... commands directly.
 
-## RUNNING FROM SOURCE
+### Printrun package from PyPI
+
+If you have a working Python environment, regardless of your OS, you can
+install the latest release distributed through the PyPI repository using
+[pip][2] and, optionally (but highly recommended), [venv][3].
+
+Activate your virtual environment, and run (Linux / macOS):
+
+`python -m pip install Printrun`
+
+or (Windows):
+
+`py -m pip install Printrun`
+
+
+[2]: https://pip.pypa.io/
+[3]: https://docs.python.org/3/tutorial/venv
+
+
+## Running From Source
 
 Run Printrun for source if you want to test out the latest features.
 
