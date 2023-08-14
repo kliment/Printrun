@@ -9,11 +9,34 @@ Printrun consists of a suite of hosts for 3D printers and other CNC machines
 (printcore, pronsole and pronterface) and a small collection of helpful
 scripts.
 
-  * **printcore.py** is a library that makes writing [RepRap][1] hosts easy
-  * **pronsole.py** is an interactive command-line host with tab-completion
-    goodness
-  * **pronterface.py** is a graphical host with the same functionality as
-    pronsole
+ * **printcore.py** is a library that makes writing [RepRap][1] hosts easy
+ * **pronsole.py** is an interactive command-line host with tab-completion
+   goodness
+ * **pronterface.py** is a graphical host with the same functionality as
+   pronsole
+
+The contents of this document are organized in the following sections:
+
+ - [Getting Printrun](#getting-printrun)
+   * [Distributed Binaries and Packages](#distributed-binaries-and-packages)
+     + [Windows and macOS pre-compiled binaries](#windows-and-macos-pre-compiled-binaries)
+     + [Linux packages from official repositories](#linux-packages-from-official-repositories)
+     + [Printrun package from PyPI](#printrun-package-from-pypi)
+   * [Running From Source](#running-from-source)
+ - [Using Printrun](#using-printrun)
+   * [Using Pronterface](#using-pronterface)
+   * [Using Pronsole](#using-pronsole)
+   * [Using Printcore](#using-printcore)
+   * [Platers](#platers)
+   * [3D Viewer Controls](#3d-viewer-controls)
+   * [RPC Server](#rpc-server)
+   * [Configuration](#configuration)
+   * [Using Macros And Custom Buttons](#using-macros-and-custom-buttons)
+   * [Using Host Commands](#using-host-commands)
+ - [Testing](#testing)
+ - [Contributing](#contributing)
+ - [Contributors](#contributors)
+ - [License](#license)
 
 
 [1]: https://en.wikipedia.org/wiki/RepRap
