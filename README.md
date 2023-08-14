@@ -152,27 +152,6 @@ The warning message
 
 means that this optimized G-Code parser hasn't been compiled. To get rid of it and benefit from the better implementation, please install Cython and run the command above.
 
-### Ubuntu/Debian
-
-The above method is the recommended way to run Printrun 2 from source. However, if you can't find a suitable wxPython4 wheel, or if it fails for other reasons, it could be run without using a python virtual environment. For users of Debian 10 Buster or later and Ubuntu 18.04 Bionic Beaver or later.
-
-Install the dependencies:
-
-```
-sudo apt install python3-serial python3-numpy cython3 python3-libxml2 python3-gi python3-dbus python3-psutil python3-cairosvg libpython3-dev python3-appdirs python3-wxgtk4.0
-```
-
-```
-sudo apt install python3-pip
-pip3 install --user pyglet
-```
-
-Install git, clone this repository:
-```
-sudo apt install git
-git clone https://github.com/kliment/Printrun.git
-cd Printrun
-```
 
 ### Windows
 
