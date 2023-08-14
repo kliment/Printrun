@@ -529,6 +529,47 @@ are also provided within folder `testtools`.
 [4]: https://docs.python.org/3/library/unittest
 
 
+# CONTRIBUTING
+
+Thinking of contributing to Printrun? Awesome! Thank you! ❤️
+
+Printrun is an open source project and we love to receive contributions from
+anyone. There are many ways to contribute:
+
+ * Improving the documentation. This README is our main source of
+   documentation and it surely lacks some love here and there or requires
+   being brought up to date.
+
+ * Submitting bug reports and feature requests.
+   - We use GitHub's [issue tracker][5] to keep track of them.
+   - Please remember to state your OS and Printrun version on new issues.
+
+ * Improving the test code base. Current code coverage is extremely low. See
+   [testing section](#testing) for more information.
+
+ * Fixing existing issues and/or implementing requested features. There is a
+   fair amount of known issues and a great deal of requested features waiting
+   to be implemented. We (the maintainers) don't have the time and resources
+   to look at them all so every code contribution will be very welcome.
+   - We use GitHub's [pull requests][6] to review and incorporate new code.
+   - Issues labeled [`Regression`][8] would be the most urgent fixes needed,
+     followed by issues/requests labeled [`2.x`][9] and lastly those with
+     [`3.x`][10].
+   - Ideally every new contribution should comply with [PEP 8][7] style guide
+     as much as possible and should be thoroughly documented to ease reviewing
+     and future understanding of the code.
+   - Please note that breaking changes might need to wait to be incorporated
+     until the next major release is due.
+
+
+[5]: https://github.com/kliment/Printrun/issues
+[6]: https://github.com/kliment/Printrun/pulls
+[7]: https://peps.python.org/pep-0008
+[8]: https://github.com/kliment/Printrun/labels/Regression
+[9]: https://github.com/kliment/Printrun/labels/2.x
+[10]: https://github.com/kliment/Printrun/labels/3.x
+
+
 # CONTRIBUTORS
 
 An enormous number of people helped make Printrun. See the list
