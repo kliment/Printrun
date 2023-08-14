@@ -513,6 +513,22 @@ List of available commands:
 - `exit`
 
 
+# TESTING
+
+A small (work in progress) test suite is developed within folder `tests` using
+[unittest][4] which can be run with (requires Python 3.11+):
+
+```
+python -m unittest discover tests
+```
+
+Small utilities for testing/debugging communications or g-code reading/writing
+are also provided within folder `testtools`.
+
+
+[4]: https://docs.python.org/3/library/unittest
+
+
 # CONTRIBUTORS
 
 An enormous number of people helped make Printrun. See the list
