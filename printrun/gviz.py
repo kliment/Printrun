@@ -37,7 +37,7 @@ class GvizBaseFrame(wx.Frame):
         h_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.toolbar = wx.ToolBar(panel, -1, style = wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_HORZ_TEXT)
-        self.build_toolbar(excluder = False)
+        self.build_toolbar()
         self.toolbar.Realize()
         v_sizer.Add(self.toolbar, 0, wx.EXPAND)
         v_sizer.Add(h_sizer, 1, wx.EXPAND)
@@ -48,26 +48,25 @@ class GvizBaseFrame(wx.Frame):
 
         return panel, h_sizer
 
-    def build_toolbar(self, excluder):
+    def build_toolbar(self):
         self.toolbar.SetMargins(get_space('minor'), get_space('mini'))
         self.toolbar.SetToolPacking(get_space('minor'))
-        self.toolbar.AddTool(1, '', wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"),)
-        self.toolbar.AddTool(2, '', wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"))
-        self.toolbar.AddTool(3, _("Reset View"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset View"))
+        self.toolbar.AddTool(1, '', wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"))
+        self.toolbar.AddTool(2, '', wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"),)
+        self.toolbar.AddTool(3, _("Reset View"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                             shortHelp = _("Reset View"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
-        self.toolbar.AddTool(5, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
+        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
+        self.toolbar.AddTool(5, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
         self.toolbar.AddSeparator()
-        if not excluder:  # This is added to the 'GCode Viewer' Toolbar
-            self.toolbar.AddTool(6, 'Inject', wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
-                                 wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
-            self.toolbar.AddTool(7, 'Edit', wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
-                                 wx.NullBitmap, shortHelp = _("Edit Layer"), longHelp = _("Edit the G-Code of this layer"))
-        else:  # This is added to the 'Excluder' Toolbar
-            self.toolbar.AddTool(8, _('Reset Selection'), wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Reset Selection"))
+        self.toolbar.AddTool(6, 'Inject', wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                             wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
+        self.toolbar.AddTool(7, 'Edit', wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                             wx.NullBitmap, shortHelp = _("Edit Layer"), longHelp = _("Edit the G-Code of this layer"))
         self.toolbar.AddStretchableSpace()
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(9, _('Close'), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), shortHelp = _("Close Window"))
+        self.toolbar.AddTool(9, _('Close'), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+                             shortHelp = _("Close Window"))
 
     def setlayercb(self, layer):
         self.layerslider.SetValue(layer)
@@ -80,14 +79,14 @@ ID_ABOUT = 101
 ID_EXIT = 110
 class GvizWindow(GvizBaseFrame):
     def __init__(self, f = None, size = (550, 550), build_dimensions = [200, 200, 100, 0, 0, 0], grid = (10, 50), extrusion_width = 0.5, bgcolor = "#000000"):
-        super().__init__(None, title = _("GCode Viewer"), size = size, style = wx.DEFAULT_FRAME_STYLE)
+        super().__init__(None, title = _("G-Code Viewer"), size = size, style = wx.DEFAULT_FRAME_STYLE)
 
         panel, h_sizer = self.create_base_ui()
 
         self.p = Gviz(panel, size = size, build_dimensions = build_dimensions, grid = grid, extrusion_width = extrusion_width, bgcolor = bgcolor, realparent = self)
         h_sizer.Add(self.p, 1, wx.EXPAND)
         h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
-        self.p.SetToolTip("Shift + Click to move view, scroll to change layer")
+        self.p.SetToolTip("Left-click to move the view, scroll to zoom and shift + scroll to change the layer.")
 
         self.Layout()
         size = (size[0] + self.layerslider.GetEffectiveMinSize().width,
@@ -96,11 +95,11 @@ class GvizWindow(GvizBaseFrame):
         self.SetMinClientSize((minsize, minsize))
         self.SetClientSize(size)
 
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1.2), id = 1)
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1 / 1.2), id = 2)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1 / 1.2), id = 1)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.zoom(-1, -1, 1.2), id = 2)
         self.Bind(wx.EVT_TOOL, self.reset_view, id = 3)
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 4)
-        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 5)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerdown(), id = 4)
+        self.Bind(wx.EVT_TOOL, lambda x: self.p.layerup(), id = 5)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.inject(), id = 6)
         self.Bind(wx.EVT_TOOL, lambda x: self.p.editlayer(), id = 7)
         self.Bind(wx.EVT_TOOL, self.reset_selection, id = 8)
