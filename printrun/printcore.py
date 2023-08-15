@@ -198,10 +198,9 @@ class printcore():
         else:
             logging.error(error)
 
-    @locked
-    def disconnect(self):
-        """Disconnects from printer and pauses the print
-        """
+    def _unlocked_dc(self):
+        """Avoids deadlock, ensure to only call from locked threads"""
+
         if self.printer:
             if self.read_thread:
                 self.stop_read_thread = True
@@ -235,11 +234,17 @@ class printcore():
         self.printing = False
 
     @locked
+    def disconnect(self):
+        """Disconnects from printer and pauses the print
+        """
+        self._unlocked_dc()
+
+    @locked
     def connect(self, port = None, baud = None, dtr=None):
         """Set port and baudrate if given, then connect to printer
         """
         if self.printer:
-            self.disconnect()
+            self._unlocked_dc()
         if port is not None:
             self.port = port
         if baud is not None:
