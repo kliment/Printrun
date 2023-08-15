@@ -574,8 +574,6 @@ class printcore():
         self.clear = False
         self._send("M110", -1, True)
 
-        self.send_now("M110 N-1") # Ensure line value is reset
-
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
                                              name = 'print thread',
@@ -861,7 +859,7 @@ class printcore():
             
             if "M110" not in command:
                 self.sentlines[lineno] = command
-                
+
         if self.printer:
             self.sent.append(command)
             # run the command through the analyzer
