@@ -572,7 +572,7 @@ class printcore():
             return True
 
         self.clear = False
-        self._send("M110", -1, True)
+        self._send("M110 N-1", -1, True)
 
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
@@ -831,35 +831,15 @@ class printcore():
             if not self.paused:
                 self.queueindex = 0
                 self.lineno = 0
-                self._send("M110", -1, True)
-
-    def swap_N_M(s):
-        """Standardizes the M110 command so N# is always in front of M110 (for Prusa MK3 3.12)"""
-
-        # Look for patterns like N1 M110
-        pattern = r"(N[-]?\d+) (M110)"
-        
-        # Define a replacement function to swap the found groups
-        def repl(match):
-            # match.group(1) contains "N<number>" and match.group(2) contains "M110"
-            return f"{match.group(2)} {match.group(1)}"
-        
-        # Use re.sub with the replacement function
-        return re.sub(pattern, repl, s)
+                self._send("M110 N-1", -1, True)
 
     def _send(self, command, lineno = 0, calcchecksum = False):
         # Only add checksums if over serial (tcp does the flow control itself)
         if calcchecksum and not self.printer_tcp:
             prefix = "N" + str(lineno) + " " + command
-
-            if "M110" in prefix:
-                prefix = self.swap_N_M(prefix)
-
             command = prefix + "*" + str(self._checksum(prefix))
-            
             if "M110" not in command:
                 self.sentlines[lineno] = command
-
         if self.printer:
             self.sent.append(command)
             # run the command through the analyzer
