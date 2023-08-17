@@ -190,10 +190,9 @@ def configfile(filename):
     return lookup_file(filename, [os.path.expanduser("~/.printrun/"), ])
 
 def decode_utf8(s):
-    try:
-        s = s.decode("utf-8")
-    except ValueError:
-        pass
+    """Attempt to decode a string, return the string otherwise"""
+    if isinstance(s, bytes):
+        return s.decode()
     return s
 
 def format_time(timestamp):
