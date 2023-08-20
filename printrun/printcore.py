@@ -572,7 +572,7 @@ class printcore():
             return True
 
         self.clear = False
-        self._send("M110", -1, True)
+        self._send("M110 N-1")
 
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
@@ -831,7 +831,7 @@ class printcore():
             if not self.paused:
                 self.queueindex = 0
                 self.lineno = 0
-                self._send("M110", -1, True)
+                self._send("M110 N-1")
 
     def _send(self, command, lineno = 0, calcchecksum = False):
         # Only add checksums if over serial (tcp does the flow control itself)
