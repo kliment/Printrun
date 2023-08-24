@@ -213,9 +213,10 @@ class printcore():
             self.dtr = dtr
         if self.port is not None and self.baud is not None:
             self.writefailures = 0
+            self.printer = device.Device()
+            self.printer.force_dtr = self.dtr
             try:
-                self.printer = device.Device()
-                self.printer.connect(self.port, self.baud, self.dtr)
+                self.printer.connect(self.port, self.baud)
             except device.DeviceError as e:
                 self.logError("Connection error: %s" % e)
                 self.printer = None

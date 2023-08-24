@@ -50,16 +50,27 @@ class Device():
     ----------
     is_connected
     has_flow_control
+    force_dtr : bool or None
+        On serial connections, force the DTR bit to a specific logic level
+        (1 or 0) after a successful connection. Not all OS/drivers support
+        this functionality. By default it is set to "None" to let the system
+        handle it automatically.
+    parity_workaround : bool
+        On serial connections, enable/disable a workaround on parity
+        checking. Not all platforms need to do this parity workaround, and
+        some drivers don't support it. By default it is only enabled on
+        platforms susceptible of actually requiring it.
 
     """
 
     def __init__(self, port=None, baudrate=9600):
         self.port = port
         self.baudrate = baudrate
+        self.force_dtr = None
+        self.parity_workaround = platform.system() == "Linux"
 
         # Private
         self._device = None
-        self._dtr = None
         self._is_connected = False
         self._hostname = None
         self._socketfile = None
@@ -72,22 +83,17 @@ class Device():
         if port is not None:
             self._parse_type()
 
-    def connect(self, port=None, baudrate=None, dtr=None):
+    def connect(self, port=None, baudrate=None):
         """Establishes the connection to the device.
 
         Parameters
         ----------
         port : str, optional
-            Either a device name, such as '/dev/ttyUSB0' or 'COM3', or an URL
-            with port, such as '192.168.0.10:80' or
-            'http://www.example.com:8080'. Only required if it was not
-            provided already.
+            See `port` attribute. Only required if it was not provided
+            already.
         baudrate : int, optional
-            Communication speed in bit/s, such as 9600, 115200 or 250000. Only
-            required if it was not provided already.
-        dtr : bool, optional
-            On serial connections, enable/disable hardware DTR flow
-            control. (Default is None)
+            See `baudrate` attribute. Only required if it was not provided
+            already.
 
         Raises
         ------
@@ -99,8 +105,6 @@ class Device():
             self.port = port
         if baudrate is not None:
             self.baudrate = baudrate
-        if dtr is not None:
-            self._dtr = dtr
 
         if self.port is not None:
             self._parse_type()
@@ -161,9 +165,7 @@ class Device():
 
         Warnings
         --------
-        Current implementation resets the serial connection and
-        disables hardware DTR flow control. It has no effect on socket
-        connections.
+        Current implementation has no effect on socket connections.
 
         """
         if self._type == 'serial':
@@ -227,8 +229,7 @@ class Device():
 
         try:
             # TODO: Check if this trick is still needed
-            if (platform.system() == "Linux" and
-                    os.path.exists("/etc/debian")):
+            if self.parity_workaround:
                 self._device = serial.Serial(port=self.port,
                                              baudrate=self.baudrate,
                                              timeout=0.25,
@@ -241,17 +242,9 @@ class Device():
                                              parity=serial.PARITY_NONE)
                 self._device.port = self.port
 
-            # DTR appears not to work on many platforms, so we're going to
-            # call it but not care if it fails
             # TODO: Check if this is still required
-            try:
-                if self._dtr is not None:
-                    self._device.dtr = self._dtr
-            except:
-                # TODO: avoid bare except clauses
-                # A catch-all clause might not be required since now
-                # pyserial silently ignores this issue anyway
-                pass
+            if self.force_dtr is not None:
+                self._device.dtr = self.force_dtr
 
             self._device.open()
 
@@ -279,11 +272,9 @@ class Device():
             raise DeviceError(msg) from e
 
     def _reset_serial(self):
-        # TODO: Current implementation forces dtr=0 regardless of user
-        # preference
-        self._device.dtr = 1
+        self._device.dtr = True
         time.sleep(0.2)
-        self._device.dtr = 0
+        self._device.dtr = False
 
     def _write_serial(self, data):
         try:
