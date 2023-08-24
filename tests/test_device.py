@@ -224,6 +224,11 @@ class TestReset(unittest.TestCase):
         # TODO: this simply tests that no errors are raised
         self.socket_dev.reset()
 
+    def test_reset_disconnected(self):
+        # TODO: this simply tests that no errors are raised
+        dev = device.Device("/a/port")
+        dev.reset()
+
 
 class TestReadSerial(unittest.TestCase):
     """Test readline functionality on serial connections"""
@@ -260,6 +265,12 @@ class TestReadSerial(unittest.TestCase):
         """READ_EMPTY is returned when there's nothing to read"""
         # Serial.readline() returns b'' (aka `READ_EMPTY`) on timeout
         self.assertEqual(self._fake_read(return_value=b''), device.READ_EMPTY)
+
+    def test_read_disconnected(self):
+        """DeviceError is raised when reading from a disconnected device"""
+        dev = device.Device("/a/port")
+        with self.assertRaises(device.DeviceError):
+            dev.readline()
 
 
 class TestReadSocket(unittest.TestCase):

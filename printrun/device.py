@@ -158,7 +158,9 @@ class Device():
 
         """
         # TODO: silent fail on no device? return timeout?
-        return getattr(self, "_readline_" + self._type)()
+        if self._device is not None:
+            return getattr(self, "_readline_" + self._type)()
+        raise DeviceError("Attempting to read when disconnected")
 
     def reset(self):
         """Attempt to reset the connection to the device.
@@ -168,9 +170,9 @@ class Device():
         Current implementation has no effect on socket connections.
 
         """
-        if self._type == 'serial':
-            return getattr(self, "_reset_" + self._type)()
-        return None
+        if self._device is not None:
+            if self._type == 'serial':
+                getattr(self, "_reset_" + self._type)()
 
     def write(self, data: bytes):
         """Write data to the connected peer.
@@ -190,7 +192,7 @@ class Device():
             If `data` is not of 'bytes' type.
 
         """
-        if self.is_connected:
+        if self._device is not None:
             getattr(self, "_write_" + self._type)(data)
         else:
             raise DeviceError("Attempting to write when disconnected")
