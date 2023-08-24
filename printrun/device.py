@@ -129,7 +129,7 @@ class Device():
         error being raised due to a lost connection.
 
         """
-        if self._type is not None:
+        if self._device is not None:
             return getattr(self, "_is_connected_" + self._type)()
         return False
 
