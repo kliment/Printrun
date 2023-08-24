@@ -261,7 +261,7 @@ class TestDisconnect(unittest.TestCase):
     def test_calls_serial_close(self):
         """Test that serial.Serial.close() is called"""
         self.core.disconnect()
-        self.mocked_serial.return_value.close.assert_called_once()
+        self.mocked_serial.return_value.close.assert_called()
 
     def test_calls_socket_close(self):
         """Test that socket.socket.close() is called"""

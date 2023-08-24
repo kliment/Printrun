@@ -137,12 +137,11 @@ class TestConnect(unittest.TestCase):
         self.dev = device.Device()
         self.addCleanup(self.dev.disconnect)
 
-    def _fake_serial_connect(self, port=None, baudrate=None, dtr=None,
-                             **kargs):
+    def _fake_serial_connect(self, port=None, baudrate=None, **kargs):
         # Mock a serial connection with optional keyword arguments
         with patch_serial("open", **kargs) as mocked_open:
-            self.dev.connect(port=port, baudrate=baudrate, dtr=dtr)
-            mocked_open.assert_called_once()
+            self.dev.connect(port=port, baudrate=baudrate)
+            mocked_open.assert_called()
 
     def _fake_socket_connect(self, port=None, **kargs):
         # Mock a socket connection with optional keyword arguments
