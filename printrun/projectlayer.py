@@ -53,6 +53,9 @@ class DisplayFrame(wx.Frame):
         self.CentreOnParent()
         self.Show()
 
+        # Closing the DisplayFrame calls the close method of Settingsframe
+        self.Bind(wx.EVT_CLOSE, parent.on_close)
+
         self.scale = scale
         self.index = 0
         self.size = res
