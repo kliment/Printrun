@@ -45,29 +45,29 @@ class Device():
     baudrate : int, optional
         Communication speed in bit/s, such as 9600, 115200 or 250000.
         (Default is 9600)
+    force_dtr : bool or None, optional
+        On serial connections, force the DTR bit to a specific logic level
+        (1 or 0) after a successful connection. Not all OS/drivers support
+        this functionality. By default it is set to "None" to let the system
+        handle it automatically.
+    parity_workaround : bool, optional
+        On serial connections, enable/disable a workaround on parity
+        checking. Not all platforms need to do this parity workaround, and
+        some drivers don't support it. By default it is disable.
 
     Attributes
     ----------
     is_connected
     has_flow_control
-    force_dtr : bool or None
-        On serial connections, force the DTR bit to a specific logic level
-        (1 or 0) after a successful connection. Not all OS/drivers support
-        this functionality. By default it is set to "None" to let the system
-        handle it automatically.
-    parity_workaround : bool
-        On serial connections, enable/disable a workaround on parity
-        checking. Not all platforms need to do this parity workaround, and
-        some drivers don't support it. By default it is only enabled on
-        platforms susceptible of actually requiring it.
 
     """
 
-    def __init__(self, port=None, baudrate=9600):
+    def __init__(self, port=None, baudrate=9600, force_dtr=None,
+                 parity_workaround=False):
         self.port = port
         self.baudrate = baudrate
-        self.force_dtr = None
-        self.parity_workaround = platform.system() == "Linux"
+        self.force_dtr = force_dtr
+        self.parity_workaround = parity_workaround
 
         # Private
         self._device = None
