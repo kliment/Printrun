@@ -53,7 +53,7 @@ class Device():
     parity_workaround : bool, optional
         On serial connections, enable/disable a workaround on parity
         checking. Not all platforms need to do this parity workaround, and
-        some drivers don't support it. By default it is disable.
+        some drivers don't support it. By default it is disabled.
 
     Attributes
     ----------
@@ -110,7 +110,7 @@ class Device():
             self._parse_type()
             getattr(self, "_connect_" + self._type)()
         else:
-            raise DeviceError("No port or URL specified.")
+            raise DeviceError("No port or URL specified")
 
     def disconnect(self):
         """Terminates the connection to the device."""
@@ -160,7 +160,7 @@ class Device():
         # TODO: silent fail on no device? return timeout?
         if self._device is not None:
             return getattr(self, "_readline_" + self._type)()
-        raise DeviceError("Attempting to read when disconnected")
+        raise DeviceError("Attempted to read when disconnected")
 
     def reset(self):
         """Attempt to reset the connection to the device.
@@ -195,7 +195,7 @@ class Device():
         if self._device is not None:
             getattr(self, "_write_" + self._type)(data)
         else:
-            raise DeviceError("Attempting to write when disconnected")
+            raise DeviceError("Attempted to write when disconnected")
 
     def _parse_type(self):
         # Guess which type of connection is being used
@@ -251,9 +251,8 @@ class Device():
             self._device.open()
 
         except (serial.SerialException, IOError) as e:
-            msg = (f"Could not connect to serial port {self.port} "
-                   f"at baudrate {self.baudrate}\n{e}")
-            raise DeviceError(msg) from e
+            msg = "Could not connect to serial port '{}'".format(self.port)
+            raise DeviceError(msg, e) from e
 
     def _is_connected_serial(self):
         return self._device.is_open
@@ -262,8 +261,8 @@ class Device():
         try:
             self._device.close()
         except serial.SerialException as e:
-            msg = "Error at disconnecting."
-            raise DeviceError(msg) from e
+            msg = "Error on serial disconnection"
+            raise DeviceError(msg, e) from e
 
     def _readline_serial(self):
         try:
@@ -271,7 +270,7 @@ class Device():
             return self._device.readline()
         except (serial.SerialException, OSError) as e:
             msg = f"Unable to read from serial port '{self.port}'"
-            raise DeviceError(msg) from e
+            raise DeviceError(msg, e) from e
 
     def _reset_serial(self):
         self._device.dtr = True
@@ -282,8 +281,8 @@ class Device():
         try:
             self._device.write(data)
         except serial.SerialException as e:
-            msg = "Unable to write to serial port."
-            raise DeviceError(msg) from e
+            msg = "Unable to write to serial port '{self.port}'"
+            raise DeviceError(msg, e) from e
 
     def _disable_ttyhup(self):
         if platform.system() == "Linux":
@@ -310,9 +309,9 @@ class Device():
 
         except OSError as e:
             self._disconnect_socket()
-            msg = (f"Could not connect to "
-                   f"'{self._hostname}:{self._port_number}'.\n{e}")
-            raise DeviceError(msg) from e
+            msg = "Could not connect to {}:{}".format(self._hostname,
+                                                      self._port_number)
+            raise DeviceError(msg, e) from e
 
     def _is_connected_socket(self):
         # TODO: current implementation tracks status of connection but
@@ -330,8 +329,8 @@ class Device():
                 self._selector = None
             self._device.close()
         except OSError as e:
-            msg = "Error at disconnecting."
-            raise DeviceError(msg) from e
+            msg = "Error on socket disconnection"
+            raise DeviceError(msg, e) from e
 
     def _readline_socket(self):
         SYS_AGAIN = None  # python's marker for timeout/no data
@@ -362,8 +361,9 @@ class Device():
                     return READ_EOF
         except OSError as e:
             self._is_connected = False
-            msg = "Unable to read from socket. Connection lost."
-            raise DeviceError(msg) from e
+            msg = ("Unable to read from {}:{}. Connection lost"
+                   ).format(self._hostname, self._port_number)
+            raise DeviceError(msg, e) from e
 
     def _readline_buf(self):
         # Try to readline from buffer
@@ -387,15 +387,30 @@ class Device():
                 pass
         except (OSError, RuntimeError) as e:
             self._is_connected = False
-            msg = "Unable to write to socket. Connection lost."
-            raise DeviceError(msg) from e
+            msg = ("Unable to write to {}:{}. Connection lost"
+                   ).format(self._hostname, self._port_number)
+            raise DeviceError(msg, e) from e
 
 
 class DeviceError(Exception):
     """Raised on any connection error.
 
     One exception groups all connection errors regardless of the underlying
-    connection or error type. Error trace will provide additional information
-    related to the relevant connection type.
+    connection or error type.
+
+    Parameters
+    ----------
+    msg : str
+        Error message.
+    cause : Exception, optional
+        Underlying error.
+
+    Attributes
+    ----------
+    cause
 
     """
+
+    def __init__(self, msg, cause=None):
+        super().__init__(msg)
+        self.cause = cause
