@@ -21,7 +21,7 @@ import wx
 from . import gcoder
 from .gl.panel import wxGLPanel
 from .gl.trackball import build_rotmatrix
-from .gl.libtatlin import actors
+from .gl import actors
 from .injectgcode import injector, injector_edit
 
 from pyglet.gl import glPushMatrix, glPopMatrix, \

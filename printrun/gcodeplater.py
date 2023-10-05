@@ -26,7 +26,7 @@ import logging
 
 from printrun import gcoder
 from printrun.objectplater import make_plater, PlaterPanel
-from printrun.gl.libtatlin import actors
+from printrun.gl import actors
 import printrun.gui.viz  # NOQA
 from printrun import gcview
 

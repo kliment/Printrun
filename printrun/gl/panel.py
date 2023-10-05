@@ -44,7 +44,7 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
 
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
-from .libtatlin.actors import vec
+from .actors import vec
 from pyglet.gl.glu import gluOrtho2D
 
 # When Subclassing wx.Window in Windows the focus goes to the wx.Window
