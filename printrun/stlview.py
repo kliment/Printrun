@@ -93,6 +93,7 @@ class StlViewPanel(wxGLPanel):
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)
+        self.mouse = actors.MouseCursor()
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.forceresize) #why needed
@@ -175,7 +176,7 @@ class StlViewPanel(wxGLPanel):
         RMB: nothing
             with shift move viewport
         """
-        self.mousepos = event.GetPosition()
+        self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
         if event.Dragging():
             if event.LeftIsDown():
                 self.handle_rotation(event)
@@ -297,19 +298,8 @@ class StlViewPanel(wxGLPanel):
                                     plane_normal = (0, 0, 1), plane_offset = 0,
                                     local_transform = False)
         if inter is not None:
-            glPushMatrix()
-            glTranslatef(inter[0], inter[1], inter[2])
-            glBegin(GL_TRIANGLES)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(1, 0, 0, 1))
-            glNormal3f(0, 0, 1)
-            glVertex3f(2, 2, 0)
-            glVertex3f(-2, 2, 0)
-            glVertex3f(-2, -2, 0)
-            glVertex3f(2, -2, 0)
-            glVertex3f(2, 2, 0)
-            glVertex3f(-2, -2, 0)
-            glEnd()
-            glPopMatrix()
+            self.mouse.position = inter
+            self.mouse.draw()
 
         # Draw objects
         glDisable(GL_CULL_FACE)

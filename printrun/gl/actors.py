@@ -35,7 +35,7 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
     GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
     glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
-    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f
+    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f, glNormal3f
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from printrun.utils import install_locale
@@ -173,6 +173,33 @@ class Platform:
         # FIXME: using the list sometimes results in graphical corruptions
         # glCallList(self.display_list)
         self.draw()
+
+class MouseCursor:
+    """
+    Cursor where the mouse should be in 3D space.
+    """
+    def __init__(self):
+        self.colour = (255 / 255, 0 / 255, 0 / 255, 1.0)  # Red
+        self.position = [0, 0, 0]
+
+    def draw(self):
+        glPushMatrix()
+        glTranslatef(*self.position)
+        glBegin(GL_TRIANGLES)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour))
+        glNormal3f(0, 0, 1)
+        glVertex3f(2, 2, 0)
+        glVertex3f(-2, 2, 0)
+        glVertex3f(-2, -2, 0)
+        glVertex3f(2, -2, 0)
+        glVertex3f(2, 2, 0)
+        glVertex3f(-2, -2, 0)
+        glEnd()
+        glPopMatrix()
+
+    def display(self, mode_2d=False):
+        self.draw()
+        pass
 
 class PrintHead:
     def __init__(self):
