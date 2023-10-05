@@ -301,8 +301,8 @@ class StlPlaterPanel(PlaterPanel):
 
     def clickcb_cut(self, event):
         axis = self.cutting_axis
-        self.cutting_dist, _, _ = self.s.get_cutting_plane(axis, None,
-                                                           local_transform = True)
+        self.cutting_dist = self.s.get_cutting_dist(axis, None,
+                                                    local_transform = True)
         if self.cutting_dist is not None:
             self.enable_cut_button(True)
 

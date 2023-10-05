@@ -94,6 +94,7 @@ class StlViewPanel(wxGLPanel):
                                         circular = circular,
                                         grid = grid)
         self.mouse = actors.MouseCursor()
+        self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.forceresize) #why needed
@@ -101,7 +102,7 @@ class StlViewPanel(wxGLPanel):
 
     def OnReshape(self):
         self.mview_initialized = False
-        super(StlViewPanel, self).OnReshape()
+        super().OnReshape()
 
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
@@ -319,49 +320,14 @@ class StlViewPanel(wxGLPanel):
 
         # Draw cutting plane
         if self.parent.cutting:
-            # FIXME: make this a proper Actor
             axis = self.parent.cutting_axis
             fixed_dist = self.parent.cutting_dist
-            dist, plane_width, plane_height = self.get_cutting_plane(axis, fixed_dist)
+            dist = self.get_cutting_dist(axis, fixed_dist)
+
             if dist is not None:
-                glPushMatrix()
-                if axis == "x":
-                    glRotatef(90, 0, 1, 0)
-                    glRotatef(90, 0, 0, 1)
-                    glTranslatef(0, 0, dist)
-                elif axis == "y":
-                    glRotatef(90, 1, 0, 0)
-                    glTranslatef(0, 0, -dist)
-                elif axis == "z":
-                    glTranslatef(0, 0, dist)
-                glDisable(GL_CULL_FACE)
-                glBegin(GL_TRIANGLES)
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.9, 0.15, 0.3))
-                glNormal3f(0, 0, self.parent.cutting_direction)
-                glVertex3f(plane_width, plane_height, 0)
-                glVertex3f(0, plane_height, 0)
-                glVertex3f(0, 0, 0)
-                glVertex3f(plane_width, 0, 0)
-                glVertex3f(plane_width, plane_height, 0)
-                glVertex3f(0, 0, 0)
-                glEnd()
-                glEnable(GL_CULL_FACE)
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-                glEnable(GL_LINE_SMOOTH)
-                orig_linewidth = (GLfloat)()
-                glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
-                glLineWidth(4.0)
-                glBegin(GL_LINE_LOOP)
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0, 0.8, 0.15, 1))
-                glVertex3f(0, 0, 0)
-                glVertex3f(0, plane_height, 0)
-                glVertex3f(plane_width, plane_height, 0)
-                glVertex3f(plane_width, 0, 0)
-                glEnd()
-                glLineWidth(orig_linewidth)
-                glDisable(GL_LINE_SMOOTH)
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-                glPopMatrix()
+                direction = self.parent.cutting_direction
+                self.cutting_plane.update(axis, direction, dist)
+                self.cutting_plane.draw()
 
         glPopMatrix()
 
@@ -383,13 +349,9 @@ class StlViewPanel(wxGLPanel):
             glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         return mvmat
 
-    def get_cutting_plane(self, cutting_axis, fixed_dist, local_transform = False):
-        cutting_plane_sizes = {"x": (self.platform.depth, self.platform.height),
-                               "y": (self.platform.width, self.platform.height),
-                               "z": (self.platform.width, self.platform.depth)}
-        plane_width, plane_height = cutting_plane_sizes[cutting_axis]
+    def get_cutting_dist(self, cutting_axis, fixed_dist, local_transform = False):
         if fixed_dist is not None:
-            return fixed_dist, plane_width, plane_height
+            return fixed_dist
         ref_sizes = {"x": self.platform.width,
                      "y": self.platform.depth,
                      "z": self.platform.height,
@@ -438,7 +400,7 @@ class StlViewPanel(wxGLPanel):
                 dist = inter[translate_axis[cutting_axis]]
         if dist is not None:
             dist = min(1.5 * ref_size, max(-0.5 * ref_size, dist))
-        return dist, plane_width, plane_height
+        return dist
 
 def main():
     app = wx.App(redirect = False)

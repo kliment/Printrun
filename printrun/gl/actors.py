@@ -35,7 +35,8 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
     GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
     glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
-    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f, glNormal3f
+    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f, glNormal3f, \
+    glRotatef, glPolygonMode, GL_CULL_FACE, GL_LINE, GL_FILL
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from printrun.utils import install_locale
@@ -199,7 +200,89 @@ class MouseCursor:
 
     def display(self, mode_2d=False):
         self.draw()
-        pass
+
+
+class CuttingPlane:
+    """
+    A plane that indicates the axis and position
+    on which the stl model will be cut.
+    """
+    def __init__(self, build_dimensions):
+        self.width = build_dimensions[0]
+        self.depth = build_dimensions[1]
+        self.height = build_dimensions[2]
+
+        self.colour = (0 / 255, 229 / 255, 38 / 255, 0.3)  # Light Green
+        self.colour_outline = (0 / 255, 204 / 255, 38 / 255, 1.0)  # Green
+        self.axis = ''
+        self.dist = 0
+        self.cutting_direction = -1
+        self.plane_width = 0
+        self.plane_height = 0
+
+    def update(self, axis, cutting_direction, dist):
+        self.axis = axis
+        self.cutting_direction = cutting_direction
+        self.dist = dist
+        self._set_plane_dimensions(self.axis)
+
+    def _set_plane_dimensions(self, cutting_axis):
+        cutting_plane_sizes = {"x": (self.depth, self.height),
+                               "y": (self.width, self.height),
+                               "z": (self.width, self.depth)}
+        self.plane_width, self.plane_height = cutting_plane_sizes[cutting_axis]
+
+    def draw(self):
+        if self.dist is None:
+            return
+
+        glPushMatrix()
+        if self.axis == "x":
+            glRotatef(90, 0, 1, 0)
+            glRotatef(90, 0, 0, 1)
+            glTranslatef(0, 0, self.dist)
+        elif self.axis == "y":
+            glRotatef(90, 1, 0, 0)
+            glTranslatef(0, 0, -self.dist)
+        elif self.axis == "z":
+            glTranslatef(0, 0, self.dist)
+
+        glDisable(GL_CULL_FACE)
+        # Draw the plane
+        glBegin(GL_TRIANGLES)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour))
+        glNormal3f(0, 0, self.cutting_direction)
+        glVertex3f(self.plane_width, self.plane_height, 0)
+        glVertex3f(0, self.plane_height, 0)
+        glVertex3f(0, 0, 0)
+        glVertex3f(self.plane_width, 0, 0)
+        glVertex3f(self.plane_width, self.plane_height, 0)
+        glVertex3f(0, 0, 0)
+        glEnd()
+        glEnable(GL_CULL_FACE)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glEnable(GL_LINE_SMOOTH)
+        # Save the current linewidth and insert a new value
+        orig_linewidth = (GLfloat)()
+        glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
+        glLineWidth(4.0)
+        # Draw the outline on the plane
+        glBegin(GL_LINE_LOOP)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour_outline))
+        glVertex3f(0, 0, 0)
+        glVertex3f(0, self.plane_height, 0)
+        glVertex3f(self.plane_width, self.plane_height, 0)
+        glVertex3f(self.plane_width, 0, 0)
+        glEnd()
+        # Restore the original linewidth
+        glLineWidth(orig_linewidth)
+        glDisable(GL_LINE_SMOOTH)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glPopMatrix()
+
+    def display(self, mode_2d=False):
+        self.draw()
+
 
 class PrintHead:
     def __init__(self):
