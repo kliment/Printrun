@@ -44,7 +44,7 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
 
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
-from .actors import vec
+from .actors import Focus, vec
 from pyglet.gl.glu import gluOrtho2D
 
 # When Subclassing wx.Window in Windows the focus goes to the wx.Window
@@ -91,6 +91,7 @@ class wxGLPanel(BASE_CLASS):
             self.canvas = glcanvas.GLCanvas(self, wx.ID_ANY, attribList, pos, size, style)
 
         self.width = self.height = None
+        self.focus = Focus()
 
         self.context = glcanvas.GLContext(self.canvas)
 
@@ -213,6 +214,7 @@ class wxGLPanel(BASE_CLASS):
             return
         self.width = max(float(width), 1.0)
         self.height = max(float(height), 1.0)
+        self.focus.update_size(self.width, self.height)
         self.OnInitGL(call_reshape = False)
         # print('glViewport', width)
         glViewport(0, 0, width, height)
@@ -282,42 +284,16 @@ class wxGLPanel(BASE_CLASS):
         """Draw the window."""
         #import time
         #start = time.perf_counter()
-        # print('DrawCanvas', self.canvas.GetClientRect())
+        #print('DrawCanvas', self.canvas.GetClientRect())
         self.pygletcontext.set_current()
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.draw_objects()
 
         if self.canvas.HasFocus():
-            self.drawFocus()
+            self.focus.draw()
         self.canvas.SwapBuffers()
-        #print('Draw took', '%.2f'%(time.perf_counter()-start))
-
-    def drawFocus(self):
-        glColor4f(0, 0, 0, 0.4)
-
-        glPushMatrix()
-        glLoadIdentity()
-
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        gluOrtho2D(0, self.width, 0, self.height)
-
-        glLineStipple(1, 0xf0f0)
-        glEnable(GL_LINE_STIPPLE)
-        glBegin(GL_LINE_LOOP)
-        glVertex2f(1, 0)
-        glVertex2f(self.width, 0)
-        glVertex2f(self.width, self.height-1)
-        glVertex2f(1, self.height-1)
-        glEnd()
-        glDisable(GL_LINE_STIPPLE)
-
-        glPopMatrix() # restore PROJECTION
-
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
+        #print('Draw took', '%.6f'%(time.perf_counter()-start))
 
     # ==========================================================================
     # To be implemented by a sub class

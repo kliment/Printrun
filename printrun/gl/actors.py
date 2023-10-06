@@ -36,7 +36,10 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
     glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
     GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f, glNormal3f, \
-    glRotatef, glPolygonMode, GL_CULL_FACE, GL_LINE, GL_FILL
+    glRotatef, glPolygonMode, GL_CULL_FACE, GL_LINE, GL_FILL, GL_PROJECTION, \
+    glLoadIdentity, glMatrixMode, glVertex2f, glLineStipple, GL_LINE_STIPPLE, \
+    GL_MODELVIEW
+from pyglet.gl.glu import gluOrtho2D
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 
 from printrun.utils import install_locale
@@ -196,6 +199,51 @@ class MouseCursor:
         glVertex3f(2, 2, 0)
         glVertex3f(-2, -2, 0)
         glEnd()
+        glPopMatrix()
+
+    def display(self, mode_2d=False):
+        self.draw()
+
+
+class Focus:
+    """
+    Outline around the currently active OpenGL panel.
+    """
+    def __init__(self):
+        self.colour = (0 / 255, 0 / 255, 0 / 255, 0.4)  # Black Transparent
+        self.width = 0
+        self.height = 0
+
+    def update_size(self, width, height):
+        self.width = width
+        self.height = height
+
+    def draw(self):
+        glColor4f(*vec(*self.colour))
+
+        glPushMatrix()
+        glLoadIdentity()
+
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        gluOrtho2D(0, self.width, 0, self.height)
+
+        glLineStipple(1, 0xff00)
+        glEnable(GL_LINE_STIPPLE)
+        # Draw a stippled line around the vertices
+        glBegin(GL_LINE_LOOP)
+        # This is the lower left corner, x, y
+        glVertex2f(5, 3)
+        glVertex2f(self.width - 3, 3)
+        glVertex2f(self.width - 3, self.height - 5)
+        glVertex2f(5, self.height - 5)
+        glEnd()
+        glDisable(GL_LINE_STIPPLE)
+
+        glPopMatrix() # restore PROJECTION
+
+        glMatrixMode(GL_MODELVIEW)
         glPopMatrix()
 
     def display(self, mode_2d=False):
