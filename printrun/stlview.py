@@ -104,7 +104,6 @@ class StlViewPanel(wxGLPanel):
     def OnInitGL(self, *args, call_reshape = True, **kwargs):
         '''Initialize OpenGL for use in the window.'''
         super().OnInitGL(*args, call_reshape, **kwargs)
-        self.setup_material()
 
         if hasattr(self.parent, "filenames") and self.parent.filenames:
             for filename in self.parent.filenames:
@@ -263,8 +262,8 @@ class StlViewPanel(wxGLPanel):
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         #glDisable(GL_CULL_FACE)
         glPushMatrix()
-        # Colour of the stl models
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, actors.vec(0.3, 0.7, 0.5, 1))
+        # Set colour to render the stl models
+        self.set_gl_colour(0.3, 0.7, 0.5)
         for i in self.parent.models:
             model = self.parent.models[i]
             # Apply transformations to the models

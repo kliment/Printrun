@@ -199,7 +199,7 @@ class MouseCursor:
         glPushMatrix()
         glTranslatef(*self.position)
         glBegin(GL_TRIANGLES)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour))
+        glColor3f(*vec(*self.colour[:-1]))
         glNormal3f(0, 0, 1)
         glVertex3f(2, 2, 0)
         glVertex3f(-2, 2, 0)
@@ -229,8 +229,6 @@ class Focus:
 
     def draw(self):
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        # TODO: Can all actors utilise glEnable(GL_COLOR_MATERIAL) instead?
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour))
         glColor4f(*vec(*self.colour))
         glPushMatrix()
         glLoadIdentity()
@@ -310,7 +308,7 @@ class CuttingPlane:
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         # Draw the plane
         glBegin(GL_TRIANGLES)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour))
+        glColor4f(*vec(*self.colour))
         glNormal3f(0, 0, self.cutting_direction)
         glVertex3f(self.plane_width, self.plane_height, 0)
         glVertex3f(0, self.plane_height, 0)
@@ -328,7 +326,7 @@ class CuttingPlane:
         glLineWidth(4.0)
         # Draw the outline on the plane
         glBegin(GL_LINE_LOOP)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour_outline))
+        glColor3f(*vec(*self.colour_outline[:-1]))
         glVertex3f(0, 0, 0)
         glVertex3f(0, self.plane_height, 0)
         glVertex3f(self.plane_width, self.plane_height, 0)
@@ -959,11 +957,7 @@ class GcodeModel(Model):
             glEnable(GL_LIGHTING)
             glEnableClientState(GL_NORMAL_ARRAY)
             glEnableClientState(GL_COLOR_ARRAY)
-            glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
 
-            glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
             self._display_movements(has_vbo)
 
             glDisable(GL_LIGHTING)

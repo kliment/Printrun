@@ -42,7 +42,9 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     glBegin, glVertex2f, glVertex3f, glEnd, GL_LINE_LOOP, glColor3f, \
     GL_LINE_STIPPLE, glColor4f, glLineStipple, glMaterialfv, \
     GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glMaterialf, \
-    GL_SHININESS, GL_EMISSION, GL_RESCALE_NORMAL
+    GL_SHININESS, GL_EMISSION, GL_RESCALE_NORMAL, glColorMaterial, \
+    GL_FRONT
+
 
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
@@ -208,10 +210,19 @@ class wxGLPanel(BASE_CLASS):
         # This enables tracking of the material colour,
         # now it can be changed only by calling glColor
         glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        # Material specs are set here once and then we only change
+        # the material colour by using glColor3f / glColor4f
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
+        glMaterialfv(GL_FRONT, GL_SPECULAR, vec(0.85, 0.85, 0.85, 1))
+        glMaterialf(GL_FRONT, GL_SHININESS, 72)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
 
         if call_reshape:
             self.OnReshape()
@@ -257,13 +268,12 @@ class wxGLPanel(BASE_CLASS):
             self.pygletcontext.set_current()
             self.update_object_resize()
 
-    def setup_material(self):
-        '''Sets the material for 3d stl models in opengl'''
-        glDisable(GL_COLOR_MATERIAL)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(1, 1, 1, 1))
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0.1, 0, 0.9))
+    def set_gl_colour(self, r_val: float, g_val: float,
+                      b_val: float, a_val: float = 1.0) -> None:
+        if a_val == 1.0:
+            glColor3f(*vec(r_val, g_val, b_val))
+        else:
+            glColor4f(*vec(r_val, g_val, b_val, a_val))
 
     def setup_lights(self):
         '''Sets the lightscene for gcode and stl models'''
