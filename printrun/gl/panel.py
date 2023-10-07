@@ -40,7 +40,9 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
     glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, \
     glBegin, glVertex2f, glVertex3f, glEnd, GL_LINE_LOOP, glColor3f, \
-    GL_LINE_STIPPLE, glColor4f, glLineStipple
+    GL_LINE_STIPPLE, glColor4f, glLineStipple, glMaterialfv, \
+    GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glMaterialf, \
+    GL_SHININESS, GL_EMISSION, GL_RESCALE_NORMAL
 
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat
@@ -61,7 +63,8 @@ class wxGLPanel(BASE_CLASS):
     orbit_control = True
     orthographic = True
     color_background = (0.98, 0.98, 0.78, 1)
-    do_lights = True
+    # G-Code models and stl models use different lightscene
+    gcode_lights = True
 
     def __init__(self, parent, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0,
@@ -94,12 +97,16 @@ class wxGLPanel(BASE_CLASS):
         self.focus = Focus()
 
         self.context = glcanvas.GLContext(self.canvas)
+        self.pygletcontext = None # initialised during glinit
 
         self.rot_lock = Lock()
         self.basequat = [0, 0, 0, 1]
         self.zoom_factor = 1.0
+        self.zoomed_width = 1.0
+        self.zoomed_height = 1.0
         self.angle_z = 0
         self.angle_x = 0
+        self.initpos = 0
 
         self.gl_broken = False
 
@@ -195,13 +202,17 @@ class wxGLPanel(BASE_CLASS):
         self.pygletcontext.set_current()
         # normal gl init
         glClearColor(*self.color_background)
-        glClearDepth(1.0)                # set depth value to 1
+        glClearDepth(1.0)  # set depth value to 1
         glDepthFunc(GL_LEQUAL)
+
+        # This enables tracking of the material colour,
+        # now it can be changed only by calling glColor
         glEnable(GL_COLOR_MATERIAL)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
         if call_reshape:
             self.OnReshape()
 
@@ -246,25 +257,49 @@ class wxGLPanel(BASE_CLASS):
             self.pygletcontext.set_current()
             self.update_object_resize()
 
+    def setup_material(self):
+        '''Sets the material for 3d stl models in opengl'''
+        glDisable(GL_COLOR_MATERIAL)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(1, 1, 1, 1))
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0.1, 0, 0.9))
+
     def setup_lights(self):
-        if not self.do_lights:
-            return
+        '''Sets the lightscene for gcode and stl models'''
         glEnable(GL_LIGHTING)
-        glDisable(GL_LIGHT0)
-        glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.4, 0.4, 0.4, 1.0))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0, 0, 0, 0))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0, 0, 0, 0))
-        glEnable(GL_LIGHT1)
-        glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
-        glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
-        glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
-        glEnable(GL_LIGHT2)
-        glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
-        glLightfv(GL_LIGHT2, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
-        glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 3, 0))
-        glEnable(GL_NORMALIZE)
+        if self.gcode_lights:
+            glDisable(GL_LIGHT0)
+
+            glEnable(GL_LIGHT1)
+            glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
+            glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
+            glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
+            glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
+
+            glEnable(GL_LIGHT2)
+            glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
+            glLightfv(GL_LIGHT2, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
+            glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
+            glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 3, 0))
+
+            glEnable(GL_NORMALIZE)
+        else:
+            glEnable(GL_LIGHT0)
+            glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
+            glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0.5, 0.5, 1.0, 1.0))
+            glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(1.0, 1.0, 1.0, 1.0))
+            glLightfv(GL_LIGHT0, GL_POSITION, vec(0.5, 0.5, 1.0, 0))
+
+            glEnable(GL_LIGHT1)
+            glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
+            glLightfv(GL_LIGHT2, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
+            glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.5, 0.5, 0.5, 1.0))
+            glLightfv(GL_LIGHT1, GL_POSITION, vec(1.0, 0, 0.5, 0))
+
+            glDisable(GL_LIGHT2)
+
+            glEnable(GL_RESCALE_NORMAL)
         glShadeModel(GL_SMOOTH)
 
     def reset_mview(self, factor):
@@ -293,7 +328,8 @@ class wxGLPanel(BASE_CLASS):
         if self.canvas.HasFocus():
             self.focus.draw()
         self.canvas.SwapBuffers()
-        #print('Draw took', '%.6f'%(time.perf_counter()-start))
+        #print(f"Draw took {(time.perf_counter()-start) * 1000:.2f} ms,"
+        #      f" {1 / (time.perf_counter()-start):.0f} FPS")
 
     # ==========================================================================
     # To be implemented by a sub class

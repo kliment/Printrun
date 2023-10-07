@@ -46,6 +46,7 @@ from printrun.utils import install_locale
 install_locale('pronterface')
 
 def vec(*args):
+    '''Returns an array of GLfloat values'''
     return (GLfloat * len(args))(*args)
 
 def compile_display_list(func, *options):
@@ -131,11 +132,14 @@ class Platform:
             elif i % (self.grid[1] // 2) == 0:
                 glColor4f(*self.color_grads_interm)
             else:
-                if self.light: return False
+                if self.light:
+                    return False
                 glColor4f(*self.color_grads_minor)
             return True
 
         # draw the grid
+        glDisable(GL_LIGHTING)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         glBegin(GL_LINES)
         if self.circular:  # Draw a circular grid
             for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
@@ -172,6 +176,7 @@ class Platform:
             glEnd()
 
         glPopMatrix()
+        glEnable(GL_LIGHTING)
 
     def display(self, mode_2d=False):
         # FIXME: using the list sometimes results in graphical corruptions
@@ -186,7 +191,11 @@ class MouseCursor:
         self.colour = (255 / 255, 0 / 255, 0 / 255, 1.0)  # Red
         self.position = [0, 0, 0]
 
+    def update_position(self, position):
+        self.position = position
+
     def draw(self):
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         glPushMatrix()
         glTranslatef(*self.position)
         glBegin(GL_TRIANGLES)
@@ -219,8 +228,10 @@ class Focus:
         self.height = height
 
     def draw(self):
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        # TODO: Can all actors utilise glEnable(GL_COLOR_MATERIAL) instead?
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour))
         glColor4f(*vec(*self.colour))
-
         glPushMatrix()
         glLoadIdentity()
 
@@ -296,6 +307,7 @@ class CuttingPlane:
             glTranslatef(0, 0, self.dist)
 
         glDisable(GL_CULL_FACE)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         # Draw the plane
         glBegin(GL_TRIANGLES)
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(*self.colour))
@@ -935,6 +947,7 @@ class GcodeModel(Model):
 
     def display(self, mode_2d=False):
         with self.lock:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
             glPushMatrix()
             glTranslatef(self.offset_x, self.offset_y, 0)
             glEnableClientState(GL_VERTEX_ARRAY)
@@ -1215,6 +1228,7 @@ class GcodeModelLight(Model):
 
     def display(self, mode_2d=False):
         with self.lock:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             glPushMatrix()
             glTranslatef(self.offset_x, self.offset_y, 0)
             glEnableClientState(GL_VERTEX_ARRAY)

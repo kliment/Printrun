@@ -39,8 +39,6 @@ from .gl.panel import wxGLPanel
 from .gl.trackball import build_rotmatrix
 from .gl import actors
 
-def vec(*args):
-    return (GLfloat * len(args))(*args)
 
 class stlview:
     def __init__(self, facets, batch):
@@ -67,7 +65,7 @@ class stlview:
 
 class StlViewPanel(wxGLPanel):
 
-    do_lights = False
+    gcode_lights = False
 
     def __init__(self, parent, size,
                  build_dimensions = None, circular = False,
@@ -76,7 +74,7 @@ class StlViewPanel(wxGLPanel):
         if perspective:
             self.orthographic=False
         super().__init__(parent, wx.DefaultPosition, size, 0,
-                                           antialias_samples = antialias_samples)
+                         antialias_samples = antialias_samples)
 
         self.batches = []
         self.rot = 0
@@ -100,55 +98,14 @@ class StlViewPanel(wxGLPanel):
         wx.CallAfter(self.forceresize) #why needed
         self.mousepos = (0, 0)
 
-    def OnReshape(self):
-        self.mview_initialized = False
-        super().OnReshape()
-
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
     # ==========================================================================
-    def OnInitGL(self, call_reshape = True):
+    def OnInitGL(self, *args, call_reshape = True, **kwargs):
         '''Initialize OpenGL for use in the window.'''
-        if self.GLinitialized:
-            return
-        self.GLinitialized = True
-        # create a pyglet context for this panel
-        self.pygletcontext = gl.Context(gl.current_context)
-        self.pygletcontext.canvas = self
-        self.pygletcontext.set_current()
-        # normal gl init
-        glClearColor(0, 0, 0, 1)
-        glColor3f(1, 0, 0)
-        glEnable(GL_DEPTH_TEST)
-        glClearDepth(1.0)
-        glDepthFunc(GL_LEQUAL)
-        glEnable(GL_CULL_FACE)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        # Uncomment this line for a wireframe view
-        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        super().OnInitGL(*args, call_reshape, **kwargs)
+        self.setup_material()
 
-        # Simple light setup.  On Windows GL_LIGHT0 is enabled by default,
-        # but this is not the case on Linux or Mac, so remember to always
-        # include it.
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT0)
-        glEnable(GL_LIGHT1)
-
-        glLightfv(GL_LIGHT0, GL_POSITION, vec(.5, .5, 1, 0))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(.5, .5, 1, 1))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(1, 1, 1, 1))
-        glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 0, .5, 0))
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(.5, .5, .5, 1))
-        glLightfv(GL_LIGHT1, GL_SPECULAR, vec(1, 1, 1, 1))
-        glShadeModel(GL_SMOOTH)
-
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(1, 1, 1, 1))
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0.1, 0, 0.9))
-        if call_reshape:
-            self.OnReshape()
         if hasattr(self.parent, "filenames") and self.parent.filenames:
             for filename in self.parent.filenames:
                 self.parent.load_file(filename)
@@ -156,6 +113,10 @@ class StlViewPanel(wxGLPanel):
             if hasattr(self.parent, "loadcb"):
                 self.parent.loadcb()
             self.parent.filenames = None
+
+    def OnReshape(self):
+        self.mview_initialized = False
+        super().OnReshape()
 
     def double_click(self, event):
         if hasattr(self.parent, "clickcb") and self.parent.clickcb:
@@ -201,8 +162,8 @@ class StlViewPanel(wxGLPanel):
 
     def wheel(self, event):
         """react to mouse wheel actions:
-        rotate object
-            with shift zoom viewport
+            without shift: zoom viewport
+            with shift: rotate object
         """
         self.handle_wheel(event)
         wx.CallAfter(self.Refresh)
@@ -261,7 +222,7 @@ class StlViewPanel(wxGLPanel):
         '''create opengl objects when opengl is initialized'''
         if not self.platform.initialized:
             self.platform.init()
-        self.initialized = 1
+        self.initialized = True
         #TODO: this probably creates constant redraw
         # create_objects is called during OnDraw, remove
         wx.CallAfter(self.Refresh)
@@ -285,16 +246,12 @@ class StlViewPanel(wxGLPanel):
         glPushMatrix()
         glTranslatef(0, 0, -self.dist)
         glMultMatrixd(build_rotmatrix(self.basequat))  # Rotate according to trackball
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.2, 0.2, 0.2, 1))
         glTranslatef(- self.build_dimensions[3] - self.platform.width / 2,
                      - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
         # Draw platform
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        glDisable(GL_LIGHTING)
         self.platform.draw()
-        glEnable(GL_LIGHTING)
+
         # Draw mouse
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                     plane_normal = (0, 0, 1), plane_offset = 0,
                                     local_transform = False)
@@ -303,11 +260,14 @@ class StlViewPanel(wxGLPanel):
             self.mouse.draw()
 
         # Draw objects
-        glDisable(GL_CULL_FACE)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        #glDisable(GL_CULL_FACE)
         glPushMatrix()
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.3, 0.7, 0.5, 1))
+        # Colour of the stl models
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, actors.vec(0.3, 0.7, 0.5, 1))
         for i in self.parent.models:
             model = self.parent.models[i]
+            # Apply transformations to the models
             glPushMatrix()
             glTranslatef(*(model.offsets))
             glRotatef(model.rot, 0.0, 0.0, 1.0)
@@ -316,7 +276,7 @@ class StlViewPanel(wxGLPanel):
             model.batch.draw()
             glPopMatrix()
         glPopMatrix()
-        glEnable(GL_CULL_FACE)
+        #glEnable(GL_CULL_FACE)
 
         # Draw cutting plane
         if self.parent.cutting:

@@ -18,15 +18,15 @@
 import logging
 import wx
 
+from pyglet.gl import glPushMatrix, glPopMatrix, \
+    glTranslatef, glRotatef, glScalef, glMultMatrixd, \
+    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble
+
 from . import gcoder
 from .gl.panel import wxGLPanel
 from .gl.trackball import build_rotmatrix
 from .gl import actors
 from .injectgcode import injector, injector_edit
-
-from pyglet.gl import glPushMatrix, glPopMatrix, \
-    glTranslatef, glRotatef, glScalef, glMultMatrixd, \
-    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble
 
 from .gviz import GvizBaseFrame
 
@@ -84,8 +84,8 @@ class GcodeViewPanel(wxGLPanel):
         if perspective:
             self.orthographic=False
         super().__init__(parent, wx.DefaultPosition,
-                                             wx.DefaultSize, 0,
-                                             antialias_samples = antialias_samples)
+                         wx.DefaultSize, 0,
+                         antialias_samples = antialias_samples)
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
         # self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
@@ -120,7 +120,9 @@ class GcodeViewPanel(wxGLPanel):
         pass
 
     def OnInitGL(self, *args, **kwargs):
+        '''Initialize OpenGL for use in the window.'''
         super().OnInitGL(*args, **kwargs)
+
         filenames = getattr(self.parent, 'filenames', None)
         if filenames:
             for filename in filenames:
