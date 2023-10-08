@@ -77,23 +77,23 @@ class wxGLPanel(BASE_CLASS):
 
         self.GLinitialized = False
         self.mview_initialized = False
-        attribList = [glcanvas.WX_GL_RGBA,  # RGBA
-                      glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
-                      glcanvas.WX_GL_DEPTH_SIZE, 24  # 24 bit
-                      ]
 
+        attribList = wx.glcanvas.GLAttributes()
+        # Set a 24bit depth buffer and activate double buffering for the canvas
+        attribList.PlatformDefaults().DoubleBuffer().Depth(24)
+
+        # Enable multi-sampling support (antialiasing) if it is active in the settings
         if antialias_samples > 0 and hasattr(glcanvas, "WX_GL_SAMPLE_BUFFERS"):
-            attribList += (glcanvas.WX_GL_SAMPLE_BUFFERS, 1,
-                           glcanvas.WX_GL_SAMPLES, antialias_samples)
+            attribList.SampleBuffers(1).Samplers(antialias_samples)
 
-        attribList.append(0)
+        attribList.EndList()
 
         if BASE_CLASS is glcanvas.GLCanvas:
-            super().__init__(parent, wx.ID_ANY, attribList, pos, size, style)
+            super().__init__(parent, attribList, wx.ID_ANY, pos, size, style)
             self.canvas = self
         else:
             super().__init__(parent, wx.ID_ANY, pos, size, style)
-            self.canvas = glcanvas.GLCanvas(self, wx.ID_ANY, attribList, pos, size, style)
+            self.canvas = glcanvas.GLCanvas(self, attribList, wx.ID_ANY, pos, size, style)
 
         self.width = self.height = None
         self.focus = Focus()
