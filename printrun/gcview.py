@@ -18,13 +18,10 @@
 import logging
 import wx
 
-from pyglet.gl import glPushMatrix, glPopMatrix, \
-    glTranslatef, glRotatef, glScalef, glMultMatrixd, \
-    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble
+from pyglet.gl import glPushMatrix, glPopMatrix
 
 from . import gcoder
 from .gl.panel import wxGLPanel
-from .gl.trackball import build_rotmatrix
 from .gl import actors
 from .injectgcode import injector, injector_edit
 
@@ -35,15 +32,7 @@ from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
 
 def create_model(light):
-    if light:
-        return actors.GcodeModelLight()
-    else:
-        return actors.GcodeModel()
-
-def gcode_dims(g):
-    return ((g.xmin, g.xmax, g.width),
-            (g.ymin, g.ymax, g.depth),
-            (g.zmin, g.zmax, g.height))
+    return actors.GcodeModelLight() if light else actors.GcodeModel()
 
 def set_model_colors(model, root):
     for field in dir(model):
@@ -87,7 +76,7 @@ class GcodeViewPanel(wxGLPanel):
                          wx.DefaultSize, 0,
                          antialias_samples = antialias_samples)
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
-        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double)
+        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
         # self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
         # in Windows event inspector shows only EVT_CHAR_HOOK events
         self.canvas.Bind(wx.EVT_CHAR_HOOK, self.keypress)
@@ -146,12 +135,7 @@ class GcodeViewPanel(wxGLPanel):
         self.create_objects()
 
         glPushMatrix()
-        # Rotate according to trackball
-        glMultMatrixd(build_rotmatrix(self.basequat))
-        # Move origin to bottom left of platform
-        platformx0 = -self.build_dimensions[3] - self.parent.platform.width / 2
-        platformy0 = -self.build_dimensions[4] - self.parent.platform.depth / 2
-        glTranslatef(platformx0, platformy0, 0)
+        self.set_origin(self.parent.platform)
 
         for obj in self.parent.objects:
             if not obj.model \
@@ -163,58 +147,14 @@ class GcodeViewPanel(wxGLPanel):
             # May need to lock init() and draw_objects() together
             # if not obj.model.initialized:
             #     continue
-            glPushMatrix()
-            glTranslatef(*(obj.offsets))
-            glRotatef(obj.rot, 0.0, 0.0, 1.0)
-            glTranslatef(*(obj.centeroffset))
-            glScalef(*obj.scale)
 
-            obj.model.display()
-            glPopMatrix()
+            # Apply transformations and draw the models
+            self.transform_draw(obj, obj.model.display)
         glPopMatrix()
 
     # ==========================================================================
     # Utils
     # ==========================================================================
-    def get_modelview_mat(self, local_transform):
-        mvmat = (GLdouble * 16)()
-        if local_transform:
-            glPushMatrix()
-            # Rotate according to trackball
-            glMultMatrixd(build_rotmatrix(self.basequat))
-            # Move origin to bottom left of platform
-            platformx0 = -self.build_dimensions[3] - self.parent.platform.width / 2
-            platformy0 = -self.build_dimensions[4] - self.parent.platform.depth / 2
-            glTranslatef(platformx0, platformy0, 0)
-            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-            glPopMatrix()
-        else:
-            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-        return mvmat
-
-    def double(self, event):
-        getattr(self.parent, 'clickcb', bool)(event)
-
-    def move(self, event):
-        """react to mouse actions:
-        no mouse: show red mousedrop
-        LMB: rotate viewport
-        RMB: move viewport
-        """
-        if event.Entering():
-            self.canvas.SetFocus()
-            event.Skip()
-            return
-        if event.Dragging():
-            if event.LeftIsDown():
-                self.handle_rotation(event)
-            elif event.RightIsDown():
-                self.handle_translation(event)
-            self.Refresh(False)
-        elif event.LeftUp() or event.RightUp():
-            self.initpos = None
-        event.Skip()
-
     def layerup(self):
         if not getattr(self.parent, 'model', False):
             return
@@ -237,58 +177,17 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
-    wheelTimestamp = None
-    def handle_wheel(self, event):
-        if self.wheelTimestamp == event.Timestamp:
-            # filter duplicate event delivery in Ubuntu, Debian issue #1110
+    def handle_wheel_shift(self, event, wheel_delta):
+        '''This runs when Mousewheel + Shift is used'''
+        if not self.parent.model:
             return
-
-        self.wheelTimestamp = event.Timestamp
-
-        delta = event.GetWheelRotation()
-        factor = 1.05
-        if event.ControlDown():
-            factor = 1.02
-        if hasattr(self.parent, "model") and event.ShiftDown():
-            if not self.parent.model:
-                return
-            count = 1 if not event.ControlDown() else 10
-            for i in range(count):
-                if delta > 0:
-                    self.layerup()
-                else:
-                    self.layerdown()
-            return
-        x, y = event.GetPosition() * self.GetContentScaleFactor()
-        x, y, _ = self.mouse_to_3d(x, y)
-        if delta > 0:
-            self.zoom(factor, (x, y))
-        else:
-            self.zoom(1 / factor, (x, y))
-
-    def wheel(self, event):
-        """react to mouse wheel actions:
-            without shift: set max layer
-            with shift: zoom viewport
-        """
-        self.handle_wheel(event)
-        wx.CallAfter(self.Refresh)
-
-    def fit(self):
-        if not self.parent.model or not self.parent.model.loaded:
-            return
-        self.canvas.SetCurrent(self.context)
-        dims = gcode_dims(self.parent.model.gcode)
-        self.reset_mview(1.0)
-        center_x = (dims[0][0] + dims[0][1]) / 2
-        center_y = (dims[1][0] + dims[1][1]) / 2
-        center_x = self.build_dimensions[0] / 2 - center_x
-        center_y = self.build_dimensions[1] / 2 - center_y
-        if self.orthographic:
-            ratio = float(self.dist) / max(dims[0][2], dims[1][2])
-            glScalef(ratio, ratio, 1)
-        glTranslatef(center_x, center_y, 0)
-        wx.CallAfter(self.Refresh)
+        count = 10 if event.ControlDown() else 1
+        for i in range(count):
+            if wheel_delta > 0:
+                self.layerup()
+            else:
+                self.layerdown()
+        return
 
     def keypress(self, event):
         """gets keypress events and moves/rotates active shape"""
@@ -296,7 +195,7 @@ class GcodeViewPanel(wxGLPanel):
             # let alt+c bubble up
             event.Skip()
             return
-        step = event.ControlDown() and 1.05 or 1.1
+        step = 1.05 if event.ControlDown() else 1.1
         key = event.GetKeyCode()
         if key in LAYER_UP_KEYS:
             self.layerup()
@@ -321,12 +220,6 @@ class GcodeViewPanel(wxGLPanel):
         elif key in RESET_KEYS:
             self.resetview()
         event.Skip()
-
-    def resetview(self):
-        self.canvas.SetCurrent(self.context)
-        self.reset_mview(0.9)
-        self.basequat = [0, 0, 0, 1]
-        wx.CallAfter(self.Refresh)
 
 class GCObject:
 

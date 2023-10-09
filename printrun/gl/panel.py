@@ -43,13 +43,17 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_LINE_STIPPLE, glColor4f, glLineStipple, glMaterialfv, \
     GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glMaterialf, \
     GL_SHININESS, GL_EMISSION, GL_RESCALE_NORMAL, glColorMaterial, \
-    GL_FRONT
-
+    GL_FRONT, glRotatef, glMultMatrixd, glPolygonMode, GL_FILL
 
 from pyglet import gl
-from .trackball import trackball, mulquat, axis_to_quat
+from .trackball import trackball, mulquat, axis_to_quat, build_rotmatrix
 from .actors import Focus, vec
 from pyglet.gl.glu import gluOrtho2D
+
+def gcode_dims(g):
+    return ((g.xmin, g.xmax, g.width),
+            (g.ymin, g.ymax, g.depth),
+            (g.zmin, g.zmax, g.height))
 
 # When Subclassing wx.Window in Windows the focus goes to the wx.Window
 # instead of GLCanvas and it does not draw the focus rectangle and
@@ -64,9 +68,11 @@ class wxGLPanel(BASE_CLASS):
 
     orbit_control = True
     orthographic = True
-    color_background = (0.98, 0.98, 0.78, 1)
+    color_background = (0.98, 0.98, 0.78, 1)  # Light Yellow
     # G-Code models and stl models use different lightscene
     gcode_lights = True
+    wheelTimestamp = None
+
 
     def __init__(self, parent, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0,
@@ -99,7 +105,7 @@ class wxGLPanel(BASE_CLASS):
         self.focus = Focus()
 
         self.context = glcanvas.GLContext(self.canvas)
-        self.pygletcontext = None # initialised during glinit
+        self.pygletcontext = None  # initialised during glinit
 
         self.rot_lock = Lock()
         self.basequat = [0, 0, 0, 1]
@@ -275,9 +281,18 @@ class wxGLPanel(BASE_CLASS):
         else:
             glColor4f(*vec(r_val, g_val, b_val, a_val))
 
+    def set_origin(self, platform):
+        # Rotate according to trackball
+        glMultMatrixd(build_rotmatrix(self.basequat))
+        # Move origin to bottom left of platform
+        platformx0 = -self.build_dimensions[3] - platform.width / 2
+        platformy0 = -self.build_dimensions[4] - platform.depth / 2
+        glTranslatef(platformx0, platformy0, 0)
+
     def setup_lights(self):
         '''Sets the lightscene for gcode and stl models'''
         glEnable(GL_LIGHTING)
+        # TODO: Harmonise and improve lighting between gcode and stl
         if self.gcode_lights:
             glDisable(GL_LIGHT0)
 
@@ -293,6 +308,7 @@ class wxGLPanel(BASE_CLASS):
             glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
             glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 3, 0))
 
+            # Normalises (0 - 1.0) the normal vectors after scaling
             glEnable(GL_NORMALIZE)
         else:
             glEnable(GL_LIGHT0)
@@ -309,6 +325,8 @@ class wxGLPanel(BASE_CLASS):
 
             glDisable(GL_LIGHT2)
 
+            # Normalises (0 - 1.0) the normal vectors after scaling
+            # GL_NORMALIZE makes the objects look too bright (?)
             glEnable(GL_RESCALE_NORMAL)
         glShadeModel(GL_SMOOTH)
 
@@ -325,6 +343,12 @@ class wxGLPanel(BASE_CLASS):
         self.zoomed_height = hratio / minratio
         glScalef(factor * minratio, factor * minratio, 1)
 
+    def resetview(self):
+        self.canvas.SetCurrent(self.context)
+        self.reset_mview(0.9)
+        self.basequat = [0, 0, 0, 1]
+        wx.CallAfter(self.Refresh)
+
     def DrawCanvas(self):
         """Draw the window."""
         #import time
@@ -340,6 +364,20 @@ class wxGLPanel(BASE_CLASS):
         self.canvas.SwapBuffers()
         #print(f"Draw took {(time.perf_counter()-start) * 1000:.2f} ms,"
         #      f" {1 / (time.perf_counter()-start):.0f} FPS")
+
+    def transform_draw(self, model, draw_func):
+        '''Apply transformations to the models and then
+        draw them with the given draw function'''
+        glPushMatrix()
+        glTranslatef(*(model.offsets))
+        glRotatef(model.rot, 0.0, 0.0, 1.0)
+        glTranslatef(*(model.centeroffset))
+        glScalef(*model.scale)
+
+        # Draw the models
+        draw_func()
+
+        glPopMatrix()
 
     # ==========================================================================
     # To be implemented by a sub class
@@ -361,9 +399,23 @@ class wxGLPanel(BASE_CLASS):
     # ==========================================================================
     def get_modelview_mat(self, local_transform):
         mvmat = (GLdouble * 16)()
-        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+        if local_transform:
+            glPushMatrix()
+            # Rotate according to trackball
+            glMultMatrixd(build_rotmatrix(self.basequat))
+            # Move origin to bottom left of platform
+            platformx0 = -self.build_dimensions[3] - self.platform.width / 2
+            platformy0 = -self.build_dimensions[4] - self.platform.depth / 2
+            glTranslatef(platformx0, platformy0, 0)
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+            glPopMatrix()
+        else:
+            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         return mvmat
 
+    # ==========================================================================
+    # Mouse and Camera
+    # ==========================================================================
     def mouse_to_3d(self, x, y, z = 1.0, local_transform = False):
         x = float(x)
         y = self.height - float(y)
@@ -417,6 +469,37 @@ class wxGLPanel(BASE_CLASS):
             return None
         return ray_near + t * ray_dir
 
+    def double_click(self, event):
+        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
+            self.parent.clickcb(event)
+
+    def move(self, event):
+        """React to mouse actions:
+        no mouse: show red mousedrop
+        LMB: rotate viewport
+        LMB + Shift: move active object
+        RMB: move viewport
+        RMB: + Shift: None
+        """
+        self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
+
+        if event.Entering():
+            self.canvas.SetFocus()
+            event.Skip()
+            return
+
+        if event.Dragging():
+            if event.LeftIsDown():
+                self.handle_rotation(event)
+            elif event.RightIsDown():
+                self.handle_translation(event)
+            self.Refresh(False)
+
+        elif event.LeftUp() or event.RightUp():
+            self.initpos = None
+
+        event.Skip()
+
     def zoom(self, factor, to = None):
         glMatrixMode(GL_MODELVIEW)
         if to:
@@ -440,15 +523,63 @@ class wxGLPanel(BASE_CLASS):
         x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
         self.zoom(factor, (x, y))
 
-    def orbit(self, p1x, p1y, p2x, p2y):
-        rz = p2x-p1x
-        self.angle_z-=rz
-        rotz = axis_to_quat([0.0,0.0,1.0],self.angle_z)
+    def handle_wheel_shift(self, event, wheel_delta):
+        '''This runs when Mousewheel + Shift is used'''
+        pass
 
-        rx = p2y-p1y
-        self.angle_x+=rx
-        rota = axis_to_quat([1.0,0.0,0.0],self.angle_x)
-        return mulquat(rotz,rota)
+    def handle_wheel(self, event):
+        '''This runs when Mousewheel is used'''
+        if self.wheelTimestamp == event.Timestamp:
+            # filter duplicate event delivery in Ubuntu, Debian issue #1110
+            return
+        self.wheelTimestamp = event.Timestamp
+
+        delta = event.GetWheelRotation()
+        if event.ShiftDown():
+            self.handle_wheel_shift(event, delta)
+            return
+        x, y = event.GetPosition() * self.GetContentScaleFactor()
+        x, y, _ = self.mouse_to_3d(x, y)
+        factor = 1.02 if event.ControlDown() else 1.05
+        if delta > 0:
+            self.zoom(factor, (x, y))
+        else:
+            self.zoom(1 / factor, (x, y))
+
+    def wheel(self, event):
+        """React to mouse wheel actions:
+            without shift: zoom viewport
+            with shift: run handle_wheel_shift
+        """
+        self.handle_wheel(event)
+        wx.CallAfter(self.Refresh)
+
+    def orbit(self, p1x, p1y, p2x, p2y):
+        rz = p2x - p1x
+        self.angle_z -= rz
+        rot_z = axis_to_quat([0.0, 0.0, 1.0], self.angle_z)
+
+        rx = p2y - p1y
+        self.angle_x += rx
+        rot_a = axis_to_quat([1.0, 0.0, 0.0], self.angle_x)
+        return mulquat(rot_z, rot_a)
+
+    def fit(self):
+        '''Zoom to fit models to screen'''
+        if not self.parent.model or not self.parent.model.loaded:
+            return
+        self.canvas.SetCurrent(self.context)
+        dims = gcode_dims(self.parent.model.gcode)
+        self.reset_mview(1.0)
+        center_x = (dims[0][0] + dims[0][1]) / 2
+        center_y = (dims[1][0] + dims[1][1]) / 2
+        center_x = self.build_dimensions[0] / 2 - center_x
+        center_y = self.build_dimensions[1] / 2 - center_y
+        if self.orthographic:
+            ratio = float(self.dist) / max(dims[0][2], dims[1][2])
+            glScalef(ratio, ratio, 1)
+        glTranslatef(center_x, center_y, 0)
+        wx.CallAfter(self.Refresh)
 
     def handle_rotation(self, event):
         content_scale_factor = self.GetContentScaleFactor()

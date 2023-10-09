@@ -22,21 +22,10 @@ import numpy
 import pyglet
 pyglet.options['debug_gl'] = True
 
-from pyglet.gl import GL_AMBIENT_AND_DIFFUSE, glBegin, glClearColor, \
-    glColor3f, GL_CULL_FACE, GL_DEPTH_TEST, GL_DIFFUSE, GL_EMISSION, \
-    glEnable, glEnd, GL_FILL, GLfloat, GL_FRONT_AND_BACK, GL_LIGHT0, \
-    GL_LIGHT1, glLightfv, GL_LIGHTING, GL_LINE, glMaterialf, glMaterialfv, \
-    glMultMatrixd, glNormal3f, glPolygonMode, glPopMatrix, GL_POSITION, \
-    glPushMatrix, glRotatef, glScalef, glShadeModel, GL_SHININESS, \
-    GL_SMOOTH, GL_SPECULAR, glTranslatef, GL_TRIANGLES, glVertex3f, \
-    glGetDoublev, GL_MODELVIEW_MATRIX, GLdouble, glClearDepth, glDepthFunc, \
-    GL_LEQUAL, GL_BLEND, glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, \
-    GL_LINE_LOOP, glGetFloatv, GL_LINE_WIDTH, glLineWidth, glDisable, \
-    GL_LINE_SMOOTH
-from pyglet import gl
+from pyglet.gl import glPushMatrix, glPopMatrix, GL_TRIANGLES, \
+    glPolygonMode, GL_FRONT_AND_BACK, GL_FILL
 
 from .gl.panel import wxGLPanel
-from .gl.trackball import build_rotmatrix
 from .gl import actors
 
 
@@ -91,12 +80,12 @@ class StlViewPanel(wxGLPanel):
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)
-        self.mouse = actors.MouseCursor()
+        self.gl_cursor = actors.MouseCursor()
         self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
         self.basequat = [0, 0, 0, 1]
-        wx.CallAfter(self.forceresize) #why needed
         self.mousepos = (0, 0)
+        wx.CallAfter(self.forceresize) #why needed
 
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
@@ -117,10 +106,6 @@ class StlViewPanel(wxGLPanel):
         self.mview_initialized = False
         super().OnReshape()
 
-    def double_click(self, event):
-        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
-            self.parent.clickcb(event)
-
     def forceresize(self):
         #print('forceresize')
         x, y = self.GetClientSize()
@@ -129,43 +114,9 @@ class StlViewPanel(wxGLPanel):
         self.SetClientSize((x, y))
         self.initialized = False
 
-    def move(self, event):
-        """react to mouse actions:
-        no mouse: show red mousedrop
-        LMB: move active object,
-            with shift rotate viewport
-        RMB: nothing
-            with shift move viewport
-        """
-        self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
-        if event.Dragging():
-            if event.LeftIsDown():
-                self.handle_rotation(event)
-            elif event.RightIsDown():
-                self.handle_translation(event)
-            self.Refresh(False)
-        elif event.ButtonUp(wx.MOUSE_BTN_LEFT) or \
-            event.ButtonUp(wx.MOUSE_BTN_RIGHT):
-            self.initpos = None
-        event.Skip()
-
-    def handle_wheel(self, event):
-        delta = event.GetWheelRotation()
-        factor = 1.05
-        x, y = event.GetPosition()
-        x, y, _ = self.mouse_to_3d(x, y, local_transform = True)
-        if delta > 0:
-            self.zoom(factor, (x, y))
-        else:
-            self.zoom(1 / factor, (x, y))
-
-    def wheel(self, event):
-        """react to mouse wheel actions:
-            without shift: zoom viewport
-            with shift: rotate object
-        """
-        self.handle_wheel(event)
-        wx.CallAfter(self.Refresh)
+    def handle_wheel_shift(self, event, wheel_delta):
+        '''This runs when Mousewheel + Shift is used'''
+        pass
 
     def keypress(self, event):
         """gets keypress events and moves/rotates active shape"""
@@ -243,10 +194,7 @@ class StlViewPanel(wxGLPanel):
         self.create_objects()
 
         glPushMatrix()
-        glTranslatef(0, 0, -self.dist)
-        glMultMatrixd(build_rotmatrix(self.basequat))  # Rotate according to trackball
-        glTranslatef(- self.build_dimensions[3] - self.platform.width / 2,
-                     - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
+        self.set_origin(self.platform)
         # Draw platform
         self.platform.draw()
 
@@ -255,25 +203,20 @@ class StlViewPanel(wxGLPanel):
                                     plane_normal = (0, 0, 1), plane_offset = 0,
                                     local_transform = False)
         if inter is not None:
-            self.mouse.position = inter
-            self.mouse.draw()
+            self.gl_cursor.position = inter
+            self.gl_cursor.draw()
 
         # Draw objects
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         #glDisable(GL_CULL_FACE)
         glPushMatrix()
+        #TODO: Find a better place for glPolygonMode!
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         # Set colour to render the stl models
         self.set_gl_colour(0.3, 0.7, 0.5)
         for i in self.parent.models:
             model = self.parent.models[i]
-            # Apply transformations to the models
-            glPushMatrix()
-            glTranslatef(*(model.offsets))
-            glRotatef(model.rot, 0.0, 0.0, 1.0)
-            glTranslatef(*(model.centeroffset))
-            glScalef(*model.scale)
-            model.batch.draw()
-            glPopMatrix()
+            # Apply transformations and draw the models
+            self.transform_draw(model, model.batch.draw)
         glPopMatrix()
         #glEnable(GL_CULL_FACE)
 
@@ -293,21 +236,6 @@ class StlViewPanel(wxGLPanel):
     # ==========================================================================
     # Utils
     # ==========================================================================
-    def get_modelview_mat(self, local_transform):
-        mvmat = (GLdouble * 16)()
-        if local_transform:
-            glPushMatrix()
-            # Rotate according to trackball
-            glTranslatef(0, 0, -self.dist)
-            glMultMatrixd(build_rotmatrix(self.basequat))  # Rotate according to trackball
-            glTranslatef(- self.build_dimensions[3] - self.platform.width / 2,
-                         - self.build_dimensions[4] - self.platform.depth / 2, 0)  # Move origin to bottom left of platform
-            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-            glPopMatrix()
-        else:
-            glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-        return mvmat
-
     def get_cutting_dist(self, cutting_axis, fixed_dist, local_transform = False):
         if fixed_dist is not None:
             return fixed_dist
