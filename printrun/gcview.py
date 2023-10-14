@@ -86,8 +86,6 @@ class GcodeViewPanel(wxGLPanel):
         self.initpos = None
         self.build_dimensions = build_dimensions
         self.dist = max(self.build_dimensions[:2])
-        self.basequat = [0, 0, 0, 1]
-        self.mousepos = [0, 0]
 
     def inject(self):
         l = self.parent.model.num_layers_to_draw
@@ -149,7 +147,7 @@ class GcodeViewPanel(wxGLPanel):
             #     continue
 
             # Apply transformations and draw the models
-            self.transform_draw(obj, obj.model.display)
+            self.transform_and_draw(obj, obj.model.display)
         glPopMatrix()
 
     # ==========================================================================

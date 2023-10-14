@@ -39,16 +39,14 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_PROJECTION, GL_PROJECTION_MATRIX, glScalef, \
     GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
     glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, \
-    glBegin, glVertex2f, glVertex3f, glEnd, GL_LINE_LOOP, glColor3f, \
-    GL_LINE_STIPPLE, glColor4f, glLineStipple, glMaterialfv, \
-    GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glMaterialf, \
-    GL_SHININESS, GL_EMISSION, GL_RESCALE_NORMAL, glColorMaterial, \
-    GL_FRONT, glRotatef, glMultMatrixd, glPolygonMode, GL_FILL
+    glColor3f, glColor4f, glMaterialfv, GL_FRONT_AND_BACK, \
+    GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, GL_EMISSION, \
+    GL_RESCALE_NORMAL, glColorMaterial, GL_FRONT, glRotatef, \
+    glMultMatrixd, glPolygonMode, GL_FILL
 
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat, build_rotmatrix
 from .actors import Focus, vec
-from pyglet.gl.glu import gluOrtho2D
 
 def gcode_dims(g):
     return ((g.xmin, g.xmax, g.width),
@@ -109,6 +107,7 @@ class wxGLPanel(BASE_CLASS):
 
         self.rot_lock = Lock()
         self.basequat = [0, 0, 0, 1]
+        self.mousepos = (0, 0)
         self.zoom_factor = 1.0
         self.zoomed_width = 1.0
         self.zoomed_height = 1.0
@@ -213,15 +212,15 @@ class wxGLPanel(BASE_CLASS):
         glClearDepth(1.0)  # set depth value to 1
         glDepthFunc(GL_LEQUAL)
 
-        # This enables tracking of the material colour,
-        # now it can be changed only by calling glColor
-        glEnable(GL_COLOR_MATERIAL)
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        # Polygon mode is never changed, but you can uncomment
+        # this line to show models as wireframe
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         # Material specs are set here once and then we only change
         # the material colour by using glColor3f / glColor4f
@@ -229,6 +228,11 @@ class wxGLPanel(BASE_CLASS):
         glMaterialfv(GL_FRONT, GL_SPECULAR, vec(0.85, 0.85, 0.85, 1))
         glMaterialf(GL_FRONT, GL_SHININESS, 72)
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
+
+        # This enables tracking of the material colour,
+        # now it can be changed only by calling glColor
+        glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
         if call_reshape:
             self.OnReshape()
@@ -361,13 +365,14 @@ class wxGLPanel(BASE_CLASS):
 
         if self.canvas.HasFocus():
             self.focus.draw()
+
         self.canvas.SwapBuffers()
         #print(f"Draw took {(time.perf_counter()-start) * 1000:.2f} ms,"
         #      f" {1 / (time.perf_counter()-start):.0f} FPS")
 
-    def transform_draw(self, model, draw_func):
-        '''Apply transformations to the models and then
-        draw them with the given draw function'''
+    def transform_and_draw(self, model, draw_func):
+        '''Apply transformations to the model and then
+        draw it with the given draw function'''
         glPushMatrix()
         glTranslatef(*(model.offsets))
         glRotatef(model.rot, 0.0, 0.0, 1.0)
@@ -498,6 +503,7 @@ class wxGLPanel(BASE_CLASS):
         elif event.LeftUp() or event.RightUp():
             self.initpos = None
 
+        wx.CallAfter(self.Refresh)
         event.Skip()
 
     def zoom(self, factor, to = None):

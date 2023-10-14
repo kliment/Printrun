@@ -33,14 +33,12 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, GLuint, \
     glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
     glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
-    GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
-    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
     GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f, glNormal3f, \
-    glRotatef, glPolygonMode, GL_CULL_FACE, GL_LINE, GL_FILL, GL_PROJECTION, \
-    glLoadIdentity, glMatrixMode, glVertex2f, glLineStipple, GL_LINE_STIPPLE, \
-    GL_MODELVIEW
+    glRotatef, GL_CULL_FACE, GL_PROJECTION, glLoadIdentity, glMatrixMode, \
+    glVertex2f, glLineStipple, GL_LINE_STIPPLE, GL_MODELVIEW
 from pyglet.gl.glu import gluOrtho2D
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
+from pyglet.graphics import Batch
 
 from printrun.utils import install_locale
 install_locale('pronterface')
@@ -97,7 +95,7 @@ class BoundingBox:
 
 class Platform:
     """
-    Platform on which models are placed.
+    Platform grid on which models are placed.
     """
 
     def __init__(self, build_dimensions, light = False, circular = False, grid = (1, 10)):
@@ -111,9 +109,9 @@ class Platform:
         self.zoffset = build_dimensions[5]
         self.grid = grid
 
-        self.color_grads_minor = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
-        self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
-        self.color_grads_major = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
+        self.color_grads_minor = (175 / 255, 223 / 255, 95 / 255, 0.1)
+        self.color_grads_interm = (175 / 255, 223 / 255, 95 / 255, 0.2)
+        self.color_grads_major = (175 / 255, 223 / 255, 95 / 255, 0.33)
 
         self.initialized = False
         self.loaded = True
@@ -123,48 +121,47 @@ class Platform:
         self.display_list = compile_display_list(self.draw)
         self.initialized = True
 
+    def colour(self, i):
+        if i % self.grid[1] == 0:
+            glColor4f(*self.color_grads_major)
+        elif i % (self.grid[1] // 2) == 0:
+            glColor4f(*self.color_grads_interm)
+        else:
+            if self.light:
+                return False
+            glColor4f(*self.color_grads_minor)
+        return True
+
     def draw(self):
         glPushMatrix()
 
         glTranslatef(self.xoffset, self.yoffset, self.zoffset)
 
-        def color(i):
-            if i % self.grid[1] == 0:
-                glColor4f(*self.color_grads_major)
-            elif i % (self.grid[1] // 2) == 0:
-                glColor4f(*self.color_grads_interm)
-            else:
-                if self.light:
-                    return False
-                glColor4f(*self.color_grads_minor)
-            return True
-
         # draw the grid
         glDisable(GL_LIGHTING)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         glBegin(GL_LINES)
         if self.circular:  # Draw a circular grid
             for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 angle = math.asin(2 * float(i) / self.width - 1)
                 x = (math.cos(angle) + 1) * self.depth / 2
-                if color(i):
+                if self.colour(i):
                     glVertex3f(float(i), self.depth - x, 0.0)
                     glVertex3f(float(i), x, 0.0)
 
             for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
                 angle = math.acos(2 * float(i) / self.depth - 1)
                 x = (math.sin(angle) + 1) * self.width / 2
-                if color(i):
+                if self.colour(i):
                     glVertex3f(self.width - x, float(i), 0.0)
                     glVertex3f(x, float(i), 0.0)
         else:  # Draw a rectangular grid
             for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
-                if color(i):
+                if self.colour(i):
                     glVertex3f(float(i), 0.0, 0.0)
                     glVertex3f(float(i), self.depth, 0.0)
 
             for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
-                if color(i):
+                if self.colour(i):
                     glVertex3f(0, float(i), 0.0)
                     glVertex3f(self.width, float(i), 0.0)
         glEnd()
@@ -191,26 +188,27 @@ class MouseCursor:
     Cursor where the mouse should be in 3D space.
     """
     def __init__(self):
-        self.colour = (255 / 255, 0 / 255, 0 / 255, 1.0)  # Red
+        self.colour = (225 / 255, 0 / 255, 45 / 255, 1.0)  # Red
         self.position = [0, 0, 0]
 
     def update_position(self, position):
         self.position = position
 
     def draw(self):
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         glPushMatrix()
         glTranslatef(*self.position)
+        glDisable(GL_CULL_FACE)
         glBegin(GL_TRIANGLES)
-        glColor3f(*vec(*self.colour[:-1]))
+        glColor3f(*self.colour[:-1])
         glNormal3f(0, 0, 1)
-        glVertex3f(2, 2, 0)
-        glVertex3f(-2, 2, 0)
-        glVertex3f(-2, -2, 0)
-        glVertex3f(2, -2, 0)
-        glVertex3f(2, 2, 0)
-        glVertex3f(-2, -2, 0)
+        glVertex3f(2, 2, 0.05)
+        glVertex3f(-2, 2, 0.05)
+        glVertex3f(-2, -2, 0.05)
+        glVertex3f(2, -2, 0.05)
+        glVertex3f(2, 2, 0.05)
+        glVertex3f(-2, -2, 0.05)
         glEnd()
+        glEnable(GL_CULL_FACE)
         glPopMatrix()
 
     def display(self, mode_2d=False):
@@ -231,8 +229,7 @@ class Focus:
         self.height = height
 
     def draw(self):
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        glColor4f(*vec(*self.colour))
+        glColor4f(*self.colour)
         glPushMatrix()
         glLoadIdentity()
 
@@ -308,10 +305,9 @@ class CuttingPlane:
             glTranslatef(0, 0, self.dist)
 
         glDisable(GL_CULL_FACE)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         # Draw the plane
         glBegin(GL_TRIANGLES)
-        glColor4f(*vec(*self.colour))
+        glColor4f(*self.colour)
         glNormal3f(0, 0, self.cutting_direction)
         glVertex3f(self.plane_width, self.plane_height, 0)
         glVertex3f(0, self.plane_height, 0)
@@ -321,7 +317,6 @@ class CuttingPlane:
         glVertex3f(0, 0, 0)
         glEnd()
         glEnable(GL_CULL_FACE)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         glEnable(GL_LINE_SMOOTH)
         # Save the current linewidth and insert a new value
         orig_linewidth = (GLfloat)()
@@ -329,7 +324,7 @@ class CuttingPlane:
         glLineWidth(4.0)
         # Draw the outline on the plane
         glBegin(GL_LINE_LOOP)
-        glColor3f(*vec(*self.colour_outline[:-1]))
+        glColor3f(*self.colour_outline[:-1])
         glVertex3f(0, 0, 0)
         glVertex3f(0, self.plane_height, 0)
         glVertex3f(self.plane_width, self.plane_height, 0)
@@ -338,7 +333,6 @@ class CuttingPlane:
         # Restore the original linewidth
         glLineWidth(orig_linewidth)
         glDisable(GL_LINE_SMOOTH)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         glPopMatrix()
 
     def display(self, mode_2d=False):
@@ -351,7 +345,7 @@ class PrintHead:
     This is currently not used.
     """
     def __init__(self):
-        self.color = (43. / 255, 0., 175. / 255, 1.0)
+        self.color = (43 / 255, 0, 175 / 255, 1.0)
         self.scale = 5
         self.height = 5
 
@@ -367,7 +361,7 @@ class PrintHead:
         glPushMatrix()
 
         glBegin(GL_LINES)
-        glColor4f(*self.color)
+        glColor3f(*self.color[:-1])
         for di in [-1, 1]:
             for dj in [-1, 1]:
                 glVertex3f(0, 0, 0)
@@ -384,6 +378,58 @@ class PrintHead:
         glCallList(self.display_list)
         glLineWidth(orig_linewidth)
         glDisable(GL_LINE_SMOOTH)
+
+
+class MeshModel:
+    """
+    Model geometries based on triangulated
+    meshes such as .stl, .obj, .3mf etc.
+    """
+    def __init__(self, model):
+        self.colour = (77 / 255, 178 / 255, 128 / 255, 1.0)  # Greenish
+        # Every model is placed into it's own batch.
+        # This is not ideal, but good enough for the moment.
+        self.batch = Batch()
+        self.vertex_list = None
+        self._fill_batch(model)
+
+    def _fill_batch(self, m):
+        # Create the vertex and normal arrays.
+        vertices = []
+        normals = []
+
+        for i in m.facets:
+            for j in i[1]:
+                vertices.extend(j)
+                normals.extend(i[0])
+
+        if hasattr(m, 'indices') and m.indices:
+            # Some file formats provide indexed vertices,
+            # which is more efficient for rendering
+            self.vertex_list = self.batch.add_indexed(len(vertices) // 3,
+                                                GL_TRIANGLES,
+                                                None,  # group
+                                                m.indices,
+                                                ('v3f/static', vertices),
+                                                ('n3f/static', normals),
+                                                ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
+
+        else:
+            self.vertex_list = self.batch.add(len(vertices) // 3,
+                                              GL_TRIANGLES,
+                                              None,  # group
+                                              ('v3f/static', vertices),
+                                              ('n3f/static', normals),
+                                              ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
+
+        m.batch = self.batch
+
+    def delete(self):
+        if self.vertex_list:
+            self.vertex_list.delete()
+
+    def draw(self):
+        self.batch.draw()
 
 
 class Model:
@@ -941,7 +987,6 @@ class GcodeModel(Model):
 
     def display(self, mode_2d=False):
         with self.lock:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
             glPushMatrix()
             glTranslatef(self.offset_x, self.offset_y, 0)
             glEnableClientState(GL_VERTEX_ARRAY)
@@ -1219,7 +1264,6 @@ class GcodeModelLight(Model):
 
     def display(self, mode_2d=False):
         with self.lock:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             glPushMatrix()
             glTranslatef(self.offset_x, self.offset_y, 0)
             glEnableClientState(GL_VERTEX_ARRAY)

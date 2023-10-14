@@ -19,38 +19,12 @@ import wx
 import time
 
 import numpy
-import pyglet
-pyglet.options['debug_gl'] = True
 
-from pyglet.gl import glPushMatrix, glPopMatrix, GL_TRIANGLES, \
-    glPolygonMode, GL_FRONT_AND_BACK, GL_FILL
+from pyglet.gl import glPushMatrix, glPopMatrix
 
 from .gl.panel import wxGLPanel
 from .gl import actors
 
-
-class stlview:
-    def __init__(self, facets, batch):
-        # Create the vertex and normal arrays.
-        vertices = []
-        normals = []
-
-        for i in facets:
-            for j in i[1]:
-                vertices.extend(j)
-                normals.extend(i[0])
-
-        # Create a list of triangle indices.
-        indices = list(range(3 * len(facets)))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
-        self.vertex_list = batch.add_indexed(len(vertices) // 3,
-                                             GL_TRIANGLES,
-                                             None,  # group,
-                                             indices,
-                                             ('v3f/static', vertices),
-                                             ('n3f/static', normals))
-
-    def delete(self):
-        self.vertex_list.delete()
 
 class StlViewPanel(wxGLPanel):
 
@@ -65,7 +39,7 @@ class StlViewPanel(wxGLPanel):
         super().__init__(parent, wx.DefaultPosition, size, 0,
                          antialias_samples = antialias_samples)
 
-        self.batches = []
+        self.meshmodels = []
         self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
@@ -83,9 +57,13 @@ class StlViewPanel(wxGLPanel):
         self.gl_cursor = actors.MouseCursor()
         self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
         self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
-        self.basequat = [0, 0, 0, 1]
-        self.mousepos = (0, 0)
         wx.CallAfter(self.forceresize) #why needed
+
+    def Destroy(self):
+        # Clean up vertex lists
+        for model in self.meshmodels:
+            model.delete()
+        super().Destroy()
 
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
@@ -178,9 +156,8 @@ class StlViewPanel(wxGLPanel):
         wx.CallAfter(self.Refresh)
 
     def prepare_model(self, m, scale):
-        batch = pyglet.graphics.Batch()
-        stlview(m.facets, batch = batch)
-        m.batch = batch
+        mesh = actors.MeshModel(m)
+        self.meshmodels.append(mesh)
         # m.animoffset = 300
         # threading.Thread(target = self.anim, args = (m, )).start()
         wx.CallAfter(self.Refresh)
@@ -191,7 +168,9 @@ class StlViewPanel(wxGLPanel):
 
     def draw_objects(self):
         '''called in the middle of ondraw after the buffer has been cleared'''
-        self.create_objects()
+        # Since GL display lists are not used,
+        # we don't need this any more.
+        # self.create_objects()
 
         glPushMatrix()
         self.set_origin(self.platform)
@@ -207,16 +186,14 @@ class StlViewPanel(wxGLPanel):
             self.gl_cursor.draw()
 
         # Draw objects
+
+        # Why would we disable face culling here?
         #glDisable(GL_CULL_FACE)
         glPushMatrix()
-        #TODO: Find a better place for glPolygonMode!
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-        # Set colour to render the stl models
-        self.set_gl_colour(0.3, 0.7, 0.5)
         for i in self.parent.models:
             model = self.parent.models[i]
             # Apply transformations and draw the models
-            self.transform_draw(model, model.batch.draw)
+            self.transform_and_draw(model, model.batch.draw)
         glPopMatrix()
         #glEnable(GL_CULL_FACE)
 
