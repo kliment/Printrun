@@ -31,7 +31,8 @@ class StlViewPanel(wxGLPanel):
     gcode_lights = False
 
     def __init__(self, parent, size,
-                 build_dimensions = None, circular = False,
+                 build_dimensions = (200, 200, 100, 0, 0, 0),
+                 circular = False,
                  antialias_samples = 0,
                  grid = (1, 10), perspective=False):
         if perspective:
@@ -47,10 +48,9 @@ class StlViewPanel(wxGLPanel):
         self.initialized = True
         self.parent = parent
         self.initpos = None
-        if build_dimensions:
-            self.build_dimensions = build_dimensions
-        else:
-            self.build_dimensions = [200, 200, 100, 0, 0, 0]
+
+        self.build_dimensions = build_dimensions
+
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)

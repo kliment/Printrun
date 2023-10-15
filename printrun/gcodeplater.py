@@ -86,11 +86,11 @@ class GcodePlaterPanel(PlaterPanel):
                    grid = (1, 10)):
         super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
-                                       antialias_samples = antialias_samples)
+                                       antialias_samples = antialias_samples,
+                                       circular = circular_platform,
+                                       grid = grid)
         self.set_viewer(viewer)
-        self.platform = actors.Platform(self.build_dimensions,
-                                        circular = circular_platform,
-                                        grid = grid)
+        self.platform = viewer.platform
         self.platform_object = gcview.GCObject(self.platform)
         self.Layout()
         self.SetMinClientSize(self.topsizer.CalcMin())

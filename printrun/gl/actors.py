@@ -117,6 +117,22 @@ class Platform:
         self.loaded = True
         self.display_list = None
 
+    def update_colour(self, bg_colour):
+        '''Update the colour of the focus based on the
+        luminance (brightness) of the background.'''
+        # Calcualte luminance of the current background colour
+        lum = 0.299 * bg_colour[0] + 0.587 * bg_colour[1] + 0.114 * bg_colour[2]
+        if lum > 0.55:
+            # Lines should be dark
+            base_colour = (64 / 255, 64 / 255, 64 / 255, 1.0)
+        else:
+            # Lines should be bright
+            base_colour = (172 / 255, 172 / 255, 172 / 255, 1.0)
+
+        self.color_grads_minor = (*base_colour[0:3], 0.1)
+        self.color_grads_interm = (*base_colour[0:3], 0.2)
+        self.color_grads_major = (*base_colour[0:3], 0.33)
+
     def init(self):
         self.display_list = compile_display_list(self.draw)
         self.initialized = True
@@ -220,13 +236,23 @@ class Focus:
     Outline around the currently active OpenGL panel.
     """
     def __init__(self):
-        self.colour = (0 / 255, 0 / 255, 0 / 255, 0.4)  # Black Transparent
+        self.colour = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Black Transparent
         self.width = 0
         self.height = 0
 
     def update_size(self, width, height):
         self.width = width
         self.height = height
+
+    def update_colour(self, bg_colour):
+        '''Update the colour of the focus based on the
+        luminance (brightness) of the background.'''
+        # Calcualte luminance of the current background colour
+        lum = 0.299 * bg_colour[0] + 0.587 * bg_colour[1] + 0.114 * bg_colour[2]
+        if lum > 0.55:
+            self.colour = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Dark Transparent
+        else:
+            self.colour = (205 / 255, 205 / 255, 205 / 255, 0.4)  # Light Transparent
 
     def draw(self):
         glColor4f(*self.colour)

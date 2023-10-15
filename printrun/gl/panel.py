@@ -66,7 +66,8 @@ class wxGLPanel(BASE_CLASS):
 
     orbit_control = True
     orthographic = True
-    color_background = (0.98, 0.98, 0.78, 1)  # Light Yellow
+    color_background = (200 / 255, 225 / 255, 250 / 255, 1.0)  # Light Blue
+
     # G-Code models and stl models use different lightscene
     gcode_lights = True
     wheelTimestamp = None

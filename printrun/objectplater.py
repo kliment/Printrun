@@ -31,6 +31,8 @@ def patch_method(obj, method, replacement):
     setattr(obj, method, types.MethodType(wrapped, obj))
 
 class PlaterPanel(wx.Panel):
+    gl_bg_colour = (200 / 255, 225 / 255, 250 / 255, 1.0)
+
     def __init__(self, **kwargs):
         self.destroy_on_done = False
         parent = kwargs.get("parent", None)
@@ -40,6 +42,13 @@ class PlaterPanel(wx.Panel):
     def prepare_ui(self, filenames = [], callback = None, parent = None, build_dimensions = None, cutting_tool = True):
         self.filenames = filenames
         self.cut_axis_buttons = []
+
+        # Load the background colour from settings
+        if parent and hasattr(parent.settings, "gcview_color_background"):
+            col = wx.Colour(parent.settings.gcview_color_background)
+            self.gl_bg_colour = (col.GetRed() / 255,
+                                 col.GetGreen() / 255,
+                                 col.GetBlue() / 255, 1.0)
 
         menu_sizer = self.menu_sizer = wx.BoxSizer(wx.VERTICAL)
         list_sizer = wx.StaticBoxSizer(wx.VERTICAL, self, label = "Models")
@@ -167,6 +176,10 @@ class PlaterPanel(wx.Panel):
                 else:
                     orig_handler(event)
             patch_method(viewer, "handle_wheel", handle_wheel)
+
+        viewer.color_background = self.gl_bg_colour
+        viewer.focus.update_colour(self.gl_bg_colour)
+        viewer.platform.update_colour(self.gl_bg_colour)
         self.s = viewer
         self.s.SetMinSize((150, 150))
         self.topsizer.Add(self.s, pos = (0, 1), span = (1, 1), flag = wx.EXPAND)

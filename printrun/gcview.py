@@ -67,9 +67,11 @@ RESET_KEYS = [ord('R')]
 
 class GcodeViewPanel(wxGLPanel):
 
-    def __init__(self, parent,
+    def __init__(self, parent, realparent = None,
                  build_dimensions = (200, 200, 100, 0, 0, 0),
-                 realparent = None, antialias_samples = 0, perspective=False):
+                 circular = False,
+                 antialias_samples = 0,
+                 grid = (1, 10), perspective=False):
         if perspective:
             self.orthographic=False
         super().__init__(parent, wx.DefaultPosition,
@@ -86,6 +88,10 @@ class GcodeViewPanel(wxGLPanel):
         self.initpos = None
         self.build_dimensions = build_dimensions
         self.dist = max(self.build_dimensions[:2])
+
+        self.platform = actors.Platform(self.build_dimensions,
+                                        circular = circular,
+                                        grid = grid)
 
     def inject(self):
         l = self.parent.model.num_layers_to_draw
@@ -262,22 +268,30 @@ class GcodeViewLoader:
 from printrun.gviz import BaseViz
 class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
 
-    def __init__(self, parent, build_dimensions, root, circular, antialias_samples, grid, perspective=False):
+    def __init__(self, parent, build_dimensions, root, circular, antialias_samples, grid, perspective = False):
         self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions,
-                                      antialias_samples = antialias_samples, perspective=perspective)
+                                      antialias_samples = antialias_samples,
+                                      grid = grid, circular = circular,
+                                      perspective = perspective)
         self.glpanel.SetMinSize((150, 150))
-        if self.root and hasattr(self.root, "gcview_color_background"):
-            self.glpanel.color_background = self.root.gcview_color_background
+
         self.clickcb = None
         self.widget = self.glpanel
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self  # Hack for backwards compatibility with gviz API
         self.grid = grid
-        self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
+        self.platform = self.glpanel.platform
         self.model = None
         self.objects = [GCObject(self.platform), GCObject(None)]
+
+        if self.root and hasattr(self.root, "gcview_color_background"):
+            colour = self.root.gcview_color_background
+            self.glpanel.color_background = colour
+            self.glpanel.focus.update_colour(colour)
+            self.platform.update_colour(colour)
+            # TODO: Find a way to update these colours without restarting
 
     def __getattr__(self, name):
         return getattr(self.glpanel, name)
@@ -327,7 +341,12 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self  # Hack for backwards compatibility with gviz API
         self.clonefrom = objects
-        self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
+        self.glpanel = GcodeViewPanel(panel, realparent = self,
+                                      build_dimensions = build_dimensions,
+                                      antialias_samples = antialias_samples,
+                                      grid = grid, circular = circular,
+                                      perspective = perspective)
+        self.platform = self.glpanel.platform
         self.model = objects[1].model if objects else None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
@@ -336,13 +355,12 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to view"), fit_image,
                                 shortHelp = _("Fit to view [F]"), longHelp = _("Fit view to display entire print"))
         self.toolbar.Realize()
-        self.glpanel = GcodeViewPanel(panel,
-                                      build_dimensions = build_dimensions,
-                                      realparent = self,
-                                      antialias_samples = antialias_samples, perspective=perspective)
 
         if self.root and hasattr(self.root, "gcview_color_background"):
-            self.glpanel.color_background = self.root.gcview_color_background
+            colour = self.root.gcview_color_background
+            self.glpanel.color_background = colour
+            self.glpanel.focus.update_colour(colour)
+            self.platform.update_colour(colour)
 
         h_sizer.Add(self.glpanel, 1, wx.EXPAND)
         h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
