@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -42,7 +42,7 @@ jobs:
       - name: Install Printrun dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install https://extras.wxpython.org/wxPython4/extras/linux/gtk3/${{ wxpython-wheel }}
+          python -m pip install "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/${{ matrix.wxpython-wheel }}"
           python -m pip install -r requirements.txt
 
       - name: Perform functional tests
