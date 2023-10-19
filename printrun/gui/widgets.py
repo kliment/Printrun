@@ -305,7 +305,7 @@ class FindAndReplace():
         self.text_cntrl.SetInsertionPoint(position)
         self.text_cntrl.ShowPosition(position)
 
-    def bools_to_flags(self, bools: tuple | list) -> int:
+    def bools_to_flags(self, bools) -> int:
         '''Converts a tuple of bool settings into an integer
         that is readable for wx.FindReplaceData'''
         matchcase = wx.FR_MATCHCASE if bools[0] else 0
