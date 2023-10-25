@@ -490,7 +490,12 @@ class wxGLPanel(BASE_CLASS):
         self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
 
         if event.Entering():
-            self.canvas.SetFocus()
+            # This makes sure we only set focus on a panel that is
+            # in the currently active window and not any other window
+            current_focus = self.FindFocus()
+            if current_focus:
+                if self.TopLevelParent == current_focus.TopLevelParent:
+                    self.canvas.SetFocus()
             event.Skip()
             return
 
