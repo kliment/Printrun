@@ -176,9 +176,9 @@ with:
 (venv) $ python -m pip install -r requirements.txt  # install the rest of dependencies
 ```
 
-> **Note for Linux users**: wxPython4 doesn't have Linux wheels available from
-> the Python Package Index yet. Before running the command above, find a
-> proper wheel for your distro at [extras.wxpython.org][6] and substitute the
+> **Note for Linux users**: if you're running an older distribution, wxPython4 may not have a wheel available for it from
+> the Python Package Index yet. If you find that wxPython4 can't be installed automatically, you may be able to find a
+> suitable wheel for your distribution at [extras.wxpython.org][6] and substitute the
 > link in the below example. You might skip this wheel installation, but that
 > results in compiling wxPython4 from source, which can be time and resource
 > consuming and might fail.
