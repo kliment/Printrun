@@ -31,57 +31,63 @@ from .utils import install_locale
 # Set up Internationalization using gettext
 install_locale('pronterface')
 
+
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, statusbar, title, res = (1024, 768), printer = None, scale = 1.0, offset = (0, 0)):
         super().__init__(parent = parent, title = title, size = res)
+
         self.printer = printer
         self.control_frame = parent
-        self.pic = wx.StaticBitmap(self)
-        self.bitmap = wx.Bitmap(*res)
-        self.bbitmap = wx.Bitmap(*res)
         self.slicer = 'Bitmap'
         self.dpi = 96
         self.status = statusbar
-
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bbitmap)
-        dc.SetBackground(wx.Brush("black"))
-        dc.Clear()
-        dc.SelectObject(wx.NullBitmap)
-
-        self.SetBackgroundColour("black")
-        self.pic.Hide()
-        self.SetDoubleBuffered(True)
-        self.CentreOnParent()
-        self.Show()
+        self.scale = scale
+        self.index = 0
+        self.offset = offset
+        self.running = False
+        self.layer_red = False
+        self.startime = 0
 
         # Closing the DisplayFrame calls the close method of Settingsframe
         self.Bind(wx.EVT_CLOSE, self.control_frame.on_close)
 
-        self.scale = scale
-        self.index = 0
-        self.size = res
-        self.offset = offset
-        self.running = False
-        self.layer_red = False
+        x_res = self.control_frame.X.GetValue()
+        y_res = self.control_frame.Y.GetValue()
+        self.size = (x_res, y_res)
+        self.bitmap = wx.Bitmap(*self.size)
+        dc = wx.MemoryDC(self.bitmap)
+        dc.SetBackground(wx.BLACK_BRUSH)
+        dc.Clear()
+        dc.SelectObject(wx.NullBitmap)
+
+        panel = wx.Panel(self)
+        panel.SetBackgroundColour(wx.BLACK)
+        self.bitmap_widget = wx.GenericStaticBitmap(panel, -1, self.bitmap)
+        self.bitmap_widget.SetScaleMode(0)
+        self.bitmap_widget.Hide()
+        sizer = wx.BoxSizer()
+        sizer.Add(self.bitmap_widget, wx.ALIGN_LEFT | wx.ALIGN_TOP)
+        panel.SetSizer(sizer)
+
+        self.SetDoubleBuffered(True)
+        self.CentreOnParent()
 
     def clear_layer(self):
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bitmap)
-        dc.SetBackground(wx.Brush("black"))
+        dc = wx.MemoryDC(self.bitmap)
+        dc.SetBackground(wx.BLACK_BRUSH)
         dc.Clear()
-        self.pic.SetBitmap(self.bitmap)
-        self.pic.Show()
+        dc.SelectObject(wx.NullBitmap)
+        self.bitmap_widget.SetBitmap(self.bitmap)
+        self.bitmap_widget.Show()
         self.Refresh()
 
     def resize(self, res = (1024, 768)):
         self.bitmap = wx.Bitmap(*res)
-        self.bbitmap = wx.Bitmap(*res)
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bbitmap)
-        dc.SetBackground(wx.Brush("black"))
+        dc = wx.MemoryDC(self.bitmap)
+        dc.SetBackground(wx.BLACK_BRUSH)
         dc.Clear()
         dc.SelectObject(wx.NullBitmap)
+        self.Refresh()
 
     def convert_mm_to_px(self, mm_value) -> float:
         resolution_x_px = self.control_frame.X.GetValue()
@@ -89,9 +95,8 @@ class DisplayFrame(wx.Frame):
         return resolution_x_px / projected_x_mm * mm_value
 
     def draw_layer(self, image = None):
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bitmap)
-        dc.SetBackground(wx.Brush("black"))
+        dc = wx.MemoryDC(self.bitmap)
+        dc.SetBackground(wx.BLACK_BRUSH)
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
 
@@ -118,8 +123,6 @@ class DisplayFrame(wx.Frame):
                 image = wx.Image(image)
             if self.layer_red:
                 image = image.AdjustChannels(1, 0, 0, 1)
-            # AGE2023-04-19 Python 3.10 and DrawBitmap expects offset
-            # as integer value. Convert float values to int
             width, height = image.GetSize()
             if width < height:
                 image = image.Rotate90(clockwise = False)
@@ -141,68 +144,70 @@ class DisplayFrame(wx.Frame):
             self.status(_("No valid file loaded."))
             return
 
-        self.pic.SetBitmap(self.bitmap)
-        self.pic.Show()
+        dc.SelectObject(wx.NullBitmap)
+        self.bitmap_widget.SetBitmap(self.bitmap)
+        self.bitmap_widget.Show()
         self.Refresh()
 
     def draw_grid(self, graphics_context):
-            gc = graphics_context
+        gc = graphics_context
 
-            x_res_px = self.control_frame.X.GetValue()
-            y_res_px = self.control_frame.Y.GetValue()
+        x_res_px = self.control_frame.X.GetValue()
+        y_res_px = self.control_frame.Y.GetValue()
 
-            # Draw outline
-            path = gc.CreatePath()
-            path.AddRectangle(0, 0, x_res_px, y_res_px)
-            path.AddCircle(0, 0, 5.0)
-            path.AddCircle(0, 0, 14.0)
+        # Draw outline
+        path = gc.CreatePath()
+        path.AddRectangle(0, 0, x_res_px, y_res_px)
+        path.AddCircle(0, 0, 5.0)
+        path.AddCircle(0, 0, 14.0)
 
-            solid_pen = gc.CreatePen(wx.GraphicsPenInfo(wx.RED).Width(5.0).Style(wx.PENSTYLE_SOLID))
-            gc.SetPen(solid_pen)
-            gc.StrokePath(path)
+        solid_pen = gc.CreatePen(wx.GraphicsPenInfo(wx.RED).Width(5.0).Style(wx.PENSTYLE_SOLID))
+        gc.SetPen(solid_pen)
+        gc.StrokePath(path)
 
-            # Calculate gridlines
-            aspectRatio = x_res_px / y_res_px
+        # Calculate gridlines
+        aspectRatio = x_res_px / y_res_px
 
-            projected_x_mm = self.control_frame.projected_X_mm.GetValue()
-            projected_y_mm = round(projected_x_mm / aspectRatio, 2)
+        projected_x_mm = self.control_frame.projected_X_mm.GetValue()
+        projected_y_mm = round(projected_x_mm / aspectRatio, 2)
 
-            px_per_mm = x_res_px / projected_x_mm
+        px_per_mm = x_res_px / projected_x_mm
 
-            grid_count_x = int(projected_x_mm / 10)
-            grid_count_y = int(projected_y_mm / 10)
+        grid_count_x = int(projected_x_mm / 10)
+        grid_count_y = int(projected_y_mm / 10)
 
-            # Draw gridlines
-            path = gc.CreatePath()
-            for y in range(1, grid_count_y + 1):
-                for x in range(1, grid_count_x + 1):
-                    # horizontal line
-                    path.MoveToPoint(0, int(y * (px_per_mm * 10)))
-                    path.AddLineToPoint(x_res_px, int(y * (px_per_mm * 10)))
-                    # vertical line
-                    path.MoveToPoint(int(x * (px_per_mm * 10)), 0)
-                    path.AddLineToPoint(int(x * (px_per_mm * 10)), y_res_px)
+        # Draw gridlines
+        path = gc.CreatePath()
+        for y in range(1, grid_count_y + 1):
+            for x in range(1, grid_count_x + 1):
+                # horizontal line
+                path.MoveToPoint(0, int(y * (px_per_mm * 10)))
+                path.AddLineToPoint(x_res_px, int(y * (px_per_mm * 10)))
+                # vertical line
+                path.MoveToPoint(int(x * (px_per_mm * 10)), 0)
+                path.AddLineToPoint(int(x * (px_per_mm * 10)), y_res_px)
 
-            thin_pen = gc.CreatePen(wx.GraphicsPenInfo(wx.RED).Width(2.0).Style(wx.PENSTYLE_DOT))
-            gc.SetPen(thin_pen)
-            gc.StrokePath(path)
+        thin_pen = gc.CreatePen(wx.GraphicsPenInfo(wx.RED).Width(2.0).Style(wx.PENSTYLE_DOT))
+        gc.SetPen(thin_pen)
+        gc.StrokePath(path)
 
     def show_img_delay(self, image):
-        self.status(_("Showing, Timestamp {:.3f} s").format(time.perf_counter()))
+        self.status(_("Showing, Runtime {:.3f} s").format(time.perf_counter() - self.startime))
         self.control_frame.set_current_layer(self.index)
         self.draw_layer(image)
         # AGe 2022-07-31 Python 3.10 and CallLater expects delay in milliseconds as
         # integer value instead of float. Convert float value to int
-        wx.CallLater(int(1000 * self.interval), self.hide_pic_and_rise)
+        timer = wx.CallLater(int(1000 * self.interval), self.hide_pic_and_rise)
+        self.control_frame.timers['delay'] = timer
 
     def rise(self):
         if self.direction == 0:  # 0: Top Down
-            self.status(_("Lowering, Timestamp {:.3f} s").format(time.perf_counter()))
+            self.status(_("Lowering, Runtime {:.3f} s").format(time.perf_counter() - self.startime))
         else:  # self.direction == 1, 1: Bottom Up
-            self.status(_("Rising, Timestamp {:.3f} s").format(time.perf_counter()))
+            self.status(_("Rising, Runtime {:.3f} s").format(time.perf_counter() - self.startime))
 
         if self.printer is not None and self.printer.online:
-            self.printer.send_now("G91")
+            self.printer.send_now('G91')
 
             if self.prelift_gcode:
                 for line in self.prelift_gcode.split('\n'):
@@ -210,32 +215,35 @@ class DisplayFrame(wx.Frame):
                         self.printer.send_now(line)
 
             if self.direction == 0:  # 0: Top Down
-                self.printer.send_now("G1 Z-%f F%g" % (self.overshoot, self.z_axis_rate,))
-                self.printer.send_now("G1 Z%f F%g" % (self.overshoot - self.thickness, self.z_axis_rate,))
+                self.printer.send_now(f"G1 Z-{self.overshoot:.3f} F{self.z_axis_rate}")
+                self.printer.send_now(f"G1 Z{self.overshoot - self.thickness:.3f} F{self.z_axis_rate}")
             else:  # self.direction == 1, 1: Bottom Up
-                self.printer.send_now("G1 Z%f F%g" % (self.overshoot, self.z_axis_rate,))
-                self.printer.send_now("G1 Z-%f F%g" % (self.overshoot - self.thickness, self.z_axis_rate,))
+                self.printer.send_now(f"G1 Z{self.overshoot:.3f} F{self.z_axis_rate}")
+                self.printer.send_now(f"G1 Z-{self.overshoot - self.thickness:.3f} F{self.z_axis_rate}")
 
             if self.postlift_gcode:
                 for line in self.postlift_gcode.split('\n'):
                     if line:
                         self.printer.send_now(line)
 
-            self.printer.send_now("G90")
+            self.printer.send_now('G90')
         else:
             time.sleep(self.pause)
 
         # AGe 2022-07-31 Python 3.10 expects delay in milliseconds as
         # integer value instead of float. Convert float value to int
-        wx.CallLater(int(1000 * self.pause), self.next_img)
+        timer = wx.CallLater(int(1000 * self.pause), self.next_img)
+        self.control_frame.timers['rise'] = timer
 
     def hide_pic(self):
-        self.status(_("Hiding, Timestamp {:.3f} s").format(time.perf_counter()))
-        self.pic.Hide()
+        self.status(_("Hiding, Runtime {:.3f} s").format(time.perf_counter() - self.startime))
+        self.bitmap_widget.Hide()
 
     def hide_pic_and_rise(self):
         wx.CallAfter(self.hide_pic)
-        wx.CallLater(500, self.rise)
+        timer = wx.CallLater(500, self.rise)
+        self.control_frame.timers['hide'] = timer
+
 
     def next_img(self):
         if not self.running:
@@ -247,7 +255,7 @@ class DisplayFrame(wx.Frame):
         else:
             self.control_frame.stop_present(wx.wxEVT_NULL)
             self.status(_("End"))
-            wx.CallAfter(self.pic.Hide)
+            wx.CallAfter(self.bitmap_widget.Hide)
             wx.CallAfter(self.Refresh)
 
     def present(self,
@@ -264,7 +272,7 @@ class DisplayFrame(wx.Frame):
                 size = (1024, 768),
                 offset = (0, 0),
                 layer_red = False):
-        wx.CallAfter(self.pic.Hide)
+        wx.CallAfter(self.bitmap_widget.Hide)
         wx.CallAfter(self.Refresh)
         self.layers = layers
         self.scale = scale
@@ -283,6 +291,7 @@ class DisplayFrame(wx.Frame):
         self.running = True
 
         self.next_img()
+
 
 class SettingsFrame(wx.Dialog):
 
@@ -306,6 +315,7 @@ class SettingsFrame(wx.Dialog):
         self.image_dir = ''
         self.current_filename = ''
         self.slicer = ''
+        self.timers = {}
 
         # In wxPython 4.1.0 gtk3 (phoenix) wxWidgets 3.1.4
         # Layout() breaks before Show(), invoke once after Show()
@@ -613,6 +623,7 @@ class SettingsFrame(wx.Dialog):
                                           printer = printer)
         self.display_frame.Centre()
         self.Raise()
+        self.display_frame.Show()
         self.Show()
 
     def __del__(self):
@@ -847,9 +858,12 @@ class SettingsFrame(wx.Dialog):
         self.reset_loaded_file()
         dlg = wx.FileDialog(self, _("Open file to print"), style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         # On macOS, the wildcard for *.3dlp.zip is not recognised, so it is just *.zip.
-        dlg.SetWildcard(_("Slic3r or Skeinforge SVG files") + " (*.svg)|*.svg|" +
+        dlg.SetWildcard(_("All supported files") +
+                        " (*.svg; *.3dlp.zip; *.sl1; *.sl1s)|*.svg;*.zip;*.sl1;*.sl1s|" +
+                        _("Slic3r or Skeinforge SVG files") + " (*.svg)|*.svg|" +
                         _("3DLP Zip files") + " (*.3dlp.zip)|*.zip|" +
-                        _("Prusa SL1 files") + " (*.sl1;*.sl1s)|*.sl1;*.sl1s")
+                        _("Prusa SL1 files") + " (*.sl1; *.sl1s)|*.sl1;*.sl1s")
+
         if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetPath()
             if not os.path.exists(name):
@@ -863,7 +877,7 @@ class SettingsFrame(wx.Dialog):
             elif name.lower().endswith('.3dlp.zip'):
                 layers = self.parse_3DLP_zip(name)
             else:
-                self.status(_("{} is not a sliced svg-file or zip-file.").format(os.path.split(name)[1]))
+                self.status(_("{} is not a sliced svg- or zip-file.").format(os.path.split(name)[1]))
                 return
 
             if layers[2] in ('Slic3r', 'Skeinforge'):
@@ -931,9 +945,7 @@ class SettingsFrame(wx.Dialog):
 
             previous_slicer = self.display_frame.slicer
             self.display_frame.slicer = 'Calibrate'
-
             self.display_frame.draw_layer()
-
             self.display_frame.slicer = previous_slicer
 
             self.display_frame.Raise()
@@ -960,7 +972,10 @@ class SettingsFrame(wx.Dialog):
                     self.first_layer.SetValue(False)
                 # AGE2023-04-19 Python 3.10 expects delay in milliseconds as
                 # integer value instead of float. Convert float value to int
-                wx.CallLater(int(sfl_timer * 1000), unpresent_first_layer)
+                if 'first' in self.timers and self.timers['first'].IsRunning():
+                    self.timers['first'].Stop()
+                timer = wx.CallLater(int(sfl_timer * 1000), unpresent_first_layer)
+                self.timers['first'] = timer
 
     def update_offset(self, event):
         offset_x = self.offset_X.GetValue()
@@ -1014,31 +1029,27 @@ class SettingsFrame(wx.Dialog):
         prelift_gcode = self.prelift_gcode.GetValue().replace('\n', "\\n")
         self.display_frame.prelift_gcode = prelift_gcode
         self._set_setting('project_prelift_gcode', prelift_gcode)
-        self.refresh_display(event)
 
     def update_postlift_gcode(self, event):
         postlift_gcode = self.postlift_gcode.GetValue().replace('\n', "\\n")
         self.display_frame.postlift_gcode = postlift_gcode
         self._set_setting('project_postlift_gcode', postlift_gcode)
-        self.refresh_display(event)
 
     def update_z_axis_rate(self, event):
         z_axis_rate = self.z_axis_rate.GetValue()
         self.display_frame.z_axis_rate = z_axis_rate
         self._set_setting('project_z_axis_rate', z_axis_rate)
-        self.refresh_display(event)
 
     def update_direction(self, event):
         direction = self.direction.GetSelection()
         self.display_frame.direction = direction
         self._set_setting('project_direction', direction)
-        self.refresh_display(event)
 
     def update_fullscreen(self, event):
-        if self.fullscreen.GetValue():
-            self.display_frame.ShowFullScreen(1)
+        if self.fullscreen.GetValue() and not self.display_frame.IsFullScreen():
+            self.display_frame.ShowFullScreen(True, wx.FULLSCREEN_ALL)
         else:
-            self.display_frame.ShowFullScreen(0)
+            self.display_frame.ShowFullScreen(False)
         self.refresh_display(event)
         self.Raise()
 
@@ -1068,10 +1079,11 @@ class SettingsFrame(wx.Dialog):
         self.stop_button.Enable()
         self.set_current_layer(0)
         self.display_frame.Raise()
-        if self.fullscreen.GetValue():
-            self.display_frame.ShowFullScreen(1)
+        if self.fullscreen.GetValue() and not self.display_frame.IsFullScreen():
+            self.display_frame.ShowFullScreen(True, wx.FULLSCREEN_ALL)
         self.display_frame.slicer = self.layers[2]
         self.display_frame.dpi = self.get_dpi()
+        self.display_frame.startime = time.perf_counter()
         self.display_frame.present(self.layers[0][:],
                                    thickness = self.thickness.GetValue(),
                                    interval = self.interval.GetValue(),
@@ -1082,11 +1094,13 @@ class SettingsFrame(wx.Dialog):
                                    prelift_gcode = self.prelift_gcode.GetValue(),
                                    postlift_gcode = self.postlift_gcode.GetValue(),
                                    direction = self.direction.GetSelection(),
-                                   size = (float(self.X.GetValue()), float(self.Y.GetValue())),
+                                   size = (self.X.GetValue(), self.Y.GetValue()),
                                    offset = (self.offset_X.GetValue(), self.offset_Y.GetValue()),
                                    layer_red = self.layer_red.IsChecked())
         self.present_button.Disable()
         self.load_button.Disable()
+        self.calibrate.SetValue(False)
+        self.calibrate.Disable()
         self.Raise()
 
     def stop_present(self, event):
@@ -1096,6 +1110,7 @@ class SettingsFrame(wx.Dialog):
         self.set_current_layer(0)
         self.present_button.Enable()
         self.load_button.Enable()
+        self.calibrate.Enable()
         self.pause_button.Disable()
         self.stop_button.Disable()
         self.status(_("Stop"))
@@ -1104,15 +1119,23 @@ class SettingsFrame(wx.Dialog):
         if self.pause_button.GetLabel() == self.get_btn_label('pause'):
             self.status(self.get_btn_label('pause'))
             self.pause_button.SetLabel(self.get_btn_label('continue'))
+            self.calibrate.Enable()
             self.display_frame.running = False
         else:
             self.status(self.get_btn_label('continue'))
             self.pause_button.SetLabel(self.get_btn_label('pause'))
+            self.calibrate.SetValue(False)
+            self.calibrate.Disable()
             self.display_frame.running = True
             self.display_frame.next_img()
 
     def on_close(self, event):
         self.stop_present(event)
+        # Make sure that all running timers are
+        # stopped before we destroy the frames
+        for timer in self.timers.values():
+            if timer.IsRunning():
+                timer.Stop()
         self.cleanup_temp()
         if self.display_frame:
             self.display_frame.DestroyLater()
@@ -1182,7 +1205,6 @@ class SettingsFrame(wx.Dialog):
             if not value == name.GetSelection():
                 name.SetSelection(value)
                 update_function(event)
-
 
 
 if __name__ == "__main__":
