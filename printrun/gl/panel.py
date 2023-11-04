@@ -103,7 +103,11 @@ class wxGLPanel(BASE_CLASS):
         self.width = self.height = None
         self.focus = Focus()
 
-        self.context = glcanvas.GLContext(self.canvas)
+        ctx_attrs = glcanvas.GLContextAttrs()
+        # FIXME: Pronterface supports only OpenGL 2.1 and compability mode at the moment
+        # ctx_attrs.PlatformDefaults().CoreProfile().MajorVersion(3).MinorVersion(3).EndList()
+        ctx_attrs.PlatformDefaults().EndList()
+        self.context = glcanvas.GLContext(self.canvas, ctxAttrs = ctx_attrs)
         self.pygletcontext = None  # initialised during glinit
 
         self.rot_lock = Lock()
@@ -208,6 +212,10 @@ class wxGLPanel(BASE_CLASS):
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
+        # Uncomment this line to see information about the created context
+        # print(f"OpenGL context version: {self.pygletcontext.get_info().get_version()},\n",
+        #      self.pygletcontext.get_info().get_renderer())
+
         # normal gl init
         glClearColor(*self.color_background)
         glClearDepth(1.0)  # set depth value to 1
@@ -249,7 +257,7 @@ class wxGLPanel(BASE_CLASS):
         self.height = max(float(height), 1.0)
         self.focus.update_size(self.width, self.height)
         self.OnInitGL(call_reshape = False)
-        # print('glViewport', width)
+        # print('glViewport: ', width, height)
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()

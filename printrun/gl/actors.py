@@ -123,15 +123,15 @@ class Platform:
         # Calcualte luminance of the current background colour
         lum = 0.299 * bg_colour[0] + 0.587 * bg_colour[1] + 0.114 * bg_colour[2]
         if lum > 0.55:
-            # Lines should be dark
-            base_colour = (64 / 255, 64 / 255, 64 / 255, 1.0)
+            # Dark lines
+            base_colour = (64 / 255, 64 / 255, 64 / 255)
         else:
-            # Lines should be bright
-            base_colour = (172 / 255, 172 / 255, 172 / 255, 1.0)
+            # Bright lines
+            base_colour = (172 / 255, 172 / 255, 172 / 255)
 
-        self.color_grads_minor = (*base_colour[0:3], 0.1)
-        self.color_grads_interm = (*base_colour[0:3], 0.2)
-        self.color_grads_major = (*base_colour[0:3], 0.33)
+        self.color_grads_minor = (*base_colour, 0.1)
+        self.color_grads_interm = (*base_colour, 0.2)
+        self.color_grads_major = (*base_colour, 0.33)
 
     def init(self):
         self.display_list = compile_display_list(self.draw)
@@ -156,6 +156,7 @@ class Platform:
         # draw the grid
         glDisable(GL_LIGHTING)
         glBegin(GL_LINES)
+
         if self.circular:  # Draw a circular grid
             for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 angle = math.asin(2 * float(i) / self.width - 1)
@@ -170,6 +171,7 @@ class Platform:
                 if self.colour(i):
                     glVertex3f(self.width - x, float(i), 0.0)
                     glVertex3f(x, float(i), 0.0)
+
         else:  # Draw a rectangular grid
             for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 if self.colour(i):
@@ -182,12 +184,55 @@ class Platform:
                     glVertex3f(self.width, float(i), 0.0)
         glEnd()
 
+        # Draw origin arrows
+        glColor4f(*self.color_grads_major)
+        arw_offset = self.width * 0.01
+        arw_side_length = self.width * 0.015
+        arw_height = arw_side_length * 0.866
+
         if self.circular:
+            # Draw circle outline
             glBegin(GL_LINE_LOOP)
             for i in range(0, 360):
                 angle = math.radians(i)
                 glVertex3f((math.cos(angle) + 1) * self.width / 2,
                            (math.sin(angle) + 1) * self.depth / 2, 0.0)
+            glEnd()
+
+            # Draw triangle to indicate front
+            glBegin(GL_LINE_LOOP)
+            glVertex3f(self.width / 2, -arw_offset, 0.0)
+            glVertex3f(self.width / 2 - arw_side_length / 2, -(arw_offset + arw_height), 0.0)
+            glVertex3f(self.width / 2 + arw_side_length / 2, -(arw_offset + arw_height), 0.0)
+            glEnd()
+
+        else:
+            # Draw origin arrows and redraw outline
+            vertices = [(arw_offset / 4, -arw_offset, 0.0),
+                        (arw_offset / 4 + arw_height,
+                         -(arw_offset + arw_side_length / 2), 0.0),
+                        (arw_offset / 4, -(arw_offset + arw_side_length), 0.0),
+                        (-arw_offset, arw_offset / 4, 0.0),
+                        (-(arw_offset + arw_side_length / 2),
+                         arw_offset / 4 + arw_height, 0.0),
+                        (-(arw_offset + arw_side_length), arw_offset / 4, 0.0),
+                        (0.0, -arw_offset, 0.0),
+                        (0.0, -(arw_offset + arw_side_length), 0.0),
+                        (-arw_offset, 0.0, 0.0),
+                        (-(arw_offset + arw_side_length), 0.0, 0.0),
+                        (0.0, 0.0, 0.0),
+                        (0.0, self.depth, 0.0),
+                        (self.width, self.depth, 0.0),
+                        (self.width, 0.0, 0.0)]
+
+            indices = [0, 1, 1, 2, 2, 0,
+                       3, 4, 4, 5, 5, 3,
+                       6, 7, 8, 9,
+                       10, 11, 11, 12, 12, 13, 13, 10]  # Outline
+
+            glBegin(GL_LINES)
+            for index in indices:
+                glVertex3f(*vertices[index])
             glEnd()
 
         glPopMatrix()
@@ -737,8 +782,8 @@ class GcodeModel(Model):
                                 # if not enough room for another 100 points now,
                                 # allocate enough and 50% extra to minimize separate allocations
                                 ratio = (travel_vertex_k + 100 * 6) / self.travels.size * 1.5
-                                print(f"gl realloc travel {self.travels.size}"
-                                      f" -> {int(self.travels.size * ratio)}")
+                                logging.debug("gl realloc travel %d -> %d" % \
+                                              (self.travels.size, int(self.travels.size * ratio)))
                                 self.travels.resize(int(self.travels.size * ratio),
                                                     refcheck = False)
 
@@ -863,8 +908,8 @@ class GcodeModel(Model):
                                 # arc interpolation extra points allocation
                                 ratio = (index_k + len(new_indices) +
                                          100 * indicesperline) / self.indices.size * 1.5
-                                print(f"gl realloc print {self.vertices.size}"
-                                      f" -> {int(self.vertices.size * ratio)}")
+                                logging.debug("gl realloc print %d -> %d" % \
+                                              (self.vertices.size, int(self.vertices.size * ratio)))
                                 self.vertices.resize(int(self.vertices.size * ratio),
                                                      refcheck = False)
                                 self.colors.resize(int(self.colors.size * ratio),
@@ -1195,10 +1240,10 @@ class GcodeModelLight(Model):
                         if self.vertices.size < (vertex_k + 100 * 6):
                             # arc interpolation extra points allocation
                             ratio = (vertex_k + 100 * 6) / self.vertices.size * 1.5
-                            # print(f"gl realloc lite {self.vertices.size} -> {int(self.vertices.size * ratio)}")
+                            logging.debug("gl realloc lite %d -> %d" % \
+                                          (self.vertices.size, int(self.vertices.size * ratio)))
                             self.vertices.resize(int(self.vertices.size * ratio), refcheck = False)
                             self.colors.resize(int(self.colors.size * ratio), refcheck = False)
-
 
                         vertices[vertex_k] = prev_pos[0]
                         vertices[vertex_k + 1] = prev_pos[1]
