@@ -251,24 +251,66 @@ class MouseCursor:
     def __init__(self):
         self.colour = (225 / 255, 0 / 255, 45 / 255, 1.0)  # Red
         self.position = [0, 0, 0]
+        self.vertices = []
+        self.indices = []
+        self._prepare_data()
 
     def update_position(self, position):
         self.position = position
+
+    def _prepare_data(self):
+        self.vertices, self.indices = self._circle()
+        #self.vertices, self.indices = self._rectangle()
+
+    def _circle(self):
+        radius = 2.0
+        segments = 24  #  Resolution of the circle.
+        z_value = 0.02
+        vertices = [(0, 0, z_value),  # this is the center point
+                    (0, radius, z_value)]  # this is first point on the top
+        indices = []
+
+        for i in range(segments):
+            alpha = 2 * math.pi / segments * i
+            new_x = radius * math.sin(alpha)
+            new_y = radius * math.cos(alpha)
+            # Add one new vertex coordinate
+            vertices.append((new_x, new_y, z_value))
+            vert_n = len(vertices) - 1
+            # Add three new indices
+            indices.extend((0, vert_n - 1, vert_n))
+        # Add last triangle
+        indices.extend((0, vert_n, 1))
+
+        return (vertices, indices)
+
+    def _rectangle(self):
+        half_a = 2  # Half of the rectangle side length
+        z_value = 0.02
+
+        vertices = [(half_a, half_a, z_value),
+                    (-half_a, half_a, z_value),
+                    (-half_a, -half_a, z_value),
+                    (half_a, -half_a, z_value)]
+
+        indices = [0, 1, 2,
+                   2, 3, 0]
+
+        return (vertices, indices)
 
     def draw(self):
         glPushMatrix()
         glTranslatef(*self.position)
         glDisable(GL_CULL_FACE)
-        glBegin(GL_TRIANGLES)
-        glColor3f(*self.colour[:-1])
+
+        glColor4f(*self.colour)
         glNormal3f(0, 0, 1)
-        glVertex3f(2, 2, 0.05)
-        glVertex3f(-2, 2, 0.05)
-        glVertex3f(-2, -2, 0.05)
-        glVertex3f(2, -2, 0.05)
-        glVertex3f(2, 2, 0.05)
-        glVertex3f(-2, -2, 0.05)
+
+        glBegin(GL_TRIANGLES)
+        for index in self.indices:
+            glVertex3f(*self.vertices[index])
         glEnd()
+
         glEnable(GL_CULL_FACE)
         glPopMatrix()
 
@@ -395,7 +437,7 @@ class CuttingPlane:
         glLineWidth(4.0)
         # Draw the outline on the plane
         glBegin(GL_LINE_LOOP)
-        glColor3f(*self.colour_outline[:-1])
+        glColor4f(*self.colour_outline)
         glVertex3f(0, 0, 0)
         glVertex3f(0, self.plane_height, 0)
         glVertex3f(self.plane_width, self.plane_height, 0)

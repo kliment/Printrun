@@ -39,10 +39,10 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_PROJECTION, GL_PROJECTION_MATRIX, glScalef, \
     GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
     glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, \
-    glColor3f, glColor4f, glMaterialfv, GL_FRONT_AND_BACK, \
+    glMaterialfv, GL_FRONT_AND_BACK, glMultMatrixd, glPolygonMode, \
     GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, GL_EMISSION, \
-    GL_RESCALE_NORMAL, glColorMaterial, GL_FRONT, glRotatef, \
-    glMultMatrixd, glPolygonMode, GL_FILL
+    GL_RESCALE_NORMAL, glColorMaterial, GL_FRONT, glRotatef, GL_FILL
+
 
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat, build_rotmatrix
@@ -232,7 +232,7 @@ class wxGLPanel(BASE_CLASS):
         # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         # Material specs are set here once and then we only change
-        # the material colour by using glColor3f / glColor4f
+        # the material colour by using glColor
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
         glMaterialfv(GL_FRONT, GL_SPECULAR, vec(0.85, 0.85, 0.85, 1))
         glMaterialf(GL_FRONT, GL_SHININESS, 72)
@@ -286,13 +286,6 @@ class wxGLPanel(BASE_CLASS):
         if self.GLinitialized:
             self.pygletcontext.set_current()
             self.update_object_resize()
-
-    def set_gl_colour(self, r_val: float, g_val: float,
-                      b_val: float, a_val: float = 1.0) -> None:
-        if a_val == 1.0:
-            glColor3f(*vec(r_val, g_val, b_val))
-        else:
-            glColor4f(*vec(r_val, g_val, b_val, a_val))
 
     def set_origin(self, platform):
         # Rotate according to trackball
