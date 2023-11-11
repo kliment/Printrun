@@ -90,14 +90,12 @@ class GcodePlaterPanel(PlaterPanel):
                                        circular = circular_platform,
                                        grid = grid)
         self.set_viewer(viewer)
-        self.platform = viewer.platform
-        self.platform_object = gcview.GCObject(self.platform)
         self.Layout()
         self.SetMinClientSize(self.topsizer.CalcMin())
         self.SetTitle(_("G-Code Plate Builder"))
 
     def get_objects(self):
-        return [self.platform_object] + list(self.models.values())
+        return list(self.models.values())
     objects = property(get_objects)
 
     def load_file(self, filename):

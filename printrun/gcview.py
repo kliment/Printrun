@@ -41,16 +41,11 @@ def set_model_colors(model, root):
             if hasattr(root, root_fieldname):
                 setattr(model, field, getattr(root, root_fieldname))
 
-def recreate_platform(self, build_dimensions, circular, grid):
-    self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
-    self.objects[0].model = self.platform
-    wx.CallAfter(self.Refresh)
-
 def set_gcview_params(self, path_width, path_height):
     self.path_halfwidth = path_width / 2
     self.path_halfheight = path_height / 2
     has_changed = False
-    for obj in self.objects[1:]:
+    for obj in self.objects:
         if isinstance(obj.model, actors.GcodeModel):
             obj.model.set_path_size(self.path_halfwidth, self.path_halfheight)
             has_changed = True
@@ -130,6 +125,13 @@ class GcodeViewPanel(wxGLPanel):
             if obj.model and obj.model.loaded and not obj.model.initialized:
                 obj.model.init()
 
+    def recreate_platform(self, build_dimensions, circular, grid, colour):
+        self.platform = actors.Platform(build_dimensions,
+                                        circular = circular,
+                                        grid = grid)
+        self.platform.update_colour(colour)
+        wx.CallAfter(self.Refresh)
+
     def update_object_resize(self):
         '''called when the window receives only if opengl is initialized'''
         pass
@@ -139,7 +141,9 @@ class GcodeViewPanel(wxGLPanel):
         self.create_objects()
 
         glPushMatrix()
-        self.set_origin(self.parent.platform)
+        self.set_origin(self.platform)
+        # Draw platform
+        self.platform.draw()
 
         for obj in self.parent.objects:
             if not obj.model \
@@ -282,15 +286,14 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
         self.refresh_timer = wx.CallLater(100, self.Refresh)
         self.p = self  # Hack for backwards compatibility with gviz API
         self.grid = grid
-        self.platform = self.glpanel.platform
         self.model = None
-        self.objects = [GCObject(self.platform), GCObject(None)]
+        self.objects = [GCObject(None)]
 
         if self.root and hasattr(self.root, "gcview_color_background"):
             colour = self.root.gcview_color_background
             self.glpanel.color_background = colour
             self.glpanel.focus.update_colour(colour)
-            self.platform.update_colour(colour)
+            self.glpanel.platform.update_colour(colour)
             # TODO: Find a way to update these colours without restarting
 
     def __getattr__(self, name):
@@ -311,7 +314,8 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
                 self.refresh_timer.Start()
 
     def recreate_platform(self, build_dimensions, circular, grid):
-        return recreate_platform(self, build_dimensions, circular, grid)
+        colour = self.root.gcview_color_background
+        return self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
 
     def setlayer(self, layer):
         if layer in self.model.layer_idxs_map:
@@ -346,9 +350,8 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
                                       antialias_samples = antialias_samples,
                                       grid = grid, circular = circular,
                                       perspective = perspective)
-        self.platform = self.glpanel.platform
-        self.model = objects[1].model if objects else None
-        self.objects = [GCObject(self.platform), GCObject(None)]
+        self.model = objects[0].model if objects else None
+        self.objects = [GCObject(None)]
 
         fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         tool_pos = self.toolbar.GetToolPos(3) + 1
@@ -360,7 +363,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
             colour = self.root.gcview_color_background
             self.glpanel.color_background = colour
             self.glpanel.focus.update_colour(colour)
-            self.platform.update_colour(colour)
+            self.glpanel.platform.update_colour(colour)
 
         h_sizer.Add(self.glpanel, 1, wx.EXPAND)
         h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
@@ -413,7 +416,8 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
                 self.refresh_timer.Start()
 
     def recreate_platform(self, build_dimensions, circular, grid):
-        return recreate_platform(self, build_dimensions, circular, grid)
+        colour = self.root.gcview_color_background
+        return self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
 
     def addfile(self, gcode = None):
         if self.clonefrom:
