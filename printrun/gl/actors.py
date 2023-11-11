@@ -122,7 +122,7 @@ class Platform:
         luminance (brightness) of the background.'''
         # Calcualte luminance of the current background colour
         lum = 0.299 * bg_colour[0] + 0.587 * bg_colour[1] + 0.114 * bg_colour[2]
-        if lum > 0.55:
+        if lum > 0.5:
             # Dark lines
             base_colour = (64 / 255, 64 / 255, 64 / 255)
         else:
@@ -294,7 +294,7 @@ class Focus:
         luminance (brightness) of the background.'''
         # Calcualte luminance of the current background colour
         lum = 0.299 * bg_colour[0] + 0.587 * bg_colour[1] + 0.114 * bg_colour[2]
-        if lum > 0.55:
+        if lum > 0.5:
             self.colour = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Dark Transparent
         else:
             self.colour = (205 / 255, 205 / 255, 205 / 255, 0.4)  # Light Transparent

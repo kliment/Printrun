@@ -1196,6 +1196,14 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         target_color = getattr(self, param)
         for i, v in enumerate(color):
             target_color[i] = v
+
+        # In case we change the background colour we need
+        # to update the colours of the grid and focus
+        if param == 'gcview_color_background':
+            if hasattr(self, 'gviz') and hasattr(self.gviz, 'update_actor_colours'):
+                self.gviz.update_actor_colours(color)
+            if hasattr(self, 'gwindow') and hasattr(self.gwindow, 'update_actor_colours'):
+                self.gwindow.update_actor_colours(color)
         wx.CallAfter(self.Refresh)
 
     def update_build_dimensions(self, param, value):

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 import logging
 import wx
 
@@ -25,7 +26,7 @@ from .gl.panel import wxGLPanel
 from .gl import actors
 from .injectgcode import injector, injector_edit
 
-from .gviz import GvizBaseFrame
+from .gviz import GvizBaseFrame, BaseViz
 
 from .gui.widgets import get_space
 from .utils import imagefile, install_locale, get_home_pos
@@ -59,6 +60,7 @@ ZOOM_OUT_KEYS = wx.WXK_PAGEUP, 390, wx.WXK_LEFT, ord('-')
 FIT_KEYS = [ord('F')]
 CURRENT_LAYER_KEYS = [ord('C')]
 RESET_KEYS = [ord('R')]
+
 
 class GcodeViewPanel(wxGLPanel):
 
@@ -229,6 +231,7 @@ class GcodeViewPanel(wxGLPanel):
             self.resetview()
         event.Skip()
 
+
 class GCObject:
 
     def __init__(self, model):
@@ -238,6 +241,7 @@ class GCObject:
         self.curlayer = 0.0
         self.scale = [1.0, 1.0, 1.0]
         self.model = model
+
 
 class GcodeViewLoader:
 
@@ -269,7 +273,7 @@ class GcodeViewLoader:
     def set_gcview_params(self, path_width, path_height):
         return set_gcview_params(self, path_width, path_height)
 
-from printrun.gviz import BaseViz
+
 class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
 
     def __init__(self, parent, build_dimensions, root, circular, antialias_samples, grid, perspective = False):
@@ -292,9 +296,7 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
         if self.root and hasattr(self.root, "gcview_color_background"):
             colour = self.root.gcview_color_background
             self.glpanel.color_background = colour
-            self.glpanel.focus.update_colour(colour)
-            self.glpanel.platform.update_colour(colour)
-            # TODO: Find a way to update these colours without restarting
+            self.update_actor_colours(colour)
 
     def __getattr__(self, name):
         return getattr(self.glpanel, name)
@@ -313,6 +315,10 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
+    def update_actor_colours(self, colour):
+        self.glpanel.focus.update_colour(colour)
+        self.glpanel.platform.update_colour(colour)
+
     def recreate_platform(self, build_dimensions, circular, grid):
         colour = self.root.gcview_color_background
         return self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
@@ -327,6 +333,7 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
         self.model = None
         self.objects[-1].model = None
         wx.CallAfter(self.Refresh)
+
 
 class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
     '''A simple class for using OpenGL with wxPython.'''
@@ -362,8 +369,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         if self.root and hasattr(self.root, "gcview_color_background"):
             colour = self.root.gcview_color_background
             self.glpanel.color_background = colour
-            self.glpanel.focus.update_colour(colour)
-            self.glpanel.platform.update_colour(colour)
+            self.update_actor_colours(colour)
 
         h_sizer.Add(self.glpanel, 1, wx.EXPAND)
         h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
@@ -415,6 +421,10 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
+    def update_actor_colours(self, colour):
+        self.glpanel.focus.update_colour(colour)
+        self.glpanel.platform.update_colour(colour)
+
     def recreate_platform(self, build_dimensions, circular, grid):
         colour = self.root.gcview_color_background
         return self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
@@ -436,7 +446,6 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         wx.CallAfter(self.Refresh)
 
 if __name__ == "__main__":
-    import sys
     app = wx.App(redirect = False)
     build_dimensions = [200, 200, 100, 0, 0, 0]
     title = _("G-Code Viewer")
