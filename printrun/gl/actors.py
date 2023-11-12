@@ -342,8 +342,7 @@ class Focus:
             self.colour = (205 / 255, 205 / 255, 205 / 255, 0.4)  # Light Transparent
 
     def draw(self):
-        glColor4f(*self.colour)
-        glPushMatrix()
+        glPushMatrix()  # backup and clear MODELVIEW
         glLoadIdentity()
 
         glMatrixMode(GL_PROJECTION)
@@ -351,9 +350,12 @@ class Focus:
         glLoadIdentity()
         gluOrtho2D(0, self.width, 0, self.height)
 
-        glLineStipple(1, 0xff00)
-        glEnable(GL_LINE_STIPPLE)
+        glDisable(GL_LIGHTING)
         # Draw a stippled line around the vertices
+        glLineStipple(1, 0xff00)
+        glColor4f(*self.colour)
+        glEnable(GL_LINE_STIPPLE)
+
         glBegin(GL_LINE_LOOP)
         # This is the lower left corner, x, y
         glVertex2f(5, 3)
@@ -361,12 +363,14 @@ class Focus:
         glVertex2f(self.width - 3, self.height - 5)
         glVertex2f(5, self.height - 5)
         glEnd()
-        glDisable(GL_LINE_STIPPLE)
 
-        glPopMatrix() # restore PROJECTION
+        glDisable(GL_LINE_STIPPLE)
+        glEnable(GL_LIGHTING)
+
+        glPopMatrix()  # restore PROJECTION
 
         glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
+        glPopMatrix()  # restore MODELVIEW
 
     def display(self, mode_2d=False):
         self.draw()

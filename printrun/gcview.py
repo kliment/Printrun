@@ -19,8 +19,6 @@ import sys
 import logging
 import wx
 
-from pyglet.gl import glPushMatrix, glPopMatrix
-
 from . import gcoder
 from .gl.panel import wxGLPanel
 from .gl import actors
@@ -68,9 +66,9 @@ class GcodeViewPanel(wxGLPanel):
                  build_dimensions = (200, 200, 100, 0, 0, 0),
                  circular = False,
                  antialias_samples = 0,
-                 grid = (1, 10), perspective=False):
+                 grid = (1, 10), perspective = False):
         if perspective:
-            self.orthographic=False
+            self.orthographic = False
         super().__init__(parent, wx.DefaultPosition,
                          wx.DefaultSize, 0,
                          antialias_samples = antialias_samples)
@@ -142,7 +140,6 @@ class GcodeViewPanel(wxGLPanel):
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()
 
-        glPushMatrix()
         self.set_origin(self.platform)
         # Draw platform
         self.platform.draw()
@@ -160,7 +157,6 @@ class GcodeViewPanel(wxGLPanel):
 
             # Apply transformations and draw the models
             self.transform_and_draw(obj, obj.model.display)
-        glPopMatrix()
 
     # ==========================================================================
     # Utils

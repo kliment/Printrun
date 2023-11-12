@@ -26,8 +26,8 @@ import pyglet
 pyglet.options['debug_gl'] = True
 pyglet.options['shadow_window'] = False
 
-from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
-    GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_POSITION, GL_DIFFUSE, \
+from pyglet.gl import glEnable, GL_LIGHTING, glLightfv, \
+    GL_LIGHT0, GL_LIGHT1, GL_POSITION, GL_DIFFUSE, \
     GL_AMBIENT, GL_SPECULAR, GL_COLOR_MATERIAL, \
     glShadeModel, GL_SMOOTH, GL_NORMALIZE, \
     GL_BLEND, glBlendFunc, glClear, glClearColor, \
@@ -42,7 +42,6 @@ from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     glMaterialfv, GL_FRONT_AND_BACK, glMultMatrixd, glPolygonMode, \
     GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, GL_EMISSION, \
     GL_RESCALE_NORMAL, glColorMaterial, GL_FRONT, glRotatef, GL_FILL
-
 
 from pyglet import gl
 from .trackball import trackball, mulquat, axis_to_quat, build_rotmatrix
@@ -81,7 +80,7 @@ class wxGLPanel(BASE_CLASS):
         style = style | wx.FULL_REPAINT_ON_RESIZE
 
         self.GLinitialized = False
-        self.mview_initialized = False
+        self.view_matrix_initialized = False
 
         attribList = wx.glcanvas.GLAttributes()
         # Set a 24bit depth buffer and activate double buffering for the canvas
@@ -226,6 +225,8 @@ class wxGLPanel(BASE_CLASS):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+        self._setup_lights()
+
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         # Polygon mode is never changed, but you can uncomment
         # this line to show models as wireframe
@@ -235,7 +236,7 @@ class wxGLPanel(BASE_CLASS):
         # the material colour by using glColor
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
         glMaterialfv(GL_FRONT, GL_SPECULAR, vec(0.85, 0.85, 0.85, 1))
-        glMaterialf(GL_FRONT, GL_SHININESS, 72)
+        glMaterialf(GL_FRONT, GL_SHININESS, 96)
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
 
         # This enables tracking of the material colour,
@@ -259,19 +260,11 @@ class wxGLPanel(BASE_CLASS):
         self.OnInitGL(call_reshape = False)
         # print('glViewport: ', width, height)
         glViewport(0, 0, width, height)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        if self.orthographic:
-            glOrtho(-width / 2, width / 2, -height / 2, height / 2,
-                    -5 * self.dist, 5 * self.dist)
-        else:
-            gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
-            glTranslatef(0, 0, -self.dist)  # Move back
-        glMatrixMode(GL_MODELVIEW)
+        self._create_projection_matrix(self.orthographic, width, height, self.dist)
 
-        if not self.mview_initialized:
-            self.reset_mview(0.9)
-            self.mview_initialized = True
+        if not self.view_matrix_initialized:
+            self._reset_view_matrix(0.9)
+            self.view_matrix_initialized = True
         elif oldwidth is not None and oldheight is not None:
             wratio = self.width / oldwidth
             hratio = self.height / oldheight
@@ -287,6 +280,20 @@ class wxGLPanel(BASE_CLASS):
             self.pygletcontext.set_current()
             self.update_object_resize()
 
+    def _create_projection_matrix(self, ortho, width, height, dist):
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+
+        if ortho:
+            glOrtho(-width / 2, width / 2,
+                    -height / 2, height / 2,
+                    -5 * dist, 5 * dist)
+        else:
+            gluPerspective(60.0, width / height, 10.0, 3 * dist)
+            glTranslatef(0, 0, -dist)  # Move back
+
+        glMatrixMode(GL_MODELVIEW)
+
     def set_origin(self, platform):
         # Rotate according to trackball
         glMultMatrixd(build_rotmatrix(self.basequat))
@@ -295,51 +302,34 @@ class wxGLPanel(BASE_CLASS):
         platformy0 = -self.build_dimensions[4] - platform.depth / 2
         glTranslatef(platformx0, platformy0, 0)
 
-    def setup_lights(self):
+    def _setup_lights(self):
         '''Sets the lightscene for gcode and stl models'''
         glEnable(GL_LIGHTING)
-        # TODO: Harmonise and improve lighting between gcode and stl
+
+        glEnable(GL_LIGHT0)
+        glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.0, 0.0, 0.0, 1.0))
+        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1.0))
+        glLightfv(GL_LIGHT0, GL_POSITION, vec(1.0, 2.0, 2.0, 0.0))
+
+        glEnable(GL_LIGHT1)
+        glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0.0, 0.0, 0.0, 1.0))
+        glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1.0))
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(-1.2, -1, 2.4, 0.0))
+
         if self.gcode_lights:
-            glDisable(GL_LIGHT0)
-
-            glEnable(GL_LIGHT1)
-            glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
-            glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-            glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
-            glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
-
-            glEnable(GL_LIGHT2)
-            glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
-            glLightfv(GL_LIGHT2, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-            glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
-            glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 3, 0))
-
-            # Normalises (0 - 1.0) the normal vectors after scaling
+            # Normalises the normal vectors after scaling
             glEnable(GL_NORMALIZE)
         else:
-            glEnable(GL_LIGHT0)
-            glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
-            glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0.5, 0.5, 1.0, 1.0))
-            glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(1.0, 1.0, 1.0, 1.0))
-            glLightfv(GL_LIGHT0, GL_POSITION, vec(0.5, 0.5, 1.0, 0))
-
-            glEnable(GL_LIGHT1)
-            glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
-            glLightfv(GL_LIGHT2, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-            glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.5, 0.5, 0.5, 1.0))
-            glLightfv(GL_LIGHT1, GL_POSITION, vec(1.0, 0, 0.5, 0))
-
-            glDisable(GL_LIGHT2)
-
-            # Normalises (0 - 1.0) the normal vectors after scaling
-            # GL_NORMALIZE makes the objects look too bright (?)
+            # GL_NORMALIZE makes stl objects look too bright (?)
             glEnable(GL_RESCALE_NORMAL)
+
         glShadeModel(GL_SMOOTH)
 
-    def reset_mview(self, factor):
+    def _reset_view_matrix(self, factor):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        self.setup_lights()
 
         wratio = self.width / self.dist
         hratio = self.height / self.dist
@@ -351,7 +341,7 @@ class wxGLPanel(BASE_CLASS):
 
     def resetview(self):
         self.canvas.SetCurrent(self.context)
-        self.reset_mview(0.9)
+        self._reset_view_matrix(0.9)
         self.basequat = [0, 0, 0, 1]
         wx.CallAfter(self.Refresh)
 
@@ -363,7 +353,10 @@ class wxGLPanel(BASE_CLASS):
         self.pygletcontext.set_current()
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        glPushMatrix()
         self.draw_objects()
+        glPopMatrix()
 
         if self.canvas.HasFocus():
             self.focus.draw()
@@ -372,19 +365,20 @@ class wxGLPanel(BASE_CLASS):
         #print(f"Draw took {(time.perf_counter()-start) * 1000:.2f} ms,"
         #      f" {1 / (time.perf_counter()-start):.0f} FPS")
 
-    def transform_and_draw(self, model, draw_func):
+    def transform_and_draw(self, actor, draw_function):
         '''Apply transformations to the model and then
         draw it with the given draw function'''
         glPushMatrix()
-        glTranslatef(*(model.offsets))
-        glRotatef(model.rot, 0.0, 0.0, 1.0)
-        glTranslatef(*(model.centeroffset))
-        glScalef(*model.scale)
-
+        self._create_model_matrix(actor)
         # Draw the models
-        draw_func()
-
+        draw_function()
         glPopMatrix()
+
+    def _create_model_matrix(self, model):
+        glTranslatef(*model.offsets)
+        glRotatef(model.rot, 0.0, 0.0, 1.0)
+        glTranslatef(*model.centeroffset)
+        glScalef(*model.scale)
 
     # ==========================================================================
     # To be implemented by a sub class
@@ -408,12 +402,7 @@ class wxGLPanel(BASE_CLASS):
         mvmat = (GLdouble * 16)()
         if local_transform:
             glPushMatrix()
-            # Rotate according to trackball
-            glMultMatrixd(build_rotmatrix(self.basequat))
-            # Move origin to bottom left of platform
-            platformx0 = -self.build_dimensions[3] - self.platform.width / 2
-            platformy0 = -self.build_dimensions[4] - self.platform.depth / 2
-            glTranslatef(platformx0, platformy0, 0)
+            self.set_origin(self.platform)
             glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
             glPopMatrix()
         else:
@@ -583,7 +572,7 @@ class wxGLPanel(BASE_CLASS):
             return
         self.canvas.SetCurrent(self.context)
         dims = gcode_dims(self.parent.model.gcode)
-        self.reset_mview(1.0)
+        self._reset_view_matrix(1.0)
         center_x = (dims[0][0] + dims[0][1]) / 2
         center_y = (dims[1][0] + dims[1][1]) / 2
         center_x = self.build_dimensions[0] / 2 - center_x

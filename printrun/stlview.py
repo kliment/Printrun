@@ -20,8 +20,6 @@ import time
 
 import numpy
 
-from pyglet.gl import glPushMatrix, glPopMatrix
-
 from .gl.panel import wxGLPanel
 from .gl import actors
 
@@ -34,9 +32,9 @@ class StlViewPanel(wxGLPanel):
                  build_dimensions = (200, 200, 100, 0, 0, 0),
                  circular = False,
                  antialias_samples = 0,
-                 grid = (1, 10), perspective=False):
+                 grid = (1, 10), perspective = False):
         if perspective:
-            self.orthographic=False
+            self.orthographic = False
         super().__init__(parent, wx.DefaultPosition, size, 0,
                          antialias_samples = antialias_samples)
 
@@ -81,7 +79,7 @@ class StlViewPanel(wxGLPanel):
             self.parent.filenames = None
 
     def OnReshape(self):
-        self.mview_initialized = False
+        self.view_matrix_initialized = False
         super().OnReshape()
 
     def forceresize(self):
@@ -169,10 +167,9 @@ class StlViewPanel(wxGLPanel):
     def draw_objects(self):
         '''called in the middle of ondraw after the buffer has been cleared'''
         # Since GL display lists are not used,
-        # we don't need this any more.
+        # we don't need this line anymore.
         # self.create_objects()
 
-        glPushMatrix()
         self.set_origin(self.platform)
         # Draw platform
         self.platform.draw()
@@ -186,16 +183,10 @@ class StlViewPanel(wxGLPanel):
             self.gl_cursor.draw()
 
         # Draw objects
-
-        # Why would we disable face culling here?
-        #glDisable(GL_CULL_FACE)
-        glPushMatrix()
         for i in self.parent.models:
             model = self.parent.models[i]
             # Apply transformations and draw the models
             self.transform_and_draw(model, model.batch.draw)
-        glPopMatrix()
-        #glEnable(GL_CULL_FACE)
 
         # Draw cutting plane
         if self.parent.cutting:
@@ -207,8 +198,6 @@ class StlViewPanel(wxGLPanel):
                 direction = self.parent.cutting_direction
                 self.cutting_plane.update(axis, direction, dist)
                 self.cutting_plane.draw()
-
-        glPopMatrix()
 
     # ==========================================================================
     # Utils
