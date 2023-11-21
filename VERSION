@@ -1,5 +1,7 @@
-This is a dummy file for pyinstaller to compile Pronterface.Cairocffi and cairosvg won't find
-the GTK3 runtime libraries needed for running Projector under Windows w / o this file.
+This is a dummy file for pyinstaller to compile Pronterface. Cairocffi and cairosvg won't find
+the GTK3 runtime libraries needed for running Projector under Windows w/o this file.
+Update 2023-11-13: With introducing merge #1387 https ://github.com/kliment/Printrun/pull/1387 
+                   cairosvg is no loger needed. We use wx.svg instead.
 
 You can find a suitable version of GTK3 for Windows 10 here : https://github.com/DivingDuck/PrintrunGTK3.
 For further information please follow the links.PrintrunGTK3 is a submodule of Printrun.

@@ -28,7 +28,7 @@ rem **                                                                          
 rem **  1. Install python 64-bit (3.10.x is actually preferred and standard version   **
 rem **     for Windows 10)                                                            **
 rem **     https://www.python.org/downloads/release                                   **
-rem **     In case you use an other Python version, check line 91 and adjust          **
+rem **     In case you use an other Python version, check line 88 to 92 and adjust          **
 rem **     the parameter accordingly to build your virtual environment.               **
 rem **  2. Install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
@@ -56,7 +56,7 @@ rem **                                                                          
 rem **   https://github.com/wxWidgets/Phoenix/commit/d3bdb14365ca754e83732cccd04e94a2ded5029f
 rem **                                                                                **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2023-02-02, Status: working                               **
+rem **  Author: DivingDuck, 2023-11-13, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -89,6 +89,7 @@ if exist v3 (
    rem py -3.8 -m venv v3
    rem py -3.9 -m venv v3
    py -3.10 -m venv v3
+   rem py -3.11 -m venv v3
    
    echo *********************************************
    echo ****** Activate virtual environment v3 ******
@@ -134,18 +135,19 @@ pip uninstall pyglet -y
 pip install pyglet==1.5.27
 
 
-echo *****************************************************************************
-echo ****** cairosvg workaround, needs to be below 2.6.0 (isn't compatible) ******
-echo *****************************************************************************
+rem echo *****************************************************************************
+rem echo ****** cairosvg workaround, needs to be below 2.6.0 (isn't compatible) ******
+rem echo *****************************************************************************
 rem # 2023-01-30
 rem cairosvg >=2.6.0 generate a crash problem with locale in module projectlayer.py (Projector), 
 rem so we will stay to 2.5.2 as workaround for now
-pip uninstall cairosvg -y
-pip install cairosvg==2.5.2
+rem # 2023-11-13 cairosvg is no longer needed. We now use wx.svg.
+rem pip uninstall cairosvg -y
+rem pip install cairosvg==2.5.2
 
 
 echo ******************************************************************
-echo ****** Compile G-Code parser gcoder_line.cp??-win_amd64.pyd ******
+echo ****** Compile G-Code parser gcoder_line.cp??-win_amd??.pyd ******
 echo ******************************************************************
 rem For safety reasons delete existing version first to prevent errors
 if exist printrun\gcoder_line.cp??-win_amd??.pyd (
@@ -165,7 +167,7 @@ rem The Projector feature of Pronterface need some external DLL binaries from th
 rem You can build Pronterface with or w/o these binaries. In addition you need
 rem different binaries depending if you build a Windows 10 x32 or x64 version.
 rem Remove 'rem' before pyi-makespec for the build of your choice and add 'rem'
-rem for all other versions. You can't bundle x32 and x46 into the same Pronterface binary file.
+rem for all other versions. You can't bundle x32 and x64 into the same Pronterface binary file.
 rem Only one active version is allowed. 
 
 rem **** Default setup: Version 3, GTK3 bundle included for Windows 10 x64 bit.  ****
@@ -175,21 +177,33 @@ rem Choose this pyi-makespec in case you don't have the GTK3 Toolkit files, or w
 rem or don't want to bundle these within Pronterface.exe. You can install them separately and 
 rem set the path location via Windows system environment variable (like Path=c:\GTK3\bin).
 
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
 
 rem Version 2: GTK3 included in Pronterface (Windows10 x32 only) NOT Supported for now (see wxPython remark line 51):
 rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files for Windows10 x32 only
 
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
 
 rem Version 3: GTK3 included in Pronterface (Windows10 x64 only):
 rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files for Windows10 x64 only
 
-pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
-pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data VERSION;cairosvg --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
+rem do we need GTK any longer?
+rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
+rem test w/o GTK
+rem do we need cairocffi any longer?
+rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
+rem test w/o GTK and cairocffi
+pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
 
 echo ***************************************************************
 echo ****** Build Pronterface, Pronsole and Plater executables *****

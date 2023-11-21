@@ -1,6 +1,6 @@
 setup on osx:
-(install python 3.6)
-(install python extension compile environment, this is automagically done if you have xcode)
+(install python 3.10)
+(install python extension compile environment, this is automatically done if you have xcode)
 (install git)
 git clone http://github.com/kliment/Printrun.git
 cd Printrun
@@ -35,11 +35,12 @@ pyinstaller --clean pronterface.spec -y
 (optional) codesign -s identityname dist/pronterface.app --deep
 
 setup on windows:
-(install python 3.6)
+(install python 3.10)
 (install python extension compile environment, see https://wiki.python.org/moin/WindowsCompilers )
 (install git)
 git clone http://github.com/kliment/Printrun.git
 cd Printrun
+git submodule update --init --recursive
 git pull
 \path\to\python3\python -m venv v3
 v3\Scripts\activate
