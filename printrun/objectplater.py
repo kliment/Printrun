@@ -150,28 +150,28 @@ class PlaterPanel(wx.Panel):
 
     def set_viewer(self, viewer):
         # Patch handle_rotation on the fly
-        if hasattr(viewer, "handle_rotation"):
+        if hasattr(viewer.camera, "handle_rotation"):
             def handle_rotation(self, event, orig_handler):
                 if self.initpos is None:
-                    self.initpos = event.GetPosition() * self.GetContentScaleFactor()
+                    self.initpos = event.GetPosition() * self.scalefactor
                 else:
                     if event.ShiftDown():
                         p1 = self.initpos
-                        init_position = self.mouse_to_plane(p1[0], p1[1],
+                        init_position = self.canvas.mouse_to_plane(p1[0], p1[1],
                                                     plane_normal = (0, 0, 1), plane_offset = 0,
                                                     local_transform = True)
 
-                        p2 = event.GetPosition() * self.GetContentScaleFactor()
+                        p2 = event.GetPosition() * self.scalefactor
 
-                        drag_position = self.mouse_to_plane(p2[0], p2[1],
+                        drag_position = self.canvas.mouse_to_plane(p2[0], p2[1],
                                                     plane_normal = (0, 0, 1), plane_offset = 0,
                                                     local_transform = True)
 
-                        self.parent.move_shape((drag_position[0] - init_position[0], drag_position[1] - init_position[1]))
+                        self.canvas.parent.move_shape((drag_position[0] - init_position[0], drag_position[1] - init_position[1]))
                         self.initpos = p2
                     else:
                         orig_handler(event)
-            patch_method(viewer, "handle_rotation", handle_rotation)
+            patch_method(viewer.camera, "handle_rotation", handle_rotation)
         # Patch handle_wheel on the fly
         if hasattr(viewer, "handle_wheel"):
             def handle_wheel(self, event, orig_handler):

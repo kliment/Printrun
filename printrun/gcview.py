@@ -67,22 +67,26 @@ class GcodeViewPanel(wxGLPanel):
                  circular = False,
                  antialias_samples = 0,
                  grid = (1, 10), perspective = False):
-        if perspective:
-            self.orthographic = False
+
         super().__init__(parent, wx.DefaultPosition,
                          wx.DefaultSize, 0,
                          antialias_samples = antialias_samples)
+
+        # Set projection of camera
+        if perspective:
+            self.camera.is_orthographic = False
+
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
         # self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
         # in Windows event inspector shows only EVT_CHAR_HOOK events
         self.canvas.Bind(wx.EVT_CHAR_HOOK, self.keypress)
-        self.initialized = 0
+        self.initialized = False
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.parent = realparent or parent
-        self.initpos = None
+
         self.build_dimensions = build_dimensions
-        self.dist = max(self.build_dimensions[:2])
+        self.camera.dist = max(self.build_dimensions[:2])
 
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
@@ -140,7 +144,7 @@ class GcodeViewPanel(wxGLPanel):
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()
 
-        self.set_origin(self.platform)
+        self.camera.set_platform_origin(self.build_dimensions)
         # Draw platform
         self.platform.draw()
 
@@ -444,10 +448,17 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
 if __name__ == "__main__":
     app = wx.App(redirect = False)
     build_dimensions = [200, 200, 100, 0, 0, 0]
+
     title = _("G-Code Viewer")
-    frame = GcodeViewFrame(None, wx.ID_ANY, title, size = (400, 400),
-                           build_dimensions = build_dimensions)
-    gcode = gcoder.GCode(open(sys.argv[1]), get_home_pos(build_dimensions))
+    frame = GcodeViewFrame(None, wx.ID_ANY, title, size = (600, 450),
+                           build_dimensions = build_dimensions,
+                           antialias_samples = 4,
+                           circular = False,
+                           perspective = False)
+
+    with open(sys.argv[1], 'r', encoding = 'UTF-8') as file:
+        gcode = gcoder.GCode(file, get_home_pos(build_dimensions))
+
     frame.addfile(gcode)
 
     first_move = None
@@ -465,14 +476,16 @@ if __name__ == "__main__":
     lines = [first_move] + [gcode.lines[int(float(i) * (len(gcode.lines) - 1) / nsteps)] for i in range(1, nsteps)] + [last_move]
     current_line = 0
 
-    def setLine():
+    def setLine() -> None:
         global current_line
         frame.set_current_gline(lines[current_line])
         current_line = (current_line + 1) % len(lines)
         timer.Start()
+
     timer = wx.CallLater(steptime, setLine)
     timer.Start()
 
+    frame.CentreOnScreen()
     frame.Show(True)
     app.MainLoop()
     app.Destroy()

@@ -17,6 +17,8 @@
 
 import wx
 import time
+import sys
+from . import stltool
 
 import numpy
 
@@ -33,29 +35,30 @@ class StlViewPanel(wxGLPanel):
                  circular = False,
                  antialias_samples = 0,
                  grid = (1, 10), perspective = False):
-        if perspective:
-            self.orthographic = False
+
         super().__init__(parent, wx.DefaultPosition, size, 0,
                          antialias_samples = antialias_samples)
+
+        # Set projection of camera
+        if perspective:
+            self.camera.is_orthographic = False
 
         self.meshmodels = []
         self.rot = 0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
-        self.initialized = True
+        self.initialized = False
         self.parent = parent
-        self.initpos = None
 
         self.build_dimensions = build_dimensions
+        self.camera.dist = max(self.build_dimensions[:2])
 
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)
         self.gl_cursor = actors.MouseCursor()
         self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
-        self.dist = max(self.build_dimensions[0], self.build_dimensions[1])
-        wx.CallAfter(self.forceresize) #why needed
 
     def Destroy(self):
         # Clean up vertex lists
@@ -79,7 +82,7 @@ class StlViewPanel(wxGLPanel):
             self.parent.filenames = None
 
     def OnReshape(self):
-        self.view_matrix_initialized = False
+        self.camera.view_matrix_initialized = False
         super().OnReshape()
 
     def forceresize(self):
@@ -97,11 +100,8 @@ class StlViewPanel(wxGLPanel):
     def keypress(self, event):
         """gets keypress events and moves/rotates active shape"""
         keycode = event.GetKeyCode()
-        step = 5
-        angle = 18
-        if event.ControlDown():
-            step = 1
-            angle = 1
+        step, angle = (1, 1) if event.ControlDown() else (5, 18)
+
         # h
         if keycode == 72:
             self.parent.move_shape((-step, 0))
@@ -170,16 +170,16 @@ class StlViewPanel(wxGLPanel):
         # we don't need this line anymore.
         # self.create_objects()
 
-        self.set_origin(self.platform)
+        self.camera.set_platform_origin(self.build_dimensions)
         # Draw platform
         self.platform.draw()
 
         # Draw mouse
-        inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
+        intersection = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                     plane_normal = (0, 0, 1), plane_offset = 0,
                                     local_transform = False)
-        if inter is not None:
-            self.gl_cursor.position = inter
+        if intersection is not None:
+            self.gl_cursor.position = intersection
             self.gl_cursor.draw()
 
         # Draw objects
@@ -255,10 +255,37 @@ class StlViewPanel(wxGLPanel):
             dist = min(1.5 * ref_size, max(-0.5 * ref_size, dist))
         return dist
 
-def main():
+def main() -> None:
     app = wx.App(redirect = False)
-    frame = wx.Frame(None, -1, "GL Window", size = (400, 400))
-    StlViewPanel(frame)
+    size = (600, 450)
+    frame = wx.Frame(None, -1, "Mesh GL Window", size = size)
+    frame.SetMinClientSize((200, 200))
+
+    stl_panel = StlViewPanel(frame, size,
+                             circular = False,
+                             antialias_samples = 4,
+                             perspective = False)
+
+    stl_panel.set_current_context()
+
+    # Load a stl model via cmd line argument
+    modeldata = stltool.stl(sys.argv[1])
+    modeldata.offsets = [65.0, 75.0, 0.0]
+    modeldata.rot = 0.0
+    modeldata.centeroffset = [-(modeldata.dims[1] + modeldata.dims[0]) / 2,
+                              -(modeldata.dims[3] + modeldata.dims[2]) / 2,
+                              0.0]
+    modeldata.scale = [1.0, 1.0, 1.0]
+
+    frame.models = {'example': modeldata}
+    actors.MeshModel(modeldata)
+
+    # Mock a cutting plane to test rendering
+    frame.cutting = True
+    frame.cutting_axis = 'x'
+    frame.cutting_direction = 1.0
+    frame.cutting_dist = 29.0
+
     frame.Show(True)
     app.MainLoop()
     app.Destroy()

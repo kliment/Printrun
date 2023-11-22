@@ -34,11 +34,13 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
     glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
     glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
     GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f, glNormal3f, \
-    glRotatef, GL_CULL_FACE, GL_PROJECTION, glLoadIdentity, glMatrixMode, \
-    glVertex2f, glLineStipple, GL_LINE_STIPPLE, GL_MODELVIEW
-from pyglet.gl.glu import gluOrtho2D
+    glRotatef, GL_CULL_FACE, glVertex2f, glLineStipple, GL_LINE_STIPPLE
+
 from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
 from pyglet.graphics import Batch
+
+from typing import Tuple
+from .camera import Camera
 
 from printrun.utils import install_locale
 install_locale('pronterface')
@@ -109,9 +111,9 @@ class Platform:
         self.zoffset = build_dimensions[5]
         self.grid = grid
 
-        self.color_grads_minor = (175 / 255, 223 / 255, 95 / 255, 0.1)
-        self.color_grads_interm = (175 / 255, 223 / 255, 95 / 255, 0.2)
-        self.color_grads_major = (175 / 255, 223 / 255, 95 / 255, 0.33)
+        self.color_grads_minor = (15 / 255, 15 / 255, 15 / 255, 0.1)
+        self.color_grads_interm = (15 / 255, 15 / 255, 15 / 255, 0.2)
+        self.color_grads_major = (15 / 255, 15 / 255, 15 / 255, 0.33)
 
         self.initialized = False
         self.loaded = True
@@ -322,16 +324,11 @@ class Focus:
     """
     Outline around the currently active OpenGL panel.
     """
-    def __init__(self):
+    def __init__(self, camera: Camera) -> None:
         self.colour = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Black Transparent
-        self.width = 0
-        self.height = 0
+        self.camera = camera
 
-    def update_size(self, width, height):
-        self.width = width
-        self.height = height
-
-    def update_colour(self, bg_colour):
+    def update_colour(self, bg_colour: Tuple[float, float, float]) -> None:
         '''Update the colour of the focus based on the
         luminance (brightness) of the background.'''
         # Calcualte luminance of the current background colour
@@ -341,14 +338,8 @@ class Focus:
         else:
             self.colour = (205 / 255, 205 / 255, 205 / 255, 0.4)  # Light Transparent
 
-    def draw(self):
-        glPushMatrix()  # backup and clear MODELVIEW
-        glLoadIdentity()
-
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        gluOrtho2D(0, self.width, 0, self.height)
+    def draw(self) -> None:
+        self.camera.create_pseudo2d_matrix()
 
         glDisable(GL_LIGHTING)
         # Draw a stippled line around the vertices
@@ -359,20 +350,17 @@ class Focus:
         glBegin(GL_LINE_LOOP)
         # This is the lower left corner, x, y
         glVertex2f(5, 3)
-        glVertex2f(self.width - 3, 3)
-        glVertex2f(self.width - 3, self.height - 5)
-        glVertex2f(5, self.height - 5)
+        glVertex2f(self.camera.width - 3, 3)
+        glVertex2f(self.camera.width - 3, self.camera.height - 5)
+        glVertex2f(5, self.camera.height - 5)
         glEnd()
 
         glDisable(GL_LINE_STIPPLE)
         glEnable(GL_LIGHTING)
 
-        glPopMatrix()  # restore PROJECTION
+        self.camera.revert_pseudo2d_matrix()
 
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()  # restore MODELVIEW
-
-    def display(self, mode_2d=False):
+    def display(self, mode_2d: bool = False) -> None:
         self.draw()
 
 
@@ -510,23 +498,23 @@ class MeshModel:
         self.vertex_list = None
         self._fill_batch(model)
 
-    def _fill_batch(self, m):
+    def _fill_batch(self, model):
         # Create the vertex and normal arrays.
         vertices = []
         normals = []
 
-        for i in m.facets:
-            for j in i[1]:
-                vertices.extend(j)
-                normals.extend(i[0])
+        for facet in model.facets:
+            for coords in facet[1]:
+                vertices.extend(coords)
+                normals.extend(facet[0])
 
-        if hasattr(m, 'indices') and m.indices:
+        if hasattr(model, 'indices') and model.indices:
             # Some file formats provide indexed vertices,
             # which is more efficient for rendering
             self.vertex_list = self.batch.add_indexed(len(vertices) // 3,
                                                 GL_TRIANGLES,
                                                 None,  # group
-                                                m.indices,
+                                                model.indices,
                                                 ('v3f/static', vertices),
                                                 ('n3f/static', normals),
                                                 ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
@@ -539,7 +527,7 @@ class MeshModel:
                                               ('n3f/static', normals),
                                               ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
 
-        m.batch = self.batch
+        model.batch = self.batch
 
     def delete(self):
         if self.vertex_list:
