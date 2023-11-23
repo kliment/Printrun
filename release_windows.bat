@@ -71,9 +71,13 @@ if exist v3 (
    rem Python x64 and x86 versions are supported.
 
    rem py -3.7 -m venv v3
+   rem py -3.8-32 -m venv v3
    rem py -3.8 -m venv v3
+   rem py -3.9-32 -m venv v3
    rem py -3.9 -m venv v3
-   py -3.10 -m venv v3
+   rem py -3.10-32 -m venv v3
+   rem py -3.10 -m venv v3
+   py -3.11-32 -m venv v3
    rem py -3.11 -m venv v3
    
    echo *********************************************
