@@ -15,18 +15,13 @@ jobs:
       matrix:
         os: [windows-latest]
         # supported architecture: [x64, x86]
-        architecture: [x64]
+        architecture: [x64, x86]
         # supported versions: ['3.7', '3.8', '3.9','3.10']
-        python-version: ['3.10']
+        python-version: ['3.10','3.11']
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    #  # Import submodule PrintrunGTK3
-    #  with #1387 no longer needed 2023-11-20
-    #  with:
-    #    submodules: recursive
-    #
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -34,8 +29,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        # remove cffi too
-        #python -m pip install --upgrade pip pyinstaller setuptools wheel simplejson polygon3 cython cffi -r requirements.txt
         python -m pip install --upgrade pip pyinstaller setuptools wheel simplejson polygon3 cython -r requirements.txt
 
     - name: Update to wxPython latest Version for x86
@@ -60,11 +53,12 @@ jobs:
     
     - name: Make pyinstaller spec
       run: |
-        #pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "VERSION;cairocffi" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
         pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -c -i pronsole.ico pronsole.py
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean pronterface.spec -y
+        pyinstaller --clean pronsole.spec -y
 
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
@@ -85,4 +79,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.EXE_NAME }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
-        path: dist/pronterface.exe
+        path: |
+            dist/pronterface.exe 
+            dist/pronsole.exe

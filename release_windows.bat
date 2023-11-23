@@ -25,38 +25,23 @@ rem **  10. Go to directory .\dist, list files and ends the activity            
 rem **                                                                                **
 rem **  Steps, you need to do manually before running this batch:                     **
 rem **                                                                                **
-rem **  1. Install python 64-bit (3.10.x is actually preferred and standard version   **
-rem **     for Windows 10)                                                            **
+rem **  1. Install python 64-bit (3.10.x 64-bit is actually preferred                 **
+rem **     and standard version for Windows 10)                                       **
 rem **     https://www.python.org/downloads/release                                   **
-rem **     In case you use an other Python version, check line 88 to 92 and adjust          **
+rem **     In case you use an other Python version: Check line 73 to 77 and adjust    **
 rem **     the parameter accordingly to build your virtual environment.               **
 rem **  2. Install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
 rem **  3. Check for latest repository updates at:                                    **
 rem **     http://github.com/kliment/Printrun.git                                     **
-rem **  4. Projector needs GTK+ for Windows Runtime Environment installed.            **
-rem **     There are different compilations, depending on the installed               **
-rem **     Windows version, available. You can find a striped version of GTK3         **
-rem **     with all needed DLL binary files in directory PrintrunGTK. Please run      **
-rem **     following git commands before you run this batch in case you don't find    **
-rem **     this directory in your local repository:                                   **
-rem **        git checkout master                                                     ** 
-rem **        git submodule add https://github.com/DivingDuck/PrintrunGTK3            **
-rem **        git submodule update --init --recursive                                 **
-rem **     In case the directory PrintrunGTK3 exist but is empty please run:          **
-rem **        git submodule update --init --recursive                                 **
-rem **     You can find a listing of all used DLL's in file VERSION as reference and  **
-rem **     further informations about the linked submodule here:                      **
-rem **     https://github.com/DivingDuck/PrintrunGTK3                                 **
 rem **                                                                                **
 rem **     Follow the instructions at section 'Collect all data for build' below      **
+rem **  																			  **
+rem **  Remark: Plater stand alone application is experimental only. GUI code need an **
+rem **          update for closing plater window and running processes. For now you   **
+rem **          need to terminate the process manually via Task manager.			  **
 rem **                                                                                **
-rem **   Remark: wxPython drops support x32 builders. Only x64 versions for now       **
-rem **                                                                                **
-rem **   https://github.com/wxWidgets/Phoenix/commit/d3bdb14365ca754e83732cccd04e94a2ded5029f
-rem **                                                                                **
-rem **                                                                                **
-rem **  Author: DivingDuck, 2023-11-13, Status: working                               **
+rem **  Author: DivingDuck, 2023-11-23, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -82,8 +67,8 @@ if exist v3 (
    rem Select your Python version below. Remove 'rem' before 'rem py -3.x ...'
    rem for your Python version of choice and add 'rem' for all other versions.
    rem Attention: 
-   rem Minimum version for wxPython is >= 4.2 and with this version only
-   rem Python x64 versions are supported.
+   rem Minimum version for wxPython is >= 4.2.1. With this version
+   rem Python x64 and x86 versions are supported.
 
    rem py -3.7 -m venv v3
    rem py -3.8 -m venv v3
@@ -121,9 +106,9 @@ echo ****** upgrade virtual environment v3 ******
 echo ********************************************
 pip install --upgrade virtualenv
  
-echo ****************************************************
-echo ****** check for and update outdated modules  ******
-echo ****************************************************
+echo ********************************************************
+echo ****** check for outdated modules and update them ******
+echo ********************************************************
 for /F "skip=2 delims= " %%i in ('pip list --outdated') do py -m pip install --upgrade %%i
 
 
@@ -134,22 +119,10 @@ rem # 2022-11-01
 pip uninstall pyglet -y
 pip install pyglet==1.5.27
 
-
-rem echo *****************************************************************************
-rem echo ****** cairosvg workaround, needs to be below 2.6.0 (isn't compatible) ******
-rem echo *****************************************************************************
-rem # 2023-01-30
-rem cairosvg >=2.6.0 generate a crash problem with locale in module projectlayer.py (Projector), 
-rem so we will stay to 2.5.2 as workaround for now
-rem # 2023-11-13 cairosvg is no longer needed. We now use wx.svg.
-rem pip uninstall cairosvg -y
-rem pip install cairosvg==2.5.2
-
-
 echo ******************************************************************
 echo ****** Compile G-Code parser gcoder_line.cp??-win_amd??.pyd ******
 echo ******************************************************************
-rem For safety reasons delete existing version first to prevent errors
+rem Delete existing versions first to prevent errors and incompatibilities
 if exist printrun\gcoder_line.cp??-win_amd??.pyd (
    del printrun\gcoder_line.cp??-win_amd??.pyd
    echo ********************************************************************************
@@ -162,47 +135,9 @@ echo ****************************************
 echo ****** Collect all data for build ******
 echo ****************************************
 
-rem **** Select which version you want to build: ****
-rem The Projector feature of Pronterface need some external DLL binaries from the GTK3.
-rem You can build Pronterface with or w/o these binaries. In addition you need
-rem different binaries depending if you build a Windows 10 x32 or x64 version.
-rem Remove 'rem' before pyi-makespec for the build of your choice and add 'rem'
-rem for all other versions. You can't bundle x32 and x64 into the same Pronterface binary file.
-rem Only one active version is allowed. 
-
-rem **** Default setup: Version 3, GTK3 bundle included for Windows 10 x64 bit.  ****
-
-rem Version 1: With external GTK3 or w/o GTK3 support: 
-rem Choose this pyi-makespec in case you don't have the GTK3 Toolkit files, or want them stay separately
-rem or don't want to bundle these within Pronterface.exe. You can install them separately and 
-rem set the path location via Windows system environment variable (like Path=c:\GTK3\bin).
-
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
-
-rem Version 2: GTK3 included in Pronterface (Windows10 x32 only) NOT Supported for now (see wxPython remark line 51):
-rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files for Windows10 x32 only
-
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-32/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
-
-rem Version 3: GTK3 included in Pronterface (Windows10 x64 only):
-rem Choose this pyi-makespec in case you want to include the GTK3 Toolkit files for Windows10 x64 only
-
-rem do we need GTK any longer?
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
-rem pyi-makespec -F --add-binary PrintrunGTK3/GTK3Windows10-64/*.dll;. --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
-rem test w/o GTK
-rem do we need cairocffi any longer?
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
-rem pyi-makespec -F --add-data VERSION;cairocffi --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
-rem test w/o GTK and cairocffi
 pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
 pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+rem Plater stand alone application is experimental only (See remark).
 pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
 
 echo ***************************************************************
@@ -216,6 +151,7 @@ echo ** Build Pronsole executable **
 pyinstaller --clean pronsole.spec -y
 echo 
 echo ** Build Plater executable **
+rem Plater stand alone application is experimental only (See remark).
 pyinstaller --clean plater.spec -y
 
 
