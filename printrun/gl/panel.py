@@ -14,6 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import time
 import traceback
 import numpy
 import numpy.linalg
@@ -64,6 +65,7 @@ class wxGLPanel(BASE_CLASS):
     # G-Code models and stl models use different lightscene
     gcode_lights = True
     wheelTimestamp = None
+    show_fps = True
 
     def __init__(self, parent, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = 0,
@@ -95,6 +97,13 @@ class wxGLPanel(BASE_CLASS):
         self.height = 1.0
         self.camera = Camera(self)
         self.focus = Focus(self.camera)
+
+        if self.show_fps:
+            self.frametime = FrameTime()
+            self.fps_counter = wx.StaticText(self, -1, '')
+            font = wx.Font(16, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
+                           encoding = wx.FONTENCODING_DEFAULT)
+            self.fps_counter.SetFont(font)
 
         ctx_attrs = glcanvas.GLContextAttrs()
         # FIXME: Pronterface supports only OpenGL 2.1 and compability mode at the moment
@@ -311,9 +320,6 @@ class wxGLPanel(BASE_CLASS):
 
     def DrawCanvas(self):
         """Draw the window."""
-        #import time
-        #start = time.perf_counter()
-        #print('DrawCanvas', self.canvas.GetClientRect())
         self.pygletcontext.set_current()
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -326,8 +332,10 @@ class wxGLPanel(BASE_CLASS):
             self.focus.draw()
 
         self.canvas.SwapBuffers()
-        #print(f"Draw took {(time.perf_counter()-start) * 1000:.2f} ms,"
-        #      f" {1 / (time.perf_counter()-start):.0f} FPS")
+
+        if self.show_fps:
+            self.frametime.update()
+            self.fps_counter.SetLabel(self.frametime.get())
 
     def transform_and_draw(self, actor, draw_function):
         '''Apply transformations to the model and then
@@ -516,3 +524,28 @@ class wxGLPanel(BASE_CLASS):
 
         glTranslatef(center_x, center_y, 0)
         wx.CallAfter(self.Refresh)
+
+
+class FrameTime:
+
+    SMOOTHING_FACTOR = 0.8
+    MAX_FPS = 2000
+
+    def __init__(self) -> None:
+        self.delta_time = 0
+        self.last_frame = time.perf_counter()
+        self.avg_fps = -1
+
+    def update(self) -> None:
+        current_frame = time.perf_counter()
+        self.delta_time = current_frame - self.last_frame
+        self.last_frame = current_frame
+        current_fps = round(min(1 / self.delta_time, self.MAX_FPS))
+
+        if self.avg_fps < 0:
+            self.avg_fps = current_fps
+        else:
+            self.avg_fps = round((self.avg_fps * self.SMOOTHING_FACTOR) + (current_fps * (1 - self.SMOOTHING_FACTOR)))
+
+    def get(self) -> str:
+        return f" {self.delta_time * 1000:4.2f} ms, {self.avg_fps:3d} FPS"
