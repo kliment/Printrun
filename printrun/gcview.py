@@ -26,21 +26,29 @@ from .injectgcode import injector, injector_edit
 
 from .gviz import GvizBaseFrame, BaseViz
 
+# for type hints
+from typing import TYPE_CHECKING, Any, Tuple, List, Union, Iterator, Optional
+from printrun.gcoder import GCode
+Build_Dims = Tuple[int, int, int, int, int, int]
+GCodeActor = Union[actors.GcodeModelLight, actors.GcodeModel]
+if TYPE_CHECKING:
+    from printrun.gcview import GCObject
+
 from .gui.widgets import get_space
 from .utils import imagefile, install_locale, get_home_pos
 install_locale('pronterface')
 
-def create_model(light):
+def create_model(light: bool) -> GCodeActor:
     return actors.GcodeModelLight() if light else actors.GcodeModel()
 
-def set_model_colors(model, root):
+def set_model_colors(model: GCodeActor, root) -> None:
     for field in dir(model):
         if field.startswith("color_"):
             root_fieldname = "gcview_" + field
             if hasattr(root, root_fieldname):
                 setattr(model, field, getattr(root, root_fieldname))
 
-def set_gcview_params(self, path_width, path_height):
+def set_gcview_params(self, path_width: float, path_height: float) -> bool:
     self.path_halfwidth = path_width / 2
     self.path_halfheight = path_height / 2
     has_changed = False
@@ -63,14 +71,16 @@ RESET_KEYS = [ord('R')]
 class GcodeViewPanel(wxGLPanel):
 
     def __init__(self, parent, realparent = None,
-                 build_dimensions = (200, 200, 100, 0, 0, 0),
-                 circular = False,
-                 antialias_samples = 0,
-                 grid = (1, 10), perspective = False):
+                 build_dimensions: Build_Dims = (200, 200, 100, 0, 0, 0),
+                 circular: bool = False,
+                 antialias_samples: int = 0,
+                 grid: Tuple[int, int] = (1, 10),
+                 perspective: bool = False) -> None:
 
         super().__init__(parent, wx.DefaultPosition,
                          wx.DefaultSize, 0,
-                         antialias_samples = antialias_samples)
+                         antialias_samples = antialias_samples,
+                         build_dimensions = build_dimensions)
 
         # Set projection of camera
         if perspective:
@@ -85,14 +95,13 @@ class GcodeViewPanel(wxGLPanel):
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.parent = realparent or parent
 
-        self.build_dimensions = build_dimensions
         self.camera.dist = max(self.build_dimensions[:2])
 
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)
 
-    def inject(self):
+    def inject(self) -> None:
         l = self.parent.model.num_layers_to_draw
         filtered = [k for k, v in self.parent.model.layer_idxs_map.items() if v == l]
         if filtered:
@@ -100,7 +109,7 @@ class GcodeViewPanel(wxGLPanel):
         else:
             logging.error(_("Invalid layer for injection"))
 
-    def editlayer(self):
+    def editlayer(self) -> None:
         l = self.parent.model.num_layers_to_draw
         filtered = [k for k, v in self.parent.model.layer_idxs_map.items() if v == l]
         if filtered:
@@ -108,10 +117,10 @@ class GcodeViewPanel(wxGLPanel):
         else:
             logging.error(_("Invalid layer for edition"))
 
-    def setlayercb(self, layer):
+    def setlayercb(self, layer: int) -> None:
         pass
 
-    def OnInitGL(self, *args, **kwargs):
+    def OnInitGL(self, *args, **kwargs) -> None:
         '''Initialize OpenGL for use in the window.'''
         super().OnInitGL(*args, **kwargs)
 
@@ -123,24 +132,27 @@ class GcodeViewPanel(wxGLPanel):
             getattr(self.parent, 'loadcb', bool)()
             self.parent.filenames = None
 
-    def create_objects(self):
+    def create_objects(self) -> None:
         '''create opengl objects when opengl is initialized'''
         for obj in self.parent.objects:
             if obj.model and obj.model.loaded and not obj.model.initialized:
                 obj.model.init()
 
-    def recreate_platform(self, build_dimensions, circular, grid, colour):
+    def recreate_platform(self, build_dimensions: Build_Dims,
+                          circular: bool, grid: Tuple[int, int],
+                          colour: Tuple[float, float, float]) -> None:
+
         self.platform = actors.Platform(build_dimensions,
                                         circular = circular,
                                         grid = grid)
         self.platform.update_colour(colour)
         wx.CallAfter(self.Refresh)
 
-    def update_object_resize(self):
+    def update_object_resize(self) -> None:
         '''called when the window receives only if opengl is initialized'''
         pass
 
-    def draw_objects(self):
+    def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()
 
@@ -165,7 +177,7 @@ class GcodeViewPanel(wxGLPanel):
     # ==========================================================================
     # Utils
     # ==========================================================================
-    def layerup(self):
+    def layerup(self) -> None:
         if not getattr(self.parent, 'model', False):
             return
         max_layers = self.parent.model.max_layers
@@ -178,7 +190,7 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
-    def layerdown(self):
+    def layerdown(self) -> None:
         if not getattr(self.parent, 'model', False):
             return
         current_layer = self.parent.model.num_layers_to_draw
@@ -187,7 +199,7 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
-    def handle_wheel_shift(self, event, wheel_delta):
+    def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
         '''This runs when Mousewheel + Shift is used'''
         if not self.parent.model:
             return
@@ -199,7 +211,7 @@ class GcodeViewPanel(wxGLPanel):
                 self.layerdown()
         return
 
-    def keypress(self, event):
+    def keypress(self, event: wx.KeyEvent) -> None:
         """gets keypress events and moves/rotates active shape"""
         if event.HasModifiers():
             # let alt+c bubble up
@@ -234,10 +246,10 @@ class GcodeViewPanel(wxGLPanel):
 
 class GCObject:
 
-    def __init__(self, model):
-        self.offsets = [0, 0, 0]
-        self.centeroffset = [0, 0, 0]
-        self.rot = 0
+    def __init__(self, model: Optional[GCodeActor]) -> None:
+        self.offsets = [0.0, 0.0, 0.0]
+        self.centeroffset = [0.0, 0.0, 0.0]
+        self.rot = 0.0
         self.curlayer = 0.0
         self.scale = [1.0, 1.0, 1.0]
         self.model = model
@@ -248,7 +260,7 @@ class GcodeViewLoader:
     path_halfwidth = 0.2
     path_halfheight = 0.15
 
-    def addfile_perlayer(self, gcode = None, showall = False):
+    def addfile_perlayer(self, gcode: Optional[GCode] = None, showall: bool = False) -> Iterator[Union[int, None]]:
         self.model = create_model(self.root.settings.light3d
                                   if self.root else False)
         if isinstance(self.model, actors.GcodeModel):
@@ -265,18 +277,21 @@ class GcodeViewLoader:
         wx.CallAfter(self.Refresh)
         yield None
 
-    def addfile(self, gcode = None, showall = False):
+    def addfile(self, gcode: Optional[GCode] = None, showall: bool = False) -> None:
         generator = self.addfile_perlayer(gcode, showall)
         while next(generator) is not None:
             continue
 
-    def set_gcview_params(self, path_width, path_height):
+    def set_gcview_params(self, path_width: float, path_height: float) -> bool:
         return set_gcview_params(self, path_width, path_height)
 
 
 class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
 
-    def __init__(self, parent, build_dimensions, root, circular, antialias_samples, grid, perspective = False):
+    def __init__(self, parent, build_dimensions: Build_Dims,
+                 root: Any, circular: bool, antialias_samples: int,
+                 grid: Tuple[int, int], perspective: bool = False) -> None:
+
         self.root = root
         self.glpanel = GcodeViewPanel(parent, realparent = self,
                                       build_dimensions = build_dimensions,
@@ -298,39 +313,41 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
             self.glpanel.color_background = colour
             self.update_actor_colours(colour)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return getattr(self.glpanel, name)
 
-    def on_settings_change(self, changed_settings):
+    def on_settings_change(self, changed_settings: List) -> None:
         if self.model:
             for s in changed_settings:
                 if s.name.startswith('gcview_color_'):
                     self.model.update_colors()
                     break
 
-    def set_current_gline(self, gline):
+    def set_current_gline(self, gline) -> None:
         if gline.is_move and gline.gcview_end_vertex is not None \
            and self.model and self.model.loaded:
             self.model.printed_until = gline.gcview_end_vertex
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
-    def update_actor_colours(self, colour):
+    def update_actor_colours(self, colour: Tuple[float, float, float]) -> None:
         self.glpanel.focus.update_colour(colour)
         self.glpanel.platform.update_colour(colour)
 
-    def recreate_platform(self, build_dimensions, circular, grid):
+    def recreate_platform(self, build_dimensions: Build_Dims,
+                          circular: bool, grid: Tuple[int, int]) -> None:
         colour = self.root.gcview_color_background
         return self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
 
-    def setlayer(self, layer):
+    def setlayer(self, layer: int) -> None:
+        assert self.model is not None
         if layer in self.model.layer_idxs_map:
             viz_layer = self.model.layer_idxs_map[layer]
             self.parent.model.num_layers_to_draw = viz_layer
             wx.CallAfter(self.Refresh)
 
-    def clear(self):
-        self.model = None
+    def clear(self) -> None:
+        self.model: Optional[GCodeActor] = None
         self.objects[-1].model = None
         wx.CallAfter(self.Refresh)
 
@@ -338,11 +355,13 @@ class GcodeViewMainWrapper(GcodeViewLoader, BaseViz):
 class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
     '''A simple class for using OpenGL with wxPython.'''
 
-    def __init__(self, parent, ID, title, build_dimensions, objects = None,
-                 pos = wx.DefaultPosition, size = wx.DefaultSize,
-                 style = wx.DEFAULT_FRAME_STYLE, root = None, circular = False,
-                 antialias_samples = 0,
-                 grid = (1, 10), perspective=False):
+    def __init__(self, parent, ID: int, title: str,
+                 build_dimensions: Build_Dims,
+                 objects = None, pos = wx.DefaultPosition, size = wx.DefaultSize,
+                 style = wx.DEFAULT_FRAME_STYLE, root: Any = None,
+                 circular: bool = False, antialias_samples: int = 0,
+                 grid: Tuple[int, int] = (1, 10), perspective: bool = False) -> None:
+
         GvizBaseFrame.__init__(self, parent, ID, title,
                                pos, size, style)
         self.root = root
@@ -388,22 +407,24 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.Bind(wx.EVT_TOOL, lambda x: self.glpanel.editlayer(), id = 7)
         self.Bind(wx.EVT_TOOL, lambda x: self.Close(), id = 9)
 
-    def setlayercb(self, layer):
+    def setlayercb(self, layer: int) -> None:
         self.layerslider.SetValue(layer)
         self.update_status("")
 
-    def update_status(self, extra):
+    def update_status(self, extra: str) -> None:
+        assert self.model is not None
         layer = self.model.num_layers_to_draw
         filtered = [k for k, v in self.model.layer_idxs_map.items() if v == layer]
         if filtered:
             true_layer = filtered[0]
+            assert self.model.gcode is not None
             z = self.model.gcode.all_layers[true_layer].z
             message = _("Layer %d: %s Z = %.03f mm") % (layer, extra, z)
         else:
             message = _("Last layer: Object complete")
         wx.CallAfter(self.SetStatusText, message, 0)
 
-    def process_slider(self, event):
+    def process_slider(self, event: wx.ScrollEvent) -> None:
         if self.model is not None:
             new_layer = self.layerslider.GetValue()
             new_layer = min(self.model.max_layers + 1, new_layer)
@@ -414,41 +435,43 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         else:
             logging.info(_("G-Code Viewer: Can't process slider. Please wait until model is loaded completely."))
 
-    def set_current_gline(self, gline):
+    def set_current_gline(self, gline) -> None:
         if gline.is_move and gline.gcview_end_vertex is not None \
            and self.model and self.model.loaded:
             self.model.printed_until = gline.gcview_end_vertex
             if not self.refresh_timer.IsRunning():
                 self.refresh_timer.Start()
 
-    def update_actor_colours(self, colour):
+    def update_actor_colours(self, colour: Tuple[float, float, float]) -> None:
         self.glpanel.focus.update_colour(colour)
         self.glpanel.platform.update_colour(colour)
 
-    def recreate_platform(self, build_dimensions, circular, grid):
+    def recreate_platform(self, build_dimensions: Build_Dims,
+                          circular: bool, grid: Tuple[int, int]) -> None:
         colour = self.root.gcview_color_background
-        return self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
+        self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
 
-    def addfile(self, gcode = None):
+    def addfile(self, gcode: Optional[GCode] = None) -> None:
         if self.clonefrom:
             self.model = self.clonefrom[-1].model.copy()
             self.objects[-1].model = self.model
         else:
             GcodeViewLoader.addfile(self, gcode)
+        assert self.model is not None
         self.layerslider.SetRange(1, self.model.max_layers + 1)
         self.layerslider.SetValue(self.model.max_layers + 1)
         wx.CallAfter(self.SetStatusText, _("Last layer: Object complete"), 0)
         wx.CallAfter(self.Refresh)
 
-    def clear(self):
-        self.model = None
+    def clear(self) -> None:
+        self.model: Optional[GCodeActor] = None
         self.objects[-1].model = None
         wx.CallAfter(self.Refresh)
 
 if __name__ == "__main__":
     app = wx.App(redirect = False)
-    build_dimensions = [200, 200, 100, 0, 0, 0]
 
+    build_dimensions = (200, 200, 100, 0, 0, 0)
     title = _("G-Code Viewer")
     frame = GcodeViewFrame(None, wx.ID_ANY, title, size = (600, 450),
                            build_dimensions = build_dimensions,

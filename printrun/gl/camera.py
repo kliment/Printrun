@@ -24,8 +24,10 @@ from .trackball import trackball, mulquat, axis_to_quat, build_rotmatrix
 
 # for type hints
 from typing import Optional, List, Tuple, TYPE_CHECKING
+from wx import MouseEvent
+from ctypes import Array
+Build_Dims = Tuple[int, int, int, int, int, int]
 if TYPE_CHECKING:
-    from wx import MouseEvent
     from .panel import wxGLPanel
 
 
@@ -46,7 +48,7 @@ class Camera():
 
         self.view_matrix_initialized = False
 
-        self.basequat = [0, 0, 0, 1]
+        self.basequat = [0.0, 0.0, 0.0, 1.0]
         self.zoom_factor = 1.0
         self.zoomed_width = 1.0
         self.zoomed_height = 1.0
@@ -111,11 +113,13 @@ class Camera():
         self.view_matrix_initialized = True
 
     def reset_rotation(self) -> None:
-        self.basequat = [0, 0, 0, 1]
-        self.angle_x = 0
-        self.angle_z = 0
+        self.basequat = [0.0, 0.0, 0.0, 1.0]
+        self.angle_x = 0.0
+        self.angle_z = 0.0
 
-    def get_view_matrix(self, local_transform: bool, build_dimensions: List[float]):
+    def get_view_matrix(self, local_transform: bool,
+                        build_dimensions: Build_Dims
+                        ) -> Array[GLdouble]:
         mvmat = (GLdouble * 16)()
         if local_transform:
             glPushMatrix()
@@ -124,9 +128,10 @@ class Camera():
             glPopMatrix()
         else:
             glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+
         return mvmat
 
-    def set_platform_origin(self, build_dimensions: List[float]) -> None:
+    def set_platform_origin(self, build_dimensions: Build_Dims) -> None:
         # Rotate according to trackball
         glMultMatrixd(build_rotmatrix(self.basequat))
         # Move origin to bottom left of platform
@@ -136,12 +141,17 @@ class Camera():
 
     def zoom(self, factor: float, to: Optional[Tuple[float, float]] = None) -> None:
         glMatrixMode(GL_MODELVIEW)
+        delta_x = 0.0
+        delta_y = 0.0
+
         if to:
             delta_x = to[0]
             delta_y = to[1]
             glTranslatef(delta_x, delta_y, 0)
+
         glScalef(factor, factor, 1)
         self.zoom_factor *= factor
+
         if to:
             glTranslatef(-delta_x, -delta_y, 0)
 
@@ -153,9 +163,10 @@ class Camera():
         rx = p2y - p1y
         self.angle_x += rx
         rot_a = axis_to_quat([1.0, 0.0, 0.0], self.angle_x)
+
         return mulquat(rot_z, rot_a)
 
-    def handle_rotation(self, event: 'MouseEvent') -> None:
+    def handle_rotation(self, event: MouseEvent) -> None:
         if self.initpos is None:
             self.initpos = event.GetPosition() * self.scalefactor
         else:
@@ -166,15 +177,16 @@ class Camera():
             p1y = 1 - p1[1] / (sz[1] / 2)
             p2x = p2[0] / (sz[0] / 2) - 1
             p2y = 1 - p2[1] / (sz[1] / 2)
-            quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
+
             with self.rot_lock:
                 if self.orbit_control:
                     self.basequat = self.orbit(p1x, p1y, p2x, p2y)
                 else:
+                    quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
                     self.basequat = mulquat(self.basequat, quat)
             self.initpos = p2
 
-    def handle_translation(self, event: 'MouseEvent') -> None:
+    def handle_translation(self, event: MouseEvent) -> None:
         if self.initpos is None:
             self.initpos = event.GetPosition() * self.scalefactor
         else:

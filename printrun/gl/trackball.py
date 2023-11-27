@@ -17,12 +17,16 @@ import math
 
 from pyglet.gl import GLdouble
 
-def cross(v1, v2):
+# for type hints
+from typing import List
+from ctypes import Array
+
+def cross(v1: List[float], v2: List[float]) -> List[float]:
     return [v1[1] * v2[2] - v1[2] * v2[1],
             v1[2] * v2[0] - v1[0] * v2[2],
             v1[0] * v2[1] - v1[1] * v2[0]]
 
-def trackball(p1x, p1y, p2x, p2y, r):
+def trackball(p1x: float, p1y: float, p2x: float, p2y: float, r: float) -> List[float]:
     TRACKBALLSIZE = r
 
     if p1x == p2x and p1y == p2y:
@@ -43,14 +47,14 @@ def trackball(p1x, p1y, p2x, p2y, r):
 
     return axis_to_quat(a, phi)
 
-def axis_to_quat(a, phi):
+def axis_to_quat(a: List[float], phi: float) -> List[float]:
     lena = math.sqrt(sum(x * x for x in a))
     q = [x * (1 / lena) for x in a]
     q = [x * math.sin(phi / 2.0) for x in q]
     q.append(math.cos(phi / 2.0))
     return q
 
-def build_rotmatrix(q):
+def build_rotmatrix(q: List[float]) -> Array[GLdouble]:
     m = (GLdouble * 16)()
     m[0] = 1.0 - 2.0 * (q[1] * q[1] + q[2] * q[2])
     m[1] = 2.0 * (q[0] * q[1] - q[2] * q[3])
@@ -73,8 +77,7 @@ def build_rotmatrix(q):
     m[15] = 1.0
     return m
 
-
-def project_to_sphere(r, x, y):
+def project_to_sphere(r: float, x: float, y: float) -> float:
     d = math.sqrt(x * x + y * y)
     if (d < r * 0.70710678118654752440):
         return math.sqrt(r * r - d * d)
@@ -82,8 +85,7 @@ def project_to_sphere(r, x, y):
         t = r / 1.41421356237309504880
         return t * t / d
 
-
-def mulquat(q1, rq):
+def mulquat(q1: List[float], rq: List[float]) -> List[float]:
     return [q1[3] * rq[0] + q1[0] * rq[3] + q1[1] * rq[2] - q1[2] * rq[1],
             q1[3] * rq[1] + q1[1] * rq[3] + q1[2] * rq[0] - q1[0] * rq[2],
             q1[3] * rq[2] + q1[2] * rq[3] + q1[0] * rq[1] - q1[1] * rq[0],

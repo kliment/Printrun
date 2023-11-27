@@ -25,33 +25,39 @@ import numpy
 from .gl.panel import wxGLPanel
 from .gl import actors
 
+# for type hints
+from typing import Tuple, Union
+from printrun.stltool import stl
+Build_Dims = Tuple[int, int, int, int, int, int]
+
 
 class StlViewPanel(wxGLPanel):
 
     gcode_lights = False
 
-    def __init__(self, parent, size,
-                 build_dimensions = (200, 200, 100, 0, 0, 0),
-                 circular = False,
-                 antialias_samples = 0,
-                 grid = (1, 10), perspective = False):
+    def __init__(self, parent, size: wx.Size,
+                 build_dimensions: Build_Dims = (200, 200, 100, 0, 0, 0),
+                 circular: bool = False,
+                 antialias_samples: int = 0,
+                 grid: Tuple[int, int] = (1, 10),
+                 perspective: bool = False) -> None:
 
         super().__init__(parent, wx.DefaultPosition, size, 0,
-                         antialias_samples = antialias_samples)
+                         antialias_samples = antialias_samples,
+                         build_dimensions = build_dimensions)
 
         # Set projection of camera
         if perspective:
             self.camera.is_orthographic = False
 
         self.meshmodels = []
-        self.rot = 0
+        self.rot = 0.0
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
         self.initialized = False
         self.parent = parent
 
-        self.build_dimensions = build_dimensions
         self.camera.dist = max(self.build_dimensions[:2])
 
         self.platform = actors.Platform(self.build_dimensions,
@@ -60,7 +66,7 @@ class StlViewPanel(wxGLPanel):
         self.gl_cursor = actors.MouseCursor()
         self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
 
-    def Destroy(self):
+    def Destroy(self) -> None:
         # Clean up vertex lists
         for model in self.meshmodels:
             model.delete()
@@ -69,9 +75,9 @@ class StlViewPanel(wxGLPanel):
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
     # ==========================================================================
-    def OnInitGL(self, *args, call_reshape = True, **kwargs):
+    def OnInitGL(self, *args, call_reshape: bool = True, **kwargs) -> None:
         '''Initialize OpenGL for use in the window.'''
-        super().OnInitGL(*args, call_reshape, **kwargs)
+        super().OnInitGL(call_reshape, *args, **kwargs)
 
         if hasattr(self.parent, "filenames") and self.parent.filenames:
             for filename in self.parent.filenames:
@@ -81,11 +87,11 @@ class StlViewPanel(wxGLPanel):
                 self.parent.loadcb()
             self.parent.filenames = None
 
-    def OnReshape(self):
+    def OnReshape(self) -> None:
         self.camera.view_matrix_initialized = False
         super().OnReshape()
 
-    def forceresize(self):
+    def forceresize(self) -> None:
         #print('forceresize')
         x, y = self.GetClientSize()
         #TODO: probably not needed
@@ -93,11 +99,11 @@ class StlViewPanel(wxGLPanel):
         self.SetClientSize((x, y))
         self.initialized = False
 
-    def handle_wheel_shift(self, event, wheel_delta):
+    def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
         '''This runs when Mousewheel + Shift is used'''
         pass
 
-    def keypress(self, event):
+    def keypress(self, event: wx.KeyEvent) -> None:
         """gets keypress events and moves/rotates active shape"""
         keycode = event.GetKeyCode()
         step, angle = (1, 1) if event.ControlDown() else (5, 18)
@@ -123,8 +129,8 @@ class StlViewPanel(wxGLPanel):
         event.Skip()
         wx.CallAfter(self.Refresh)
 
-    def anim(self, obj):
-        g = 50 * 9.8
+    def anim(self, obj: stl) -> None:
+        g = 50 * 9.81
         v = 20
         dt = 0.05
         basepos = obj.offsets[2]
@@ -144,7 +150,7 @@ class StlViewPanel(wxGLPanel):
             obj.scale[2] *= 1 + 5 * dt
         obj.scale[2] = 1.0
 
-    def create_objects(self):
+    def create_objects(self) -> None:
         '''create opengl objects when opengl is initialized'''
         if not self.platform.initialized:
             self.platform.init()
@@ -153,18 +159,18 @@ class StlViewPanel(wxGLPanel):
         # create_objects is called during OnDraw, remove
         wx.CallAfter(self.Refresh)
 
-    def prepare_model(self, m, scale):
+    def prepare_model(self, m: stl, scale: float) -> None:
         mesh = actors.MeshModel(m)
         self.meshmodels.append(mesh)
         # m.animoffset = 300
         # threading.Thread(target = self.anim, args = (m, )).start()
         wx.CallAfter(self.Refresh)
 
-    def update_object_resize(self):
+    def update_object_resize(self) -> None:
         '''called when the window receives only if opengl is initialized'''
         pass
 
-    def draw_objects(self):
+    def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         # Since GL display lists are not used,
         # we don't need this line anymore.
@@ -178,6 +184,7 @@ class StlViewPanel(wxGLPanel):
         intersection = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                     plane_normal = (0, 0, 1), plane_offset = 0,
                                     local_transform = False)
+
         if intersection is not None:
             self.gl_cursor.position = intersection
             self.gl_cursor.draw()
@@ -202,9 +209,12 @@ class StlViewPanel(wxGLPanel):
     # ==========================================================================
     # Utils
     # ==========================================================================
-    def get_cutting_dist(self, cutting_axis, fixed_dist, local_transform = False):
+    def get_cutting_dist(self, cutting_axis: str, fixed_dist: float,
+                         local_transform: bool = False) -> Union[float, None]:
+
         if fixed_dist is not None:
             return fixed_dist
+
         ref_sizes = {"x": self.platform.width,
                      "y": self.platform.depth,
                      "z": self.platform.height,
@@ -232,33 +242,56 @@ class StlViewPanel(wxGLPanel):
         ref_size = ref_sizes[cutting_axis]
         ref_plane = ref_planes[cutting_axis]
         ref_offset = ref_offsets[cutting_axis]
+
         inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                     plane_normal = ref_plane,
                                     plane_offset = ref_offset,
                                     local_transform = local_transform)
+
         max_size = max((self.platform.width,
                         self.platform.depth,
                         self.platform.height))
         dist = None
+
         if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
             dist = inter[translate_axis[cutting_axis]]
+
         if dist is None or dist < -0.5 * ref_size or dist > 1.5 * ref_size:
             ref_plane = fallback_ref_planes[cutting_axis]
             ref_offset = fallback_ref_offsets[cutting_axis]
+
             inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                         plane_normal = ref_plane,
                                         plane_offset = ref_offset,
                                         local_transform = False)
+
             if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
                 dist = inter[translate_axis[cutting_axis]]
+
         if dist is not None:
             dist = min(1.5 * ref_size, max(-0.5 * ref_size, dist))
+
         return dist
+
+
+class TestFrame(wx.Frame):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.models = {}
+
+        # Mock a cutting plane to test rendering
+        self.cutting = True
+        self.cutting_axis = 'x'
+        self.cutting_direction = 1.0
+        self.cutting_dist = 29.0
+
 
 def main() -> None:
     app = wx.App(redirect = False)
-    size = (600, 450)
-    frame = wx.Frame(None, -1, "Mesh GL Window", size = size)
+    size = wx.Size(600, 450)
+    frame = TestFrame(None, -1, "Mesh GL Window", size = size)
     frame.SetMinClientSize((200, 200))
 
     stl_panel = StlViewPanel(frame, size,
@@ -279,12 +312,6 @@ def main() -> None:
 
     frame.models = {'example': modeldata}
     actors.MeshModel(modeldata)
-
-    # Mock a cutting plane to test rendering
-    frame.cutting = True
-    frame.cutting_axis = 'x'
-    frame.cutting_direction = 1.0
-    frame.cutting_dist = 29.0
 
     frame.Show(True)
     app.MainLoop()

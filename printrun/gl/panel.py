@@ -44,7 +44,15 @@ from pyglet import gl
 from .actors import Focus, vec
 from .camera import Camera
 
-def gcode_dims(g):
+# for type hints
+from typing import TYPE_CHECKING, Any, Tuple, Union, Callable, Optional
+from printrun.stltool import stl
+from printrun.gcoder import GCode
+Build_Dims = Tuple[int, int, int, int, int, int]
+if TYPE_CHECKING:
+    from printrun.gcview import GCObject
+
+def gcode_dims(g: GCode) -> Tuple[Tuple[float , float, float], ...]:
     return ((g.xmin, g.xmax, g.width),
             (g.ymin, g.ymax, g.depth),
             (g.zmin, g.zmax, g.height))
@@ -67,9 +75,11 @@ class wxGLPanel(BASE_CLASS):
     wheelTimestamp = None
     show_fps = True
 
-    def __init__(self, parent, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize, style = 0,
-                 antialias_samples = 0):
+    def __init__(self, parent, pos: wx.Point = wx.DefaultPosition,
+                 size: wx.Size = wx.DefaultSize, style = 0,
+                 antialias_samples: int = 0,
+                 build_dimensions: Build_Dims = (200, 200, 100, 0, 0, 0)
+                ) -> None:
         # Full repaint should not be a performance problem
         #TODO: test on windows, tested in Ubuntu
         style = style | wx.FULL_REPAINT_ON_RESIZE
@@ -88,7 +98,7 @@ class wxGLPanel(BASE_CLASS):
 
         if BASE_CLASS is glcanvas.GLCanvas:
             super().__init__(parent, attribList, wx.ID_ANY, pos, size, style)
-            self.canvas = self
+            self.canvas: glcanvas.GLCanvas = self  # type: ignore
         else:
             super().__init__(parent, wx.ID_ANY, pos, size, style)
             self.canvas = glcanvas.GLCanvas(self, attribList, wx.ID_ANY, pos, size, style)
@@ -110,11 +120,12 @@ class wxGLPanel(BASE_CLASS):
         # ctx_attrs.PlatformDefaults().CoreProfile().MajorVersion(3).MinorVersion(3).EndList()
         ctx_attrs.PlatformDefaults().EndList()
         self.context = glcanvas.GLContext(self.canvas, ctxAttrs = ctx_attrs)
-        self.pygletcontext = None  # initialised with pyglet during glinit
+        # initialised with pyglet during glinit
+        self.pygletcontext: Optional[gl.Context] = None
 
         self.mousepos = (0, 0)
-        self.parent = None
-        self.buid_dimensions = (200, 200, 100, 0, 0, 0)
+        self.parent = parent
+        self.build_dimensions = build_dimensions
 
         self.gl_broken = False
 
@@ -140,34 +151,35 @@ class wxGLPanel(BASE_CLASS):
         if not self.gl_broken:
             self.canvas.SetCurrent(self.context)
 
-    def processFocus(self, ev):
+    def processFocus(self, event: wx.FocusEvent) -> None:
         # print('processFocus')
         self.Refresh(False)
-        ev.Skip()
+        event.Skip()
 
-    def processKillFocus(self, ev):
+    def processKillFocus(self, event: wx.FocusEvent) -> None:
         # print('processKillFocus')
         self.Refresh(False)
-        ev.Skip()
+        event.Skip()
+
     # def processIdle(self, event):
     #     print('processIdle')
     #     event.Skip()
 
-    def Layout(self):
+    def Layout(self) -> Any:
         return super().Layout()
 
-    def Refresh(self, eraseback=True):
+    def Refresh(self, eraseback: bool = True) -> Any:
         # print('Refresh')
         return super().Refresh(eraseback)
 
-    def OnScrollSize(self, event):
+    def OnScrollSize(self, event: wx.SizeEvent) -> None:
         self.canvas.SetSize(event.Size)
 
-    def processEraseBackgroundEvent(self, event):
+    def processEraseBackgroundEvent(self, event: wx.EraseEvent) -> None:
         '''Process the erase background event.'''
         pass  # Do nothing, to avoid flashing on MSWin
 
-    def processSizeEvent(self, event):
+    def processSizeEvent(self, event: wx.SizeEvent) -> None:
         '''Process the resize event.'''
 
         # print('processSizeEvent frozen', self.IsFrozen(), event.Size.x, self.ClientSize.x)
@@ -180,7 +192,7 @@ class wxGLPanel(BASE_CLASS):
             # print('Refresh')
         event.Skip()
 
-    def processPaintEvent(self, event):
+    def processPaintEvent(self, event: wx.PaintEvent) -> None:
         '''Process the drawing event.'''
         # print('wxGLPanel.processPaintEvent', self.ClientSize.Width)
         self.canvas.SetCurrent(self.context)
@@ -189,14 +201,15 @@ class wxGLPanel(BASE_CLASS):
             try:
                 self.OnInitGL()
                 self.DrawCanvas()
-            except pyglet.gl.lib.GLException:
+            except pyglet.gl.GLException:
                 self.gl_broken = True
                 logging.error("OpenGL failed, disabling it:"
                               + "\n" + traceback.format_exc())
         event.Skip()
 
-    def Destroy(self):
+    def Destroy(self) -> None:
         # clean up the pyglet OpenGL context
+        assert self.pygletcontext is not None
         self.pygletcontext.destroy()
         # call the super method
         super().Destroy()
@@ -204,7 +217,7 @@ class wxGLPanel(BASE_CLASS):
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
     # ==========================================================================
-    def OnInitGL(self, call_reshape = True):
+    def OnInitGL(self, call_reshape: bool = True) -> None:
         '''Initialize OpenGL for use in the window.'''
         if self.GLinitialized:
             return
@@ -236,10 +249,10 @@ class wxGLPanel(BASE_CLASS):
 
         # Material specs are set here once and then we only change
         # the material colour by using glColor
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1))
-        glMaterialfv(GL_FRONT, GL_SPECULAR, vec(0.85, 0.85, 0.85, 1))
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1.0))
+        glMaterialfv(GL_FRONT, GL_SPECULAR, vec(0.85, 0.85, 0.85, 1.0))
         glMaterialf(GL_FRONT, GL_SHININESS, 96)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
+        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0.0, 0.0, 0.0, 0.0))
 
         # This enables tracking of the material colour,
         # now it can be changed only by calling glColor
@@ -249,7 +262,7 @@ class wxGLPanel(BASE_CLASS):
         if call_reshape:
             self.OnReshape()
 
-    def OnReshape(self):
+    def OnReshape(self) -> None:
         """Reshape the OpenGL viewport based on the size of the window"""
 
         old_width, old_height = self.width, self.height
@@ -284,10 +297,11 @@ class wxGLPanel(BASE_CLASS):
 
         # Wrap text to the width of the window
         if self.GLinitialized:
+            assert self.pygletcontext is not None
             self.pygletcontext.set_current()
             self.update_object_resize()
 
-    def _setup_lights(self):
+    def _setup_lights(self) -> None:
         '''Sets the lightscene for gcode and stl models'''
         glEnable(GL_LIGHTING)
 
@@ -301,7 +315,7 @@ class wxGLPanel(BASE_CLASS):
         glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0.0, 0.0, 0.0, 1.0))
         glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
         glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1.0))
-        glLightfv(GL_LIGHT1, GL_POSITION, vec(-1.2, -1, 2.4, 0.0))
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(-1.2, -1.0, 2.4, 0.0))
 
         if self.gcode_lights:
             # Normalises the normal vectors after scaling
@@ -312,14 +326,15 @@ class wxGLPanel(BASE_CLASS):
 
         glShadeModel(GL_SMOOTH)
 
-    def resetview(self):
+    def resetview(self) -> None:
         self.canvas.SetCurrent(self.context)
         self.camera.reset_view_matrix(0.9)
         self.camera.reset_rotation()
         wx.CallAfter(self.Refresh)
 
-    def DrawCanvas(self):
+    def DrawCanvas(self) -> None:
         """Draw the window."""
+        assert self.pygletcontext is not None
         self.pygletcontext.set_current()
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -337,16 +352,16 @@ class wxGLPanel(BASE_CLASS):
             self.frametime.update()
             self.fps_counter.SetLabel(self.frametime.get())
 
-    def transform_and_draw(self, actor, draw_function):
+    def transform_and_draw(self, model: Union['GCObject', stl], draw_function: Callable[[], None]) -> None:
         '''Apply transformations to the model and then
         draw it with the given draw function'''
         glPushMatrix()
-        self._create_model_matrix(actor)
+        self._create_model_matrix(model)
         # Draw the models
         draw_function()
         glPopMatrix()
 
-    def _create_model_matrix(self, model):
+    def _create_model_matrix(self, model: Union['GCObject', stl]) -> None:
         glTranslatef(*model.offsets)
         glRotatef(model.rot, 0.0, 0.0, 1.0)
         glTranslatef(*model.centeroffset)
@@ -355,22 +370,23 @@ class wxGLPanel(BASE_CLASS):
     # ==========================================================================
     # To be implemented by a sub class
     # ==========================================================================
-    def create_objects(self):
+    def create_objects(self) -> None:
         '''create opengl objects when opengl is initialized'''
         pass
 
-    def update_object_resize(self):
+    def update_object_resize(self) -> None:
         '''called when the window receives only if opengl is initialized'''
         pass
 
-    def draw_objects(self):
+    def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         pass
 
     # ==========================================================================
     # Mouse and Utilities
     # ==========================================================================
-    def mouse_to_3d(self, x, y, z = 1.0, local_transform = False):
+    def mouse_to_3d(self, x: float, y: float, z = 1.0,
+                    local_transform: bool = False) -> Tuple[float, float, float]:
         x = float(x)
         y = self.height - float(y)
         # The following could work if we were not initially scaling to zoom on
@@ -387,9 +403,11 @@ class wxGLPanel(BASE_CLASS):
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
         gluUnProject(x, y, z, mvmat, pmat, viewport, px, py, pz)
-        return (px.value, py.value, pz.value)
+        return px.value, py.value, pz.value
 
-    def mouse_to_ray(self, x, y, local_transform = False):
+    def mouse_to_ray(self, x: float, y: float,
+                     local_transform: bool = False
+                     ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
         # Ray from z-depth 1.0 to 0.0
         x = float(x)
         y = self.height - float(y)
@@ -408,27 +426,30 @@ class wxGLPanel(BASE_CLASS):
         ray_near = (px.value, py.value, pz.value)
         return ray_near, ray_far
 
-    def mouse_to_plane(self, x, y, plane_normal, plane_offset, local_transform = False):
+    def mouse_to_plane(self, x: float, y: float,
+                       plane_normal: Tuple[float, float, float],
+                       plane_offset: float, local_transform: bool = False
+                       ) -> Union[Tuple[float, float, float], None]:
         # Ray/plane intersection
         ray_near, ray_far = self.mouse_to_ray(x, y, local_transform)
         ray_near = numpy.array(ray_near)
         ray_far = numpy.array(ray_far)
         ray_dir = ray_far - ray_near
         ray_dir = ray_dir / numpy.linalg.norm(ray_dir)
-        plane_normal = numpy.array(plane_normal)
-        q = ray_dir.dot(plane_normal)
+        plane_normal_np = numpy.array(plane_normal)
+        q = ray_dir.dot(plane_normal_np)
         if q == 0:
             return None
-        t = - (ray_near.dot(plane_normal) + plane_offset) / q
+        t = - (ray_near.dot(plane_normal_np) + plane_offset) / q
         if t < 0:
             return None
         return ray_near + t * ray_dir
 
-    def double_click(self, event):
+    def double_click(self, event: wx.MouseEvent) -> None:
         if hasattr(self.parent, "clickcb") and self.parent.clickcb:
             self.parent.clickcb(event)
 
-    def move(self, event):
+    def move(self, event: wx.MouseEvent) -> None:
         """React to mouse actions:
         no mouse: show red mousedrop
         LMB: rotate viewport
@@ -461,17 +482,17 @@ class wxGLPanel(BASE_CLASS):
         wx.CallAfter(self.Refresh)
         event.Skip()
 
-    def zoom_to_center(self, factor):
+    def zoom_to_center(self, factor: float) -> None:
         self.canvas.SetCurrent(self.context)
         x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
         self.camera.zoom(factor, (x, y))
         wx.CallAfter(self.Refresh)
 
-    def handle_wheel_shift(self, event, wheel_delta):
+    def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
         '''This runs when Mousewheel + Shift is used'''
         pass
 
-    def handle_wheel(self, event):
+    def handle_wheel(self, event: wx.MouseEvent) -> None:
         '''This runs when Mousewheel is used'''
         if self.wheelTimestamp == event.Timestamp:
             # filter duplicate event delivery in Ubuntu, Debian issue #1110
@@ -490,7 +511,7 @@ class wxGLPanel(BASE_CLASS):
         else:
             self.camera.zoom(1 / factor, (x, y))
 
-    def wheel(self, event):
+    def wheel(self, event: wx.MouseEvent) -> None:
         """React to mouse wheel actions:
             without shift: zoom viewport
             with shift: run handle_wheel_shift
@@ -498,7 +519,7 @@ class wxGLPanel(BASE_CLASS):
         self.handle_wheel(event)
         wx.CallAfter(self.Refresh)
 
-    def fit(self):
+    def fit(self) -> None:
         '''Zoom to fit models to screen'''
 
         # FIXME: The models in G-Code Plater are different than
@@ -545,7 +566,8 @@ class FrameTime:
         if self.avg_fps < 0:
             self.avg_fps = current_fps
         else:
-            self.avg_fps = round((self.avg_fps * self.SMOOTHING_FACTOR) + (current_fps * (1 - self.SMOOTHING_FACTOR)))
+            self.avg_fps = round((self.avg_fps * self.SMOOTHING_FACTOR) +
+                                 (current_fps * (1 - self.SMOOTHING_FACTOR)))
 
     def get(self) -> str:
         return f" {self.delta_time * 1000:4.2f} ms, {self.avg_fps:3d} FPS"
