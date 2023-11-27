@@ -54,7 +54,7 @@ def axis_to_quat(a: List[float], phi: float) -> List[float]:
     q.append(math.cos(phi / 2.0))
     return q
 
-def build_rotmatrix(q: List[float]) -> Array[GLdouble]:
+def build_rotmatrix(q: List[float]) -> Array:
     m = (GLdouble * 16)()
     m[0] = 1.0 - 2.0 * (q[1] * q[1] + q[2] * q[2])
     m[1] = 2.0 * (q[0] * q[1] - q[2] * q[3])

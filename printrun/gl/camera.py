@@ -119,7 +119,7 @@ class Camera():
 
     def get_view_matrix(self, local_transform: bool,
                         build_dimensions: Build_Dims
-                        ) -> Array[GLdouble]:
+                        ) -> Array:
         mvmat = (GLdouble * 16)()
         if local_transform:
             glPushMatrix()

@@ -114,6 +114,8 @@ class wxGLPanel(BASE_CLASS):
             font = wx.Font(16, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
                            encoding = wx.FONTENCODING_DEFAULT)
             self.fps_counter.SetFont(font)
+            self.fps_counter.SetForegroundColour(wx.WHITE)
+            self.fps_counter.SetBackgroundColour(wx.Colour('DIM GREY'))
 
         ctx_attrs = glcanvas.GLContextAttrs()
         # FIXME: Pronterface supports only OpenGL 2.1 and compability mode at the moment
@@ -570,4 +572,4 @@ class FrameTime:
                                  (current_fps * (1 - self.SMOOTHING_FACTOR)))
 
     def get(self) -> str:
-        return f" {self.delta_time * 1000:4.2f} ms, {self.avg_fps:3d} FPS"
+        return f" {self.delta_time * 1000:4.2f} ms, {self.avg_fps:3d} FPS "

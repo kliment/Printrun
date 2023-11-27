@@ -48,7 +48,7 @@ from printrun.stltool import stl
 from printrun.gcoder import GCode
 Build_Dims = Tuple[int, int, int, int, int, int]
 
-def vec(*args: float) -> Array[GLfloat]:
+def vec(*args: float) -> Array:
     '''Returns an array of GLfloat values'''
     return (GLfloat * len(args))(*args)
 
