@@ -32,7 +32,7 @@ jobs:
       run: |
         python setup.py bdist_wheel
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheel_${{ matrix.os }}_${{ matrix.architecture }}_${{ matrix.python-version }}
         path: dist/*.whl
