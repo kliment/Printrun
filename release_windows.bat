@@ -35,13 +35,12 @@ rem **     https://wiki.python.org/moin/WindowsCompilers                        
 rem **  3. Check for latest repository updates at:                                    **
 rem **     http://github.com/kliment/Printrun.git                                     **
 rem **                                                                                **
-rem **     Follow the instructions at section 'Collect all data for build' below      **
 rem **  																			  **
 rem **  Remark: Plater stand alone application is experimental only. GUI code need an **
 rem **          update for closing plater window and running processes. For now you   **
 rem **          need to terminate the process manually via Task manager.			  **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2023-11-23, Status: working                               **
+rem **  Author: DivingDuck, 2023-12-15, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -68,16 +67,16 @@ if exist v3 (
    rem for your Python version of choice and add 'rem' for all other versions.
    rem Attention: 
    rem Minimum version for wxPython is >= 4.2.1. With this version
-   rem Python x64 and x86 versions are supported.
+   rem Python x64 (version 3.7 up to 3.11) and 
+   rem Python x86 (version 3.9 up to 3.11) is supported.
 
    rem py -3.7 -m venv v3
-   rem py -3.8-32 -m venv v3
    rem py -3.8 -m venv v3
    rem py -3.9-32 -m venv v3
    rem py -3.9 -m venv v3
    rem py -3.10-32 -m venv v3
-   rem py -3.10 -m venv v3
-   py -3.11-32 -m venv v3
+   py -3.10 -m venv v3
+   rem py -3.11-32 -m venv v3
    rem py -3.11 -m venv v3
    
    echo *********************************************
@@ -122,6 +121,14 @@ echo *************************************************************************
 rem # 2022-11-01
 pip uninstall pyglet -y
 pip install pyglet==1.5.27
+
+echo **************************************************************************
+echo ****** pillow workaround, needs to be below 10.0 (isn't compatible) ******
+echo **************************************************************************
+rem # 2023-12-15
+rem building wxPython 4.2.1 for x86 needs pillow <10.0
+pip uninstall pillow -y
+pip install pillow==9.5.0
 
 echo ******************************************************************
 echo ****** Compile G-Code parser gcoder_line.cp??-win_amd??.pyd ******
