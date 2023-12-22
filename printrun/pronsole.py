@@ -1,4 +1,4 @@
-# This file is part of the Printrun suite.
+# file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -932,6 +932,16 @@ class pronsole(cmd.Cmd):
     #  File loading handling
     #  --------------------------------------------------------------
 
+    def do_line(self, l=''):
+        lines = self.p.current_line()
+        for line in lines:
+            self.log("%04d: %s" % (line[0], line[2]))
+
+    def do_skip(self, l):
+        skip = int(l)
+        self.p.queueindex = self.p.queueindex + skip
+
+
     def do_load(self, filename):
         self._do_load(filename)
 
@@ -1094,7 +1104,16 @@ class pronsole(cmd.Cmd):
         self.log(_("Printing %s") % self.filename)
         self.log(_("You can monitor the print with the monitor command."))
         self.sdprinting = False
-        self.p.startprint(self.fgcode)
+        really = not (l and l == 'pause')
+        self.p.startprint(self.fgcode, really_start=really)
+        if not really:
+            self.paused = True
+
+    def do_next(self, l):
+        if self.paused:
+            self.p.printing = True
+            self.p._sendnext()
+            self.p.printing = False
 
     def do_pause(self, l):
         if self.sdprinting:
@@ -1121,7 +1140,8 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M24")
             return
         else:
-            self.p.resume()
+            do_restore = not l or l != 'direct'
+            self.p.resume(do_restore)
 
     def help_resume(self):
         self.log(_("Resumes a paused print."))

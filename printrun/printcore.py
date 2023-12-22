@@ -155,7 +155,7 @@ class printcore():
         self.startcb = None  # impl ()
         self.endcb = None  # impl ()
         self.onlinecb = None  # impl ()
-        self.loud = False  # emit sent and received lines to terminal
+        self.loud = True  # emit sent and received lines to terminal
         self.tcp_streaming_mode = False
         self.greetings = ['start', 'Grbl ']
         self.wait = 0  # default wait period for send(), send_now()
@@ -536,7 +536,7 @@ class printcore():
     def _checksum(self, command):
         return reduce(lambda x, y: x ^ y, map(ord, command))
 
-    def startprint(self, gcode, startindex = 0):
+    def startprint(self, gcode, startindex = 0, really_start=True):
         """Start a print.
 
         The `mainqueue` is populated and then commands are gradually sent to
@@ -575,10 +575,14 @@ class printcore():
         self._send("M110 N-1")
 
         resuming = (startindex != 0)
-        self.print_thread = threading.Thread(target = self._print,
-                                             name = 'print thread',
-                                             kwargs = {"resuming": resuming})
-        self.print_thread.start()
+
+        if really_start:
+            self.print_thread = threading.Thread(target = self._print,
+                                                 name = 'print thread',
+                                                 kwargs = {"resuming": resuming})
+            self.print_thread.start()
+        else:
+            self.pause()
         return True
 
     def cancelprint(self):
@@ -600,6 +604,21 @@ class printcore():
         except:
             pass
 
+    def current_line(self, context=5):
+        if self.mainqueue and self.mainqueue.has_index(self.queueindex):
+            lines = []
+            index = self.queueindex - context
+            while index < self.queueindex + context:
+                (layer, line) = self.mainqueue.idxs(index)
+                gline = self.mainqueue.all_layers[layer][line]
+
+                prefix = "> " if index == self.queueindex else "  "
+                suffix = " <" if index == self.queueindex else ""
+
+                lines.append((index, layer, prefix + gline.raw + suffix))
+                index = index + 1
+            return lines
+
     def pause(self):
         """Pauses an ongoing print.
 
@@ -616,12 +635,13 @@ class printcore():
         self.paused = True
         self.printing = False
 
-        # ';@pause' in the gcode file calls pause from the print thread
-        if not threading.current_thread() is self.print_thread:
-            try:
-                self.print_thread.join()
-            except:
-                self.logError(traceback.format_exc())
+        if self.print_thread:
+            # ';@pause' in the gcode file calls pause from the print thread
+            if not threading.current_thread() is self.print_thread:
+                try:
+                    self.print_thread.join()
+                except:
+                    self.logError(traceback.format_exc())
 
         self.print_thread = None
 
@@ -634,7 +654,7 @@ class printcore():
         self.pauseRelative = self.analyzer.relative
         self.pauseRelativeE = self.analyzer.relative_e
 
-    def resume(self):
+    def resume(self, restore=True):
         """Resumes a paused print.
 
         `printcore` will first attempt to set the position and conditions it
@@ -649,22 +669,23 @@ class printcore():
         """
         if not self.paused: return False
         # restores the status
-        self.send_now("G90")  # go to absolute coordinates
+        if restore:
+            self.send_now("G90")  # go to absolute coordinates
 
-        xyFeed = '' if self.xy_feedrate is None else ' F' + str(self.xy_feedrate)
-        zFeed = '' if self.z_feedrate is None else ' F' + str(self.z_feedrate)
+            xyFeed = '' if self.xy_feedrate is None else ' F' + str(self.xy_feedrate)
+            zFeed = '' if self.z_feedrate is None else ' F' + str(self.z_feedrate)
 
-        self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY, xyFeed))
-        self.send_now("G1 Z" + str(self.pauseZ) + zFeed)
-        self.send_now("G92 E" + str(self.pauseE))
+            self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY, xyFeed))
+            self.send_now("G1 Z" + str(self.pauseZ) + zFeed)
+            self.send_now("G92 E" + str(self.pauseE))
 
-        # go back to relative if needed
-        if self.pauseRelative:
-            self.send_now("G91")
-        if self.pauseRelativeE:
-            self.send_now('M83')
-        # reset old feed rate
-        self.send_now("G1 F" + str(self.pauseF))
+            # go back to relative if needed
+            if self.pauseRelative:
+                self.send_now("G91")
+            if self.pauseRelativeE:
+                self.send_now('M83')
+            # reset old feed rate
+            self.send_now("G1 F" + str(self.pauseF))
 
         self.paused = False
         self.printing = True
