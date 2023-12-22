@@ -38,7 +38,7 @@ from .utils import install_locale, run_command, get_command_output, \
     get_home_pos, parse_build_dimensions, parse_temperature_report, \
     setup_logging
 install_locale('pronterface')
-from .settings import Settings, BuildDimensionsSetting
+from .settings import Settings, BuildDimensionsSetting, BooleanSetting
 from .power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
 from .rpc import ProntRPC
@@ -180,6 +180,7 @@ class pronsole(cmd.Cmd):
         self.processing_args = False
         self.settings = Settings(self)
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build Dimensions:"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"), self.update_build_dimensions)
+        self.settings._add(BooleanSetting("stepping_mode", False, "GCode Stepping Mode: When true, will go into paused mode when starting and disable restore on resume"))
         self.settings._port_list = self.scanserial
         self.update_build_dimensions(None, self.settings.build_dimensions)
         self.update_tcp_streaming_mode(None, self.settings.tcp_streaming_mode)
@@ -1104,7 +1105,7 @@ class pronsole(cmd.Cmd):
         self.log(_("Printing %s") % self.filename)
         self.log(_("You can monitor the print with the monitor command."))
         self.sdprinting = False
-        really = not (l and l == 'pause')
+        really = not (l and l == 'pause') and not self.settings.stepping_mode
         self.p.startprint(self.fgcode, really_start=really)
         if not really:
             self.paused = True
@@ -1140,7 +1141,7 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M24")
             return
         else:
-            do_restore = not l or l != 'direct'
+            do_restore = not l or l != 'direct' or self.settings.stepping_mode
             self.p.resume(do_restore)
 
     def help_resume(self):
