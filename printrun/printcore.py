@@ -171,7 +171,7 @@ class printcore():
         # don't support it.  Limit it to platforms that actually require it
         # here to avoid doing redundant work elsewhere and potentially breaking
         # things.
-        self.needs_parity_workaround = platform.system() == "linux" and os.path.exists("/etc/debian")
+        self.needs_parity_workaround = platform.system() == "Linux"
         for handler in self.event_handler:
             try: handler.on_init()
             except: logging.error(traceback.format_exc())
