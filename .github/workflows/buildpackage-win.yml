@@ -23,7 +23,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         architecture: ${{ matrix.architecture }}
         python-version: ${{ matrix.python-version }}
@@ -76,7 +76,7 @@ jobs:
         "EXE_NAME=printrun-test" >> $env:GITHUB_ENV
 
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.EXE_NAME }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: |

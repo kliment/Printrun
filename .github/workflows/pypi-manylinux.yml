@@ -14,7 +14,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.x
     - name: Install dependencies
@@ -26,7 +26,7 @@ jobs:
         python-versions: 'cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310'
         build-requirements: 'cython'
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: manylinux_wheels
         path: dist/*-manylinux*.whl
