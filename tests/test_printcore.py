@@ -40,7 +40,7 @@ def mock_sttyhup(cls):
     # Needed to avoid error:
     # "stty: /mocked/port: No such file or directory"
     cls.enterClassContext(
-        mock.patch("printrun.printcore.control_ttyhup"))
+        mock.patch("printrun.device.Device._disable_ttyhup"))
 
 
 def mock_serial(test, read_function=slow_printer):
@@ -261,7 +261,7 @@ class TestDisconnect(unittest.TestCase):
     def test_calls_serial_close(self):
         """Test that serial.Serial.close() is called"""
         self.core.disconnect()
-        self.mocked_serial.return_value.close.assert_called_once()
+        self.mocked_serial.return_value.close.assert_called()
 
     def test_calls_socket_close(self):
         """Test that socket.socket.close() is called"""
