@@ -20,22 +20,15 @@ if sys.version_info.major < 3:
     print("You need to run this on Python 3")
     sys.exit(-1)
 
-import serial
-from select import error as SelectError
 import threading
 from queue import Queue, Empty as QueueEmpty
 import time
-import platform
-import os
 import logging
 import traceback
-import errno
-import socket
-import re
-import selectors
 from functools import wraps, reduce
 from collections import deque
 from printrun import gcoder
+from printrun import device
 from .utils import set_utf8_locale, install_locale, decode_utf8
 try:
     set_utf8_locale()
@@ -52,19 +45,6 @@ def locked(f):
     inner.lock = threading.Lock()
     return inner
 
-def control_ttyhup(port, disable_hup):
-    """Controls the HUPCL"""
-    if platform.system() == "Linux":
-        if disable_hup:
-            os.system("stty -F %s -hup" % port)
-        else:
-            os.system("stty -F %s hup" % port)
-
-def enable_hup(port):
-    control_ttyhup(port, False)
-
-def disable_hup(port):
-    control_ttyhup(port, True)
 
 PR_EOF = None  #printrun's marker for EOF
 PR_AGAIN = b'' #printrun's marker for timeout/no data
@@ -167,11 +147,6 @@ class printcore():
         self.readline_buf = []
         self.selector = None
         self.event_handler = PRINTCORE_HANDLER
-        # Not all platforms need to do this parity workaround, and some drivers
-        # don't support it.  Limit it to platforms that actually require it
-        # here to avoid doing redundant work elsewhere and potentially breaking
-        # things.
-        self.needs_parity_workaround = platform.system() == "linux" and os.path.exists("/etc/debian")
         for handler in self.event_handler:
             try: handler.on_init()
             except: logging.error(traceback.format_exc())
@@ -213,19 +188,9 @@ class printcore():
                 self.print_thread.join()
             self._stop_sender()
             try:
-                if self.selector is not None:
-                    self.selector.unregister(self.printer_tcp)
-                    self.selector.close()
-                    self.selector = None
-                if self.printer_tcp is not None:
-                    self.printer_tcp.close()
-                    self.printer_tcp = None
-                self.printer.close()
-            except socket.error:
-                logging.error(traceback.format_exc())
-                pass
-            except OSError:
-                logging.error(traceback.format_exc())
+                self.printer.disconnect()
+            except device.DeviceError:
+                self.logError(traceback.format_exc())
                 pass
         for handler in self.event_handler:
             try: handler.on_disconnect()
@@ -247,76 +212,15 @@ class printcore():
         if dtr is not None:
             self.dtr = dtr
         if self.port is not None and self.baud is not None:
-            # Connect to socket if "port" is an IP, device if not
-            host_regexp = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
-            is_serial = True
-            if ":" in self.port:
-                bits = self.port.split(":")
-                if len(bits) == 2:
-                    hostname = bits[0]
-                    try:
-                        port_number = int(bits[1])
-                        if host_regexp.match(hostname) and 1 <= port_number <= 65535:
-                            is_serial = False
-                    except:
-                        pass
             self.writefailures = 0
-            if not is_serial:
-                self.printer_tcp = socket.socket(socket.AF_INET,
-                                                 socket.SOCK_STREAM)
-                self.printer_tcp.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                self.timeout = 0.25
-                self.printer_tcp.settimeout(1.0)
-                try:
-                    self.printer_tcp.connect((hostname, port_number))
-                    #a single read timeout raises OSError for all later reads
-                    #probably since python 3.5
-                    #use non blocking instead
-                    self.printer_tcp.settimeout(0)
-                    self.printer = self.printer_tcp.makefile('rwb', buffering=0)
-                    self.selector = selectors.DefaultSelector()
-                    self.selector.register(self.printer_tcp, selectors.EVENT_READ)
-                except socket.error as e:
-                    if(e.strerror is None): e.strerror=""
-                    self.logError(_("Could not connect to %s:%s:") % (hostname, port_number) +
-                                  "\n" + _("Socket error %s:") % e.errno +
-                                  "\n" + e.strerror)
-                    self.printer = None
-                    self.printer_tcp.close()
-                    self.printer_tcp = None
-                    return
-            else:
-                disable_hup(self.port)
-                self.printer_tcp = None
-                try:
-                    if self.needs_parity_workaround:
-                        self.printer = serial.Serial(port = self.port,
-                                              baudrate = self.baud,
-                                              timeout = 0.25,
-                                              parity = serial.PARITY_ODD)
-                        self.printer.close()
-                        self.printer.parity = serial.PARITY_NONE
-                    else:
-                        self.printer = serial.Serial(baudrate = self.baud,
-                                              timeout = 0.25,
-                                              parity = serial.PARITY_NONE)
-                        self.printer.port = self.port
-                    try:  #this appears not to work on many platforms, so we're going to call it but not care if it fails
-                        self.printer.dtr = dtr
-                    except:
-                        #self.logError(_("Could not set DTR on this platform")) #not sure whether to output an error message
-                        pass
-                    self.printer.open()
-                except serial.SerialException as e:
-                    self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
-                                  "\n" + _("Serial error: %s") % e)
-                    self.printer = None
-                    return
-                except IOError as e:
-                    self.logError(_("Could not connect to %s at baudrate %s:") % (self.port, self.baud) +
-                                  "\n" + _("IO error: %s") % e)
-                    self.printer = None
-                    return
+            self.printer = device.Device()
+            self.printer.force_dtr = self.dtr
+            try:
+                self.printer.connect(self.port, self.baud)
+            except device.DeviceError as e:
+                self.logError("Connection error: %s" % e)
+                self.printer = None
+                return
             for handler in self.event_handler:
                 try: handler.on_connect()
                 except: logging.error(traceback.format_exc())
@@ -335,57 +239,15 @@ class printcore():
         hardware DTR flow control. It has no effect on socket connections.
 
         """
-        if self.printer and not self.printer_tcp:
-            self.printer.dtr = 1
-            time.sleep(0.2)
-            self.printer.dtr = 0
-
-    def _readline_buf(self):
-        "Try to readline from buffer"
-        if len(self.readline_buf):
-            chunk = self.readline_buf[-1]
-            eol = chunk.find(b'\n')
-            if eol >= 0:
-                line = b''.join(self.readline_buf[:-1]) + chunk[:(eol+1)]
-                self.readline_buf = []
-                if eol + 1 < len(chunk):
-                    self.readline_buf.append(chunk[(eol+1):])
-                return line
-        return PR_AGAIN
-
-    def _readline_nb(self):
-        "Non blocking readline. Socket based files do not support non blocking or timeouting readline"
-        if self.printer_tcp:
-            line = self._readline_buf()
-            if line:
-                return line
-            chunk_size = 256
-            while True:
-                chunk = self.printer.read(chunk_size)
-                if chunk is SYS_AGAIN and self.selector.select(self.timeout):
-                    chunk = self.printer.read(chunk_size)
-                #print('_readline_nb chunk', chunk, type(chunk))
-                if chunk:
-                    self.readline_buf.append(chunk)
-                    line = self._readline_buf()
-                    if line:
-                        return line
-                elif chunk is SYS_AGAIN:
-                    return PR_AGAIN
-                else:
-                    #chunk == b'' means EOF
-                    line = b''.join(self.readline_buf)
-                    self.readline_buf = []
-                    self.stop_read_thread = True
-                    return line if line else PR_EOF
-        else: # serial port
-            return self.printer.readline()
+        self.printer.reset()
 
     def _readline(self):
         try:
-            line_bytes = self._readline_nb()
-            if line_bytes is PR_EOF:
-                self.logError(_("Can't read from printer (disconnected?). line_bytes is None"))
+            line_bytes = self.printer.readline()
+            if line_bytes is device.READ_EOF:
+                self.logError("Can't read from printer (disconnected?)." +
+                              " line_bytes is None")
+                self.stop_read_thread = True
                 return PR_EOF
             line = line_bytes.decode('utf-8')
 
@@ -400,38 +262,20 @@ class printcore():
                 if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except UnicodeDecodeError:
-            self.logError(_("Got rubbish reply from %s at baudrate %s:") % (self.port, self.baud) +
-                              "\n" + _("Maybe a bad baudrate?"))
+            msg = ("Got rubbish reply from {0} at baudrate {1}:\n"
+                   "Maybe a bad baudrate?").format(self.port, self.baud)
+            self.logError(msg)
             return None
-        except serial.SerialException as e:
-            self.logError(_("Can't read from printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
+        except device.DeviceError as e:
+            msg = ("Can't read from printer (disconnected?) {0}"
+                   ).format(decode_utf8(str(e)))
+            self.logError(msg)
             return None
-        except socket.error as e:
-            self.logError(_("Can't read from printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
-            return None
-        except (OSError, SelectError) as e:
-            # OSError and SelectError are the same thing since python 3.3
-            if self.printer_tcp:
-                # SelectError branch, assume select is used only for socket printers
-                if len(e.args) > 1 and 'Bad file descriptor' in e.args[1]:
-                    self.logError(_("Can't read from printer (disconnected?) (SelectError {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
-                    return None
-                else:
-                    self.logError(_("SelectError ({0}): {1}").format(e.errno, decode_utf8(e.strerror)))
-                    raise
-            else:
-                # OSError branch, serial printers
-                if e.errno == errno.EAGAIN:  # Not a real error, no data was available
-                    return ""
-                self.logError(_("Can't read from printer (disconnected?) (OS Error {0}): {1}").format(e.errno, e.strerror))
-                return None
 
     def _listen_can_continue(self):
-        if self.printer_tcp:
-            return not self.stop_read_thread and self.printer
         return (not self.stop_read_thread
                 and self.printer
-                and self.printer.is_open)
+                and self.printer.is_connected)
 
     def _listen_until_online(self):
         while not self.online and self._listen_can_continue():
@@ -762,7 +606,7 @@ class printcore():
             time.sleep(0.001)
         # Only wait for oks when using serial connections or when not using tcp
         # in streaming mode
-        if not self.printer_tcp or not self.tcp_streaming_mode:
+        if not self.printer.has_flow_control or not self.tcp_streaming_mode:
             self.clear = False
         if not (self.printing and self.printer and self.online):
             self.clear = True
@@ -835,7 +679,7 @@ class printcore():
 
     def _send(self, command, lineno = 0, calcchecksum = False):
         # Only add checksums if over serial (tcp does the flow control itself)
-        if calcchecksum and not self.printer_tcp:
+        if calcchecksum and not self.printer.has_flow_control:
             prefix = "N" + str(lineno) + " " + command
             command = prefix + "*" + str(self._checksum(prefix))
             if "M110" not in command:
@@ -860,23 +704,8 @@ class printcore():
                 except: self.logError(traceback.format_exc())
             try:
                 self.printer.write((command + "\n").encode('ascii'))
-                if self.printer_tcp:
-                    try:
-                        self.printer.flush()
-                    except socket.timeout:
-                        pass
                 self.writefailures = 0
-            except socket.error as e:
-                if e.errno is None:
-                    self.logError(_("Can't write to printer (disconnected ?):") +
-                                  "\n" + traceback.format_exc())
-                else:
-                    self.logError(_("Can't write to printer (disconnected?) (Socket error {0}): {1}").format(e.errno, decode_utf8(e.strerror)))
-                self.writefailures += 1
-            except serial.SerialException as e:
-                self.logError(_("Can't write to printer (disconnected?) (SerialException): {0}").format(decode_utf8(str(e))))
-                self.writefailures += 1
-            except RuntimeError:
-                self.logError("Socket connection broken, disconnected.\n" +
-                              traceback.format_exc())
+            except device.DeviceError as e:
+                self.logError("Can't write to printer (disconnected?)"
+                              "{0}".format(e))
                 self.writefailures += 1
