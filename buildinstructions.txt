@@ -9,7 +9,6 @@ python3 -m venv v3
 . ./v3/bin/activate
 pip install --upgrade pip
 pip install --upgrade setuptools
-pip install cffi
 pip install -r requirements.txt
 pip install cython
 python setup.py build_ext --inplace
@@ -38,17 +37,21 @@ setup on windows:
 (install python 3.10)
 (install python extension compile environment, see https://wiki.python.org/moin/WindowsCompilers )
 (install git)
+(for further informations pls. see script file release_windows.bat where we implemented 
+an automated build for windows)
 git clone http://github.com/kliment/Printrun.git
 cd Printrun
-git submodule update --init --recursive
 git pull
 \path\to\python3\python -m venv v3
 v3\Scripts\activate
 pip install --upgrade pip
 pip install --upgrade setuptools
-pip install cffi
-pip install -r requirements.txt
+pip install wheel
 pip install cython
+pip install -r requirements.txt
+pip install simplejson
+pip install pypiwin32
+pip install polygon3    * please see remark
 python setup.py build_ext --inplace
 
 for running:
@@ -58,3 +61,8 @@ for packaging:
 pip install pyinstaller
 pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
 pyinstaller --clean pronterface.spec -y
+
+Remark: 
+The library polygon is free for non commercial use. You can build Pronterface without 
+this library but then it will run slower.
+Please find further details here: https://pypi.org/project/Polygon3/
