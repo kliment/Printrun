@@ -590,8 +590,8 @@ class pronsole(cmd.Cmd):
     def do_set(self, argl):
         args = argl.split(None, 1)
         if len(args) < 1:
-            for k in [kk for kk in dir(self.settings) if not kk.startswith("_")]:
-                self.log("%s = %s" % (k, str(getattr(self.settings, k))))
+            for k in self.settings._all_settings():
+                self.log("%s = %s" % (k.name, k.value))
             return
         if len(args) < 2:
             # Try getting the default value of the setting to check whether it
@@ -935,8 +935,9 @@ class pronsole(cmd.Cmd):
 
     def do_line(self, l=''):
         lines = self.p.current_line()
-        for line in lines:
-            self.log("%04d: %s" % (line[0], line[2]))
+        if lines:
+            for line in lines:
+                self.log("%04d: %s" % (line[0], line[2]))
 
     def do_skip(self, l):
         skip = int(l)
@@ -1141,7 +1142,7 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M24")
             return
         else:
-            do_restore = not l or l != 'direct' or self.settings.stepping_mode
+            do_restore = (not l or l != 'direct') and not self.settings.stepping_mode
             self.p.resume(do_restore)
 
     def help_resume(self):
@@ -1530,7 +1531,7 @@ class pronsole(cmd.Cmd):
                 elif self.sdprinting:
                     preface = _("SD print progress: ")
                     progress = self.percentdone
-                prev_msg = preface + "%.1f%%" % progress
+                prev_msg = preface + "%3.1f%% - %d" % (progress, self.p.queueindex)
                 if self.silent is False:
                     sys.stdout.write("\r" + prev_msg.ljust(prev_msg_len))
                     sys.stdout.flush()
