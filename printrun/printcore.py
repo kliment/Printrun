@@ -125,6 +125,9 @@ class printcore():
         self.log = deque(maxlen = 10000)
         self.sent = []
         self.writefailures = 0
+        self.callback = Callback()
+        # TODO[v3]: *cb attributes kept for backwards compatibility. To be
+        #           removed in future releases
         self.tempcb = None  # impl (wholeline)
         self.recvcb = None  # impl (wholeline)
         self.sendcb = None  # impl (wholeline)
@@ -709,3 +712,208 @@ class printcore():
                 self.logError("Can't write to printer (disconnected?)"
                               " {0}".format(e))
                 self.writefailures += 1
+
+    def _callback(self, name, *args):
+        # Parameters:
+        #   name: string with relevant callback or event name
+        #   *args: Any arguments after `name` are passed directly to
+        #          the callback or event function
+
+        # Call events from each event-handler
+        for handler in self.event_handler:
+            try: event = getattr(handler, f"on_{name}")
+            except AttributeError: continue
+            try: event(*args)
+            except Exception:
+                logging.error(f"'on_{name}' handler failed with:\n"
+                              f"{traceback.format_exc()}")
+
+        # Invoke the relevant old callback function for backwards
+        # compatibility
+        # TODO[v3]: Remove this code
+        try: callback = getattr(self, f"{name}cb")
+        except AttributeError: pass
+        else:
+            if callback is not None:
+                logging.warning(f"Function printcore.{name}cb is deprecated.")
+                try: return callback(*args)
+                except Exception: logging.error(traceback.format_exc())
+
+        # Invoke the relevant callback function
+        try: callback = getattr(self.callback, f"{name}")
+        except AttributeError: return None
+        try: return callback(*args)
+        except Exception:
+            logging.error(f"'{name}' callback failed with:\n"
+                          f"{traceback.format_exc()}")
+
+
+class Callback():
+    """Printcore callback functions.
+
+    The relevant callback method is invoked at the relevant process stage.
+
+    """
+
+    def end(self):
+        """Called when printing stops.
+
+        Called when an ongoing print is paused, canceled or finished.
+        See `printrun.printcore.printcore.pause`.
+        See `printrun.printcore.printcore.cancel`.
+
+        """
+        pass
+
+    def error(self, error):
+        """Called whenever an error occurs.
+
+        Parameters:
+        -----------
+        error : str
+            String containing the error message.
+
+        """
+        logging.error(error)
+
+    def hostcommand(self, command):
+        """Called on host-commands.
+
+        Host-commands are those starting with ';@', e.g. ';@pause'. When a
+        host-command is detected, this function is invoked and this line is
+        omitted and not sent to the printer.
+
+        Only ;@pause command is implemented by default. If overwriting this
+        function, remember to rewrite the pause logic if you wish to keep that
+        functionality.
+
+        This function is only called on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters:
+        -----------
+        command : str
+            Verbatim command string.
+
+        """
+        command = command.lstrip()
+        if command.startswith(";@pause"):
+            self.pause()
+
+    def layerchange(self, layer):
+        """Called on detected layer changes during a print.
+
+        This event is only triggered on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters
+        ----------
+        layer : int
+            Index of the new layer within printcore's `mainqueue`.
+            See `printrun.printcore.printcore.mainqueue`.
+
+        """
+        pass
+
+    def online(self):
+        """Called when printer gets online."""
+        pass
+
+    def preprintsend(self, gline, next_gline):
+        """Called before sending each command of a print.
+
+        This function is called right before a line is sent and the line
+        returned by this function is what it is actually sent to the
+        printer. Therefore this function allows modifying/processing lines
+        before they are sent to the printer.
+
+        This function is only called on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters
+        ----------
+        gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code to
+            be sent.
+        next_gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code to
+            be sent after the current `gline`.
+
+        Returns
+        -------
+        Line
+            The `printrun.gcoder.Line` object containing the line of G-code
+            that will be actually sent to the printer. If None is returned
+            then this line won't be sent to the printer.
+
+        """
+        return gline
+
+    def printsend(self, gline):
+        """Called on each line sent during a print.
+
+        This event is only triggered on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters
+        ----------
+        gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code
+            sent.
+
+        """
+        pass
+
+    def recv(self, line):
+        """Called on every line read from the printer.
+
+        Parameters:
+        -----------
+        line : str
+            String with data read from the printer.
+
+        """
+        pass
+
+    def send(self, command, gline):
+        """Called on every command sent to the printer.
+
+        Parameters:
+        -----------
+        line : str
+            Command string sent to the printer.
+        gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code
+            sent to the printer.
+
+        """
+        pass
+
+    def start(self, resume):
+        """Called when printing commences.
+
+        Called when starting a new print or resuming a paused one.
+        See `printrun.printcore.printcore.startprint`.
+        See `printrun.printcore.printcore.resume`.
+
+        Parameters
+        ----------
+        resume : bool
+            True if the print is resumed.
+
+        """
+        pass
+
+    def temp(self, line):
+        """Called on temperature related printer replies.
+
+        Called when an answer from the printer contains information related to
+        temperature such as temperature readings or status indications.
+
+        Parameters:
+        -----------
+        line : str
+            String with data read from the printer.
+
+        """
+        pass
