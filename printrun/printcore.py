@@ -75,6 +75,9 @@ class printcore():
         A `printrun.gcoder.GCode` object containing all the G-code commands
         sent to the printer.
     baud
+    callback : Callback
+        Object containing callback functions run at certain process stages.
+        See `printrun.printcore.Callback`.
     dtr
     event_handler : list of PrinterEventHandler
         Collection of event-handling objects. The relevant method of each
@@ -150,9 +153,7 @@ class printcore():
         self.readline_buf = []
         self.selector = None
         self.event_handler = PRINTCORE_HANDLER
-        for handler in self.event_handler:
-            try: handler.on_init()
-            except: logging.error(traceback.format_exc())
+        self._callback('init')
         if port is not None and baud is not None:
             self.connect(port, baud)
         self.xy_feedrate = None
@@ -195,9 +196,7 @@ class printcore():
             except device.DeviceError:
                 self.logError(traceback.format_exc())
                 pass
-        for handler in self.event_handler:
-            try: handler.on_disconnect()
-            except: logging.error(traceback.format_exc())
+        self._callback('disconnect')
         self.printer = None
         self.online = False
         self.printing = False
@@ -224,9 +223,7 @@ class printcore():
                 self.logError("Connection error: %s" % e)
                 self.printer = None
                 return
-            for handler in self.event_handler:
-                try: handler.on_connect()
-                except: logging.error(traceback.format_exc())
+            self._callback('connect')
             self.stop_read_thread = False
             self.read_thread = threading.Thread(target = self._listen,
                                                 name='read thread')
@@ -256,12 +253,7 @@ class printcore():
 
             if len(line) > 1:
                 self.log.append(line)
-                for handler in self.event_handler:
-                    try: handler.on_recv(line)
-                    except: logging.error(traceback.format_exc())
-                if self.recvcb:
-                    try: self.recvcb(line)
-                    except: self.logError(traceback.format_exc())
+                self._callback('recv', line)
                 if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except UnicodeDecodeError:
@@ -306,12 +298,7 @@ class printcore():
                 if line.startswith(tuple(self.greetings)) \
                    or line.startswith('ok') or "T:" in line:
                     self.online = True
-                    for handler in self.event_handler:
-                        try: handler.on_online()
-                        except: logging.error(traceback.format_exc())
-                    if self.onlinecb:
-                        try: self.onlinecb()
-                        except: self.logError(traceback.format_exc())
+                    self._callback('online')
                     return
 
     def _listen(self):
@@ -330,13 +317,7 @@ class printcore():
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
             if line.startswith('ok') and "T:" in line:
-                for handler in self.event_handler:
-                    try: handler.on_temp(line)
-                    except: logging.error(traceback.format_exc())
-                if self.tempcb:
-                    # callback for temp, status, whatever
-                    try: self.tempcb(line)
-                    except: self.logError(traceback.format_exc())
+                self._callback('temp', line)
             elif line.startswith('Error'):
                 self.logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
@@ -566,29 +547,13 @@ class printcore():
     def _print(self, resuming = False):
         self._stop_sender()
         try:
-            for handler in self.event_handler:
-                try: handler.on_start(resuming)
-                except: logging.error(traceback.format_exc())
-            if self.startcb:
-                # callback for printing started
-                try: self.startcb(resuming)
-                except:
-                    self.logError(_("Print start callback failed with:") +
-                                  "\n" + traceback.format_exc())
+            self._callback('start', resuming)
             while self.printing and self.printer and self.online:
                 self._sendnext()
             self.sentlines = {}
             self.log.clear()
             self.sent = []
-            for handler in self.event_handler:
-                try: handler.on_end()
-                except: logging.error(traceback.format_exc())
-            if self.endcb:
-                # callback for printing done
-                try: self.endcb()
-                except:
-                    self.logError(_("Print end callback failed with:") +
-                                  "\n" + traceback.format_exc())
+            self._callback('end')
         except:
             self.logError(_("Print thread died due to the following error:") +
                           "\n" + traceback.format_exc())
@@ -629,24 +594,21 @@ class printcore():
             if self.queueindex > 0:
                 (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
-                    for handler in self.event_handler:
-                        try: handler.on_layerchange(layer)
-                        except: logging.error(traceback.format_exc())
-            if self.layerchangecb and self.queueindex > 0:
-                (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
-                if prev_layer != layer:
-                    try: self.layerchangecb(layer)
-                    except: self.logError(traceback.format_exc())
+                    self._callback('layerchange', layer)
             for handler in self.event_handler:
+                # TODO[v3]: Unify arguments of callback and envent handler
                 try: handler.on_preprintsend(gline, self.queueindex, self.mainqueue)
                 except: logging.error(traceback.format_exc())
+            if self.mainqueue.has_index(self.queueindex + 1):
+                (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
+                next_gline = self.mainqueue.all_layers[next_layer][next_line]
+            else:
+                next_gline = None
             if self.preprintsendcb:
-                if self.mainqueue.has_index(self.queueindex + 1):
-                    (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
-                    next_gline = self.mainqueue.all_layers[next_layer][next_line]
-                else:
-                    next_gline = None
+                # TODO[v3]: Unify arguments of callback and envent handler
                 gline = self.preprintsendcb(gline, next_gline)
+            else:
+                gline = self.callback.preprintsend(gline, next_gline)
             if gline is None:
                 self.queueindex += 1
                 self.clear = True
@@ -663,12 +625,7 @@ class printcore():
             if tline:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
-                for handler in self.event_handler:
-                    try: handler.on_printsend(gline)
-                    except: logging.error(traceback.format_exc())
-                if self.printsendcb:
-                    try: self.printsendcb(gline)
-                    except: self.logError(traceback.format_exc())
+                self._callback('printsend', gline)
             else:
                 self.clear = True
             self.queueindex += 1
@@ -699,12 +656,7 @@ class printcore():
             if self.loud:
                 logging.info("SENT: %s" % command)
 
-            for handler in self.event_handler:
-                try: handler.on_send(command, gline)
-                except: logging.error(traceback.format_exc())
-            if self.sendcb:
-                try: self.sendcb(command, gline)
-                except: self.logError(traceback.format_exc())
+            self._callback('send', command, gline)
             try:
                 self.printer.write((command + "\n").encode('ascii'))
                 self.writefailures = 0
