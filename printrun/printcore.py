@@ -129,8 +129,9 @@ class printcore():
         self.sent = []
         self.writefailures = 0
         self.callback = Callback()
-        # TODO[v3]: *cb attributes kept for backwards compatibility. To be
-        #           removed in future releases
+        self.callback.hostcommand = self._host_command_cb
+        # TODO[v3]: Remove these attributes kept for backwards compatibility
+        self.process_host_command = None
         self.tempcb = None  # impl (wholeline)
         self.recvcb = None  # impl (wholeline)
         self.sendcb = None  # impl (wholeline)
@@ -561,8 +562,7 @@ class printcore():
             self.print_thread = None
             self._start_sender()
 
-    def process_host_command(self, command):
-        """only ;@pause command is implemented as a host command in printcore, but hosts are free to reimplement this method"""
+    def _host_command_cb(self, command):
         command = command.lstrip()
         if command.startswith(";@pause"):
             self.pause()
@@ -615,7 +615,7 @@ class printcore():
                 return
             tline = gline.raw
             if tline.lstrip().startswith(";@"):  # check for host command
-                self.process_host_command(tline)
+                self._callback('hostcommand', tline)
                 self.queueindex += 1
                 self.clear = True
                 return
@@ -680,16 +680,20 @@ class printcore():
                 logging.error(f"'on_{name}' handler failed with:\n"
                               f"{traceback.format_exc()}")
 
-        # Invoke the relevant old callback function for backwards
-        # compatibility
+        # Invoke the relevant old callback function for backwards compatibility
         # TODO[v3]: Remove this code
-        try: callback = getattr(self, f"{name}cb")
-        except AttributeError: pass
+        if name == 'hostcommand' and self.process_host_command is not None:
+            logging.warning("Function `printcore.printcore.process_host_command` is now deprecated.")
+            logging.warning("New implementations shall use `printcore.Callback.hostcommand` instead")
+            return self.process_host_command(*args)
         else:
-            if callback is not None:
-                logging.warning(f"Function printcore.{name}cb is deprecated.")
-                try: return callback(*args)
-                except Exception: logging.error(traceback.format_exc())
+            try: callback = getattr(self, f"{name}cb")
+            except AttributeError: pass
+            else:
+                if callback is not None:
+                    logging.warning(f"Function printcore.{name}cb is deprecated.")
+                    try: return callback(*args)
+                    except Exception: logging.error(traceback.format_exc())
 
         # Invoke the relevant callback function
         try: callback = getattr(self.callback, f"{name}")
@@ -748,9 +752,7 @@ class Callback():
             Verbatim command string.
 
         """
-        command = command.lstrip()
-        if command.startswith(";@pause"):
-            self.pause()
+        pass
 
     def layerchange(self, layer):
         """Called on detected layer changes during a print.
