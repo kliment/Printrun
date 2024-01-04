@@ -130,6 +130,7 @@ class printcore():
         self.writefailures = 0
         self.callback = Callback()
         self.callback.hostcommand = self._host_command_cb
+        self.callback.error = self._error_cb
         # TODO[v3]: Remove these attributes kept for backwards compatibility
         self.process_host_command = None
         self.tempcb = None  # impl (wholeline)
@@ -169,14 +170,16 @@ class printcore():
         self.event_handler.append(handler)
 
     def logError(self, error):
-        for handler in self.event_handler:
-            try: handler.on_error(error)
-            except: logging.error(traceback.format_exc())
-        if self.errorcb:
-            try: self.errorcb(error)
-            except: logging.error(traceback.format_exc())
-        else:
-            logging.error(error)
+        # TODO[v3]: Remove this function kept for backwards compatibility
+        logging.warning("Function `printcore.printcore.logError` is now deprecated.")
+        logging.warning("`printcore.Callback.error` shall be used instead.")
+        self._logError(error)
+
+    def _logError(self, error):
+        self._callback('error', error)
+
+    def _error_cb(self, error):
+        logging.error(error)
 
     @locked
     def disconnect(self):
@@ -195,7 +198,7 @@ class printcore():
             try:
                 self.printer.disconnect()
             except device.DeviceError:
-                self.logError(traceback.format_exc())
+                self._logError(traceback.format_exc())
                 pass
         self._callback('disconnect')
         self.printer = None
@@ -221,7 +224,7 @@ class printcore():
             try:
                 self.printer.connect(self.port, self.baud)
             except device.DeviceError as e:
-                self.logError("Connection error: %s" % e)
+                self._logError("Connection error: %s" % e)
                 self.printer = None
                 return
             self._callback('connect')
@@ -246,8 +249,8 @@ class printcore():
         try:
             line_bytes = self.printer.readline()
             if line_bytes is device.READ_EOF:
-                self.logError("Can't read from printer (disconnected?)." +
-                              " line_bytes is None")
+                self._logError("Can't read from printer (disconnected?)." +
+                               " line_bytes is None")
                 self.stop_read_thread = True
                 return PR_EOF
             line = line_bytes.decode('utf-8')
@@ -260,12 +263,12 @@ class printcore():
         except UnicodeDecodeError:
             msg = ("Got rubbish reply from {0} at baudrate {1}:\n"
                    "Maybe a bad baudrate?").format(self.port, self.baud)
-            self.logError(msg)
+            self._logError(msg)
             return None
         except device.DeviceError as e:
             msg = ("Can't read from printer (disconnected?) {0}"
                    ).format(decode_utf8(str(e)))
-            self.logError(msg)
+            self._logError(msg)
             return None
 
     def _listen_can_continue(self):
@@ -320,7 +323,7 @@ class printcore():
             if line.startswith('ok') and "T:" in line:
                 self._callback('temp', line)
             elif line.startswith('Error'):
-                self.logError(line)
+                self._logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
             # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
@@ -450,7 +453,7 @@ class printcore():
             try:
                 self.print_thread.join()
             except:
-                self.logError(traceback.format_exc())
+                self._logError(traceback.format_exc())
 
         self.print_thread = None
 
@@ -524,7 +527,7 @@ class printcore():
             else:
                 self.priqueue.put_nowait(command)
         else:
-            self.logError(_("Not connected to printer."))
+            self._logError(_("Not connected to printer."))
 
     def send_now(self, command, wait = 0):
         """Adds a command to the priority queue.
@@ -543,7 +546,7 @@ class printcore():
         if self.online:
             self.priqueue.put_nowait(command)
         else:
-            self.logError(_("Not connected to printer."))
+            self._logError(_("Not connected to printer."))
 
     def _print(self, resuming = False):
         self._stop_sender()
@@ -556,8 +559,8 @@ class printcore():
             self.sent = []
             self._callback('end')
         except:
-            self.logError(_("Print thread died due to the following error:") +
-                          "\n" + traceback.format_exc())
+            self._logError(_("Print thread died due to the following error:") +
+                           "\n" + traceback.format_exc())
         finally:
             self.print_thread = None
             self._start_sender()
@@ -661,7 +664,7 @@ class printcore():
                 self.printer.write((command + "\n").encode('ascii'))
                 self.writefailures = 0
             except device.DeviceError as e:
-                self.logError("Can't write to printer (disconnected?)"
+                self._logError("Can't write to printer (disconnected?)"
                               " {0}".format(e))
                 self.writefailures += 1
 
@@ -680,18 +683,19 @@ class printcore():
                 logging.error(f"'on_{name}' handler failed with:\n"
                               f"{traceback.format_exc()}")
 
-        # Invoke the relevant old callback function for backwards compatibility
         # TODO[v3]: Remove this code
+        # Invoke the relevant old callback function for backwards compatibility
         if name == 'hostcommand' and self.process_host_command is not None:
             logging.warning("Function `printcore.printcore.process_host_command` is now deprecated.")
-            logging.warning("New implementations shall use `printcore.Callback.hostcommand` instead")
+            logging.warning("`printcore.Callback.hostcommand` shall be used instead.")
             return self.process_host_command(*args)
         else:
             try: callback = getattr(self, f"{name}cb")
             except AttributeError: pass
             else:
                 if callback is not None:
-                    logging.warning(f"Function printcore.{name}cb is deprecated.")
+                    logging.warning(f"Function `printcore.printcore.{name}cb` is now deprecated.")
+                    logging.warning(f"`printcore.Callback.{name}` shall be used instead.")
                     try: return callback(*args)
                     except Exception: logging.error(traceback.format_exc())
 
@@ -730,7 +734,7 @@ class Callback():
             String containing the error message.
 
         """
-        logging.error(error)
+        pass
 
     def hostcommand(self, command):
         """Called on host-commands.
