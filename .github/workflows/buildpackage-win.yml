@@ -16,7 +16,8 @@ jobs:
         os: [windows-latest]
         # supported architecture: [x64, x86]
         architecture: [x86, x64]
-        # supported versions: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        # supported versions: ['3.8', '3.9', '3.10', '3.11']
+        # for x86 only Python 3.9 to 3.11 is supported
         python-version: ['3.10']
 
     steps:
@@ -32,16 +33,16 @@ jobs:
         python -m pip install --upgrade pip pyinstaller setuptools wheel simplejson polygon3 cython -r requirements.txt
 
     - name: Update to wxPython latest Version for x86
-      # Latest development version for x32 and Python 3.7 to 3.10, can be removed if requirements.txt is fixed
+      # Latest development version for x32 and Python 3.9 to 3.11, can be removed if requirements.txt is fixed
       # minimum version for x86 needs to be wxPython >= 4.2.1 (2023-11-20) 
-      if: ${{ matrix.architecture == 'x86' && matrix.python-version >= '3.7' }}
+      if: ${{ matrix.architecture == 'x86' && matrix.python-version >= '3.9' }}
       run: |
         #python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython==4.2.2a1.dev5626+a1184286
         #python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
         python -m pip install -U wxPython
     - name: Update to wxPython latest Version for x64
-      # Latest development version for x64 and Python 3.7 to 3.10, can be removed if requirements.txt is fixed
-      if: ${{ matrix.architecture == 'x64' && matrix.python-version >= '3.7' }}
+      # Latest development version for x64 and Python 3.8 to 3.11, can be removed if requirements.txt is fixed
+      if: ${{ matrix.architecture == 'x64' && matrix.python-version >= '3.8' }}
       run: |
         #python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython==4.2.2a1.dev5626+a1184286
         #python -m pip install -U --pre -f https://wxpython.org/Phoenix/snapshot-builds/ wxPython
