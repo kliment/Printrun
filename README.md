@@ -225,7 +225,6 @@ CMD
 ```cmd
 > git clone https://github.com/kliment/Printrun.git
 > cd Printrun
-> git submodule update --init --recursive
 > release_windows.bat
 ```
 
@@ -233,15 +232,18 @@ PowerShell:
 ```ps
 > git clone https://github.com/kliment/Printrun.git
 > cd Printrun
-> git submodule update --init --recursive
 > ./release_windows.bat
 ```
 
-The script above will clone this repository and the submodule PrintrunGTK3. The script 'release_windows.bat' will install a virtual environment named v3, download all needed python libraries and compile the binaries for Pronterface.exe and Pronsole.exe.
-You will find the files in the new created directory 'dist'. You will find further and more detailed information in the script release_windows.bat. Further information for the linked submodul: [PrintrunGTK3](https://github.com/DivingDuck/PrintrunGTK3)
+The script above will clone this repository. The script `release_windows.bat` will install a virtual environment named v3, download all needed python libraries and compile the binaries for Pronterface.exe and Pronsole.exe.
+You will find the files in the new created directory `dist`. You will find further and more detailed information in the script `release_windows.bat`.
 Run Pronterface or Pronsole from the binary files or from source calling pronterface.py for the GUI version and pronsole.py for the commandline version.
 
-Run 'release_windows.bat' when ever you make changes or updates. With each new run it will compile the binaries and update all involved libraries in the virtual environment if needed. Delete the virtual environment if you have problems with it. Use 'git submodule update --init --recursive' for updating the submodule
+Running Pronsole works best by running it in WindowsTerminal. You can create a desktop shortcut link to the file pronsole.exe. Then edit the target for your shortcut as shown in belows example:
+`%LocalAppData%\Microsoft\WindowsApps\wt.exe --title Pronsole %USERPROFILE%\Downloads\pronterface-test\pronsole.exe`
+You need to adjust the path to your location of pronsole.exe.
+
+Run 'release_windows.bat' when ever you make changes or updates. With each new run it will compile the binaries and update all involved libraries in the virtual environment if needed. Delete the virtual environment if you have problems with it.
 
 
 # USING PRINTRUN
