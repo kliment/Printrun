@@ -3,13 +3,11 @@
 *.swp
 *.bak
 *.mo
+*.spec
 uploads
 .DS_Store
 .vagrant
 prontserve-env
-pronterface.spec
-pronsole.spec
-plater.spec
 printrun/gcoder_line.c
 printrun/gcoder_line*.so
 printrun/gcoder_line*.pyd
@@ -18,15 +16,17 @@ printrun/gcoder_line*.pyd
 /build/
 /dist/
 /venv/
+/v3/
+
 /.vscode/
+/.vs/
 
 /wheelhouse/
 *.egg-info/
+/.eggs
 
-/v3/
-/.vs/
-/dist
 /slic3rconf.ini
 /PrusaSlicer.ini
-/.eggs
 /SuperSlicer.ini
+
+/release_locale.bat
