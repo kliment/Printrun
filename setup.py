@@ -19,9 +19,6 @@ import ast
 import glob
 from setuptools import Extension, find_packages, setup
 
-with open('README.md', encoding='utf-8') as f:
-    long_description = f.read()
-
 with open('requirements.txt') as f:
     install_requires = f.readlines()
 
@@ -30,13 +27,11 @@ with open('printrun/printcore.py') as f:
         if line.startswith("__version__"):
             __version__ = ast.literal_eval(line.split("=")[1].strip())
 
-
 def multiglob(*globs):
     paths = []
     for g in globs:
         paths.extend(glob.glob(g))
     return paths
-
 
 data_files = [
     ('share/pixmaps', multiglob('*.png')),
@@ -56,35 +51,11 @@ extensions = [
     ]
 
 setup(
-    name="Printrun",
     version=__version__,
-    description="Host software for 3D printers",
-    author="Kliment Yanev, Guillaume Seguin and others",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="http://github.com/kliment/Printrun/",
-    license="GPLv3+",
     data_files=data_files,
     packages=find_packages(),
     scripts=["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
     ext_modules=extensions,
-    python_requires=">=3.7",
     install_requires=install_requires,
-    classifiers=[
-        "Environment :: X11 Applications :: GTK",
-        "Intended Audience :: End Users/Desktop",
-        "Intended Audience :: Manufacturing",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Topic :: Printing",
-    ],
     zip_safe=False,
 )
