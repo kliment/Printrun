@@ -17,21 +17,7 @@
 
 import ast
 import glob
-from setuptools import setup
-from setuptools import find_packages
-
-try:
-    from Cython.Build import cythonize
-    extensions = cythonize("printrun/gcoder_line.pyx")
-    from Cython.Distutils import build_ext
-except ImportError as e:
-    print("WARNING: Failed to cythonize: %s" % e)
-    # Debug helper: uncomment these:
-    # import traceback
-    # traceback.print_exc()
-    extensions = None
-    build_ext = None
-
+from setuptools import Extension, find_packages, setup
 
 with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
@@ -63,6 +49,11 @@ data_files = [
 for locale in glob.glob('locale/*/LC_MESSAGES/'):
     data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
 
+extensions = [
+    Extension(
+        name="printrun.gcoder_line",
+        sources=["printrun/gcoder_line.pyx"])
+    ]
 
 setup(
     name="Printrun",
@@ -79,7 +70,6 @@ setup(
     ext_modules=extensions,
     python_requires=">=3.7",
     install_requires=install_requires,
-    setup_requires=["Cython"],
     classifiers=[
         "Environment :: X11 Applications :: GTK",
         "Intended Audience :: End Users/Desktop",
