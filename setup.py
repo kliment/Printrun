@@ -19,13 +19,19 @@ import ast
 import glob
 from setuptools import Extension, find_packages, setup
 
-with open('requirements.txt') as f:
-    install_requires = f.readlines()
 
-with open('printrun/printcore.py') as f:
-    for line in f.readlines():
-        if line.startswith("__version__"):
-            __version__ = ast.literal_eval(line.split("=")[1].strip())
+def get_install_requires():
+    with open('requirements.txt') as f:
+        install_requires = f.readlines()
+
+
+def get_version():
+    with open('printrun/printcore.py', encoding="utf-8") as f:
+        for line in f.readlines():
+            if line.startswith("__version__"):
+                return ast.literal_eval(line.split("=")[1].strip())
+    return "unknown"
+
 
 def multiglob(*globs):
     paths = []
@@ -33,29 +39,36 @@ def multiglob(*globs):
         paths.extend(glob.glob(g))
     return paths
 
-data_files = [
-    ('share/pixmaps', multiglob('*.png')),
-    ('share/applications', multiglob('*.desktop')),
-    ('share/metainfo', multiglob('*.appdata.xml')),
-    ('share/pronterface/images', multiglob('images/*.png',
-                                    'images/*.svg')),
-]
 
-for locale in glob.glob('locale/*/LC_MESSAGES/'):
-    data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
-
-extensions = [
-    Extension(
-        name="printrun.gcoder_line",
-        sources=["printrun/gcoder_line.pyx"])
+def get_data_files():
+    data_files = [
+        ('share/pixmaps', multiglob('*.png')),
+        ('share/applications', multiglob('*.desktop')),
+        ('share/metainfo', multiglob('*.appdata.xml')),
+        ('share/pronterface/images', multiglob('images/*.png',
+                                               'images/*.svg')),
     ]
 
+    for locale in glob.glob('locale/*/LC_MESSAGES/'):
+        data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
+
+    return data_files
+
+
+def get_extensions():
+    extensions = [
+        Extension(name="printrun.gcoder_line",
+                  sources=["printrun/gcoder_line.pyx"])
+    ]
+    return extensions
+
+
 setup(
-    version=__version__,
-    data_files=data_files,
+    version=get_version(),
+    data_files=get_data_files(),
     packages=find_packages(),
     scripts=["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
-    ext_modules=extensions,
-    install_requires=install_requires,
+    ext_modules=get_extensions(),
+    install_requires=get_install_requires(),
     zip_safe=False,
 )
