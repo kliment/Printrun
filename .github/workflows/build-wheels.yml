@@ -1,4 +1,4 @@
-name: Build sdist and wheels
+name: Build Python sdist and wheels
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-11, macos-12]
+        os: [ubuntu-22.04, windows-2022, macos-12]
 
     steps:
       - uses: actions/checkout@v4
