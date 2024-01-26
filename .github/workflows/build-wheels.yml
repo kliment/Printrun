@@ -1,0 +1,79 @@
+name: Build sdist and wheels
+
+on:
+  pull_request:
+  push:
+  release:
+    types:
+      - published
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-11, macos-12]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build ${{ matrix.os }} wheels
+        uses: pypa/cibuildwheel@v2.16.2
+        env:
+          # we only support what's supported by wxPython, therefore we skip:
+          #  * PyPy Python implementation
+          #  * Python 3.6 nor 3.7 versions
+          #  * musl C implementation
+          CIBW_SKIP: "pp* cp36* cp37* *-musllinux*"
+          # produce ARM wheels on Linux in addition to 32 and 64 bit
+          CIBW_ARCHS_LINUX: auto aarch64
+          # produce wheels for macOS to support both Intel and Apple silicon
+          CIBW_ARCHS_MACOS: x86_64 universal2 arm64
+
+      - name: Upload ${{ matrix.os }} wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          # unpack all CIBW artifacts into dist/
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # by default, the contents of the `dist/` directory are uploaded
+          password: ${{ secrets.PYPI_API_KEY }}
