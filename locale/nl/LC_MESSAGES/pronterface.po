@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface rl1\n"
-"POT-Creation-Date: 2024-01-29 21:04+0100\n"
-"PO-Revision-Date: 2024-01-29 21:14+0100\n"
+"POT-Creation-Date: 2024-01-29 21:48+0100\n"
+"PO-Revision-Date: 2024-01-30 11:23+0100\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: NL <LL@li.org>\n"
 "Language: nl\n"
@@ -3480,6 +3480,14 @@ msgstr ""
 
 #: printrun\stlplater.py:274
 msgid "Cutting %s alongside %s axis"
+msgstr ""
+
+#: printrun\stlplater.py:319
+msgid "Skipping %s for rebase search"
+msgstr ""
+
+#: printrun\stlplater.py:327
+msgid "Rebasing %s"
 msgstr ""
 
 #: printrun\stlplater.py:356

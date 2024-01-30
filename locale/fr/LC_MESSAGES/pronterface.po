@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2024-01-29 21:04+0100\n"
-"PO-Revision-Date: 2024-01-29 21:13+0100\n"
+"POT-Creation-Date: 2024-01-29 21:48+0100\n"
+"PO-Revision-Date: 2024-01-30 11:21+0100\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: FR <guillaume@segu.in>\n"
 "Language: fr\n"
@@ -3742,6 +3742,16 @@ msgstr "Fichiers STL (*.stl;*.STL)|*.stl;*.STL"
 #: printrun\stlplater.py:274
 msgid "Cutting %s alongside %s axis"
 msgstr ""
+
+#: printrun\stlplater.py:319
+msgid "Skipping %s for rebase search"
+msgstr ""
+
+#: printrun\stlplater.py:327
+#, fuzzy
+#| msgid "Uploading %s"
+msgid "Rebasing %s"
+msgstr "Envoi de %s"
 
 #: printrun\stlplater.py:356
 msgid "Loading STL file failed"
