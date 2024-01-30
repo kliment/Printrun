@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2024-01-20 18:55+0100\n"
-"PO-Revision-Date: 2024-01-20 19:10+0100\n"
+"POT-Creation-Date: 2024-01-29 21:04+0100\n"
+"PO-Revision-Date: 2024-01-29 21:13+0100\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: HY <info@armath.am>\n"
 "Language: hy\n"
@@ -45,6 +45,12 @@ msgstr ""
 msgid "GCODE files"
 msgstr ""
 
+#: printrun\gcodeplater.py:97
+#, fuzzy
+#| msgid "G-Code Plater"
+msgid "G-Code Plate Builder"
+msgstr "G-Code -ի հարթեցում"
+
 #: printrun\gcodeplater.py:207 printrun\gcodeplater.py:248
 msgid "Exported merged G-Codes to %s"
 msgstr "Արտահանված G-Code-ը վերածել %-ի"
@@ -62,28 +68,49 @@ msgid "Invalid layer for edition"
 msgstr "Տրված միջակայքը անվավեր է:"
 
 #: printrun\gcview.py:443
-msgid "Fit to plate"
+#, fuzzy
+#| msgid "Fit to plate"
+msgid "Fit to view"
 msgstr "Ֆիքսել հարթությանը"
 
 #: printrun\gcview.py:444
-msgid "Fit to plate [F]"
+#, fuzzy
+#| msgid "Fit to plate [F]"
+msgid "Fit to view [F]"
 msgstr "Ֆիքսել հարթությանը [F]"
 
-#: printrun\gcview.py:482
+#: printrun\gcview.py:444
+msgid "Fit view to display entire print"
+msgstr ""
+
+#: printrun\gcview.py:456 printrun\gviz.py:89
+msgid ""
+"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
+"change the layer."
+msgstr ""
+
+#: printrun\gcview.py:481
 #, fuzzy
 #| msgid "Layer %d - Going Up - Z = %.03f mm"
 msgid "Layer %d: %s Z = %.03f mm"
 msgstr "Շերտ %d - Գնալ վեր - Z = %.03f մմ"
 
-#: printrun\gcview.py:484 printrun\gcview.py:516
+#: printrun\gcview.py:483 printrun\gcview.py:515
 msgid "Last layer: Object complete"
 msgstr ""
 
-#: printrun\gcview.py:496
+#: printrun\gcview.py:495
 msgid ""
 "G-Code Viewer: Can't process slider. Please wait until model is loaded "
 "completely."
 msgstr ""
+
+#: printrun\gcview.py:527 printrun\gui\viz.py:101 printrun\gviz.py:82
+#, fuzzy
+#| msgid "G-Code Plater"
+msgid "G-Code Viewer"
+msgstr "G-Code -ի հարթեցում"
 
 #: printrun\gl\panel.py:172
 msgid "OpenGL failed, disabling it:"
@@ -358,6 +385,14 @@ msgstr "Դադար"
 msgid "Turn printer off"
 msgstr "Անջատել տպիչը"
 
+#: printrun\gui\viz.py:81 printrun\gui\viz.py:112
+msgid "3D view mode requested, but we failed to initialize it.\n"
+msgstr ""
+
+#: printrun\gui\viz.py:82 printrun\gui\viz.py:113
+msgid "Falling back to 2D view, and here is the backtrace:\n"
+msgstr ""
+
 #: printrun\gui\viz.py:91
 msgid ""
 "Click to examine / edit\n"
@@ -472,10 +507,16 @@ msgstr "Մանրացնել [-]"
 msgid "Zoom In [+]"
 msgstr "Խոշորացնել [+]"
 
-#: printrun\gviz.py:56 printrun\gviz.py:57
+#: printrun\gviz.py:56
 #, fuzzy
 #| msgid "Reset view"
 msgid "Reset View"
+msgstr "Զրոացնել տեսքը"
+
+#: printrun\gviz.py:57
+#, fuzzy
+#| msgid "Reset view"
+msgid "Reset View [R]"
 msgstr "Զրոացնել տեսքը"
 
 #: printrun\gviz.py:59
@@ -486,6 +527,10 @@ msgstr "Տեղափոխվել ներգևի շերտ[D]"
 msgid "Move Up a Layer [U]"
 msgstr "Տեղափոխվել վերևի շերտ [U]"
 
+#: printrun\gviz.py:62
+msgid "Inject"
+msgstr ""
+
 #: printrun\gviz.py:63
 msgid "Inject G-Code"
 msgstr ""
@@ -493,6 +538,12 @@ msgstr ""
 #: printrun\gviz.py:63
 msgid "Insert code at the beginning of this layer"
 msgstr ""
+
+#: printrun\gviz.py:64
+#, fuzzy
+#| msgid "&Edit..."
+msgid "Edit"
+msgstr "Խմբագրել…"
 
 #: printrun\gviz.py:65
 msgid "Edit Layer"
@@ -511,12 +562,6 @@ msgstr ""
 #| msgid " Closes the Window"
 msgid "Close Window"
 msgstr "Փակում է պատուհանը"
-
-#: printrun\gviz.py:82
-#, fuzzy
-#| msgid "G-Code Plater"
-msgid "G-Code Viewer"
-msgstr "G-Code -ի հարթեցում"
 
 #: printrun\gviz.py:128 printrun\gviz.py:278 printrun\gviz.py:287
 #, fuzzy
@@ -3752,6 +3797,10 @@ msgstr "Տախտակը լիքն է, խնդրում ենք հանել որոշ օ
 #: printrun\stlplater.py:498
 msgid "simarrange failed"
 msgstr "Պարզեցումը ձախողվեց"
+
+#: printrun\stltool.py:175
+msgid "Not an ascii stl solid - attempting to parse as binary"
+msgstr ""
 
 #: printrun\utils.py:305
 msgid "Color must be specified as #RGB"

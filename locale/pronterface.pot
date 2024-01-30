@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-01-20 18:55+0100\n"
+"POT-Creation-Date: 2024-01-29 21:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,6 +37,10 @@ msgstr ""
 msgid "GCODE files"
 msgstr ""
 
+#: printrun\gcodeplater.py:97
+msgid "G-Code Plate Builder"
+msgstr ""
+
 #: printrun\gcodeplater.py:207 printrun\gcodeplater.py:248
 msgid "Exported merged G-Codes to %s"
 msgstr ""
@@ -50,23 +54,35 @@ msgid "Invalid layer for edition"
 msgstr ""
 
 #: printrun\gcview.py:443
-msgid "Fit to plate"
+msgid "Fit to view"
 msgstr ""
 
 #: printrun\gcview.py:444
-msgid "Fit to plate [F]"
+msgid "Fit to view [F]"
 msgstr ""
 
-#: printrun\gcview.py:482
+#: printrun\gcview.py:444
+msgid "Fit view to display entire print"
+msgstr ""
+
+#: printrun\gcview.py:456 printrun\gviz.py:89
+msgid "Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."
+msgstr ""
+
+#: printrun\gcview.py:481
 msgid "Layer %d: %s Z = %.03f mm"
 msgstr ""
 
-#: printrun\gcview.py:484 printrun\gcview.py:516
+#: printrun\gcview.py:483 printrun\gcview.py:515
 msgid "Last layer: Object complete"
 msgstr ""
 
-#: printrun\gcview.py:496
+#: printrun\gcview.py:495
 msgid "G-Code Viewer: Can't process slider. Please wait until model is loaded completely."
+msgstr ""
+
+#: printrun\gcview.py:527 printrun\gui\viz.py:101 printrun\gviz.py:82
+msgid "G-Code Viewer"
 msgstr ""
 
 #: printrun\gl\panel.py:172
@@ -323,6 +339,16 @@ msgstr ""
 msgid "Turn printer off"
 msgstr ""
 
+#: printrun\gui\viz.py:81 printrun\gui\viz.py:112
+msgid ""
+"3D view mode requested, but we failed to initialize it.\n"
+msgstr ""
+
+#: printrun\gui\viz.py:82 printrun\gui\viz.py:113
+msgid ""
+"Falling back to 2D view, and here is the backtrace:\n"
+msgstr ""
+
 #: printrun\gui\viz.py:91
 msgid ""
 "Click to examine / edit\n"
@@ -413,8 +439,12 @@ msgstr ""
 msgid "Zoom In [+]"
 msgstr ""
 
-#: printrun\gviz.py:56 printrun\gviz.py:57
+#: printrun\gviz.py:56
 msgid "Reset View"
+msgstr ""
+
+#: printrun\gviz.py:57
+msgid "Reset View [R]"
 msgstr ""
 
 #: printrun\gviz.py:59
@@ -425,12 +455,20 @@ msgstr ""
 msgid "Move Up a Layer [U]"
 msgstr ""
 
+#: printrun\gviz.py:62
+msgid "Inject"
+msgstr ""
+
 #: printrun\gviz.py:63
 msgid "Inject G-Code"
 msgstr ""
 
 #: printrun\gviz.py:63
 msgid "Insert code at the beginning of this layer"
+msgstr ""
+
+#: printrun\gviz.py:64
+msgid "Edit"
 msgstr ""
 
 #: printrun\gviz.py:65
@@ -447,10 +485,6 @@ msgstr ""
 
 #: printrun\gviz.py:69
 msgid "Close Window"
-msgstr ""
-
-#: printrun\gviz.py:82
-msgid "G-Code Viewer"
 msgstr ""
 
 #: printrun\gviz.py:128 printrun\gviz.py:278 printrun\gviz.py:287
@@ -3141,6 +3175,14 @@ msgstr ""
 msgid "Cutting %s alongside %s axis"
 msgstr ""
 
+#: printrun\stlplater.py:319
+msgid "Skipping %s for rebase search"
+msgstr ""
+
+#: printrun\stlplater.py:327
+msgid "Rebasing %s"
+msgstr ""
+
 #: printrun\stlplater.py:356
 msgid "Loading STL file failed"
 msgstr ""
@@ -3183,6 +3225,10 @@ msgstr ""
 
 #: printrun\stlplater.py:498
 msgid "simarrange failed"
+msgstr ""
+
+#: printrun\stltool.py:175
+msgid "Not an ascii stl solid - attempting to parse as binary"
 msgstr ""
 
 #: printrun\utils.py:305

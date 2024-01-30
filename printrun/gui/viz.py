@@ -78,8 +78,8 @@ class VizPane(wx.BoxSizer):
                 root.gviz.clickcb = root.show_viz_window
             except:
                 use2dview = True
-                logging.error("3D view mode requested, but we failed to initialize it.\n"
-                              + "Falling back to 2D view, and here is the backtrace:\n"
+                logging.error(_("3D view mode requested, but we failed to initialize it.\n")
+                              + _("Falling back to 2D view, and here is the backtrace:\n")
                               + traceback.format_exc())
         if use2dview:
             from printrun import gviz
@@ -98,7 +98,7 @@ class VizPane(wx.BoxSizer):
                 objects = None
                 if isinstance(root.gviz, printrun.gcview.GcodeViewMainWrapper):
                     objects = root.gviz.objects
-                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, 'G-Code Viewer',
+                root.gwindow = printrun.gcview.GcodeViewFrame(None, wx.ID_ANY, _('G-Code Viewer'),
                     size = (600, 600),
                     build_dimensions = root.build_dimensions_list,
                     objects = objects,
@@ -109,8 +109,8 @@ class VizPane(wx.BoxSizer):
                     perspective=root.settings.perspective)
             except:
                 use3dview = False
-                logging.error("3D view mode requested, but we failed to initialize it.\n"
-                              + "Falling back to 2D view, and here is the backtrace:\n"
+                logging.error(_("3D view mode requested, but we failed to initialize it.\n")
+                              + _("Falling back to 2D view, and here is the backtrace:\n")
                               + traceback.format_exc())
         if not use3dview:
             from printrun import gviz
