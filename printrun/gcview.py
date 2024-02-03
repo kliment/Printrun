@@ -64,7 +64,7 @@ def set_gcview_params(self, path_width, path_height):
     for obj in self.objects[1:]:
         if isinstance(obj.model, actors.GcodeModel):
             obj.model.set_path_size(self.path_halfwidth, self.path_halfheight)
-            has_changed = True                      
+            has_changed = True
     return has_changed
 
 # E selected for Up because is above D

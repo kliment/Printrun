@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-01-29 21:48+0100\n"
+"POT-Creation-Date: 2024-02-03 16:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -251,6 +251,10 @@ msgid ""
 "Send commands to printer\n"
 "(Type 'help' for simple\n"
 "help function)"
+msgstr ""
+
+#: printrun\gui\log.py:33
+msgid "Command to send"
 msgstr ""
 
 #: printrun\gui\log.py:46
@@ -1871,7 +1875,7 @@ msgid " Open file"
 msgstr ""
 
 #: printrun\pronterface.py:815
-msgid "&Open...\tCtrl+O"
+msgid "&Open..."
 msgstr ""
 
 #: printrun\pronterface.py:816
@@ -1891,7 +1895,7 @@ msgid " Clear output console"
 msgstr ""
 
 #: printrun\pronterface.py:826
-msgid "Clear console\tCtrl+L"
+msgid "Clear console"
 msgstr ""
 
 #: printrun\pronterface.py:827

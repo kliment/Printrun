@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2024-01-29 21:48+0100\n"
-"PO-Revision-Date: 2024-01-30 11:20+0100\n"
+"POT-Creation-Date: 2024-02-03 16:23+0100\n"
+"PO-Revision-Date: 2024-02-03 16:25+0100\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: <>\n"
 "Language: de\n"
@@ -277,6 +277,10 @@ msgstr ""
 "Senden Befehle an den Drucker\n"
 "(Geben Sie 'help' für einfache\n"
 "Hilfefunktionen ein)"
+
+#: printrun\gui\log.py:33
+msgid "Command to send"
+msgstr "Befehl zum Senden"
 
 #: printrun\gui\log.py:46
 msgid "Send"
@@ -2134,8 +2138,8 @@ msgid " Open file"
 msgstr " Öffne Datei"
 
 #: printrun\pronterface.py:815
-msgid "&Open...\tCtrl+O"
-msgstr "&Öffnen...\tStrg+O"
+msgid "&Open..."
+msgstr "&Öffnen..."
 
 #: printrun\pronterface.py:816
 msgid " Save file"
@@ -2154,8 +2158,8 @@ msgid " Clear output console"
 msgstr " Ausgabe Konsole leeren"
 
 #: printrun\pronterface.py:826
-msgid "Clear console\tCtrl+L"
-msgstr "Konsole leeren\tStrg+L"
+msgid "Clear console"
+msgstr "Konsole leeren"
 
 #: printrun\pronterface.py:827
 msgid " Closes the Window"

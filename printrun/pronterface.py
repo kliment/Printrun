@@ -812,7 +812,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         # File menu
         m = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open...\tCtrl+O"), _(" Open file")))
+        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open...")+"\tCtrl+O", _(" Open file")))
         self.savebtn = m.Append(-1, _("&Save..."), _(" Save file"))
         self.savebtn.Enable(False)
         self.Bind(wx.EVT_MENU, self.savefile, self.savebtn)
@@ -823,7 +823,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
         m.Append(wx.ID_ANY, _("&Recent Files"), recent)
-        self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console\tCtrl+L"), _(" Clear output console")))
+        self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console")+"\tCtrl+L", _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
 
