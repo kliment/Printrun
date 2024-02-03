@@ -61,6 +61,10 @@ jobs:
         pyinstaller --clean Pronterface.spec -y
         pyinstaller --clean Pronsole.spec -y
 
+    - name: Copy translation files
+      run: |
+        cp -r locale dist
+
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
       run: |
@@ -83,4 +87,4 @@ jobs:
         path: |
             dist/Pronterface.exe 
             dist/Pronsole.exe
-            local
+            dist/locale
