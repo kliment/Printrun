@@ -25,11 +25,11 @@ jobs:
           platforms: all
 
       - name: Build ${{ matrix.os }} wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           # we only support what's supported by wxPython, therefore we skip:
           #  * PyPy Python implementation
-          #  * Python 3.6 nor 3.7 versions
+          #  * Python 3.6 and 3.7 versions
           #  * musl C implementation
           CIBW_SKIP: "pp* cp36* cp37* *-musllinux*"
           # produce ARM wheels on Linux in addition to 32 and 64 bit
