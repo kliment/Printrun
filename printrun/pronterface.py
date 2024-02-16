@@ -2055,7 +2055,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 if len(command) == 2 and command[0] == "action":
                     command = command[1]
                     self.log(_("Received command %s") % command)
-                    if command == "pause":
+                    if command in ["pause", "cancel"]:
                         if not self.paused:
                             wx.CallAfter(self.pause)
                         return True

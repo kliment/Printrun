@@ -1316,7 +1316,7 @@ class pronsole(cmd.Cmd):
                 command = command.split(":")
                 if len(command) == 2 and command[0] == "action":
                     command = command[1]
-                    if command == "pause":
+                    if command in ["pause", "cancel"]:
                         self.do_pause(None)
                         sys.stdout.write(self.promptf())
                         sys.stdout.flush()
