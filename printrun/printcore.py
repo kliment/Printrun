@@ -594,10 +594,14 @@ class printcore():
             self._start_sender()
 
     def process_host_command(self, command):
-        """only ;@pause command is implemented as a host command in printcore, but hosts are free to reimplement this method"""
+        """only ;@pause, ;@cancel and ;@resume commands are implemented as a host command in printcore, but hosts are free to reimplement this method"""
         command = command.lstrip()
         if command.startswith(";@pause"):
             self.pause()
+        elif command.startswith(";@cancel"):
+            self.cancelprint()
+        elif command.startswith(";@resume"):
+            self.resume()
 
     def _sendnext(self):
         if not self.printer:
