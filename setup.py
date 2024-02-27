@@ -17,32 +17,20 @@
 
 import ast
 import glob
-from setuptools import setup
-from setuptools import find_packages
-
-try:
-    from Cython.Build import cythonize
-    extensions = cythonize("printrun/gcoder_line.pyx")
-    from Cython.Distutils import build_ext
-except ImportError as e:
-    print("WARNING: Failed to cythonize: %s" % e)
-    # Debug helper: uncomment these:
-    # import traceback
-    # traceback.print_exc()
-    extensions = None
-    build_ext = None
+from setuptools import Extension, find_packages, setup
 
 
-with open('README.md', encoding='utf-8') as f:
-    long_description = f.read()
+def get_install_requires():
+    with open('requirements.txt') as f:
+        install_requires = f.readlines()
 
-with open('requirements.txt') as f:
-    install_requires = f.readlines()
 
-with open('printrun/printcore.py') as f:
-    for line in f.readlines():
-        if line.startswith("__version__"):
-            __version__ = ast.literal_eval(line.split("=")[1].strip())
+def get_version():
+    with open('printrun/printcore.py', encoding="utf-8") as f:
+        for line in f.readlines():
+            if line.startswith("__version__"):
+                return ast.literal_eval(line.split("=")[1].strip())
+    return "unknown"
 
 
 def multiglob(*globs):
@@ -52,49 +40,35 @@ def multiglob(*globs):
     return paths
 
 
-data_files = [
-    ('share/pixmaps', multiglob('*.png')),
-    ('share/applications', multiglob('*.desktop')),
-    ('share/metainfo', multiglob('*.appdata.xml')),
-    ('share/pronterface/images', multiglob('images/*.png',
-                                    'images/*.svg')),
-]
+def get_data_files():
+    data_files = [
+        ('share/pixmaps', multiglob('*.png')),
+        ('share/applications', multiglob('*.desktop')),
+        ('share/metainfo', multiglob('*.appdata.xml')),
+        ('share/pronterface/images', multiglob('images/*.png',
+                                               'images/*.svg')),
+    ]
 
-for locale in glob.glob('locale/*/LC_MESSAGES/'):
-    data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
+    for locale in glob.glob('locale/*/LC_MESSAGES/'):
+        data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
+
+    return data_files
+
+
+def get_extensions():
+    extensions = [
+        Extension(name="printrun.gcoder_line",
+                  sources=["printrun/gcoder_line.pyx"])
+    ]
+    return extensions
 
 
 setup(
-    name="Printrun",
-    version=__version__,
-    description="Host software for 3D printers",
-    author="Kliment Yanev, Guillaume Seguin and others",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="http://github.com/kliment/Printrun/",
-    license="GPLv3+",
-    data_files=data_files,
+    version=get_version(),
+    data_files=get_data_files(),
     packages=find_packages(),
     scripts=["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
-    ext_modules=extensions,
-    python_requires=">=3.7",
-    install_requires=install_requires,
-    setup_requires=["Cython"],
-    classifiers=[
-        "Environment :: X11 Applications :: GTK",
-        "Intended Audience :: End Users/Desktop",
-        "Intended Audience :: Manufacturing",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Topic :: Printing",
-    ],
+    ext_modules=get_extensions(),
+    install_requires=get_install_requires(),
     zip_safe=False,
 )
