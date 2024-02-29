@@ -385,9 +385,11 @@ class pronsole(cmd.Cmd):
     def default(self, l):
         if l[0].upper() in self.commandprefixes.upper():
             if self.p and self.p.online:
+                if l[0] != l[0].upper():
+                    l = l.upper()
                 if not self.p.loud:
-                    self.log("SENDING:" + l.upper())
-                self.p.send_now(l.upper())
+                    self.log("SENDING:" + l)
+                self.p.send_now(l)
             else:
                 self.logError(_("Printer is not online."))
             return
