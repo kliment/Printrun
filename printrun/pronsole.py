@@ -403,6 +403,11 @@ class pronsole(cmd.Cmd):
             cmd.Cmd.default(self, l)
 
     def do_exit(self, l):
+        if self.p.printing and l != "force":
+            self.log(_("Are you sure you want to exit while printing?\n\
+Disables all heaters upon exit."))
+            if not self.confirm():
+                return
         if self.status.extruder_temp_target != 0:
             self.log(_("Setting extruder temp to 0"))
         self.p.send_now("M104 S0.0")
@@ -411,11 +416,7 @@ class pronsole(cmd.Cmd):
                 self.log(_("Setting bed temp to 0"))
             self.p.send_now("M140 S0.0")
         self.log(_("Disconnecting from printer..."))
-        if self.p.printing and l != "force":
-            self.log(_("Are you sure you want to exit while printing?\n\
-(this will terminate the print)."))
-            if not self.confirm():
-                return
+
         self.log(_("Exiting program. Goodbye!"))
         self.p.disconnect()
         self.kill()
