@@ -146,24 +146,24 @@ echo ****************************************
 echo ****** Collect all data for build ******
 echo ****************************************
 
-pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
-pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
+pyi-makespec -F --name "Pronterface" --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i pronterface.ico pronterface.py
+pyi-makespec -F --name "Pronsole" --add-data images/*;images --add-data *.png;. --add-data *.ico;. -c -i pronsole.ico pronsole.py
 rem Plater stand alone application is experimental only (See remark).
-pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
+pyi-makespec -F --name "Plater" --add-data images/*;images --add-data *.png;. --add-data *.ico;. -w -i plater.ico plater.py
 
 echo ***************************************************************
 echo ****** Build Pronterface, Pronsole and Plater executables *****
 echo ***************************************************************
 echo
 echo ** Build Pronterface executable **
-pyinstaller --clean pronterface.spec -y
+pyinstaller --clean Pronterface.spec -y
 echo 
 echo ** Build Pronsole executable **
-pyinstaller --clean pronsole.spec -y
+pyinstaller --clean Pronsole.spec -y
 echo 
 echo ** Build Plater executable **
 rem Plater stand alone application is experimental only (See remark).
-pyinstaller --clean plater.spec -y
+pyinstaller --clean Plater.spec -y
 
 
 echo ********************************

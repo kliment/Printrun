@@ -1,19 +1,18 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-02-03 16:23+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Project-Id-Version: Plater\n"
+"POT-Creation-Date: 2024-01-29 21:48+0100\n"
+"PO-Revision-Date: 2024-01-30 11:21+0100\n"
+"Last-Translator: DivingDuck\n"
+"Language-Team: < http://linuxac.org ســ  <مجتمع لينكس العربي\n"
+"Language: ar\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=cp1252\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+"X-Generator: Poedit 3.4.2\n"
 "Generated-By: pygettext.py 1.5\n"
-
 
 #: printrun\excluder.py:26
 msgid "Print Excluder"
@@ -66,7 +65,10 @@ msgid "Fit view to display entire print"
 msgstr ""
 
 #: printrun\gcview.py:456 printrun\gviz.py:89
-msgid "Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."
+msgid ""
+"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
+"change the layer."
 msgstr ""
 
 #: printrun\gcview.py:481
@@ -78,7 +80,9 @@ msgid "Last layer: Object complete"
 msgstr ""
 
 #: printrun\gcview.py:495
-msgid "G-Code Viewer: Can't process slider. Please wait until model is loaded completely."
+msgid ""
+"G-Code Viewer: Can't process slider. Please wait until model is loaded "
+"completely."
 msgstr ""
 
 #: printrun\gcview.py:527 printrun\gui\viz.py:101 printrun\gviz.py:82
@@ -253,10 +257,6 @@ msgid ""
 "help function)"
 msgstr ""
 
-#: printrun\gui\log.py:33
-msgid "Command to send"
-msgstr ""
-
 #: printrun\gui\log.py:46
 msgid "Send"
 msgstr ""
@@ -312,8 +312,10 @@ msgid "Load a 3D model file"
 msgstr ""
 
 #: printrun\gui\toolbar.py:70 printrun\pronterface.py:1584
+#, fuzzy
+#| msgid "Load"
 msgid "Load file"
-msgstr ""
+msgstr "تحميل"
 
 #: printrun\gui\toolbar.py:71
 msgid "SD"
@@ -344,13 +346,11 @@ msgid "Turn printer off"
 msgstr ""
 
 #: printrun\gui\viz.py:81 printrun\gui\viz.py:112
-msgid ""
-"3D view mode requested, but we failed to initialize it.\n"
+msgid "3D view mode requested, but we failed to initialize it.\n"
 msgstr ""
 
 #: printrun\gui\viz.py:82 printrun\gui\viz.py:113
-msgid ""
-"Falling back to 2D view, and here is the backtrace:\n"
+msgid "Falling back to 2D view, and here is the backtrace:\n"
 msgstr ""
 
 #: printrun\gui\viz.py:91
@@ -420,7 +420,9 @@ msgid "Colour:"
 msgstr ""
 
 #: printrun\gui\widgets.py:550
-msgid "Type short commands directly, enter a name for a new macro or select an existing macro from the list."
+msgid ""
+"Type short commands directly, enter a name for a new macro or select an "
+"existing macro from the list."
 msgstr ""
 
 #: printrun\gui\widgets.py:551
@@ -525,7 +527,7 @@ msgstr ""
 
 #: printrun\objectplater.py:63
 msgid "Export"
-msgstr ""
+msgstr "تصدير"
 
 #: printrun\objectplater.py:70
 msgid "Snap to Zero"
@@ -537,7 +539,7 @@ msgstr ""
 
 #: printrun\objectplater.py:80
 msgid "Delete"
-msgstr ""
+msgstr "حذف"
 
 #: printrun\objectplater.py:90
 msgid "Cutting Tool"
@@ -588,8 +590,11 @@ msgid "Bed full, sorry sir :("
 msgstr ""
 
 #: printrun\objectplater.py:263
-msgid "Are you sure you want to clear the grid? All unsaved changes will be lost."
+msgid ""
+"Are you sure you want to clear the grid? All unsaved changes will be lost."
 msgstr ""
+"هل أنت متأكد من أنك تريد مسح الشبكة؟ سيتم فقدان كافة التغييرات التي لم يتم "
+"حفظها."
 
 #: printrun\objectplater.py:264
 msgid "Clear the grid?"
@@ -668,10 +673,12 @@ msgstr ""
 
 #: printrun\projectlayer.py:332 printrun\spoolmanager\spoolmanager_gui.py:294
 msgid "Load"
-msgstr ""
+msgstr "تحميل"
 
 #: printrun\projectlayer.py:334
-msgid "Choose a SVG file created from Slic3r or Skeinforge, a PrusaSlicer SL1-file or a zip file of bitmap images (.3dlp.zip)."
+msgid ""
+"Choose a SVG file created from Slic3r or Skeinforge, a PrusaSlicer SL1-file "
+"or a zip file of bitmap images (.3dlp.zip)."
 msgstr ""
 
 #: printrun\projectlayer.py:339
@@ -683,7 +690,9 @@ msgid "Starts the presentation of the slices."
 msgstr ""
 
 #: printrun\projectlayer.py:348
-msgid "Pauses the presentation. Can be resumed afterwards by clicking this button, or restarted by clicking start again."
+msgid ""
+"Pauses the presentation. Can be resumed afterwards by clicking this button, "
+"or restarted by clicking start again."
 msgstr ""
 
 #: printrun\projectlayer.py:354 printrun\projectlayer.py:1116
@@ -703,7 +712,10 @@ msgid "Layerheight (mm):"
 msgstr ""
 
 #: printrun\projectlayer.py:372
-msgid "The thickness of each slice. Should match the value used to slice the model. SVG files update this value automatically, 3dlp.zip files have to be manually entered."
+msgid ""
+"The thickness of each slice. Should match the value used to slice the model. "
+"SVG files update this value automatically, 3dlp.zip files have to be "
+"manually entered."
 msgstr ""
 
 #: printrun\projectlayer.py:376
@@ -719,7 +731,10 @@ msgid "Blank (s):"
 msgstr ""
 
 #: printrun\projectlayer.py:391
-msgid "The pause length between slices. This should take into account any movement of the Z axis, plus time to prepare the resin surface (sliding, tilting, sweeping, etc)."
+msgid ""
+"The pause length between slices. This should take into account any movement "
+"of the Z axis, plus time to prepare the resin surface (sliding, tilting, "
+"sweeping, etc)."
 msgstr ""
 
 #: printrun\projectlayer.py:395
@@ -743,7 +758,9 @@ msgid "Top Down"
 msgstr ""
 
 #: printrun\projectlayer.py:417
-msgid "The direction the Z axis should move. Top Down is where the projector is above the model, Bottom up is where the projector is below the model."
+msgid ""
+"The direction the Z axis should move. Top Down is where the projector is "
+"above the model, Bottom up is where the projector is below the model."
 msgstr ""
 
 #: printrun\projectlayer.py:421
@@ -751,7 +768,11 @@ msgid "Overshoot (mm):"
 msgstr ""
 
 #: printrun\projectlayer.py:427
-msgid "How far the axis should move beyond the next slice position for each slice. For Top Down printers this would dunk the model under the resi and then return. For Bottom Up printers this would raise the base away from the vat and then return."
+msgid ""
+"How far the axis should move beyond the next slice position for each slice. "
+"For Top Down printers this would dunk the model under the resi and then "
+"return. For Bottom Up printers this would raise the base away from the vat "
+"and then return."
 msgstr ""
 
 #: printrun\projectlayer.py:432
@@ -759,7 +780,10 @@ msgid "Pre-lift Gcode:"
 msgstr ""
 
 #: printrun\projectlayer.py:436
-msgid "Additional gcode to run before raising the Z-axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!"
+msgid ""
+"Additional gcode to run before raising the Z-axis. Be sure to take into "
+"account any additional time needed in the pause value, and be careful what "
+"gcode is added!"
 msgstr ""
 
 #: printrun\projectlayer.py:442
@@ -767,7 +791,10 @@ msgid "Post-lift Gcode:"
 msgstr ""
 
 #: printrun\projectlayer.py:446
-msgid "Additional gcode to run after raising the Z-axis. Be sure to take into account any additional time needed in the pause value, and be careful what gcode is added!"
+msgid ""
+"Additional gcode to run after raising the Z-axis. Be sure to take into "
+"account any additional time needed in the pause value, and be careful what "
+"gcode is added!"
 msgstr ""
 
 #: printrun\projectlayer.py:453
@@ -807,7 +834,10 @@ msgid "Projected X (mm):"
 msgstr ""
 
 #: printrun\projectlayer.py:491
-msgid "The actual width of the entire projected image. Use the Calibrate grid to show the full size of the projected image, and measure the width at the same level where the slice will be projected onto the resin."
+msgid ""
+"The actual width of the entire projected image. Use the Calibrate grid to "
+"show the full size of the projected image, and measure the width at the same "
+"level where the slice will be projected onto the resin."
 msgstr ""
 
 #: printrun\projectlayer.py:496
@@ -815,7 +845,9 @@ msgid "Z-Axis Speed (mm/min):"
 msgstr ""
 
 #: printrun\projectlayer.py:501
-msgid "Speed of the Z axis in mm/minute. Take into account that slower rates may require a longer pause value."
+msgid ""
+"Speed of the Z axis in mm/minute. Take into account that slower rates may "
+"require a longer pause value."
 msgstr ""
 
 #: printrun\projectlayer.py:508
@@ -835,11 +867,14 @@ msgid "Calibrate"
 msgstr ""
 
 #: printrun\projectlayer.py:520
-msgid "Toggles the calibration grid. Each grid should be 10 mm x 10 mm in size."
+msgid ""
+"Toggles the calibration grid. Each grid should be 10 mm x 10 mm in size."
 msgstr ""
 
 #: printrun\projectlayer.py:521
-msgid " Use the grid to ensure the projected size is correct. See also the help for the ProjectedX field."
+msgid ""
+" Use the grid to ensure the projected size is correct. See also the help for "
+"the ProjectedX field."
 msgstr ""
 
 #: printrun\projectlayer.py:527
@@ -847,7 +882,10 @@ msgid "1st Layer"
 msgstr ""
 
 #: printrun\projectlayer.py:529
-msgid "Displays the first layer of the model. Use this to project the first layer for longer so it holds to the base. Note: this value does not affect the first layer when the 'Start' run is started, it should be used manually."
+msgid ""
+"Displays the first layer of the model. Use this to project the first layer "
+"for longer so it holds to the base. Note: this value does not affect the "
+"first layer when the 'Start' run is started, it should be used manually."
 msgstr ""
 
 #: printrun\projectlayer.py:539
@@ -859,7 +897,9 @@ msgid "Red"
 msgstr ""
 
 #: printrun\projectlayer.py:546
-msgid "Toggles whether the image should be red. Useful for positioning whilst resin is in the printer as it should not cause a reaction."
+msgid ""
+"Toggles whether the image should be red. Useful for positioning whilst resin "
+"is in the printer as it should not cause a reaction."
 msgstr ""
 
 #: printrun\projectlayer.py:553
@@ -1003,7 +1043,9 @@ msgid ""
 msgstr ""
 
 #: printrun\pronsole.py:212
-msgid "Welcome to the printer console! Type \"help\" for a list of available commands."
+msgid ""
+"Welcome to the printer console! Type \"help\" for a list of available "
+"commands."
 msgstr ""
 
 #: printrun\pronsole.py:293
@@ -1042,10 +1084,15 @@ msgid "Disconnecting from printer..."
 msgstr ""
 
 #: printrun\pronsole.py:415
+#, fuzzy
+#| msgid ""
+#| "Are you sure you want to clear the grid? All unsaved changes will be lost."
 msgid ""
 "Are you sure you want to exit while printing?\n"
 "(this will terminate the print)."
 msgstr ""
+"هل أنت متأكد من أنك تريد مسح الشبكة؟ سيتم فقدان كافة التغييرات التي لم يتم "
+"حفظها."
 
 #: printrun\pronsole.py:419
 msgid "Exiting program. Goodbye!"
@@ -1097,11 +1144,15 @@ msgid "Define multi-line macro:  macro <name>"
 msgstr ""
 
 #: printrun\pronsole.py:554
-msgid "Enter macro definition in indented lines. Use {0} .. {N} to substitute macro arguments"
+msgid ""
+"Enter macro definition in indented lines. Use {0} .. {N} to substitute macro "
+"arguments"
 msgstr ""
 
 #: printrun\pronsole.py:555
-msgid "Enter python code, prefixed with !  Use arg[0] .. arg[N] to substitute macro arguments"
+msgid ""
+"Enter python code, prefixed with !  Use arg[0] .. arg[N] to substitute macro "
+"arguments"
 msgstr ""
 
 #: printrun\pronsole.py:556
@@ -1157,11 +1208,15 @@ msgid "increase verbosity"
 msgstr ""
 
 #: printrun\pronsole.py:744
-msgid "load this file on startup instead of .pronsolerc ; you may chain config files, if so settings auto-save will use the last specified file"
+msgid ""
+"load this file on startup instead of .pronsolerc ; you may chain config "
+"files, if so settings auto-save will use the last specified file"
 msgstr ""
 
 #: printrun\pronsole.py:745
-msgid "executes command after configuration/.pronsolerc is loaded ; macros/settings from these commands are not autosaved"
+msgid ""
+"executes command after configuration/.pronsolerc is loaded ; macros/settings "
+"from these commands are not autosaved"
 msgstr ""
 
 #: printrun\pronsole.py:746
@@ -1209,7 +1264,9 @@ msgid "connect <port> <baudrate>"
 msgstr ""
 
 #: printrun\pronsole.py:840
-msgid "If port and baudrate are not specified, connects to first detected port at 115200bps"
+msgid ""
+"If port and baudrate are not specified, connects to first detected port at "
+"115200bps"
 msgstr ""
 
 #: printrun\pronsole.py:843
@@ -1277,7 +1334,8 @@ msgid "Slicing failed: %s"
 msgstr ""
 
 #: printrun\pronsole.py:1016
-msgid "Creates a gcode file from an stl model using the slicer (with tab-completion)"
+msgid ""
+"Creates a gcode file from an stl model using the slicer (with tab-completion)"
 msgstr ""
 
 #: printrun\pronsole.py:1017
@@ -1285,7 +1343,9 @@ msgid "slice filename.stl - create gcode file"
 msgstr ""
 
 #: printrun\pronsole.py:1018
-msgid "slice filename.stl view - create gcode file and view using skeiniso (if using skeinforge)"
+msgid ""
+"slice filename.stl view - create gcode file and view using skeiniso (if "
+"using skeinforge)"
 msgstr ""
 
 #: printrun\pronsole.py:1019
@@ -1333,7 +1393,9 @@ msgid "Uploads a gcode file to the sd card"
 msgstr ""
 
 #: printrun\pronsole.py:1083
-msgid "Send a loaded gcode file to the printer. Load a file with the load command first."
+msgid ""
+"Send a loaded gcode file to the printer. Load a file with the load command "
+"first."
 msgstr ""
 
 #: printrun\pronsole.py:1085
@@ -1479,7 +1541,9 @@ msgid "You must enter a temperature."
 msgstr ""
 
 #: printrun\pronsole.py:1436
-msgid "%s is a high temperature to set your extruder to. Are you sure you want to do that?"
+msgid ""
+"%s is a high temperature to set your extruder to. Are you sure you want to "
+"do that?"
 msgstr ""
 
 #: printrun\pronsole.py:1441
@@ -1487,7 +1551,9 @@ msgid "Setting hotend temperature to %s degrees Celsius."
 msgstr ""
 
 #: printrun\pronsole.py:1445 printrun\pronterface.py:477
-msgid "You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."
+msgid ""
+"You cannot set negative temperatures. To turn the hotend off entirely, set "
+"its temperature to 0."
 msgstr ""
 
 #: printrun\pronsole.py:1448
@@ -1503,7 +1569,9 @@ msgid "Setting bed temperature to %s degrees Celsius."
 msgstr ""
 
 #: printrun\pronsole.py:1472 printrun\pronterface.py:497
-msgid "You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."
+msgid ""
+"You cannot set negative temperatures. To turn the bed off entirely, set its "
+"temperature to 0."
 msgstr ""
 
 #: printrun\pronsole.py:1475
@@ -1543,11 +1611,15 @@ msgid "Monitor a machine's temperatures and an SD print's status."
 msgstr ""
 
 #: printrun\pronsole.py:1523
-msgid "monitor - Reports temperature and SD print status (if SD printing) every 5 seconds"
+msgid ""
+"monitor - Reports temperature and SD print status (if SD printing) every 5 "
+"seconds"
 msgstr ""
 
 #: printrun\pronsole.py:1524
-msgid "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 seconds"
+msgid ""
+"monitor 2 - Reports temperature and SD print status (if SD printing) every 2 "
+"seconds"
 msgstr ""
 
 #: printrun\pronsole.py:1535
@@ -1563,7 +1635,8 @@ msgid "You cannot set negative tool numbers."
 msgstr ""
 
 #: printrun\pronsole.py:1547
-msgid "Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."
+msgid ""
+"Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."
 msgstr ""
 
 #: printrun\pronsole.py:1551
@@ -1572,7 +1645,9 @@ msgstr ""
 
 #: printrun\pronsole.py:1554 printrun\pronsole.py:1616
 #: printrun\pronsole.py:1665 printrun\pronsole.py:1692
-msgid "Printer is currently printing. Please pause the print before you issue manual commands."
+msgid ""
+"Printer is currently printing. Please pause the print before you issue "
+"manual commands."
 msgstr ""
 
 #: printrun\pronsole.py:1557 printrun\pronsole.py:1689
@@ -1592,7 +1667,9 @@ msgid "Move an axis. Specify the name of the axis and the amount. "
 msgstr ""
 
 #: printrun\pronsole.py:1590
-msgid "move X 10 - will move the X axis forward by 10 mm at %s mm/min (default XY speed)"
+msgid ""
+"move X 10 - will move the X axis forward by 10 mm at %s mm/min (default XY "
+"speed)"
 msgstr ""
 
 #: printrun\pronsole.py:1591
@@ -1600,7 +1677,8 @@ msgid "move Y 10 - 5000 will move the Y axis forward by 10 mm at 5000 mm/min"
 msgstr ""
 
 #: printrun\pronsole.py:1592
-msgid "move Z -1 - will move the Z axis down by 1mm at %s mm/min (default Z speed)"
+msgid ""
+"move Z -1 - will move the Z axis down by 1mm at %s mm/min (default Z speed)"
 msgstr ""
 
 #: printrun\pronsole.py:1593
@@ -1632,7 +1710,9 @@ msgid "Length is 0, not doing anything."
 msgstr ""
 
 #: printrun\pronsole.py:1652
-msgid "Extrudes a length of filament, 5 mm by default, or the number of mm given as a parameter"
+msgid ""
+"Extrudes a length of filament, 5 mm by default, or the number of mm given as "
+"a parameter"
 msgstr ""
 
 #: printrun\pronsole.py:1653
@@ -1656,7 +1736,9 @@ msgid "Printer is not online. Unable to reverse."
 msgstr ""
 
 #: printrun\pronsole.py:1681
-msgid "Reverses the extruder, 5 mm by default, or the number of mm given as a parameter"
+msgid ""
+"Reverses the extruder, 5 mm by default, or the number of mm given as a "
+"parameter"
 msgstr ""
 
 #: printrun\pronsole.py:1682
@@ -1732,11 +1814,14 @@ msgid "G-Code calling host command \"%s\""
 msgstr ""
 
 #: printrun\pronsole.py:1754
-msgid "Runs a custom script. Current gcode filename can be given using $s token."
+msgid ""
+"Runs a custom script. Current gcode filename can be given using $s token."
 msgstr ""
 
 #: printrun\pronsole.py:1764
-msgid "Runs a custom script which output gcode which will in turn be executed. Current gcode filename can be given using $s token."
+msgid ""
+"Runs a custom script which output gcode which will in turn be executed. "
+"Current gcode filename can be given using $s token."
 msgstr ""
 
 #: printrun\pronterface.py:161
@@ -1775,11 +1860,14 @@ msgid ""
 msgstr ""
 
 #: printrun\pronterface.py:214
-msgid "Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"
+msgid ""
+"Note!!! You have specified custom buttons in both custombtn.txt and ."
+"pronsolerc"
 msgstr ""
 
 #: printrun\pronterface.py:215
-msgid "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
+msgid ""
+"Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
 msgstr ""
 
 #: printrun\pronterface.py:291 printrun\pronterface.py:630
@@ -1859,11 +1947,15 @@ msgid "SD Print"
 msgstr ""
 
 #: printrun\pronterface.py:713
-msgid "Manual move outside of the build volume prevented (see the \"Clamp manual moves\" option)."
+msgid ""
+"Manual move outside of the build volume prevented (see the \"Clamp manual "
+"moves\" option)."
 msgstr ""
 
 #: printrun\pronterface.py:782
-msgid "Attempted to write invalid text to console, which could be due to an invalid baudrate"
+msgid ""
+"Attempted to write invalid text to console, which could be due to an invalid "
+"baudrate"
 msgstr ""
 
 #: printrun\pronterface.py:784
@@ -1875,7 +1967,7 @@ msgid " Open file"
 msgstr ""
 
 #: printrun\pronterface.py:815
-msgid "&Open..."
+msgid "&Open...\tCtrl+O"
 msgstr ""
 
 #: printrun\pronterface.py:816
@@ -1895,7 +1987,7 @@ msgid " Clear output console"
 msgstr ""
 
 #: printrun\pronterface.py:826
-msgid "Clear console"
+msgid "Clear console\tCtrl+L"
 msgstr ""
 
 #: printrun\pronterface.py:827
@@ -1955,7 +2047,9 @@ msgid "&Tools"
 msgstr ""
 
 #: printrun\pronterface.py:845
-msgid " Recover previous print after a disconnect (homes X, Y, restores Z and E status)"
+msgid ""
+" Recover previous print after a disconnect (homes X, Y, restores Z and E "
+"status)"
 msgstr ""
 
 #: printrun\pronterface.py:845
@@ -2043,7 +2137,8 @@ msgid "&Help"
 msgstr ""
 
 #: printrun\pronterface.py:925
-msgid "Printrun is a pure Python 3D printing (and other types of CNC) host software."
+msgid ""
+"Printrun is a pure Python 3D printing (and other types of CNC) host software."
 msgstr ""
 
 #: printrun\pronterface.py:929
@@ -2055,7 +2150,9 @@ msgid "Monitor printer status"
 msgstr ""
 
 #: printrun\pronterface.py:1080
-msgid "Regularly monitor printer temperatures (required to have functional temperature graph or gauges)"
+msgid ""
+"Regularly monitor printer temperatures (required to have functional "
+"temperature graph or gauges)"
 msgstr ""
 
 #: printrun\pronterface.py:1081
@@ -2095,11 +2192,15 @@ msgid "Display progress on printer"
 msgstr ""
 
 #: printrun\pronterface.py:1085
-msgid "Show progress on printers display (sent via M117, might not be supported by all printers)"
+msgid ""
+"Show progress on printers display (sent via M117, might not be supported by "
+"all printers)"
 msgstr ""
 
 #: printrun\pronterface.py:1086
-msgid "Interval in which pronterface sends the progress to the printer if enabled, in seconds"
+msgid ""
+"Interval in which pronterface sends the progress to the printer if enabled, "
+"in seconds"
 msgstr ""
 
 #: printrun\pronterface.py:1086
@@ -2120,8 +2221,10 @@ msgstr ""
 
 #: printrun\pronterface.py:1088
 msgid ""
-"Standard interface is a one-page, three columns layout with controls/visualization/log\n"
-"Compact mode is a one-page, two columns layout with controls + log/visualization"
+"Standard interface is a one-page, three columns layout with controls/"
+"visualization/log\n"
+"Compact mode is a one-page, two columns layout with controls + log/"
+"visualization"
 msgstr ""
 
 #: printrun\pronterface.py:1088 printrun\pronterface.py:1090
@@ -2137,7 +2240,10 @@ msgid "Mini"
 msgstr ""
 
 #: printrun\pronterface.py:1090
-msgid "Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"
+msgid ""
+"Standard controls include all controls needed for printer setup and "
+"calibration, while Mini controls are limited to the ones needed for daily "
+"printing"
 msgstr ""
 
 #: printrun\pronterface.py:1091
@@ -2153,7 +2259,9 @@ msgid "Update Slic3r default presets"
 msgstr ""
 
 #: printrun\pronterface.py:1092
-msgid "When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"
+msgid ""
+"When selecting a profile in Slic3r integration menu, also save it as the "
+"default Slic3r preset"
 msgstr ""
 
 #: printrun\pronterface.py:1093
@@ -2185,11 +2293,15 @@ msgid "Use a lighter 3D visualization"
 msgstr ""
 
 #: printrun\pronterface.py:1096
-msgid "Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"
+msgid ""
+"Use a lighter visualization with simple lines instead of extruded paths for "
+"3D viewer"
 msgstr ""
 
 #: printrun\pronterface.py:1097
-msgid "A perspective view looks more realistic, but is a bit more confusing to navigate"
+msgid ""
+"A perspective view looks more realistic, but is a bit more confusing to "
+"navigate"
 msgstr ""
 
 #: printrun\pronterface.py:1097
@@ -2517,7 +2629,9 @@ msgid " Z: %.3f mm"
 msgstr ""
 
 #: printrun\pronterface.py:1280
-msgid "Warning: The print progress message might be too long to be displayed properly"
+msgid ""
+"Warning: The print progress message might be too long to be displayed "
+"properly"
 msgstr ""
 
 #: printrun\pronterface.py:1309
@@ -2614,14 +2728,18 @@ msgstr ""
 
 #: printrun\pronterface.py:1587
 msgid "Cancel"
-msgstr ""
+msgstr "الغِ"
 
 #: printrun\pronterface.py:1589
 msgid "Slicing "
 msgstr ""
 
 #: printrun\pronterface.py:1627
-msgid "OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|GCODE files (*.gcode;*.gco;*.g)|*.gcode;*.gco;*.g|OBJ, STL files (*.stl;*.STL;*.obj;*.OBJ)|*.stl;*.STL;*.obj;*.OBJ|All Files (*.*)|*.*"
+msgid ""
+"OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*."
+"gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|GCODE files (*.gcode;*.gco;*.g)|*."
+"gcode;*.gco;*.g|OBJ, STL files (*.stl;*.STL;*.obj;*.OBJ)|*.stl;*.STL;*.obj;*."
+"OBJ|All Files (*.*)|*.*"
 msgstr ""
 
 #: printrun\pronterface.py:1660
@@ -2645,8 +2763,10 @@ msgid "Loaded %s, %d lines"
 msgstr ""
 
 #: printrun\pronterface.py:1725
+#, fuzzy
+#| msgid "Load"
 msgid "Load File"
-msgstr ""
+msgstr "تحميل"
 
 #: printrun\pronterface.py:1748
 msgid ""
@@ -2655,8 +2775,7 @@ msgid ""
 msgstr ""
 
 #: printrun\pronterface.py:1749
-msgid ""
-"%d will likely run out of filament during the print.\n"
+msgid "%d will likely run out of filament during the print.\n"
 msgstr ""
 
 #: printrun\pronterface.py:1757
@@ -2720,7 +2839,8 @@ msgid "Execute command: "
 msgstr ""
 
 #: printrun\pronterface.py:2164
-msgid "Defines custom button. Usage: button <num> \"title\" [/c \"colour\"] command"
+msgid ""
+"Defines custom button. Usage: button <num> \"title\" [/c \"colour\"] command"
 msgstr ""
 
 #: printrun\pronterface.py:2186
@@ -2756,8 +2876,10 @@ msgid "Do you want to erase the macro?"
 msgstr ""
 
 #: printrun\pronterface.py:2411
+#, fuzzy
+#| msgid "Cancel"
 msgid "Cancelled."
-msgstr ""
+msgstr "الغِ"
 
 #: printrun\pronterface.py:2429
 msgid "Enter macro name"
@@ -2848,7 +2970,10 @@ msgid "TCP Streaming Mode:"
 msgstr ""
 
 #: printrun\settings.py:386
-msgid "When using a TCP connection to the printer, the streaming mode will not wait for acks from the printer to send new commands.This will break things such as ETA prediction, but can result in smoother prints."
+msgid ""
+"When using a TCP connection to the printer, the streaming mode will not wait "
+"for acks from the printer to send new commands.This will break things such "
+"as ETA prediction, but can result in smoother prints."
 msgstr ""
 
 #: printrun\settings.py:388
@@ -2864,7 +2989,8 @@ msgid "DTR:"
 msgstr ""
 
 #: printrun\settings.py:389
-msgid "Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"
+msgid ""
+"Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"
 msgstr ""
 
 #: printrun\settings.py:391
@@ -3040,8 +3166,10 @@ msgid "Are you sure you want to delete the '%s' spool?"
 msgstr ""
 
 #: printrun\spoolmanager\spoolmanager_gui.py:198
+#, fuzzy
+#| msgid "Delete"
 msgid "Delete Spool"
-msgstr ""
+msgstr "حذف"
 
 #: printrun\spoolmanager\spoolmanager_gui.py:207
 msgid "Deleted spool '%s'."
@@ -3168,12 +3296,16 @@ msgid "Could not load 3D viewer for plater:"
 msgstr ""
 
 #: printrun\stlplater.py:218
+#, fuzzy
+#| msgid "STL files (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"
 msgid "STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad"
-msgstr ""
+msgstr "ملغات STL (;*.stl;*.STL;)|*.stl|OpenSCAD files (;*.scad;)|*.scad"
 
 #: printrun\stlplater.py:219
+#, fuzzy
+#| msgid "STL files (;*.stl;*.STL;)"
 msgid "STL files (*.stl;*.STL)|*.stl;*.STL"
-msgstr ""
+msgstr "ملفات STL (;*.stl;*.STL;)"
 
 #: printrun\stlplater.py:274
 msgid "Cutting %s alongside %s axis"
@@ -3216,7 +3348,9 @@ msgid "Wrote plate to %s"
 msgstr ""
 
 #: printrun\stlplater.py:458
-msgid "Failed to use simarrange for plating, falling back to the standard method. The error was: "
+msgid ""
+"Failed to use simarrange for plating, falling back to the standard method. "
+"The error was: "
 msgstr ""
 
 #: printrun\stlplater.py:466
@@ -3246,4 +3380,3 @@ msgstr ""
 #: pronsole.py:58
 msgid "Caught an exception, exiting:"
 msgstr ""
-

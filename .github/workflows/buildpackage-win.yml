@@ -54,12 +54,16 @@ jobs:
     
     - name: Make pyinstaller spec
       run: |
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -c -i pronsole.ico pronsole.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --name "Pronterface" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --name "Pronsole" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -c -i pronsole.ico pronsole.py
     - name: Make pyinstaller build
       run: |
-        pyinstaller --clean pronterface.spec -y
-        pyinstaller --clean pronsole.spec -y
+        pyinstaller --clean Pronterface.spec -y
+        pyinstaller --clean Pronsole.spec -y
+
+    - name: Copy translation files
+      run: |
+        cp -r locale dist
 
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
@@ -81,5 +85,6 @@ jobs:
       with:
         name: ${{ env.EXE_NAME }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: |
-            dist/pronterface.exe 
-            dist/pronsole.exe
+            dist/Pronterface.exe 
+            dist/Pronsole.exe
+            dist/locale

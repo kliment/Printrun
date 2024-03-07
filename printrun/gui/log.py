@@ -30,7 +30,7 @@ class LogPane(wx.BoxSizer):
         lbrs = wx.BoxSizer(wx.HORIZONTAL)
         root.commandbox = wx.TextCtrl(bottom_panel, style = wx.TE_PROCESS_ENTER)
         root.commandbox.SetToolTip(wx.ToolTip(_("Send commands to printer\n(Type 'help' for simple\nhelp function)")))
-        root.commandbox.Hint = 'Command to [S]end'
+        root.commandbox.Hint = _("Command to send")
         root.commandbox.Bind(wx.EVT_TEXT_ENTER, root.sendline)
         root.commandbox.Bind(wx.EVT_CHAR, root.cbkey)
         def deselect(ev):

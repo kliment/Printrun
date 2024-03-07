@@ -89,7 +89,7 @@ class showstl(wx.Window):
     def move_shape(self, delta):
         """moves shape (selected in l, which is list ListBox of shapes)
         by an offset specified in tuple delta.
-        Positive numbers move to (rigt, down)"""
+        Positive numbers move to (right, down)"""
         name = self.parent.l.GetSelection()
         if name == wx.NOT_FOUND:
             return False
@@ -316,7 +316,7 @@ class StlPlaterPanel(PlaterPanel):
             transformation = transformation_matrix(model)
             transformed = model.transform(transformation)
             if not transformed.intersect_box(ray_near, ray_far):
-                logging.debug("Skipping %s for rebase search" % key)
+                logging.debug(_("Skipping %s for rebase search") % key)
                 continue
             facet, facet_dist = transformed.intersect(ray_near, ray_far)
             if facet is not None and facet_dist < best_dist:
@@ -324,7 +324,7 @@ class StlPlaterPanel(PlaterPanel):
                 best_facet = facet
                 best_dist = facet_dist
         if best_match is not None:
-            logging.info("Rebasing %s" % best_match)
+            logging.info(_("Rebasing %s") % best_match)
             model = self.models[best_match]
             newmodel = model.rebase(best_facet)
             newmodel.offsets = list(model.offsets)

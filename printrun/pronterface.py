@@ -812,7 +812,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         # File menu
         m = wx.Menu()
-        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open...\tCtrl+O"), _(" Open file")))
+        self.Bind(wx.EVT_MENU, self.loadfile, m.Append(-1, _("&Open...")+"\tCtrl+O", _(" Open file")))
         self.savebtn = m.Append(-1, _("&Save..."), _(" Save file"))
         self.savebtn.Enable(False)
         self.Bind(wx.EVT_MENU, self.savefile, self.savebtn)
@@ -823,7 +823,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
         m.Append(wx.ID_ANY, _("&Recent Files"), recent)
-        self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console\tCtrl+L"), _(" Clear output console")))
+        self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console")+"\tCtrl+L", _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
 
@@ -1277,7 +1277,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     # ":" seems to be some kind of separator for G-CODE"
                     self.p.send_now(printer_progress_string.replace(":", "."))
                     if len(printer_progress_string) > 25:
-                        logging.info("Warning: The print progress message might be too long to be displayed properly")
+                        logging.info(_("Warning: The print progress message might be too long to be displayed properly"))
                     # 13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
@@ -1448,7 +1448,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             return
         if not self.p.online:
             return
-        dlg = wx.TextEntryDialog(self, ("Enter a target filename in 8.3 format:"), _("Pick SD filename"), dosify(self.filename))
+        dlg = wx.TextEntryDialog(self, _("Enter a target filename in 8.3 format:"), _("Pick SD filename"), dosify(self.filename))
         if dlg.ShowModal() == wx.ID_OK:
             self.p.send_now("M21")
             self.p.send_now("M28 " + str(dlg.GetValue()))
@@ -1745,9 +1745,9 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         remainder = self.spool_manager.getRemainingFilament(extruder) - length
         minimum_warning_length = 1000.0
         if remainder < minimum_warning_length:
-            self.log(_("\nWARNING: Currently loaded spool for extruder " +
-            "%d will likely run out of filament during the print.\n" %
-            extruder))
+            self.log(_("\nWARNING: Currently loaded spool for extruder ") +
+                     _("%d will likely run out of filament during the print.\n") 
+                     % extruder)
         return remainder
 
     def output_gcode_stats(self):
@@ -1884,7 +1884,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def online_gui(self):
         """Callback when printer goes online (graphical bits)"""
         self.connectbtn.SetLabel(_("Dis&connect"))
-        self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
+        self.connectbtn.SetToolTip(wx.ToolTip(_("Disconnect from the printer")))
         self.connectbtn_cb_var = self.disconnect
 
         if hasattr(self, "extrudersel"):
