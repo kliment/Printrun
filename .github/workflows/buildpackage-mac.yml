@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-11, macos-12]
+        os: [macos-12]
         architecture: [x64]
         python-version: ['3.10']
 
@@ -33,11 +33,11 @@ jobs:
         python setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. -w -i P-face.icns pronterface.py
+        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. --name Pronterface -w -i P-face.icns pronterface.py
         # Edit spec file
         export git_hash=$(git rev-parse --short "$GITHUB_SHA")
-        sed -i '' '$ s/.$//' pronterface.spec
-        cat >> pronterface.spec <<EOL
+        sed -i '' '$ s/.$//' Pronterface.spec
+        cat >> Pronterface.spec <<EOL
         info_plist={
             'CFBundleShortVersionString': '$git_hash',
             'NSPrincipalClass': 'NSApplication',
@@ -48,10 +48,10 @@ jobs:
         EOL
     - name: Make pyinstaller build
       run: |
-        pyinstaller --clean pronterface.spec -y
+        pyinstaller --clean Pronterface.spec -y
         # Zip app manually to avoid losing execute permissions for binary file in app
         cd dist
-        zip -r -X pronterface-app.zip pronterface.app
+        zip -r -X Pronterface-app.zip Pronterface.app
 
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
@@ -72,4 +72,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.EXE_NAME }}_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}
-        path: dist/pronterface-app.zip
+        path: dist/Pronterface-app.zip
