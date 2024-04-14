@@ -130,7 +130,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     # Hotend temp
     add("htemp_label", wx.StaticText(parentpanel, -1, _("Heat:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
 
-    root.settoff = make_button(parentpanel, _("Off"), lambda e: root.do_settemp("off"), _("Switch Hotend Off"), size = (38, -1), style = wx.BU_EXACTFIT)
+    root.settoff = make_button(parentpanel, _("Off"), lambda e: root.do_settemp("0.0"), _("Switch Hotend Off"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.settoff)
     add("htemp_off", root.settoff)
 
@@ -146,7 +146,7 @@ def add_extra_controls(self, root, parentpanel, extra_buttons = None, mini_mode 
     # Bed temp
     add("btemp_label", wx.StaticText(parentpanel, -1, _("Bed:")), flag = wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT)
 
-    root.setboff = make_button(parentpanel, _("Off"), lambda e: root.do_bedtemp("off"), _("Switch Heated Bed Off"), size = (38, -1), style = wx.BU_EXACTFIT)
+    root.setboff = make_button(parentpanel, _("Off"), lambda e: root.do_bedtemp("0.0"), _("Switch Heated Bed Off"), size = (38, -1), style = wx.BU_EXACTFIT)
     root.printerControls.append(root.setboff)
     add("btemp_off", root.setboff)
 
