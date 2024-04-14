@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2024-01-29 21:48+0100\n"
-"PO-Revision-Date: 2024-01-30 11:21+0100\n"
+"POT-Creation-Date: 2024-04-14 21:47+0200\n"
+"PO-Revision-Date: 2024-04-14 22:35+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: FR <guillaume@segu.in>\n"
 "Language: fr\n"
@@ -296,6 +296,12 @@ msgid ""
 msgstr ""
 "Envoyer des commandes à l'imprimante\n"
 "(Taper 'help' pour avoir de l'aide)"
+
+#: printrun\gui\log.py:33
+#, fuzzy
+#| msgid "Commands"
+msgid "Command to send"
+msgstr "Commandes"
 
 #: printrun\gui\log.py:46
 msgid "Send"
@@ -700,7 +706,7 @@ msgid "Aborting connection attempt after 4 failed writes."
 msgstr "Annulation de la tentative de connexion suite à 4 envois échoués."
 
 #: printrun\printcore.py:542 printrun\printcore.py:561
-#: printrun\pronsole.py:1034 printrun\pronsole.py:1092
+#: printrun\pronsole.py:1035 printrun\pronsole.py:1093
 #: printrun\pronterface.py:224 printrun\pronterface.py:1299
 #: printrun\pronterface.py:1435 printrun\pronterface.py:1508
 msgid "Not connected to printer."
@@ -1068,8 +1074,8 @@ msgstr ""
 msgid "Prusa SL1 files"
 msgstr ""
 
-#: printrun\projectlayer.py:870 printrun\pronsole.py:944
-#: printrun\pronsole.py:985 printrun\pronterface.py:1640
+#: printrun\projectlayer.py:870 printrun\pronsole.py:945
+#: printrun\pronsole.py:986 printrun\pronterface.py:1640
 msgid "File not found!"
 msgstr "Fichier non trouvé"
 
@@ -1177,157 +1183,157 @@ msgstr "Exécuter la commande :"
 msgid "SENDING:"
 msgstr ""
 
-#: printrun\pronsole.py:392 printrun\pronsole.py:400 printrun\pronsole.py:1443
-#: printrun\pronsole.py:1470 printrun\pronsole.py:1542
+#: printrun\pronsole.py:392 printrun\pronsole.py:400 printrun\pronsole.py:1444
+#: printrun\pronsole.py:1471 printrun\pronsole.py:1543
 #: printrun\pronterface.py:475 printrun\pronterface.py:495
 #: printrun\pronterface.py:512 printrun\pronterface.py:527
 msgid "Printer is not online."
 msgstr "Imprimante déconnectée."
 
 #: printrun\pronsole.py:407
+#, fuzzy
+#| msgid "Are you sure you want to reset the printer?"
+msgid ""
+"Are you sure you want to exit while printing?\n"
+"Disables all heaters upon exit."
+msgstr "Etes-vous sûr de vouloir réinitialiser l'imprimante?"
+
+#: printrun\pronsole.py:412
 msgid "Setting extruder temp to 0"
 msgstr ""
 
-#: printrun\pronsole.py:411
+#: printrun\pronsole.py:416
 msgid "Setting bed temp to 0"
 msgstr ""
 
-#: printrun\pronsole.py:413
+#: printrun\pronsole.py:418
 #, fuzzy
 #| msgid "Disconnecting after 4 failed writes."
 msgid "Disconnecting from printer..."
 msgstr "Déconnexion suite à 4 envois échoués."
 
-#: printrun\pronsole.py:415
-#, fuzzy
-#| msgid "Are you sure you want to reset the printer?"
-msgid ""
-"Are you sure you want to exit while printing?\n"
-"(this will terminate the print)."
-msgstr "Etes-vous sûr de vouloir réinitialiser l'imprimante?"
-
-#: printrun\pronsole.py:419
+#: printrun\pronsole.py:420
 msgid "Exiting program. Goodbye!"
 msgstr "Fin du programme. Au revoir !"
 
-#: printrun\pronsole.py:425
+#: printrun\pronsole.py:426
 msgid "Disconnects from the printer and exits the program."
 msgstr "Déconnecte l'imprimante et quitte le programme."
 
-#: printrun\pronsole.py:459
+#: printrun\pronsole.py:460
 msgid "' defined"
 msgstr ""
 
-#: printrun\pronsole.py:459 printrun\pronsole.py:519 printrun\pronsole.py:523
-#: printrun\pronsole.py:564 printrun\pronsole.py:567 printrun\pronsole.py:569
+#: printrun\pronsole.py:460 printrun\pronsole.py:520 printrun\pronsole.py:524
+#: printrun\pronsole.py:565 printrun\pronsole.py:568 printrun\pronsole.py:570
 #, fuzzy
 #| msgid "&Macros"
 msgid "Macro '"
 msgstr "&Macros"
 
-#: printrun\pronsole.py:471 printrun\pronsole.py:488
+#: printrun\pronsole.py:472 printrun\pronsole.py:489
 msgid "Empty macro - cancelled"
 msgstr ""
 
-#: printrun\pronsole.py:508
+#: printrun\pronsole.py:509
 msgid "Enter macro using indented lines, end with empty line"
 msgstr ""
 
-#: printrun\pronsole.py:519
+#: printrun\pronsole.py:520
 msgid "' removed"
 msgstr ""
 
-#: printrun\pronsole.py:523 printrun\pronsole.py:569
+#: printrun\pronsole.py:524 printrun\pronsole.py:570
 msgid "' is not defined"
 msgstr ""
 
-#: printrun\pronsole.py:532
+#: printrun\pronsole.py:533
 #, fuzzy
 #| msgid "Name '%s' is being used by built-in command"
 msgid "' is being used by built-in command"
 msgstr "Le nom '%s' est utilisé par une commande interne"
 
-#: printrun\pronsole.py:532
+#: printrun\pronsole.py:533
 msgid "Name '"
 msgstr ""
 
-#: printrun\pronsole.py:552
+#: printrun\pronsole.py:553
 msgid "Define single-line macro: macro <name> <definition>"
 msgstr ""
 
-#: printrun\pronsole.py:553
+#: printrun\pronsole.py:554
 msgid "Define multi-line macro:  macro <name>"
 msgstr ""
 
-#: printrun\pronsole.py:554
+#: printrun\pronsole.py:555
 msgid ""
 "Enter macro definition in indented lines. Use {0} .. {N} to substitute macro "
 "arguments"
 msgstr ""
 
-#: printrun\pronsole.py:555
+#: printrun\pronsole.py:556
 msgid ""
 "Enter python code, prefixed with !  Use arg[0] .. arg[N] to substitute macro "
 "arguments"
 msgstr ""
 
-#: printrun\pronsole.py:556
+#: printrun\pronsole.py:557
 msgid "Delete macro:             macro <name> /d"
 msgstr ""
 
-#: printrun\pronsole.py:557
+#: printrun\pronsole.py:558
 msgid "Show macro definition:    macro <name> /s"
 msgstr ""
 
-#: printrun\pronsole.py:558
+#: printrun\pronsole.py:559
 msgid "'macro' without arguments displays list of defined macros"
 msgstr ""
 
-#: printrun\pronsole.py:564
+#: printrun\pronsole.py:565
 msgid "' defined as:"
 msgstr ""
 
-#: printrun\pronsole.py:567
+#: printrun\pronsole.py:568
 msgid "' defined as: '"
 msgstr ""
 
-#: printrun\pronsole.py:582 printrun\pronsole.py:601
+#: printrun\pronsole.py:583 printrun\pronsole.py:602
 #, fuzzy
 #| msgid "Unknown axis."
 msgid "Unknown variable '%s'"
 msgstr "Axe inconnu."
 
-#: printrun\pronsole.py:585
+#: printrun\pronsole.py:586
 msgid "Bad value %s for variable '%s': %s"
 msgstr ""
 
-#: printrun\pronsole.py:587
+#: printrun\pronsole.py:588
 msgid "Bad value for variable '%s', expecting %s (%s)"
 msgstr ""
 
-#: printrun\pronsole.py:606
+#: printrun\pronsole.py:607
 msgid "Set variable:   set <variable> <value>"
 msgstr ""
 
-#: printrun\pronsole.py:607
+#: printrun\pronsole.py:608
 msgid "Show variable:  set <variable>"
 msgstr ""
 
-#: printrun\pronsole.py:608
+#: printrun\pronsole.py:609
 msgid "'set' without arguments displays all variables"
 msgstr ""
 
-#: printrun\pronsole.py:714
+#: printrun\pronsole.py:715
 #, fuzzy
 #| msgid "Slicing failed: %s"
 msgid "Saving failed for "
 msgstr "Échec de la découpe: %s"
 
-#: printrun\pronsole.py:743
+#: printrun\pronsole.py:744
 msgid "increase verbosity"
 msgstr ""
 
-#: printrun\pronsole.py:744
+#: printrun\pronsole.py:745
 msgid ""
 "load this file on startup instead of .pronsolerc ; you may chain config "
 "files, if so settings auto-save will use the last specified file"
@@ -1336,7 +1342,7 @@ msgstr ""
 "fichiers de configuration, dans ce cas les paramètres seront sauvegardés "
 "dans le dernier fichier spécifié"
 
-#: printrun\pronsole.py:745
+#: printrun\pronsole.py:746
 msgid ""
 "executes command after configuration/.pronsolerc is loaded ; macros/settings "
 "from these commands are not autosaved"
@@ -1345,115 +1351,115 @@ msgstr ""
 "les macros et paramètres de ces commandes ne seront pas sauvegardées "
 "automatiquement"
 
-#: printrun\pronsole.py:746
+#: printrun\pronsole.py:747
 msgid "file to load"
 msgstr "fichier à charger"
 
-#: printrun\pronsole.py:756
+#: printrun\pronsole.py:757
 #, fuzzy
 msgid "ERROR: Unable to load configuration file: %s"
 msgstr "Activer l'intégration de Slic3r"
 
-#: printrun\pronsole.py:790 printrun\pronsole.py:800
+#: printrun\pronsole.py:791 printrun\pronsole.py:801
 msgid "Error: You are trying to connect to a non-existing port."
 msgstr "Erreur: Vous essayez de vous connecter à un port inexistant."
 
-#: printrun\pronsole.py:792
+#: printrun\pronsole.py:793
 msgid "Error: You don't have permission to open %s."
 msgstr "Erreur: Vous n'avez pas la permission d'ouvrir %s."
 
-#: printrun\pronsole.py:793
+#: printrun\pronsole.py:794
 msgid "You might need to add yourself to the dialout group."
 msgstr ""
 "Vous avez peut être besoin de vous ajouter au groupe dialout ou similaire."
 
-#: printrun\pronsole.py:823
+#: printrun\pronsole.py:824
 msgid "' ignored"
 msgstr ""
 
-#: printrun\pronsole.py:823
+#: printrun\pronsole.py:824
 msgid "Bad baud value '"
 msgstr ""
 
-#: printrun\pronsole.py:825
+#: printrun\pronsole.py:826
 msgid "No serial ports detected - please specify a port"
 msgstr ""
 
-#: printrun\pronsole.py:828
+#: printrun\pronsole.py:829
 msgid "No port specified - connecting to %s at %dbps"
 msgstr ""
 
-#: printrun\pronsole.py:838
+#: printrun\pronsole.py:839
 #, fuzzy
 #| msgid "Connect to the printer"
 msgid "Connect to printer"
 msgstr "Se connecter à l'imprimante"
 
-#: printrun\pronsole.py:839
+#: printrun\pronsole.py:840
 msgid "connect <port> <baudrate>"
 msgstr ""
 
-#: printrun\pronsole.py:840
+#: printrun\pronsole.py:841
 msgid ""
 "If port and baudrate are not specified, connects to first detected port at "
 "115200bps"
 msgstr ""
 
-#: printrun\pronsole.py:843
+#: printrun\pronsole.py:844
 msgid "Available ports: "
 msgstr ""
 
-#: printrun\pronsole.py:845
+#: printrun\pronsole.py:846
 msgid "No serial ports were automatically found."
 msgstr ""
 
-#: printrun\pronsole.py:878
+#: printrun\pronsole.py:879
 #, fuzzy
 #| msgid "Printer is now online."
 msgid "Printer is now online"
 msgstr "Imprimante connectée."
 
-#: printrun\pronsole.py:885
+#: printrun\pronsole.py:886
 #, fuzzy
 #| msgid "Connect to the printer"
 msgid "Disconnects from the printer"
 msgstr "Se connecter à l'imprimante"
 
-#: printrun\pronsole.py:892
+#: printrun\pronsole.py:893
 #, fuzzy
 #| msgid "Printer is not online."
 msgid "Blocks until printer is online"
 msgstr "Imprimante déconnectée."
 
-#: printrun\pronsole.py:893
+#: printrun\pronsole.py:894
 msgid "Warning: if something goes wrong, this can block pronsole forever"
 msgstr ""
 
-#: printrun\pronsole.py:902
+#: printrun\pronsole.py:903
 msgid "Disconnecting after 4 failed writes."
 msgstr "Déconnexion suite à 4 envois échoués."
 
-#: printrun\pronsole.py:940 printrun\pronsole.py:977
+#: printrun\pronsole.py:941 printrun\pronsole.py:978
 msgid "No file name given."
 msgstr "Aucun nom de fichier fourni."
 
-#: printrun\pronsole.py:942 printrun\pronterface.py:1672
+#: printrun\pronsole.py:943 printrun\pronterface.py:1672
 #, fuzzy
 #| msgid "Skeining file: %s"
 msgid "Loading file: %s"
 msgstr "Découpe du fichier: %s"
 
-#: printrun\pronsole.py:947
+#: printrun\pronsole.py:948
 #, fuzzy
 msgid "Loaded %s, %d lines."
 msgstr "%s chargé, %d lignes"
 
-#: printrun\pronsole.py:948 printrun\pronterface.py:1779
+#: printrun\pronsole.py:949 printrun\pronterface.py:1779
 #, fuzzy
 msgid "Estimated duration: %d layers, %s"
 msgstr "Durée estimée : %s"
 
-#: printrun\pronsole.py:972
+#: printrun\pronsole.py:973
 #, fuzzy
 #| msgid ""
 #| "Creates a gcode file from an stl model using the slicer (with tab-"
@@ -1463,37 +1469,37 @@ msgstr ""
 "Crée un fichier gcode à partir d'un modèle stl avec la découpeuse (avec tab-"
 "complétion)"
 
-#: printrun\pronsole.py:983
+#: printrun\pronsole.py:984
 #, fuzzy
 #| msgid "Slicing failed: %s"
 msgid "Slicing file: %s"
 msgstr "Échec de la découpe: %s"
 
-#: printrun\pronsole.py:990
+#: printrun\pronsole.py:991
 msgid "Entering slicer settings: %s"
 msgstr "Accès au paramètres de découpée: %s"
 
-#: printrun\pronsole.py:1000
+#: printrun\pronsole.py:1001
 msgid "Loading sliced file."
 msgstr "Chargement du fichier slicé."
 
-#: printrun\pronsole.py:1003
+#: printrun\pronsole.py:1004
 msgid "Slicing failed: %s"
 msgstr "Échec de la découpe: %s"
 
-#: printrun\pronsole.py:1016
+#: printrun\pronsole.py:1017
 msgid ""
 "Creates a gcode file from an stl model using the slicer (with tab-completion)"
 msgstr ""
 "Crée un fichier gcode à partir d'un modèle stl avec la découpeuse (avec tab-"
 "complétion)"
 
-#: printrun\pronsole.py:1017
+#: printrun\pronsole.py:1018
 #, fuzzy
 msgid "slice filename.stl - create gcode file"
 msgstr "skein fichier.stl - découper fichier.stl en un gcode"
 
-#: printrun\pronsole.py:1018
+#: printrun\pronsole.py:1019
 #, fuzzy
 msgid ""
 "slice filename.stl view - create gcode file and view using skeiniso (if "
@@ -1502,52 +1508,52 @@ msgstr ""
 "skein fichier.stl view - découper fichier.stl en un gcode et le visualiser "
 "avec skeiniso"
 
-#: printrun\pronsole.py:1019
+#: printrun\pronsole.py:1020
 #, fuzzy
 msgid "slice set - adjust slicer settings"
 msgstr "skein set - régler les paramètres de découpe"
 
-#: printrun\pronsole.py:1031
+#: printrun\pronsole.py:1032
 msgid "Please enter target name in 8.3 format."
 msgstr "Veuillez entrer un nom au format 8.3."
 
-#: printrun\pronsole.py:1037
+#: printrun\pronsole.py:1038
 msgid "Uploading as %s"
 msgstr "Envoi en tant que %s"
 
-#: printrun\pronsole.py:1038
+#: printrun\pronsole.py:1039
 msgid "Uploading %s"
 msgstr "Envoi de %s"
 
-#: printrun\pronsole.py:1040
+#: printrun\pronsole.py:1041
 msgid "Press Ctrl-C to interrupt upload."
 msgstr "Appuyer sur Ctrl-C pour interrompre l'envoi."
 
-#: printrun\pronsole.py:1043
+#: printrun\pronsole.py:1044
 msgid "Progress: "
 msgstr "Progrès :"
 
-#: printrun\pronsole.py:1054
+#: printrun\pronsole.py:1055
 msgid "Upload completed. %s should now be on the card."
 msgstr "Envoi terminé. %s devrait maintenant se trouver sur la carte."
 
-#: printrun\pronsole.py:1058
+#: printrun\pronsole.py:1059
 msgid "...interrupted!"
 msgstr "...interrompu !"
 
-#: printrun\pronsole.py:1060
+#: printrun\pronsole.py:1061
 msgid "Something wrong happened while uploading:"
 msgstr ""
 
-#: printrun\pronsole.py:1066
+#: printrun\pronsole.py:1067
 msgid "A partial file named %s may have been written to the sd card."
 msgstr "Un fichier incomplet nommé %s peut avoir été écrit sur la carte SD."
 
-#: printrun\pronsole.py:1079
+#: printrun\pronsole.py:1080
 msgid "Uploads a gcode file to the sd card"
 msgstr ""
 
-#: printrun\pronsole.py:1083
+#: printrun\pronsole.py:1084
 msgid ""
 "Send a loaded gcode file to the printer. Load a file with the load command "
 "first."
@@ -1555,161 +1561,161 @@ msgstr ""
 "Envoyer un fichier gcode chargé à l'imprimante. Veuillez d'abord charger un "
 "fichier avec la commande \"load\"."
 
-#: printrun\pronsole.py:1085
+#: printrun\pronsole.py:1086
 msgid "Send a loaded gcode file to the printer. You have %s loaded right now."
 msgstr ""
 "Envoyer un fichier gcode chargé à l'imprimante. %s est chargé pour l'instant."
 
-#: printrun\pronsole.py:1089 printrun\pronterface.py:904
+#: printrun\pronsole.py:1090 printrun\pronterface.py:904
 #: printrun\pronterface.py:1432
 msgid "No file loaded. Please use load first."
 msgstr "Aucun fichier chargé. Veuillez charger un fichier avant."
 
-#: printrun\pronsole.py:1094
+#: printrun\pronsole.py:1095
 msgid "Printing %s"
 msgstr "Impression de %s"
 
-#: printrun\pronsole.py:1095
+#: printrun\pronsole.py:1096
 msgid "You can monitor the print with the monitor command."
 msgstr "Vous pouvez suivre l'impression avec la commande \"monitor\"."
 
-#: printrun\pronsole.py:1104
+#: printrun\pronsole.py:1105
 msgid "Not printing, cannot pause."
 msgstr "Pas d'impression en cours, impossible de mettre en pause."
 
-#: printrun\pronsole.py:1110
+#: printrun\pronsole.py:1111
 msgid "Pauses a running print"
 msgstr "Met en pause l'impression en cours"
 
-#: printrun\pronsole.py:1117
+#: printrun\pronsole.py:1118
 msgid "Not paused, unable to resume. Start a print first."
 msgstr ""
 "Pas d'impression en pause, impossible de continuer. Veuillez d'abord lancer "
 "une impression."
 
-#: printrun\pronsole.py:1127
+#: printrun\pronsole.py:1128
 msgid "Resumes a paused print."
 msgstr "Continue une impression en pause."
 
-#: printrun\pronsole.py:1136
+#: printrun\pronsole.py:1137
 msgid "Files on SD card:"
 msgstr "Fichiers sur la carte SD :"
 
-#: printrun\pronsole.py:1151 printrun\pronsole.py:1193
-#: printrun\pronsole.py:1486
+#: printrun\pronsole.py:1152 printrun\pronsole.py:1194
+#: printrun\pronsole.py:1487
 msgid "Printer is not online. Please connect to it first."
 msgstr "Imprimante déconnectée. Veuillez vous y connecter."
 
-#: printrun\pronsole.py:1156
+#: printrun\pronsole.py:1157
 msgid "Lists files on the SD card"
 msgstr "Liste les fichiers sur la carte SD"
 
-#: printrun\pronsole.py:1160 printrun\pronterface.py:2098
+#: printrun\pronsole.py:1161 printrun\pronterface.py:2098
 msgid "Opening file failed."
 msgstr "L'ouverture du fichier a échoué"
 
-#: printrun\pronsole.py:1166 printrun\pronterface.py:2104
+#: printrun\pronsole.py:1167 printrun\pronterface.py:2104
 msgid "Starting print"
 msgstr "Début de l'impression..."
 
-#: printrun\pronsole.py:1189
+#: printrun\pronsole.py:1190
 msgid "Resets the printer."
 msgstr "Remet à zéro l'imprimante."
 
-#: printrun\pronsole.py:1199
+#: printrun\pronsole.py:1200
 msgid "File is not present on card. Please upload it first."
 msgstr "Le fichier n'est pas sur la carte, veuillez d'abord l'y envoyer."
 
-#: printrun\pronsole.py:1203
+#: printrun\pronsole.py:1204
 msgid "Printing file: %s from SD card."
 msgstr "Impression du fichier %s depuis la carte SD"
 
-#: printrun\pronsole.py:1204
+#: printrun\pronsole.py:1205
 msgid "Requesting SD print..."
 msgstr "Demande de l'impression depuis la carte SD..."
 
-#: printrun\pronsole.py:1208
+#: printrun\pronsole.py:1209
 msgid "Print a file from the SD card. Tab completes with available file names."
 msgstr ""
 "Imprimer un fichier depuis la carte SD. La touche Tab complétera les "
 "fichiers disponibles."
 
-#: printrun\pronsole.py:1209
+#: printrun\pronsole.py:1210
 msgid "sdprint filename.g"
 msgstr "sdprint fichier.g"
 
-#: printrun\pronsole.py:1226
+#: printrun\pronsole.py:1227
 msgid "Print resumed at: %s"
 msgstr "Impression relancée à : %s"
 
-#: printrun\pronsole.py:1228
+#: printrun\pronsole.py:1229
 msgid "Print started at: %s"
 msgstr "Impression lancée à : %s"
 
-#: printrun\pronsole.py:1239
+#: printrun\pronsole.py:1240
 msgid "Start command output:"
 msgstr ""
 
-#: printrun\pronsole.py:1244 printrun\pronsole.py:1251
+#: printrun\pronsole.py:1245 printrun\pronsole.py:1252
 #, fuzzy
 #| msgid "Failed to start web interface"
 msgid "Failed to set power settings:"
 msgstr "Échec du lancement de l'interface web"
 
-#: printrun\pronsole.py:1255
+#: printrun\pronsole.py:1256
 msgid "Print ended at: %(end_time)s and took %(duration)s"
 msgstr "Impression terminée à : %(end_time)s après avoir duré %(duration)s"
 
-#: printrun\pronsole.py:1281
+#: printrun\pronsole.py:1282
 #, fuzzy
 #| msgid "Final command"
 msgid "Final command output:"
 msgstr "Script post-impression"
 
-#: printrun\pronsole.py:1315 printrun\pronterface.py:2057
+#: printrun\pronsole.py:1316 printrun\pronterface.py:2057
 #, fuzzy
 #| msgid "Execute command: "
 msgid "Received command %s"
 msgstr "Exécuter la commande :"
 
-#: printrun\pronsole.py:1381
+#: printrun\pronsole.py:1382
 msgid "Printer is not currently printing. No ETA available."
 msgstr ""
 
-#: printrun\pronsole.py:1384
+#: printrun\pronsole.py:1385
 #, fuzzy
 msgid "Est: %s of %s remaining"
 msgstr " ETA: %s restant sur %s | "
 
-#: printrun\pronsole.py:1389
+#: printrun\pronsole.py:1390
 msgid "Displays estimated remaining print time."
 msgstr ""
 
-#: printrun\pronsole.py:1399
+#: printrun\pronsole.py:1400
 msgid "Hotend temperature presets updated, pla:%s, abs:%s"
 msgstr ""
 
-#: printrun\pronsole.py:1403
+#: printrun\pronsole.py:1404
 msgid "Bed temperature presets updated, pla:%s, abs:%s"
 msgstr ""
 
-#: printrun\pronsole.py:1416 printrun\pronsole.py:1418
+#: printrun\pronsole.py:1417 printrun\pronsole.py:1419
 msgid "Hotend: %s%s/%s%s"
 msgstr ""
 
-#: printrun\pronsole.py:1419
+#: printrun\pronsole.py:1420
 msgid "Bed:    %s%s/%s%s"
 msgstr ""
 
-#: printrun\pronsole.py:1422
+#: printrun\pronsole.py:1423
 msgid "Read the extruder and bed temperature."
 msgstr "Lire la température de l'extrudeuse et du plateau."
 
-#: printrun\pronsole.py:1431 printrun\pronsole.py:1464
+#: printrun\pronsole.py:1432 printrun\pronsole.py:1465
 msgid "You must enter a temperature."
 msgstr "Vous devez saisir une température."
 
-#: printrun\pronsole.py:1436
+#: printrun\pronsole.py:1437
 msgid ""
 "%s is a high temperature to set your extruder to. Are you sure you want to "
 "do that?"
@@ -1717,11 +1723,11 @@ msgstr ""
 "%s est une température élevée pour une extrudeuse. Êtes-vous sûr de vouloir "
 "faire ça ?"
 
-#: printrun\pronsole.py:1441
+#: printrun\pronsole.py:1442
 msgid "Setting hotend temperature to %s degrees Celsius."
 msgstr "Réglage de la température de la buse à %s degrés Celsius."
 
-#: printrun\pronsole.py:1445 printrun\pronterface.py:477
+#: printrun\pronsole.py:1446 printrun\pronterface.py:477
 msgid ""
 "You cannot set negative temperatures. To turn the hotend off entirely, set "
 "its temperature to 0."
@@ -1729,20 +1735,20 @@ msgstr ""
 "Vous ne pouvez pas régler une température négative. Pour éteindre la buse, "
 "réglez sa température à 0°C."
 
-#: printrun\pronsole.py:1448
+#: printrun\pronsole.py:1449
 msgid "Sets the hotend temperature to the value entered."
 msgstr "Règle de la température de la buse à la valeur saisie."
 
-#: printrun\pronsole.py:1449 printrun\pronsole.py:1476
+#: printrun\pronsole.py:1450 printrun\pronsole.py:1477
 msgid "Enter either a temperature in celsius or one of the following keywords"
 msgstr ""
 "Entrez soit une température en degrés celsius soit un des mots-clés suivants"
 
-#: printrun\pronsole.py:1468
+#: printrun\pronsole.py:1469
 msgid "Setting bed temperature to %s degrees Celsius."
 msgstr "Réglage de la température du plateau à %s degrés Celsius."
 
-#: printrun\pronsole.py:1472 printrun\pronterface.py:497
+#: printrun\pronsole.py:1473 printrun\pronterface.py:497
 msgid ""
 "You cannot set negative temperatures. To turn the bed off entirely, set its "
 "temperature to 0."
@@ -1750,47 +1756,47 @@ msgstr ""
 "Vous ne pouvez pas régler une température négative. Pour désactiver votre "
 "plateau chauffant, réglez sa température à 0°C."
 
-#: printrun\pronsole.py:1475
+#: printrun\pronsole.py:1476
 msgid "Sets the bed temperature to the value entered."
 msgstr "Règle de la température du plateau à la valeur saisie."
 
-#: printrun\pronsole.py:1489
+#: printrun\pronsole.py:1490
 msgid "Printer is not printing. Please print something before monitoring."
 msgstr ""
 "L'imprimante n'est pas en cours d'impression. Veuillez lancer une impression "
 "avant d'activer le suivi."
 
-#: printrun\pronsole.py:1491
+#: printrun\pronsole.py:1492
 msgid "Monitoring printer, use ^C to interrupt."
 msgstr "Imprimante sous surveillance, utiliser ^C pour interrompre."
 
-#: printrun\pronsole.py:1496 printrun\pronterface.py:441
+#: printrun\pronsole.py:1497 printrun\pronterface.py:441
 msgid "Invalid period given."
 msgstr "La période donnée est invalide"
 
-#: printrun\pronsole.py:1497
+#: printrun\pronsole.py:1498
 msgid "Updating values every %f seconds."
 msgstr "Mise à jour des valeurs toutes les %f secondes."
 
-#: printrun\pronsole.py:1507
+#: printrun\pronsole.py:1508
 msgid "Print progress: "
 msgstr "Progrès de l'impression : "
 
-#: printrun\pronsole.py:1510
+#: printrun\pronsole.py:1511
 #, fuzzy
 #| msgid "Print progress: "
 msgid "SD print progress: "
 msgstr "Progrès de l'impression : "
 
-#: printrun\pronsole.py:1518 printrun\pronterface.py:445
+#: printrun\pronsole.py:1519 printrun\pronterface.py:445
 msgid "Done monitoring."
 msgstr "Surveillance de l'imprimante effectuée."
 
-#: printrun\pronsole.py:1522
+#: printrun\pronsole.py:1523
 msgid "Monitor a machine's temperatures and an SD print's status."
 msgstr "Monitorer les températures de la machine et l'état de l'impression SD"
 
-#: printrun\pronsole.py:1523
+#: printrun\pronsole.py:1524
 msgid ""
 "monitor - Reports temperature and SD print status (if SD printing) every 5 "
 "seconds"
@@ -1798,7 +1804,7 @@ msgstr ""
 "monitor - Rapporte les températures et l'état d'impression SD (si "
 "applicable) toutes les 5 secondes"
 
-#: printrun\pronsole.py:1524
+#: printrun\pronsole.py:1525
 msgid ""
 "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 "
 "seconds"
@@ -1806,30 +1812,30 @@ msgstr ""
 "monitor 2 - Rapporte les températures et l'état d'impression SD (si "
 "applicable) toutes les 2 secondes"
 
-#: printrun\pronsole.py:1535
+#: printrun\pronsole.py:1536
 msgid "You must specify the tool index as an integer."
 msgstr "Vous devez spécifier l'indice de l'outil avec un entier."
 
-#: printrun\pronsole.py:1539
+#: printrun\pronsole.py:1540
 msgid "Using tool %d."
 msgstr "Utilisation de l'outil %d."
 
-#: printrun\pronsole.py:1544
+#: printrun\pronsole.py:1545
 msgid "You cannot set negative tool numbers."
 msgstr "Vous ne pouvez pas choisir des indices d'outil négatifs."
 
-#: printrun\pronsole.py:1547
+#: printrun\pronsole.py:1548
 msgid ""
 "Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."
 msgstr ""
 "Passer à l'outil spécifié (e.g. faire \"tool 1\" enverra un G-Code T1)."
 
-#: printrun\pronsole.py:1551
+#: printrun\pronsole.py:1552
 msgid "No move specified."
 msgstr "Aucun déplacement spécifié."
 
-#: printrun\pronsole.py:1554 printrun\pronsole.py:1616
-#: printrun\pronsole.py:1665 printrun\pronsole.py:1692
+#: printrun\pronsole.py:1555 printrun\pronsole.py:1617
+#: printrun\pronsole.py:1666 printrun\pronsole.py:1693
 msgid ""
 "Printer is currently printing. Please pause the print before you issue "
 "manual commands."
@@ -1837,23 +1843,23 @@ msgstr ""
 "L'imprimante est actuellement en train d'imprimer. Veuillez mettre "
 "l'impression en pause avant d'envoyer des commandes manuelles."
 
-#: printrun\pronsole.py:1557 printrun\pronsole.py:1689
+#: printrun\pronsole.py:1558 printrun\pronsole.py:1690
 msgid "Printer is not online. Unable to move."
 msgstr "Imprimante déconnectée. Impossible de bouger."
 
-#: printrun\pronsole.py:1573
+#: printrun\pronsole.py:1574
 msgid "Unknown axis."
 msgstr "Axe inconnu."
 
-#: printrun\pronsole.py:1578
+#: printrun\pronsole.py:1579
 msgid "Invalid distance"
 msgstr "Distance invalide"
 
-#: printrun\pronsole.py:1589
+#: printrun\pronsole.py:1590
 msgid "Move an axis. Specify the name of the axis and the amount. "
 msgstr "Déplacer un axe. Spécifier le nom de l'axe et la distance."
 
-#: printrun\pronsole.py:1590
+#: printrun\pronsole.py:1591
 #, fuzzy
 #| msgid ""
 #| "move X 10 will move the X axis forward by 10mm at %s mm/min (default XY "
@@ -1865,13 +1871,13 @@ msgstr ""
 "move X 10 va déplacer l'axe X en avant de 10mm à %s mm/min (vitesse XY par "
 "défaut)"
 
-#: printrun\pronsole.py:1591
+#: printrun\pronsole.py:1592
 #, fuzzy
 #| msgid "move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"
 msgid "move Y 10 - 5000 will move the Y axis forward by 10 mm at 5000 mm/min"
 msgstr "move Y 10 5000 va déplacer l'axe Y en avant de 10mm à 5000mm/min"
 
-#: printrun\pronsole.py:1592
+#: printrun\pronsole.py:1593
 #, fuzzy
 #| msgid ""
 #| "move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)"
@@ -1881,41 +1887,41 @@ msgstr ""
 "move Z -1 va déplacer l'axe Z vers le bas de 1mm à %s mm/min (vitesse Z par "
 "défaut)"
 
-#: printrun\pronsole.py:1593
+#: printrun\pronsole.py:1594
 msgid "Common amounts are in the tabcomplete list."
 msgstr "Des longueurs standard sont dans la liste de tabcomplétion."
 
-#: printrun\pronsole.py:1613
+#: printrun\pronsole.py:1614
 #, fuzzy
 #| msgid "Printer is not online. Unable to reverse."
 msgid "Printer is not online. Unable to extrude."
 msgstr "Imprimante déconnectée. Impossible de retirer."
 
-#: printrun\pronsole.py:1623 printrun\pronsole.py:1672
+#: printrun\pronsole.py:1624 printrun\pronsole.py:1673
 msgid "Invalid length given."
 msgstr "La longueur donnée est invalide."
 
-#: printrun\pronsole.py:1628 printrun\pronsole.py:1677
+#: printrun\pronsole.py:1629 printrun\pronsole.py:1678
 msgid "Invalid speed given."
 msgstr "La vitesse donnée est invalide."
 
-#: printrun\pronsole.py:1636
+#: printrun\pronsole.py:1637
 #, fuzzy
 #| msgid "Extruding %fmm of filament."
 msgid "Extruding %f mm of filament."
 msgstr "Extrusion de %fmm de filament."
 
-#: printrun\pronsole.py:1638
+#: printrun\pronsole.py:1639
 #, fuzzy
 #| msgid "Reversing %fmm of filament."
 msgid "Reversing %f mm of filament."
 msgstr "Rétractation de %fmm de filament."
 
-#: printrun\pronsole.py:1640
+#: printrun\pronsole.py:1641
 msgid "Length is 0, not doing anything."
 msgstr "Longueur nulle, rien à faire."
 
-#: printrun\pronsole.py:1652
+#: printrun\pronsole.py:1653
 #, fuzzy
 #| msgid ""
 #| "Extrudes a length of filament, 5mm by default, or the number of mm given "
@@ -1927,35 +1933,35 @@ msgstr ""
 "Extruder une longueur de filament, 5mm par défaut, ou le nombre de mm "
 "spécifiés en paramètre"
 
-#: printrun\pronsole.py:1653
+#: printrun\pronsole.py:1654
 #, fuzzy
 #| msgid "extrude - extrudes 5mm of filament at 300mm/min (5mm/s)"
 msgid "extrude - extrudes 5 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "extrude - extruder 5mm de filament à 300mm/min (5mm/s)"
 
-#: printrun\pronsole.py:1654
+#: printrun\pronsole.py:1655
 #, fuzzy
 #| msgid "extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)"
 msgid "extrude 20 - extrudes 20 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "extrude 20 - extruder 20mm de filament à 300mm/min (5mm/s)"
 
-#: printrun\pronsole.py:1655
+#: printrun\pronsole.py:1656
 #, fuzzy
 #| msgid "extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)"
 msgid "extrude -5 - REVERSES 5 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "extrude -5 - RETRACTER 5mm de filament à 300mm/min (5mm/s)"
 
-#: printrun\pronsole.py:1656
+#: printrun\pronsole.py:1657
 #, fuzzy
 #| msgid "extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
 msgid "extrude 10 210 - extrudes 10 mm of filament at 210 mm/min (3.5 mm/s)"
 msgstr "extrude 10 210 - extruder 10mm de filament à 210mm/min (3.5mm/s)"
 
-#: printrun\pronsole.py:1662
+#: printrun\pronsole.py:1663
 msgid "Printer is not online. Unable to reverse."
 msgstr "Imprimante déconnectée. Impossible de retirer."
 
-#: printrun\pronsole.py:1681
+#: printrun\pronsole.py:1682
 #, fuzzy
 #| msgid ""
 #| "Reverses the extruder, 5mm by default, or the number of mm given as a "
@@ -1967,96 +1973,96 @@ msgstr ""
 "Rétracte l'extrudeuse, de 5mm par défaut, ou du nombre de mm donnés en "
 "paramètre"
 
-#: printrun\pronsole.py:1682
+#: printrun\pronsole.py:1683
 #, fuzzy
 #| msgid "reverse - reverses 5mm of filament at 300mm/min (5mm/s)"
 msgid "reverse - reverses 5 mm of filament at 300mm/min (5 mm/s)"
 msgstr "reverse - rétracte 5mm de filament à 300mm/min (5mm/s)"
 
-#: printrun\pronsole.py:1683
+#: printrun\pronsole.py:1684
 #, fuzzy
 #| msgid "reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)"
 msgid "reverse 20 - reverses 20 mm of filament at 300mm/min (5 mm/s)"
 msgstr "reverse 20 - rétracte 20mm de filament à 300mm/min (5mm/s)"
 
-#: printrun\pronsole.py:1684
+#: printrun\pronsole.py:1685
 #, fuzzy
 #| msgid "reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
 msgid "reverse 10 210 - extrudes 10 mm of filament at 210 mm/min (3.5 mm/s)"
 msgstr "reverse 10 210 - rétracte 10mm de filament à 210mm/min (3.5mm/s)"
 
-#: printrun\pronsole.py:1685
+#: printrun\pronsole.py:1686
 #, fuzzy
 #| msgid "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
 msgid "reverse -5 - EXTRUDES 5 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "reverse -5 - EXTRUDE 5mm de filament à 300mm/min (5mm/s)"
 
-#: printrun\pronsole.py:1707
+#: printrun\pronsole.py:1708
 msgid "Homes the printer"
 msgstr "Ramène l'imprimante à zéro"
 
-#: printrun\pronsole.py:1708
+#: printrun\pronsole.py:1709
 msgid "home - homes all axes and zeroes the extruder(Using G28 and G92)"
 msgstr ""
 "home - ramène tous les axes à l'origine et remet l'extrudeuse à zéro (avec "
 "un G28 et un G92)"
 
-#: printrun\pronsole.py:1709
+#: printrun\pronsole.py:1710
 msgid "home xy - homes x and y axes (Using G28)"
 msgstr "home xy - ramène les axes x et y à l'origine (avec un G28)"
 
-#: printrun\pronsole.py:1710
+#: printrun\pronsole.py:1711
 msgid "home z - homes z axis only (Using G28)"
 msgstr "home z - ramène l'axe z à l'origine (avec un G28)"
 
-#: printrun\pronsole.py:1711
+#: printrun\pronsole.py:1712
 msgid "home e - set extruder position to zero (Using G92)"
 msgstr "home e - réinitialise l'extrudeuse à la position zéro (avec un G92)"
 
-#: printrun\pronsole.py:1712
+#: printrun\pronsole.py:1713
 msgid "home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"
 msgstr ""
 "home xyze - ramène tous les axes à l'origine et réinitialise l'extrudeuse "
 "(avec un G28 et un G92)"
 
-#: printrun\pronsole.py:1720
+#: printrun\pronsole.py:1721
 msgid "; Motors off"
 msgstr "; Arrêt moteur"
 
-#: printrun\pronsole.py:1722
+#: printrun\pronsole.py:1723
 msgid "; Extruder off"
 msgstr "; Arrêt extrudeuse"
 
-#: printrun\pronsole.py:1724
+#: printrun\pronsole.py:1725
 msgid "; Heatbed off"
 msgstr "; Arrêt plateau chauffant"
 
-#: printrun\pronsole.py:1726
+#: printrun\pronsole.py:1727
 msgid "; Fan off"
 msgstr "; Arrêt ventilateur"
 
-#: printrun\pronsole.py:1728
+#: printrun\pronsole.py:1729
 msgid "; Power supply off"
 msgstr "; Arrêt alimentation"
 
-#: printrun\pronsole.py:1731
+#: printrun\pronsole.py:1732
 msgid "Printer is not online. Unable to turn it off."
 msgstr "Imprimante déconnectée. Impossible de l'éteindre."
 
-#: printrun\pronsole.py:1734
+#: printrun\pronsole.py:1735
 msgid "Turns off everything on the printer"
 msgstr "Éteint tout sur l'imprimante"
 
-#: printrun\pronsole.py:1745
+#: printrun\pronsole.py:1746
 msgid "G-Code calling host command \"%s\""
 msgstr ""
 
-#: printrun\pronsole.py:1754
+#: printrun\pronsole.py:1755
 msgid ""
 "Runs a custom script. Current gcode filename can be given using $s token."
 msgstr ""
 
-#: printrun\pronsole.py:1764
+#: printrun\pronsole.py:1765
 msgid ""
 "Runs a custom script which output gcode which will in turn be executed. "
 "Current gcode filename can be given using $s token."
@@ -2228,7 +2234,7 @@ msgstr " Ouvrir un fichier"
 #: printrun\pronterface.py:815
 #, fuzzy
 #| msgid "&Open..."
-msgid "&Open...\tCtrl+O"
+msgid "&Open..."
 msgstr "&Ouvrir..."
 
 #: printrun\pronterface.py:816
@@ -2254,7 +2260,7 @@ msgstr " Effacer le contenu de la console de sortie"
 #: printrun\pronterface.py:826
 #, fuzzy
 #| msgid "Clear console"
-msgid "Clear console\tCtrl+L"
+msgid "Clear console"
 msgstr "Effacer la console"
 
 #: printrun\pronterface.py:827
