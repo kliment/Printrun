@@ -1395,13 +1395,13 @@ Disables all heaters upon exit."))
 
     def set_temp_preset(self, key, value):
         if not key.startswith("bed"):
-            self.temps["pla"] = str(self.settings.temperature_pla)
-            self.temps["abs"] = str(self.settings.temperature_abs)
-            self.log(_("Hotend temperature presets updated, pla:%s, abs:%s") % (self.temps["pla"], self.temps["abs"]))
+            self.temps["PLA"] = str(self.settings.temperature_pla)
+            self.temps["ABS"] = str(self.settings.temperature_abs)
+            self.log(_("Hotend temperature presets updated, PLA:%s, ABS:%s") % (self.temps["PLA"], self.temps["ABS"]))
         else:
-            self.bedtemps["pla"] = str(self.settings.bedtemp_pla)
-            self.bedtemps["abs"] = str(self.settings.bedtemp_abs)
-            self.log(_("Bed temperature presets updated, pla:%s, abs:%s") % (self.bedtemps["pla"], self.bedtemps["abs"]))
+            self.bedtemps["PLA"] = str(self.settings.bedtemp_pla)
+            self.bedtemps["ABS"] = str(self.settings.bedtemp_abs)
+            self.log(_("Bed temperature presets updated, PLA:%s, ABS:%s") % (self.bedtemps["PLA"], self.bedtemps["ABS"]))
 
     def tempcb(self, l):
         if "T:" in l:
