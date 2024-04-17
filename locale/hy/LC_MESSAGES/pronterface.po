@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2024-04-14 21:47+0200\n"
-"PO-Revision-Date: 2024-04-14 22:36+0200\n"
+"POT-Creation-Date: 2024-04-17 21:28+0200\n"
+"PO-Revision-Date: 2024-04-17 21:37+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: HY <info@armath.am>\n"
 "Language: hy\n"
@@ -1679,11 +1679,11 @@ msgid "Displays estimated remaining print time."
 msgstr "Ցույց տալ, թե իչքան ժամանակ է մնացել տպագրությանը:"
 
 #: printrun\pronsole.py:1400
-msgid "Hotend temperature presets updated, pla:%s, abs:%s"
+msgid "Hotend temperature presets updated, PLA:%s, ABS:%s"
 msgstr ""
 
 #: printrun\pronsole.py:1404
-msgid "Bed temperature presets updated, pla:%s, abs:%s"
+msgid "Bed temperature presets updated, PLA:%s, ABS:%s"
 msgstr ""
 
 #: printrun\pronsole.py:1417 printrun\pronsole.py:1419
