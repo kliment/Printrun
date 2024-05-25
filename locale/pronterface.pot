@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-04-17 21:28+0200\n"
+"POT-Creation-Date: 2024-05-25 15:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -65,8 +65,8 @@ msgstr ""
 msgid "Fit view to display entire print"
 msgstr ""
 
-#: printrun\gcview.py:456 printrun\gviz.py:89
-msgid "Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."
+#: printrun\gcview.py:456
+msgid "Click [Mouse-Right] to move the view, click [Mouse-Left] to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."
 msgstr ""
 
 #: printrun\gcview.py:481
@@ -489,6 +489,10 @@ msgstr ""
 
 #: printrun\gviz.py:69
 msgid "Close Window"
+msgstr ""
+
+#: printrun\gviz.py:89
+msgid "Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."
 msgstr ""
 
 #: printrun\gviz.py:128 printrun\gviz.py:278 printrun\gviz.py:287
@@ -1596,7 +1600,7 @@ msgid "move X 10 - will move the X axis forward by 10 mm at %s mm/min (default X
 msgstr ""
 
 #: printrun\pronsole.py:1592
-msgid "move Y 10 - 5000 will move the Y axis forward by 10 mm at 5000 mm/min"
+msgid "move Y 10 5000 - will move the Y axis forward by 10 mm at 5000 mm/min"
 msgstr ""
 
 #: printrun\pronsole.py:1593

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Plater\n"
-"POT-Creation-Date: 2024-04-17 21:28+0200\n"
-"PO-Revision-Date: 2024-04-17 21:32+0200\n"
+"POT-Creation-Date: 2024-05-25 15:04+0200\n"
+"PO-Revision-Date: 2024-05-25 15:06+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: < http://linuxac.org ســ  <مجتمع لينكس العربي\n"
 "Language: ar\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.4.4\n"
 "Generated-By: pygettext.py 1.5\n"
 
 #: printrun\excluder.py:26
@@ -64,9 +64,9 @@ msgstr ""
 msgid "Fit view to display entire print"
 msgstr ""
 
-#: printrun\gcview.py:456 printrun\gviz.py:89
+#: printrun\gcview.py:456
 msgid ""
-"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"Click [Mouse-Right] to move the view, click [Mouse-Left] to pan the view, "
 "scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
 "change the layer."
 msgstr ""
@@ -495,6 +495,13 @@ msgstr ""
 
 #: printrun\gviz.py:69
 msgid "Close Window"
+msgstr ""
+
+#: printrun\gviz.py:89
+msgid ""
+"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
+"change the layer."
 msgstr ""
 
 #: printrun\gviz.py:128 printrun\gviz.py:278 printrun\gviz.py:287
@@ -1677,7 +1684,7 @@ msgid ""
 msgstr ""
 
 #: printrun\pronsole.py:1592
-msgid "move Y 10 - 5000 will move the Y axis forward by 10 mm at 5000 mm/min"
+msgid "move Y 10 5000 - will move the Y axis forward by 10 mm at 5000 mm/min"
 msgstr ""
 
 #: printrun\pronsole.py:1593

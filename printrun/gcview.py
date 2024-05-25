@@ -453,7 +453,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
 
         h_sizer.Add(self.glpanel, 1, wx.EXPAND)
         h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
-        self.glpanel.SetToolTip(_("Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."))
+        self.glpanel.SetToolTip(_("Click [Mouse-Right] to move the view, click [Mouse-Left] to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."))
 
         minsize = self.toolbar.GetEffectiveMinSize().width
         self.SetMinClientSize((minsize, minsize))

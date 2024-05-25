@@ -1589,7 +1589,7 @@ Disables all heaters upon exit."))
     def help_move(self):
         self.log(_("Move an axis. Specify the name of the axis and the amount. "))
         self.log(_("move X 10 - will move the X axis forward by 10 mm at %s mm/min (default XY speed)") % self.settings.xy_feedrate)
-        self.log(_("move Y 10 - 5000 will move the Y axis forward by 10 mm at 5000 mm/min"))
+        self.log(_("move Y 10 5000 - will move the Y axis forward by 10 mm at 5000 mm/min"))
         self.log(_("move Z -1 - will move the Z axis down by 1mm at %s mm/min (default Z speed)") % self.settings.z_feedrate)
         self.log(_("Common amounts are in the tabcomplete list."))
 

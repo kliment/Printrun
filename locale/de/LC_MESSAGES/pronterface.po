@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2024-04-17 21:28+0200\n"
-"PO-Revision-Date: 2024-04-17 21:31+0200\n"
+"POT-Creation-Date: 2024-05-25 15:04+0200\n"
+"PO-Revision-Date: 2024-05-25 15:09+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: <>\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.4.4\n"
 
 # Besseren Begriff suchen
 #: printrun\excluder.py:26
@@ -72,9 +72,9 @@ msgstr "Ansicht anpassen [F]"
 msgid "Fit view to display entire print"
 msgstr "Ansicht anpassen, um den gesamten Druck anzuzeigen"
 
-#: printrun\gcview.py:456 printrun\gviz.py:89
+#: printrun\gcview.py:456
 msgid ""
-"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"Click [Mouse-Right] to move the view, click [Mouse-Left] to pan the view, "
 "scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
 "change the layer."
 msgstr ""
@@ -522,6 +522,17 @@ msgstr "Schließen"
 #: printrun\gviz.py:69
 msgid "Close Window"
 msgstr "Fenster schließen"
+
+#: printrun\gviz.py:89
+msgid ""
+"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
+"change the layer."
+msgstr ""
+"Auf [Maus-Rechts] klicken, um die Ansicht zu verschieben, auf [Maus-Links] "
+"klicken, um die Ansicht zu schwenken, scrollen mit dem [Mausrad], um zu "
+"zoomen, und scrollen mit [Umschalt]+[Mausrad], um zwischen den Schichten zu "
+"wechseln."
 
 #: printrun\gviz.py:128 printrun\gviz.py:278 printrun\gviz.py:287
 msgid "Layer %d: Z = %.03f mm"
@@ -1815,8 +1826,8 @@ msgstr ""
 "Geschwindigkeit) vorwärts"
 
 #: printrun\pronsole.py:1592
-msgid "move Y 10 - 5000 will move the Y axis forward by 10 mm at 5000 mm/min"
-msgstr "move Y 10 5000  -bewegt die Y-Achse um 10 mm bei 5000 mm/min vorwärts"
+msgid "move Y 10 5000 - will move the Y axis forward by 10 mm at 5000 mm/min"
+msgstr "move Y 10 5000 - bewegt die Y-Achse um 10 mm bei 5000 mm/min vorwärts"
 
 #: printrun\pronsole.py:1593
 msgid ""

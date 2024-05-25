@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-04-17 21:28+0200\n"
-"PO-Revision-Date: 2024-04-17 21:37+0200\n"
+"POT-Creation-Date: 2024-05-25 15:04+0200\n"
+"PO-Revision-Date: 2024-05-25 15:11+0200\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: Italian RepRap Community <reprap-italia@googlegroups.com>\n"
 "Language: it\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.4.4\n"
 
 #: printrun\excluder.py:26
 #, fuzzy
@@ -71,9 +71,9 @@ msgstr ""
 msgid "Fit view to display entire print"
 msgstr ""
 
-#: printrun\gcview.py:456 printrun\gviz.py:89
+#: printrun\gcview.py:456
 msgid ""
-"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"Click [Mouse-Right] to move the view, click [Mouse-Left] to pan the view, "
 "scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
 "change the layer."
 msgstr ""
@@ -540,6 +540,13 @@ msgstr ""
 #| msgid " Closes the Window"
 msgid "Close Window"
 msgstr " Chiude la finestra"
+
+#: printrun\gviz.py:89
+msgid ""
+"Click [Mouse-Right] to move the view, click [Mouse-Left]to pan the view, "
+"scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to "
+"change the layer."
+msgstr ""
 
 #: printrun\gviz.py:128 printrun\gviz.py:278 printrun\gviz.py:287
 #, fuzzy
@@ -1791,7 +1798,7 @@ msgid ""
 msgstr ""
 
 #: printrun\pronsole.py:1592
-msgid "move Y 10 - 5000 will move the Y axis forward by 10 mm at 5000 mm/min"
+msgid "move Y 10 5000 - will move the Y axis forward by 10 mm at 5000 mm/min"
 msgstr ""
 
 #: printrun\pronsole.py:1593
