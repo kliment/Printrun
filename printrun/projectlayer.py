@@ -517,7 +517,7 @@ class SettingsFrame(wx.Dialog):
 
         self.calibrate = wx.CheckBox(displayGroup, -1, _("Calibrate"))
         self.calibrate.Bind(wx.EVT_CHECKBOX, self.show_calibrate)
-        self.calibrate.SetToolTip(_("Toggles the calibration grid. Each grid should be 10mmx10mm in size.") +
+        self.calibrate.SetToolTip(_("Toggles the calibration grid. Each grid should be 10 mm x 10 mm in size.") +
                                   _(" Use the grid to ensure the projected size is correct. "
                                     "See also the help for the ProjectedX field."))
         displaysizer.Add(self.calibrate, 0, wx.ALIGN_CENTER_VERTICAL)

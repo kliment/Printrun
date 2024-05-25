@@ -172,7 +172,7 @@ class stl:
                 if not self.parseline(line):
                     return
         else:
-            logging.warning("Not an ascii stl solid - attempting to parse as binary")
+            logging.warning(_("Not an ascii stl solid - attempting to parse as binary"))
             f = open(filename, "rb")
             buf = f.read(84)
             while len(buf) < 84:

@@ -70,7 +70,7 @@ def set_gcview_params(self, path_width, path_height):
 # E selected for Up because is above D
 LAYER_UP_KEYS = ord('U'), ord('E'), wx.WXK_UP
 LAYER_DOWN_KEYS = ord('D'), wx.WXK_DOWN
-ZOOM_IN_KEYS = wx.WXK_PAGEDOWN, 388, wx.WXK_RIGHT, ord('=')
+ZOOM_IN_KEYS = wx.WXK_PAGEDOWN, 388, wx.WXK_RIGHT, ord('+')
 ZOOM_OUT_KEYS = wx.WXK_PAGEUP, 390, wx.WXK_LEFT, ord('-')
 FIT_KEYS = [ord('F')]
 CURRENT_LAYER_KEYS = [ord('C')]
@@ -440,8 +440,8 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
 
         fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         tool_pos = self.toolbar.GetToolPos(3) + 1
-        self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to plate"), fit_image,
-                                shortHelp = _("Fit to plate [F]"), longHelp = '')
+        self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to view"), fit_image,
+                                shortHelp = _("Fit to view [F]"), longHelp = _("Fit view to display entire print"))
         self.toolbar.Realize()
         self.glpanel = GcodeViewPanel(panel,
                                       build_dimensions = build_dimensions,
@@ -453,8 +453,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
 
         h_sizer.Add(self.glpanel, 1, wx.EXPAND)
         h_sizer.Add(self.layerslider, 0, wx.EXPAND | wx.ALL, get_space('minor'))
-        self.glpanel.SetToolTip("Left-click to pan, right-click to move the view "
-                                "and shift + scroll to change the layer")
+        self.glpanel.SetToolTip(_("Click [Mouse-Right] to move the view, click [Mouse-Left] to pan the view, scroll with [Mouse Wheel] to zoom, and scroll with [Shift]+[Mouse Wheel] to change the layer."))
 
         minsize = self.toolbar.GetEffectiveMinSize().width
         self.SetMinClientSize((minsize, minsize))
@@ -525,7 +524,7 @@ if __name__ == "__main__":
     import sys
     app = wx.App(redirect = False)
     build_dimensions = [200, 200, 100, 0, 0, 0]
-    title = 'G-Code Viewer'
+    title = _("G-Code Viewer")
     frame = GcodeViewFrame(None, wx.ID_ANY, title, size = (400, 400),
                            build_dimensions = build_dimensions)
     gcode = gcoder.GCode(open(sys.argv[1]), get_home_pos(build_dimensions))
