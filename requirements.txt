@@ -5,7 +5,7 @@ numpy (>= 1.8.2)
 pyglet >= 1.1, < 2.0
 psutil (>= 2.1)
 lxml (>= 2.9.1)
-appdirs (>= 1.4.0)
+platformdirs
 dbus-python >= 1.2.0 ; sys_platform == 'linux'
 pyobjc-framework-Cocoa ; sys_platform == 'darwin'
 pyreadline3 ; sys_platform == 'win32'

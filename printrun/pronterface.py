@@ -930,7 +930,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                        % self.settings.total_filament_used
 
         info.SetDescription(description)
-        info.SetCopyright('(C) 2011 - 2020')
+        info.SetCopyright('(C) 2011 - 2024')
         info.SetWebSite('https://github.com/kliment/Printrun')
 
         licence = """\
@@ -1273,12 +1273,16 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 status_string += _(" Z: %.3f mm") % self.curlayer
                 if self.settings.display_progress_on_printer and time.time() - self.printer_progress_time >= self.settings.printer_progress_update_interval:
                     self.printer_progress_time = time.time()
-                    printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
-                    # ":" seems to be some kind of separator for G-CODE"
-                    self.p.send_now(printer_progress_string.replace(":", "."))
-                    if len(printer_progress_string) > 25:
-                        logging.info(_("Warning: The print progress message might be too long to be displayed properly"))
-                    # 13 chars for up to 99h est.
+                    if self.p.mainqueue is not None:
+                        # Don't try to calculate the printer_progress_string with a None value of self.p.mainqueue.
+                        # This happens in combination with self.p.queueindex = 0
+                        # We pass the calculation and try it next time.
+                        printer_progress_string = "M117 " + str(round(100 * float(self.p.queueindex) / len(self.p.mainqueue), 2)) + "% Est " + format_duration(secondsremain)
+                        # ":" seems to be some kind of separator for G-CODE"
+                        self.p.send_now(printer_progress_string.replace(":", "."))
+                        if len(printer_progress_string) > 25:
+                            logging.info(_("Warning: The print progress message might be too long to be displayed properly"))
+                        # 13 chars for up to 99h est.
         elif self.loading_gcode:
             status_string = self.loading_gcode_message
         wx.CallAfter(self.statusbar.SetStatusText, status_string)

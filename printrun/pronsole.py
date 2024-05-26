@@ -29,7 +29,7 @@ import logging
 import traceback
 import re
 
-from appdirs import user_cache_dir, user_config_dir, user_data_dir
+from platformdirs import user_cache_dir, user_config_dir, user_data_dir
 from serial import SerialException
 
 from . import printcore
@@ -323,7 +323,7 @@ class pronsole(cmd.Cmd):
                 progress = 0.0
             specials["progress"] = str(progress)
             if self.p.printing or self.sdprinting:
-                specials["progress_fancy"] = " " + str(progress) + "%"
+                specials["progress_fancy"] = " " + str(round(progress, 2)) + "%"
             else:
                 specials["progress_fancy"] = ""
             specials["red"] = "\033[31m"
