@@ -9,6 +9,7 @@ An enormous number of people have contributed to Printrun (thank you!):
 - Miro Hrončok @hroncok (code, packaging)
 - Rob Gilson @D1plo1d (code)
 - Gary Hodgson @garyhodgson (code)
+- Neofelis @neofelis2X (code)
 - Duane Johnson (code,graphics)
 - Alessandro Ranellucci @alranel (code)
 - Travis Howse @tjhowse (code)

@@ -604,7 +604,7 @@ An enormous number of people helped make Printrun. See the list
 # LICENSE
 
 ```
-Copyright (C) 2011-2023 Kliment Yanev, Guillaume Seguin, and the other contributors listed in CONTRIBUTORS.md
+Copyright (C) 2011-2024 Kliment Yanev, Guillaume Seguin, and the other contributors listed in CONTRIBUTORS.md
 
 Printrun is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -1,3 +1,44 @@
+Printrun - 2.1.0
+================
+
+Minor release with plenty of GUI enhancements.
+
+### New Features
+
+ * Switch from dependency `appdirs` to `platformdirs` (#1420)
+ * Support print cancellation on Prusa/Marlin based printers (#1414)
+ * Build procedure reworked to use a `pyproject.toml` file (#1407)
+ * Dropped support for Python 3.7 and added Python 3.11 (#1400, #1406)
+   - Removed 'PythonGTK3' submodule
+   - Removed dependencies on 'cffi', 'cairocffi' and 'cairosvg'
+   - New dependency on 'pillow' for Windows systems
+   - Re-enabled support for 32 bits architectures on Windows
+ * Reworked translations (#1343, #1406)
+   - Translation brought up to date to match latest code
+   - Translations for all Printrun tools are now within a single file
+ * Reworked Layer Projector tool (#1387)
+ * Pronterface user interface enhancements (#1331, #1347, #1367)
+ * Code refactoring on printcore (#1346)
+ * Added unit tests suite for printcore (#1334)
+ * Higher baud rates offered by default (#1267)
+
+### Fixed Bugs
+
+ * Fix type error quirk in status when printing via SD (#1426)
+ * Consequences of exiting a print are more transparent (#1415)
+ * Temp button Off for heater or bed conversion error (#1406)
+ * Pronterface double-listing filaments for upper and lower case types (#1406)
+ * Pronterface keyboard shortcuts prevent inputs of some characters (#1406)
+ * Typo in pronsole desktop file (#1359)
+ * Line number mismatch on resend (#1341)
+ * Module 'pyreadline' replaced by 'pyreadline3' (#1332)
+
+### Administrative
+
+ * Updated instructions to build the package (#1400)
+ * Reworked README (#1309, #1374)
+
+
 Printrun - 2.0.1
 ================
 

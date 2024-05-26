@@ -955,6 +955,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         info.AddDeveloper('Miro Hrončok @hroncok (code, packaging)')
         info.AddDeveloper('Rob Gilson @D1plo1d (code)')
         info.AddDeveloper('Gary Hodgson @garyhodgson (code)')
+        info.AddDeveloper('Neofelis @neofelis2X (code)')
         info.AddDeveloper('Duane Johnson (code,graphics)')
         info.AddDeveloper('Alessandro Ranellucci @alranel (code)')
         info.AddDeveloper('Travis Howse @tjhowse (code)')
