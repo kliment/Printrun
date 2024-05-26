@@ -930,7 +930,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                        % self.settings.total_filament_used
 
         info.SetDescription(description)
-        info.SetCopyright('(C) 2011 - 2020')
+        info.SetCopyright('(C) 2011 - 2024')
         info.SetWebSite('https://github.com/kliment/Printrun')
 
         licence = """\
