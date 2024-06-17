@@ -332,12 +332,12 @@ class Gviz(wx.Panel, BaseViz):
                 int(self.scale[1] * x[3]),)
 
     def _arc_scaler(self, x):
-        return (self.scale[0] * x[0],
-                self.scale[1] * x[1],
-                self.scale[0] * x[2],
-                self.scale[1] * x[3],
-                self.scale[0] * x[4],
-                self.scale[1] * x[5],)
+        return (int(self.scale[0] * x[0]),
+                int(self.scale[1] * x[1]),
+                int(self.scale[0] * x[2]),
+                int(self.scale[1] * x[3]),
+                int(self.scale[0] * x[4]),
+                int(self.scale[1] * x[5]),)
 
     def _drawlines(self, dc, lines, pens):
         scaled_lines = [self._line_scaler(l) for l in lines]
