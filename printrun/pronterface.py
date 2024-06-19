@@ -2559,7 +2559,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 import itertools
                 return itertools.chain([self.header], iter(self.f))
 
-        parser.readfp(add_header(open(configfile)), configfile)
+        parser.read_file(add_header(open(configfile)), configfile)
         return parser
 
     def set_slic3r_config(self, configfile, cat, file):
