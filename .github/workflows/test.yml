@@ -7,15 +7,14 @@ on:
   pull_request:
 
 jobs:
-  test:
+  functional_test:
+    name: Functional testing with Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
         include:
-          # Set unit testing to false on all combinations
-          - unit-test: false
           - python-version: "3.8"
             wxpython-wheel: "ubuntu-22.04/wxPython-4.2.1-cp38-cp38-linux_x86_64.whl"
           - python-version: "3.9"
@@ -23,7 +22,6 @@ jobs:
           - python-version: "3.10"
             wxpython-wheel: "ubuntu-22.04/wxPython-4.2.1-cp310-cp310-linux_x86_64.whl"
           - python-version: "3.11"
-            unit-test: true
             wxpython-wheel: "ubuntu-22.04/wxPython-4.2.1-cp311-cp311-linux_x86_64.whl"
 
     steps:
@@ -46,10 +44,33 @@ jobs:
           python -m pip install -r requirements.txt
 
       - name: Perform functional tests
+        # Simple test that but might be enough to detect regressions
+        # particularly those due to wxPython versions
         run: |
           ./pronterface.py -h
 
+  unit_test:
+    name: Unit testing with Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13-dev"]
+        # Unit testing uses functions not available on Python < 3.11
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Printrun dependencies for unit testing
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyserial
+
       - name: Perform unit tests
-        if: ${{ matrix.unit-test }}
         run: |
           python -m unittest discover tests
