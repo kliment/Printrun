@@ -5,7 +5,7 @@ on:
   pull_request:
   release:
     types:
-      - created
+      - published
 
 jobs:
   build:
@@ -76,7 +76,7 @@ jobs:
         "EXE_NAME=printrun-nightly" >> $env:GITHUB_ENV
 
     - name: Configuration for pull requests
-      if: ${{ github.event_name != 'release' && github.event_name != 'push' }}
+      if: ${{ github.event_name == 'pull_request' }}
       run: |
         "EXE_NAME=printrun-test" >> $env:GITHUB_ENV
 
@@ -88,3 +88,8 @@ jobs:
             dist/Pronterface.exe 
             dist/Pronsole.exe
             dist/locale
+
+  upload_release_assets:
+    needs: [build]
+    if: github.event_name == 'release' && github.event.action == 'published'
+    uses: kliment/Printrun/.github/workflows/upload-assets.yml@master

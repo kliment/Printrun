@@ -1,0 +1,40 @@
+name: Upload Assets to Releases
+
+on:
+  workflow_call:
+
+jobs:
+  upload_release_assets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      actions: read
+      issues: read
+      packages: write
+      pull-requests: read
+      repository-projects: read
+      statuses: read
+    steps:
+      - name: Get artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: printrun-*
+          path: upload
+          merge-multiple: false
+
+      - name: Zip artifacts for uploading
+        run: |
+          cd upload || { echo "Failed to cd into 'upload'"; exit 1; }
+          for i in *; do
+            cd "$i" || { echo "Failed to cd into '$i'"; exit 1; }
+            zip -r "../$i.zip" ./*
+            cd ..
+          done
+
+      - name: Upload assets
+        uses: alexellis/upload-assets@0.4.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          asset_paths: '["upload/*.zip"]'

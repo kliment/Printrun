@@ -5,7 +5,7 @@ on:
   pull_request:
   release:
     types:
-      - created
+      - published
 
 jobs:
   build:
@@ -56,20 +56,25 @@ jobs:
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
       run: |
-        echo "EXE_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+        echo "EXE_NAME=${{ github.ref_name }}_macos_${{ matrix.architecture }}" >> $GITHUB_ENV
 
     - name: Configuration for pushes
       if: ${{ github.event_name == 'push' }}
       run: |
-        echo "EXE_NAME=printrun-nightly" >> $GITHUB_ENV
+        echo "EXE_NAME=printrun-nightly_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}" >> $GITHUB_ENV
 
     - name: Configuration for pull requests
-      if: ${{ github.event_name != 'release' && github.event_name != 'push' }}
+      if: ${{ github.event_name == 'pull_request' }}
       run: |
-        echo "EXE_NAME=printrun-test" >> $GITHUB_ENV
+        echo "EXE_NAME=printrun-test_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}" >> $GITHUB_ENV
 
     - name: Upload artifacts for inspection
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.EXE_NAME }}_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}
+        name: ${{ env.EXE_NAME }}
         path: dist/Pronterface-app.zip
+
+  upload_release_assets:
+    needs: [build]
+    if: github.event_name == 'release' && github.event.action == 'published'
+    uses: kliment/Printrun/.github/workflows/upload-assets.yml@master
