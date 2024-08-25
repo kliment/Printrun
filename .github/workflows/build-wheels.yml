@@ -29,9 +29,9 @@ jobs:
         env:
           # we only support what's supported by wxPython, therefore we skip:
           #  * PyPy Python implementation
-          #  * Python 3.6 and 3.7 versions
+          #  * Python 3.6, 3.7 and 3.13 versions
           #  * musl C implementation
-          CIBW_SKIP: "pp* cp36* cp37* *-musllinux*"
+          CIBW_SKIP: "pp* cp36* cp37* cp313* *-musllinux*"
           # produce ARM wheels on Linux in addition to 32 and 64 bit
           CIBW_ARCHS_LINUX: auto aarch64
           # produce wheels for macOS to support both Intel and Apple silicon
