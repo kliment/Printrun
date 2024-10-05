@@ -55,8 +55,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13-dev"]
         # Unit testing uses functions not available on Python < 3.11
+        python-version: ["3.11", "3.12", "3.13"]
+        allow-prereleases: true
 
     steps:
       - uses: actions/checkout@v4
