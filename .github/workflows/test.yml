@@ -57,7 +57,6 @@ jobs:
       matrix:
         # Unit testing uses functions not available on Python < 3.11
         python-version: ["3.11", "3.12", "3.13"]
-        allow-prereleases: true
 
     steps:
       - uses: actions/checkout@v4
@@ -66,6 +65,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
 
       - name: Install Printrun dependencies for unit testing
         run: |
