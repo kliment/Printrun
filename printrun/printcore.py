@@ -417,16 +417,15 @@ class printcore():
 
         self.clear = False
         
-        '''Reset Gcode line number for printer
+        '''Reset Gcode line number for printer, pls. see issue #1421.
            Actual Prusa firmware >3.12.x needs "M110 N-1"
            Smoothieware firmware needs "N-1 M110"
            Old Marlin firmware 1.0.0 needs in addition line checksum
-           self._send("M110 N-1", -1, True) work for Smoothieware and old Marlin firmware.
-           Test for Prusa is needed
+           self._send("M110 N-1", -1, True) results in sending "N-1 M110 N-1*125" 
+           and do not harm Smoothieware and old Marlin firmware.
+           Test for Prusa is needed.
         '''
-        #self._send("M110 N-1") #Prusa firmware >3.12.x
         self._send("M110 N-1", -1, True) #all in one if Prusa works with "N-1 M110 N-1 + checksum"
-        #self._send("M110", -1, True) #older or other firmware, like Smoothieware + Marlin 1.0 needs checksum in addition
 
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
@@ -686,16 +685,15 @@ class printcore():
                 self.queueindex = 0
                 self.lineno = 0
 
-                '''Reset Gcode Line number for Printer
-                Actual Prusa firmware >3.12.x needs "M110 N-1"
-                Smoothieware firmware needs "N-1 M110"
-                Old Marlin firmware 1.0.0 needs in addition line checksum
-                self._send("M110 N-1", -1, True) work for Smoothieware and old Marlin firmware.
-                Test for Prusa is needed
+                '''Reset Gcode line number for printer, pls. see issue #1421.
+                   Actual Prusa firmware >3.12.x needs "M110 N-1"
+                   Smoothieware firmware needs "N-1 M110"
+                   Old Marlin firmware 1.0.0 needs in addition line checksum
+                   self._send("M110 N-1", -1, True) results in sending "N-1 M110 N-1*125" 
+                   and do not harm Smoothieware and old Marlin firmware.
+                   Test for Prusa is needed.
                 '''
-                #self._send("M110 N-1") #Prusa firmware >3.12.x
                 self._send("M110 N-1", -1, True) #all in one if Prusa works with "N-1 M110 N-1 + checksum"
-                #self._send("M110", -1, True) #older or other firmware, like Smoothieware + Marlin 1.0 needs checksum in addition
 
     def _send(self, command, lineno = 0, calcchecksum = False):
         # Only add checksums if over serial (tcp does the flow control itself)
