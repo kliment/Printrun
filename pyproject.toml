@@ -32,6 +32,7 @@ classifiers=[
 dynamic = [  # these variables are dynamically set at `setup.py`
     "version",
     "scripts",
+    "dependencies",
 ]
 
 [project.urls]

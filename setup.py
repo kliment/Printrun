@@ -22,7 +22,7 @@ from setuptools import Extension, find_packages, setup
 
 def get_install_requires():
     with open('requirements.txt') as f:
-        install_requires = f.readlines()
+        return f.readlines()
 
 
 def get_version():
