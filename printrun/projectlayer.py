@@ -20,7 +20,7 @@ import os
 import time
 import zipfile
 import tempfile
-import imghdr
+import puremagic
 import copy
 import re
 from collections import OrderedDict
@@ -756,7 +756,7 @@ class SettingsFrame(wx.Dialog):
 
         for f in imagefilesOrderedDict.values():
             path = os.path.join(self.image_dir.name, f)
-            if os.path.isfile(path) and imghdr.what(path) in accepted_image_types:
+            if os.path.isfile(path) and puremagic.what(path) in accepted_image_types:
                 ol.append(path)
 
         return ol, -1, 'Bitmap'
@@ -780,7 +780,7 @@ class SettingsFrame(wx.Dialog):
         ol = []
         for f in sorted(os.listdir(self.image_dir.name)):
             path = os.path.join(self.image_dir.name, f)
-            if os.path.isfile(path) and imghdr.what(path) in accepted_image_types:
+            if os.path.isfile(path) and puremagic.what(path) in accepted_image_types:
                 ol.append(path)
 
         return ol, -1, 'PrusaSlicer', settings
