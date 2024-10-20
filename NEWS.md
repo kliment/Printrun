@@ -1,3 +1,24 @@
+Printrun - 2.2.0
+================
+Minor release. Added support for Python 3.13.
+
+### New Features
+
+ * Added support for Python 3.13 (#1451)
+ * Replaced module `imghdr` with `puremagic` (#1455)
+ * Replaced configparser `readfp` with `read_file` (#1428)
+
+### Fixed Bugs
+
+ * Regression when dealing with line numbers (#1454)
+ * Run-time dependencies installation (#1457)
+ * Correction of type error for G2/G3 arc moves (#1434)
+
+### Administrative
+
+ * Simplified file naming for macOS builds (#1432)
+
+
 Printrun - 2.1.0
 ================
 
