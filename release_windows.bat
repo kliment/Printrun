@@ -28,19 +28,23 @@ rem **                                                                          
 rem **  1. Install python 64-bit (3.10.x 64-bit is actually preferred                 **
 rem **     and standard version for Windows 10)                                       **
 rem **     https://www.python.org/downloads/release                                   **
-rem **     In case you use an other Python version: Check line 73 to 77 and adjust    **
+rem **     In case you use an other Python version: Check line 77 to 82 and adjust    **
 rem **     the parameter accordingly to build your virtual environment.               **
 rem **  2. Install C-compiler environment                                             **
 rem **     https://wiki.python.org/moin/WindowsCompilers                              **
+rem **     (Microsoft Visual Studio 2022 Community version is proofed to work fine)   **
 rem **  3. Check for latest repository updates at:                                    **
 rem **     http://github.com/kliment/Printrun.git                                     **
-rem **                                                                                **
+rem **  4. It is recommended to delete an existing virtual environment (v3) when you  **
+rem **     switch between -x32/-x64 or different Python versions. There is a second   **
+rem **     batch script called CleanCacheFiles.bat available for cleaning             **
+rem **     former compiling- and __pycache__ artifacts . Run it as often you need.    **
 rem **  																			  **
 rem **  Remark: Plater stand alone application is experimental only. GUI code need an **
 rem **          update for closing plater window and running processes. For now you   **
 rem **          need to terminate the process manually via Task manager.			  **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2023-12-15, Status: working                               **
+rem **  Author: DivingDuck, 2024-11-16, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -52,6 +56,13 @@ if exist dist (
    DEL /F/Q/S dist > NUL
    RMDIR /Q/S dist
    )
+echo ***************************************************
+echo ****** Delete files and directory of .\build ******
+echo ***************************************************
+if exist build (
+   DEL /F/Q/S build > NUL
+   RMDIR /Q/S build
+   )   
 echo *********************************************
 echo ****** Activate virtual environment v3 ******
 echo *********************************************
@@ -67,17 +78,22 @@ if exist v3 (
    rem for your Python version of choice and add 'rem' for all other versions.
    rem Attention: 
    rem Minimum version for wxPython is >= 4.2.1. With this version
-   rem Python x64 (version 3.7 up to 3.11) and 
-   rem Python x86 (version 3.9 up to 3.11) is supported.
+   rem Python x64 (version 3.8 up to 3.12) and 
+   rem Python x86 (version 3.9 up to 3.12) is supported.
 
-   rem py -3.7 -m venv v3
    rem py -3.8 -m venv v3
    rem py -3.9-32 -m venv v3
    rem py -3.9 -m venv v3
    rem py -3.10-32 -m venv v3
-   py -3.10 -m venv v3
+   rem py -3.10 -m venv v3
    rem py -3.11-32 -m venv v3
    rem py -3.11 -m venv v3
+   rem py -3.12-32 -m venv v3
+   rem py -3.12 -m venv v3
+   
+   rem Attention: Python 3.13 support is experimental, no 3D view available for now.
+   rem py -3.13-32 -m venv v3
+   py -3.13 -m venv v3
    
    echo *********************************************
    echo ****** Activate virtual environment v3 ******
@@ -102,6 +118,7 @@ if exist v3 (
    pip install pyinstaller
    pip install pypiwin32
    pip install polygon3
+   pip install pytest
    )
 
 echo ********************************************
@@ -120,15 +137,15 @@ echo ****** pyglet workaround, needs to be below 2.0 (isn't compatible) ******
 echo *************************************************************************
 rem # 2022-11-01
 pip uninstall pyglet -y
-pip install pyglet==1.5.27
+pip install pyglet==1.5.29
 
-echo **************************************************************************
-echo ****** pillow workaround, needs to be below 10.0 (isn't compatible) ******
-echo **************************************************************************
+rem echo **************************************************************************
+rem echo ****** pillow workaround, needs to be below 10.0 (isn't compatible) ******
+rem echo **************************************************************************
 rem # 2023-12-15
 rem building wxPython 4.2.1 for x86 needs pillow <10.0
-pip uninstall pillow -y
-pip install pillow==9.5.0
+rem *** pip uninstall pillow -y
+rem *** pip install pillow==9.5.0
 
 echo ******************************************************************
 echo ****** Compile G-Code parser gcoder_line.cp??-win_amd??.pyd ******
@@ -140,6 +157,14 @@ if exist printrun\gcoder_line.cp??-win_amd??.pyd (
    echo ****** found versions of printrun\gcoder_line.cp??-win_amd??.pyd, deleted ******
    echo ********************************************************************************
    )
+rem In addition check for 3 digit Python versions
+if exist printrun\gcoder_line.cp???-win_amd??.pyd (
+   del printrun\gcoder_line.cp???-win_amd??.pyd
+   echo ***********************************************************************++*********
+   echo ****** found versions of printrun\gcoder_line.cp???-win_amd??.pyd, deleted ******
+   echo **********************************************************************************
+   )
+
 python setup.py build_ext --inplace
 
 echo ****************************************
