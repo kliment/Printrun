@@ -89,11 +89,11 @@ if exist v3 (
    rem py -3.11-32 -m venv v3
    rem py -3.11 -m venv v3
    rem py -3.12-32 -m venv v3
-   rem py -3.12 -m venv v3
+   py -3.12 -m venv v3
    
    rem Attention: Python 3.13 support is experimental, no 3D view available for now.
    rem py -3.13-32 -m venv v3
-   py -3.13 -m venv v3
+   rem py -3.13 -m venv v3
    
    echo *********************************************
    echo ****** Activate virtual environment v3 ******

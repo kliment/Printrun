@@ -19,7 +19,7 @@ jobs:
         # supported versions: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         # for x86 only Python 3.9 to 3.13 is supported
         # Python 3.13 is experimental
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
 
     steps:
     - name: Checkout
