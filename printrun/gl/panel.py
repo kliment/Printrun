@@ -24,6 +24,7 @@ from wx import glcanvas
 
 import pyglet
 pyglet.options['debug_gl'] = True
+pyglet.options['shadow_window'] = False
 
 from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
     GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_POSITION, GL_DIFFUSE, \
