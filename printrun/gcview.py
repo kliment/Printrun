@@ -95,8 +95,6 @@ class GcodeViewPanel(wxGLPanel):
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.parent = realparent or parent
 
-        self.camera.dist = max(self.build_dimensions[:2])
-
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)
@@ -156,7 +154,6 @@ class GcodeViewPanel(wxGLPanel):
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()
 
-        self.camera.set_platform_origin(self.build_dimensions)
         # Draw platform
         self.platform.draw()
 

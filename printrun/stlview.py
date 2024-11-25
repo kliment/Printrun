@@ -58,8 +58,6 @@ class StlViewPanel(wxGLPanel):
         self.initialized = False
         self.parent = parent
 
-        self.camera.dist = max(self.build_dimensions[:2])
-
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)
@@ -176,7 +174,6 @@ class StlViewPanel(wxGLPanel):
         # we don't need this line anymore.
         # self.create_objects()
 
-        self.camera.set_platform_origin(self.build_dimensions)
         # Draw platform
         self.platform.draw()
 
@@ -209,7 +206,7 @@ class StlViewPanel(wxGLPanel):
     # ==========================================================================
     # Utils
     # ==========================================================================
-    def get_cutting_dist(self, cutting_axis: str, fixed_dist: float,
+    def get_cutting_dist(self, cutting_axis: str, fixed_dist: Union[float, None],
                          local_transform: bool = False) -> Union[float, None]:
 
         if fixed_dist is not None:
@@ -278,7 +275,6 @@ class TestFrame(wx.Frame):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
         self.models = {}
 
         # Mock a cutting plane to test rendering

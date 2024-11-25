@@ -105,7 +105,7 @@ class wxGLPanel(BASE_CLASS):
 
         self.width = 1.0
         self.height = 1.0
-        self.camera = Camera(self)
+        self.camera = Camera(self, build_dimensions)
         self.focus = Focus(self.camera)
 
         if self.show_fps:
@@ -319,13 +319,7 @@ class wxGLPanel(BASE_CLASS):
         glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1.0))
         glLightfv(GL_LIGHT1, GL_POSITION, vec(-1.2, -1.0, 2.4, 0.0))
 
-        if self.gcode_lights:
-            # Normalises the normal vectors after scaling
-            glEnable(GL_NORMALIZE)
-        else:
-            # GL_NORMALIZE makes stl objects look too bright (?)
-            glEnable(GL_RESCALE_NORMAL)
-
+        glEnable(GL_NORMALIZE)
         glShadeModel(GL_SMOOTH)
 
     def resetview(self) -> None:
@@ -341,9 +335,8 @@ class wxGLPanel(BASE_CLASS):
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        glPushMatrix()
+        self.camera.update()
         self.draw_objects()
-        glPopMatrix()
 
         if self.canvas.HasFocus():
             self.focus.draw()
@@ -396,7 +389,7 @@ class wxGLPanel(BASE_CLASS):
         # if self.camera.is_orthographic:
         #    return (x - self.width / 2, y - self.height / 2, 0)
         pmat = (GLdouble * 16)()
-        mvmat = self.camera.get_view_matrix(local_transform, self.build_dimensions)
+        mvmat = self.camera.get_view_matrix(local_transform)
         viewport = (GLint * 4)()
         px = (GLdouble)()
         py = (GLdouble)()
@@ -421,7 +414,7 @@ class wxGLPanel(BASE_CLASS):
         pz = (GLdouble)()
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
-        mvmat = self.camera.get_view_matrix(local_transform, self.build_dimensions)
+        mvmat = self.camera.get_view_matrix(local_transform)
         gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
         ray_far = (px.value, py.value, pz.value)
         gluUnProject(x, y, 0.0, mvmat, pmat, viewport, px, py, pz)
@@ -480,6 +473,8 @@ class wxGLPanel(BASE_CLASS):
 
         elif event.LeftUp() or event.RightUp():
             self.camera.initpos = None
+            self.camera.init_trans_pos = None
+
 
         wx.CallAfter(self.Refresh)
         event.Skip()
@@ -573,3 +568,4 @@ class FrameTime:
 
     def get(self) -> str:
         return f" {self.delta_time * 1000:4.2f} ms, {self.avg_fps:3d} FPS "
+

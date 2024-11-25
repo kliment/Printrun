@@ -14,12 +14,10 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-
-from pyglet.gl import GLdouble
+import numpy as np
 
 # for type hints
-from typing import List
-from ctypes import Array
+from typing import List, Optional
 
 def cross(v1: List[float], v2: List[float]) -> List[float]:
     return [v1[1] * v2[2] - v1[2] * v2[1],
@@ -39,10 +37,8 @@ def trackball(p1x: float, p1y: float, p2x: float, p2y: float, r: float) -> List[
     d = map(lambda x, y: x - y, p1, p2)
     t = math.sqrt(sum(x * x for x in d)) / (2.0 * TRACKBALLSIZE)
 
-    if t > 1.0:
-        t = 1.0
-    if t < -1.0:
-        t = -1.0
+    t = min(t, 1.0)
+    t = max(t, -1.0)
     phi = 2.0 * math.asin(t)
 
     return axis_to_quat(a, phi)
@@ -54,8 +50,8 @@ def axis_to_quat(a: List[float], phi: float) -> List[float]:
     q.append(math.cos(phi / 2.0))
     return q
 
-def build_rotmatrix(q: List[float]) -> Array:
-    m = (GLdouble * 16)()
+def build_rotmatrix(q: List[float]) -> np.ndarray:
+    m = np.zeros((16, 1)) # (GLdouble * 16)()
     m[0] = 1.0 - 2.0 * (q[1] * q[1] + q[2] * q[2])
     m[1] = 2.0 * (q[0] * q[1] - q[2] * q[3])
     m[2] = 2.0 * (q[2] * q[0] + q[1] * q[3])
@@ -75,18 +71,38 @@ def build_rotmatrix(q: List[float]) -> Array:
     m[13] = 0.0
     m[14] = 0.0
     m[15] = 1.0
-    return m
+    return m.reshape((4, 4))
 
 def project_to_sphere(r: float, x: float, y: float) -> float:
     d = math.sqrt(x * x + y * y)
-    if (d < r * 0.70710678118654752440):
+    if d < r * 0.70710678118654752440:
         return math.sqrt(r * r - d * d)
-    else:
-        t = r / 1.41421356237309504880
-        return t * t / d
+
+    t = r / 1.41421356237309504880
+    return t * t / d
 
 def mulquat(q1: List[float], rq: List[float]) -> List[float]:
     return [q1[3] * rq[0] + q1[0] * rq[3] + q1[1] * rq[2] - q1[2] * rq[1],
             q1[3] * rq[1] + q1[1] * rq[3] + q1[2] * rq[0] - q1[0] * rq[2],
             q1[3] * rq[2] + q1[2] * rq[3] + q1[0] * rq[1] - q1[1] * rq[0],
             q1[3] * rq[3] - q1[0] * rq[0] - q1[1] * rq[1] - q1[2] * rq[2]]
+
+def mat4_translation(x_val: float, y_val: float,
+                     z_val: float = 0.0,
+                     matrix: np.ndarray = np.identity(4)) -> np.ndarray:
+
+    matrix[3][0] += x_val
+    matrix[3][1] += y_val
+    matrix[3][2] += z_val
+
+    return matrix
+
+def mat4_scaling(x_val: float, y_val: float, z_val: float,
+                 matrix: np.ndarray = np.identity(4)) -> np.ndarray:
+
+    matrix[0][0] *= x_val
+    matrix[1][1] *= y_val
+    matrix[2][2] *= z_val
+
+    return matrix
+

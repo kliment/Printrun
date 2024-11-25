@@ -17,10 +17,14 @@ from threading import Lock
 
 from pyglet.gl import GLdouble, glGetDoublev, glLoadIdentity, \
     glMatrixMode, GL_MODELVIEW, GL_MODELVIEW_MATRIX, glOrtho, \
-    GL_PROJECTION, glScalef, glTranslatef, gluPerspective, \
-    glPushMatrix, glPopMatrix, glMultMatrixd
+    GL_PROJECTION, glTranslatef, gluPerspective, \
+    glPushMatrix, glPopMatrix, glLoadMatrixd
 
-from .trackball import trackball, mulquat, axis_to_quat, build_rotmatrix
+from .trackball import trackball, mulquat, axis_to_quat, \
+                       build_rotmatrix, mat4_translation, \
+                       mat4_scaling
+
+import numpy as np
 
 # for type hints
 from typing import Optional, List, Tuple, TYPE_CHECKING
@@ -35,31 +39,43 @@ class Camera():
 
     rot_lock = Lock()
 
-    def __init__(self, parent: 'wxGLPanel') -> None:
+    def __init__(self, parent: 'wxGLPanel', build_dimensions: Build_Dims, ortho: bool = True) -> None:
 
         self.canvas = parent
-        self.is_orthographic = True
+        self.is_orthographic = ortho
         self.orbit_control = True
 
         self.scalefactor = 1.0
         self.width = 1.0
         self.height = 1.0
-        self.dist = 1.0
+        self.dist = max(build_dimensions[:2])
 
         self.view_matrix_initialized = False
 
         self.basequat = [0.0, 0.0, 0.0, 1.0]
-        self.zoom_factor = 1.0
         self.zoomed_width = 1.0
         self.zoomed_height = 1.0
         self.angle_z = 0
         self.angle_x = 0
         self.initpos = None
+        self.init_trans_pos = None
+
+        self.init_scale = (1.0, 1.0, 1.0)
+        self.transl_mat = np.identity(4)
+        self.scale_mat = np.identity(4)
+
+        self.platformcenter = (-build_dimensions[3] - build_dimensions[0] / 2,
+                               -build_dimensions[4] - build_dimensions[1] / 2)
 
     def update_size(self, width: int, height: int, scalefactor: float) -> None:
         self.width = width
         self.height = height
         self.scalefactor = scalefactor
+
+    def update_build_dims(self, build_dimensions: Build_Dims) -> None:
+        self.dist = max(build_dimensions[:2])
+        self.platformcenter = (-build_dimensions[3] - build_dimensions[0] / 2,
+                               -build_dimensions[4] - build_dimensions[1] / 2)
 
     def create_projection_matrix(self) -> None:
         glMatrixMode(GL_PROJECTION)
@@ -68,9 +84,9 @@ class Camera():
         if self.is_orthographic:
             glOrtho(-self.width / 2, self.width / 2,
                     -self.height / 2, self.height / 2,
-                    -5 * self.dist, 5 * self.dist)
+                    -25 * self.dist, 25 * self.dist)
         else:
-            gluPerspective(90.0, self.width / self.height, 0.1, 5 * self.dist)
+            gluPerspective(45.0, self.width / self.height, 0.1, 20 * self.dist)
             # FIXME: Something here is wrong with the perspective.
             glTranslatef(0, 0, -self.dist)  # Move back
 
@@ -101,14 +117,16 @@ class Camera():
     def reset_view_matrix(self, factor: float) -> None:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+        self.transl_mat = np.identity(4)
+        self.scale_mat = np.identity(4)
 
         wratio = self.width / self.dist
         hratio = self.height / self.dist
         minratio = float(min(wratio, hratio))
-        self.zoom_factor = 1.0
         self.zoomed_width = wratio / minratio
         self.zoomed_height = hratio / minratio
-        glScalef(factor * minratio, factor * minratio, 1)
+
+        self.init_scale = (factor * minratio, factor * minratio, factor * minratio)
 
         self.view_matrix_initialized = True
 
@@ -117,13 +135,11 @@ class Camera():
         self.angle_x = 0.0
         self.angle_z = 0.0
 
-    def get_view_matrix(self, local_transform: bool,
-                        build_dimensions: Build_Dims
-                        ) -> Array:
+    def get_view_matrix(self, local_transform: bool) -> Array:
         mvmat = (GLdouble * 16)()
         if local_transform:
             glPushMatrix()
-            self.set_platform_origin(build_dimensions)
+            self.update()
             glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
             glPopMatrix()
         else:
@@ -131,16 +147,26 @@ class Camera():
 
         return mvmat
 
-    def set_platform_origin(self, build_dimensions: Build_Dims) -> None:
-        # Rotate according to trackball
-        glMultMatrixd(build_rotmatrix(self.basequat))
-        # Move origin to bottom left of platform
-        platformx0 = -build_dimensions[3] - build_dimensions[0] / 2
-        platformy0 = -build_dimensions[4] - build_dimensions[1] / 2
-        glTranslatef(platformx0, platformy0, 0)
+    def update(self) -> None:
+        glMatrixMode(GL_MODELVIEW)
+        transl_mat = mat4_translation(self.platformcenter[0],
+                                      self.platformcenter[1],
+                                      matrix = self.transl_mat.copy())
+
+        view_mat = np.matmul(transl_mat, build_rotmatrix(self.basequat))
+
+        scale_mat = mat4_scaling(self.init_scale[0], self.init_scale[0],
+                                 self.init_scale[0],self.scale_mat.copy())
+
+        view_mat = np.matmul(view_mat, scale_mat).reshape((16, 1))
+
+        array_type = GLdouble * len(view_mat)
+        view_mat_gl = array_type(*view_mat)
+        glLoadMatrixd(view_mat_gl)
 
     def zoom(self, factor: float, to: Optional[Tuple[float, float]] = None) -> None:
-        glMatrixMode(GL_MODELVIEW)
+        # TODO: Implement zoom to point
+        '''
         delta_x = 0.0
         delta_y = 0.0
 
@@ -148,12 +174,14 @@ class Camera():
             delta_x = to[0]
             delta_y = to[1]
             glTranslatef(delta_x, delta_y, 0)
+        '''
 
-        glScalef(factor, factor, 1)
-        self.zoom_factor *= factor
-
+        mat4_scaling(factor, factor, factor,
+                     self.scale_mat)
+        '''
         if to:
             glTranslatef(-delta_x, -delta_y, 0)
+        '''
 
     def orbit(self, p1x: float, p1y: float, p2x: float, p2y: float) -> List[float]:
         rz = p2x - p1x
@@ -187,15 +215,16 @@ class Camera():
             self.initpos = p2
 
     def handle_translation(self, event: MouseEvent) -> None:
-        if self.initpos is None:
-            self.initpos = event.GetPosition() * self.scalefactor
+        if self.init_trans_pos is None:
+            self.init_trans_pos = event.GetPosition() * self.scalefactor
         else:
-            p1 = self.initpos
+            p1 = self.init_trans_pos
             p2 = event.GetPosition() * self.scalefactor
-            if self.is_orthographic:
-                x1, y1, _ = self.canvas.mouse_to_3d(p1[0], p1[1])
-                x2, y2, _ = self.canvas.mouse_to_3d(p2[0], p2[1])
-                glTranslatef(x2 - x1, y2 - y1, 0)
-            else:
-                glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
-            self.initpos = p2
+
+            x1, y1, z1 = self.canvas.mouse_to_3d(p1[0], p1[1])
+            x2, y2, z2 = self.canvas.mouse_to_3d(p2[0], p2[1])
+
+            mat4_translation(x2 - x1, y2 - y1, z2 - z1, self.transl_mat)
+
+            self.init_trans_pos = p2
+
