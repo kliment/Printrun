@@ -91,7 +91,8 @@ if exist v3 (
    rem py -3.12-32 -m venv v3
    py -3.12 -m venv v3
    
-   rem Attention: Python 3.13 support is experimental, no 3D view available for now.
+   rem Attention: Python 3.13 support is experimental, no 3D view available for now as
+   rem            pyglet 1.5.29 have compiling issues with Python 3.13.
    rem py -3.13-32 -m venv v3
    rem py -3.13 -m venv v3
    
@@ -129,15 +130,20 @@ pip install --upgrade virtualenv
 echo ********************************************************
 echo ****** check for outdated modules and update them ******
 echo ********************************************************
-for /F "skip=2 delims= " %%i in ('pip list --outdated') do py -m pip install --upgrade %%i
+rem --exclude pyglet: workaround, needs to be below 2.0 (isn't compatible)
+rem --exclude pefile: workaround, (Windows) Pin pefile != 2024.8.26 due to performance
+rem              regression in pefile 2024.8.26 that heavily impacts PyInstaller’s
+rem              binary dependency analysis and binary-vs-data classification. See
+rem              https://pyinstaller.org/en/stable/CHANGES.html#pyinstaller-core
+for /F "skip=2 delims= " %%i in ('pip list --outdated --exclude pyglet --exclude pefile') do py -m pip install --upgrade %%i
 
 
-echo *************************************************************************
-echo ****** pyglet workaround, needs to be below 2.0 (isn't compatible) ******
-echo *************************************************************************
-rem # 2022-11-01
-pip uninstall pyglet -y
-pip install pyglet==1.5.29
+rem echo *************************************************************************
+rem echo ****** pyglet workaround, needs to be below 2.0 (isn't compatible) ******
+rem echo *************************************************************************
+rem # 2022-11-01, 2024-11-24 moved to check for outdated section above --exclude pyglet
+rem pip uninstall pyglet -y
+rem pip install pyglet==1.5.29
 
 rem echo **************************************************************************
 rem echo ****** pillow workaround, needs to be below 10.0 (isn't compatible) ******
