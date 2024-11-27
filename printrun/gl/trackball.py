@@ -15,9 +15,11 @@
 
 import math
 import numpy as np
+from numpy.linalg import inv
 
 # for type hints
-from typing import List, Optional
+from typing import List
+from ctypes import Array, c_int, c_double
 
 def cross(v1: List[float], v2: List[float]) -> List[float]:
     return [v1[1] * v2[2] - v1[2] * v2[1],
@@ -105,4 +107,51 @@ def mat4_scaling(x_val: float, y_val: float, z_val: float,
     matrix[2][2] *= z_val
 
     return matrix
+
+def np_unproject(winx: float, winy: float, winz: float,
+                 mv_mat: Array[c_double], p_mat: Array[c_double],
+                 viewport: Array[c_int], pointx: c_double,
+                 pointy: c_double, pointz: c_double) -> bool:
+    '''
+    gluUnProject in Python with numpy. This is a direct
+    implementation of the Khronos OpenGL Wiki code:
+    https://www.khronos.org/opengl/wiki/GluProject_and_gluUnProject_code
+
+    Parameters:
+        winx, winy, winz: Window coordinates.
+        mv_mat: Model-view matrix as a ctypes array.
+        p_mat: Projection matrix as a ctypes array.
+        viewport: Viewport as a ctypes array [x, y, width, height].
+        pointx, pointy, pointz: Output variables for object coordinates.
+
+    Returns:
+        bool: True if successful, False otherwise.
+    '''
+    modelview_mat = np.asarray(mv_mat).reshape((4, 4))
+    projection_mat = np.asarray(p_mat).reshape((4, 4))
+
+    mat_a = projection_mat.T @ modelview_mat.T
+
+    try:
+        mat_inv = inv(mat_a)
+    except np.linalg.LinAlgError:
+        return False
+
+    # Normalized screen coordinates between -1 and 1
+    coords_in = np.zeros(4)
+    coords_in[0] = (winx - float(viewport[0])) / float(viewport[2]) * 2.0 - 1.0
+    coords_in[1] = (winy - float(viewport[1])) / float(viewport[3]) * 2.0 - 1.0
+    coords_in[2] = 2.0 * winz - 1.0
+    coords_in[3] = 1.0
+
+    # Object coordinates
+    coords_out = mat_inv @ coords_in
+    if coords_out[3] == 0.0:
+        return False
+
+    coords_out[3] = 1.0 / coords_out[3]
+    pointx.value = coords_out[0] * coords_out[3]
+    pointy.value = coords_out[1] * coords_out[3]
+    pointz.value = coords_out[2] * coords_out[3]
+    return True
 

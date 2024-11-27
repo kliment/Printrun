@@ -38,9 +38,10 @@ from pyglet.gl import glEnable, GL_LIGHTING, glLightfv, \
     gluUnProject, glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, \
     glMaterialfv, GL_FRONT_AND_BACK, glPolygonMode, \
     GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, GL_EMISSION, \
-    GL_RESCALE_NORMAL, glColorMaterial, GL_FRONT, glRotatef, GL_FILL
+    glColorMaterial, GL_FRONT, glRotatef, GL_FILL
 
 from pyglet import gl
+from .trackball import np_unproject
 from .actors import Focus, vec
 from .camera import Camera
 
@@ -397,7 +398,10 @@ class wxGLPanel(BASE_CLASS):
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
+
+        #np_unproject(x, y, z, mvmat, pmat, viewport, px, py, pz)
         gluUnProject(x, y, z, mvmat, pmat, viewport, px, py, pz)
+
         return px.value, py.value, pz.value
 
     def mouse_to_ray(self, x: float, y: float,
