@@ -58,3 +58,4 @@ if __name__ == "__main__":
         logging.error(_("Caught an exception, exiting:")
                       + "\n" + traceback.format_exc())
         interp.p.disconnect()
+        import pdb; pdb.post_mortem()
