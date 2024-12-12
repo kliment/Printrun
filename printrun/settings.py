@@ -409,7 +409,9 @@ class Settings:
         self._add(StringSetting("start_command", "", _("Start Command:"), _("Executable to run when the print is started"), "External"))
         self._add(StringSetting("final_command", "", _("Final Command:"), _("Executable to run when the print is finished"), "External"))
         self._add(StringSetting("error_command", "", _("Error Command:"), _("Executable to run when an error occurs"), "External"))
-        self._add(DirSetting("log_path", str(Path.home()), _("Log Path:"), _("Path to the log file. An empty path will log to the console."), "UI"))
+        self._add(DirSetting("log_path", str(Path.home()), _("Log Path:"),
+                             _("Path to the log file. If the path is a directory the file will be named 'printrun.log'"), "UI"))
+        self._add(BooleanSetting("log_stdout", False, _("Log to console:"), _("Duplicate log messages to stdout"), "UI"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))
