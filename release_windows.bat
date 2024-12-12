@@ -44,7 +44,7 @@ rem **  Remark: Plater stand alone application is experimental only. GUI code ne
 rem **          update for closing plater window and running processes. For now you   **
 rem **          need to terminate the process manually via Task manager.			  **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2024-11-16, Status: working                               **
+rem **  Author: DivingDuck, 2024-12-12, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -89,12 +89,11 @@ if exist v3 (
    rem py -3.11-32 -m venv v3
    rem py -3.11 -m venv v3
    rem py -3.12-32 -m venv v3
-   py -3.12 -m venv v3
-   
-   rem Attention: Python 3.13 support is experimental, no 3D view available for now as
-   rem            pyglet 1.5.29 have compiling issues with Python 3.13.
+   rem py -3.12 -m venv v3
    rem py -3.13-32 -m venv v3
-   rem py -3.13 -m venv v3
+   py -3.13 -m venv v3
+   rem Attention: py -3.13-32t and py -3.13t (the experimental 
+   rem            free-threaded mode) are not supported jet
    
    echo *********************************************
    echo ****** Activate virtual environment v3 ******
@@ -117,7 +116,7 @@ if exist v3 (
    echo ***********************
    pip install simplejson
    pip install pyinstaller
-   pip install pypiwin32
+   pip install pywin32
    pip install polygon3
    pip install pytest
    )
