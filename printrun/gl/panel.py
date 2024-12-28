@@ -112,7 +112,7 @@ class wxGLPanel(BASE_CLASS):
         if self.show_fps:
             self.frametime = FrameTime()
             self.fps_counter = wx.StaticText(self, -1, '')
-            font = wx.Font(16, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
+            font = wx.Font(12, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
                            encoding = wx.FONTENCODING_DEFAULT)
             self.fps_counter.SetFont(font)
             self.fps_counter.SetForegroundColour(wx.WHITE)
@@ -286,17 +286,25 @@ class wxGLPanel(BASE_CLASS):
         self.height = max(float(height), 1.0)
 
         if not self.camera.view_matrix_initialized:
-            self.camera.reset_view_matrix(0.9)
+            self.camera.reset_view_matrix()
 
         elif old_width is not None and old_height is not None:
             wratio = self.width / old_width
             hratio = self.height / old_height
 
-            factor = min(wratio * self.camera.zoomed_width, hratio * self.camera.zoomed_height)
+            if wratio < 1.0 and hratio < 1.0:
+                factor = min(wratio, hratio)
+            elif hratio == 1.0:
+                factor = wratio
+            elif wratio == 1.0:
+                factor = hratio
+            elif wratio > 1.0 and hratio > 1.0:
+                factor = max(wratio, hratio)
+            else:
+                factor = 1.0
+
             x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
             self.camera.zoom(factor, (x, y))
-            self.camera.zoomed_width *= wratio / factor
-            self.camera.zoomed_height *= hratio / factor
 
         # Wrap text to the width of the window
         if self.GLinitialized:
@@ -325,18 +333,18 @@ class wxGLPanel(BASE_CLASS):
 
     def resetview(self) -> None:
         self.canvas.SetCurrent(self.context)
-        self.camera.reset_view_matrix(0.9)
-        self.camera.reset_rotation()
+        self.camera.reset_view_matrix()
         wx.CallAfter(self.Refresh)
 
     def DrawCanvas(self) -> None:
         """Draw the window."""
+        if self.show_fps:
+            self.frametime.start_frame()
         assert self.pygletcontext is not None
         self.pygletcontext.set_current()
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        self.camera.update()
         self.draw_objects()
 
         if self.canvas.HasFocus():
@@ -345,7 +353,7 @@ class wxGLPanel(BASE_CLASS):
         self.canvas.SwapBuffers()
 
         if self.show_fps:
-            self.frametime.update()
+            self.frametime.end_frame()
             self.fps_counter.SetLabel(self.frametime.get())
 
     def transform_and_draw(self, model: Union['GCObject', stl], draw_function: Callable[[], None]) -> None:
@@ -381,16 +389,13 @@ class wxGLPanel(BASE_CLASS):
     # ==========================================================================
     # Mouse and Utilities
     # ==========================================================================
-    def mouse_to_3d(self, x: float, y: float, z = 1.0,
-                    local_transform: bool = False) -> Tuple[float, float, float]:
+    def mouse_to_3d(self, x: float, y: float, z = 1.0
+                    ) -> Tuple[float, float, float]:
         x = float(x)
         y = self.height - float(y)
-        # The following could work if we were not initially scaling to zoom on
-        # the bed
-        # if self.camera.is_orthographic:
-        #    return (x - self.width / 2, y - self.height / 2, 0)
+
         pmat = (GLdouble * 16)()
-        mvmat = self.camera.get_view_matrix(local_transform)
+        mvmat = self.camera.get_view_matrix()
         viewport = (GLint * 4)()
         px = (GLdouble)()
         py = (GLdouble)()
@@ -405,7 +410,6 @@ class wxGLPanel(BASE_CLASS):
         return px.value, py.value, pz.value
 
     def mouse_to_ray(self, x: float, y: float,
-                     local_transform: bool = False
                      ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
         # Ray from z-depth 1.0 to 0.0
         x = float(x)
@@ -418,7 +422,7 @@ class wxGLPanel(BASE_CLASS):
         pz = (GLdouble)()
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
-        mvmat = self.camera.get_view_matrix(local_transform)
+        mvmat = self.camera.get_view_matrix()
         gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
         ray_far = (px.value, py.value, pz.value)
         gluUnProject(x, y, 0.0, mvmat, pmat, viewport, px, py, pz)
@@ -427,10 +431,10 @@ class wxGLPanel(BASE_CLASS):
 
     def mouse_to_plane(self, x: float, y: float,
                        plane_normal: Tuple[float, float, float],
-                       plane_offset: float, local_transform: bool = False
+                       plane_offset: float
                        ) -> Union[Tuple[float, float, float], None]:
         # Ray/plane intersection
-        ray_near, ray_far = self.mouse_to_ray(x, y, local_transform)
+        ray_near, ray_far = self.mouse_to_ray(x, y)
         ray_near = numpy.array(ray_near)
         ray_far = numpy.array(ray_far)
         ray_dir = ray_far - ray_near
@@ -476,7 +480,7 @@ class wxGLPanel(BASE_CLASS):
             self.Refresh(False)
 
         elif event.LeftUp() or event.RightUp():
-            self.camera.initpos = None
+            self.camera.init_rot_pos = None
             self.camera.init_trans_pos = None
 
 
@@ -533,7 +537,7 @@ class wxGLPanel(BASE_CLASS):
 
         self.canvas.SetCurrent(self.context)
         dims = gcode_dims(self.parent.model.gcode)
-        self.camera.reset_view_matrix(1.0)
+        self.camera.reset_view_matrix()
 
         center_x = (dims[0][0] + dims[0][1]) / 2
         center_y = (dims[1][0] + dims[1][1]) / 2
@@ -550,26 +554,29 @@ class wxGLPanel(BASE_CLASS):
 
 class FrameTime:
 
-    SMOOTHING_FACTOR = 0.8
-    MAX_FPS = 2000
+    FRAME_MIDDLE = 20
 
     def __init__(self) -> None:
-        self.delta_time = 0
-        self.last_frame = time.perf_counter()
-        self.avg_fps = -1
+        self.t_frame_start = 0.0
+        self.framecount = 0
+        self.timesum = 0.0
+        self.avg_frametime = 0.0
+        self.avg_fps = 0
 
-    def update(self) -> None:
-        current_frame = time.perf_counter()
-        self.delta_time = current_frame - self.last_frame
-        self.last_frame = current_frame
-        current_fps = round(min(1 / self.delta_time, self.MAX_FPS))
+    def start_frame(self) -> None:
+        self.t_frame_start = time.perf_counter()
 
-        if self.avg_fps < 0:
-            self.avg_fps = current_fps
-        else:
-            self.avg_fps = round((self.avg_fps * self.SMOOTHING_FACTOR) +
-                                 (current_fps * (1 - self.SMOOTHING_FACTOR)))
+    def end_frame(self) -> None:
+        self.framecount += 1
+        self.timesum += time.perf_counter() - self.t_frame_start
+
+        if self.framecount >= self.FRAME_MIDDLE:
+            self.avg_frametime = self.timesum / self.framecount
+            self.avg_fps = int(self.framecount / self.timesum)
+
+            self.framecount = 0
+            self.timesum = 0.0
 
     def get(self) -> str:
-        return f" {self.delta_time * 1000:4.2f} ms, {self.avg_fps:3d} FPS "
+        return f" avg. {self.avg_frametime * 1000:4.2f} ms ({self.avg_fps:4d} FPS) "
 

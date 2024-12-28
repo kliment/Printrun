@@ -152,23 +152,23 @@ class PlaterPanel(wx.Panel):
         # Patch handle_rotation on the fly
         if hasattr(viewer.camera, "handle_rotation"):
             def handle_rotation(self, event, orig_handler):
-                if self.initpos is None:
-                    self.initpos = event.GetPosition() * self.scalefactor
+                if self.init_rot_pos is None:
+                    self.init_rot_pos = event.GetPosition() * self.display_ppi_factor
                 else:
                     if event.ShiftDown():
-                        p1 = self.initpos
+                        p1 = self.init_rot_pos
                         init_position = self.canvas.mouse_to_plane(p1[0], p1[1],
-                                                    plane_normal = (0, 0, 1), plane_offset = 0,
-                                                    local_transform = True)
+                                                    plane_normal = (0, 0, 1), plane_offset = 0)
 
-                        p2 = event.GetPosition() * self.scalefactor
+                        p2 = event.GetPosition() * self.display_ppi_factor
 
                         drag_position = self.canvas.mouse_to_plane(p2[0], p2[1],
-                                                    plane_normal = (0, 0, 1), plane_offset = 0,
-                                                    local_transform = True)
+                                                    plane_normal = (0, 0, 1), plane_offset = 0)
 
-                        self.canvas.parent.move_shape((drag_position[0] - init_position[0], drag_position[1] - init_position[1]))
-                        self.initpos = p2
+                        if drag_position is not None:
+                            self.canvas.parent.move_shape((drag_position[0] - init_position[0],
+                                                           drag_position[1] - init_position[1]))
+                            self.init_rot_pos = p2
                     else:
                         orig_handler(event)
             patch_method(viewer.camera, "handle_rotation", handle_rotation)

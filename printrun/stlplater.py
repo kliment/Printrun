@@ -301,14 +301,13 @@ class StlPlaterPanel(PlaterPanel):
 
     def clickcb_cut(self, event):
         axis = self.cutting_axis
-        self.cutting_dist = self.s.get_cutting_dist(axis, None,
-                                                    local_transform = True)
+        self.cutting_dist = self.s.get_cutting_dist(axis, None)
         if self.cutting_dist is not None:
             self.enable_cut_button(True)
 
     def clickcb_rebase(self, event):
         x, y = event.GetPosition()
-        ray_near, ray_far = self.s.mouse_to_ray(x, y, local_transform = True)
+        ray_near, ray_far = self.s.mouse_to_ray(x, y)
         best_match = None
         best_facet = None
         best_dist = float("inf")

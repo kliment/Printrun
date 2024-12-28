@@ -89,6 +89,16 @@ def mulquat(q1: List[float], rq: List[float]) -> List[float]:
             q1[3] * rq[2] + q1[2] * rq[3] + q1[0] * rq[1] - q1[1] * rq[0],
             q1[3] * rq[3] - q1[0] * rq[0] - q1[1] * rq[1] - q1[2] * rq[2]]
 
+def quat_rotate_vec(quat: List[float],
+                    vector_list: list[np.ndarray]) -> list[np.ndarray]:
+    rmat = build_rotmatrix(quat)
+    vecs_out = []
+    for vec in vector_list:
+        vec_in = np.append(vec, 0.0)
+        vecs_out.append(np.matmul(vec_in, rmat)[:3])
+
+    return vecs_out
+
 def mat4_translation(x_val: float, y_val: float,
                      z_val: float = 0.0,
                      matrix: np.ndarray = np.identity(4)) -> np.ndarray:
@@ -96,6 +106,23 @@ def mat4_translation(x_val: float, y_val: float,
     matrix[3][0] += x_val
     matrix[3][1] += y_val
     matrix[3][2] += z_val
+
+    return matrix
+
+def mat4_rotation(x: float, y: float,
+                  z: float, angle: float) -> np.ndarray:
+    matrix = np.identity(4)
+    co = np.cos(angle)
+    si = np.sin(angle)
+    matrix[0][0] = x * x * (1 - co) + co
+    matrix[1][0] = x * y * (1 - co) - z * si
+    matrix[2][0] = x * z * (1 - co) + y * si
+    matrix[0][1] = x * y * (1 - co) + z * si
+    matrix[1][1] = y * y * (1 - co) + co
+    matrix[2][1] = y * z * (1 - co) - x * si
+    matrix[0][2] = x * z * (1 - co) - y * si
+    matrix[1][2] = y * z * (1 - co) + x * si
+    matrix[2][2] = z * z * (1 - co) + co
 
     return matrix
 

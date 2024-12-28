@@ -179,8 +179,7 @@ class StlViewPanel(wxGLPanel):
 
         # Draw mouse
         intersection = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
-                                    plane_normal = (0, 0, 1), plane_offset = 0,
-                                    local_transform = False)
+                                    plane_normal = (0, 0, 1), plane_offset = 0)
 
         if intersection is not None:
             self.gl_cursor.position = intersection
@@ -206,8 +205,9 @@ class StlViewPanel(wxGLPanel):
     # ==========================================================================
     # Utils
     # ==========================================================================
-    def get_cutting_dist(self, cutting_axis: str, fixed_dist: Union[float, None],
-                         local_transform: bool = False) -> Union[float, None]:
+    def get_cutting_dist(self, cutting_axis: str,
+                         fixed_dist: Union[float, None]
+                         ) -> Union[float, None]:
 
         if fixed_dist is not None:
             return fixed_dist
@@ -242,8 +242,7 @@ class StlViewPanel(wxGLPanel):
 
         inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                     plane_normal = ref_plane,
-                                    plane_offset = ref_offset,
-                                    local_transform = local_transform)
+                                    plane_offset = ref_offset)
 
         max_size = max((self.platform.width,
                         self.platform.depth,
@@ -259,8 +258,7 @@ class StlViewPanel(wxGLPanel):
 
             inter = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
                                         plane_normal = ref_plane,
-                                        plane_offset = ref_offset,
-                                        local_transform = False)
+                                        plane_offset = ref_offset)
 
             if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
                 dist = inter[translate_axis[cutting_axis]]
