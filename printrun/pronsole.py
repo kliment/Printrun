@@ -28,6 +28,7 @@ import locale
 import logging
 import traceback
 import re
+from pathlib import Path
 
 from platformdirs import user_cache_dir, user_config_dir, user_data_dir
 from serial import SerialException
@@ -196,7 +197,7 @@ class pronsole(cmd.Cmd):
         self.current_tool = 0   # Keep track of the extruder being used
         self.cache_dir = os.path.join(user_cache_dir("Printrun"))
         self.history_file = os.path.join(self.cache_dir,"history")
-        self.config_dir = os.path.join(user_config_dir("Printrun"))
+        self.config_dir = Path(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
         self.lineignorepattern=re.compile("ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
 
@@ -400,7 +401,10 @@ class pronsole(cmd.Cmd):
                 self.logError(_("Printer is not online."))
             return
         else:
-            cmd.Cmd.default(self, l)
+            if self.processing_rc:
+                logging.debug(f"Ignored configuration command '{l}'")
+            else:
+                self.log(_(f"Unknown command '{l}'"))
 
     def do_exit(self, l):
         if self.p.printing and l != "force":
@@ -616,19 +620,24 @@ Disables all heaters upon exit."))
         else:
             return []
 
-    def load_rc(self, rc_filename):
+    def load_rc(self, rc_file):
+        # Parameters:
+        #   rc_file : pathlib.Path
         self.processing_rc = True
+        self.rc_file = rc_file.expanduser().resolve()
+        self.log(f"Loading config file '{self.rc_file}'")
         try:
-            rc = codecs.open(rc_filename, "r", "utf-8")
-            self.rc_filename = os.path.abspath(rc_filename)
-            for rc_cmd in rc:
-                if not rc_cmd.lstrip().startswith("#"):
-                    logging.debug(rc_cmd.rstrip())
-                    self.onecmd(rc_cmd)
-            rc.close()
+            with self.rc_file.open(mode="r", encoding="utf-8") as rc:
+                for rc_cmd in rc:
+                    if not rc_cmd.lstrip().startswith("#"):
+                        logging.debug(rc_cmd.rstrip())
+                        self.onecmd(rc_cmd)
             if hasattr(self, "cur_macro_def"):
                 self.end_macro()
             self.rc_loaded = True
+        except EnvironmentError as err:
+            self.logError(_("Unable to load configuration file: %s") %
+                          str(err)[10:])
         finally:
             self.processing_rc = False
 
@@ -636,54 +645,53 @@ Disables all heaters upon exit."))
         # Check if a configuration file exists in an "old" location,
         # if not, use the "new" location provided by appdirs
         for f in '~/.pronsolerc', '~/printrunconf.ini':
-            expanded = os.path.expanduser(f)
-            if os.path.exists(expanded):
-                config = expanded
+            old_rc = Path(f).expanduser()
+            if old_rc.exists():
+                config = old_rc
                 break
         else:
-            if not os.path.exists(self.config_dir):
-                os.makedirs(self.config_dir)
+            if platform.system() == 'Windows':
+                config_name = 'printrunconf.ini'
+            else:
+                config_name = 'pronsolerc'
+            config = self.config_dir / config_name
+            config.parent.mkdir(exist_ok=True)
+            config.touch(exist_ok=True)
 
-            config_name = ('printrunconf.ini'
-                            if platform.system() == 'Windows'
-                            else 'pronsolerc')
-
-            config = os.path.join(self.config_dir, config_name)
-        logging.info('Loading config file ' + config)
-
-        # Load the default configuration file
-        try:
-            self.load_rc(config)
-        except FileNotFoundError:
-            # Make sure the filename is initialized,
-            # and create the file if it doesn't exist
-            self.rc_filename = config
-            open(self.rc_filename, 'a').close()
+        self.load_rc(config)
 
     def save_in_rc(self, key, definition):
-        """
-        Saves or updates macro or other definitions in .pronsolerc
-        key is prefix that determines what is being defined/updated (e.g. 'macro foo')
-        definition is the full definition (that is written to file). (e.g. 'macro foo move x 10')
-        Set key as empty string to just add (and not overwrite)
-        Set definition as empty string to remove it from .pronsolerc
-        To delete line from .pronsolerc, set key as the line contents, and definition as empty string
-        Only first definition with given key is overwritten.
-        Updates are made in the same file position.
-        Additions are made to the end of the file.
+        """Saves or updates macro or other definitions in `.pronsolerc`
+
+        Set `key` as empty string to just add (and not overwrite). Only first
+        definition with given key is overwritten. Set definition as empty
+        string to remove it from `.pronsolerc`. To delete a line from
+        `.pronsolerc`, set `key` as the line contents, and `definition` as
+        empty string. Updates are made in the same file position. Additions
+        are made to the end of the file.
+
+        Parameters
+        ----------
+        key : str
+            Prefix that determines what is being defined/updated.
+            (e.g. 'macro foo').
+        definition : str
+            Full definition that is written to file.
+            (e.g. 'macro foo move x 10').
+
         """
         rci, rco = None, None
         if definition != "" and not definition.endswith("\n"):
             definition += "\n"
         try:
             written = False
-            if os.path.exists(self.rc_filename):
+            if self.rc_file.exists():
                 if not os.path.exists(self.cache_dir):
                     os.makedirs(self.cache_dir)
-                configcache = os.path.join(self.cache_dir, os.path.basename(self.rc_filename))
+                configcache = os.path.join(self.cache_dir, self.rc_file.name)
                 configcachebak = configcache + "~bak"
                 configcachenew = configcache + "~new"
-                shutil.copy(self.rc_filename, configcachebak)
+                shutil.copy(self.rc_file, configcachebak)
                 rci = codecs.open(configcachebak, "r", "utf-8")
             rco = codecs.open(configcachenew, "w", "utf-8")
             if rci is not None:
@@ -694,7 +702,8 @@ Disables all heaters upon exit."))
                     ws = l[:len(l) - len(ls)]  # just leading whitespace
                     if overwriting and len(ws) == 0:
                         overwriting = False
-                    if not written and key != "" and rc_cmd.startswith(key) and (rc_cmd + "\n")[len(key)].isspace():
+                    if (not written and key != "" and rc_cmd.startswith(key)
+                        and (rc_cmd + "\n")[len(key)].isspace()):
                         overwriting = True
                         written = True
                         rco.write(definition)
@@ -706,7 +715,7 @@ Disables all heaters upon exit."))
             if rci is not None:
                 rci.close()
             rco.close()
-            shutil.move(configcachenew, self.rc_filename)
+            shutil.move(configcachenew, self.rc_file)
             # if definition != "":
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
             # else:
@@ -751,12 +760,7 @@ Disables all heaters upon exit."))
             logger = logging.getLogger()
             logger.setLevel(logging.DEBUG)
         for config in args.conf:
-            try:
-                self.load_rc(config)
-            except EnvironmentError as err:
-                print((_("ERROR: Unable to load configuration file: %s") %
-                       str(err)[10:]))
-                sys.exit(1)
+            self.load_rc(Path(config))
         if not self.rc_loaded:
             self.load_default_rc()
         self.processing_args = True
