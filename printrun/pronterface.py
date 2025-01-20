@@ -81,20 +81,22 @@ def format_length(mm, fractional=2):
     return '%%.%df' % fractional % units + suffix
 
 class ConsoleOutputHandler:
-    """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
-    We also redirect stdout and stderr to ourself to catch print messages and al."""
+    """Handle console output. All messages go through the logging submodule. We
+    setup a logging handler to get logged messages and write them to both
+    stdout (unless a log file path is specified, in which case we add another
+    logging handler to write to this file) and the log panel. We also redirect
+    stdout and stderr to ourselves to catch print messages et al."""
 
-    def __init__(self, target, log_path):
+    def __init__(self, target, log_path, log_stdout):
         self.stdout = sys.stdout
         self.stderr = sys.stderr
         sys.stdout = self
         sys.stderr = self
-        self.print_on_stdout = not log_path
-        if log_path:
-            setup_logging(self, log_path, reset_handlers = True)
-        else:
-            setup_logging(sys.stdout, reset_handlers = True)
+
+        self.print_on_stdout = log_stdout or not log_path
         self.target = target
+
+        setup_logging(self, log_path, reset_handlers=True)
 
     def __del__(self):
         sys.stdout = self.stdout
@@ -103,13 +105,15 @@ class ConsoleOutputHandler:
     def write(self, data):
         try:
             self.target(data)
-        except:
-            pass
+        except Exception as e:
+            # This shouldn't generally happen, unless there is something very wrong with the code
+            self.stderr.write(_("An exception occurred during an attempt to log a message: {}").format(e))
+
         if self.print_on_stdout:
             self.stdout.write(data)
 
     def flush(self):
-        if self.stdout:
+        if self.print_on_stdout:
             self.stdout.flush()
 
 class PronterWindow(MainWindow, pronsole.pronsole):
@@ -223,7 +227,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetStatusText(_("Not connected to printer."))
 
-        self.t = ConsoleOutputHandler(self.catchprint, self.settings.log_path)
+        self.t = ConsoleOutputHandler(self.catchprint, self.settings.log_path, self.settings.log_stdout)
         self.stdout = sys.stdout
         self.slicing = False
         self.loading_gcode = False
