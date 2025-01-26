@@ -281,7 +281,7 @@ class Device():
         try:
             self._device.write(data)
         except serial.SerialException as e:
-            msg = "Unable to write to serial port '{self.port}'"
+            msg = f"Unable to write to serial port '{self.port}'"
             raise DeviceError(msg, e) from e
 
     def _disable_ttyhup(self):
