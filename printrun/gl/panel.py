@@ -63,9 +63,10 @@ def gcode_dims(g: GCode) -> Tuple[Tuple[float , float, float], ...]:
 # does not consume used keystrokes
 # BASE_CLASS = wx.Window
 # Subclassing Panel solves problem In Windows
-BASE_CLASS = wx.Panel
+# BASE_CLASS = wx.Panel
 # BASE_CLASS = wx.ScrolledWindow
-# BASE_CLASS = glcanvas.GLCanvas
+BASE_CLASS = glcanvas.GLCanvas
+
 class wxGLPanel(BASE_CLASS):
     '''A simple class for using OpenGL with wxPython.'''
 
