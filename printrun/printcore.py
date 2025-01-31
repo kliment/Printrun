@@ -158,7 +158,7 @@ class printcore():
     def addEventHandler(self, handler):
         '''
         Adds an event handler.
-        
+
         @param handler: The handler to be added.
         '''
         self.event_handler.append(handler)
@@ -707,5 +707,5 @@ class printcore():
                 self.writefailures = 0
             except device.DeviceError as e:
                 self.logError("Can't write to printer (disconnected?)"
-                              "{0}".format(e))
+                              " {0}".format(e))
                 self.writefailures += 1
