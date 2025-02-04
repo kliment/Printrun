@@ -143,6 +143,8 @@ class PlaterPanel(wx.Panel):
             self.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback), id=wx.ID_OK)
             self.Bind(wx.EVT_BUTTON, lambda e: self.Destroy(), id=wx.ID_CANCEL)
 
+        self.Bind(wx.EVT_CHAR_HOOK, self.keypress)
+
         self.topsizer.AddGrowableRow(0)
         self.topsizer.AddGrowableCol(1)
         self.SetSizer(self.topsizer)
@@ -187,9 +189,43 @@ class PlaterPanel(wx.Panel):
         viewer.color_background = self.gl_bg_colour
         viewer.focus.update_colour(self.gl_bg_colour)
         viewer.platform.update_colour(self.gl_bg_colour)
+
         self.s = viewer
+
         self.s.SetMinSize((150, 150))
         self.topsizer.Add(self.s, pos = (0, 1), span = (1, 1), flag = wx.EXPAND)
+
+    def keypress(self, event: wx.KeyEvent) -> None:
+        """gets keypress events and moves/rotates active shape"""
+        keycode = event.GetUnicodeKey()
+        if keycode == wx.WXK_NONE:
+            keycode = event.GetKeyCode()
+
+        if event.GetModifiers() in (wx.MOD_CONTROL, wx.MOD_SHIFT):
+            step, angle = (1, 1)
+        else:
+            step, angle = (5, 18)
+
+        if keycode == ord('H'):
+            self.move_shape((-step, 0))
+
+        elif keycode == ord('L'):
+            self.move_shape((step, 0))
+
+        elif keycode == ord('J'):
+            self.move_shape((0, step))
+
+        elif keycode == ord('K'):
+            self.move_shape((0, -step))
+
+        elif keycode == ord('['):
+            self.rotate_shape(-angle)
+
+        elif keycode == ord(']'):
+            self.rotate_shape(angle)
+
+        event.Skip()
+        wx.CallAfter(self.Refresh)
 
     def move_shape(self, delta):
         """moves shape (selected in l, which is list ListBox of shapes)

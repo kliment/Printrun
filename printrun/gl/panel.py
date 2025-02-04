@@ -44,6 +44,7 @@ from pyglet import gl
 from .trackball import np_unproject
 from .actors import Focus, vec
 from .camera import Camera
+from .keyboardinput import KeyboardInput
 
 # for type hints
 from typing import TYPE_CHECKING, Any, Tuple, Union, Callable, Optional
@@ -109,6 +110,8 @@ class wxGLPanel(BASE_CLASS):
         self.height = 1.0
         self.camera = Camera(self, build_dimensions)
         self.focus = Focus(self.camera)
+        self.keyinput = KeyboardInput(self.canvas, self.zoom_to_center,
+                                      self.fit, self.resetview)
 
         if self.show_fps:
             self.frametime = FrameTime()

@@ -55,6 +55,7 @@ class StlViewPanel(wxGLPanel):
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
+
         self.initialized = False
         self.parent = parent
 
@@ -93,39 +94,13 @@ class StlViewPanel(wxGLPanel):
         #print('forceresize')
         x, y = self.GetClientSize()
         #TODO: probably not needed
-        self.SetClientSize((x, y+1))
+        self.SetClientSize((x, y + 1))
         self.SetClientSize((x, y))
         self.initialized = False
 
     def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
         '''This runs when Mousewheel + Shift is used'''
         pass
-
-    def keypress(self, event: wx.KeyEvent) -> None:
-        """gets keypress events and moves/rotates active shape"""
-        keycode = event.GetKeyCode()
-        step, angle = (1, 1) if event.ControlDown() else (5, 18)
-
-        # h
-        if keycode == 72:
-            self.parent.move_shape((-step, 0))
-        # l
-        if keycode == 76:
-            self.parent.move_shape((step, 0))
-        # j
-        if keycode == 75:
-            self.parent.move_shape((0, step))
-        # k
-        if keycode == 74:
-            self.parent.move_shape((0, -step))
-        # [
-        if keycode == 91:
-            self.parent.rotate_shape(-angle)
-        # ]
-        if keycode == 93:
-            self.parent.rotate_shape(angle)
-        event.Skip()
-        wx.CallAfter(self.Refresh)
 
     def anim(self, obj: stl) -> None:
         g = 50 * 9.81
@@ -313,3 +288,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

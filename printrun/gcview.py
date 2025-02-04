@@ -27,12 +27,10 @@ from .injectgcode import injector, injector_edit
 from .gviz import GvizBaseFrame, BaseViz
 
 # for type hints
-from typing import TYPE_CHECKING, Any, Tuple, List, Union, Iterator, Optional
+from typing import Any, Tuple, List, Union, Iterator, Optional
 from printrun.gcoder import GCode
 Build_Dims = Tuple[int, int, int, int, int, int]
 GCodeActor = Union[actors.GcodeModelLight, actors.GcodeModel]
-if TYPE_CHECKING:
-    from printrun.gcview import GCObject
 
 from .gui.widgets import get_space
 from .utils import imagefile, install_locale, get_home_pos
@@ -58,15 +56,6 @@ def set_gcview_params(self, path_width: float, path_height: float) -> bool:
             has_changed = True
     return has_changed
 
-# E selected for Up because is above D
-LAYER_UP_KEYS = ord('U'), ord('E'), wx.WXK_UP
-LAYER_DOWN_KEYS = ord('D'), wx.WXK_DOWN
-ZOOM_IN_KEYS = wx.WXK_PAGEDOWN, 388, wx.WXK_RIGHT, ord('+')
-ZOOM_OUT_KEYS = wx.WXK_PAGEUP, 390, wx.WXK_LEFT, ord('-')
-FIT_KEYS = [ord('F')]
-CURRENT_LAYER_KEYS = [ord('C')]
-RESET_KEYS = [ord('R')]
-
 
 class GcodeViewPanel(wxGLPanel):
 
@@ -88,16 +77,18 @@ class GcodeViewPanel(wxGLPanel):
 
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
-        # self.canvas.Bind(wx.EVT_KEY_DOWN, self.keypress)
-        # in Windows event inspector shows only EVT_CHAR_HOOK events
-        self.canvas.Bind(wx.EVT_CHAR_HOOK, self.keypress)
-        self.initialized = False
         self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
+
+        self.initialized = False
         self.parent = realparent or parent
 
         self.platform = actors.Platform(self.build_dimensions,
                                         circular = circular,
                                         grid = grid)
+
+        self.keyinput.register(layerup=self.layerup,
+                               layerdown=self.layerdown,
+                               currentlayer=self.currentlayer)
 
     def inject(self) -> None:
         l = self.parent.model.num_layers_to_draw
@@ -196,6 +187,15 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.setlayercb(new_layer)
         wx.CallAfter(self.Refresh)
 
+    def currentlayer(self) -> None:
+        if not getattr(self.parent, 'model', False):
+            return
+
+        if not self.parent.model or not self.parent.model.loaded:
+            return
+        self.parent.model.only_current = not self.parent.model.only_current
+        wx.CallAfter(self.Refresh)
+
     def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
         '''This runs when Mousewheel + Shift is used'''
         if not self.parent.model:
@@ -207,38 +207,6 @@ class GcodeViewPanel(wxGLPanel):
             else:
                 self.layerdown()
         return
-
-    def keypress(self, event: wx.KeyEvent) -> None:
-        """gets keypress events and moves/rotates active shape"""
-        if event.HasModifiers():
-            # let alt+c bubble up
-            event.Skip()
-            return
-        step = 1.05 if event.ControlDown() else 1.1
-        key = event.GetKeyCode()
-        if key in LAYER_UP_KEYS:
-            self.layerup()
-            return  # prevent shifting focus to other controls
-        elif key in LAYER_DOWN_KEYS:
-            self.layerdown()
-            return
-        # x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
-        elif key in ZOOM_IN_KEYS:
-            self.zoom_to_center(step)
-            return
-        elif key in ZOOM_OUT_KEYS:
-            self.zoom_to_center(1 / step)
-            return
-        elif key in FIT_KEYS:
-            self.fit()
-        elif key in CURRENT_LAYER_KEYS:
-            if not self.parent.model or not self.parent.model.loaded:
-                return
-            self.parent.model.only_current = not self.parent.model.only_current
-            wx.CallAfter(self.Refresh)
-        elif key in RESET_KEYS:
-            self.resetview()
-        event.Skip()
 
 
 class GCObject:
@@ -509,3 +477,4 @@ if __name__ == "__main__":
     frame.Show(True)
     app.MainLoop()
     app.Destroy()
+
