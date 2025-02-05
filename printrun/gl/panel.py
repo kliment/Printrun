@@ -41,7 +41,7 @@ from pyglet.gl import glEnable, GL_LIGHTING, glLightfv, \
     glColorMaterial, GL_FRONT, glRotatef, GL_FILL
 
 from pyglet import gl
-from .trackball import np_unproject
+from .mathutils import np_unproject
 from .actors import Focus, vec
 from .camera import Camera
 from .keyboardinput import KeyboardInput

@@ -20,7 +20,7 @@ from pyglet.gl import GLdouble, glGetDoublev, glLoadIdentity, \
     GL_PROJECTION, gluPerspective, glPushMatrix, glPopMatrix, \
     glLoadMatrixd
 
-from .trackball import trackball, mulquat, axis_to_quat, quat_rotate_vec
+from .mathutils import trackball, mulquat, axis_to_quat, quat_rotate_vec
 
 import numpy as np
 
