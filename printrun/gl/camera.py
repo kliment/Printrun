@@ -153,8 +153,17 @@ class Camera():
     def get_view_matrix(self) -> Array:
         return self._np_to_gl_mat(self.view_mat)
 
+    def move_rel(self, x: float, y: float, z: float):
+        delta = np.array((x, y, z))
+
+        self.eye = delta + self.eye
+        self.target = delta + self.target
+
+        self._rebuild_view_mat()
+
     def zoom(self, factor: float,
-             to: Optional[Tuple[float, float]] = None) -> None:
+             to: Optional[Tuple[float, float]] = None,
+             rebuild_mat: bool = True) -> None:
         # TODO: Implement zoom to point
         '''
         delta_x = 0.0
@@ -178,7 +187,9 @@ class Camera():
                 return
 
             self.eye = eye
-            self._rebuild_view_mat()
+
+            if rebuild_mat:
+                self._rebuild_view_mat()
 
         '''
         if to:

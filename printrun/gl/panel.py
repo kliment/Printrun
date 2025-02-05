@@ -550,9 +550,10 @@ class wxGLPanel(BASE_CLASS):
 
         if self.camera.is_orthographic:
             ratio = float(self.camera.dist) / max(dims[0][2], dims[1][2])
-            glScalef(ratio, ratio, 1)
+            self.camera.zoom(ratio, rebuild_mat=False)
 
-        glTranslatef(center_x, center_y, 0)
+        self.camera.move_rel(-center_x, -center_y, 0.0)
+
         wx.CallAfter(self.Refresh)
 
 
