@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2024-05-25 15:04+0200\n"
-"PO-Revision-Date: 2024-05-25 15:10+0200\n"
+"POT-Creation-Date: 2025-02-06 18:46+0100\n"
+"PO-Revision-Date: 2025-02-06 20:18+0100\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: FR <guillaume@segu.in>\n"
 "Language: fr\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.4.4\n"
+"X-Generator: Poedit 3.5\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 #: printrun\excluder.py:26
@@ -113,7 +113,7 @@ msgstr ""
 msgid "G-Code Viewer"
 msgstr "Plater"
 
-#: printrun\gl\panel.py:172
+#: printrun\gl\panel.py:173
 msgid "OpenGL failed, disabling it:"
 msgstr ""
 
@@ -133,16 +133,16 @@ msgstr "Commandes"
 msgid "Status"
 msgstr "État"
 
-#: printrun\gui\__init__.py:187 printrun\pronterface.py:291
-#: printrun\pronterface.py:630
+#: printrun\gui\__init__.py:187 printrun\pronterface.py:295
+#: printrun\pronterface.py:634
 msgid "Tabbed with platers"
 msgstr ""
 
-#: printrun\gui\__init__.py:203 printrun\pronterface.py:833
+#: printrun\gui\__init__.py:203 printrun\pronterface.py:837
 msgid "Plater"
 msgstr "Plater"
 
-#: printrun\gui\__init__.py:204 printrun\pronterface.py:834
+#: printrun\gui\__init__.py:204 printrun\pronterface.py:838
 #, fuzzy
 msgid "G-Code Plater"
 msgstr "Plater"
@@ -339,13 +339,13 @@ msgstr "Sélectionner le port auquel l'imprimante est connectée"
 msgid "Select Baud rate for printer communication"
 msgstr "Sélectionner la vitesse de communication"
 
-#: printrun\gui\toolbar.py:56 printrun\pronterface.py:1376
+#: printrun\gui\toolbar.py:56 printrun\pronterface.py:1385
 #, fuzzy
 #| msgid "Connect"
 msgid "&Connect"
 msgstr "Connecter"
 
-#: printrun\gui\toolbar.py:56 printrun\pronterface.py:1377
+#: printrun\gui\toolbar.py:56 printrun\pronterface.py:1386
 msgid "Connect to the printer"
 msgstr "Se connecter à l'imprimante"
 
@@ -361,7 +361,7 @@ msgstr "Réinitialiser"
 msgid "Load a 3D model file"
 msgstr "Charger un modèle 3D"
 
-#: printrun\gui\toolbar.py:70 printrun\pronterface.py:1584
+#: printrun\gui\toolbar.py:70 printrun\pronterface.py:1593
 msgid "Load file"
 msgstr "Charger un fichier"
 
@@ -714,8 +714,8 @@ msgstr "Annulation de la tentative de connexion suite à 4 envois échoués."
 
 #: printrun\printcore.py:542 printrun\printcore.py:561
 #: printrun\pronsole.py:1035 printrun\pronsole.py:1093
-#: printrun\pronterface.py:224 printrun\pronterface.py:1299
-#: printrun\pronterface.py:1435 printrun\pronterface.py:1508
+#: printrun\pronterface.py:228 printrun\pronterface.py:1308
+#: printrun\pronterface.py:1444 printrun\pronterface.py:1517
 msgid "Not connected to printer."
 msgstr "Imprimante non connectée."
 
@@ -1061,7 +1061,7 @@ msgstr ""
 msgid "Could not load .sl1 config."
 msgstr ""
 
-#: printrun\projectlayer.py:859 printrun\pronterface.py:1626
+#: printrun\projectlayer.py:859 printrun\pronterface.py:1635
 msgid "Open file to print"
 msgstr "Ouvrir un fichier à imprimer"
 
@@ -1082,7 +1082,7 @@ msgid "Prusa SL1 files"
 msgstr ""
 
 #: printrun\projectlayer.py:870 printrun\pronsole.py:945
-#: printrun\pronsole.py:986 printrun\pronterface.py:1640
+#: printrun\pronsole.py:986 printrun\pronterface.py:1649
 msgid "File not found!"
 msgstr "Fichier non trouvé"
 
@@ -1192,8 +1192,8 @@ msgstr ""
 
 #: printrun\pronsole.py:392 printrun\pronsole.py:400 printrun\pronsole.py:1444
 #: printrun\pronsole.py:1471 printrun\pronsole.py:1543
-#: printrun\pronterface.py:475 printrun\pronterface.py:495
-#: printrun\pronterface.py:512 printrun\pronterface.py:527
+#: printrun\pronterface.py:479 printrun\pronterface.py:499
+#: printrun\pronterface.py:516 printrun\pronterface.py:531
 msgid "Printer is not online."
 msgstr "Imprimante déconnectée."
 
@@ -1450,7 +1450,7 @@ msgstr "Déconnexion suite à 4 envois échoués."
 msgid "No file name given."
 msgstr "Aucun nom de fichier fourni."
 
-#: printrun\pronsole.py:943 printrun\pronterface.py:1672
+#: printrun\pronsole.py:943 printrun\pronterface.py:1681
 #, fuzzy
 #| msgid "Skeining file: %s"
 msgid "Loading file: %s"
@@ -1461,7 +1461,7 @@ msgstr "Découpe du fichier: %s"
 msgid "Loaded %s, %d lines."
 msgstr "%s chargé, %d lignes"
 
-#: printrun\pronsole.py:949 printrun\pronterface.py:1779
+#: printrun\pronsole.py:949 printrun\pronterface.py:1788
 #, fuzzy
 msgid "Estimated duration: %d layers, %s"
 msgstr "Durée estimée : %s"
@@ -1573,8 +1573,8 @@ msgid "Send a loaded gcode file to the printer. You have %s loaded right now."
 msgstr ""
 "Envoyer un fichier gcode chargé à l'imprimante. %s est chargé pour l'instant."
 
-#: printrun\pronsole.py:1090 printrun\pronterface.py:904
-#: printrun\pronterface.py:1432
+#: printrun\pronsole.py:1090 printrun\pronterface.py:908
+#: printrun\pronterface.py:1441
 msgid "No file loaded. Please use load first."
 msgstr "Aucun fichier chargé. Veuillez charger un fichier avant."
 
@@ -1617,11 +1617,11 @@ msgstr "Imprimante déconnectée. Veuillez vous y connecter."
 msgid "Lists files on the SD card"
 msgstr "Liste les fichiers sur la carte SD"
 
-#: printrun\pronsole.py:1161 printrun\pronterface.py:2098
+#: printrun\pronsole.py:1161 printrun\pronterface.py:2107
 msgid "Opening file failed."
 msgstr "L'ouverture du fichier a échoué"
 
-#: printrun\pronsole.py:1167 printrun\pronterface.py:2104
+#: printrun\pronsole.py:1167 printrun\pronterface.py:2113
 msgid "Starting print"
 msgstr "Début de l'impression..."
 
@@ -1679,7 +1679,7 @@ msgstr "Impression terminée à : %(end_time)s après avoir duré %(duration)s"
 msgid "Final command output:"
 msgstr "Script post-impression"
 
-#: printrun\pronsole.py:1316 printrun\pronterface.py:2057
+#: printrun\pronsole.py:1316 printrun\pronterface.py:2066
 #, fuzzy
 #| msgid "Execute command: "
 msgid "Received command %s"
@@ -1734,7 +1734,7 @@ msgstr ""
 msgid "Setting hotend temperature to %s degrees Celsius."
 msgstr "Réglage de la température de la buse à %s degrés Celsius."
 
-#: printrun\pronsole.py:1446 printrun\pronterface.py:477
+#: printrun\pronsole.py:1446 printrun\pronterface.py:481
 msgid ""
 "You cannot set negative temperatures. To turn the hotend off entirely, set "
 "its temperature to 0."
@@ -1755,7 +1755,7 @@ msgstr ""
 msgid "Setting bed temperature to %s degrees Celsius."
 msgstr "Réglage de la température du plateau à %s degrés Celsius."
 
-#: printrun\pronsole.py:1473 printrun\pronterface.py:497
+#: printrun\pronsole.py:1473 printrun\pronterface.py:501
 msgid ""
 "You cannot set negative temperatures. To turn the bed off entirely, set its "
 "temperature to 0."
@@ -1777,7 +1777,7 @@ msgstr ""
 msgid "Monitoring printer, use ^C to interrupt."
 msgstr "Imprimante sous surveillance, utiliser ^C pour interrompre."
 
-#: printrun\pronsole.py:1497 printrun\pronterface.py:441
+#: printrun\pronsole.py:1497 printrun\pronterface.py:445
 msgid "Invalid period given."
 msgstr "La période donnée est invalide"
 
@@ -1795,7 +1795,7 @@ msgstr "Progrès de l'impression : "
 msgid "SD print progress: "
 msgstr "Progrès de l'impression : "
 
-#: printrun\pronsole.py:1519 printrun\pronterface.py:445
+#: printrun\pronsole.py:1519 printrun\pronterface.py:449
 msgid "Done monitoring."
 msgstr "Surveillance de l'imprimante effectuée."
 
@@ -2075,35 +2075,39 @@ msgid ""
 "Current gcode filename can be given using $s token."
 msgstr ""
 
-#: printrun\pronterface.py:161
+#: printrun\pronterface.py:110
+msgid "An exception occurred during an attempt to log a message: {}"
+msgstr ""
+
+#: printrun\pronterface.py:165
 msgid "Motors off"
 msgstr "Arrêter les moteurs"
 
-#: printrun\pronterface.py:161
+#: printrun\pronterface.py:165
 msgid "Switch all motors off"
 msgstr "Arrêter tous les moteurs"
 
-#: printrun\pronterface.py:162
+#: printrun\pronterface.py:166
 msgid "Advance extruder by set length"
 msgstr "Extruder sur la longueur donnée"
 
-#: printrun\pronterface.py:162
+#: printrun\pronterface.py:166
 msgid "Extrude"
 msgstr "Extruder"
 
-#: printrun\pronterface.py:163
+#: printrun\pronterface.py:167
 msgid "Reverse"
 msgstr "Inverser"
 
-#: printrun\pronterface.py:163
+#: printrun\pronterface.py:167
 msgid "Reverse extruder by set length"
 msgstr "Inverser l'extrudeur sur la longueur donnée"
 
-#: printrun\pronterface.py:184
+#: printrun\pronterface.py:188
 msgid "Pronterface"
 msgstr "Pronterface"
 
-#: printrun\pronterface.py:209
+#: printrun\pronterface.py:213
 msgid ""
 "# I moved all your custom buttons into .pronsolerc.\n"
 "# Please don't add them here any more.\n"
@@ -2114,7 +2118,7 @@ msgstr ""
 "# Veuillez ne plus en ajouter ici.\n"
 "# Une sauvegarde de vos anciens boutons est dans le fichier custombtn.old\n"
 
-#: printrun\pronterface.py:214
+#: printrun\pronterface.py:218
 msgid ""
 "Note!!! You have specified custom buttons in both custombtn.txt and ."
 "pronsolerc"
@@ -2122,97 +2126,97 @@ msgstr ""
 "Remarque! Vous avez spécifié des boutons personnalisés dans custombtn.txt et "
 "aussi dans .pronsolerc"
 
-#: printrun\pronterface.py:215
+#: printrun\pronterface.py:219
 msgid ""
 "Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"
 msgstr ""
 "custombtn.txt ignoré. Retirez tous les boutons en cours pour revenir à "
 "custombtn.txt"
 
-#: printrun\pronterface.py:291 printrun\pronterface.py:630
+#: printrun\pronterface.py:295 printrun\pronterface.py:634
 msgid "Tabbed"
 msgstr ""
 
-#: printrun\pronterface.py:294 printrun\pronterface.py:1088
+#: printrun\pronterface.py:298 printrun\pronterface.py:1093
 msgid "Compact"
 msgstr ""
 
-#: printrun\pronterface.py:401
+#: printrun\pronterface.py:405
 msgid "Exit"
 msgstr ""
 
-#: printrun\pronterface.py:401
+#: printrun\pronterface.py:405
 msgid "Print in progress ! Are you really sure you want to quit ?"
 msgstr ""
 
-#: printrun\pronterface.py:443
+#: printrun\pronterface.py:447
 msgid "Monitoring printer."
 msgstr "Imprimante sous surveillance."
 
-#: printrun\pronterface.py:449
+#: printrun\pronterface.py:453
 msgid "Please pause or stop print before extruding."
 msgstr ""
 
-#: printrun\pronterface.py:456
+#: printrun\pronterface.py:460
 msgid "Please pause or stop print before reversing."
 msgstr ""
 
-#: printrun\pronterface.py:472
+#: printrun\pronterface.py:476
 #, fuzzy
 #| msgid "Setting hotend temperature to %s degrees Celsius."
 msgid "Setting hotend temperature to %g degrees Celsius."
 msgstr "Réglage de la température de la buse à %s degrés Celsius."
 
-#: printrun\pronterface.py:479 printrun\pronterface.py:499
+#: printrun\pronterface.py:483 printrun\pronterface.py:503
 msgid "You must enter a temperature. (%s)"
 msgstr "Vous devez saisir une température. (%s)"
 
-#: printrun\pronterface.py:492
+#: printrun\pronterface.py:496
 #, fuzzy
 #| msgid "Setting bed temperature to %s degrees Celsius."
 msgid "Setting bed temperature to %g degrees Celsius."
 msgstr "Réglage de la température du plateau à %s degrés Celsius."
 
-#: printrun\pronterface.py:510
+#: printrun\pronterface.py:514
 msgid "Setting print speed factor to %d%%."
 msgstr ""
 
-#: printrun\pronterface.py:514
+#: printrun\pronterface.py:518
 #, fuzzy
 msgid "You must enter a speed. (%s)"
 msgstr "Vous devez saisir une température. (%s)"
 
-#: printrun\pronterface.py:525
+#: printrun\pronterface.py:529
 msgid "Setting print flow factor to %d%%."
 msgstr ""
 
-#: printrun\pronterface.py:529
+#: printrun\pronterface.py:533
 #, fuzzy
 msgid "You must enter a flow. (%s)"
 msgstr "Vous devez saisir une température. (%s)"
 
-#: printrun\pronterface.py:610
+#: printrun\pronterface.py:614
 msgid "Plate function activated"
 msgstr "Fonction de composition activée"
 
-#: printrun\pronterface.py:620
+#: printrun\pronterface.py:624
 #, fuzzy
 msgid "G-Code plate function activated"
 msgstr "Fonction de composition activée"
 
-#: printrun\pronterface.py:628
+#: printrun\pronterface.py:632
 msgid "Plated %s"
 msgstr "Plateau créé %s"
 
-#: printrun\pronterface.py:645
+#: printrun\pronterface.py:649
 msgid "SD Upload"
 msgstr "Copier sur SD"
 
-#: printrun\pronterface.py:649
+#: printrun\pronterface.py:653
 msgid "SD Print"
 msgstr "Imprimer depuis SD"
 
-#: printrun\pronterface.py:713
+#: printrun\pronterface.py:717
 msgid ""
 "Manual move outside of the build volume prevented (see the \"Clamp manual "
 "moves\" option)."
@@ -2220,7 +2224,7 @@ msgstr ""
 "Déplacement en dehors du volume d'impression inhibé (voir l'option \"Limiter "
 "les mouvements manuels\")."
 
-#: printrun\pronterface.py:782
+#: printrun\pronterface.py:786
 msgid ""
 "Attempted to write invalid text to console, which could be due to an invalid "
 "baudrate"
@@ -2228,106 +2232,106 @@ msgstr ""
 "Impossible de transcrire un message dans la console, possiblement à cause "
 "d'un mauvais réglage du baudrate."
 
-#: printrun\pronterface.py:784
+#: printrun\pronterface.py:788
 msgid "Unhanded exception: "
 msgstr ""
 
-#: printrun\pronterface.py:815
+#: printrun\pronterface.py:819
 #, fuzzy
 #| msgid " Opens file"
 msgid " Open file"
 msgstr " Ouvrir un fichier"
 
-#: printrun\pronterface.py:815
+#: printrun\pronterface.py:819
 #, fuzzy
 #| msgid "&Open..."
 msgid "&Open..."
 msgstr "&Ouvrir..."
 
-#: printrun\pronterface.py:816
+#: printrun\pronterface.py:820
 #, fuzzy
 #| msgid " Opens file"
 msgid " Save file"
 msgstr " Ouvrir un fichier"
 
-#: printrun\pronterface.py:816
+#: printrun\pronterface.py:820
 #, fuzzy
 #| msgid "Save"
 msgid "&Save..."
 msgstr "Enregistrer"
 
-#: printrun\pronterface.py:825
+#: printrun\pronterface.py:829
 msgid "&Recent Files"
 msgstr ""
 
-#: printrun\pronterface.py:826
+#: printrun\pronterface.py:830
 msgid " Clear output console"
 msgstr " Effacer le contenu de la console de sortie"
 
-#: printrun\pronterface.py:826
+#: printrun\pronterface.py:830
 #, fuzzy
 #| msgid "Clear console"
 msgid "Clear console"
 msgstr "Effacer la console"
 
-#: printrun\pronterface.py:827
+#: printrun\pronterface.py:831
 msgid " Closes the Window"
 msgstr " Quitter le programme"
 
-#: printrun\pronterface.py:827
+#: printrun\pronterface.py:831
 msgid "E&xit"
 msgstr "&Quitter"
 
-#: printrun\pronterface.py:828
+#: printrun\pronterface.py:832
 msgid "&File"
 msgstr "&Fichier"
 
-#: printrun\pronterface.py:832
+#: printrun\pronterface.py:836
 msgid " Edit open file"
 msgstr " Éditer le fichier ouvert"
 
-#: printrun\pronterface.py:832
+#: printrun\pronterface.py:836
 msgid "&Edit..."
 msgstr "&Éditer..."
 
-#: printrun\pronterface.py:833
+#: printrun\pronterface.py:837
 msgid " Compose 3D models into a single plate"
 msgstr "Composer plusieurs modèles 3D en un seul plateau"
 
-#: printrun\pronterface.py:834
+#: printrun\pronterface.py:838
 #, fuzzy
 msgid " Compose G-Codes into a single plate"
 msgstr "Composer plusieurs modèles 3D en un seul plateau"
 
-#: printrun\pronterface.py:835
+#: printrun\pronterface.py:839
 msgid " Exclude parts of the bed from being printed"
 msgstr "Exclure des pièces du plateau lors de l'impression"
 
-#: printrun\pronterface.py:835
+#: printrun\pronterface.py:839
 msgid "Excluder"
 msgstr "Exclueur"
 
-#: printrun\pronterface.py:836
+#: printrun\pronterface.py:840
 msgid " Project slices"
 msgstr " Projeter les couches"
 
-#: printrun\pronterface.py:836
+#: printrun\pronterface.py:840
 msgid "Projector"
 msgstr "Projecteur"
 
-#: printrun\pronterface.py:839 printrun\spoolmanager\spoolmanager_gui.py:34
+#: printrun\pronterface.py:843 printrun\spoolmanager\spoolmanager_gui.py:34
 msgid "Spool Manager"
 msgstr ""
 
-#: printrun\pronterface.py:840
+#: printrun\pronterface.py:844
 msgid " Manage different spools of filament"
 msgstr ""
 
-#: printrun\pronterface.py:841
+#: printrun\pronterface.py:845
 msgid "&Tools"
 msgstr "&Outils"
 
-#: printrun\pronterface.py:845
+#: printrun\pronterface.py:849
 msgid ""
 " Recover previous print after a disconnect (homes X, Y, restores Z and E "
 "status)"
@@ -2335,184 +2339,184 @@ msgstr ""
 " Récupérer l'impression précédente après une déconnexion (ramène X, Y à 0, "
 "restaure l'état de Z et E)"
 
-#: printrun\pronterface.py:845
+#: printrun\pronterface.py:849
 msgid "Recover"
 msgstr "Récupérer"
 
-#: printrun\pronterface.py:848
+#: printrun\pronterface.py:852
 msgid "&Advanced"
 msgstr "&Avancé"
 
-#: printrun\pronterface.py:855
+#: printrun\pronterface.py:859
 msgid "Print &settings"
 msgstr "Paramètres d'impre&ssion"
 
-#: printrun\pronterface.py:856
+#: printrun\pronterface.py:860
 msgid "&Filament"
 msgstr "&Filament"
 
-#: printrun\pronterface.py:857
+#: printrun\pronterface.py:861
 msgid "&Printer"
 msgstr "&Imprimante"
 
-#: printrun\pronterface.py:863
+#: printrun\pronterface.py:867
 msgid "&Slic3r"
 msgstr "&Slic3r"
 
-#: printrun\pronterface.py:865
+#: printrun\pronterface.py:869
 #, fuzzy
 msgid "Failed to load Slic3r configuration:"
 msgstr "Activer l'intégration de Slic3r"
 
-#: printrun\pronterface.py:871
+#: printrun\pronterface.py:875
 msgid "&Macros"
 msgstr "&Macros"
 
-#: printrun\pronterface.py:872
+#: printrun\pronterface.py:876
 msgid "<&New...>"
 msgstr "<&Nouvelle...>"
 
-#: printrun\pronterface.py:873
+#: printrun\pronterface.py:877
 msgid " Options dialog"
 msgstr " Fenêtre des options"
 
-#: printrun\pronterface.py:873
+#: printrun\pronterface.py:877
 msgid "&Options"
 msgstr "&Options"
 
-#: printrun\pronterface.py:875
+#: printrun\pronterface.py:879
 msgid " Adjust slicing settings"
 msgstr " Régler les paramètres de slicing"
 
-#: printrun\pronterface.py:875
+#: printrun\pronterface.py:879
 #, fuzzy
 msgid "Slicing settings"
 msgstr "Paramètres de slicing"
 
-#: printrun\pronterface.py:877
+#: printrun\pronterface.py:881
 #, fuzzy
 msgid "Debug communications"
 msgstr "Vitesse de communication"
 
-#: printrun\pronterface.py:878
+#: printrun\pronterface.py:882
 msgid "Print all G-code sent to and received from the printer."
 msgstr "Afficher tous les G-code envoyés et reçus."
 
-#: printrun\pronterface.py:882
+#: printrun\pronterface.py:886
 msgid "Don't autoscroll"
 msgstr ""
 
-#: printrun\pronterface.py:883
+#: printrun\pronterface.py:887
 msgid "Disables automatic scrolling of the console when new text is added"
 msgstr ""
 
-#: printrun\pronterface.py:887
+#: printrun\pronterface.py:891
 msgid "&Settings"
 msgstr "&Paramètres"
 
-#: printrun\pronterface.py:893
+#: printrun\pronterface.py:897
 msgid "&About Printrun"
 msgstr "&A propos de Printrun"
 
-#: printrun\pronterface.py:893
+#: printrun\pronterface.py:897
 msgid "Show about dialog"
 msgstr "Afficher la fenêtre A propos"
 
-#: printrun\pronterface.py:894
+#: printrun\pronterface.py:898
 msgid "&Help"
 msgstr ""
 
-#: printrun\pronterface.py:925
+#: printrun\pronterface.py:929
 msgid ""
 "Printrun is a pure Python 3D printing (and other types of CNC) host software."
 msgstr ""
 "Printrun est un logiciel hôte pour imprimante 3D (et autres CNC) écrit en "
 "pur Python"
 
-#: printrun\pronterface.py:929
+#: printrun\pronterface.py:933
 #, fuzzy
 msgid "%.02fmm of filament have been extruded during prints"
 msgstr "mm de filament utilisés pour cette impression"
 
-#: printrun\pronterface.py:1080
+#: printrun\pronterface.py:1085
 #, fuzzy
 msgid "Monitor printer status"
 msgstr "Imprimante sous surveillance."
 
-#: printrun\pronterface.py:1080
+#: printrun\pronterface.py:1085
 msgid ""
 "Regularly monitor printer temperatures (required to have functional "
 "temperature graph or gauges)"
 msgstr ""
 
-#: printrun\pronterface.py:1081
+#: printrun\pronterface.py:1086
 msgid "Path to the simarrange binary to use in the STL plater"
 msgstr "Chemin vers le binaire de simarrange à utiliser dans le plater de STL"
 
-#: printrun\pronterface.py:1081
+#: printrun\pronterface.py:1086
 msgid "Simarrange command"
 msgstr "Commande simarrange"
 
-#: printrun\pronterface.py:1082
+#: printrun\pronterface.py:1087
 msgid "Circular build platform"
 msgstr ""
 
-#: printrun\pronterface.py:1082
+#: printrun\pronterface.py:1087
 msgid "Draw a circular (or oval) build platform instead of a rectangular one"
 msgstr ""
 
-#: printrun\pronterface.py:1083
+#: printrun\pronterface.py:1088
 msgid "Extruders count"
 msgstr "Nombre d'extrudeuses"
 
-#: printrun\pronterface.py:1083
+#: printrun\pronterface.py:1088
 msgid "Number of extruders"
 msgstr "Nombre d'extrudeuses"
 
-#: printrun\pronterface.py:1084
+#: printrun\pronterface.py:1089
 msgid "Clamp manual moves"
 msgstr "Limiter les mouvements manuels"
 
-#: printrun\pronterface.py:1084
+#: printrun\pronterface.py:1089
 msgid "Prevent manual moves from leaving the specified build dimensions"
 msgstr ""
 "Empêcher les mouvements manuels de quitter le volume d'impression défini"
 
-#: printrun\pronterface.py:1085
+#: printrun\pronterface.py:1090
 msgid "Display progress on printer"
 msgstr ""
 
-#: printrun\pronterface.py:1085
+#: printrun\pronterface.py:1090
 msgid ""
 "Show progress on printers display (sent via M117, might not be supported by "
 "all printers)"
 msgstr ""
 
-#: printrun\pronterface.py:1086
+#: printrun\pronterface.py:1091
 msgid ""
 "Interval in which pronterface sends the progress to the printer if enabled, "
 "in seconds"
 msgstr ""
 
-#: printrun\pronterface.py:1086
+#: printrun\pronterface.py:1091
 #, fuzzy
 #| msgid "Print progress: "
 msgid "Printer progress update interval"
 msgstr "Progrès de l'impression : "
 
-#: printrun\pronterface.py:1087
+#: printrun\pronterface.py:1092
 msgid "Display cutting moves"
 msgstr ""
 
-#: printrun\pronterface.py:1087
+#: printrun\pronterface.py:1092
 msgid "Show moves where spindle is active as printing moves"
 msgstr ""
 
-#: printrun\pronterface.py:1088
+#: printrun\pronterface.py:1093
 msgid "Interface mode"
 msgstr "Mode de l'interface"
 
-#: printrun\pronterface.py:1088
+#: printrun\pronterface.py:1093
 #, fuzzy
 #| msgid ""
 #| "Standard interface is a one-page, three columns layout with controls/"
@@ -2534,42 +2538,42 @@ msgstr ""
 "Le mode Tabbed présente deux onglets, l'un contenant les contrôles, l'autre "
 "la visualisation et la console."
 
-#: printrun\pronterface.py:1088 printrun\pronterface.py:1090
+#: printrun\pronterface.py:1093 printrun\pronterface.py:1095
 msgid "Standard"
 msgstr ""
 
-#: printrun\pronterface.py:1090
+#: printrun\pronterface.py:1095
 msgid "Controls mode"
 msgstr ""
 
-#: printrun\pronterface.py:1090
+#: printrun\pronterface.py:1095
 #, fuzzy
 #| msgid "Mini mode"
 msgid "Mini"
 msgstr "Mode réduit"
 
-#: printrun\pronterface.py:1090
+#: printrun\pronterface.py:1095
 msgid ""
 "Standard controls include all controls needed for printer setup and "
 "calibration, while Mini controls are limited to the ones needed for daily "
 "printing"
 msgstr ""
 
-#: printrun\pronterface.py:1091
+#: printrun\pronterface.py:1096
 msgid "Add a menu to select Slic3r profiles directly from Pronterface"
 msgstr ""
 "Ajouter un menu pour sélectionner les profils Slic3r directement depuis "
 "Pronterface"
 
-#: printrun\pronterface.py:1091
+#: printrun\pronterface.py:1096
 msgid "Enable Slic3r integration"
 msgstr "Activer l'intégration de Slic3r"
 
-#: printrun\pronterface.py:1092
+#: printrun\pronterface.py:1097
 msgid "Update Slic3r default presets"
 msgstr "Mettre à jour les profils par défaut de Slic3r"
 
-#: printrun\pronterface.py:1092
+#: printrun\pronterface.py:1097
 msgid ""
 "When selecting a profile in Slic3r integration menu, also save it as the "
 "default Slic3r preset"
@@ -2577,37 +2581,37 @@ msgstr ""
 "Lors de la sélection d'un profil dans le menu d'intégration de Slic3r, "
 "définir ce profil en tant que défaut pour Slic3r également"
 
-#: printrun\pronterface.py:1093
+#: printrun\pronterface.py:1098
 msgid "Main visualization"
 msgstr "Visualisation principale"
 
-#: printrun\pronterface.py:1093
+#: printrun\pronterface.py:1098
 msgid "None"
 msgstr ""
 
-#: printrun\pronterface.py:1093
+#: printrun\pronterface.py:1098
 msgid "Select visualization for main window."
 msgstr "Sélectionnez la visualisation pour la fenêtre principale"
 
-#: printrun\pronterface.py:1094
+#: printrun\pronterface.py:1099
 msgid "Use 3D in GCode viewer window"
 msgstr "Utiliser la 3D pour la fenêtre de visualisation"
 
-#: printrun\pronterface.py:1094
+#: printrun\pronterface.py:1099
 msgid "Use 3D mode instead of 2D layered mode in the visualization window"
 msgstr ""
 "Utiliser le mode 3D à la place du mode 2D par couche dans la fenêtre de "
 "visualisation"
 
-#: printrun\pronterface.py:1095
+#: printrun\pronterface.py:1100
 msgid "3D viewer options"
 msgstr ""
 
-#: printrun\pronterface.py:1096
+#: printrun\pronterface.py:1101
 msgid "Use a lighter 3D visualization"
 msgstr "Utiliser une visualisation 3D plus légère"
 
-#: printrun\pronterface.py:1096
+#: printrun\pronterface.py:1101
 msgid ""
 "Use a lighter visualization with simple lines instead of extruded paths for "
 "3D viewer"
@@ -2615,320 +2619,320 @@ msgstr ""
 "Utiliser une visualisation plus légère avec des lignes à la place de tubes "
 "extrudés dans la vue 3D"
 
-#: printrun\pronterface.py:1097
+#: printrun\pronterface.py:1102
 msgid ""
 "A perspective view looks more realistic, but is a bit more confusing to "
 "navigate"
 msgstr ""
 
-#: printrun\pronterface.py:1097
+#: printrun\pronterface.py:1102
 msgid "Use a perspective view instead of orthographic"
 msgstr ""
 
-#: printrun\pronterface.py:1098
+#: printrun\pronterface.py:1103
 msgid "Amount of anti-aliasing samples used in the 3D viewer"
 msgstr ""
 
-#: printrun\pronterface.py:1098
+#: printrun\pronterface.py:1103
 msgid "Number of anti-aliasing samples"
 msgstr ""
 
-#: printrun\pronterface.py:1099
+#: printrun\pronterface.py:1104
 msgid "Track current layer in main 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1099
+#: printrun\pronterface.py:1104
 msgid "Track the currently printing layer in the main 3D visualization"
 msgstr ""
 
-#: printrun\pronterface.py:1100
+#: printrun\pronterface.py:1105
 msgid "Extrusion width for 3D viewer"
 msgstr ""
 
-#: printrun\pronterface.py:1100
+#: printrun\pronterface.py:1105
 #, fuzzy
 #| msgid "Width of Extrusion in Preview"
 msgid "Width of printed path in 3D viewer"
 msgstr "Largeur de l'extrusion dans la prévisualisation"
 
-#: printrun\pronterface.py:1101
+#: printrun\pronterface.py:1106
 msgid "Height of printed path in 3D viewer"
 msgstr ""
 
-#: printrun\pronterface.py:1101
+#: printrun\pronterface.py:1106
 msgid "Layer height for 3D viewer"
 msgstr ""
 
-#: printrun\pronterface.py:1102
+#: printrun\pronterface.py:1107
 msgid "Display temperature graph"
 msgstr "Afficher le graphe de températures"
 
-#: printrun\pronterface.py:1102
+#: printrun\pronterface.py:1107
 msgid "Display time-lapse temperature graph"
 msgstr "Afficher un graphe temporel de la température"
 
-#: printrun\pronterface.py:1103
+#: printrun\pronterface.py:1108
 msgid "Display graphical gauges for temperatures visualization"
 msgstr "Afficher des jauges de température"
 
-#: printrun\pronterface.py:1103
+#: printrun\pronterface.py:1108
 msgid "Display temperature gauges"
 msgstr "Afficher les jauges de température"
 
-#: printrun\pronterface.py:1104
+#: printrun\pronterface.py:1109
 msgid "Display a checkbox that, when check, locks most of Pronterface"
 msgstr ""
 "Afficher une case à cocher pour verrouiller une grande partie de l'imprimante"
 
-#: printrun\pronterface.py:1104
+#: printrun\pronterface.py:1109
 msgid "Display interface lock checkbox"
 msgstr "Afficher une case à cocher pour pouvoir verrouiller l'inteface"
 
-#: printrun\pronterface.py:1105
+#: printrun\pronterface.py:1110
 msgid "If lock checkbox is enabled, lock the interface when starting a print"
 msgstr ""
 "Si la case de verrouillage est activée, verrouiler l'interface au lancement "
 "d'une impression"
 
-#: printrun\pronterface.py:1105
+#: printrun\pronterface.py:1110
 msgid "Lock interface upon print start"
 msgstr "Verrouiller l'interface au lancement d'une impression"
 
-#: printrun\pronterface.py:1106
+#: printrun\pronterface.py:1111
 msgid "Regularly update visualization during the load of a G-Code file"
 msgstr ""
 
-#: printrun\pronterface.py:1106
+#: printrun\pronterface.py:1111
 msgid "Update UI during G-Code load"
 msgstr ""
 
-#: printrun\pronterface.py:1115
+#: printrun\pronterface.py:1120
 msgid "2D viewer options"
 msgstr ""
 
-#: printrun\pronterface.py:1116
+#: printrun\pronterface.py:1121
 msgid "Preview extrusion width"
 msgstr "Largeur de l'extrusion pour la visualisation"
 
-#: printrun\pronterface.py:1116
+#: printrun\pronterface.py:1121
 msgid "Width of Extrusion in Preview"
 msgstr "Largeur de l'extrusion dans la prévisualisation"
 
-#: printrun\pronterface.py:1117
+#: printrun\pronterface.py:1122
 msgid "Fine Grid Spacing"
 msgstr "Espacement fin de la grille"
 
-#: printrun\pronterface.py:1117
+#: printrun\pronterface.py:1122
 msgid "Fine grid spacing"
 msgstr "Espacement fin de la grille"
 
-#: printrun\pronterface.py:1118
+#: printrun\pronterface.py:1123
 msgid "Coarse Grid Spacing"
 msgstr "Espacement large de la grille"
 
-#: printrun\pronterface.py:1118
+#: printrun\pronterface.py:1123
 msgid "Coarse grid spacing"
 msgstr "Espacement large de la grille"
 
-#: printrun\pronterface.py:1119
+#: printrun\pronterface.py:1124
 msgid "General"
 msgstr ""
 
-#: printrun\pronterface.py:1120
+#: printrun\pronterface.py:1125
 msgid "Background color"
 msgstr "Couleur de fond"
 
-#: printrun\pronterface.py:1120
+#: printrun\pronterface.py:1125
 msgid "Pronterface background color"
 msgstr "Couleur de fond de Pronterface"
 
-#: printrun\pronterface.py:1121
+#: printrun\pronterface.py:1126
 #, fuzzy
 #| msgid "Temperature graph"
 msgid "Temperature Graph"
 msgstr "Graphe de température"
 
-#: printrun\pronterface.py:1122
+#: printrun\pronterface.py:1127
 msgid "Color of the temperature graph background"
 msgstr ""
 
-#: printrun\pronterface.py:1122
+#: printrun\pronterface.py:1127
 #, fuzzy
 #| msgid "Background color"
 msgid "Graph background color"
 msgstr "Couleur de fond"
 
-#: printrun\pronterface.py:1123
+#: printrun\pronterface.py:1128
 #, fuzzy
 #| msgid "Display temperature graph"
 msgid "Color of the temperature graph text"
 msgstr "Afficher le graphe de températures"
 
-#: printrun\pronterface.py:1123
+#: printrun\pronterface.py:1128
 msgid "Graph text color"
 msgstr ""
 
-#: printrun\pronterface.py:1124
+#: printrun\pronterface.py:1129
 #, fuzzy
 #| msgid "Display temperature graph"
 msgid "Color of the temperature graph grid"
 msgstr "Afficher le graphe de températures"
 
-#: printrun\pronterface.py:1124
+#: printrun\pronterface.py:1129
 #, fuzzy
 #| msgid "Background color"
 msgid "Graph grid color"
 msgstr "Couleur de fond"
 
-#: printrun\pronterface.py:1125
+#: printrun\pronterface.py:1130
 msgid "Color of the temperature graph fan speed line"
 msgstr ""
 
-#: printrun\pronterface.py:1125
+#: printrun\pronterface.py:1130
 msgid "Graph fan line color"
 msgstr ""
 
-#: printrun\pronterface.py:1126
+#: printrun\pronterface.py:1131
 #, fuzzy
 #| msgid "Read the extruder and bed temperature."
 msgid "Color of the temperature graph bed temperature line"
 msgstr "Lire la température de l'extrudeuse et du plateau."
 
-#: printrun\pronterface.py:1126
+#: printrun\pronterface.py:1131
 msgid "Graph bed line color"
 msgstr ""
 
-#: printrun\pronterface.py:1127
+#: printrun\pronterface.py:1132
 msgid "Color of the temperature graph bed temperature target line"
 msgstr ""
 
-#: printrun\pronterface.py:1127
+#: printrun\pronterface.py:1132
 msgid "Graph bed target line color"
 msgstr ""
 
-#: printrun\pronterface.py:1128
+#: printrun\pronterface.py:1133
 msgid "Color of the temperature graph extruder 0 temperature line"
 msgstr ""
 
-#: printrun\pronterface.py:1128
+#: printrun\pronterface.py:1133
 msgid "Graph ex0 line color"
 msgstr ""
 
-#: printrun\pronterface.py:1129
+#: printrun\pronterface.py:1134
 msgid "Color of the temperature graph extruder 0 target temperature line"
 msgstr ""
 
-#: printrun\pronterface.py:1129
+#: printrun\pronterface.py:1134
 msgid "Graph ex0 target line color"
 msgstr ""
 
-#: printrun\pronterface.py:1130
+#: printrun\pronterface.py:1135
 msgid "Color of the temperature graph extruder 1 temperature line"
 msgstr ""
 
-#: printrun\pronterface.py:1130
+#: printrun\pronterface.py:1135
 msgid "Graph ex1 line color color"
 msgstr ""
 
-#: printrun\pronterface.py:1131
+#: printrun\pronterface.py:1136
 msgid "Color of the temperature graph extruder 1 temperature target line"
 msgstr ""
 
-#: printrun\pronterface.py:1131
+#: printrun\pronterface.py:1136
 msgid "Graph ex1 target line color"
 msgstr ""
 
-#: printrun\pronterface.py:1132
+#: printrun\pronterface.py:1137
 #, fuzzy
 #| msgid "Enable 3D viewer"
 msgid "3D Viewer"
 msgstr "Activer la visualisation 3D"
 
-#: printrun\pronterface.py:1133
+#: printrun\pronterface.py:1138
 #, fuzzy
 msgid "3D view background color"
 msgstr "Couleur de fond"
 
-#: printrun\pronterface.py:1133
+#: printrun\pronterface.py:1138
 msgid "Color of the 3D view background"
 msgstr ""
 
-#: printrun\pronterface.py:1134
+#: printrun\pronterface.py:1139
 msgid "3D view travel moves color"
 msgstr ""
 
-#: printrun\pronterface.py:1134
+#: printrun\pronterface.py:1139
 msgid "Color of travel moves in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1135
+#: printrun\pronterface.py:1140
 msgid "3D view print moves color"
 msgstr ""
 
-#: printrun\pronterface.py:1135
+#: printrun\pronterface.py:1140
 msgid "Color of print moves with tool 0 in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1136
+#: printrun\pronterface.py:1141
 msgid "3D view tool 1 moves color"
 msgstr ""
 
-#: printrun\pronterface.py:1136
+#: printrun\pronterface.py:1141
 msgid "Color of print moves with tool 1 in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1137
+#: printrun\pronterface.py:1142
 #, fuzzy
 msgid "3D view tool 2 moves color"
 msgstr "Couleur de fond"
 
-#: printrun\pronterface.py:1137
+#: printrun\pronterface.py:1142
 msgid "Color of print moves with tool 2 in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1138
+#: printrun\pronterface.py:1143
 #, fuzzy
 msgid "3D view tool 3 moves color"
 msgstr "Couleur de fond"
 
-#: printrun\pronterface.py:1138
+#: printrun\pronterface.py:1143
 msgid "Color of print moves with tool 3 in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1139
+#: printrun\pronterface.py:1144
 #, fuzzy
 msgid "3D view tool 4 moves color"
 msgstr "Couleur de fond"
 
-#: printrun\pronterface.py:1139
+#: printrun\pronterface.py:1144
 msgid "Color of print moves with tool 4 in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1140
+#: printrun\pronterface.py:1145
 msgid "3D view printed moves color"
 msgstr ""
 
-#: printrun\pronterface.py:1140
+#: printrun\pronterface.py:1145
 msgid "Color of printed moves in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1141
+#: printrun\pronterface.py:1146
 msgid "3D view current layer moves color"
 msgstr ""
 
-#: printrun\pronterface.py:1141
+#: printrun\pronterface.py:1146
 msgid "Color of moves in current layer in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1142
+#: printrun\pronterface.py:1147
 msgid "3D view printed current layer moves color"
 msgstr ""
 
-#: printrun\pronterface.py:1142
+#: printrun\pronterface.py:1147
 msgid "Color of already printed moves from current layer in 3D view"
 msgstr ""
 
-#: printrun\pronterface.py:1143
+#: printrun\pronterface.py:1148
 #, fuzzy
 #| msgid "Changing most settings here will require restart to get effect"
 msgid "Changing some of these settings might require a restart to get effect"
@@ -2936,155 +2940,155 @@ msgstr ""
 "La plupart de ces réglages nécessitent de redémarrer le logiciel pour être "
 "appliqués."
 
-#: printrun\pronterface.py:1143
+#: printrun\pronterface.py:1148
 msgid "Note:"
 msgstr "Note:"
 
-#: printrun\pronterface.py:1157
+#: printrun\pronterface.py:1162
 msgid "automatically try to connect to printer on startup"
 msgstr "tenter de se connecter automatiquement à l'imprimante au démarrage"
 
-#: printrun\pronterface.py:1170 printrun\pronterface.py:1651
+#: printrun\pronterface.py:1175 printrun\pronterface.py:1660
 msgid "Failed to load recent files list:"
 msgstr ""
 
-#: printrun\pronterface.py:1263
+#: printrun\pronterface.py:1268
 msgid "SD upload: %04.2f%% |"
 msgstr "Envoi SD : %04.2f%% |"
 
-#: printrun\pronterface.py:1264 printrun\pronterface.py:1269
+#: printrun\pronterface.py:1269 printrun\pronterface.py:1274
 msgid " Line# %d of %d lines |"
 msgstr " Ligne# %d sur %d lignes |"
 
-#: printrun\pronterface.py:1266
+#: printrun\pronterface.py:1271
 msgid "SD printing: %04.2f%% |"
 msgstr "Impression SD : %04.2f%% |"
 
-#: printrun\pronterface.py:1268
+#: printrun\pronterface.py:1273
 msgid "Printing: %04.2f%% |"
 msgstr "Impression : %04.2f%% |"
 
-#: printrun\pronterface.py:1271
+#: printrun\pronterface.py:1276
 msgid " Est: %s of %s remaining | "
 msgstr " ETA: %s restant sur %s | "
 
-#: printrun\pronterface.py:1273
+#: printrun\pronterface.py:1278
 msgid " Z: %.3f mm"
 msgstr " Z: %.3f mm"
 
-#: printrun\pronterface.py:1280
+#: printrun\pronterface.py:1289
 msgid ""
 "Warning: The print progress message might be too long to be displayed "
 "properly"
 msgstr ""
 
-#: printrun\pronterface.py:1309
+#: printrun\pronterface.py:1318
 msgid "Locking interface."
 msgstr "Verrouillage de l'interface."
 
-#: printrun\pronterface.py:1313
+#: printrun\pronterface.py:1322
 msgid "Unlocking interface."
 msgstr "Déverrouillage de l'interface."
 
-#: printrun\pronterface.py:1328
+#: printrun\pronterface.py:1337
 msgid "Connecting..."
 msgstr "Connexion en cours..."
 
-#: printrun\pronterface.py:1340
+#: printrun\pronterface.py:1349
 msgid "Could not parse baud rate: "
 msgstr "Impossible d'analyser le débit:"
 
-#: printrun\pronterface.py:1345 printrun\pronterface.py:1385
-#: printrun\pronterface.py:1405 printrun\pronterface.py:1415
-#: printrun\pronterface.py:1502 printrun\pronterface.py:1727
+#: printrun\pronterface.py:1354 printrun\pronterface.py:1394
+#: printrun\pronterface.py:1414 printrun\pronterface.py:1424
+#: printrun\pronterface.py:1511 printrun\pronterface.py:1736
 #, fuzzy
 #| msgid "Pause"
 msgid "&Pause"
 msgstr "Pause"
 
-#: printrun\pronterface.py:1346 printrun\pronterface.py:1386
-#: printrun\pronterface.py:1402 printrun\pronterface.py:1726
-#: printrun\pronterface.py:1876
+#: printrun\pronterface.py:1355 printrun\pronterface.py:1395
+#: printrun\pronterface.py:1411 printrun\pronterface.py:1735
+#: printrun\pronterface.py:1885
 #, fuzzy
 #| msgid "Print"
 msgid "&Print"
 msgstr "Imprimer"
 
-#: printrun\pronterface.py:1366
+#: printrun\pronterface.py:1375
 msgid "Disconnected."
 msgstr "Déconnecté."
 
-#: printrun\pronterface.py:1395
+#: printrun\pronterface.py:1404
 msgid "Reset."
 msgstr "Réinitialisée."
 
-#: printrun\pronterface.py:1396
+#: printrun\pronterface.py:1405
 msgid "Are you sure you want to reset the printer?"
 msgstr "Etes-vous sûr de vouloir réinitialiser l'imprimante?"
 
-#: printrun\pronterface.py:1396
+#: printrun\pronterface.py:1405
 msgid "Reset?"
 msgstr "Réinitialiser ?"
 
-#: printrun\pronterface.py:1417
+#: printrun\pronterface.py:1426
 msgid "Restart"
 msgstr "Recommencer"
 
-#: printrun\pronterface.py:1451
+#: printrun\pronterface.py:1460
 #, fuzzy
 #| msgid "Please enter target name in 8.3 format."
 msgid "Enter a target filename in 8.3 format:"
 msgstr "Veuillez entrer un nom au format 8.3."
 
-#: printrun\pronterface.py:1451
+#: printrun\pronterface.py:1460
 msgid "Pick SD filename"
 msgstr "Lister les fichiers sur la carte SD"
 
-#: printrun\pronterface.py:1469
+#: printrun\pronterface.py:1478
 msgid "File upload complete"
 msgstr "Envoi du fichier terminé"
 
-#: printrun\pronterface.py:1476
+#: printrun\pronterface.py:1485
 msgid "Print paused at: %s"
 msgstr "Impression interrompue à : %s"
 
-#: printrun\pronterface.py:1490
+#: printrun\pronterface.py:1499
 msgid "Resume"
 msgstr "Reprendre"
 
-#: printrun\pronterface.py:1493
+#: printrun\pronterface.py:1502
 msgid "Resuming."
 msgstr "Continuons !"
 
-#: printrun\pronterface.py:1522
+#: printrun\pronterface.py:1531
 msgid "Pick SD file"
 msgstr "Choisir un fichier sur la carte SD"
 
-#: printrun\pronterface.py:1522
+#: printrun\pronterface.py:1531
 msgid "Select the file to print"
 msgstr "Sélectionnez le fichier à imprimer :"
 
-#: printrun\pronterface.py:1557
+#: printrun\pronterface.py:1566
 msgid "Running "
 msgstr ""
 
-#: printrun\pronterface.py:1566
+#: printrun\pronterface.py:1575
 msgid "Failed to execute slicing software: "
 msgstr "Une erreur s'est produite lors du slicing : "
 
-#: printrun\pronterface.py:1573
+#: printrun\pronterface.py:1582
 msgid "Slicing..."
 msgstr "Slicing..."
 
-#: printrun\pronterface.py:1587
+#: printrun\pronterface.py:1596
 msgid "Cancel"
 msgstr "Annuler"
 
-#: printrun\pronterface.py:1589
+#: printrun\pronterface.py:1598
 msgid "Slicing "
 msgstr "Slicing "
 
-#: printrun\pronterface.py:1627
+#: printrun\pronterface.py:1636
 #, fuzzy
 #| msgid ""
 #| "OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*."
@@ -3098,76 +3102,76 @@ msgstr ""
 "Fichiers OBJ, STL et GCODE (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)|*."
 "gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|Tous les fichiers (*.*)|*.*"
 
-#: printrun\pronterface.py:1660
+#: printrun\pronterface.py:1669
 msgid "Could not update recent files list:"
 msgstr ""
 
-#: printrun\pronterface.py:1697
+#: printrun\pronterface.py:1706
 msgid "Loading %s: %d layers loaded (%d lines)"
 msgstr ""
 
-#: printrun\pronterface.py:1706
+#: printrun\pronterface.py:1715
 #, fuzzy
 #| msgid "Uploading %s"
 msgid "Loading %s..."
 msgstr "Envoi de %s"
 
-#: printrun\pronterface.py:1720
+#: printrun\pronterface.py:1729
 #, fuzzy
 #| msgid "Pronterface"
 msgid "Pronterface - %s"
 msgstr "Pronterface"
 
-#: printrun\pronterface.py:1721
+#: printrun\pronterface.py:1730
 msgid "Loaded %s, %d lines"
 msgstr "%s chargé, %d lignes"
 
-#: printrun\pronterface.py:1725
+#: printrun\pronterface.py:1734
 msgid "Load File"
 msgstr "Charger un fichier"
 
-#: printrun\pronterface.py:1748
+#: printrun\pronterface.py:1757
 msgid ""
 "\n"
 "WARNING: Currently loaded spool for extruder "
 msgstr ""
 
-#: printrun\pronterface.py:1749
+#: printrun\pronterface.py:1758
 msgid "%d will likely run out of filament during the print.\n"
 msgstr ""
 
-#: printrun\pronterface.py:1757
+#: printrun\pronterface.py:1766
 #, fuzzy
 msgid "%s of filament used in this print"
 msgstr "mm de filament utilisés pour cette impression"
 
-#: printrun\pronterface.py:1770
+#: printrun\pronterface.py:1779
 msgid "Using spool '%s' (%s of filament will remain)"
 msgstr ""
 
-#: printrun\pronterface.py:1775
+#: printrun\pronterface.py:1784
 msgid "The print goes:"
 msgstr "L'impression va :"
 
-#: printrun\pronterface.py:1776
+#: printrun\pronterface.py:1785
 msgid "- from %.2f mm to %.2f mm in X and is %.2f mm wide"
 msgstr "- de %.02f mm à %.02f mm en X et mesure %.02f mm de large"
 
-#: printrun\pronterface.py:1777
+#: printrun\pronterface.py:1786
 msgid "- from %.2f mm to %.2f mm in Y and is %.2f mm deep"
 msgstr "- de %.02f mm à %.02f mm en Y et mesure %.02f mm de profondeur"
 
-#: printrun\pronterface.py:1778
+#: printrun\pronterface.py:1787
 msgid "- from %.2f mm to %.2f mm in Z and is %.2f mm high"
 msgstr "- de %.02f mm à %.02f mm en Y et mesure %.02f mm de haut"
 
-#: printrun\pronterface.py:1841
+#: printrun\pronterface.py:1850
 #, fuzzy
 #| msgid "Save"
 msgid "Save as"
 msgstr "Enregistrer"
 
-#: printrun\pronterface.py:1842
+#: printrun\pronterface.py:1851
 #, fuzzy
 #| msgid ""
 #| "OBJ, STL, and GCODE files (*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ)|*."
@@ -3177,102 +3181,102 @@ msgstr ""
 "Fichiers OBJ, STL et GCODE (;*.gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ;)|*."
 "gcode;*.gco;*.g;*.stl;*.STL;*.obj;*.OBJ|Tous les fichiers (*.*)|*.*"
 
-#: printrun\pronterface.py:1846
+#: printrun\pronterface.py:1855
 msgid "G-Code successfully saved to %s"
 msgstr ""
 
-#: printrun\pronterface.py:1881
+#: printrun\pronterface.py:1890
 msgid "Printer is now online."
 msgstr "Imprimante connectée."
 
-#: printrun\pronterface.py:1886
+#: printrun\pronterface.py:1895
 #, fuzzy
 #| msgid "Disconnect"
 msgid "Dis&connect"
 msgstr "Déconnecter"
 
-#: printrun\pronterface.py:1887
+#: printrun\pronterface.py:1896
 #, fuzzy
 #| msgid "Connect to the printer"
 msgid "Disconnect from the printer"
 msgstr "Se connecter à l'imprimante"
 
-#: printrun\pronterface.py:2016
+#: printrun\pronterface.py:2025
 #, fuzzy
 #| msgid "Heater:"
 msgid "Heater%s:"
 msgstr "Buse:"
 
-#: printrun\pronterface.py:2139
+#: printrun\pronterface.py:2148
 #, fuzzy
 #| msgid "click to add new custom button"
 msgid "Click to add new custom button"
 msgstr "Ajouter un bouton personnalisé"
 
-#: printrun\pronterface.py:2145
+#: printrun\pronterface.py:2154
 msgid "Execute command: "
 msgstr "Exécuter la commande :"
 
-#: printrun\pronterface.py:2164
+#: printrun\pronterface.py:2173
 msgid ""
 "Defines custom button. Usage: button <num> \"title\" [/c \"colour\"] command"
 msgstr ""
 "Définit des boutons personnalidés. Utilisation : <numero> \"Libelle\" [/c "
 "\"couleur\"] commande"
 
-#: printrun\pronterface.py:2186
+#: printrun\pronterface.py:2195
 msgid "Custom button number should be between 0 and 63"
 msgstr ""
 "Les numéros des boutons personnalisés doivent être compris entre 0 et 63."
 
-#: printrun\pronterface.py:2272
+#: printrun\pronterface.py:2281
 msgid "Edit custom button '%s'"
 msgstr "Editer le bouton personnalisé '%s'"
 
-#: printrun\pronterface.py:2274
+#: printrun\pronterface.py:2283
 msgid "Move left <<"
 msgstr "Déplacer vers la gauche <<"
 
-#: printrun\pronterface.py:2277
+#: printrun\pronterface.py:2286
 msgid "Move right >>"
 msgstr "Déplacer vers la droite >>"
 
-#: printrun\pronterface.py:2283
+#: printrun\pronterface.py:2292
 msgid "Remove custom button '%s'"
 msgstr "Supprimer le bouton personnalisé '%s'"
 
-#: printrun\pronterface.py:2286
+#: printrun\pronterface.py:2295
 msgid "Add custom button"
 msgstr "Ajouter un bouton personnalisé"
 
-#: printrun\pronterface.py:2394
+#: printrun\pronterface.py:2403
 #, fuzzy
 msgid "Failed to handle button"
 msgstr "Activer l'intégration de Slic3r"
 
-#: printrun\pronterface.py:2407
+#: printrun\pronterface.py:2416
 msgid "Do you want to erase the macro?"
 msgstr "Voulez-vous effacer la macro ?"
 
-#: printrun\pronterface.py:2411
+#: printrun\pronterface.py:2420
 msgid "Cancelled."
 msgstr "Annulé"
 
-#: printrun\pronterface.py:2429
+#: printrun\pronterface.py:2438
 msgid "Enter macro name"
 msgstr "Saisissez le nom de la macro"
 
-#: printrun\pronterface.py:2432
+#: printrun\pronterface.py:2441
 msgid "Macro name:"
 msgstr "Nom :"
 
-#: printrun\pronterface.py:2468
+#: printrun\pronterface.py:2477
 msgid "Macro name may contain only ASCII alphanumeric symbols and underscores"
 msgstr ""
 "Un nom de macro ne peut contenir que des caractères alphanumérique ASCII et "
 "des underscore (_)"
 
-#: printrun\pronterface.py:2471
+#: printrun\pronterface.py:2480
 msgid "Name '%s' is being used by built-in command"
 msgstr "Le nom '%s' est utilisé par une commande interne"
 
@@ -3537,11 +3541,21 @@ msgstr "Exécutable à exécuter quand l'impression est terminée"
 msgid "Log Path:"
 msgstr ""
 
-#: printrun\settings.py:412
-msgid "Path to the log file. An empty path will log to the console."
+#: printrun\settings.py:413
+msgid ""
+"Path to the log file. If the path is a directory the file will be named "
+"'printrun.log'"
 msgstr ""
 
-#: printrun\settings.py:482
+#: printrun\settings.py:414
+msgid "Duplicate log messages to stdout"
+msgstr ""
+
+#: printrun\settings.py:414
+msgid "Log to console:"
+msgstr ""
+
+#: printrun\settings.py:484
 msgid "Failed to run callback after setting '%s':"
 msgstr ""
 
