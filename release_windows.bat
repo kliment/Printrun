@@ -5,7 +5,7 @@ rem ****************************************************************************
 rem *********************  ---> New batch file starts here <---  ***********************
 rem **                                                                                **
 rem **  This batch will compile automated via command line an executable              **
-rem **  Pronterface, Pronsole and Plater file for Windows 10.                         **
+rem **  Pronterface, Pronsole and Plater file for Windows 10 and 11.                  **
 rem **                                                                                **
 rem **  Steps that are automated:                                                     **
 rem **                                                                                **
@@ -25,8 +25,8 @@ rem **  10. Go to directory .\dist, list files and ends the activity            
 rem **                                                                                **
 rem **  Steps, you need to do manually before running this batch:                     **
 rem **                                                                                **
-rem **  1. Install python 64-bit (3.10.x 64-bit is actually preferred                 **
-rem **     and standard version for Windows 10)                                       **
+rem **  1. Install python 64-bit (3.13.x 64-bit is actually preferred                 **
+rem **     and standard version for Windows 10 and 11)                                **
 rem **     https://www.python.org/downloads/release                                   **
 rem **     In case you use an other Python version: Check line 77 to 82 and adjust    **
 rem **     the parameter accordingly to build your virtual environment.               **
@@ -44,7 +44,7 @@ rem **  Remark: Plater stand alone application is experimental only. GUI code ne
 rem **          update for closing plater window and running processes. For now you   **
 rem **          need to terminate the process manually via Task manager.			  **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2024-12-12, Status: working                               **
+rem **  Author: DivingDuck, 2025-02-06, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -78,8 +78,8 @@ if exist v3 (
    rem for your Python version of choice and add 'rem' for all other versions.
    rem Attention: 
    rem Minimum version for wxPython is >= 4.2.1. With this version
-   rem Python x64 (version 3.8 up to 3.12) and 
-   rem Python x86 (version 3.9 up to 3.12) is supported.
+   rem Python x64 (version 3.8 up to 3.13) and 
+   rem Python x86 (version 3.9 up to 3.13) are supported.
 
    rem py -3.8 -m venv v3
    rem py -3.9-32 -m venv v3
