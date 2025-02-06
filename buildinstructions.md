@@ -86,8 +86,11 @@ pyi-makespec -F --add-data images/*;images --add-data *.png;. --add-data *.ico;.
 pyinstaller --clean pronterface.spec -y
 ```
 
->[!TIP] Please find further informations about building a development environment and packaging in script [release_windows.bat](release_windows.bat) where we implemented an automated build for windows.
+> [!TIP]
+> Please find further informations about building a development environment and packaging in script [release_windows.bat](release_windows.bat) where we implemented an automated build for windows.
 
-### Remark: 
->[^1]: The library **polygon3** is free for non commercial use. You can build Pronterface without this library - but then it will run slower.
->Please find further details regarding license here: https://pypi.org/project/Polygon3/
+### Remark:
+
+[^1]: The library **polygon3** is free for non commercial use. You can build Pronterface without this library - but then it will run slower.
+  Please find further details regarding license here: https://pypi.org/project/Polygon3/
+
