@@ -15,9 +15,8 @@
 
 from threading import Lock
 
-from pyglet.gl import GLdouble, glGetDoublev, glLoadIdentity, \
-    glMatrixMode, GL_MODELVIEW, GL_MODELVIEW_MATRIX, glOrtho, \
-    GL_PROJECTION, gluPerspective, glPushMatrix, glPopMatrix, \
+from pyglet.gl import GLdouble, glLoadIdentity, glMatrixMode, GL_MODELVIEW, \
+    glOrtho, GL_PROJECTION, gluPerspective, glPushMatrix, glPopMatrix, \
     glLoadMatrixd
 
 from .mathutils import trackball, mulquat, axis_to_quat, quat_rotate_vec
@@ -37,7 +36,7 @@ class Camera():
 
     rot_lock = Lock()
 
-    def __init__(self, parent: 'wxGLPanel', build_dimensions: Build_Dims, 
+    def __init__(self, parent: 'wxGLPanel', build_dimensions: Build_Dims,
                  ortho: bool = True) -> None:
 
         self.canvas = parent
@@ -49,9 +48,10 @@ class Camera():
         self.height = 1.0
         self.display_ppi_factor = 1.0
 
-        self.platformcenter = (-build_dimensions[3] - build_dimensions[0] / 2,
-                               -build_dimensions[4] - build_dimensions[1] / 2)
-        self.dist = max(build_dimensions[:2])
+        self.platformcenter = (0.0, 0.0)
+        self.platform = (1.0, 1.0)
+        self.dist = 1.0
+        self.update_build_dims(build_dimensions, setview=False)
 
         self.eye = np.array((0.0, 0.0, 1.0))
         self.target = np.array((0.0, 0.0, 0.0))
@@ -71,11 +71,22 @@ class Camera():
         self.height = height
         self.display_ppi_factor = scalefactor
 
-    def update_build_dims(self, build_dimensions: Build_Dims) -> None:
-        self.dist = max(build_dimensions[:2])
-        self.platformcenter = (-build_dimensions[3] - build_dimensions[0] / 2,
-                               -build_dimensions[4] - build_dimensions[1] / 2)
-        self._set_initial_view()
+    def update_build_dims(self, build_dimensions: Build_Dims,
+                          setview: bool = True) -> None:
+        """
+        Update the printer dimensions which the 3D view uses to set the
+        initial view and the size of the print platform
+        """
+        # FIXME: Call this method when changing dimensions in the options dialog
+
+        dims = build_dimensions
+        self.platformcenter = (-dims[3] - dims[0] / 2,
+                               -dims[4] - dims[1] / 2)
+        self.platform = (dims[0], dims[1])
+        self.dist = max(dims[:2])
+
+        if setview:
+            self._set_initial_view()
 
     def _set_initial_view(self) -> None:
         self.eye = np.array((-self.platformcenter[0],
@@ -95,13 +106,13 @@ class Camera():
 
         if self.width < self.height:
             min_side = self.width * self.display_ppi_factor
-            zoom_length = 2 * abs(self.platformcenter[0])
+            zoom_length = self.platform[0]
         else:
             min_side = self.height * self.display_ppi_factor
-            zoom_length = 2 * abs(self.platformcenter[1])
+            zoom_length = self.platform[1]
 
-        # TODO: Check this value on other displays and resolutions
-        zoom_constant = 2.1  # conversion between millimeter and pixel
+        # conversion between millimeter and pixel
+        zoom_constant = 1.05 * self.display_ppi_factor
         self.zoom_factor = zoom_length / min_side * zoom_constant
         self.create_projection_matrix()
 
