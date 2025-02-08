@@ -464,7 +464,6 @@ class wxGLPanel(BASE_CLASS):
         RMB: move viewport
         RMB: + Shift: None
         """
-        self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
 
         if event.Entering():
             # This makes sure we only set focus on a panel that is
@@ -475,6 +474,9 @@ class wxGLPanel(BASE_CLASS):
                     self.canvas.SetFocus()
             event.Skip()
             return
+
+        self.canvas.SetCurrent(self.context)
+        self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
 
         if event.Dragging():
             if event.LeftIsDown():
@@ -503,6 +505,7 @@ class wxGLPanel(BASE_CLASS):
 
     def handle_wheel(self, event: wx.MouseEvent) -> None:
         '''This runs when Mousewheel is used'''
+
         if self.wheelTimestamp == event.Timestamp:
             # filter duplicate event delivery in Ubuntu, Debian issue #1110
             return
@@ -525,6 +528,7 @@ class wxGLPanel(BASE_CLASS):
             without shift: zoom viewport
             with shift: run handle_wheel_shift
         """
+        self.canvas.SetCurrent(self.context)
         self.handle_wheel(event)
         wx.CallAfter(self.Refresh)
 
