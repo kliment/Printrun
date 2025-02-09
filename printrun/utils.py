@@ -311,15 +311,21 @@ def compile_file(filename):
     with open(filename, 'r', encoding='utf-8') as f:
         return compile(f.read(), filename, 'exec')
 
-def read_history_from(filename):
-    history = []
-    if os.path.exists(filename):
-        with open(filename, 'r', encoding='utf-8') as _hf:
-            for i in _hf:
-                history.append(i.rstrip())
-    return history
 
-def write_history_to(filename, hist):
-    with open(filename, 'w', encoding='utf-8') as _hf:
-        for i in hist:
-            _hf.write(i + '\n')
+def read_history_from(history_file):
+    # Parameters:
+    #   history_file : pathlib.Path
+    history_list = []
+    with history_file.open('r', encoding='utf-8') as hf:
+        for line in hf:
+            history_list.append(line.rstrip())
+    return history_list
+
+
+def write_history_to(history_file, history_list):
+    # Parameters:
+    #   history_file : pathlib.Path
+    #   history_list : list of str
+    with history_file.open('w', encoding='utf-8') as hf:
+        for item in history_list:
+            hf.write(item + '\n')
