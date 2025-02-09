@@ -252,9 +252,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.menustrip.SetMenus([])
             if len(self.commandbox.history):
                 # save current command box history
-                if not os.path.exists(self.history_file):
-                    if not os.path.exists(self.cache_dir):
-                        os.makedirs(self.cache_dir)
                 write_history_to(self.history_file, self.commandbox.history)
             # Create a temporary panel to reparent widgets with state we want
             # to retain across UI changes
@@ -374,11 +371,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def kill(self, e=None):
         if len(self.commandbox.history):
             # save current command box history
-            history = self.history_file
-            if not os.path.exists(history):
-                if not os.path.exists(self.cache_dir):
-                    os.makedirs(self.cache_dir)
-            write_history_to(history, self.commandbox.history)
+            write_history_to(self.history_file, self.commandbox.history)
 
         if self.p.printing or self.p.paused:
             dlg = wx.MessageDialog(self, _("Print in progress ! Are you really sure you want to quit ?"), _("Exit"), wx.YES_NO | wx.ICON_WARNING)
