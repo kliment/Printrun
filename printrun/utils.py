@@ -23,7 +23,6 @@ import subprocess
 import shlex
 import locale
 import logging
-
 from pathlib import Path
 
 DATADIR = os.path.join(sys.prefix, 'share')
@@ -91,6 +90,7 @@ def setup_logging(out, filepath = None, reset_handlers = False):
         logging_handler.setFormatter(formatter)
         logger.addHandler(logging_handler)
 
+
 def iconfile(filename):
     '''
     Get the full path to filename by checking in standard icon locations
@@ -101,59 +101,65 @@ def iconfile(filename):
         return sys.executable
     return pixmapfile(filename)
 
+
 def imagefile(filename):
     '''
     Get the full path to filename by checking standard image locations,
     those being possible locations of the pronterface "images" directory
     (See the lookup_file function's documentation for behavior).
     '''
-    my_local_share = os.path.join(
-        os.path.dirname(os.path.dirname(sys.argv[0])),
-        "share",
-        "pronterface"
-    )  # Used by pip install
-    image_dirs = [
-        os.path.join(DATADIR, 'pronterface', 'images'),
-        os.path.join(os.path.dirname(sys.argv[0]), "images"),
-        os.path.join(my_local_share, "images"),
-        os.path.join(
-            getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),
-            "images"
-        ),  # Check manually since lookup_file checks in frozen but not /images
+    return lookup_file(filename, ["images", "pronterface/images"])
+
+
+def lookup_file(filename, folders=None, locations=None):
+    """Look for a file in different locations.
+
+    Get the full path to `filename` by checking in one or several combinations
+    of folders and locations, or in the frozen data (for bundled packages) if
+    applicable.
+
+    If a result from this is used for the wx.Image constructor and `filepath`
+    isn't found, the C++ part of wx will raise an exception
+    (wx._core.wxAssertionError): "invalid image".
+
+    Parameters
+    ----------
+    filename : str
+        Name of file to look for (without any path).
+    folders : list of str or pathlib.Path
+        List of relative paths to potential folders containing `filename`.
+    locations : optional, list of pathlib.Path
+        Additional absolute locations to search for `filename`.
+
+    Returns
+    -------
+    A string containing the full path if found, or the name of the file if not
+    found.
+    """
+
+    script_location = Path(sys.argv[0]).resolve().parent
+    dirs = [
+        Path('.').resolve(),           # Pure local
+        script_location,               # Local to script
+        script_location / "share",     # Script local share (for pip install)
+        Path(sys.prefix) / "share",    # Global share
     ]
-    path = lookup_file(filename, image_dirs)
-    if path == filename:
-        # The file wasn't found in any known location, so use a relative
-        #   path.
-        path = os.path.join("images", filename)
-    return path
+    if getattr(sys, "frozen", False):  # Local to pyinstaller bundle
+        dirs += Path(getattr(sys, "_MEIPASS")).resolve()
+    if locations is not None:
+        dirs += locations
 
-def lookup_file(filename, prefixes):
-    '''
-    Get the full path to filename by checking one or more prefixes,
-    or in the frozen data if applicable. If a result from this
-    (or from callers such as imagefile) is used for the wx.Image
-    constructor and filename isn't found, the C++ part of wx
-    will raise an exception (wx._core.wxAssertionError): "invalid
-    image".
+    _folders = ["."]
+    if folders is not None:
+        _folders += folders
 
-    Sequential arguments:
-    filename -- a filename without the path.
-    prefixes -- a list of paths.
-
-    Returns:
-    The full path if found, or filename if not found.
-    '''
-    local_candidate = os.path.join(os.path.dirname(sys.argv[0]), filename)
-    if os.path.exists(local_candidate):
-        return local_candidate
-    if getattr(sys, "frozen", False):
-        prefixes += [getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))),]
-    for prefix in prefixes:
-        candidate = os.path.join(prefix, filename)
-        if os.path.exists(candidate):
-            return candidate
+    for location in dirs:
+        for folder in _folders:
+            candidate = location / folder / filename
+            if candidate.exists():
+                return str(candidate)
     return filename
+
 
 def pixmapfile(filename):
     '''
@@ -161,22 +167,8 @@ def pixmapfile(filename):
     ("pixmaps") directories (See the lookup_file function's
     documentation for behavior).
     '''
-    shared_pixmaps_dir = os.path.join(DATADIR, 'pixmaps')
-    local_pixmaps_dir = os.path.join(
-        os.path.dirname(os.path.dirname(sys.argv[0])),
-        "share",
-        "pixmaps"
-    )  # Used by pip install
-    pixmaps_dirs = [shared_pixmaps_dir, local_pixmaps_dir]
-    return lookup_file(filename, pixmaps_dirs)
+    return lookup_file(filename, ["pixmaps"])
 
-def sharedfile(filename):
-    '''
-    Get the full path to filename by checking in the shared
-    directory (See the lookup_file function's documentation for behavior).
-    '''
-    shared_pronterface_dir = os.path.join(DATADIR, 'pronterface')
-    return lookup_file(filename, [shared_pronterface_dir])
 
 def decode_utf8(s):
     """Attempt to decode a string, return the string otherwise"""
