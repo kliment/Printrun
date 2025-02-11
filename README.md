@@ -195,7 +195,9 @@ With your virtual environment still active, invoke the app you need like:
 
 ### Windows
 
-First download and install [GIT for Windows](https://git-scm.com/downloads), [Python 3.10](https://www.python.org/downloads/) and a [C-compiler environment](https://wiki.python.org/moin/WindowsCompilers/).
+For running or compiling Pronterface from source we need first download and install [GIT for Windows](https://git-scm.com/downloads), [Python 3.13](https://www.python.org/downloads/) and a [C-compiler environment](https://wiki.python.org/moin/WindowsCompilers/). We use Visual Studio 2022 with workloads for Python and C++ installed.
+Please consult `release_windows.bat` in case you want to use other Python versions. Currently supported are all versions from 3.8 to 3.13 except the free-threaded versions of 3.12 and 3.13. The default version is actual set to 3.13. 
+
 For the next steps we need a CMD window or a PowerShell window. You can use Windows Terminal for this as well.
 Create and navigate to a directory of your choice where you want to download the source files of this repository and follow the next steps:
 
