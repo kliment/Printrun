@@ -661,12 +661,12 @@ Disables all heaters upon exit."))
         self.load_rc(config)
 
     def save_in_rc(self, key, definition):
-        """Saves or updates macro or other definitions in `.pronsolerc`
+        """Saves or updates macro or other definitions in config file.
 
         Set `key` as empty string to just add (and not overwrite). Only first
         definition with given key is overwritten. Set definition as empty
-        string to remove it from `.pronsolerc`. To delete a line from
-        `.pronsolerc`, set `key` as the line contents, and `definition` as
+        string to remove it from config file. To delete a line from
+        config file, set `key` as the line contents, and `definition` as
         empty string. Updates are made in the same file position. Additions
         are made to the end of the file.
 
