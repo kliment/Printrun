@@ -111,6 +111,7 @@ An enormous number of people have contributed to Printrun (thank you!):
 - l4nce0 (code)
 - palob (code)
 - russ (code)
+- Andrew McDonald (code)
 
 # Artists
 - Ahmet Cem TURAN @ahmetcemturan (icons, code)
