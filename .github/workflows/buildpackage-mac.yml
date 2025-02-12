@@ -58,6 +58,10 @@ jobs:
         cd dist
         zip -r -X Pronterface-app.zip Pronterface.app
 
+    - name: Copy translation files
+      run: |
+        cp -r locale dist
+
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
       run: |
@@ -77,7 +81,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.EXE_NAME }}
-        path: dist/Pronterface-app.zip
+        path: 
+            dist/Pronterface-app.zip
+            dist/locale
 
   upload_release_assets:
     needs: [build]
