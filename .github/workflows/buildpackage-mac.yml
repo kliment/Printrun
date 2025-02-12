@@ -81,7 +81,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.EXE_NAME }}
-        path: 
+        path: |
             dist/Pronterface-app.zip
             dist/locale
 
