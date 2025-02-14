@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pronterface\n"
-"POT-Creation-Date: 2025-02-06 18:46+0100\n"
-"PO-Revision-Date: 2025-02-06 20:19+0100\n"
+"POT-Creation-Date: 2025-02-14 16:35+0100\n"
+"PO-Revision-Date: 2025-02-14 16:51+0100\n"
 "Last-Translator: DivingDuck\n"
 "Language-Team: HY <info@armath.am>\n"
 "Language: hy\n"
@@ -708,7 +708,7 @@ msgid "Aborting connection attempt after 4 failed writes."
 msgstr "4 անգամվա ձախողված միացման փորձից հետո չեղարկվում է "
 
 #: printrun\printcore.py:542 printrun\printcore.py:561
-#: printrun\pronsole.py:1035 printrun\pronsole.py:1093
+#: printrun\pronsole.py:1041 printrun\pronsole.py:1099
 #: printrun\pronterface.py:228 printrun\pronterface.py:1308
 #: printrun\pronterface.py:1444 printrun\pronterface.py:1517
 msgid "Not connected to printer."
@@ -1079,8 +1079,8 @@ msgstr ""
 msgid "Prusa SL1 files"
 msgstr ""
 
-#: printrun\projectlayer.py:870 printrun\pronsole.py:945
-#: printrun\pronsole.py:986 printrun\pronterface.py:1649
+#: printrun\projectlayer.py:870 printrun\pronsole.py:951
+#: printrun\pronsole.py:992 printrun\pronterface.py:1649
 msgid "File not found!"
 msgstr "Նիշքտ չի գտնվել!"
 
@@ -1134,13 +1134,13 @@ msgstr ""
 msgid "Layer Projector settings reset"
 msgstr ""
 
-#: printrun\pronsole.py:182
+#: printrun\pronsole.py:183
 #, fuzzy
 #| msgid "Build dimensions"
 msgid "Build Dimensions:"
 msgstr "Կառուցման չափսերը"
 
-#: printrun\pronsole.py:182
+#: printrun\pronsole.py:183
 msgid ""
 "Dimensions of Build Platform\n"
 " & optional offset of origin\n"
@@ -1162,7 +1162,7 @@ msgstr ""
 "   XXXxYYYxZZZ+OffX+OffY+OffZ\n"
 "XXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"
 
-#: printrun\pronsole.py:212
+#: printrun\pronsole.py:213
 msgid ""
 "Welcome to the printer console! Type \"help\" for a list of available "
 "commands."
@@ -1170,34 +1170,44 @@ msgstr ""
 "Բարի գալուստ տպիչի վահանակ! Հավաքել “help” ՝ հասանելի հրամանների ցանկը "
 "տեսնելու համար "
 
-#: printrun\pronsole.py:293
+#: printrun\pronsole.py:294
 #, fuzzy
 #| msgid "Error command"
 msgid "Error command output:"
 msgstr "Սխալ հրաման"
 
-#: printrun\pronsole.py:365
+#: printrun\pronsole.py:366
 msgid "Gcodes are passed through to the printer as they are"
 msgstr ""
 
-#: printrun\pronsole.py:375
+#: printrun\pronsole.py:376
 #, fuzzy
 #| msgid "Execute command: "
 msgid "Executes a python command. Example:"
 msgstr "Գործարկել հրաման ՝"
 
-#: printrun\pronsole.py:389 printrun\pronsole.py:397
+#: printrun\pronsole.py:390 printrun\pronsole.py:398
 msgid "SENDING:"
 msgstr ""
 
-#: printrun\pronsole.py:392 printrun\pronsole.py:400 printrun\pronsole.py:1444
-#: printrun\pronsole.py:1471 printrun\pronsole.py:1543
+#: printrun\pronsole.py:393 printrun\pronsole.py:401 printrun\pronsole.py:1450
+#: printrun\pronsole.py:1477 printrun\pronsole.py:1549
 #: printrun\pronterface.py:479 printrun\pronterface.py:499
 #: printrun\pronterface.py:516 printrun\pronterface.py:531
 msgid "Printer is not online."
 msgstr "Տպիչը միացված չե ցանցին:"
 
-#: printrun\pronsole.py:407
+#: printrun\pronsole.py:406
+msgid "Ignored configuration command"
+msgstr ""
+
+#: printrun\pronsole.py:409
+#, fuzzy
+#| msgid "Unknown axis."
+msgid "Unknown command"
+msgstr "Անհայտ առանցք:"
+
+#: printrun\pronsole.py:413
 #, fuzzy
 #| msgid "Are you sure you want to reset the printer?"
 msgid ""
@@ -1205,142 +1215,148 @@ msgid ""
 "Disables all heaters upon exit."
 msgstr "Իրո՞ք ցանկանում եք վերատեղադրել տպիչը:"
 
-#: printrun\pronsole.py:412
+#: printrun\pronsole.py:418
 msgid "Setting extruder temp to 0"
 msgstr ""
 
-#: printrun\pronsole.py:416
+#: printrun\pronsole.py:422
 msgid "Setting bed temp to 0"
 msgstr ""
 
-#: printrun\pronsole.py:418
+#: printrun\pronsole.py:424
 #, fuzzy
 #| msgid "Disconnecting after 4 failed writes."
 msgid "Disconnecting from printer..."
 msgstr "Անջատում է 4 անգամ ձախողված գրառումից հետո:"
 
-#: printrun\pronsole.py:420
+#: printrun\pronsole.py:426
 msgid "Exiting program. Goodbye!"
 msgstr "Ծրագիրը փակվում է: Ցտեսություն!"
 
-#: printrun\pronsole.py:426
+#: printrun\pronsole.py:432
 msgid "Disconnects from the printer and exits the program."
 msgstr "Անջատել տպիչից և փակել ծրագիրը"
 
-#: printrun\pronsole.py:460
+#: printrun\pronsole.py:466
 msgid "' defined"
 msgstr ""
 
-#: printrun\pronsole.py:460 printrun\pronsole.py:520 printrun\pronsole.py:524
-#: printrun\pronsole.py:565 printrun\pronsole.py:568 printrun\pronsole.py:570
+#: printrun\pronsole.py:466 printrun\pronsole.py:526 printrun\pronsole.py:530
+#: printrun\pronsole.py:571 printrun\pronsole.py:574 printrun\pronsole.py:576
 #, fuzzy
 #| msgid "&Macros"
 msgid "Macro '"
 msgstr "Macros"
 
-#: printrun\pronsole.py:472 printrun\pronsole.py:489
+#: printrun\pronsole.py:478 printrun\pronsole.py:495
 msgid "Empty macro - cancelled"
 msgstr ""
 
-#: printrun\pronsole.py:509
+#: printrun\pronsole.py:515
 msgid "Enter macro using indented lines, end with empty line"
 msgstr ""
 
-#: printrun\pronsole.py:520
+#: printrun\pronsole.py:526
 msgid "' removed"
 msgstr ""
 
-#: printrun\pronsole.py:524 printrun\pronsole.py:570
+#: printrun\pronsole.py:530 printrun\pronsole.py:576
 msgid "' is not defined"
 msgstr ""
 
-#: printrun\pronsole.py:533
+#: printrun\pronsole.py:539
 #, fuzzy
 #| msgid "Name '%s' is being used by built-in command"
 msgid "' is being used by built-in command"
 msgstr "‘%s’ անունը օգտագործվում է ներկառուցված հրամանում"
 
-#: printrun\pronsole.py:533
+#: printrun\pronsole.py:539
 msgid "Name '"
 msgstr ""
 
-#: printrun\pronsole.py:553
+#: printrun\pronsole.py:559
 msgid "Define single-line macro: macro <name> <definition>"
 msgstr ""
 
-#: printrun\pronsole.py:554
+#: printrun\pronsole.py:560
 msgid "Define multi-line macro:  macro <name>"
 msgstr ""
 
-#: printrun\pronsole.py:555
+#: printrun\pronsole.py:561
 msgid ""
 "Enter macro definition in indented lines. Use {0} .. {N} to substitute macro "
 "arguments"
 msgstr ""
 
-#: printrun\pronsole.py:556
+#: printrun\pronsole.py:562
 msgid ""
 "Enter python code, prefixed with !  Use arg[0] .. arg[N] to substitute macro "
 "arguments"
 msgstr ""
 
-#: printrun\pronsole.py:557
+#: printrun\pronsole.py:563
 msgid "Delete macro:             macro <name> /d"
 msgstr ""
 
-#: printrun\pronsole.py:558
+#: printrun\pronsole.py:564
 msgid "Show macro definition:    macro <name> /s"
 msgstr ""
 
-#: printrun\pronsole.py:559
+#: printrun\pronsole.py:565
 msgid "'macro' without arguments displays list of defined macros"
 msgstr ""
 
-#: printrun\pronsole.py:565
+#: printrun\pronsole.py:571
 msgid "' defined as:"
 msgstr ""
 
-#: printrun\pronsole.py:568
+#: printrun\pronsole.py:574
 msgid "' defined as: '"
 msgstr ""
 
-#: printrun\pronsole.py:583 printrun\pronsole.py:602
+#: printrun\pronsole.py:589 printrun\pronsole.py:608
 #, fuzzy
 #| msgid "Unknown axis."
 msgid "Unknown variable '%s'"
 msgstr "Անհայտ առանցք:"
 
-#: printrun\pronsole.py:586
+#: printrun\pronsole.py:592
 msgid "Bad value %s for variable '%s': %s"
 msgstr ""
 
-#: printrun\pronsole.py:588
+#: printrun\pronsole.py:594
 msgid "Bad value for variable '%s', expecting %s (%s)"
 msgstr ""
 
-#: printrun\pronsole.py:607
+#: printrun\pronsole.py:613
 msgid "Set variable:   set <variable> <value>"
 msgstr ""
 
-#: printrun\pronsole.py:608
+#: printrun\pronsole.py:614
 msgid "Show variable:  set <variable>"
 msgstr ""
 
-#: printrun\pronsole.py:609
+#: printrun\pronsole.py:615
 msgid "'set' without arguments displays all variables"
 msgstr ""
 
-#: printrun\pronsole.py:715
+#: printrun\pronsole.py:641
+#, fuzzy
+#| msgid "Failed to load Slic3r configuration:"
+msgid "Unable to load configuration file: %s"
+msgstr "Չհաջողվեց բեռնել Slic3r -ի կարգաբերումը:"
+
+#: printrun\pronsole.py:726
 #, fuzzy
 #| msgid "Slicing failed: %s"
 msgid "Saving failed for "
 msgstr "Շերտավորումը ձախողվեց: %s"
 
-#: printrun\pronsole.py:744
+#: printrun\pronsole.py:755
 msgid "increase verbosity"
 msgstr ""
 
-#: printrun\pronsole.py:745
+#: printrun\pronsole.py:756
 msgid ""
 "load this file on startup instead of .pronsolerc ; you may chain config "
 "files, if so settings auto-save will use the last specified file"
@@ -1349,7 +1365,7 @@ msgstr ""
 "կարգավորման նիշքը և այդ դեպքում կարգավորումները ինքնուրույն կպահպանվեն "
 "օգտագործելով վերջին նիշքը"
 
-#: printrun\pronsole.py:746
+#: printrun\pronsole.py:757
 msgid ""
 "executes command after configuration/.pronsolerc is loaded ; macros/settings "
 "from these commands are not autosaved"
@@ -1357,113 +1373,107 @@ msgstr ""
 "գործարկել հրամանը կարգավորման//.pronsolerc -ը բեռնելուց հետո; macro-ները/"
 "կարգավորումները այս հրամաններից հետո չեն կարող ինքնուրույն պահպանվել;"
 
-#: printrun\pronsole.py:747
+#: printrun\pronsole.py:758
 msgid "file to load"
 msgstr "բեռնելու նիշքը"
 
-#: printrun\pronsole.py:757
-#, fuzzy
-#| msgid "Failed to load Slic3r configuration:"
-msgid "ERROR: Unable to load configuration file: %s"
-msgstr "Չհաջողվեց բեռնել Slic3r -ի կարգաբերումը:"
-
-#: printrun\pronsole.py:791 printrun\pronsole.py:801
+#: printrun\pronsole.py:797 printrun\pronsole.py:807
 msgid "Error: You are trying to connect to a non-existing port."
 msgstr "Սխալ` դուք ցանկանում եք միանալ գոյություն չունեցող տպիչի կայանին։"
 
-#: printrun\pronsole.py:793
+#: printrun\pronsole.py:799
 msgid "Error: You don't have permission to open %s."
 msgstr "Սխալ` դուք չունեք թույլտվություն բացել %s-ը:"
 
-#: printrun\pronsole.py:794
+#: printrun\pronsole.py:800
 msgid "You might need to add yourself to the dialout group."
 msgstr "Կարող է պետք լինի ավելացնել ինքներտ Ձեզ dialout խմբի մեջ:"
 
-#: printrun\pronsole.py:824
+#: printrun\pronsole.py:830
 msgid "' ignored"
 msgstr ""
 
-#: printrun\pronsole.py:824
+#: printrun\pronsole.py:830
 msgid "Bad baud value '"
 msgstr ""
 
-#: printrun\pronsole.py:826
+#: printrun\pronsole.py:832
 msgid "No serial ports detected - please specify a port"
 msgstr ""
 
-#: printrun\pronsole.py:829
+#: printrun\pronsole.py:835
 msgid "No port specified - connecting to %s at %dbps"
 msgstr ""
 
-#: printrun\pronsole.py:839
+#: printrun\pronsole.py:845
 #, fuzzy
 #| msgid "Connect to the printer"
 msgid "Connect to printer"
 msgstr "Միանալ տպիչին"
 
-#: printrun\pronsole.py:840
+#: printrun\pronsole.py:846
 msgid "connect <port> <baudrate>"
 msgstr ""
 
-#: printrun\pronsole.py:841
+#: printrun\pronsole.py:847
 msgid ""
 "If port and baudrate are not specified, connects to first detected port at "
 "115200bps"
 msgstr ""
 
-#: printrun\pronsole.py:844
+#: printrun\pronsole.py:850
 msgid "Available ports: "
 msgstr ""
 
-#: printrun\pronsole.py:846
+#: printrun\pronsole.py:852
 msgid "No serial ports were automatically found."
 msgstr ""
 
-#: printrun\pronsole.py:879
+#: printrun\pronsole.py:885
 #, fuzzy
 #| msgid "Printer is now online."
 msgid "Printer is now online"
 msgstr "Տպիչը կապակցված է:"
 
-#: printrun\pronsole.py:886
+#: printrun\pronsole.py:892
 #, fuzzy
 #| msgid "Connect to the printer"
 msgid "Disconnects from the printer"
 msgstr "Միանալ տպիչին"
 
-#: printrun\pronsole.py:893
+#: printrun\pronsole.py:899
 #, fuzzy
 #| msgid "Printer is not online."
 msgid "Blocks until printer is online"
 msgstr "Տպիչը միացված չե ցանցին:"
 
-#: printrun\pronsole.py:894
+#: printrun\pronsole.py:900
 msgid "Warning: if something goes wrong, this can block pronsole forever"
 msgstr ""
 
-#: printrun\pronsole.py:903
+#: printrun\pronsole.py:909
 msgid "Disconnecting after 4 failed writes."
 msgstr "Անջատում է 4 անգամ ձախողված գրառումից հետո:"
 
-#: printrun\pronsole.py:941 printrun\pronsole.py:978
+#: printrun\pronsole.py:947 printrun\pronsole.py:984
 msgid "No file name given."
 msgstr "Նիշքի անունը տված չե:"
 
-#: printrun\pronsole.py:943 printrun\pronterface.py:1681
+#: printrun\pronsole.py:949 printrun\pronterface.py:1681
 #, fuzzy
 #| msgid "Skeining file: %s"
 msgid "Loading file: %s"
 msgstr "Skeining նիշք: %s"
 
-#: printrun\pronsole.py:948
+#: printrun\pronsole.py:954
 msgid "Loaded %s, %d lines."
 msgstr "Բեռնված %s, %d գծերը."
 
-#: printrun\pronsole.py:949 printrun\pronterface.py:1788
+#: printrun\pronsole.py:955 printrun\pronterface.py:1788
 msgid "Estimated duration: %d layers, %s"
 msgstr "Գնահատված տևողությունը: %d շերտեր, %s"
 
-#: printrun\pronsole.py:973
+#: printrun\pronsole.py:979
 #, fuzzy
 #| msgid ""
 #| "Creates a gcode file from an stl model using the slicer (with tab-"
@@ -1472,35 +1482,35 @@ msgid "Loads a gcode file (with tab-completion)"
 msgstr ""
 "stl մոդելից ստեղծել .gcode նիշք օգտագործելով slicer-ը (ներդիրի ավարտման հետ)"
 
-#: printrun\pronsole.py:984
+#: printrun\pronsole.py:990
 #, fuzzy
 #| msgid "Slicing failed: %s"
 msgid "Slicing file: %s"
 msgstr "Շերտավորումը ձախողվեց: %s"
 
-#: printrun\pronsole.py:991
+#: printrun\pronsole.py:997
 msgid "Entering slicer settings: %s"
 msgstr "Գնալ slicer-ի կարգավորումներ"
 
-#: printrun\pronsole.py:1001
+#: printrun\pronsole.py:1007
 msgid "Loading sliced file."
 msgstr "Շերտավորած նիշքի բեռնում."
 
-#: printrun\pronsole.py:1004
+#: printrun\pronsole.py:1010
 msgid "Slicing failed: %s"
 msgstr "Շերտավորումը ձախողվեց: %s"
 
-#: printrun\pronsole.py:1017
+#: printrun\pronsole.py:1023
 msgid ""
 "Creates a gcode file from an stl model using the slicer (with tab-completion)"
 msgstr ""
 "stl մոդելից ստեղծել .gcode նիշք օգտագործելով slicer-ը (ներդիրի ավարտման հետ)"
 
-#: printrun\pronsole.py:1018
+#: printrun\pronsole.py:1024
 msgid "slice filename.stl - create gcode file"
 msgstr "շերտավորել filename.stl - ստեղծել gcode նիշք"
 
-#: printrun\pronsole.py:1019
+#: printrun\pronsole.py:1025
 msgid ""
 "slice filename.stl view - create gcode file and view using skeiniso (if "
 "using skeinforge)"
@@ -1508,51 +1518,51 @@ msgstr ""
 "շերտավորել filename.stl տեսքը - ստեղծել gcode նիշք և դիտել օգտագործելով "
 "skeiniso (եթե օգտագործում է skeinforge)"
 
-#: printrun\pronsole.py:1020
+#: printrun\pronsole.py:1026
 msgid "slice set - adjust slicer settings"
 msgstr "սահմանել շերտը - հարմարեցնել slicer-ի կարգավորումը"
 
-#: printrun\pronsole.py:1032
+#: printrun\pronsole.py:1038
 msgid "Please enter target name in 8.3 format."
 msgstr "Խնդրում ենք մուտքագրել թիրախի անունը 8.3 ձևաչափով:"
 
-#: printrun\pronsole.py:1038
+#: printrun\pronsole.py:1044
 msgid "Uploading as %s"
 msgstr "Վերբեռնում է որպես %s"
 
-#: printrun\pronsole.py:1039
+#: printrun\pronsole.py:1045
 msgid "Uploading %s"
 msgstr "%s-ի վերբեռնում"
 
-#: printrun\pronsole.py:1041
+#: printrun\pronsole.py:1047
 msgid "Press Ctrl-C to interrupt upload."
 msgstr "Սեղմել Ctrl-C վերբեռնումը չեղարկելու համար:"
 
-#: printrun\pronsole.py:1044
+#: printrun\pronsole.py:1050
 msgid "Progress: "
 msgstr "Պրոգրես `"
 
-#: printrun\pronsole.py:1055
+#: printrun\pronsole.py:1061
 msgid "Upload completed. %s should now be on the card."
 msgstr "Վերբեռնումը ավարտվեց: %s-ը պետք է լինի արդեն կրիչի վրա:"
 
-#: printrun\pronsole.py:1059
+#: printrun\pronsole.py:1065
 msgid "...interrupted!"
 msgstr "… ընդհատվեց!"
 
-#: printrun\pronsole.py:1061
+#: printrun\pronsole.py:1067
 msgid "Something wrong happened while uploading:"
 msgstr "Վերբեռնման ժամանակ ինչ որ սխալ տեղի ունեցավ `"
 
-#: printrun\pronsole.py:1067
+#: printrun\pronsole.py:1073
 msgid "A partial file named %s may have been written to the sd card."
 msgstr "Հնարավոր է %s անունով մասնակի նիշք է պահվել SD կրիչի վրա:"
 
-#: printrun\pronsole.py:1080
+#: printrun\pronsole.py:1086
 msgid "Uploads a gcode file to the sd card"
 msgstr ""
 
-#: printrun\pronsole.py:1084
+#: printrun\pronsole.py:1090
 msgid ""
 "Send a loaded gcode file to the printer. Load a file with the load command "
 "first."
@@ -1560,156 +1570,156 @@ msgstr ""
 "Ուղարկել բենված gcode նիշքը տպիչին: Առաջին հերթին բեռնել նիշքը բեռնման "
 "հրամանի հետ:"
 
-#: printrun\pronsole.py:1086
+#: printrun\pronsole.py:1092
 msgid "Send a loaded gcode file to the printer. You have %s loaded right now."
 msgstr "Ուղարկել բենված gcode նիշքը տպիչին: Հենց նոր դուք բեռնեցիք %s նիշքը:"
 
-#: printrun\pronsole.py:1090 printrun\pronterface.py:908
+#: printrun\pronsole.py:1096 printrun\pronterface.py:908
 #: printrun\pronterface.py:1441
 msgid "No file loaded. Please use load first."
 msgstr "Նիշքը չի բեռնվել: Նախ պետ է բեռնել այն:"
 
-#: printrun\pronsole.py:1095
+#: printrun\pronsole.py:1101
 msgid "Printing %s"
 msgstr "%s-ի տպագրություն"
 
-#: printrun\pronsole.py:1096
+#: printrun\pronsole.py:1102
 msgid "You can monitor the print with the monitor command."
 msgstr "Դուք կարող եք վերահսկել տպագրությունը մոնիտորի հրամանով:"
 
-#: printrun\pronsole.py:1105
+#: printrun\pronsole.py:1111
 msgid "Not printing, cannot pause."
 msgstr "Չի տպում, հնարավոր չե կանգնեցնել:"
 
-#: printrun\pronsole.py:1111
+#: printrun\pronsole.py:1117
 msgid "Pauses a running print"
 msgstr "Դադարեցնում է ընթացիկ տպագրությունը"
 
-#: printrun\pronsole.py:1118
+#: printrun\pronsole.py:1124
 msgid "Not paused, unable to resume. Start a print first."
 msgstr "Չի կանգնեցվել, անհնար է շարունակել: Սկզբից սկսեք տպագրությունը:"
 
-#: printrun\pronsole.py:1128
+#: printrun\pronsole.py:1134
 msgid "Resumes a paused print."
 msgstr "Շարունակում է կանգենցված տպագրությունը:"
 
-#: printrun\pronsole.py:1137
+#: printrun\pronsole.py:1143
 msgid "Files on SD card:"
 msgstr " SD կրիչի նիշքերը:"
 
-#: printrun\pronsole.py:1152 printrun\pronsole.py:1194
-#: printrun\pronsole.py:1487
+#: printrun\pronsole.py:1158 printrun\pronsole.py:1200
+#: printrun\pronsole.py:1493
 msgid "Printer is not online. Please connect to it first."
 msgstr "Տպիչը կապակցված չե: Նախ պետք է միացնել այն:"
 
-#: printrun\pronsole.py:1157
+#: printrun\pronsole.py:1163
 msgid "Lists files on the SD card"
 msgstr "SD կրիչում առկա նիշքերի ցանկը"
 
-#: printrun\pronsole.py:1161 printrun\pronterface.py:2107
+#: printrun\pronsole.py:1167 printrun\pronterface.py:2107
 msgid "Opening file failed."
 msgstr "Չհաջողվեց նիշքը բացել:"
 
-#: printrun\pronsole.py:1167 printrun\pronterface.py:2113
+#: printrun\pronsole.py:1173 printrun\pronterface.py:2113
 msgid "Starting print"
 msgstr "Տպման մեկնարկ"
 
-#: printrun\pronsole.py:1190
+#: printrun\pronsole.py:1196
 msgid "Resets the printer."
 msgstr "Զրոյացնել տպիչի կարգավորումներ:"
 
-#: printrun\pronsole.py:1200
+#: printrun\pronsole.py:1206
 msgid "File is not present on card. Please upload it first."
 msgstr "Նիշքը առկա չե կրիչի վրա: Նախ պետք է այն վեռբեռնել:"
 
-#: printrun\pronsole.py:1204
+#: printrun\pronsole.py:1210
 msgid "Printing file: %s from SD card."
 msgstr "Նիշքի տպագրում ՝ %s-ը SD կրիչից:"
 
-#: printrun\pronsole.py:1205
+#: printrun\pronsole.py:1211
 msgid "Requesting SD print..."
 msgstr "SD տպագրման հայցում…"
 
-#: printrun\pronsole.py:1209
+#: printrun\pronsole.py:1215
 msgid "Print a file from the SD card. Tab completes with available file names."
 msgstr "Տպել նիշքը SD կրիչից: Ներդիրն ամբողջական է առկա նիշքի անունով:"
 
-#: printrun\pronsole.py:1210
+#: printrun\pronsole.py:1216
 msgid "sdprint filename.g"
 msgstr "sdprint filename.g"
 
-#: printrun\pronsole.py:1227
+#: printrun\pronsole.py:1233
 msgid "Print resumed at: %s"
 msgstr "Տպագրությունը շարունակվում է %s-ում:"
 
-#: printrun\pronsole.py:1229
+#: printrun\pronsole.py:1235
 msgid "Print started at: %s"
 msgstr "Տպագրությունը մեկնարկում է %s-ում"
 
-#: printrun\pronsole.py:1240
+#: printrun\pronsole.py:1246
 msgid "Start command output:"
 msgstr ""
 
-#: printrun\pronsole.py:1245 printrun\pronsole.py:1252
+#: printrun\pronsole.py:1251 printrun\pronsole.py:1258
 #, fuzzy
 #| msgid "Failed to run callback after setting \"%s\":"
 msgid "Failed to set power settings:"
 msgstr "Չհաջողվեց գրանցել հետ կանչը կարգավորումից հետո “%s” ՝"
 
-#: printrun\pronsole.py:1256
+#: printrun\pronsole.py:1262
 msgid "Print ended at: %(end_time)s and took %(duration)s"
 msgstr ""
 "Տպագրումը վերջացավ՝ %(վերջանալու_ժամանակ)վրկ. և տևեց %(տևողությունը)վրկ."
 
-#: printrun\pronsole.py:1282
+#: printrun\pronsole.py:1288
 #, fuzzy
 #| msgid "Final command"
 msgid "Final command output:"
 msgstr "Ավարտման հրաման"
 
-#: printrun\pronsole.py:1316 printrun\pronterface.py:2066
+#: printrun\pronsole.py:1322 printrun\pronterface.py:2066
 #, fuzzy
 #| msgid "Execute command: "
 msgid "Received command %s"
 msgstr "Գործարկել հրաման ՝"
 
-#: printrun\pronsole.py:1382
+#: printrun\pronsole.py:1388
 msgid "Printer is not currently printing. No ETA available."
 msgstr "Տպիչը այս պահին չի տպում. ETA-ն հասանելի չի:"
 
-#: printrun\pronsole.py:1385
+#: printrun\pronsole.py:1391
 msgid "Est: %s of %s remaining"
 msgstr "Գնահատում ՝մնացել է %s-ի %s-ը"
 
-#: printrun\pronsole.py:1390
+#: printrun\pronsole.py:1396
 msgid "Displays estimated remaining print time."
 msgstr "Ցույց տալ, թե իչքան ժամանակ է մնացել տպագրությանը:"
 
-#: printrun\pronsole.py:1400
+#: printrun\pronsole.py:1406
 msgid "Hotend temperature presets updated, PLA:%s, ABS:%s"
 msgstr ""
 
-#: printrun\pronsole.py:1404
+#: printrun\pronsole.py:1410
 msgid "Bed temperature presets updated, PLA:%s, ABS:%s"
 msgstr ""
 
-#: printrun\pronsole.py:1417 printrun\pronsole.py:1419
+#: printrun\pronsole.py:1423 printrun\pronsole.py:1425
 msgid "Hotend: %s%s/%s%s"
 msgstr ""
 
-#: printrun\pronsole.py:1420
+#: printrun\pronsole.py:1426
 msgid "Bed:    %s%s/%s%s"
 msgstr ""
 
-#: printrun\pronsole.py:1423
+#: printrun\pronsole.py:1429
 msgid "Read the extruder and bed temperature."
 msgstr "Կարդալ գլխիկի և հարթակի ջերմաստիճանները:"
 
-#: printrun\pronsole.py:1432 printrun\pronsole.py:1465
+#: printrun\pronsole.py:1438 printrun\pronsole.py:1471
 msgid "You must enter a temperature."
 msgstr "Դուք պետք է մուտքագրեք ջերմաստիճանը:"
 
-#: printrun\pronsole.py:1437
+#: printrun\pronsole.py:1443
 msgid ""
 "%s is a high temperature to set your extruder to. Are you sure you want to "
 "do that?"
@@ -1717,11 +1727,11 @@ msgstr ""
 "%s-ը առավելագույն ջերմաստիճանն է, որը կարող եք սահմանել Ձեր extruder-"
 "ի(գլխիկ) համար: Համոզվա՞ծ եք, որ ցանկանում եք դա անել:"
 
-#: printrun\pronsole.py:1442
+#: printrun\pronsole.py:1448
 msgid "Setting hotend temperature to %s degrees Celsius."
 msgstr "Սահմանել տաքացման ջերմաստիճանը %s աստիճան Ցելսիուս:"
 
-#: printrun\pronsole.py:1446 printrun\pronterface.py:481
+#: printrun\pronsole.py:1452 printrun\pronterface.py:481
 msgid ""
 "You cannot set negative temperatures. To turn the hotend off entirely, set "
 "its temperature to 0."
@@ -1729,19 +1739,19 @@ msgstr ""
 "Չեք կարող սահմանել բացասական արժեքով ջերմաստիճան: Տաքացումը ամբողջությամբ "
 "անջատելու համար սահմանեք 0 ջերմաստիճան:"
 
-#: printrun\pronsole.py:1449
+#: printrun\pronsole.py:1455
 msgid "Sets the hotend temperature to the value entered."
 msgstr "Սահմանել տաքացման ջերմաստիճանը մուտքագրած արժեքի չափով:"
 
-#: printrun\pronsole.py:1450 printrun\pronsole.py:1477
+#: printrun\pronsole.py:1456 printrun\pronsole.py:1483
 msgid "Enter either a temperature in celsius or one of the following keywords"
 msgstr "Մուտքագրել ջերմաստիճանը ցելսիուսով կամ հետևյալ հիմնաբառերից մեկով"
 
-#: printrun\pronsole.py:1469
+#: printrun\pronsole.py:1475
 msgid "Setting bed temperature to %s degrees Celsius."
 msgstr "Սահմանել հարթակի ջերմաստիճանը %s աստիճան Ցելսիուս:"
 
-#: printrun\pronsole.py:1473 printrun\pronterface.py:501
+#: printrun\pronsole.py:1479 printrun\pronterface.py:501
 msgid ""
 "You cannot set negative temperatures. To turn the bed off entirely, set its "
 "temperature to 0."
@@ -1749,45 +1759,45 @@ msgstr ""
 "Չեք կարող սահմանել բացասական արժեքով ջերմաստիճան: Հարթակի տաքացումը "
 "ամբողջությամբ անջատելու համար սահմանեք 0 ջերմաստիճան:"
 
-#: printrun\pronsole.py:1476
+#: printrun\pronsole.py:1482
 msgid "Sets the bed temperature to the value entered."
 msgstr "Սահմանել հարթակի տաքացման ջերմաստիճանը մուտքագրած արժեքի չափով:"
 
-#: printrun\pronsole.py:1490
+#: printrun\pronsole.py:1496
 msgid "Printer is not printing. Please print something before monitoring."
 msgstr "Տպիչը չի տպում: Տպեք մեկ այլ բան ուսումնասիերլուց հետո:"
 
-#: printrun\pronsole.py:1492
+#: printrun\pronsole.py:1498
 msgid "Monitoring printer, use ^C to interrupt."
 msgstr "Տպիչի մոնիտորինգ, ^C կանգնեցնելու համար:"
 
-#: printrun\pronsole.py:1497 printrun\pronterface.py:445
+#: printrun\pronsole.py:1503 printrun\pronterface.py:445
 msgid "Invalid period given."
 msgstr "Տրված միջակայքը անվավեր է:"
 
-#: printrun\pronsole.py:1498
+#: printrun\pronsole.py:1504
 msgid "Updating values every %f seconds."
 msgstr "Արժեքների թարմացում ամեն %f վարկյանը մեկը"
 
-#: printrun\pronsole.py:1508
+#: printrun\pronsole.py:1514
 msgid "Print progress: "
 msgstr "Տպագրության ընթացքը:"
 
-#: printrun\pronsole.py:1511
+#: printrun\pronsole.py:1517
 #, fuzzy
 #| msgid "Print progress: "
 msgid "SD print progress: "
 msgstr "Տպագրության ընթացքը:"
 
-#: printrun\pronsole.py:1519 printrun\pronterface.py:449
+#: printrun\pronsole.py:1525 printrun\pronterface.py:449
 msgid "Done monitoring."
 msgstr "Մոնիտորինը արված է:"
 
-#: printrun\pronsole.py:1523
+#: printrun\pronsole.py:1529
 msgid "Monitor a machine's temperatures and an SD print's status."
 msgstr "Սարքի ջերմաստիճանների և SD տպագրման կարգավիճակի մոնիտորինգ"
 
-#: printrun\pronsole.py:1524
+#: printrun\pronsole.py:1530
 msgid ""
 "monitor - Reports temperature and SD print status (if SD printing) every 5 "
 "seconds"
@@ -1795,7 +1805,7 @@ msgstr ""
 "դիտարկում - Ամեն 5 վարկյանը մեկը զեկուցել ջերմաստիճանի և SD տպագրման "
 "կարգավիճակը (եթե SD-ով եք տպում)"
 
-#: printrun\pronsole.py:1525
+#: printrun\pronsole.py:1531
 msgid ""
 "monitor 2 - Reports temperature and SD print status (if SD printing) every 2 "
 "seconds"
@@ -1803,30 +1813,30 @@ msgstr ""
 "դիտարկում 2 - Ամեն 2 վարկյանը մեկը զեկուցել ջերմաստիճանի և SD տպագրման "
 "կարգավիճակը (եթե SD-ով եք տպում)"
 
-#: printrun\pronsole.py:1536
+#: printrun\pronsole.py:1542
 msgid "You must specify the tool index as an integer."
 msgstr "Դուք պետք է մուտքագրեք գործիքի ինդեքսը, որպես ամբողջ թիվ:"
 
-#: printrun\pronsole.py:1540
+#: printrun\pronsole.py:1546
 msgid "Using tool %d."
 msgstr "%d գործիքի օգտագործում:"
 
-#: printrun\pronsole.py:1545
+#: printrun\pronsole.py:1551
 msgid "You cannot set negative tool numbers."
 msgstr "Գործիքի համար չեք կարող սահմանել բացասական արժեքներ:"
 
-#: printrun\pronsole.py:1548
+#: printrun\pronsole.py:1554
 msgid ""
 "Switches to the specified tool (e.g. doing tool 1 will emit a T1 G-Code)."
 msgstr ""
 "Փոխարկում նշված գործիքին (գործիք 1-ի կատարումը կթողարկի T1 G-Code-ը ևայլն )"
 
-#: printrun\pronsole.py:1552
+#: printrun\pronsole.py:1558
 msgid "No move specified."
 msgstr "Քայլը նշված չէ:"
 
-#: printrun\pronsole.py:1555 printrun\pronsole.py:1617
-#: printrun\pronsole.py:1666 printrun\pronsole.py:1693
+#: printrun\pronsole.py:1561 printrun\pronsole.py:1623
+#: printrun\pronsole.py:1672 printrun\pronsole.py:1699
 msgid ""
 "Printer is currently printing. Please pause the print before you issue "
 "manual commands."
@@ -1834,23 +1844,23 @@ msgstr ""
 "Տպիչն այս պահի տպում է: Խնդրում ենք կանգնեցրեք այն, մինչ ձեռքով հրամանների "
 "կատարումը:"
 
-#: printrun\pronsole.py:1558 printrun\pronsole.py:1690
+#: printrun\pronsole.py:1564 printrun\pronsole.py:1696
 msgid "Printer is not online. Unable to move."
 msgstr "Տպիչը կապակցված չէ: Ահնար է շարժել:"
 
-#: printrun\pronsole.py:1574
+#: printrun\pronsole.py:1580
 msgid "Unknown axis."
 msgstr "Անհայտ առանցք:"
 
-#: printrun\pronsole.py:1579
+#: printrun\pronsole.py:1585
 msgid "Invalid distance"
 msgstr "անվավեր հեռավորություն"
 
-#: printrun\pronsole.py:1590
+#: printrun\pronsole.py:1596
 msgid "Move an axis. Specify the name of the axis and the amount. "
 msgstr "Շարժել առանցքը: Հստակեցրեք առանցքի անունը և մեծությունը:"
 
-#: printrun\pronsole.py:1591
+#: printrun\pronsole.py:1597
 #, fuzzy
 #| msgid ""
 #| "move X 10 will move the X axis forward by 10mm at %s mm/min (default XY "
@@ -1860,13 +1870,13 @@ msgid ""
 "speed)"
 msgstr "X 10 շարժումը կտեղափոխի X առանցքը դեպի առաջ 10 մմ %s մմ/ր արագությամբ"
 
-#: printrun\pronsole.py:1592
+#: printrun\pronsole.py:1598
 #, fuzzy
 #| msgid "move Y 10 5000 will move the Y axis forward by 10mm at 5000mm/min"
 msgid "move Y 10 5000 - will move the Y axis forward by 10 mm at 5000 mm/min"
 msgstr "Y 10 5000 քայլը կշրժի Y առանցքը դեպի առաջ 10մմ 5000մմ/ր արագությամբ"
 
-#: printrun\pronsole.py:1593
+#: printrun\pronsole.py:1599
 #, fuzzy
 #| msgid ""
 #| "move Z -1 will move the Z axis down by 1mm at %s mm/min (default Z speed)"
@@ -1875,41 +1885,41 @@ msgid ""
 msgstr ""
 "Z -1 քայլը կշարժի Z առանցքը դեպի ներգև 1մմ %s մմ/ր (լռելայն արագություն)"
 
-#: printrun\pronsole.py:1594
+#: printrun\pronsole.py:1600
 msgid "Common amounts are in the tabcomplete list."
 msgstr "Ընդհանուր միավորը գտնվում է ներդիրի լրացման ցանկում:"
 
-#: printrun\pronsole.py:1614
+#: printrun\pronsole.py:1620
 #, fuzzy
 #| msgid "Printer is not online. Unable to reverse."
 msgid "Printer is not online. Unable to extrude."
 msgstr "Տպիչը կապակցված չէ: Անհնար է հետ շարժեշ արտամղիչը:"
 
-#: printrun\pronsole.py:1624 printrun\pronsole.py:1673
+#: printrun\pronsole.py:1630 printrun\pronsole.py:1679
 msgid "Invalid length given."
 msgstr "Տրված երկարությունը անվավեր է:"
 
-#: printrun\pronsole.py:1629 printrun\pronsole.py:1678
+#: printrun\pronsole.py:1635 printrun\pronsole.py:1684
 msgid "Invalid speed given."
 msgstr "Տրված արագությունը անվավեր է: "
 
-#: printrun\pronsole.py:1637
+#: printrun\pronsole.py:1643
 #, fuzzy
 #| msgid "Extruding %fmm of filament."
 msgid "Extruding %f mm of filament."
 msgstr "Լցանյութի արատմղում %fմմ չափով:"
 
-#: printrun\pronsole.py:1639
+#: printrun\pronsole.py:1645
 #, fuzzy
 #| msgid "Reversing %fmm of filament."
 msgid "Reversing %f mm of filament."
 msgstr "Լցանյութի հետ քաշում %fմմ չափով:"
 
-#: printrun\pronsole.py:1641
+#: printrun\pronsole.py:1647
 msgid "Length is 0, not doing anything."
 msgstr "Երկարությունը 0 է, ոչինչ չի արվում:"
 
-#: printrun\pronsole.py:1653
+#: printrun\pronsole.py:1659
 #, fuzzy
 #| msgid ""
 #| "Extrudes a length of filament, 5mm by default, or the number of mm given "
@@ -1919,36 +1929,36 @@ msgid ""
 "a parameter"
 msgstr "Լռելայն 5մմ կամ տրված պարամետրի թվով երկարությամբ լցանյութի արտամղում:"
 
-#: printrun\pronsole.py:1654
+#: printrun\pronsole.py:1660
 #, fuzzy
 #| msgid "extrude - extrudes 5mm of filament at 300mm/min (5mm/s)"
 msgid "extrude - extrudes 5 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "արտամղել - արտամղել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
-#: printrun\pronsole.py:1655
+#: printrun\pronsole.py:1661
 #, fuzzy
 #| msgid "extrude 20 - extrudes 20mm of filament at 300mm/min (5mm/s)"
 msgid "extrude 20 - extrudes 20 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "արտամղել 20 - արտամղել 20մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
-#: printrun\pronsole.py:1656
+#: printrun\pronsole.py:1662
 #, fuzzy
 #| msgid "extrude -5 - REVERSES 5mm of filament at 300mm/min (5mm/s)"
 msgid "extrude -5 - REVERSES 5 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "արտամղել 5 - հետ բերել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
-#: printrun\pronsole.py:1657
+#: printrun\pronsole.py:1663
 #, fuzzy
 #| msgid "extrude 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
 msgid "extrude 10 210 - extrudes 10 mm of filament at 210 mm/min (3.5 mm/s)"
 msgstr ""
 "արտամղել 10 210 - արտամղել 10մմ լցանյութ 210մմ/ր արագությամբ (3.5մմ/վրկ)"
 
-#: printrun\pronsole.py:1663
+#: printrun\pronsole.py:1669
 msgid "Printer is not online. Unable to reverse."
 msgstr "Տպիչը կապակցված չէ: Անհնար է հետ շարժեշ արտամղիչը:"
 
-#: printrun\pronsole.py:1682
+#: printrun\pronsole.py:1688
 #, fuzzy
 #| msgid ""
 #| "Reverses the extruder, 5mm by default, or the number of mm given as a "
@@ -1958,92 +1968,92 @@ msgid ""
 "parameter"
 msgstr "Հետ շարժել արտամղիչը 5մմ-ի կամ տրված պարամետրի չափով"
 
-#: printrun\pronsole.py:1683
+#: printrun\pronsole.py:1689
 #, fuzzy
 #| msgid "reverse - reverses 5mm of filament at 300mm/min (5mm/s)"
 msgid "reverse - reverses 5 mm of filament at 300mm/min (5 mm/s)"
 msgstr "հետ շարժել - հետ քաշել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
-#: printrun\pronsole.py:1684
+#: printrun\pronsole.py:1690
 #, fuzzy
 #| msgid "reverse 20 - reverses 20mm of filament at 300mm/min (5mm/s)"
 msgid "reverse 20 - reverses 20 mm of filament at 300mm/min (5 mm/s)"
 msgstr "հետ շարժել 20 - հետ քաշել 20մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
-#: printrun\pronsole.py:1685
+#: printrun\pronsole.py:1691
 #, fuzzy
 #| msgid "reverse 10 210 - extrudes 10mm of filament at 210mm/min (3.5mm/s)"
 msgid "reverse 10 210 - extrudes 10 mm of filament at 210 mm/min (3.5 mm/s)"
 msgstr ""
 "հետ շարժել 10 210 - հետ քաշել 10մմ լցանյութ 210մմ/ր արագությամբ (3.5մմ/վրկ)"
 
-#: printrun\pronsole.py:1686
+#: printrun\pronsole.py:1692
 #, fuzzy
 #| msgid "reverse -5 - EXTRUDES 5mm of filament at 300mm/min (5mm/s)"
 msgid "reverse -5 - EXTRUDES 5 mm of filament at 300 mm/min (5 mm/s)"
 msgstr "արտամղել -5 - արտամղել 5մմ լցանյութ 300մմ/ր արագությամբ (5մմ/վրկ)"
 
-#: printrun\pronsole.py:1708
+#: printrun\pronsole.py:1714
 msgid "Homes the printer"
 msgstr "Տպիչը դիրքի զրոյացում"
 
-#: printrun\pronsole.py:1709
+#: printrun\pronsole.py:1715
 msgid "home - homes all axes and zeroes the extruder(Using G28 and G92)"
 msgstr ""
 "զրոյական դիրք - զրոյացնել բոլոր առանցքները և արտամղիչը(Օգտագործում է G28 և "
 "G92)"
 
-#: printrun\pronsole.py:1710
+#: printrun\pronsole.py:1716
 msgid "home xy - homes x and y axes (Using G28)"
 msgstr "զրոյական դիրք xy - զրոյացնել x և y առանցքենրը (Օգտագործում է G28)"
 
-#: printrun\pronsole.py:1711
+#: printrun\pronsole.py:1717
 msgid "home z - homes z axis only (Using G28)"
 msgstr "զրոյական դիրք z - զրոյացնել միայն z առանցքը (Օգտագործում է G28)"
 
-#: printrun\pronsole.py:1712
+#: printrun\pronsole.py:1718
 msgid "home e - set extruder position to zero (Using G92)"
 msgstr "զրոյական դիրք e - զրոյացնել արտամղիչի դիրքը (Օգտագործում է G92)"
 
-#: printrun\pronsole.py:1713
+#: printrun\pronsole.py:1719
 msgid "home xyze - homes all axes and zeroes the extruder (Using G28 and G92)"
 msgstr ""
 "զրոյական դիրք xyze - զրոյացնել բոլոր առանցքները և արտամղիչի դիրքը "
 "(Օգտագործում է G28 և G92)"
 
-#: printrun\pronsole.py:1721
+#: printrun\pronsole.py:1727
 msgid "; Motors off"
 msgstr "; Անջատ շարժիչներ"
 
-#: printrun\pronsole.py:1723
+#: printrun\pronsole.py:1729
 msgid "; Extruder off"
 msgstr "; Անջատել արտամղիչը"
 
-#: printrun\pronsole.py:1725
+#: printrun\pronsole.py:1731
 msgid "; Heatbed off"
 msgstr "; Անջատել տաքացվող հարթակը"
 
-#: printrun\pronsole.py:1727
+#: printrun\pronsole.py:1733
 msgid "; Fan off"
 msgstr "; Անջատել հովացուցիչը"
 
-#: printrun\pronsole.py:1729
+#: printrun\pronsole.py:1735
 msgid "; Power supply off"
 msgstr "; Անջատել հոսանքի մատակարարումը"
 
-#: printrun\pronsole.py:1732
+#: printrun\pronsole.py:1738
 msgid "Printer is not online. Unable to turn it off."
 msgstr "Տպիչը կապակցված չե: Հնարավոր չէ անջատել:"
 
-#: printrun\pronsole.py:1735
+#: printrun\pronsole.py:1741
 msgid "Turns off everything on the printer"
 msgstr "Անջատել տպիչի բոլոր սարքերը:"
 
-#: printrun\pronsole.py:1746
+#: printrun\pronsole.py:1752
 msgid "G-Code calling host command \"%s\""
 msgstr "G-Code կանչում է “%s” հրամանի host-ը"
 
-#: printrun\pronsole.py:1755
+#: printrun\pronsole.py:1761
 #, fuzzy
 #| msgid ""
 #| "Runs a custom script. Current gcode filename can be given using %s token."
@@ -2053,7 +2063,7 @@ msgstr ""
 "Բացում է հատուկ սցենար: Ընթացիկ gcode-ի անունը կարող է ընդունվել միայն %s "
 "նշանի օգտագործմամբ:"
 
-#: printrun\pronsole.py:1765
+#: printrun\pronsole.py:1771
 #, fuzzy
 #| msgid ""
 #| "Runs a custom script which output gcode which will in turn be executed. "
