@@ -59,7 +59,15 @@ available at: https://github.com/kliment/Printrun/releases/latest
 
 #### Important: Allow the application to run on macOS
 
-macOS will block Printrun from running because it is not from a verified developer. [Please read this wiki article](https://github.com/kliment/Printrun/wiki/macOS-Apple-could-not-verify) to learn how to allow the application to start. You only need to do this once for each new version.
+macOS will block Printrun from running because it is not from a verified developer.
+[Please read this wiki article](https://github.com/kliment/Printrun/wiki/macOS-Apple-could-not-verify)
+to learn how to allow the application to start. You only need to do this once for each new version.
+
+#### Important: Allow the application to run on Windows
+
+Windows will block Printrun from running because it is not from a verified developer.
+[Please read this wiki FAQ article](https://github.com/kliment/Printrun/wiki/FAQ#malware-virus-or-trojan-detection-defender-smartscreen-and-firewall-warnings)
+to learn how to allow the application to start. You only need to do this once for each new version.
 
 ### Linux packages from official repositories
 
