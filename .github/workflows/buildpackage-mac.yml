@@ -61,6 +61,7 @@ jobs:
     - name: Copy translation files
       run: |
         cp -r locale dist
+        cp README.md dist/
 
     - name: Configuration for releases
       if: ${{ github.event_name == 'release' }}
@@ -83,6 +84,7 @@ jobs:
         name: ${{ env.EXE_NAME }}
         path: |
             dist/Pronterface-app.zip
+            dist/README.md
             dist/locale
 
   upload_release_assets:
