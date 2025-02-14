@@ -226,11 +226,11 @@ You need to adjust the path to your location of pronsole.exe.
 
 Run 'release_windows.bat' when ever you make changes or updates. With each new run it will compile the binaries and update all involved libraries in the virtual environment if needed. Delete the virtual environment if you have problems with it.
 
-### Translating Pronterface
+## Translating Pronterface
 
 Pronterface supports the localization of the GUI in your language. We would be more
 than happy if users support us with updated translation files in all different
-languages. Actual we have translation files for AR, DE, FR, HY, IT and NL available,
+languages. Actually we have translation files for AR, DE, FR, HY, IT and NL available,
 but only the translation DE is complete. Generate a new issue in our repository and
 ask us if you need an additional translation file that is not available jet.
 
@@ -238,24 +238,28 @@ The easiest way updating our translation files is to use a free version of the t
 Poedit (https://poedit.net/). The software is available for Linux, macOS and Windows.
 
 The translation files are already included in the distributed pre-compiled binaries
-for Windows. You need only to open the pronterface.po of the corresponding language
-folder and save the file. This will generate the needed pronterface.mo for a working
-translation.
+for Windows and macOS. You need only to open the pronterface.po of the corresponding
+language folder and save the file. This will generate the needed pronterface.mo for
+a working translation.
 
-#### How to update a translation
+### How to update a translation
 
 The best way is to clone first our repository and then work on the translation file
-local. Send us a pull request when you have finish your work. Doing the translation
+local. Send us a pull request when you have finished your work. Doing the translation
 in steps is also OK, please mention it in the PR. We will then wait with releasing
-your update up to the point you tell us you have finish your work.
+your update up to the point you tell us you have finished your work.
 
 The translation is organized in the folder `\locale` and includes sub folders for each
 supported language. The structure is mandatory and should not be changed. The file
-`pronterface.po` contains all translatable strings and is the file to be edit for a
+`pronterface.po` contains all translatable strings and is the file to be edited for a
 translation. The file `pronterface.mo` is the translation file from `pronterface.po`
 file in binary format and is needed on that place for a functional translation in
-Pronterface. It will be automatically generated if you use Poedit. The file `pronterface.pot` is the master
-translation file and should not be modified.
+Pronterface. It will be automatically generated if you use Poedit. Please do not send
+this file as it is operating system dependent and should be generated on the OS used.
+The file `pronterface.pot` is the master translation file and should not be modified.
+We do update the translation files when ever this is needed, mostly due to source code
+changes where translation is also involved or when we receive an updated translation.
+
 
 Structure:
 ```
@@ -276,7 +280,7 @@ after you update a translation and restart Ponterface. The file pronterface.po i
 not needed for a functional translation but helpful, if you want to update your
 translation. Restart Pronterface after each update.
 
-#### Providing a new or updated translation
+### Providing a new or updated translation
 
 Please use always the latest version of files in our repository before providing
 a new or updated translation. Open an issue and ask for help if you need further
