@@ -402,9 +402,9 @@ class pronsole(cmd.Cmd):
             return
         else:
             if self.processing_rc:
-                logging.debug(f"Ignored configuration command '{l}'")
+                logging.debug(_("Ignored configuration command") + f" '{l}'")
             else:
-                self.log(_(f"Unknown command '{l}'"))
+                self.log(_("Unknown command") + f" '{l}'")
 
     def do_exit(self, l):
         if self.p.printing and l != "force":
