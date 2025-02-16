@@ -123,15 +123,6 @@ class StlViewPanel(wxGLPanel):
             obj.scale[2] *= 1 + 5 * dt
         obj.scale[2] = 1.0
 
-    def create_objects(self) -> None:
-        '''create opengl objects when opengl is initialized'''
-        if not self.platform.initialized:
-            self.platform.init()
-        self.initialized = True
-        #TODO: this probably creates constant redraw
-        # create_objects is called during OnDraw, remove
-        wx.CallAfter(self.Refresh)
-
     def prepare_model(self, m: stl, scale: float) -> None:
         mesh = actors.MeshModel(m)
         self.meshmodels.append(mesh)
@@ -145,10 +136,6 @@ class StlViewPanel(wxGLPanel):
 
     def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
-        # Since GL display lists are not used,
-        # we don't need this line anymore.
-        # self.create_objects()
-
         # Draw platform
         self.platform.draw()
 
@@ -273,11 +260,11 @@ def main() -> None:
     # Load a stl model via cmd line argument
     modeldata = stltool.stl(sys.argv[1])
     modeldata.offsets = [65.0, 75.0, 0.0]
-    modeldata.rot = 0.0
+    modeldata.rot = 45.0
     modeldata.centeroffset = [-(modeldata.dims[1] + modeldata.dims[0]) / 2,
                               -(modeldata.dims[3] + modeldata.dims[2]) / 2,
                               0.0]
-    modeldata.scale = [1.0, 1.0, 1.0]
+    modeldata.scale = [1.0, 1.0, 0.6]
 
     frame.models = {'example': modeldata}
     actors.MeshModel(modeldata)

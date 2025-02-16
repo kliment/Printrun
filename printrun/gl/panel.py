@@ -26,22 +26,24 @@ import pyglet
 pyglet.options['debug_gl'] = True
 pyglet.options['shadow_window'] = False
 
-from pyglet.gl import glEnable, GL_LIGHTING, glLightfv, \
-    GL_LIGHT0, GL_LIGHT1, GL_POSITION, GL_DIFFUSE, \
-    GL_AMBIENT, GL_SPECULAR, GL_COLOR_MATERIAL, \
-    glShadeModel, GL_SMOOTH, GL_NORMALIZE, GL_BLEND, glBlendFunc, \
-    glClear, glClearColor, glClearDepth, GL_COLOR_BUFFER_BIT, GL_CULL_FACE, \
-    GL_DEPTH_BUFFER_BIT, glDepthFunc, GL_DEPTH_TEST, \
-    GLdouble, glGetDoublev, glGetIntegerv, GLint, \
-    GL_LEQUAL, GL_MODELVIEW_MATRIX, GL_ONE_MINUS_SRC_ALPHA, \
-    GL_PROJECTION_MATRIX, glScalef, GL_SRC_ALPHA, glTranslatef, \
-    gluUnProject, glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, \
-    glMaterialfv, GL_FRONT_AND_BACK, glPolygonMode, \
-    GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, GL_EMISSION, \
-    glColorMaterial, GL_FRONT, glRotatef, GL_FILL
+from pyglet.gl import GLint, GLdouble, glEnable,glBlendFunc,glViewport, \
+    glClear, glClearColor, glClearDepth, glDepthFunc, glGetDoublev, \
+    glGetIntegerv, glPolygonMode, \
+    GL_LEQUAL, GL_ONE_MINUS_SRC_ALPHA,GL_DEPTH_BUFFER_BIT, \
+    GL_SRC_ALPHA, GL_BLEND, GL_COLOR_BUFFER_BIT, GL_CULL_FACE, \
+    GL_VIEWPORT, GL_FRONT_AND_BACK,GL_DEPTH_TEST, GL_FRONT, GL_FILL
+
+# those are legacy calls which need to be replaced
+from pyglet.gl import GL_LIGHTING, GL_LIGHT0, GL_LIGHT1, GL_POSITION, \
+    GL_DIFFUSE, GL_AMBIENT, GL_SPECULAR, GL_COLOR_MATERIAL, GL_SMOOTH, \
+    GL_NORMALIZE, GL_MODELVIEW_MATRIX, GL_PROJECTION_MATRIX, \
+    GL_AMBIENT_AND_DIFFUSE, GL_SHININESS, GL_EMISSION, GL_MODELVIEW, \
+    glMaterialf, glColorMaterial, glMaterialfv, glLightfv, glShadeModel, \
+    glPushMatrix, glPopMatrix, glMultMatrixd, glMatrixMode
 
 from pyglet import gl
-from .mathutils import np_unproject
+from .mathutils import np_unproject, np_to_gl_mat, \
+                       mat4_translation, mat4_rotation, mat4_scaling
 from .actors import Focus, vec
 from .camera import Camera
 from .keyboardinput import KeyboardInput
@@ -108,6 +110,7 @@ class wxGLPanel(BASE_CLASS):
 
         self.width = 1.0
         self.height = 1.0
+
         self.camera = Camera(self, build_dimensions)
         self.focus = Focus(self.camera)
         self.keyinput = KeyboardInput(self.canvas, self.zoom_to_center,
@@ -363,17 +366,21 @@ class wxGLPanel(BASE_CLASS):
     def transform_and_draw(self, model: Union['GCObject', stl], draw_function: Callable[[], None]) -> None:
         '''Apply transformations to the model and then
         draw it with the given draw function'''
+        glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
-        self._create_model_matrix(model)
+        self._load_model_matrix(model)
         # Draw the models
         draw_function()
         glPopMatrix()
 
-    def _create_model_matrix(self, model: Union['GCObject', stl]) -> None:
-        glTranslatef(*model.offsets)
-        glRotatef(model.rot, 0.0, 0.0, 1.0)
-        glTranslatef(*model.centeroffset)
-        glScalef(*model.scale)
+    def _load_model_matrix(self, model: Union['GCObject', stl]) -> None:
+        tm = mat4_translation(*model.offsets)
+        rm = mat4_rotation(0.0, 0.0, 1.0, model.rot)
+        tc = mat4_translation(*model.centeroffset)
+        sm = mat4_scaling(*model.scale)
+        mat = sm @ tc @ rm @ tm
+
+        glMultMatrixd(np_to_gl_mat(mat))
 
     # ==========================================================================
     # To be implemented by a sub class
@@ -408,8 +415,7 @@ class wxGLPanel(BASE_CLASS):
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
 
-        #np_unproject(x, y, z, mvmat, pmat, viewport, px, py, pz)
-        gluUnProject(x, y, z, mvmat, pmat, viewport, px, py, pz)
+        np_unproject(x, y, z, mvmat, pmat, viewport, px, py, pz)
 
         return px.value, py.value, pz.value
 
@@ -427,9 +433,9 @@ class wxGLPanel(BASE_CLASS):
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         mvmat = self.camera.get_view_matrix()
-        gluUnProject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
+        np_unproject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
         ray_far = (px.value, py.value, pz.value)
-        gluUnProject(x, y, 0.0, mvmat, pmat, viewport, px, py, pz)
+        np_unproject(x, y, 0.0, mvmat, pmat, viewport, px, py, pz)
         ray_near = (px.value, py.value, pz.value)
         return ray_near, ray_far
 

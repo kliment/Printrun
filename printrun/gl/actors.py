@@ -25,18 +25,26 @@ import threading
 
 from ctypes import sizeof
 
-from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
-    glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
-    GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
-    GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, \
-    glBegin, glEnd, GL_LINES, glEnable, glDisable, glGetFloatv, \
-    GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, GLuint, \
-    glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
-    glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
-    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f, glNormal3f, \
-    glRotatef, GL_CULL_FACE, glVertex2f, glLineStipple, GL_LINE_STIPPLE
+from pyglet.gl import GLfloat, GLuint, \
+                      glEnable, glDisable, glGetFloatv, glLineWidth, \
+                      glDrawArrays, glDrawRangeElements, \
+                      GL_VERTEX_ARRAY, GL_ELEMENT_ARRAY_BUFFER, \
+                      GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
+                      GL_ARRAY_BUFFER, GL_STATIC_DRAW, GL_LINES, GL_FLOAT, \
+                      GL_CULL_FACE, GL_LINE_SMOOTH, GL_LINE_WIDTH
 
-from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject, VertexArray
+# those are legacy calls which need to be replaced
+from pyglet.gl import glPushMatrix, glPopMatrix, glMultMatrixd, \
+                        glColor4f, glVertex3f, glBegin, glEnd, \
+                        glVertexPointer, glColorPointer, glEnableClientState, \
+                        glDisableClientState, glNormalPointer, glColor3f, \
+                        glNormal3f, glVertex2f, glLineStipple, \
+                        GL_LINE_STIPPLE, GL_NORMAL_ARRAY, \
+                        GL_LIGHTING, GL_COLOR_ARRAY
+
+from .mathutils import mat4_translation, mat4_rotation, np_to_gl_mat
+
+from pyglet.graphics.vertexbuffer import VertexBufferObject as BufferObject
 from pyglet.graphics import Batch
 
 from .camera import Camera
@@ -52,21 +60,10 @@ def vec(*args: float) -> Array:
     '''Returns an array of GLfloat values'''
     return (GLfloat * len(args))(*args)
 
-def compile_display_list(func, *options) -> Any:
-    display_list = glGenLists(1)
-    glNewList(display_list, GL_COMPILE)
-    func(*options)
-    glEndList()
-    return display_list
+def numpy2vbo(nparray: numpy.ndarray, target = GL_ARRAY_BUFFER,
+              usage = GL_STATIC_DRAW) -> BufferObject:
 
-def numpy2vbo(nparray: numpy.ndarray,
-              target = GL_ARRAY_BUFFER,
-              usage = GL_STATIC_DRAW,
-              use_vbos: bool = True
-              ) -> Union[VertexBufferObject, VertexArray]:
-
-    vbo = create_buffer(nparray.nbytes, target = target,
-                        usage = usage, vbo = use_vbos)
+    vbo = BufferObject(nparray.nbytes, usage=usage, target=target)
     vbo.bind()
     vbo.set_data(nparray.ctypes.data)
     return vbo
@@ -128,9 +125,7 @@ class Platform:
         self.color_grads_interm = (15 / 255, 15 / 255, 15 / 255, 0.2)
         self.color_grads_major = (15 / 255, 15 / 255, 15 / 255, 0.33)
 
-        self.initialized = False
         self.loaded = True
-        self.display_list = None
 
     def update_colour(self, bg_colour: Tuple[float, float, float]) -> None:
         '''Update the colour of the focus based on the
@@ -148,10 +143,6 @@ class Platform:
         self.color_grads_interm = (*base_colour, 0.2)
         self.color_grads_major = (*base_colour, 0.33)
 
-    def init(self) -> None:
-        self.display_list = compile_display_list(self.draw)
-        self.initialized = True
-
     def _colour(self, i: int) -> bool:
         if i % self.grid[1] == 0:
             glColor4f(*self.color_grads_major)
@@ -163,10 +154,14 @@ class Platform:
             glColor4f(*self.color_grads_minor)
         return True
 
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(self.xoffset, self.yoffset, self.zoffset)
+        return np_to_gl_mat(mat)
+
     def draw(self) -> None:
         glPushMatrix()
 
-        glTranslatef(self.xoffset, self.yoffset, self.zoffset)
+        glMultMatrixd(self._get_transformation())
 
         # draw the grid
         glDisable(GL_LIGHTING)
@@ -176,25 +171,25 @@ class Platform:
             for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 angle = math.asin(2 * float(i) / self.width - 1)
                 x = (math.cos(angle) + 1) * self.depth / 2
-                if self._colour(i):
+                if self._colour(int(i)):
                     glVertex3f(float(i), self.depth - x, 0.0)
                     glVertex3f(float(i), x, 0.0)
 
             for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
                 angle = math.acos(2 * float(i) / self.depth - 1)
                 x = (math.sin(angle) + 1) * self.width / 2
-                if self._colour(i):
+                if self._colour(int(i)):
                     glVertex3f(self.width - x, float(i), 0.0)
                     glVertex3f(x, float(i), 0.0)
 
         else:  # Draw a rectangular grid
             for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
-                if self._colour(i):
+                if self._colour(int(i)):
                     glVertex3f(float(i), 0.0, 0.0)
                     glVertex3f(float(i), self.depth, 0.0)
 
             for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
-                if self._colour(i):
+                if self._colour(int(i)):
                     glVertex3f(0, float(i), 0.0)
                     glVertex3f(self.width, float(i), 0.0)
         glEnd()
@@ -253,11 +248,6 @@ class Platform:
         glPopMatrix()
         glEnable(GL_LIGHTING)
 
-    def display(self, mode_2d: bool = False) -> None:
-        # FIXME: using the list sometimes results in graphical corruptions
-        # glCallList(self.display_list)
-        self.draw()
-
 
 class MouseCursor:
     """
@@ -314,9 +304,15 @@ class MouseCursor:
 
         return (vertices, indices)
 
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(*self.position)
+        return np_to_gl_mat(mat)
+
     def draw(self) -> None:
         glPushMatrix()
-        glTranslatef(*self.position)
+
+        glMultMatrixd(self._get_transformation())
+
         glDisable(GL_CULL_FACE)
 
         glColor4f(*self.colour)
@@ -329,9 +325,6 @@ class MouseCursor:
 
         glEnable(GL_CULL_FACE)
         glPopMatrix()
-
-    def display(self, mode_2d: bool = False) -> None:
-        self.draw()
 
 
 class Focus:
@@ -374,9 +367,6 @@ class Focus:
 
         self.camera.revert_pseudo2d_matrix()
 
-    def display(self, mode_2d: bool = False) -> None:
-        self.draw()
-
 
 class CuttingPlane:
     """
@@ -407,21 +397,31 @@ class CuttingPlane:
                                "y": (self.width, self.height),
                                "z": (self.width, self.depth)}
         self.plane_width, self.plane_height = cutting_plane_sizes[cutting_axis]
+    
+    def _get_transformation(self) -> Array:
+
+        if self.axis == "x":
+            rm1 = mat4_rotation(0.0, 1.0, 0.0, 90.0)
+            rm2 = mat4_rotation(0.0, 0.0, 1.0, 90.0)
+            tm = mat4_translation(0.0, 0.0, self.dist)
+            mat = tm @ rm2 @ rm1
+        elif self.axis == "y":
+            rm = mat4_rotation(1.0, 0.0, 0.0, 90.0)
+            tm = mat4_translation(0.0, 0.0, -self.dist)
+            mat = tm @ rm
+        elif self.axis == "z":
+            mat = mat4_translation(0.0, 0.0, self.dist)
+        else:
+            mat = numpy.identity(4)
+
+        return np_to_gl_mat(mat)
 
     def draw(self) -> None:
         if self.dist is None:
             return
 
         glPushMatrix()
-        if self.axis == "x":
-            glRotatef(90, 0, 1, 0)
-            glRotatef(90, 0, 0, 1)
-            glTranslatef(0, 0, self.dist)
-        elif self.axis == "y":
-            glRotatef(90, 1, 0, 0)
-            glTranslatef(0, 0, -self.dist)
-        elif self.axis == "z":
-            glTranslatef(0, 0, self.dist)
+        glMultMatrixd(self._get_transformation())
 
         glDisable(GL_CULL_FACE)
         # Draw the plane
@@ -454,10 +454,9 @@ class CuttingPlane:
         glDisable(GL_LINE_SMOOTH)
         glPopMatrix()
 
-    def display(self, mode_2d: bool = False) -> None:
-        self.draw()
 
-
+'''
+# TODO: A 3D printhead vis is currently not implemented. Would be nice to have.
 class PrintHead:
     """
     A representation of the printhead.
@@ -497,6 +496,7 @@ class PrintHead:
         glCallList(self.display_list)
         glLineWidth(orig_linewidth)
         glDisable(GL_LINE_SMOOTH)
+'''
 
 
 class MeshModel:
@@ -509,7 +509,7 @@ class MeshModel:
         # Every model is placed into it's own batch.
         # This is not ideal, but good enough for the moment.
         self.batch = Batch()
-        self.vertex_list = None
+        self.vl = None
         self._fill_batch(model)
 
     def _fill_batch(self, model: stl) -> None:
@@ -522,6 +522,7 @@ class MeshModel:
                 vertices.extend(coords)
                 normals.extend(facet[0])
 
+        """
         if hasattr(model, 'indices') and model.indices:
             # Some file formats provide indexed vertices,
             # which is more efficient for rendering
@@ -532,23 +533,24 @@ class MeshModel:
                                                 ('v3f/static', vertices),
                                                 ('n3f/static', normals),
                                                 ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
+        """
 
-        else:
-            self.vertex_list = self.batch.add(len(vertices) // 3,
-                                              GL_TRIANGLES,
-                                              None,  # group
-                                              ('v3f/static', vertices),
-                                              ('n3f/static', normals),
-                                              ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
+        self.vl = self.batch.add(len(vertices) // 3,
+                                GL_TRIANGLES,
+                                None,  # group
+                                ('v3f/static', vertices),
+                                ('n3f/static', normals),
+                                ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
 
         model.batch = self.batch  # type: ignore
 
     def delete(self) -> None:
-        if self.vertex_list:
-            self.vertex_list.delete()
+        if self.vl:
+            self.vl.delete()
 
     def draw(self) -> None:
-        self.batch.draw()
+        if self.vl:
+            self.vl.draw(GL_TRIANGLES)
 
 
 class Model:
@@ -577,6 +579,7 @@ class Model:
     def __init__(self, offset_x: float = 0.0, offset_y: float = 0.0) -> None:
         self.offset_x = offset_x
         self.offset_y = offset_y
+        self._bounding_box = None
 
         self.lock = threading.Lock()
 
@@ -723,7 +726,6 @@ class GcodeModel(Model):
     display_travels = True
 
     buffers_created = False
-    use_vbos = True
     loaded = False
     fully_loaded = False
 
@@ -1083,7 +1085,7 @@ class GcodeModel(Model):
                     cur_vertex += 1
         if self.vertex_color_buffer:
             self.vertex_color_buffer.delete()
-        self.vertex_color_buffer = numpy2vbo(colors, use_vbos = self.use_vbos)
+        self.vertex_color_buffer = numpy2vbo(colors)
 
     # ------------------------------------------------------------------------
     # DRAWING
@@ -1099,12 +1101,12 @@ class GcodeModel(Model):
                 self.vertex_buffer.delete()
                 self.vertex_color_buffer.delete()
                 self.vertex_normal_buffer.delete()
-            self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
-            self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
+            self.travel_buffer = numpy2vbo(self.travels)
+            self.index_buffer = numpy2vbo(self.indices,
                                           target = GL_ELEMENT_ARRAY_BUFFER)
-            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
-            self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
+            self.vertex_buffer = numpy2vbo(self.vertices)
+            self.vertex_color_buffer = numpy2vbo(self.colors)
+            self.vertex_normal_buffer = numpy2vbo(self.normals)
             if self.fully_loaded:
                 # Delete numpy arrays after creating VBOs after full load
                 self.travels = numpy.zeros(0, dtype = GLfloat)
@@ -1114,21 +1116,25 @@ class GcodeModel(Model):
                 self.normals = numpy.zeros(0, dtype = GLfloat)
             self.buffers_created = True
 
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(self.offset_x, self.offset_y, 0.0)
+        return np_to_gl_mat(mat)
+
     def display(self, mode_2d: bool = False) -> None:
         with self.lock:
             glPushMatrix()
-            glTranslatef(self.offset_x, self.offset_y, 0)
+            glMultMatrixd(self._get_transformation())
+
             glEnableClientState(GL_VERTEX_ARRAY)
 
-            has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
             if self.display_travels:
-                self._display_travels(has_vbo)
+                self._display_travels()
 
             glEnable(GL_LIGHTING)
             glEnableClientState(GL_NORMAL_ARRAY)
             glEnableClientState(GL_COLOR_ARRAY)
 
-            self._display_movements(has_vbo)
+            self._display_movements()
 
             glDisable(GL_LIGHTING)
 
@@ -1138,7 +1144,7 @@ class GcodeModel(Model):
 
             glPopMatrix()
 
-    def _display_travels(self, has_vbo: bool) -> None:
+    def _display_travels(self) -> None:
         self.travel_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
 
@@ -1169,7 +1175,7 @@ class GcodeModel(Model):
                             GL_UNSIGNED_INT,
                             sizeof(GLuint) * self.count_print_indices[start - 1])
 
-    def _display_movements(self, has_vbo: bool) -> None:
+    def _display_movements(self) -> None:
         self.vertex_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
 
@@ -1179,6 +1185,7 @@ class GcodeModel(Model):
         self.vertex_normal_buffer.bind()
         glNormalPointer(GL_FLOAT, 0, self.vertex_normal_buffer.ptr)
 
+        # Pyglet 2.0: target=GL_ELEMENT_ARRAY_BUFFER
         self.index_buffer.bind()
 
         # Prevent race condition by using the number of currently loaded layers
@@ -1255,7 +1262,6 @@ class GcodeModelLight(Model):
     color_current_printed = (0.1, 0.4, 0, 0.8)
 
     buffers_created = False
-    use_vbos = True
     loaded = False
     fully_loaded = False
 
@@ -1385,19 +1391,24 @@ class GcodeModelLight(Model):
             if self.buffers_created:
                 self.vertex_buffer.delete()
                 self.vertex_color_buffer.delete()
-            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
+            self.vertex_buffer = numpy2vbo(self.vertices)
             # each pair of vertices shares the color
-            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
+            self.vertex_color_buffer = numpy2vbo(self.colors)
             if self.fully_loaded:
                 # Delete numpy arrays after creating VBOs after full load
                 self.vertices = numpy.zeros(0, dtype = GLfloat)
                 self.colors = numpy.zeros(0, dtype = GLfloat)
             self.buffers_created = True
 
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(self.offset_x, self.offset_y, 0.0)
+        return np_to_gl_mat(mat)
+
     def display(self, mode_2d: bool = False) -> None:
         with self.lock:
             glPushMatrix()
-            glTranslatef(self.offset_x, self.offset_y, 0)
+            glMultMatrixd(self._get_transformation())
+
             glEnableClientState(GL_VERTEX_ARRAY)
             glEnableClientState(GL_COLOR_ARRAY)
 
@@ -1409,17 +1420,10 @@ class GcodeModelLight(Model):
 
     def _display_movements(self, mode_2d: bool = False) -> None:
         self.vertex_buffer.bind()
-        has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
-        if has_vbo:
-            glVertexPointer(3, GL_FLOAT, 0, None)
-        else:
-            glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
+        glVertexPointer(3, GL_FLOAT, 0, None)
 
         self.vertex_color_buffer.bind()
-        if has_vbo:
-            glColorPointer(4, GL_FLOAT, 0, None)
-        else:
-            glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
+        glColorPointer(4, GL_FLOAT, 0, None)
 
         # Prevent race condition by using the number of currently loaded layers
         max_layers = self.layers_loaded

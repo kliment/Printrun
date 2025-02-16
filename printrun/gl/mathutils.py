@@ -100,20 +100,27 @@ def quat_rotate_vec(quat: List[float],
     return vecs_out
 
 def mat4_translation(x_val: float, y_val: float,
-                     z_val: float = 0.0,
-                     matrix: np.ndarray = np.identity(4)) -> np.ndarray:
+                     z_val: float) -> np.ndarray:
+    """
+    Returns a 4x4 translation matrix
+    """
 
-    matrix[3][0] += x_val
-    matrix[3][1] += y_val
-    matrix[3][2] += z_val
+    matrix = np.identity(4)
+    matrix[3][0] = x_val
+    matrix[3][1] = y_val
+    matrix[3][2] = z_val
 
     return matrix
 
 def mat4_rotation(x: float, y: float,
-                  z: float, angle: float) -> np.ndarray:
+                  z: float, angle_deg: float) -> np.ndarray:
+    """
+    Returns a 4x4 rotation matrix, enter rotation angle in degree
+    """
+
     matrix = np.identity(4)
-    co = np.cos(angle)
-    si = np.sin(angle)
+    co = np.cos(np.radians(angle_deg))
+    si = np.sin(np.radians(angle_deg))
     matrix[0][0] = x * x * (1 - co) + co
     matrix[1][0] = x * y * (1 - co) - z * si
     matrix[2][0] = x * z * (1 - co) + y * si
@@ -126,14 +133,36 @@ def mat4_rotation(x: float, y: float,
 
     return matrix
 
-def mat4_scaling(x_val: float, y_val: float, z_val: float,
-                 matrix: np.ndarray = np.identity(4)) -> np.ndarray:
+def mat4_scaling(x_val: float, y_val: float, z_val: float) -> np.ndarray:
+    """
+    Returns a 4x4 scaling matrix
+    """
 
-    matrix[0][0] *= x_val
-    matrix[1][1] *= y_val
-    matrix[2][2] *= z_val
+    matrix = np.identity(4)
+    matrix[0][0] = x_val
+    matrix[1][1] = y_val
+    matrix[2][2] = z_val
 
     return matrix
+
+def pyg_to_gl_mat4(pyg_matrix) -> Array:
+    """
+    Converts a pyglet Mat4() matrix into a c_types_Array which
+    can be directly passed into OpenGL calls.
+    """
+    array_type = c_double * 16
+    return array_type(*pyg_matrix.column(0),
+                      *pyg_matrix.column(1),
+                      *pyg_matrix.column(2),
+                      *pyg_matrix.column(3))
+
+def np_to_gl_mat(np_matrix: np.ndarray) -> Array:
+    """
+    Converts a numpy matrix into a c_types_Array which
+    can be directly passed into OpenGL calls.
+    """
+    array_type = c_double * np_matrix.size
+    return array_type(*np_matrix.reshape((np_matrix.size, 1)))
 
 def np_unproject(winx: float, winy: float, winz: float,
                  mv_mat: Array[c_double], p_mat: Array[c_double],

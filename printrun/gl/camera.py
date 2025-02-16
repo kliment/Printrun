@@ -15,13 +15,16 @@
 
 from threading import Lock
 
-from pyglet.gl import GLdouble, glLoadIdentity, glMatrixMode, GL_MODELVIEW, \
-    glOrtho, GL_PROJECTION, gluPerspective, glPushMatrix, glPopMatrix, \
-    glLoadMatrixd
-
-from .mathutils import trackball, mulquat, axis_to_quat, quat_rotate_vec
-
 import numpy as np
+
+# those are legacy calls which need to be replaced
+from pyglet.gl import GL_PROJECTION, GL_MODELVIEW, \
+                      glLoadMatrixd, glMatrixMode, \
+                      glPushMatrix, glPopMatrix, \
+                      glOrtho, gluPerspective
+
+from .mathutils import trackball, np_to_gl_mat, \
+                       mulquat, axis_to_quat, quat_rotate_vec
 
 # for type hints
 from typing import Optional, List, Tuple, TYPE_CHECKING
@@ -64,6 +67,8 @@ class Camera():
         self.init_rot_pos = None
         self.init_trans_pos = None
         self.view_mat = np.identity(4)
+        self.proj_mat = np.identity(4)
+        self.gl_identity = np_to_gl_mat(np.identity(4))
         self._set_initial_view()
 
     def update_size(self, width: int, height: int, scalefactor: float) -> None:
@@ -100,7 +105,7 @@ class Camera():
 
     def reset_view_matrix(self) -> None:
         glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
+        glLoadMatrixd(self.gl_identity)
         self.reset_rotation()
         self._set_initial_view()
 
@@ -126,7 +131,7 @@ class Camera():
 
     def create_projection_matrix(self) -> None:
         glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
+        glLoadMatrixd(self.gl_identity)
 
         if self.is_orthographic:
             glOrtho(-self.width / 2 * self.zoom_factor,
@@ -135,34 +140,36 @@ class Camera():
                     self.height / 2 * self.zoom_factor,
                     0.01, 3 * self.dist)
         else:
-            gluPerspective(45.0, self.width / self.height, 0.1, 5.5 * self.dist)
-
-        glMatrixMode(GL_MODELVIEW)
+            gluPerspective(45.0, self.width / self.height,
+                           0.1, 5.5 * self.dist)
 
     def create_pseudo2d_matrix(self) -> None:
         '''Create untransformed matrices to render
         coordinates directly on the canvas, quasi 2D.
-        Use always in conjunction with revert_...'''
+        Use always in conjunction with revert'''
 
+        glMatrixMode(GL_MODELVIEW)
         glPushMatrix()  # backup and clear MODELVIEW
-        glLoadIdentity()
+        glLoadMatrixd(self.gl_identity)
 
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()  # backup and clear PROJECTION
-        glLoadIdentity()
-        glOrtho(0, self.width, 0, self.height, -1, 1)
+        glLoadMatrixd(self.gl_identity)
+
+        glOrtho(0.0, self.width, 0.0, self.height, -1.0, 1.0)
 
     def revert_pseudo2d_matrix(self) -> None:
         '''Revert current matrices back to the normal,
         saved matrices'''
 
+        glMatrixMode(GL_PROJECTION)
         glPopMatrix()  # restore PROJECTION
 
         glMatrixMode(GL_MODELVIEW)
         glPopMatrix()  # restore MODELVIEW
 
     def get_view_matrix(self) -> Array:
-        return self._np_to_gl_mat(self.view_mat)
+        return self.view_mat
 
     def move_rel(self, x: float, y: float, z: float):
         delta = np.array((x, y, z))
@@ -199,8 +206,8 @@ class Camera():
 
             self.eye = eye
 
-            if rebuild_mat:
-                self._rebuild_view_mat()
+        if rebuild_mat:
+            self._rebuild_view_mat()
 
         '''
         if to:
@@ -261,25 +268,24 @@ class Camera():
             self._rebuild_view_mat()
             self.init_trans_pos = p2
 
-    def _np_to_gl_mat(self, np_matrix: np.ndarray) -> Array:
-        array_type = GLdouble * np_matrix.size
-        return array_type(*np_matrix.reshape((np_matrix.size, 1)))
-
     def _rebuild_view_mat(self) -> None:
         forward = self.eye - self.target
-        rotated_forward, rotated_up = quat_rotate_vec(self.orientation,
+        rotated_forward, rotated_up, *_ = quat_rotate_vec(self.orientation,
                                                       [forward, self.up])
         rotated_eye = rotated_forward + self.target
         self.view_mat = self._look_at(rotated_eye , self.target, rotated_up)
 
         glMatrixMode(GL_MODELVIEW)
-        #glLoadIdentity()
-        #gluLookAt(*rotated_eye, *self.target, *rotated_up)
-        glLoadMatrixd(self._np_to_gl_mat(self.view_mat))
+        glLoadMatrixd(self.view_mat)
 
     def _look_at(self, eye: np.ndarray,
                        center: np.ndarray,
-                       up: np.ndarray) -> np.ndarray:
+                       up: np.ndarray) -> Array:
+        """
+        Classic gluLookAt implementation that takes in numpy arrays for
+        the vector eye, center (target) and global up and returns a 4x4
+        view matrix as c_types_Array
+        """
         # Calculate the forward vector (z-axis in camera space)
         forward = center - eye
         forward = forward / np.linalg.norm(forward)
@@ -306,5 +312,5 @@ class Camera():
         view_matrix[1, 3] = -np.dot(true_up, eye)
         view_matrix[2, 3] = -np.dot(forward, eye)
 
-        return view_matrix.T
+        return np_to_gl_mat(view_matrix.T)
 
