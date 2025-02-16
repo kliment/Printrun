@@ -17,11 +17,11 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import time
-import numpy
 import array
 import math
 import logging
 import threading
+import numpy as np
 
 from ctypes import sizeof
 
@@ -60,7 +60,7 @@ def vec(*args: float) -> Array:
     '''Returns an array of GLfloat values'''
     return (GLfloat * len(args))(*args)
 
-def numpy2vbo(nparray: numpy.ndarray, target = GL_ARRAY_BUFFER,
+def numpy2vbo(nparray: np.ndarray, target = GL_ARRAY_BUFFER,
               usage = GL_STATIC_DRAW) -> BufferObject:
 
     vbo = BufferObject(nparray.nbytes, usage=usage, target=target)
@@ -168,14 +168,14 @@ class Platform:
         glBegin(GL_LINES)
 
         if self.circular:  # Draw a circular grid
-            for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
+            for i in np.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 angle = math.asin(2 * float(i) / self.width - 1)
                 x = (math.cos(angle) + 1) * self.depth / 2
                 if self._colour(int(i)):
                     glVertex3f(float(i), self.depth - x, 0.0)
                     glVertex3f(float(i), x, 0.0)
 
-            for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
+            for i in np.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
                 angle = math.acos(2 * float(i) / self.depth - 1)
                 x = (math.sin(angle) + 1) * self.width / 2
                 if self._colour(int(i)):
@@ -183,12 +183,12 @@ class Platform:
                     glVertex3f(x, float(i), 0.0)
 
         else:  # Draw a rectangular grid
-            for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
+            for i in np.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
                 if self._colour(int(i)):
                     glVertex3f(float(i), 0.0, 0.0)
                     glVertex3f(float(i), self.depth, 0.0)
 
-            for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
+            for i in np.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
                 if self._colour(int(i)):
                     glVertex3f(0, float(i), 0.0)
                     glVertex3f(self.width, float(i), 0.0)
@@ -397,7 +397,7 @@ class CuttingPlane:
                                "y": (self.width, self.height),
                                "z": (self.width, self.depth)}
         self.plane_width, self.plane_height = cutting_plane_sizes[cutting_axis]
-    
+
     def _get_transformation(self) -> Array:
 
         if self.axis == "x":
@@ -412,7 +412,7 @@ class CuttingPlane:
         elif self.axis == "z":
             mat = mat4_translation(0.0, 0.0, self.dist)
         else:
-            mat = numpy.identity(4)
+            mat = np.identity(4)
 
         return np_to_gl_mat(mat)
 
@@ -585,7 +585,7 @@ class Model:
 
         self.init_model_attributes()
 
-        self.vertices = numpy.zeros(0, dtype = GLfloat)
+        self.vertices = np.zeros(0, dtype = GLfloat)
 
     def init_model_attributes(self) -> None:
         """
@@ -783,15 +783,15 @@ class GcodeModel(Model):
         ncoords = coords_count(nlines)
         nindices = indices_count(nlines)
 
-        travel_vertices = self.travels = numpy.zeros(ntravelcoords, dtype = GLfloat)
+        travel_vertices = self.travels = np.zeros(ntravelcoords, dtype = GLfloat)
         travel_vertex_k = 0
-        vertices = self.vertices = numpy.zeros(ncoords, dtype = GLfloat)
+        vertices = self.vertices = np.zeros(ncoords, dtype = GLfloat)
         vertex_k = 0
-        colors = self.colors = numpy.zeros(ncoords, dtype = GLfloat)
+        colors = self.colors = np.zeros(ncoords, dtype = GLfloat)
 
         color_k = 0
-        normals = self.normals = numpy.zeros(ncoords, dtype = GLfloat)
-        indices = self.indices = numpy.zeros(nindices, dtype = GLuint)
+        normals = self.normals = np.zeros(ncoords, dtype = GLfloat)
+        indices = self.indices = np.zeros(nindices, dtype = GLuint)
         index_k = 0
         self.layer_idxs_map = {}
         self.layer_stops = [0]
@@ -1072,7 +1072,7 @@ class GcodeModel(Model):
     def update_colors(self) -> None:
         """Rebuild gl color buffer without loading. Used after color settings edit"""
         ncoords = self.count_print_vertices[-1]
-        colors = numpy.empty(ncoords * 3, dtype = GLfloat)
+        colors = np.empty(ncoords * 3, dtype = GLfloat)
         cur_vertex = 0
         gline_i = 1
         for gline in self.gcode.lines:
@@ -1109,11 +1109,11 @@ class GcodeModel(Model):
             self.vertex_normal_buffer = numpy2vbo(self.normals)
             if self.fully_loaded:
                 # Delete numpy arrays after creating VBOs after full load
-                self.travels = numpy.zeros(0, dtype = GLfloat)
-                self.indices = numpy.zeros(0, dtype = GLuint)
-                self.vertices = numpy.zeros(0, dtype = GLfloat)
-                self.colors = numpy.zeros(0, dtype = GLfloat)
-                self.normals = numpy.zeros(0, dtype = GLfloat)
+                self.travels = np.zeros(0, dtype = GLfloat)
+                self.indices = np.zeros(0, dtype = GLuint)
+                self.vertices = np.zeros(0, dtype = GLfloat)
+                self.colors = np.zeros(0, dtype = GLfloat)
+                self.normals = np.zeros(0, dtype = GLfloat)
             self.buffers_created = True
 
     def _get_transformation(self) -> Array:
@@ -1277,9 +1277,9 @@ class GcodeModelLight(Model):
         prev_pos = (0, 0, 0)
         layer_idx = 0
         nlines = len(model_data)
-        vertices = self.vertices = numpy.zeros(nlines * 6, dtype = GLfloat)
+        vertices = self.vertices = np.zeros(nlines * 6, dtype = GLfloat)
         vertex_k = 0
-        colors = self.colors = numpy.zeros(nlines * 8, dtype = GLfloat)
+        colors = self.colors = np.zeros(nlines * 8, dtype = GLfloat)
         color_k = 0
         self.printed_until = -1
         self.only_current = False
@@ -1396,8 +1396,8 @@ class GcodeModelLight(Model):
             self.vertex_color_buffer = numpy2vbo(self.colors)
             if self.fully_loaded:
                 # Delete numpy arrays after creating VBOs after full load
-                self.vertices = numpy.zeros(0, dtype = GLfloat)
-                self.colors = numpy.zeros(0, dtype = GLfloat)
+                self.vertices = np.zeros(0, dtype = GLfloat)
+                self.colors = np.zeros(0, dtype = GLfloat)
             self.buffers_created = True
 
     def _get_transformation(self) -> Array:

@@ -16,8 +16,7 @@
 import logging
 import time
 import traceback
-import numpy
-import numpy.linalg
+import numpy as np
 
 import wx
 from wx import glcanvas
@@ -445,11 +444,11 @@ class wxGLPanel(BASE_CLASS):
                        ) -> Union[Tuple[float, float, float], None]:
         # Ray/plane intersection
         ray_near, ray_far = self.mouse_to_ray(x, y)
-        ray_near = numpy.array(ray_near)
-        ray_far = numpy.array(ray_far)
+        ray_near = np.array(ray_near)
+        ray_far = np.array(ray_far)
         ray_dir = ray_far - ray_near
-        ray_dir = ray_dir / numpy.linalg.norm(ray_dir)
-        plane_normal_np = numpy.array(plane_normal)
+        ray_dir = ray_dir / np.linalg.norm(ray_dir)
+        plane_normal_np = np.array(plane_normal)
         q = ray_dir.dot(plane_normal_np)
         if q == 0:
             return None
