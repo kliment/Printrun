@@ -38,7 +38,7 @@ from pyglet.gl import glPushMatrix, glPopMatrix, glMultMatrixd, \
                         glColor4f, glVertex3f, glBegin, glEnd, \
                         glVertexPointer, glColorPointer, glEnableClientState, \
                         glDisableClientState, glNormalPointer, glColor3f, \
-                        glNormal3f, glVertex2f, glLineStipple, \
+                        glNormal3f, glLineStipple, \
                         GL_LINE_STIPPLE, GL_NORMAL_ARRAY, \
                         GL_LIGHTING, GL_COLOR_ARRAY
 
@@ -334,6 +334,21 @@ class Focus:
     def __init__(self, camera: Camera) -> None:
         self.colour = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Black Transparent
         self.camera = camera
+        self.vertices = ()
+        self.indices = ()
+        self._prepare_data()
+
+    def _prepare_data(self) -> None:
+        # Starts at the lower left corner, x, y
+        offset = 2.0 * self.camera.display_ppi_factor
+        self.vertices = ((offset, offset, 0.0),
+                         (self.camera.width - offset, offset, 0.0),
+                         (self.camera.width - offset, self.camera.height - offset, 0.0),
+                         (offset, self.camera.height - offset, 0.0))
+        self.indices = (0, 1, 1, 2, 2, 3, 3, 0)
+
+    def update_size(self) -> None:
+        self._prepare_data()
 
     def update_colour(self, bg_colour: Tuple[float, float, float]) -> None:
         '''Update the colour of the focus based on the
@@ -354,12 +369,9 @@ class Focus:
         glColor4f(*self.colour)
         glEnable(GL_LINE_STIPPLE)
 
-        glBegin(GL_LINE_LOOP)
-        # This is the lower left corner, x, y
-        glVertex2f(5, 3)
-        glVertex2f(self.camera.width - 3, 3)
-        glVertex2f(self.camera.width - 3, self.camera.height - 5)
-        glVertex2f(5, self.camera.height - 5)
+        glBegin(GL_LINES)
+        for index in self.indices:
+            glVertex3f(*self.vertices[index])
         glEnd()
 
         glDisable(GL_LINE_STIPPLE)

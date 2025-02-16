@@ -283,6 +283,7 @@ class wxGLPanel(BASE_CLASS):
             return
 
         self.camera.update_size(width, height, self.GetContentScaleFactor())
+        self.focus.update_size()
         self.OnInitGL(call_reshape = False)
         # print('glViewport: ', width, height)
         glViewport(0, 0, width, height)
