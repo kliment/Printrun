@@ -181,14 +181,6 @@ def sharedfile(filename):
     shared_pronterface_dir = os.path.join(DATADIR, 'pronterface')
     return lookup_file(filename, [shared_pronterface_dir])
 
-def configfile(filename):
-    '''
-    Get the full path to filename by checking in the
-    standard configuration directory (See the lookup_file
-    function's documentation for behavior).
-    '''
-    return lookup_file(filename, [os.path.expanduser("~/.printrun/"), ])
-
 def decode_utf8(s):
     """Attempt to decode a string, return the string otherwise"""
     if isinstance(s, bytes):
