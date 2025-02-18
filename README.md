@@ -245,10 +245,10 @@ ask us if you need an additional translation file that is not available jet.
 The easiest way updating our translation files is to use a free version of the tool
 Poedit (https://poedit.net/). The software is available for Linux, macOS and Windows.
 
-The translation files are already included in the distributed pre-compiled binaries
-for Windows and macOS. You need only to open the pronterface.po of the corresponding
-language folder and save the file. This will generate the needed pronterface.mo for
-a working translation.
+A set of existing translation files is already included in the distributed pre-compiled
+binaries for Windows and macOS. You need only to open the pronterface.po of the
+corresponding language folder and save the file. This will generate the needed
+pronterface.mo for a working translation.
 
 ### How to update a translation
 
@@ -283,10 +283,15 @@ Structure:
    ...
    pronterface.pot
 ```
-Copy the updated folder locale over the same folder of your Pronterface installation
-after you update a translation and restart Ponterface. The file pronterface.po is
-not needed for a functional translation but helpful, if you want to update your
-translation. Restart Pronterface after each update.
+Pronterface search for installed translation files on `/usr/share` for Linux. For
+Windows and macOS it will find the folder `.\locale` on the same location where
+the binaries are installed (where you will find them when you download the distributed
+binaries).
+
+Copy the updated folder `.\locale` over the same folder of your Pronterface
+installation after you update a translation and then restart Ponterface.
+The file pronterface.po is not needed for a functional translation but helpful,
+if you want to work on your translation.
 
 ### Providing a new or updated translation
 
