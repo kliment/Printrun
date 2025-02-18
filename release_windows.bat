@@ -44,7 +44,7 @@ rem **  Remark: Plater stand alone application is experimental only. GUI code ne
 rem **          update for closing plater window and running processes. For now you   **
 rem **          need to terminate the process manually via Task manager.			  **
 rem **                                                                                **
-rem **  Author: DivingDuck, 2025-02-06, Status: working                               **
+rem **  Author: DivingDuck, 2025-02-18, Status: working                               **
 rem **                                                                                **
 rem ************************************************************************************
 rem ************************************************************************************
@@ -196,10 +196,11 @@ rem Plater stand alone application is experimental only (See remark).
 pyinstaller --clean Plater.spec -y
 
 
-echo ********************************
-echo ****** Add language files ******
-echo ********************************
+echo **********************************************
+echo ****** Add language files and README.me ******
+echo **********************************************
 xcopy locale dist\locale\ /Y /E
+xcopy README.md	dist
 
 echo ***************************************************************
 echo ******                Batch finalizes                    ******
