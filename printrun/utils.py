@@ -37,7 +37,7 @@ def set_utf8_locale():
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not
-# found (windows)
+# found (windows and macOS)
 def install_locale(domain):
     shared_locale_dir = os.path.join(DATADIR, 'locale')
     translation = None
@@ -46,10 +46,7 @@ def install_locale(domain):
 
     if osPlatform == "Darwin":
         # improvised workaround for macOS crash with gettext.translation, see issue #1154
-        if os.path.exists(shared_locale_dir):
-            gettext.install(domain, shared_locale_dir)
-        else:
-            gettext.install(domain, './locale')
+        gettext.install(domain, './locale')
     else:
         if os.path.exists('./locale'):
             translation = gettext.translation(domain, './locale',
