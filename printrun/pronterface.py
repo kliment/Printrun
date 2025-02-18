@@ -34,7 +34,7 @@ from . import printcore
 from printrun.spoolmanager import spoolmanager_gui
 
 from .utils import install_locale, setup_logging, dosify, \
-    iconfile, configfile, format_time, format_duration, \
+    iconfile, format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
     prepare_command, check_rgb_color, check_rgba_color, compile_file, \
     write_history_to, read_history_from
@@ -199,27 +199,6 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.z_feedrate = self.settings.z_feedrate
 
         self.panel.SetBackgroundColour(self.bgcolor)
-        customdict = {}
-        try:
-            exec(compile_file(configfile("custombtn.txt")), customdict)
-            if len(customdict["btns"]):
-                if not len(self.custombuttons):
-                    try:
-                        self.custombuttons = customdict["btns"]
-                        for n in range(len(self.custombuttons)):
-                            self.cbutton_save(n, self.custombuttons[n])
-                        os.rename("custombtn.txt", "custombtn.old")
-                        rco = open("custombtn.txt", "w")
-                        rco.write(_("# I moved all your custom buttons into .pronsolerc.\n# Please don't add them here any more.\n# Backup of your old buttons is in custombtn.old\n"))
-                        rco.close()
-                    except IOError as x:
-                        logging.error(str(x))
-                else:
-                    logging.warning(_("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"))
-                    logging.warning(_("Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"))
-
-        except:
-            pass
         self.menustrip = wx.MenuBar()
         self.reload_ui()
         # disable all printer controls until we connect to a printer
