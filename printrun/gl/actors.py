@@ -112,7 +112,7 @@ class Platform:
                  circular: bool = False,
                  grid: Tuple[int, int] = (1, 10)) -> None:
         self.light = light
-        self.circular = circular
+        self.is_circular = circular
         self.width = build_dimensions[0]
         self.depth = build_dimensions[1]
         self.height = build_dimensions[2]
@@ -121,129 +121,191 @@ class Platform:
         self.zoffset = build_dimensions[5]
         self.grid = grid
 
-        self.color_grads_minor = (15 / 255, 15 / 255, 15 / 255, 0.1)
-        self.color_grads_interm = (15 / 255, 15 / 255, 15 / 255, 0.2)
-        self.color_grads_major = (15 / 255, 15 / 255, 15 / 255, 0.33)
+        self.color_minor = (15 / 255, 15 / 255, 15 / 255, 0.1)
+        self.color_interm = (15 / 255, 15 / 255, 15 / 255, 0.2)
+        self.color_major = (15 / 255, 15 / 255, 15 / 255, 0.33)
+
+        self.vertices = ()
+        self.indices = ()
+        self.colors = ()
+        self._initialise_data()
 
         self.loaded = True
 
-    def update_colour(self, bg_colour: Tuple[float, float, float]) -> None:
+    def update_colour(self, bg_color: Tuple[float, float, float]) -> None:
         '''Update the colour of the focus based on the
         luminance (brightness) of the background.'''
         # Calcualte luminance of the current background colour
-        lum = 0.299 * bg_colour[0] + 0.587 * bg_colour[1] + 0.114 * bg_colour[2]
+        lum = 0.299 * bg_color[0] + 0.587 * bg_color[1] + 0.114 * bg_color[2]
         if lum > 0.5:
             # Dark lines
-            base_colour = (64 / 255, 64 / 255, 64 / 255)
+            base_color = (64 / 255, 64 / 255, 64 / 255)
         else:
             # Bright lines
-            base_colour = (172 / 255, 172 / 255, 172 / 255)
+            base_color = (172 / 255, 172 / 255, 172 / 255)
 
-        self.color_grads_minor = (*base_colour, 0.1)
-        self.color_grads_interm = (*base_colour, 0.2)
-        self.color_grads_major = (*base_colour, 0.33)
+        self.color_minor = (*base_color, 0.1)
+        self.color_interm = (*base_color, 0.2)
+        self.color_major = (*base_color, 0.33)
 
-    def _colour(self, i: int) -> bool:
+        self._initialise_data()
+
+    def _color(self, i: float) -> tuple:
         if i % self.grid[1] == 0:
-            glColor4f(*self.color_grads_major)
-        elif i % (self.grid[1] // 2) == 0:
-            glColor4f(*self.color_grads_interm)
-        else:
-            if self.light:
-                return False
-            glColor4f(*self.color_grads_minor)
-        return True
+            return self.color_major
+        if i % (self.grid[1] // 2) == 0:
+            return self.color_interm
+        if self.light:
+            return ()
+        return self.color_minor
 
     def _get_transformation(self) -> Array:
         mat = mat4_translation(self.xoffset, self.yoffset, self.zoffset)
         return np_to_gl_mat(mat)
 
+    def _initialise_data(self):
+        if self.is_circular:
+            self._load_circular()
+        else:
+            self._load_rectangular()
+
+    def _origin_arrows(self) -> tuple[float, float, float]:
+        arrow_offset = self.width * 0.01
+        arrow_side_length = self.width * 0.015
+        arrow_height = arrow_side_length * 0.866
+
+        return (arrow_offset, arrow_side_length, arrow_height)
+
+    def _load_grid(self):
+        vertices = []
+        indices = []
+        colors = []
+        x_half = self.width / 2
+        y_half = self.depth / 2
+
+        # Grid lines in X
+        for x_val in np.arange(self.grid[0], int(math.ceil(x_half)), self.grid[0], dtype=float):
+            if self.is_circular:
+                k_val = x_val / x_half
+                y_val = y_half * math.sqrt(1 - (k_val * k_val))
+            else:
+                y_val = y_half
+
+            col = self._color(x_val)
+            if col:
+                colors.extend(4 * [col])
+                vertices.append((x_half + x_val, y_half + y_val, 0.0))
+                vertices.append((x_half + x_val, y_half - y_val, 0.0))
+                vertices.append((x_half - x_val, y_half + y_val, 0.0))
+                vertices.append((x_half - x_val, y_half - y_val, 0.0))
+
+        # Grid lines in Y
+        for y_val in np.arange(self.grid[0], int(math.ceil(y_half)), self.grid[0], dtype=float):
+            if self.is_circular:
+                k_val = y_val / y_half
+                x_val = x_half * math.sqrt(1 - (k_val * k_val))
+            else:
+                x_val = x_half
+
+            col = self._color(y_val)
+            if col:
+                colors.extend(4 * [col])
+                vertices.append((x_half + x_val, y_half + y_val, 0.0))
+                vertices.append((x_half - x_val, y_half + y_val, 0.0))
+                vertices.append((x_half + x_val, y_half - y_val, 0.0))
+                vertices.append((x_half - x_val, y_half - y_val, 0.0))
+
+        # Center lines
+        colors.extend(4 * [self.color_major])
+        vertices.append((2 * x_half, y_half, 0.0))
+        vertices.append((0.0, y_half, 0.0))
+        vertices.append((x_half, 2 * y_half, 0.0))
+        vertices.append((x_half, 0.0, 0.0))
+
+        indices.extend(range(0, len(vertices)))
+
+        return (vertices, indices, colors)
+
+    def _load_circular(self):
+        x_half = self.width / 2
+        y_half = self.depth / 2
+
+        # Grid
+        vertices, indices, colors = self._load_grid()
+
+        # Circle outline
+        for deg in range(0, 361):
+            rad = math.radians(deg)
+            colors.append(self.color_major)
+            vertices.append(((math.cos(rad) + 1) * x_half,
+                             (math.sin(rad) + 1) * y_half,
+                             0.0))
+            if deg != 360:
+                indices.extend((len(vertices) - 1, len(vertices)))
+
+        # Triangle to indicate front
+        ao, al, ah = self._origin_arrows()
+        vertices.extend(((x_half, -ao, 0.0),
+                         (x_half - al / 2, -(ao + ah), 0.0),
+                         (x_half + al / 2, -(ao + ah), 0.0)))
+        colors.extend(3 * [self.color_major])
+        idx = len(vertices)
+        indices.extend((idx - 3, idx - 2, idx - 2, idx - 1, idx - 1, idx - 3))
+
+        self.vertices = vertices
+        self.indices = indices
+        self.colors = colors
+
+    def _load_rectangular(self):
+        # Grid
+        vertices, indices, colors = self._load_grid()
+
+        # Arrows at origin point
+        ao, al, ah = self._origin_arrows()
+        op_verts = [(ao / 4, -ao, 0.0),
+                   (ao / 4 + ah, -(ao + al / 2), 0.0),
+                   (ao / 4, -(ao + al), 0.0),
+                   (-ao, ao / 4, 0.0),
+                   (-(ao + al / 2), ao / 4 + ah, 0.0),
+                   (-(ao + al), ao / 4, 0.0),
+                   (0.0, -ao, 0.0),
+                   (0.0, -(ao + al), 0.0),
+                   (-ao, 0.0, 0.0),
+                   (-(ao + al), 0.0, 0.0),
+                   # Outline
+                   (0.0, 0.0, 0.0),
+                   (0.0, self.depth, 0.0),
+                   (self.width, self.depth, 0.0),
+                   (self.width, 0.0, 0.0)]
+
+        op_cols = len(op_verts) * [self.color_major]
+
+        rel_idxs = (0, 1, 1, 2, 2, 0,
+                    3, 4, 4, 5, 5, 3,
+                    6, 7, 8, 9,
+                    10, 11, 11, 12, 12, 13, 13, 10)
+
+        abs_idxs = [i + len(vertices) for i in rel_idxs]
+
+        vertices.extend(op_verts)
+        self.vertices = vertices
+        indices.extend(abs_idxs)
+        self.indices = indices
+        colors.extend(op_cols)
+        self.colors = colors
+
     def draw(self) -> None:
         glPushMatrix()
-
         glMultMatrixd(self._get_transformation())
 
         # draw the grid
         glDisable(GL_LIGHTING)
+
         glBegin(GL_LINES)
-
-        if self.circular:  # Draw a circular grid
-            for i in np.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
-                angle = math.asin(2 * float(i) / self.width - 1)
-                x = (math.cos(angle) + 1) * self.depth / 2
-                if self._colour(int(i)):
-                    glVertex3f(float(i), self.depth - x, 0.0)
-                    glVertex3f(float(i), x, 0.0)
-
-            for i in np.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
-                angle = math.acos(2 * float(i) / self.depth - 1)
-                x = (math.sin(angle) + 1) * self.width / 2
-                if self._colour(int(i)):
-                    glVertex3f(self.width - x, float(i), 0.0)
-                    glVertex3f(x, float(i), 0.0)
-
-        else:  # Draw a rectangular grid
-            for i in np.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
-                if self._colour(int(i)):
-                    glVertex3f(float(i), 0.0, 0.0)
-                    glVertex3f(float(i), self.depth, 0.0)
-
-            for i in np.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
-                if self._colour(int(i)):
-                    glVertex3f(0, float(i), 0.0)
-                    glVertex3f(self.width, float(i), 0.0)
+        for index in self.indices:
+            glColor4f(*self.colors[index])
+            glVertex3f(*self.vertices[index])
         glEnd()
-
-        # Draw origin arrows
-        glColor4f(*self.color_grads_major)
-        arw_offset = self.width * 0.01
-        arw_side_length = self.width * 0.015
-        arw_height = arw_side_length * 0.866
-
-        if self.circular:
-            # Draw circle outline
-            glBegin(GL_LINE_LOOP)
-            for i in range(0, 360):
-                angle = math.radians(i)
-                glVertex3f((math.cos(angle) + 1) * self.width / 2,
-                           (math.sin(angle) + 1) * self.depth / 2, 0.0)
-            glEnd()
-
-            # Draw triangle to indicate front
-            glBegin(GL_LINE_LOOP)
-            glVertex3f(self.width / 2, -arw_offset, 0.0)
-            glVertex3f(self.width / 2 - arw_side_length / 2, -(arw_offset + arw_height), 0.0)
-            glVertex3f(self.width / 2 + arw_side_length / 2, -(arw_offset + arw_height), 0.0)
-            glEnd()
-
-        else:
-            # Draw origin arrows and redraw outline
-            vertices = [(arw_offset / 4, -arw_offset, 0.0),
-                        (arw_offset / 4 + arw_height,
-                         -(arw_offset + arw_side_length / 2), 0.0),
-                        (arw_offset / 4, -(arw_offset + arw_side_length), 0.0),
-                        (-arw_offset, arw_offset / 4, 0.0),
-                        (-(arw_offset + arw_side_length / 2),
-                         arw_offset / 4 + arw_height, 0.0),
-                        (-(arw_offset + arw_side_length), arw_offset / 4, 0.0),
-                        (0.0, -arw_offset, 0.0),
-                        (0.0, -(arw_offset + arw_side_length), 0.0),
-                        (-arw_offset, 0.0, 0.0),
-                        (-(arw_offset + arw_side_length), 0.0, 0.0),
-                        (0.0, 0.0, 0.0),
-                        (0.0, self.depth, 0.0),
-                        (self.width, self.depth, 0.0),
-                        (self.width, 0.0, 0.0)]
-
-            indices = [0, 1, 1, 2, 2, 0,
-                       3, 4, 4, 5, 5, 3,
-                       6, 7, 8, 9,
-                       10, 11, 11, 12, 12, 13, 13, 10]  # Outline
-
-            glBegin(GL_LINES)
-            for index in indices:
-                glVertex3f(*vertices[index])
-            glEnd()
 
         glPopMatrix()
         glEnable(GL_LIGHTING)
