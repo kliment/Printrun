@@ -76,6 +76,15 @@ def triangulate_box(i1: int, i2: int, i3: int, i4: int,
     return [i1, i2, j2, j2, j1, i1, i2, i3, j3, j3, j2, i2,
             i3, i4, j4, j4, j3, i3, i4, i1, j1, j1, j4, i4]
 
+def high_luminance(bg_color: Tuple[float, float, float]) -> bool:
+    '''Returns True (bright) or False (dark) based on the
+    luminance (brightness) of the background.'''
+    # Calcualte luminance of the current background color
+    lum = 0.299 * bg_color[0] + 0.587 * bg_color[1] + 0.114 * bg_color[2]
+    if lum > 0.5:  # Bright background
+        return True
+    return False
+
 
 class BoundingBox:
     """
@@ -107,6 +116,9 @@ class Platform:
     Platform grid on which models are placed.
     """
 
+    COLOR_LIGHT = (172 / 255, 172 / 255, 172 / 255)
+    COLOR_DARK = (64 / 255, 64 / 255, 64 / 255)
+
     def __init__(self, build_dimensions: Build_Dims,
                  light: bool = False,
                  circular: bool = False,
@@ -121,9 +133,9 @@ class Platform:
         self.zoffset = build_dimensions[5]
         self.grid = grid
 
-        self.color_minor = (15 / 255, 15 / 255, 15 / 255, 0.1)
-        self.color_interm = (15 / 255, 15 / 255, 15 / 255, 0.2)
-        self.color_major = (15 / 255, 15 / 255, 15 / 255, 0.33)
+        self.color_minor = (*self.COLOR_DARK, 0.1)
+        self.color_interm = (*self.COLOR_DARK, 0.2)
+        self.color_major = (*self.COLOR_DARK, 0.33)
 
         self.vertices = ()
         self.indices = ()
@@ -133,16 +145,12 @@ class Platform:
         self.loaded = True
 
     def update_colour(self, bg_color: Tuple[float, float, float]) -> None:
-        '''Update the colour of the focus based on the
+        '''Update the color of the platform grid based on the
         luminance (brightness) of the background.'''
-        # Calcualte luminance of the current background colour
-        lum = 0.299 * bg_color[0] + 0.587 * bg_color[1] + 0.114 * bg_color[2]
-        if lum > 0.5:
-            # Dark lines
-            base_color = (64 / 255, 64 / 255, 64 / 255)
+        if high_luminance(bg_color):
+            base_color = self.COLOR_DARK  # Dark lines
         else:
-            # Bright lines
-            base_color = (172 / 255, 172 / 255, 172 / 255)
+            base_color = self.COLOR_LIGHT  # Bright lines
 
         self.color_minor = (*base_color, 0.1)
         self.color_interm = (*base_color, 0.2)
@@ -316,22 +324,22 @@ class MouseCursor:
     Cursor where the mouse should be in 3D space.
     """
     def __init__(self) -> None:
-        self.colour = (225 / 255, 0 / 255, 45 / 255, 1.0)  # Red
         self.position = (0.0, 0.0, 0.0)
         self.vertices = []
         self.indices = []
-        self._prepare_data()
+        self.color = (225 / 255, 0 / 255, 45 / 255, 1.0)  # Red
+        self._initialise_data()
 
     def update_position(self, position_3d: Tuple[float, float, float]) -> None:
         self.position = position_3d
 
-    def _prepare_data(self) -> None:
+    def _initialise_data(self) -> None:
         self.vertices, self.indices = self._circle()
         #self.vertices, self.indices = self._rectangle()
 
     def _circle(self) -> Tuple[List[Tuple[float, float, float]], List[int]]:
         radius = 2.0
-        segments = 24  #  Resolution of the circle.
+        segments = 32  #  Resolution of the circle.
         z_value = 0.02
         vertices = [(0.0, 0.0, z_value),  # this is the center point
                     (0.0, radius, z_value)]  # this is first point on the top
@@ -377,7 +385,7 @@ class MouseCursor:
 
         glDisable(GL_CULL_FACE)
 
-        glColor4f(*self.colour)
+        glColor4f(*self.color)
         glNormal3f(0, 0, 1)
 
         glBegin(GL_TRIANGLES)
@@ -393,14 +401,18 @@ class Focus:
     """
     Outline around the currently active OpenGL panel.
     """
+
+    COLOR_LIGHT = (205 / 255, 205 / 255, 205 / 255)
+    COLOR_DARK = (15 / 255, 15 / 255, 15 / 255)
+
     def __init__(self, camera: Camera) -> None:
-        self.colour = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Black Transparent
         self.camera = camera
         self.vertices = ()
         self.indices = ()
-        self._prepare_data()
+        self.color = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Black Transparent
+        self._initialise_data()
 
-    def _prepare_data(self) -> None:
+    def _initialise_data(self) -> None:
         # Starts at the lower left corner, x, y
         offset = 2.0 * self.camera.display_ppi_factor
         self.vertices = ((offset, offset, 0.0),
@@ -410,17 +422,15 @@ class Focus:
         self.indices = (0, 1, 1, 2, 2, 3, 3, 0)
 
     def update_size(self) -> None:
-        self._prepare_data()
+        self._initialise_data()
 
-    def update_colour(self, bg_colour: Tuple[float, float, float]) -> None:
-        '''Update the colour of the focus based on the
+    def update_colour(self, bg_color: Tuple[float, float, float]) -> None:
+        '''Update the color of the focus based on the
         luminance (brightness) of the background.'''
-        # Calcualte luminance of the current background colour
-        lum = 0.299 * bg_colour[0] + 0.587 * bg_colour[1] + 0.114 * bg_colour[2]
-        if lum > 0.5:
-            self.colour = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Dark Transparent
+        if high_luminance(bg_color):
+            self.color = (*self.COLOR_DARK, 0.6)  # Dark Transparent
         else:
-            self.colour = (205 / 255, 205 / 255, 205 / 255, 0.4)  # Light Transparent
+            self.color = (*self.COLOR_LIGHT, 0.4)  # Light Transparent
 
     def draw(self) -> None:
         self.camera.create_pseudo2d_matrix()
@@ -428,7 +438,7 @@ class Focus:
         glDisable(GL_LIGHTING)
         # Draw a stippled line around the vertices
         glLineStipple(1, 0xff00)
-        glColor4f(*self.colour)
+        glColor4f(*self.color)
         glEnable(GL_LINE_STIPPLE)
 
         glBegin(GL_LINES)
@@ -452,8 +462,8 @@ class CuttingPlane:
         self.depth = build_dimensions[1]
         self.height = build_dimensions[2]
 
-        self.colour = (0 / 255, 229 / 255, 38 / 255, 0.3)  # Light Green
-        self.colour_outline = (0 / 255, 204 / 255, 38 / 255, 1.0)  # Green
+        self.color = (0 / 255, 229 / 255, 38 / 255, 0.3)  # Light Green
+        self.color_outline = (0 / 255, 204 / 255, 38 / 255, 1.0)  # Green
         self.axis = ''
         self.dist = 0.0
         self.cutting_direction = -1
@@ -500,7 +510,7 @@ class CuttingPlane:
         glDisable(GL_CULL_FACE)
         # Draw the plane
         glBegin(GL_TRIANGLES)
-        glColor4f(*self.colour)
+        glColor4f(*self.color)
         glNormal3f(0, 0, self.cutting_direction)
         glVertex3f(self.plane_width, self.plane_height, 0)
         glVertex3f(0, self.plane_height, 0)
@@ -517,7 +527,7 @@ class CuttingPlane:
         glLineWidth(4.0)
         # Draw the outline on the plane
         glBegin(GL_LINE_LOOP)
-        glColor4f(*self.colour_outline)
+        glColor4f(*self.color_outline)
         glVertex3f(0, 0, 0)
         glVertex3f(0, self.plane_height, 0)
         glVertex3f(self.plane_width, self.plane_height, 0)
@@ -579,7 +589,7 @@ class MeshModel:
     meshes such as .stl, .obj, .3mf etc.
     """
     def __init__(self, model: stl) -> None:
-        self.colour = (77 / 255, 178 / 255, 128 / 255, 1.0)  # Greenish
+        self.color = (77 / 255, 178 / 255, 128 / 255, 1.0)  # Greenish
         # Every model is placed into it's own batch.
         # This is not ideal, but good enough for the moment.
         self.batch = Batch()
@@ -606,7 +616,7 @@ class MeshModel:
                                                 model.indices,
                                                 ('v3f/static', vertices),
                                                 ('n3f/static', normals),
-                                                ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
+                                                ('c3f/static', self.color[:-1] * (len(vertices) // 3)))
         """
 
         self.vl = self.batch.add(len(vertices) // 3,
@@ -614,7 +624,7 @@ class MeshModel:
                                 None,  # group
                                 ('v3f/static', vertices),
                                 ('n3f/static', normals),
-                                ('c3f/static', self.colour[:-1] * (len(vertices) // 3)))
+                                ('c3f/static', self.color[:-1] * (len(vertices) // 3)))
 
         model.batch = self.batch  # type: ignore
 
