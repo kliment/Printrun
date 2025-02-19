@@ -77,7 +77,7 @@ class wxGLPanel(BASE_CLASS):
     # G-Code models and stl models use different lightscene
     gcode_lights = True
     wheelTimestamp = None
-    show_fps = True
+    show_frametime = True
 
     def __init__(self, parent, pos: wx.Point = wx.DefaultPosition,
                  size: wx.Size = wx.DefaultSize, style = 0,
@@ -115,14 +115,14 @@ class wxGLPanel(BASE_CLASS):
         self.keyinput = KeyboardInput(self.canvas, self.zoom_to_center,
                                       self.fit, self.resetview)
 
-        if self.show_fps:
+        if self.show_frametime:
             self.frametime = FrameTime()
-            self.fps_counter = wx.StaticText(self, -1, '')
+            self.frametime_counter = wx.StaticText(self, -1, '')
             font = wx.Font(12, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
                            encoding = wx.FONTENCODING_DEFAULT)
-            self.fps_counter.SetFont(font)
-            self.fps_counter.SetForegroundColour(wx.WHITE)
-            self.fps_counter.SetBackgroundColour(wx.Colour('DIM GREY'))
+            self.frametime_counter.SetFont(font)
+            self.frametime_counter.SetForegroundColour(wx.WHITE)
+            self.frametime_counter.SetBackgroundColour(wx.Colour('DIM GREY'))
 
         ctx_attrs = glcanvas.GLContextAttrs()
         # FIXME: Pronterface supports only OpenGL 2.1 and compability mode at the moment
@@ -345,7 +345,7 @@ class wxGLPanel(BASE_CLASS):
 
     def DrawCanvas(self) -> None:
         """Draw the window."""
-        if self.show_fps:
+        if self.show_frametime:
             self.frametime.start_frame()
         assert self.pygletcontext is not None
         self.pygletcontext.set_current()
@@ -359,9 +359,9 @@ class wxGLPanel(BASE_CLASS):
 
         self.canvas.SwapBuffers()
 
-        if self.show_fps:
+        if self.show_frametime:
             self.frametime.end_frame()
-            self.fps_counter.SetLabel(self.frametime.get())
+            self.frametime_counter.SetLabel(self.frametime.get())
 
     def transform_and_draw(self, model: Union['GCObject', stl], draw_function: Callable[[], None]) -> None:
         '''Apply transformations to the model and then
