@@ -29,8 +29,8 @@ from pyglet.gl import GLfloat, GLuint, \
                       glEnable, glDisable, glGetFloatv, glLineWidth, \
                       glDrawArrays, glDrawRangeElements, \
                       GL_VERTEX_ARRAY, GL_ELEMENT_ARRAY_BUFFER, \
-                      GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
-                      GL_ARRAY_BUFFER, GL_STATIC_DRAW, GL_LINES, GL_FLOAT, \
+                      GL_UNSIGNED_INT, GL_FLOAT, GL_TRIANGLES, GL_LINES, \
+                      GL_ARRAY_BUFFER, GL_STATIC_DRAW,\
                       GL_CULL_FACE, GL_LINE_SMOOTH, GL_LINE_WIDTH
 
 # those are legacy calls which need to be replaced
@@ -192,7 +192,8 @@ class Platform:
         y_half = self.depth / 2
 
         # Grid lines in X
-        for x_val in np.arange(self.grid[0], int(math.ceil(x_half)), self.grid[0], dtype=float):
+        for x_val in np.arange(self.grid[0], int(math.ceil(x_half)),
+                               self.grid[0], dtype=float):
             if self.is_circular:
                 k_val = x_val / x_half
                 y_val = y_half * math.sqrt(1 - (k_val * k_val))
@@ -208,7 +209,8 @@ class Platform:
                 vertices.append((x_half - x_val, y_half - y_val, 0.0))
 
         # Grid lines in Y
-        for y_val in np.arange(self.grid[0], int(math.ceil(y_half)), self.grid[0], dtype=float):
+        for y_val in np.arange(self.grid[0], int(math.ceil(y_half)),
+                               self.grid[0], dtype=float):
             if self.is_circular:
                 k_val = y_val / y_half
                 x_val = x_half * math.sqrt(1 - (k_val * k_val))
@@ -386,7 +388,7 @@ class MouseCursor:
         glDisable(GL_CULL_FACE)
 
         glColor4f(*self.color)
-        glNormal3f(0, 0, 1)
+        glNormal3f(0.0, 0.0, 1.0)
 
         glBegin(GL_TRIANGLES)
         for index in self.indices:
@@ -461,29 +463,39 @@ class CuttingPlane:
         self.width = build_dimensions[0]
         self.depth = build_dimensions[1]
         self.height = build_dimensions[2]
-
-        self.color = (0 / 255, 229 / 255, 38 / 255, 0.3)  # Light Green
-        self.color_outline = (0 / 255, 204 / 255, 38 / 255, 1.0)  # Green
+        self.cutplane_sizes = {"x": (self.depth, self.height),
+                                    "y": (self.width, self.height),
+                                    "z": (self.width, self.depth)}
         self.axis = ''
         self.dist = 0.0
         self.cutting_direction = -1
         self.plane_width = 0.0
         self.plane_height = 0.0
 
-    def update(self, axis: str, cutting_direction: int, dist: float) -> None:
+        self.vertices = ()
+        self.indices = ()
+        self.color = (0 / 255, 229 / 255, 38 / 255, 0.3)  # Light Green
+        self.color_outline = (0 / 255, 204 / 255, 38 / 255, 1.0)  # Green
+
+    def _initialise_data(self) -> None:
+        self.vertices = ((self.plane_width, self.plane_height, 0.0),
+                         (0.0, self.plane_height, 0.0),
+                         (0.0, 0.0, 0.0),
+                         (self.plane_width, 0.0, 0.0))
+
+        self.indices = (0, 1, 2, 3, 0, 2,
+                        2, 1, 1, 0, 0, 3, 3, 2)
+
+    def update_plane(self, axis: str, cutting_direction: int) -> None:
         self.axis = axis
         self.cutting_direction = cutting_direction
-        self.dist = dist
-        self._set_plane_dimensions(self.axis)
+        self.plane_width, self.plane_height = self.cutplane_sizes[axis]
+        self._initialise_data()
 
-    def _set_plane_dimensions(self, cutting_axis: str) -> None:
-        cutting_plane_sizes = {"x": (self.depth, self.height),
-                               "y": (self.width, self.height),
-                               "z": (self.width, self.depth)}
-        self.plane_width, self.plane_height = cutting_plane_sizes[cutting_axis]
+    def update_position(self, dist: float) -> None:
+        self.dist = dist
 
     def _get_transformation(self) -> Array:
-
         if self.axis == "x":
             rm1 = mat4_rotation(0.0, 1.0, 0.0, 90.0)
             rm2 = mat4_rotation(0.0, 0.0, 1.0, 90.0)
@@ -506,32 +518,29 @@ class CuttingPlane:
 
         glPushMatrix()
         glMultMatrixd(self._get_transformation())
-
         glDisable(GL_CULL_FACE)
         # Draw the plane
-        glBegin(GL_TRIANGLES)
         glColor4f(*self.color)
-        glNormal3f(0, 0, self.cutting_direction)
-        glVertex3f(self.plane_width, self.plane_height, 0)
-        glVertex3f(0, self.plane_height, 0)
-        glVertex3f(0, 0, 0)
-        glVertex3f(self.plane_width, 0, 0)
-        glVertex3f(self.plane_width, self.plane_height, 0)
-        glVertex3f(0, 0, 0)
+        glNormal3f(0.0, 0.0, self.cutting_direction)
+
+        glBegin(GL_TRIANGLES)
+        for index in self.indices[:6]:
+            glVertex3f(*self.vertices[index])
         glEnd()
+
         glEnable(GL_CULL_FACE)
         glEnable(GL_LINE_SMOOTH)
+
         # Save the current linewidth and insert a new value
         orig_linewidth = (GLfloat)()
         glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
         glLineWidth(4.0)
         # Draw the outline on the plane
-        glBegin(GL_LINE_LOOP)
         glColor4f(*self.color_outline)
-        glVertex3f(0, 0, 0)
-        glVertex3f(0, self.plane_height, 0)
-        glVertex3f(self.plane_width, self.plane_height, 0)
-        glVertex3f(self.plane_width, 0, 0)
+
+        glBegin(GL_LINES)
+        for index in self.indices[6:]:
+            glVertex3f(*self.vertices[index])
         glEnd()
         # Restore the original linewidth
         glLineWidth(orig_linewidth)
@@ -594,9 +603,9 @@ class MeshModel:
         # This is not ideal, but good enough for the moment.
         self.batch = Batch()
         self.vl = None
-        self._fill_batch(model)
+        self._initialise_data(model)
 
-    def _fill_batch(self, model: stl) -> None:
+    def _initialise_data(self, model: stl) -> None:
         # Create the vertex and normal arrays.
         vertices = []
         normals = []

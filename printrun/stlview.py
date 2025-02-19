@@ -161,7 +161,9 @@ class StlViewPanel(wxGLPanel):
 
             if dist is not None:
                 direction = self.parent.cutting_direction
-                self.cutting_plane.update(axis, direction, dist)
+                # TODO: Check if plane has even changed (use buttonEvent?)
+                self.cutting_plane.update_plane(axis, direction)
+                self.cutting_plane.update_position(dist)
                 self.cutting_plane.draw()
 
     # ==========================================================================
