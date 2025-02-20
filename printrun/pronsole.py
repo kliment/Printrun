@@ -59,7 +59,7 @@ try:
 except ImportError:
     READLINE = False  # neither readline module is available
 
-tempreading_exp = re.compile('\\bT\d*:')
+tempreading_exp = re.compile(r'\\bT\d*:')
 
 REPORT_NONE = 0
 REPORT_POS = 1
@@ -199,7 +199,7 @@ class pronsole(cmd.Cmd):
         self.history_file = os.path.join(self.cache_dir,"history")
         self.config_dir = Path(user_config_dir("Printrun"))
         self.data_dir = os.path.join(user_data_dir("Printrun"))
-        self.lineignorepattern=re.compile("ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
+        self.lineignorepattern = re.compile(r"ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -402,9 +402,9 @@ class pronsole(cmd.Cmd):
             return
         else:
             if self.processing_rc:
-                logging.debug(f"Ignored configuration command '{l}'")
+                logging.debug(_("Ignored configuration command '{}'" .format(l)))
             else:
-                self.log(_(f"Unknown command '{l}'"))
+                self.log(_("Unknown command '{}'".format(l)))
 
     def do_exit(self, l):
         if self.p.printing and l != "force":
@@ -1141,7 +1141,7 @@ Disables all heaters upon exit."))
                 self.log(_("Files on SD card:"))
                 self.log("\n".join(self.sdfiles))
         elif self.sdlisting:
-            self.sdfiles.append(re.sub(" \d+$","",line.strip().lower()))
+            self.sdfiles.append(re.sub(r" \d+$","",line.strip().lower()))
 
     def _do_ls(self, echo):
         # FIXME: this was 2, but I think it should rather be 0 as in do_upload
