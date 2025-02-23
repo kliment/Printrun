@@ -135,6 +135,7 @@ def lookup_file(filename, folders=None, locations=None):
     -------
     A string containing the full path if found, or the name of the file if not
     found.
+
     """
 
     script_location = Path(sys.argv[0]).resolve().parent
@@ -145,7 +146,7 @@ def lookup_file(filename, folders=None, locations=None):
         Path(sys.prefix) / "share",    # Global share
     ]
     if getattr(sys, "frozen", False):  # Local to pyinstaller bundle
-        dirs += Path(getattr(sys, "_MEIPASS")).resolve()
+        dirs += [Path(getattr(sys, "_MEIPASS")).resolve()]
     if locations is not None:
         dirs += locations
 
