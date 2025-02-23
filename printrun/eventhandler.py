@@ -26,8 +26,7 @@ class PrinterEventHandler:
     Event method `on_send` will be called at the same time and with the same
     arguments as the printcore `send` callback function. See
     `printrun.printcore.Callback`. Same logic applies to all other methods
-    but for `on_preprintsend`, `on_init`, `on_connect` and
-    `on_disconnect`. See below.
+    but for `on_init`, `on_connect` and `on_disconnect`. See below.
 
     """
     def __init__(self):
@@ -70,26 +69,7 @@ class PrinterEventHandler:
     def on_layerchange(self, layer):
         pass
 
-    def on_preprintsend(self, gline, index, mainqueue):
-        """Called before sending each command of a print.
-
-        This event is only triggered on lines sent while a print is ongoing.
-        See `printrun.printcore.printcore.startprint`.
-
-        Parameters
-        ----------
-        gline : Line
-            The `printrun.gcoder.Line` object containing the line of G-code to
-            be sent.
-        index : int
-            Index of this `gline` within `mainqueue`.
-        mainqueue : GCode
-            A `printrun.gcoder.GCode` object with the current queue of
-            commands being processed.
-            See `printrun.printcore.printcore.mainqueue`.
-
-        """
-        # TODO[v3]: Rework to match callback function arguments?
+    def on_printpresend(self, gline, next_gline, index):
         pass
 
     def on_printsend(self, gline):

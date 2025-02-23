@@ -131,6 +131,7 @@ class printcore():
         self.callback = Callback()
         self.callback.hostcommand = self._host_command_cb
         self.callback.error = self._error_cb
+
         # TODO[v3]: Remove these attributes kept for backwards compatibility
         self.process_host_command = None
         self.tempcb = None  # impl (wholeline)
@@ -143,6 +144,7 @@ class printcore():
         self.startcb = None  # impl ()
         self.endcb = None  # impl ()
         self.onlinecb = None  # impl ()
+
         self.loud = False  # emit sent and received lines to terminal
         self.tcp_streaming_mode = False
         self.greetings = ['start', 'Grbl ']
@@ -598,20 +600,13 @@ class printcore():
                 (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
                     self._callback('layerchange', layer)
-            for handler in self.event_handler:
-                # TODO[v3]: Unify arguments of callback and envent handler
-                try: handler.on_preprintsend(gline, self.queueindex, self.mainqueue)
-                except: logging.error(traceback.format_exc())
             if self.mainqueue.has_index(self.queueindex + 1):
                 (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
                 next_gline = self.mainqueue.all_layers[next_layer][next_line]
             else:
                 next_gline = None
-            if self.preprintsendcb:
-                # TODO[v3]: Unify arguments of callback and envent handler
-                gline = self.preprintsendcb(gline, next_gline)
-            else:
-                gline = self.callback.preprintsend(gline, next_gline)
+            gline = self._callback('printpresend', gline, next_gline,
+                                   self.queueindex)
             if gline is None:
                 self.queueindex += 1
                 self.clear = True
@@ -675,37 +670,55 @@ class printcore():
         #          the callback or event function
 
         # Call events from each event-handler
+        # TODO[v3]: Remove code kept for backwards compatibility
         for handler in self.event_handler:
-            try: event = getattr(handler, f"on_{name}")
-            except AttributeError: continue
-            try: event(*args)
-            except Exception:
-                logging.error(f"'on_{name}' handler failed with:\n"
-                              f"{traceback.format_exc()}")
+            if name == 'printpresend' and hasattr(handler, 'on_preprintsend'):
+                self._preprintsend_event(handler, *args)
+            else:
+                try: event = getattr(handler, f"on_{name}")
+                except AttributeError: continue
+                try:
+                    event(*args)
+                except Exception:
+                    logging.error(f"'on_{name}' handler failed with:\n"
+                                  f"{traceback.format_exc()}")
 
-        # TODO[v3]: Remove this code
-        # Invoke the relevant old callback function for backwards compatibility
+        # Invoke the relevant callback function
+        # TODO[v3]: Remove code kept for backwards compatibility
         if name == 'hostcommand' and self.process_host_command is not None:
             logging.warning("Function `printcore.printcore.process_host_command` is now deprecated.")
             logging.warning("`printcore.Callback.hostcommand` shall be used instead.")
-            return self.process_host_command(*args)
+            callback = self.process_host_command
+        elif name == 'printpresend' and self.preprintsendcb is not None:
+            callback = self._preprintsend_cb
+        elif (hasattr(self, f"{name}cb") and
+              ((old_callback := getattr(self, f"{name}cb")) is not None)):
+            logging.warning(f"Function `printcore.printcore.{name}cb` is now deprecated.")
+            logging.warning(f"`printcore.Callback.{name}` shall be used instead.")
+            callback = old_callback
         else:
-            try: callback = getattr(self, f"{name}cb")
-            except AttributeError: pass
-            else:
-                if callback is not None:
-                    logging.warning(f"Function `printcore.printcore.{name}cb` is now deprecated.")
-                    logging.warning(f"`printcore.Callback.{name}` shall be used instead.")
-                    try: return callback(*args)
-                    except Exception: logging.error(traceback.format_exc())
-
-        # Invoke the relevant callback function
-        try: callback = getattr(self.callback, f"{name}")
-        except AttributeError: return None
-        try: return callback(*args)
+            try: callback = getattr(self.callback, f"{name}")
+            except AttributeError: return None
+        try:
+            return callback(*args)
         except Exception:
             logging.error(f"'{name}' callback failed with:\n"
                           f"{traceback.format_exc()}")
+
+    def _preprintsend_event(self, handler, gline, next_gline, index):
+        # TODO[v3]: Remove this function kept for backwards compatibility
+        logging.warning("Function `eventhandler.PrinterEventHandler.on_preprintsend` is now deprecated.")
+        logging.warning("`eventhandler.PrinterEventHandler.on_printpresend` shall be used instead.")
+        try: handler.on_preprintsend(gline, index, self.mainqueue)
+        except Exception:
+            logging.error(f"'on_preprintsend' handler failed with:\n"
+                          f"{traceback.format_exc()}")
+
+    def _preprintsend_cb(self, gline, next_gline, index):
+        # TODO[v3]: Remove this function kept for backwards compatibility
+        logging.warning("Function `printcore.printcore.preprintsendcb` is now deprecated.")
+        logging.warning("`printcore.Callback.printpresend` shall be used instead.")
+        return self.preprintsendcb(gline, next_gline)
 
 
 class Callback():
@@ -777,7 +790,7 @@ class Callback():
         """Called when printer gets online."""
         pass
 
-    def preprintsend(self, gline, next_gline):
+    def printpresend(self, gline, next_gline, index):
         """Called before sending each command of a print.
 
         This function is called right before a line is sent and the line
@@ -796,6 +809,9 @@ class Callback():
         next_gline : Line
             The `printrun.gcoder.Line` object containing the line of G-code to
             be sent after the current `gline`.
+        index : int
+            Index of this `gline` within `mainqueue`.
+            See `printrun.printcore.printcore.mainqueue`.
 
         Returns
         -------
