@@ -30,7 +30,7 @@ import traceback
 import re
 from pathlib import Path
 
-from platformdirs import user_cache_dir, user_config_dir, user_data_dir
+import platformdirs
 from serial import SerialException
 
 from . import printcore
@@ -195,10 +195,11 @@ class pronsole(cmd.Cmd):
                            "online": "%(bold)s%(green)s%(port)s%(white)s %(extruder_temp_fancy)s%(progress_fancy)s>%(normal)s "}
         self.spool_manager = spoolmanager.SpoolManager(self)
         self.current_tool = 0   # Keep track of the extruder being used
-        self.cache_dir = os.path.join(user_cache_dir("Printrun"))
-        self.history_file = os.path.join(self.cache_dir,"history")
-        self.config_dir = Path(user_config_dir("Printrun"))
-        self.data_dir = os.path.join(user_data_dir("Printrun"))
+        self.config_dir = Path(platformdirs.user_config_dir("Printrun"))
+        self.cache_dir = Path(platformdirs.user_cache_dir("Printrun"))
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.history_file = self.cache_dir / "history"
+        self.history_file.touch(exist_ok=True)
         self.lineignorepattern = re.compile(r"ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
 
     #  --------------------------------------------------------------
@@ -229,13 +230,7 @@ class pronsole(cmd.Cmd):
             self.old_completer = readline.get_completer()
             readline.set_completer(self.complete)
             readline.parse_and_bind(self.completekey + ": complete")
-            history = (self.history_file)
-            if not os.path.exists(history):
-                if not os.path.exists(self.cache_dir):
-                    os.makedirs(self.cache_dir)
-                history = os.path.join(self.cache_dir, "history")
-            if os.path.exists(history):
-                readline.read_history_file(history)
+            readline.read_history_file(self.history_file)
         try:
             if intro is not None:
                 self.intro = intro
@@ -627,7 +622,7 @@ Disables all heaters upon exit."))
         self.rc_file = rc_file.expanduser().resolve()
         self.log(f"Loading config file '{self.rc_file}'")
         try:
-            with self.rc_file.open(mode="r", encoding="utf-8") as rc:
+            with self.rc_file.open("r", encoding="utf-8") as rc:
                 for rc_cmd in rc:
                     if not rc_cmd.lstrip().startswith("#"):
                         logging.debug(rc_cmd.rstrip())
@@ -643,7 +638,7 @@ Disables all heaters upon exit."))
 
     def load_default_rc(self):
         # Check if a configuration file exists in an "old" location,
-        # if not, use the "new" location provided by appdirs
+        # if not, use the "new" location provided by platformdirs
         for f in '~/.pronsolerc', '~/printrunconf.ini':
             old_rc = Path(f).expanduser()
             if old_rc.exists():
@@ -680,50 +675,41 @@ Disables all heaters upon exit."))
             (e.g. 'macro foo move x 10').
 
         """
-        rci, rco = None, None
         if definition != "" and not definition.endswith("\n"):
             definition += "\n"
         try:
+            configcache = self.cache_dir / self.rc_file.name
+            configcachebak = Path(str(configcache) + "~bak")
+            configcachenew = Path(str(configcache) + "~new")
+            shutil.copy(self.rc_file, configcachebak)
             written = False
-            if self.rc_file.exists():
-                if not os.path.exists(self.cache_dir):
-                    os.makedirs(self.cache_dir)
-                configcache = os.path.join(self.cache_dir, self.rc_file.name)
-                configcachebak = configcache + "~bak"
-                configcachenew = configcache + "~new"
-                shutil.copy(self.rc_file, configcachebak)
-                rci = codecs.open(configcachebak, "r", "utf-8")
-            rco = codecs.open(configcachenew, "w", "utf-8")
-            if rci is not None:
-                overwriting = False
-                for rc_cmd in rci:
-                    l = rc_cmd.rstrip()
-                    ls = l.lstrip()
-                    ws = l[:len(l) - len(ls)]  # just leading whitespace
-                    if overwriting and len(ws) == 0:
-                        overwriting = False
-                    if (not written and key != "" and rc_cmd.startswith(key)
-                        and (rc_cmd + "\n")[len(key)].isspace()):
-                        overwriting = True
-                        written = True
+            with configcachebak.open("r", encoding="utf-8") as rci:
+                with configcachenew.open("w", encoding="utf-8") as rco:
+                    overwriting = False
+                    for rc_cmd in rci:
+                        l = rc_cmd.rstrip()
+                        ls = l.lstrip()
+                        ws = l[:len(l) - len(ls)]  # just leading whitespace
+                        if overwriting and len(ws) == 0:
+                            overwriting = False
+                        if (not written and key != ""
+                            and rc_cmd.startswith(key)
+                            and (rc_cmd + "\n")[len(key)].isspace()):
+                            overwriting = True
+                            written = True
+                            rco.write(definition)
+                        if not overwriting:
+                            rco.write(rc_cmd)
+                            if not rc_cmd.endswith("\n"): rco.write("\n")
+                    if not written:
                         rco.write(definition)
-                    if not overwriting:
-                        rco.write(rc_cmd)
-                        if not rc_cmd.endswith("\n"): rco.write("\n")
-            if not written:
-                rco.write(definition)
-            if rci is not None:
-                rci.close()
-            rco.close()
             shutil.move(configcachenew, self.rc_file)
             # if definition != "":
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
             # else:
             #    self.log("Removed '"+key+"' from '"+self.rc_filename+"'")
         except Exception as e:
-            self.logError(_("Saving failed for "), key + ":", str(e))
-        finally:
-            del rci, rco
+            self.logError(_("Saving failed for "), key + " : ", str(e))
 
     #  --------------------------------------------------------------
     #  Configuration update callbacks
