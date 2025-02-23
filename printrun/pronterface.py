@@ -2079,7 +2079,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             self.recvlisteners.remove(self.listfiles)
             wx.CallAfter(self.filesloaded)
         elif self.sdlisting:
-            self.sdfiles.append(re.sub(" \d+$", "", line.strip().lower()))  # NOQA
+            self.sdfiles.append(re.sub(r" \d+$", "", line.strip().lower()))  # NOQA
 
     def waitforsdresponse(self, l):
         if "file.open failed" in l:

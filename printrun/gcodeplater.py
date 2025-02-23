@@ -45,8 +45,8 @@ def gcoder_write(self, f, line, store = False):
     self.append(line, store = store)
 
 
-rewrite_exp = re.compile("(%s)" % "|".join(["X([-+]?[0-9]*\.?[0-9]*)",
-                                            "Y([-+]?[0-9]*\.?[0-9]*)"]))
+rewrite_exp = re.compile("(%s)" % "|".join([r"X([-+]?[0-9]*\.?[0-9]*)",
+                                            r"Y([-+]?[0-9]*\.?[0-9]*)"]))
 
 def rewrite_gline(centeroffset, gline, cosr, sinr):
     if gline.is_move and (gline.x is not None or gline.y is not None):
