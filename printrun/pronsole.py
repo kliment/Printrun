@@ -683,27 +683,26 @@ Disables all heaters upon exit."))
             configcachenew = Path(str(configcache) + "~new")
             shutil.copy(self.rc_file, configcachebak)
             written = False
-            with (
-                configcachebak.open("r", encoding="utf-8") as rci,
-                configcachenew.open("w", encoding="utf-8") as rco
-            ):
-                overwriting = False
-                for rc_cmd in rci:
-                    l = rc_cmd.rstrip()
-                    ls = l.lstrip()
-                    ws = l[:len(l) - len(ls)]  # just leading whitespace
-                    if overwriting and len(ws) == 0:
-                        overwriting = False
-                    if (not written and key != "" and rc_cmd.startswith(key)
-                        and (rc_cmd + "\n")[len(key)].isspace()):
-                        overwriting = True
-                        written = True
+            with configcachebak.open("r", encoding="utf-8") as rci:
+                with configcachenew.open("w", encoding="utf-8") as rco:
+                    overwriting = False
+                    for rc_cmd in rci:
+                        l = rc_cmd.rstrip()
+                        ls = l.lstrip()
+                        ws = l[:len(l) - len(ls)]  # just leading whitespace
+                        if overwriting and len(ws) == 0:
+                            overwriting = False
+                        if (not written and key != ""
+                            and rc_cmd.startswith(key)
+                            and (rc_cmd + "\n")[len(key)].isspace()):
+                            overwriting = True
+                            written = True
+                            rco.write(definition)
+                        if not overwriting:
+                            rco.write(rc_cmd)
+                            if not rc_cmd.endswith("\n"): rco.write("\n")
+                    if not written:
                         rco.write(definition)
-                    if not overwriting:
-                        rco.write(rc_cmd)
-                        if not rc_cmd.endswith("\n"): rco.write("\n")
-                if not written:
-                    rco.write(definition)
             shutil.move(configcachenew, self.rc_file)
             # if definition != "":
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
