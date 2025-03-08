@@ -63,8 +63,7 @@ def mock_socket(test, read_function=slow_printer):
 
 def add_mocked_handler(core):
     """Add a fake PrinterEventHandler to a printcore instance"""
-    mocked_handler = mock.create_autospec(
-        spec=eventhandler.PrinterEventHandler)
+    mocked_handler = mock.create_autospec(spec=CustomHandler)
     core.addEventHandler(mocked_handler)
     return mocked_handler
 
@@ -795,3 +794,10 @@ class TestListenThread(unittest.TestCase):
         self.printer_answer = DEFAULT_ANSWER.encode()
         wait_printer_cycles(2)
         self.core.disconnect()
+
+
+class CustomHandler(eventhandler.PrinterEventHandler):
+    # Dummy implementation of PrinterEventHandler to mimic old implementations
+    # that still include the now deprecated `on_preprintsend` function
+    def on_preprintsend(self, gline, index, mainqueue):
+        pass
