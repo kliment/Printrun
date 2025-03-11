@@ -74,8 +74,6 @@ class wxGLPanel(BASE_CLASS):
 
     color_background = (200 / 255, 225 / 255, 250 / 255, 1.0)  # Light Blue
 
-    # G-Code models and stl models use different lightscene
-    gcode_lights = True
     wheelTimestamp = None
     show_frametime = True
 
@@ -146,12 +144,7 @@ class wxGLPanel(BASE_CLASS):
             self.SetCanFocus(False)
 
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
-        # In wxWidgets 3.0.x there is a clipping bug during resizing
-        # which could be affected by painting the container
-        # self.Bind(wx.EVT_PAINT, self.processPaintEvent)
-        # Upgrade to wxPython 4.1 recommended
         self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
-
         self.canvas.Bind(wx.EVT_SET_FOCUS, self.processFocus)
         self.canvas.Bind(wx.EVT_KILL_FOCUS, self.processKillFocus)
 
@@ -194,7 +187,7 @@ class wxGLPanel(BASE_CLASS):
         # print('processSizeEvent frozen', self.IsFrozen(), event.Size.x, self.ClientSize.x)
         if not self.IsFrozen() and self.canvas.IsShownOnScreen():
             # Make sure the frame is shown before calling SetCurrent.
-            self.canvas.SetCurrent(self.context)
+            self.set_current_context()
             self.OnReshape()
 
             # self.Refresh(False)
@@ -204,7 +197,7 @@ class wxGLPanel(BASE_CLASS):
     def processPaintEvent(self, event: wx.PaintEvent) -> None:
         '''Process the drawing event.'''
         # print('wxGLPanel.processPaintEvent', self.ClientSize.Width)
-        self.canvas.SetCurrent(self.context)
+        self.set_current_context()
 
         if not self.gl_broken:
             try:
@@ -273,7 +266,7 @@ class wxGLPanel(BASE_CLASS):
 
     def OnReshape(self) -> None:
         """Reshape the OpenGL viewport based on the size of the window"""
-
+        self.set_current_context()
         old_width, old_height = self.width, self.height
 
         new_size = self.GetClientSize() * self.GetContentScaleFactor()
@@ -310,14 +303,7 @@ class wxGLPanel(BASE_CLASS):
             else:
                 factor = 1.0
 
-            x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
-            self.camera.zoom(factor, (x, y))
-
-        # Wrap text to the width of the window
-        if self.GLinitialized:
-            assert self.pygletcontext is not None
-            self.pygletcontext.set_current()
-            self.update_object_resize()
+            self.camera.zoom(factor)
 
     def _setup_lights(self) -> None:
         '''Sets the lightscene for gcode and stl models'''
@@ -339,16 +325,17 @@ class wxGLPanel(BASE_CLASS):
         glShadeModel(GL_SMOOTH)
 
     def resetview(self) -> None:
-        self.canvas.SetCurrent(self.context)
+        self.set_current_context()
         self.camera.reset_view_matrix()
         wx.CallAfter(self.Refresh)
 
     def DrawCanvas(self) -> None:
         """Draw the window."""
+        self.set_current_context()
+
         if self.show_frametime:
             self.frametime.start_frame()
-        assert self.pygletcontext is not None
-        self.pygletcontext.set_current()
+
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -389,10 +376,6 @@ class wxGLPanel(BASE_CLASS):
         '''create opengl objects when opengl is initialized'''
         pass
 
-    def update_object_resize(self) -> None:
-        '''called when the window receives only if opengl is initialized'''
-        pass
-
     def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         pass
@@ -413,7 +396,6 @@ class wxGLPanel(BASE_CLASS):
         pz = (GLdouble)()
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
-        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
 
         np_unproject(x, y, z, mvmat, pmat, viewport, px, py, pz)
 
@@ -481,7 +463,7 @@ class wxGLPanel(BASE_CLASS):
             event.Skip()
             return
 
-        self.canvas.SetCurrent(self.context)
+        self.set_current_context()
         self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
 
         if event.Dragging():
@@ -500,9 +482,8 @@ class wxGLPanel(BASE_CLASS):
         event.Skip()
 
     def zoom_to_center(self, factor: float) -> None:
-        self.canvas.SetCurrent(self.context)
-        x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
-        self.camera.zoom(factor, (x, y))
+        self.set_current_context()
+        self.camera.zoom(factor)
         wx.CallAfter(self.Refresh)
 
     def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
@@ -521,8 +502,8 @@ class wxGLPanel(BASE_CLASS):
         if event.ShiftDown():
             self.handle_wheel_shift(event, delta)
             return
+
         x, y = event.GetPosition() * self.GetContentScaleFactor()
-        x, y, _ = self.mouse_to_3d(x, y)
         factor = 1.02 if event.ControlDown() else 1.05
         if delta > 0:
             self.camera.zoom(factor, (x, y))
@@ -534,23 +515,28 @@ class wxGLPanel(BASE_CLASS):
             without shift: zoom viewport
             with shift: run handle_wheel_shift
         """
-        self.canvas.SetCurrent(self.context)
+        self.set_current_context()
         self.handle_wheel(event)
         wx.CallAfter(self.Refresh)
 
     def fit(self) -> None:
         '''Zoom to fit models to screen'''
-
-        # FIXME: The models in G-Code Plater are different than
-        # in the main view. So fit() currently doesn't work here.
-        if hasattr(self.parent, 'models'):
+        #FIXME: The models in the Platers are organised differently than in
+        # the in the main view. So fit() is currently not implemented here.
+        if hasattr(self.parent, 'l'):
+            # Parent is of class objectplater
+            self.resetview()
             return
 
-        if not self.parent.model or not self.parent.model.loaded:
+        if self.parent.model and self.parent.model.loaded:
+            model = self.parent.model
+
+        else:
+            self.resetview()
             return
 
-        self.canvas.SetCurrent(self.context)
-        dims = gcode_dims(self.parent.model.gcode)
+        self.set_current_context()
+        dims = gcode_dims(model.gcode)
         self.camera.reset_view_matrix()
 
         center_x = (dims[0][0] + dims[0][1]) / 2

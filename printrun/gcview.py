@@ -137,10 +137,6 @@ class GcodeViewPanel(wxGLPanel):
         self.platform.update_colour(colour)
         wx.CallAfter(self.Refresh)
 
-    def update_object_resize(self) -> None:
-        '''called when the window receives only if opengl is initialized'''
-        pass
-
     def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()

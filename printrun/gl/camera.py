@@ -69,7 +69,6 @@ class Camera():
         self.view_mat = np.identity(4)
         self.proj_mat = np.identity(4)
         self.gl_identity = np_to_gl_mat(np.identity(4))
-        self._set_initial_view()
 
     def update_size(self, width: int, height: int, scalefactor: float) -> None:
         self.width = width
@@ -180,23 +179,21 @@ class Camera():
         self._rebuild_view_mat()
 
     def zoom(self, factor: float,
-             to: Optional[Tuple[float, float]] = None,
+             to_cursor: Optional[Tuple[float, float]] = None,
              rebuild_mat: bool = True) -> None:
-        # TODO: Implement zoom to point
-        '''
-        delta_x = 0.0
-        delta_y = 0.0
 
-        if to:
-            delta_x = to[0]
-            delta_y = to[1]
-            glTranslatef(delta_x, delta_y, 0)
-        '''
         if self.is_orthographic:
             zf = self.zoom_factor * 1 / factor
             self.zoom_factor = max(min(zf, 0.8), 0.01)
             self.create_projection_matrix()
         else:
+            # TODO: Implement zoom to cursor
+            """
+            if to_cursor:
+                vec1 = np.array(self.canvas.mouse_to_3d(to_cursor[0], to_cursor[1]))
+                print("vev1: ", vec1)
+            """
+
             eye = self.target + (self.eye - self.target) * 1 / factor
             forward = eye - self.target
             length = np.sqrt(sum(a * a for a in forward))
@@ -206,13 +203,18 @@ class Camera():
 
             self.eye = eye
 
+            """
+            if to_cursor:
+                self._rebuild_view_mat()
+                vec2 = np.array(self.canvas.mouse_to_3d(to_cursor[0], to_cursor[1]))
+                print("vev2: ", vec2)
+                delta = vec2 - vec1
+                print("delta: ", delta)
+                self.eye = delta + self.eye
+                self.target = delta + self.target
+            """
         if rebuild_mat:
             self._rebuild_view_mat()
-
-        '''
-        if to:
-            glTranslatef(-delta_x, -delta_y, 0)
-        '''
 
     def _orbit(self, p1x: float, p1y: float,
                p2x: float, p2y: float) -> List[float]:

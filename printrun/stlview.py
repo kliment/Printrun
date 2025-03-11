@@ -20,7 +20,7 @@ import time
 import sys
 from . import stltool
 
-import numpy
+import numpy as np
 
 from .gl.panel import wxGLPanel
 from .gl import actors
@@ -32,8 +32,6 @@ Build_Dims = Tuple[int, int, int, int, int, int]
 
 
 class StlViewPanel(wxGLPanel):
-
-    gcode_lights = False
 
     def __init__(self, parent, size: wx.Size,
                  build_dimensions: Build_Dims = (200, 200, 100, 0, 0, 0),
@@ -130,10 +128,6 @@ class StlViewPanel(wxGLPanel):
         # threading.Thread(target = self.anim, args = (m, )).start()
         wx.CallAfter(self.Refresh)
 
-    def update_object_resize(self) -> None:
-        '''called when the window receives only if opengl is initialized'''
-        pass
-
     def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         # Draw platform
@@ -213,7 +207,7 @@ class StlViewPanel(wxGLPanel):
                         self.platform.height))
         dist = None
 
-        if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
+        if inter is not None and np.fabs(inter).max() + max_size / 2 < 2 * max_size:
             dist = inter[translate_axis[cutting_axis]]
 
         if dist is None or dist < -0.5 * ref_size or dist > 1.5 * ref_size:
@@ -224,7 +218,7 @@ class StlViewPanel(wxGLPanel):
                                         plane_normal = ref_plane,
                                         plane_offset = ref_offset)
 
-            if inter is not None and numpy.fabs(inter).max() + max_size / 2 < 2 * max_size:
+            if inter is not None and np.fabs(inter).max() + max_size / 2 < 2 * max_size:
                 dist = inter[translate_axis[cutting_axis]]
 
         if dist is not None:
