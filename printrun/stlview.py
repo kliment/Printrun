@@ -18,6 +18,7 @@
 import wx
 import time
 import sys
+from pathlib import Path
 from . import stltool
 
 import numpy as np
@@ -241,6 +242,7 @@ class TestFrame(wx.Frame):
 
 
 def main() -> None:
+    STL_TESTMODEL = Path(__file__, "../../testfiles/testgeometry_ascii.stl").resolve()
     app = wx.App(redirect = False)
     size = wx.Size(600, 450)
     frame = TestFrame(None, -1, "Mesh GL Window", size = size)
@@ -254,7 +256,11 @@ def main() -> None:
     stl_panel.set_current_context()
 
     # Load a stl model via cmd line argument
-    modeldata = stltool.stl(sys.argv[1])
+    if 1 < len(sys.argv) and Path(sys.argv[1]).is_file():
+        testgeometry = sys.argv[1]
+    else :
+        testgeometry = STL_TESTMODEL
+    modeldata = stltool.stl(testgeometry)
     modeldata.offsets = [65.0, 75.0, 0.0]
     modeldata.rot = 45.0
     modeldata.centeroffset = [-(modeldata.dims[1] + modeldata.dims[0]) / 2,
