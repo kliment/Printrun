@@ -30,13 +30,13 @@ from pyglet.gl import GLint, GLdouble, glEnable,glBlendFunc,glViewport, \
     glGetIntegerv, glPolygonMode, \
     GL_LEQUAL, GL_ONE_MINUS_SRC_ALPHA,GL_DEPTH_BUFFER_BIT, \
     GL_SRC_ALPHA, GL_BLEND, GL_COLOR_BUFFER_BIT, GL_CULL_FACE, \
-    GL_VIEWPORT, GL_FRONT_AND_BACK,GL_DEPTH_TEST, GL_FRONT, GL_FILL
+    GL_VIEWPORT, GL_FRONT_AND_BACK,GL_DEPTH_TEST, GL_FILL
 
 # those are legacy calls which need to be replaced
 from pyglet.gl import GL_LIGHTING, GL_LIGHT0, GL_LIGHT1, GL_POSITION, \
     GL_DIFFUSE, GL_AMBIENT, GL_SPECULAR, GL_COLOR_MATERIAL, GL_SMOOTH, \
-    GL_NORMALIZE, GL_MODELVIEW_MATRIX, GL_PROJECTION_MATRIX, \
-    GL_AMBIENT_AND_DIFFUSE, GL_SHININESS, GL_EMISSION, GL_MODELVIEW, \
+    GL_NORMALIZE, GL_PROJECTION_MATRIX, GL_AMBIENT_AND_DIFFUSE, \
+    GL_SHININESS, GL_EMISSION, GL_MODELVIEW, \
     glMaterialf, glColorMaterial, glMaterialfv, glLightfv, glShadeModel, \
     glPushMatrix, glPopMatrix, glMultMatrixd, glMatrixMode
 
@@ -243,23 +243,7 @@ class wxGLPanel(BASE_CLASS):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         self._setup_lights()
-
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-        # Polygon mode is never changed, but you can uncomment
-        # this line to show models as wireframe
-        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-
-        # Material specs are set here once and then we only change
-        # the material colour by using glColor
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0, 0.3, 1.0))
-        glMaterialfv(GL_FRONT, GL_SPECULAR, vec(0.85, 0.85, 0.85, 1.0))
-        glMaterialf(GL_FRONT, GL_SHININESS, 96)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0.0, 0.0, 0.0, 0.0))
-
-        # This enables tracking of the material colour,
-        # now it can be changed only by calling glColor
-        glEnable(GL_COLOR_MATERIAL)
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+        self._setup_material()
 
         if call_reshape:
             self.OnReshape()
@@ -312,17 +296,36 @@ class wxGLPanel(BASE_CLASS):
         glEnable(GL_LIGHT0)
         glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.0, 0.0, 0.0, 1.0))
         glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1.0))
-        glLightfv(GL_LIGHT0, GL_POSITION, vec(1.0, 2.0, 2.0, 0.0))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0.7, 0.7, 0.7, 1.0))
+        glLightfv(GL_LIGHT0, GL_POSITION, vec(0.9, 2.8, 1.7, 0.0))
 
         glEnable(GL_LIGHT1)
         glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0.0, 0.0, 0.0, 1.0))
         glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1.0))
-        glLightfv(GL_LIGHT1, GL_POSITION, vec(-1.2, -1.0, 2.4, 0.0))
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.7, 0.7, 0.7, 1.0))
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(-1.2, -1.0, 2.2, 0.0))
 
         glEnable(GL_NORMALIZE)
         glShadeModel(GL_SMOOTH)
+
+    def _setup_material(self) -> None:
+        '''Sets the material attributes for all objects'''
+
+        # Switch this two lines to show models as wireframe
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
+        # Material specs are set here once and only the
+        # the material colour is changed later
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.1, 0.3, 1.0))
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(0.35, 0.35, 0.35, 1.0))
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0.0, 0.0, 0.0, 1.0))
+
+        # This enables tracking of the material colour,
+        # now it can be changed only by calling glColor
+        glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
     def resetview(self) -> None:
         self.set_current_context()
