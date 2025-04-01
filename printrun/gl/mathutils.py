@@ -16,10 +16,15 @@
 import math
 import numpy as np
 from numpy.linalg import inv
+from pyglet import gl
 
 # for type hints
 from typing import List
 from ctypes import Array, c_int, c_double
+
+def vec(*args: float) -> Array:
+    '''Returns an array of GLfloat values'''
+    return (gl.GLfloat * len(args))(*args)
 
 def cross(v1: List[float], v2: List[float]) -> List[float]:
     return [v1[1] * v2[2] - v1[2] * v2[1],
@@ -90,12 +95,32 @@ def mulquat(q1: List[float], rq: List[float]) -> List[float]:
             q1[3] * rq[3] - q1[0] * rq[0] - q1[1] * rq[1] - q1[2] * rq[2]]
 
 def quat_rotate_vec(quat: List[float],
-                    vector_list: list[np.ndarray]) -> list[np.ndarray]:
+                     vector_list: list[np.ndarray]) -> list[np.ndarray]:
+    """
+    Apply the rotation of a given quaterion on all of the given vectors.
+    This implementation uses a rotation matrix.
+    """
     rmat = build_rotmatrix(quat)
     vecs_out = []
-    for vec in vector_list:
-        vec_in = np.append(vec, 0.0)
+    for v in vector_list:
+        vec_in = np.append(v, 0.0)
         vecs_out.append(np.matmul(vec_in, rmat)[:3])
+
+    return vecs_out
+
+def quat_rotate_vec_dev(quat: List[float],
+                        vector_list: list[np.ndarray]) -> list[np.ndarray]:
+    """
+    Apply the rotation of a given quaterion on all of the given vectors.
+    This implementation uses quaternion multiplication.
+    """
+    vecs_out = []
+    quat_inv = [-quat[0], -quat[1], -quat[2], quat[3]]
+    for v in vector_list:
+        vec_in = [v[0], v[1], v[2], 0.0]
+        a = mulquat(quat_inv, vec_in)
+        b = mulquat(a, quat)
+        vecs_out.append(b[:3])
 
     return vecs_out
 

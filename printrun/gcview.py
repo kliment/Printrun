@@ -28,7 +28,6 @@ from .gviz import GvizBaseFrame, BaseViz
 
 # for type hints
 from typing import Any, Tuple, List, Union, Iterator, Optional
-from printrun.gcoder import GCode
 Build_Dims = Tuple[int, int, int, int, int, int]
 GCodeActor = Union[actors.GcodeModelLight, actors.GcodeModel]
 
@@ -69,11 +68,10 @@ class GcodeViewPanel(wxGLPanel):
         super().__init__(parent, wx.DefaultPosition,
                          wx.DefaultSize, 0,
                          antialias_samples = antialias_samples,
-                         build_dimensions = build_dimensions)
-
-        # Set projection of camera
-        if perspective:
-            self.camera.is_orthographic = False
+                         build_dimensions = build_dimensions,
+                         circular = circular,
+                         grid = grid,
+                         perspective = perspective)
 
         self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
@@ -81,10 +79,6 @@ class GcodeViewPanel(wxGLPanel):
 
         self.initialized = False
         self.parent = realparent or parent
-
-        self.platform = actors.Platform(self.build_dimensions,
-                                        circular = circular,
-                                        grid = grid)
 
         self.keyinput.register(layerup=self.layerup,
                                layerdown=self.layerdown,
@@ -127,22 +121,10 @@ class GcodeViewPanel(wxGLPanel):
             if obj.model and obj.model.loaded and not obj.model.initialized:
                 obj.model.init()
 
-    def recreate_platform(self, build_dimensions: Build_Dims,
-                          circular: bool, grid: Tuple[int, int],
-                          colour: Tuple[float, float, float]) -> None:
-
-        self.platform = actors.Platform(build_dimensions,
-                                        circular = circular,
-                                        grid = grid)
-        self.platform.update_colour(colour)
-        wx.CallAfter(self.Refresh)
 
     def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         self.create_objects()
-
-        # Draw platform
-        self.platform.draw()
 
         for obj in self.parent.objects:
             if not obj.model \
@@ -221,7 +203,7 @@ class GcodeViewLoader:
     path_halfwidth = 0.2
     path_halfheight = 0.15
 
-    def addfile_perlayer(self, gcode: Optional[GCode] = None, showall: bool = False) -> Iterator[Union[int, None]]:
+    def addfile_perlayer(self, gcode: Optional[gcoder.GCode] = None, showall: bool = False) -> Iterator[Union[int, None]]:
         self.model = create_model(self.root.settings.light3d
                                   if self.root else False)
         if isinstance(self.model, actors.GcodeModel):
@@ -238,7 +220,7 @@ class GcodeViewLoader:
         wx.CallAfter(self.Refresh)
         yield None
 
-    def addfile(self, gcode: Optional[GCode] = None, showall: bool = False) -> None:
+    def addfile(self, gcode: Optional[gcoder.GCode] = None, showall: bool = False) -> None:
         generator = self.addfile_perlayer(gcode, showall)
         while next(generator) is not None:
             continue
@@ -412,7 +394,7 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         colour = self.root.gcview_color_background
         self.glpanel.recreate_platform(build_dimensions, circular, grid, colour)
 
-    def addfile(self, gcode: Optional[GCode] = None) -> None:
+    def addfile(self, gcode: Optional[gcoder.GCode] = None) -> None:
         if self.clonefrom:
             self.model = self.clonefrom[-1].model.copy()
             self.objects[-1].model = self.model

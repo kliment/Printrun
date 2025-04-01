@@ -47,18 +47,14 @@ from .mathutils import mat4_translation, mat4_rotation, np_to_gl_mat
 from pyglet.graphics.vertexbuffer import VertexBufferObject as BufferObject
 from pyglet.graphics import Batch
 
-from .camera import Camera
+from . import camera
 
 # for type hints
 from typing import Union, Any, Tuple, List, Iterator
 from ctypes import Array
-from printrun.stltool import stl
-from printrun.gcoder import GCode
+from printrun import stltool
+from printrun import gcoder
 Build_Dims = Tuple[int, int, int, int, int, int]
-
-def vec(*args: float) -> Array:
-    '''Returns an array of GLfloat values'''
-    return (GLfloat * len(args))(*args)
 
 def numpy2vbo(nparray: np.ndarray, target = GL_ARRAY_BUFFER,
               usage = GL_STATIC_DRAW) -> BufferObject:
@@ -184,7 +180,7 @@ class Platform:
 
         return (arrow_offset, arrow_side_length, arrow_height)
 
-    def _load_grid(self):
+    def _load_grid(self, z_val):
         vertices = []
         indices = []
         colors = []
@@ -203,10 +199,10 @@ class Platform:
             col = self._color(x_val)
             if col:
                 colors.extend(4 * [col])
-                vertices.append((x_half + x_val, y_half + y_val, 0.0))
-                vertices.append((x_half + x_val, y_half - y_val, 0.0))
-                vertices.append((x_half - x_val, y_half + y_val, 0.0))
-                vertices.append((x_half - x_val, y_half - y_val, 0.0))
+                vertices.append((x_half + x_val, y_half + y_val, z_val))
+                vertices.append((x_half + x_val, y_half - y_val, z_val))
+                vertices.append((x_half - x_val, y_half + y_val, z_val))
+                vertices.append((x_half - x_val, y_half - y_val, z_val))
 
         # Grid lines in Y
         for y_val in np.arange(self.grid[0], int(math.ceil(y_half)),
@@ -220,17 +216,17 @@ class Platform:
             col = self._color(y_val)
             if col:
                 colors.extend(4 * [col])
-                vertices.append((x_half + x_val, y_half + y_val, 0.0))
-                vertices.append((x_half - x_val, y_half + y_val, 0.0))
-                vertices.append((x_half + x_val, y_half - y_val, 0.0))
-                vertices.append((x_half - x_val, y_half - y_val, 0.0))
+                vertices.append((x_half + x_val, y_half + y_val, z_val))
+                vertices.append((x_half - x_val, y_half + y_val, z_val))
+                vertices.append((x_half + x_val, y_half - y_val, z_val))
+                vertices.append((x_half - x_val, y_half - y_val, z_val))
 
         # Center lines
         colors.extend(4 * [self.color_major])
-        vertices.append((2 * x_half, y_half, 0.0))
-        vertices.append((0.0, y_half, 0.0))
-        vertices.append((x_half, 2 * y_half, 0.0))
-        vertices.append((x_half, 0.0, 0.0))
+        vertices.append((2 * x_half, y_half, z_val))
+        vertices.append((0.0, y_half, z_val))
+        vertices.append((x_half, 2 * y_half, z_val))
+        vertices.append((x_half, 0.0, z_val))
 
         indices.extend(range(0, len(vertices)))
 
@@ -239,9 +235,10 @@ class Platform:
     def _load_circular(self):
         x_half = self.width / 2
         y_half = self.depth / 2
+        z_height = -0.01
 
         # Grid
-        vertices, indices, colors = self._load_grid()
+        vertices, indices, colors = self._load_grid(z_height)
 
         # Circle outline
         for deg in range(0, 361):
@@ -249,15 +246,15 @@ class Platform:
             colors.append(self.color_major)
             vertices.append(((math.cos(rad) + 1) * x_half,
                              (math.sin(rad) + 1) * y_half,
-                             0.0))
+                             z_height))
             if deg != 360:
                 indices.extend((len(vertices) - 1, len(vertices)))
 
         # Triangle to indicate front
         ao, al, ah = self._origin_arrows()
-        vertices.extend(((x_half, -ao, 0.0),
-                         (x_half - al / 2, -(ao + ah), 0.0),
-                         (x_half + al / 2, -(ao + ah), 0.0)))
+        vertices.extend(((x_half, -ao, z_height),
+                         (x_half - al / 2, -(ao + ah), z_height),
+                         (x_half + al / 2, -(ao + ah), z_height)))
         colors.extend(3 * [self.color_major])
         idx = len(vertices)
         indices.extend((idx - 3, idx - 2, idx - 2, idx - 1, idx - 1, idx - 3))
@@ -267,26 +264,27 @@ class Platform:
         self.colors = colors
 
     def _load_rectangular(self):
+        z_height = -0.01
         # Grid
-        vertices, indices, colors = self._load_grid()
+        vertices, indices, colors = self._load_grid(z_height)
 
         # Arrows at origin point
         ao, al, ah = self._origin_arrows()
-        op_verts = [(ao / 4, -ao, 0.0),
-                   (ao / 4 + ah, -(ao + al / 2), 0.0),
-                   (ao / 4, -(ao + al), 0.0),
-                   (-ao, ao / 4, 0.0),
-                   (-(ao + al / 2), ao / 4 + ah, 0.0),
-                   (-(ao + al), ao / 4, 0.0),
-                   (0.0, -ao, 0.0),
-                   (0.0, -(ao + al), 0.0),
-                   (-ao, 0.0, 0.0),
-                   (-(ao + al), 0.0, 0.0),
+        op_verts = [(ao / 4, -ao, z_height),
+                   (ao / 4 + ah, -(ao + al / 2), z_height),
+                   (ao / 4, -(ao + al), z_height),
+                   (-ao, ao / 4, z_height),
+                   (-(ao + al / 2), ao / 4 + ah, z_height),
+                   (-(ao + al), ao / 4, z_height),
+                   (0.0, -ao, z_height),
+                   (0.0, -(ao + al), z_height),
+                   (-ao, 0.0, z_height),
+                   (-(ao + al), 0.0, z_height),
                    # Outline
-                   (0.0, 0.0, 0.0),
-                   (0.0, self.depth, 0.0),
-                   (self.width, self.depth, 0.0),
-                   (self.width, 0.0, 0.0)]
+                   (0.0, 0.0, z_height),
+                   (0.0, self.depth, z_height),
+                   (self.width, self.depth, z_height),
+                   (self.width, 0.0, z_height)]
 
         op_cols = len(op_verts) * [self.color_major]
 
@@ -342,9 +340,9 @@ class MouseCursor:
     def _circle(self) -> Tuple[List[Tuple[float, float, float]], List[int]]:
         radius = 2.0
         segments = 32  #  Resolution of the circle.
-        z_value = 0.02
-        vertices = [(0.0, 0.0, z_value),  # this is the center point
-                    (0.0, radius, z_value)]  # this is first point on the top
+        z_height = 0.01
+        vertices = [(0.0, 0.0, z_height),  # this is the center point
+                    (0.0, radius, z_height)]  # this is first point on the top
         indices = []
 
         vert_n = 0
@@ -353,7 +351,7 @@ class MouseCursor:
             new_x = radius * math.sin(alpha)
             new_y = radius * math.cos(alpha)
             # Add one new vertex coordinate
-            vertices.append((new_x, new_y, z_value))
+            vertices.append((new_x, new_y, z_height))
             vert_n = len(vertices) - 1
             # Add three new indices
             indices.extend((0, vert_n - 1, vert_n))
@@ -364,12 +362,12 @@ class MouseCursor:
 
     def _rectangle(self) -> Tuple[List[Tuple[float, float, float]], List[int]]:
         half_a = 2.0  # Half of the rectangle side length
-        z_value = 0.02
+        z_height = 0.01
 
-        vertices = [(half_a, half_a, z_value),
-                    (-half_a, half_a, z_value),
-                    (-half_a, -half_a, z_value),
-                    (half_a, -half_a, z_value)]
+        vertices = [(half_a, half_a, z_height),
+                    (-half_a, half_a, z_height),
+                    (-half_a, -half_a, z_height),
+                    (half_a, -half_a, z_height)]
 
         indices = [0, 1, 2,
                    2, 3, 0]
@@ -407,8 +405,8 @@ class Focus:
     COLOR_LIGHT = (205 / 255, 205 / 255, 205 / 255)
     COLOR_DARK = (15 / 255, 15 / 255, 15 / 255)
 
-    def __init__(self, camera: Camera) -> None:
-        self.camera = camera
+    def __init__(self, cam: camera.Camera) -> None:
+        self.camera = cam
         self.vertices = ()
         self.indices = ()
         self.color = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Black Transparent
@@ -597,7 +595,7 @@ class MeshModel:
     Model geometries based on triangulated
     meshes such as .stl, .obj, .3mf etc.
     """
-    def __init__(self, model: stl) -> None:
+    def __init__(self, model: stltool.stl) -> None:
         self.color = (77 / 255, 178 / 255, 128 / 255, 1.0)  # Greenish
         # Every model is placed into it's own batch.
         # This is not ideal, but good enough for the moment.
@@ -605,7 +603,7 @@ class MeshModel:
         self.vl = None
         self._initialise_data(model)
 
-    def _initialise_data(self, model: stl) -> None:
+    def _initialise_data(self, model: stltool.stl) -> None:
         # Create the vertex and normal arrays.
         vertices = []
         normals = []
@@ -830,7 +828,8 @@ class GcodeModel(Model):
             self.path_halfwidth = path_halfwidth
             self.path_halfheight = path_halfheight
 
-    def load_data(self, model_data: GCode, callback = None) -> Iterator[Union[int, None]]:
+    def load_data(self, model_data: gcoder.GCode,
+                  callback = None) -> Iterator[Union[int, None]]:
         t_start = time.time()
         self.gcode = model_data
 
@@ -1360,7 +1359,8 @@ class GcodeModelLight(Model):
 
     gcode = None
 
-    def load_data(self, model_data: GCode, callback = None) -> Iterator[Union[int, None]]:
+    def load_data(self, model_data: gcoder.GCode,
+                  callback = None) -> Iterator[Union[int, None]]:
         t_start = time.time()
         self.gcode = model_data
 

@@ -19,16 +19,15 @@ import wx
 import time
 import sys
 from pathlib import Path
-from . import stltool
 
 import numpy as np
 
+from . import stltool
 from .gl.panel import wxGLPanel
 from .gl import actors
 
 # for type hints
 from typing import Tuple, Union
-from printrun.stltool import stl
 Build_Dims = Tuple[int, int, int, int, int, int]
 
 
@@ -43,11 +42,10 @@ class StlViewPanel(wxGLPanel):
 
         super().__init__(parent, wx.DefaultPosition, size, 0,
                          antialias_samples = antialias_samples,
-                         build_dimensions = build_dimensions)
-
-        # Set projection of camera
-        if perspective:
-            self.camera.is_orthographic = False
+                         build_dimensions = build_dimensions,
+                         circular = circular,
+                         grid = grid,
+                         perspective = perspective)
 
         self.meshmodels = []
         self.rot = 0.0
@@ -58,9 +56,6 @@ class StlViewPanel(wxGLPanel):
         self.initialized = False
         self.parent = parent
 
-        self.platform = actors.Platform(self.build_dimensions,
-                                        circular = circular,
-                                        grid = grid)
         self.gl_cursor = actors.MouseCursor()
         self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
 
@@ -101,7 +96,7 @@ class StlViewPanel(wxGLPanel):
         '''This runs when Mousewheel + Shift is used'''
         pass
 
-    def anim(self, obj: stl) -> None:
+    def anim(self, obj: stltool.stl) -> None:
         g = 50 * 9.81
         v = 20
         dt = 0.05
@@ -122,7 +117,7 @@ class StlViewPanel(wxGLPanel):
             obj.scale[2] *= 1 + 5 * dt
         obj.scale[2] = 1.0
 
-    def prepare_model(self, m: stl, scale: float) -> None:
+    def prepare_model(self, m: stltool.stl, scale: float) -> None:
         mesh = actors.MeshModel(m)
         self.meshmodels.append(mesh)
         # m.animoffset = 300
@@ -131,8 +126,6 @@ class StlViewPanel(wxGLPanel):
 
     def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
-        # Draw platform
-        self.platform.draw()
 
         # Draw mouse
         intersection = self.mouse_to_plane(self.mousepos[0], self.mousepos[1],
@@ -247,12 +240,19 @@ def main() -> None:
     size = wx.Size(600, 450)
     frame = TestFrame(None, -1, "Mesh GL Window", size = size)
     frame.SetMinClientSize((200, 200))
+    persp = False
+
+    if 2 < len(sys.argv):
+        persp = sys.argv[2] == "perspective"
 
     stl_panel = StlViewPanel(frame, size,
                              circular = False,
                              antialias_samples = 4,
-                             perspective = False)
+                             perspective = persp,
+                             )
 
+    stl_panel.show_frametime = True
+    stl_panel.init_frametime()
     stl_panel.set_current_context()
 
     # Load a stl model via cmd line argument

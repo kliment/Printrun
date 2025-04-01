@@ -16,10 +16,10 @@
 import logging
 import time
 import traceback
-import numpy as np
 
 import wx
 from wx import glcanvas
+import numpy as np
 
 import pyglet
 pyglet.options['debug_gl'] = True
@@ -41,21 +41,25 @@ from pyglet.gl import GL_LIGHTING, GL_LIGHT0, GL_LIGHT1, GL_POSITION, \
     glPushMatrix, glPopMatrix, glMultMatrixd, glMatrixMode
 
 from pyglet import gl
-from .mathutils import np_unproject, np_to_gl_mat, \
+
+from .mathutils import vec, np_unproject, np_to_gl_mat, \
                        mat4_translation, mat4_rotation, mat4_scaling
-from .actors import Focus, vec
-from .camera import Camera
-from .keyboardinput import KeyboardInput
+from . import actors
+from . import camera
+from . import keyboardinput as kbi
 
 # for type hints
 from typing import TYPE_CHECKING, Any, Tuple, Union, Callable, Optional
-from printrun.stltool import stl
-from printrun.gcoder import GCode
+from printrun import stltool
+from printrun import gcoder
 Build_Dims = Tuple[int, int, int, int, int, int]
+Gcode_Dims = Tuple[Tuple[float , float, float],
+                   Tuple[float , float, float],
+                   Tuple[float , float, float]]
 if TYPE_CHECKING:
     from printrun.gcview import GCObject
 
-def gcode_dims(g: GCode) -> Tuple[Tuple[float , float, float], ...]:
+def gcode_dims(g: gcoder.GCode) -> Gcode_Dims:
     return ((g.xmin, g.xmax, g.width),
             (g.ymin, g.ymax, g.depth),
             (g.zmin, g.zmax, g.height))
@@ -75,15 +79,17 @@ class wxGLPanel(BASE_CLASS):
     color_background = (200 / 255, 225 / 255, 250 / 255, 1.0)  # Light Blue
 
     wheelTimestamp = None
-    show_frametime = True
+    show_frametime = False
 
     def __init__(self, parent, pos: wx.Point = wx.DefaultPosition,
                  size: wx.Size = wx.DefaultSize, style = 0,
                  antialias_samples: int = 0,
-                 build_dimensions: Build_Dims = (200, 200, 100, 0, 0, 0)
-                ) -> None:
+                 build_dimensions: Build_Dims = (200, 200, 100, 0, 0, 0),
+                 circular: bool = False,
+                 grid: Tuple[int, int] = (1, 10),
+                 perspective: bool = False
+                 ) -> None:
         # Full repaint should not be a performance problem
-        #TODO: test on windows, tested in Ubuntu
         style = style | wx.FULL_REPAINT_ON_RESIZE
 
         self.GLinitialized = False
@@ -108,19 +114,14 @@ class wxGLPanel(BASE_CLASS):
         self.width = 1.0
         self.height = 1.0
 
-        self.camera = Camera(self, build_dimensions)
-        self.focus = Focus(self.camera)
-        self.keyinput = KeyboardInput(self.canvas, self.zoom_to_center,
+        self.camera = camera.Camera(self, build_dimensions, ortho = not perspective)
+        self.focus = actors.Focus(self.camera)
+        self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
+        self.keyinput = kbi.KeyboardInput(self.canvas, self.zoom_to_center,
                                       self.fit, self.resetview)
 
         if self.show_frametime:
-            self.frametime = FrameTime()
-            self.frametime_counter = wx.StaticText(self, -1, '')
-            font = wx.Font(12, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
-                           encoding = wx.FONTENCODING_DEFAULT)
-            self.frametime_counter.SetFont(font)
-            self.frametime_counter.SetForegroundColour(wx.WHITE)
-            self.frametime_counter.SetBackgroundColour(wx.Colour('DIM GREY'))
+            self.init_frametime()
 
         ctx_attrs = glcanvas.GLContextAttrs()
         # FIXME: Pronterface supports only OpenGL 2.1 and compability mode at the moment
@@ -215,6 +216,18 @@ class wxGLPanel(BASE_CLASS):
         self.pygletcontext.destroy()
         # call the super method
         super().Destroy()
+
+    def init_frametime(self) -> None:
+        self.frametime = FrameTime()
+        self.frametime_counter = wx.StaticText(self, -1, '')
+        font = wx.Font(12, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
+                       encoding = wx.FONTENCODING_DEFAULT)
+        self.frametime_counter.SetFont(font)
+        self.frametime_counter.SetForegroundColour(wx.WHITE)
+        self.frametime_counter.SetBackgroundColour(wx.Colour('DIM GREY'))
+        sizer = wx.BoxSizer()
+        sizer.Add(self.frametime_counter, 0, wx.ALIGN_BOTTOM | wx.ALL, 4)
+        self.SetSizer(sizer)
 
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
@@ -332,6 +345,17 @@ class wxGLPanel(BASE_CLASS):
         self.camera.reset_view_matrix()
         wx.CallAfter(self.Refresh)
 
+    def recreate_platform(self, build_dimensions: Build_Dims,
+                          circular: bool, grid: Tuple[int, int],
+                          colour: Tuple[float, float, float]) -> None:
+
+        self.platform = actors.Platform(build_dimensions,
+                                 circular = circular,
+                                 grid = grid)
+        self.platform.update_colour(colour)
+        self.camera.update_build_dims(build_dimensions)
+        wx.CallAfter(self.Refresh)
+
     def DrawCanvas(self) -> None:
         """Draw the window."""
         self.set_current_context()
@@ -342,6 +366,7 @@ class wxGLPanel(BASE_CLASS):
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+        self.platform.draw()
         self.draw_objects()
 
         if self.canvas.HasFocus():
@@ -353,7 +378,8 @@ class wxGLPanel(BASE_CLASS):
             self.frametime.end_frame()
             self.frametime_counter.SetLabel(self.frametime.get())
 
-    def transform_and_draw(self, model: Union['GCObject', stl], draw_function: Callable[[], None]) -> None:
+    def transform_and_draw(self, model: Union['GCObject', stltool.stl],
+                           draw_function: Callable[[], None]) -> None:
         '''Apply transformations to the model and then
         draw it with the given draw function'''
         glMatrixMode(GL_MODELVIEW)
@@ -363,7 +389,7 @@ class wxGLPanel(BASE_CLASS):
         draw_function()
         glPopMatrix()
 
-    def _load_model_matrix(self, model: Union['GCObject', stl]) -> None:
+    def _load_model_matrix(self, model: Union['GCObject', stltool.stl]) -> None:
         tm = mat4_translation(*model.offsets)
         rm = mat4_rotation(0.0, 0.0, 1.0, model.rot)
         tc = mat4_translation(*model.centeroffset)

@@ -81,8 +81,6 @@ class Camera():
         Update the printer dimensions which the 3D view uses to set the
         initial view and the size of the print platform
         """
-        # FIXME: Call this method when changing dimensions in the options dialog
-
         dims = build_dimensions
         self.platformcenter = (-dims[3] - dims[0] / 2,
                                -dims[4] - dims[1] / 2)
@@ -108,7 +106,7 @@ class Camera():
         self.reset_rotation()
         self._set_initial_view()
 
-        if self.width < self.height:
+        if self.width / self.platform[0] < self.height / self.platform[1]:
             min_side = self.width * self.display_ppi_factor
             zoom_length = self.platform[0]
         else:
