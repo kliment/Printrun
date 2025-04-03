@@ -1,4 +1,4 @@
-# This file is part of the Printrun suite.
+# file is part of the Printrun suite.
 #
 # Printrun is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ from .utils import install_locale, run_command, get_command_output, \
     get_home_pos, parse_build_dimensions, parse_temperature_report, \
     setup_logging
 install_locale('pronterface')
-from .settings import Settings, BuildDimensionsSetting
+from .settings import Settings, BuildDimensionsSetting, BooleanSetting
 from .power import powerset_print_start, powerset_print_stop
 from printrun import gcoder
 from .rpc import ProntRPC
@@ -181,6 +181,7 @@ class pronsole(cmd.Cmd):
         self.processing_args = False
         self.settings = Settings(self)
         self.settings._add(BuildDimensionsSetting("build_dimensions", "200x200x100+0+0+0+0+0+0", _("Build Dimensions:"), _("Dimensions of Build Platform\n & optional offset of origin\n & optional switch position\n\nExamples:\n   XXXxYYY\n   XXX,YYY,ZZZ\n   XXXxYYYxZZZ+OffX+OffY+OffZ\nXXXxYYYxZZZ+OffX+OffY+OffZ+HomeX+HomeY+HomeZ"), "Printer"), self.update_build_dimensions)
+        self.settings._add(BooleanSetting("stepping_mode", False, "GCode Stepping Mode: When true, will go into paused mode when starting and disable restore on resume"))
         self.settings._port_list = self.scanserial
         self.update_build_dimensions(None, self.settings.build_dimensions)
         self.update_tcp_streaming_mode(None, self.settings.tcp_streaming_mode)
@@ -589,8 +590,8 @@ Disables all heaters upon exit."))
     def do_set(self, argl):
         args = argl.split(None, 1)
         if len(args) < 1:
-            for k in [kk for kk in dir(self.settings) if not kk.startswith("_")]:
-                self.log("%s = %s" % (k, str(getattr(self.settings, k))))
+            for k in self.settings._all_settings():
+                self.log("%s = %s" % (k.name, k.value))
             return
         if len(args) < 2:
             # Try getting the default value of the setting to check whether it
@@ -923,6 +924,17 @@ Disables all heaters upon exit."))
     #  File loading handling
     #  --------------------------------------------------------------
 
+    def do_line(self, l=''):
+        lines = self.p.current_line()
+        if lines:
+            for line in lines:
+                self.log("%04d: %s" % (line[0], line[2]))
+
+    def do_skip(self, l):
+        skip = int(l)
+        self.p.queueindex = self.p.queueindex + skip
+
+
     def do_load(self, filename):
         self._do_load(filename)
 
@@ -1085,7 +1097,16 @@ Disables all heaters upon exit."))
         self.log(_("Printing %s") % self.filename)
         self.log(_("You can monitor the print with the monitor command."))
         self.sdprinting = False
-        self.p.startprint(self.fgcode)
+        really = not (l and l == 'pause') and not self.settings.stepping_mode
+        self.p.startprint(self.fgcode, really_start=really)
+        if not really:
+            self.paused = True
+
+    def do_next(self, l):
+        if self.paused:
+            self.p.printing = True
+            self.p._sendnext()
+            self.p.printing = False
 
     def do_pause(self, l):
         if self.sdprinting:
@@ -1112,7 +1133,8 @@ Disables all heaters upon exit."))
             self.p.send_now("M24")
             return
         else:
-            self.p.resume()
+            do_restore = (not l or l != 'direct') and not self.settings.stepping_mode
+            self.p.resume(do_restore)
 
     def help_resume(self):
         self.log(_("Resumes a paused print."))
@@ -1500,7 +1522,7 @@ Disables all heaters upon exit."))
                 elif self.sdprinting:
                     preface = _("SD print progress: ")
                     progress = self.percentdone
-                prev_msg = preface + "%.1f%%" % progress
+                prev_msg = preface + "%3.1f%% - %d" % (progress, self.p.queueindex)
                 if self.silent is False:
                     sys.stdout.write("\r" + prev_msg.ljust(prev_msg_len))
                     sys.stdout.flush()
