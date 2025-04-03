@@ -75,6 +75,9 @@ class printcore():
         A `printrun.gcoder.GCode` object containing all the G-code commands
         sent to the printer.
     baud
+    callback : Callback
+        Object containing callback functions run at certain process stages.
+        See `printrun.printcore.Callback`.
     dtr
     event_handler : list of PrinterEventHandler
         Collection of event-handling objects. The relevant method of each
@@ -125,6 +128,12 @@ class printcore():
         self.log = deque(maxlen = 10000)
         self.sent = []
         self.writefailures = 0
+        self.callback = Callback()
+        self.callback.hostcommand = self._host_command_cb
+        self.callback.error = self._error_cb
+
+        # TODO[v3]: Remove these attributes kept for backwards compatibility
+        self.process_host_command = None
         self.tempcb = None  # impl (wholeline)
         self.recvcb = None  # impl (wholeline)
         self.sendcb = None  # impl (wholeline)
@@ -135,6 +144,7 @@ class printcore():
         self.startcb = None  # impl ()
         self.endcb = None  # impl ()
         self.onlinecb = None  # impl ()
+
         self.loud = False  # emit sent and received lines to terminal
         self.tcp_streaming_mode = False
         self.greetings = ['start', 'Grbl ']
@@ -147,9 +157,7 @@ class printcore():
         self.readline_buf = []
         self.selector = None
         self.event_handler = PRINTCORE_HANDLER
-        for handler in self.event_handler:
-            try: handler.on_init()
-            except: logging.error(traceback.format_exc())
+        self._callback('init')
         if port is not None and baud is not None:
             self.connect(port, baud)
         self.xy_feedrate = None
@@ -164,14 +172,16 @@ class printcore():
         self.event_handler.append(handler)
 
     def logError(self, error):
-        for handler in self.event_handler:
-            try: handler.on_error(error)
-            except: logging.error(traceback.format_exc())
-        if self.errorcb:
-            try: self.errorcb(error)
-            except: logging.error(traceback.format_exc())
-        else:
-            logging.error(error)
+        # TODO[v3]: Remove this function kept for backwards compatibility
+        logging.warning("Function `printcore.printcore.logError` is now deprecated.")
+        logging.warning("`printcore.Callback.error` shall be used instead.")
+        self._logError(error)
+
+    def _logError(self, error):
+        self._callback('error', error)
+
+    def _error_cb(self, error):
+        logging.error(error)
 
     @locked
     def disconnect(self):
@@ -190,11 +200,9 @@ class printcore():
             try:
                 self.printer.disconnect()
             except device.DeviceError:
-                self.logError(traceback.format_exc())
+                self._logError(traceback.format_exc())
                 pass
-        for handler in self.event_handler:
-            try: handler.on_disconnect()
-            except: logging.error(traceback.format_exc())
+        self._callback('disconnect')
         self.printer = None
         self.online = False
         self.printing = False
@@ -218,12 +226,10 @@ class printcore():
             try:
                 self.printer.connect(self.port, self.baud)
             except device.DeviceError as e:
-                self.logError("Connection error: %s" % e)
+                self._logError("Connection error: %s" % e)
                 self.printer = None
                 return
-            for handler in self.event_handler:
-                try: handler.on_connect()
-                except: logging.error(traceback.format_exc())
+            self._callback('connect')
             self.stop_read_thread = False
             self.read_thread = threading.Thread(target = self._listen,
                                                 name='read thread')
@@ -245,31 +251,26 @@ class printcore():
         try:
             line_bytes = self.printer.readline()
             if line_bytes is device.READ_EOF:
-                self.logError("Can't read from printer (disconnected?)." +
-                              " line_bytes is None")
+                self._logError("Can't read from printer (disconnected?)." +
+                               " line_bytes is None")
                 self.stop_read_thread = True
                 return PR_EOF
             line = line_bytes.decode('utf-8')
 
             if len(line) > 1:
                 self.log.append(line)
-                for handler in self.event_handler:
-                    try: handler.on_recv(line)
-                    except: logging.error(traceback.format_exc())
-                if self.recvcb:
-                    try: self.recvcb(line)
-                    except: self.logError(traceback.format_exc())
+                self._callback('recv', line)
                 if self.loud: logging.info("RECV: %s" % line.rstrip())
             return line
         except UnicodeDecodeError:
             msg = ("Got rubbish reply from {0} at baudrate {1}:\n"
                    "Maybe a bad baudrate?").format(self.port, self.baud)
-            self.logError(msg)
+            self._logError(msg)
             return None
         except device.DeviceError as e:
             msg = ("Can't read from printer (disconnected?) {0}"
                    ).format(decode_utf8(str(e)))
-            self.logError(msg)
+            self._logError(msg)
             return None
 
     def _listen_can_continue(self):
@@ -303,12 +304,7 @@ class printcore():
                 if line.startswith(tuple(self.greetings)) \
                    or line.startswith('ok') or "T:" in line:
                     self.online = True
-                    for handler in self.event_handler:
-                        try: handler.on_online()
-                        except: logging.error(traceback.format_exc())
-                    if self.onlinecb:
-                        try: self.onlinecb()
-                        except: self.logError(traceback.format_exc())
+                    self._callback('online')
                     return
 
     def _listen(self):
@@ -327,15 +323,9 @@ class printcore():
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
             if line.startswith('ok') and "T:" in line:
-                for handler in self.event_handler:
-                    try: handler.on_temp(line)
-                    except: logging.error(traceback.format_exc())
-                if self.tempcb:
-                    # callback for temp, status, whatever
-                    try: self.tempcb(line)
-                    except: self.logError(traceback.format_exc())
+                self._callback('temp', line)
             elif line.startswith('Error'):
-                self.logError(line)
+                self._logError(line)
             # Teststrings for resend parsing       # Firmware     exp. result
             # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
@@ -465,7 +455,7 @@ class printcore():
             try:
                 self.print_thread.join()
             except:
-                self.logError(traceback.format_exc())
+                self._logError(traceback.format_exc())
 
         self.print_thread = None
 
@@ -539,7 +529,7 @@ class printcore():
             else:
                 self.priqueue.put_nowait(command)
         else:
-            self.logError(_("Not connected to printer."))
+            self._logError(_("Not connected to printer."))
 
     def send_now(self, command, wait = 0):
         """Adds a command to the priority queue.
@@ -558,43 +548,26 @@ class printcore():
         if self.online:
             self.priqueue.put_nowait(command)
         else:
-            self.logError(_("Not connected to printer."))
+            self._logError(_("Not connected to printer."))
 
     def _print(self, resuming = False):
         self._stop_sender()
         try:
-            for handler in self.event_handler:
-                try: handler.on_start(resuming)
-                except: logging.error(traceback.format_exc())
-            if self.startcb:
-                # callback for printing started
-                try: self.startcb(resuming)
-                except:
-                    self.logError(_("Print start callback failed with:") +
-                                  "\n" + traceback.format_exc())
+            self._callback('start', resuming)
             while self.printing and self.printer and self.online:
                 self._sendnext()
             self.sentlines = {}
             self.log.clear()
             self.sent = []
-            for handler in self.event_handler:
-                try: handler.on_end()
-                except: logging.error(traceback.format_exc())
-            if self.endcb:
-                # callback for printing done
-                try: self.endcb()
-                except:
-                    self.logError(_("Print end callback failed with:") +
-                                  "\n" + traceback.format_exc())
+            self._callback('end')
         except:
-            self.logError(_("Print thread died due to the following error:") +
-                          "\n" + traceback.format_exc())
+            self._logError(_("Print thread died due to the following error:") +
+                           "\n" + traceback.format_exc())
         finally:
             self.print_thread = None
             self._start_sender()
 
-    def process_host_command(self, command):
-        """only ;@pause command is implemented as a host command in printcore, but hosts are free to reimplement this method"""
+    def _host_command_cb(self, command):
         command = command.lstrip()
         if command.startswith(";@pause"):
             self.pause()
@@ -626,31 +599,21 @@ class printcore():
             if self.queueindex > 0:
                 (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
                 if prev_layer != layer:
-                    for handler in self.event_handler:
-                        try: handler.on_layerchange(layer)
-                        except: logging.error(traceback.format_exc())
-            if self.layerchangecb and self.queueindex > 0:
-                (prev_layer, prev_line) = self.mainqueue.idxs(self.queueindex - 1)
-                if prev_layer != layer:
-                    try: self.layerchangecb(layer)
-                    except: self.logError(traceback.format_exc())
-            for handler in self.event_handler:
-                try: handler.on_preprintsend(gline, self.queueindex, self.mainqueue)
-                except: logging.error(traceback.format_exc())
-            if self.preprintsendcb:
-                if self.mainqueue.has_index(self.queueindex + 1):
-                    (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
-                    next_gline = self.mainqueue.all_layers[next_layer][next_line]
-                else:
-                    next_gline = None
-                gline = self.preprintsendcb(gline, next_gline)
+                    self._callback('layerchange', layer)
+            if self.mainqueue.has_index(self.queueindex + 1):
+                (next_layer, next_line) = self.mainqueue.idxs(self.queueindex + 1)
+                next_gline = self.mainqueue.all_layers[next_layer][next_line]
+            else:
+                next_gline = None
+            gline = self._callback('printpresend', gline, next_gline,
+                                   self.queueindex)
             if gline is None:
                 self.queueindex += 1
                 self.clear = True
                 return
             tline = gline.raw
             if tline.lstrip().startswith(";@"):  # check for host command
-                self.process_host_command(tline)
+                self._callback('hostcommand', tline)
                 self.queueindex += 1
                 self.clear = True
                 return
@@ -660,12 +623,7 @@ class printcore():
             if tline:
                 self._send(tline, self.lineno, True)
                 self.lineno += 1
-                for handler in self.event_handler:
-                    try: handler.on_printsend(gline)
-                    except: logging.error(traceback.format_exc())
-                if self.printsendcb:
-                    try: self.printsendcb(gline)
-                    except: self.logError(traceback.format_exc())
+                self._callback('printsend', gline)
             else:
                 self.clear = True
             self.queueindex += 1
@@ -696,16 +654,240 @@ class printcore():
             if self.loud:
                 logging.info("SENT: %s" % command)
 
-            for handler in self.event_handler:
-                try: handler.on_send(command, gline)
-                except: logging.error(traceback.format_exc())
-            if self.sendcb:
-                try: self.sendcb(command, gline)
-                except: self.logError(traceback.format_exc())
+            self._callback('send', command, gline)
             try:
                 self.printer.write((command + "\n").encode('ascii'))
                 self.writefailures = 0
             except device.DeviceError as e:
-                self.logError("Can't write to printer (disconnected?)"
+                self._logError("Can't write to printer (disconnected?)"
                               " {0}".format(e))
                 self.writefailures += 1
+
+    def _callback(self, name, *args):
+        # Parameters:
+        #   name: string with relevant callback or event name
+        #   *args: Any arguments after `name` are passed directly to
+        #          the callback or event function
+
+        # Call events from each event-handler
+        # TODO[v3]: Remove code kept for backwards compatibility
+        for handler in self.event_handler:
+            if name == 'printpresend' and hasattr(handler, 'on_preprintsend'):
+                self._preprintsend_event(handler, *args)
+            else:
+                try: event = getattr(handler, f"on_{name}")
+                except AttributeError: continue
+                try:
+                    event(*args)
+                except Exception:
+                    logging.error(f"'on_{name}' handler failed with:\n"
+                                  f"{traceback.format_exc()}")
+
+        # Invoke the relevant callback function
+        # TODO[v3]: Remove code kept for backwards compatibility
+        if name == 'hostcommand' and self.process_host_command is not None:
+            logging.warning("Function `printcore.printcore.process_host_command` is now deprecated.")
+            logging.warning("`printcore.Callback.hostcommand` shall be used instead.")
+            callback = self.process_host_command
+        elif name == 'printpresend' and self.preprintsendcb is not None:
+            callback = self._preprintsend_cb
+        elif (hasattr(self, f"{name}cb") and
+              ((old_callback := getattr(self, f"{name}cb")) is not None)):
+            logging.warning(f"Function `printcore.printcore.{name}cb` is now deprecated.")
+            logging.warning(f"`printcore.Callback.{name}` shall be used instead.")
+            callback = old_callback
+        else:
+            try: callback = getattr(self.callback, f"{name}")
+            except AttributeError: return None
+        try:
+            return callback(*args)
+        except Exception:
+            logging.error(f"'{name}' callback failed with:\n"
+                          f"{traceback.format_exc()}")
+
+    def _preprintsend_event(self, handler, gline, next_gline, index):
+        # TODO[v3]: Remove this function kept for backwards compatibility
+        logging.warning("Function `eventhandler.PrinterEventHandler.on_preprintsend` is now deprecated.")
+        logging.warning("`eventhandler.PrinterEventHandler.on_printpresend` shall be used instead.")
+        try: handler.on_preprintsend(gline, index, self.mainqueue)
+        except Exception:
+            logging.error(f"'on_preprintsend' handler failed with:\n"
+                          f"{traceback.format_exc()}")
+
+    def _preprintsend_cb(self, gline, next_gline, index):
+        # TODO[v3]: Remove this function kept for backwards compatibility
+        logging.warning("Function `printcore.printcore.preprintsendcb` is now deprecated.")
+        logging.warning("`printcore.Callback.printpresend` shall be used instead.")
+        return self.preprintsendcb(gline, next_gline)
+
+
+class Callback():
+    """Printcore callback functions.
+
+    The relevant callback method is invoked at the relevant process stage.
+
+    """
+
+    def end(self):
+        """Called when printing stops.
+
+        Called when an ongoing print is paused, canceled or finished.
+        See `printrun.printcore.printcore.pause`.
+        See `printrun.printcore.printcore.cancel`.
+
+        """
+        pass
+
+    def error(self, error):
+        """Called whenever an error occurs.
+
+        Parameters:
+        -----------
+        error : str
+            String containing the error message.
+
+        """
+        pass
+
+    def hostcommand(self, command):
+        """Called on host-commands.
+
+        Host-commands are those starting with ';@', e.g. ';@pause'. When a
+        host-command is detected, this function is invoked and this line is
+        omitted and not sent to the printer.
+
+        Only ;@pause command is implemented by default. If overwriting this
+        function, remember to rewrite the pause logic if you wish to keep that
+        functionality.
+
+        This function is only called on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters:
+        -----------
+        command : str
+            Verbatim command string.
+
+        """
+        pass
+
+    def layerchange(self, layer):
+        """Called on detected layer changes during a print.
+
+        This event is only triggered on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters
+        ----------
+        layer : int
+            Index of the new layer within printcore's `mainqueue`.
+            See `printrun.printcore.printcore.mainqueue`.
+
+        """
+        pass
+
+    def online(self):
+        """Called when printer gets online."""
+        pass
+
+    def printpresend(self, gline, next_gline, index):
+        """Called before sending each command of a print.
+
+        This function is called right before a line is sent and the line
+        returned by this function is what it is actually sent to the
+        printer. Therefore this function allows modifying/processing lines
+        before they are sent to the printer.
+
+        This function is only called on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters
+        ----------
+        gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code to
+            be sent.
+        next_gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code to
+            be sent after the current `gline`.
+        index : int
+            Index of this `gline` within `mainqueue`.
+            See `printrun.printcore.printcore.mainqueue`.
+
+        Returns
+        -------
+        Line
+            The `printrun.gcoder.Line` object containing the line of G-code
+            that will be actually sent to the printer. If None is returned
+            then this line won't be sent to the printer.
+
+        """
+        return gline
+
+    def printsend(self, gline):
+        """Called on each line sent during a print.
+
+        This event is only triggered on lines sent while a print is ongoing.
+        See `printrun.printcore.printcore.startprint`.
+
+        Parameters
+        ----------
+        gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code
+            sent.
+
+        """
+        pass
+
+    def recv(self, line):
+        """Called on every line read from the printer.
+
+        Parameters:
+        -----------
+        line : str
+            String with data read from the printer.
+
+        """
+        pass
+
+    def send(self, command, gline):
+        """Called on every command sent to the printer.
+
+        Parameters:
+        -----------
+        line : str
+            Command string sent to the printer.
+        gline : Line
+            The `printrun.gcoder.Line` object containing the line of G-code
+            sent to the printer.
+
+        """
+        pass
+
+    def start(self, resume):
+        """Called when printing commences.
+
+        Called when starting a new print or resuming a paused one.
+        See `printrun.printcore.printcore.startprint`.
+        See `printrun.printcore.printcore.resume`.
+
+        Parameters
+        ----------
+        resume : bool
+            True if the print is resumed.
+
+        """
+        pass
+
+    def temp(self, line):
+        """Called on temperature related printer replies.
+
+        Called when an answer from the printer contains information related to
+        temperature such as temperature readings or status indications.
+
+        Parameters:
+        -----------
+        line : str
+            String with data read from the printer.
+
+        """
+        pass
