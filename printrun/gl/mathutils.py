@@ -19,7 +19,7 @@ from numpy.linalg import inv
 from pyglet import gl
 
 # for type hints
-from typing import List
+from typing import List, Tuple
 from ctypes import Array, c_int, c_double
 
 def vec(*args: float) -> Array:
@@ -31,11 +31,13 @@ def cross(v1: List[float], v2: List[float]) -> List[float]:
             v1[2] * v2[0] - v1[0] * v2[2],
             v1[0] * v2[1] - v1[1] * v2[0]]
 
-def trackball(p1x: float, p1y: float, p2x: float, p2y: float, r: float) -> List[float]:
+def trackball(p1x: float, p1y: float,
+              p2x: float, p2y: float,
+              r: float) -> Tuple[float, float, float, float]:
     TRACKBALLSIZE = r
 
     if p1x == p2x and p1y == p2y:
-        return [0.0, 0.0, 0.0, 1.0]
+        return (0.0, 0.0, 0.0, 1.0)
 
     p1 = [p1x, p1y, project_to_sphere(TRACKBALLSIZE, p1x, p1y)]
     p2 = [p2x, p2y, project_to_sphere(TRACKBALLSIZE, p2x, p2y)]
@@ -48,16 +50,17 @@ def trackball(p1x: float, p1y: float, p2x: float, p2y: float, r: float) -> List[
     t = max(t, -1.0)
     phi = 2.0 * math.asin(t)
 
-    return axis_to_quat(a, phi)
+    return axis_to_quat(np.array(a), phi)
 
-def axis_to_quat(a: List[float], phi: float) -> List[float]:
+def axis_to_quat(a: np.ndarray,
+                 phi: float) -> Tuple[float, float, float, float]:
     lena = math.sqrt(sum(x * x for x in a))
     q = [x * (1 / lena) for x in a]
     q = [x * math.sin(phi / 2.0) for x in q]
     q.append(math.cos(phi / 2.0))
-    return q
+    return tuple(q)
 
-def build_rotmatrix(q: List[float]) -> np.ndarray:
+def build_rotmatrix(q: Tuple[float, float, float, float]) -> np.ndarray:
     m = np.zeros((16, 1)) # (GLdouble * 16)()
     m[0] = 1.0 - 2.0 * (q[1] * q[1] + q[2] * q[2])
     m[1] = 2.0 * (q[0] * q[1] - q[2] * q[3])
@@ -88,13 +91,15 @@ def project_to_sphere(r: float, x: float, y: float) -> float:
     t = r / 1.41421356237309504880
     return t * t / d
 
-def mulquat(q1: List[float], rq: List[float]) -> List[float]:
-    return [q1[3] * rq[0] + q1[0] * rq[3] + q1[1] * rq[2] - q1[2] * rq[1],
+def mulquat(q1: Tuple[float, float, float, float],
+            rq: Tuple[float, float, float, float]
+            ) -> Tuple[float, float, float, float]:
+    return (q1[3] * rq[0] + q1[0] * rq[3] + q1[1] * rq[2] - q1[2] * rq[1],
             q1[3] * rq[1] + q1[1] * rq[3] + q1[2] * rq[0] - q1[0] * rq[2],
             q1[3] * rq[2] + q1[2] * rq[3] + q1[0] * rq[1] - q1[1] * rq[0],
-            q1[3] * rq[3] - q1[0] * rq[0] - q1[1] * rq[1] - q1[2] * rq[2]]
+            q1[3] * rq[3] - q1[0] * rq[0] - q1[1] * rq[1] - q1[2] * rq[2])
 
-def quat_rotate_vec(quat: List[float],
+def quat_rotate_vec(quat: Tuple[float, float, float, float],
                      vector_list: list[np.ndarray]) -> list[np.ndarray]:
     """
     Apply the rotation of a given quaterion on all of the given vectors.
@@ -108,16 +113,16 @@ def quat_rotate_vec(quat: List[float],
 
     return vecs_out
 
-def quat_rotate_vec_dev(quat: List[float],
+def quat_rotate_vec_dev(quat: Tuple[float, float, float, float],
                         vector_list: list[np.ndarray]) -> list[np.ndarray]:
     """
     Apply the rotation of a given quaterion on all of the given vectors.
     This implementation uses quaternion multiplication.
     """
     vecs_out = []
-    quat_inv = [-quat[0], -quat[1], -quat[2], quat[3]]
+    quat_inv = (-quat[0], -quat[1], -quat[2], quat[3])
     for v in vector_list:
-        vec_in = [v[0], v[1], v[2], 0.0]
+        vec_in = (v[0], v[1], v[2], 0.0)
         a = mulquat(quat_inv, vec_in)
         b = mulquat(a, quat)
         vecs_out.append(b[:3])
@@ -170,7 +175,7 @@ def mat4_scaling(x_val: float, y_val: float, z_val: float) -> np.ndarray:
 
     return matrix
 
-def pyg_to_gl_mat4(pyg_matrix) -> Array:
+def pyg_to_gl_mat4(pyg_matrix) -> Array[c_double]:
     """
     Converts a pyglet Mat4() matrix into a c_types_Array which
     can be directly passed into OpenGL calls.
@@ -181,7 +186,7 @@ def pyg_to_gl_mat4(pyg_matrix) -> Array:
                       *pyg_matrix.column(2),
                       *pyg_matrix.column(3))
 
-def np_to_gl_mat(np_matrix: np.ndarray) -> Array:
+def np_to_gl_mat(np_matrix: np.ndarray) -> Array[c_double]:
     """
     Converts a numpy matrix into a c_types_Array which
     can be directly passed into OpenGL calls.

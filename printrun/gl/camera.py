@@ -27,7 +27,7 @@ from .mathutils import trackball, np_to_gl_mat, \
                        mulquat, axis_to_quat, quat_rotate_vec
 
 # for type hints
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING
 from wx import MouseEvent
 from ctypes import Array
 Build_Dims = Tuple[int, int, int, int, int, int]
@@ -59,16 +59,14 @@ class Camera():
         self.eye = np.array((0.0, 0.0, 1.0))
         self.target = np.array((0.0, 0.0, 0.0))
         self.up = np.array((0.0, 1.0, 0.0))
+        self.x_axis = np.array((-1.0, 0.0, 0.0))
         self.zoom_factor = 1.0
 
-        self.orientation = [0.0, 0.0, 0.0, 1.0]
-        self.angle_z = 0
-        self.angle_x = 0
         self.init_rot_pos = None
         self.init_trans_pos = None
-        self.view_mat = np.identity(4)
-        self.proj_mat = np.identity(4)
         self.gl_identity = np_to_gl_mat(np.identity(4))
+        self.view_mat = self.gl_identity
+        self.proj_mat = np.identity(4)
 
     def update_size(self, width: int, height: int, scalefactor: float) -> None:
         self.width = width
@@ -103,7 +101,8 @@ class Camera():
     def reset_view_matrix(self) -> None:
         glMatrixMode(GL_MODELVIEW)
         glLoadMatrixd(self.gl_identity)
-        self.reset_rotation()
+        self.up = np.array((0.0, 1.0, 0.0))
+        self.x_axis = np.array((-1.0, 0.0, 0.0))
         self._set_initial_view()
 
         if self.width / self.platform[0] < self.height / self.platform[1]:
@@ -120,11 +119,6 @@ class Camera():
 
         self._rebuild_view_mat()
         self.view_matrix_initialized = True
-
-    def reset_rotation(self) -> None:
-        self.orientation = [0.0, 0.0, 0.0, 1.0]
-        self.angle_x = 0.0
-        self.angle_z = 0.0
 
     def create_projection_matrix(self) -> None:
         glMatrixMode(GL_PROJECTION)
@@ -182,47 +176,82 @@ class Camera():
 
         if self.is_orthographic:
             zf = self.zoom_factor * 1 / factor
-            self.zoom_factor = max(min(zf, 0.8), 0.01)
-            self.create_projection_matrix()
-        else:
-            # TODO: Implement zoom to cursor
-            """
-            if to_cursor:
-                vec1 = np.array(self.canvas.mouse_to_3d(to_cursor[0], to_cursor[1]))
-                print("vev1: ", vec1)
-            """
-
-            eye = self.target + (self.eye - self.target) * 1 / factor
-            forward = eye - self.target
-            length = np.sqrt(sum(a * a for a in forward))
-
-            if length > 5 * self.dist or length < 6.0:
+            if zf >= 0.8 or zf <= 0.01:
                 return
 
-            self.eye = eye
+            self.zoom_factor = zf
+            self.create_projection_matrix()
 
-            """
             if to_cursor:
-                self._rebuild_view_mat()
-                vec2 = np.array(self.canvas.mouse_to_3d(to_cursor[0], to_cursor[1]))
-                print("vev2: ", vec2)
-                delta = vec2 - vec1
-                print("delta: ", delta)
-                self.eye = delta + self.eye
-                self.target = delta + self.target
-            """
+                cursor_vec = np.array(self.canvas.mouse_to_3d(to_cursor[0],
+                                                              to_cursor[1]))
+                center_vec = np.array(self.canvas.mouse_to_3d(self.width / 2,
+                                                              self.height / 2))
+                dolly_delta =(cursor_vec - center_vec) * (1.0 - 1 / factor)
+                self.eye = dolly_delta + self.eye
+                self.target = dolly_delta + self.target
+        else:
+            if to_cursor:
+                cursor_vec = np.array(self.canvas.mouse_to_3d(to_cursor[0],
+                                                              to_cursor[1]))
+                cursor_dir = self.eye - cursor_vec
+                cursor_udir = cursor_dir / np.sqrt(sum(a * a for a in cursor_dir))
+
+                forward = self.target - self.eye
+                length = np.sqrt(sum(a * a for a in forward))
+                uforward = forward / length
+
+                delta_vec = cursor_udir * length * (1.0 - factor)
+                new_length = length * 1 / factor
+
+                if new_length > 5 * self.dist or new_length < 6.0:
+                    return
+
+                self.eye = self.eye + delta_vec
+                self.target = self.eye + uforward * new_length
+                if self.target[2] < 0.0:
+                    # We don't want the pivot to go lower than the platform
+                    self.target = self._set_target_to_ground(self.target,
+                                                             self.eye,
+                                                             uforward)
+
+            else:
+                eye = self.target + (self.eye - self.target) * 1 / factor
+                forward = eye - self.target
+                new_length = np.sqrt(sum(a * a for a in forward))
+
+                if new_length > 5 * self.dist or new_length < 6.0:
+                    return
+
+                self.eye = eye
+
         if rebuild_mat:
             self._rebuild_view_mat()
 
+    def _set_target_to_ground(self, target_vec: np.ndarray, eye_vec: np.ndarray,
+                              unit_direction: np.ndarray) -> np.ndarray:
+        """
+        Calculates the point where the camera direction hits the
+        ground plane (platform plane).
+        Returns either a new target vector or the given target vector.
+        """
+        plane_normal = np.array((0.0, 0.0, 1.0))
+        q = unit_direction.dot(plane_normal)
+        if q == 0:
+            return target_vec
+        t = - (eye_vec.dot(plane_normal)) / q
+        if t < 0:
+            return target_vec
+
+        return eye_vec + t * unit_direction
+
     def _orbit(self, p1x: float, p1y: float,
-               p2x: float, p2y: float) -> List[float]:
+               p2x: float, p2y: float) -> Tuple[float, float, float, float]:
         rz = p2x - p1x
-        self.angle_z -= rz
-        rot_z = axis_to_quat([0.0, 0.0, -1.0], self.angle_z)
+        rot_z = axis_to_quat(np.array((0.0, 0.0, -1.0)), -rz)
 
         rx = p2y - p1y
-        self.angle_x += rx
-        rot_a = axis_to_quat([-1.0, 0.0, 0.0], self.angle_x)
+        rot_a = axis_to_quat(self.x_axis, rx)
 
         return mulquat(rot_a, rot_z)
 
@@ -240,12 +269,16 @@ class Camera():
 
             with self.rot_lock:
                 if self.orbit_control:
-                    self.orientation = self._orbit(p1x, p1y, p2x, p2y)
+                    delta_quat = self._orbit(p1x, p1y, p2x, p2y)
                 else:
                     # TODO: Is trackball still useable?
-                    quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
-                    self.orientation = mulquat(self.orientation, quat)
+                    delta_quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
 
+            forward = self.eye - self.target
+            rotated_forward, self.up, self.x_axis, *_ = quat_rotate_vec(delta_quat,
+                                                        [forward, self.up, self.x_axis])
+
+            self.eye = rotated_forward + self.target
             self._rebuild_view_mat()
             self.init_rot_pos = p2
 
@@ -269,11 +302,7 @@ class Camera():
             self.init_trans_pos = p2
 
     def _rebuild_view_mat(self) -> None:
-        forward = self.eye - self.target
-        rotated_forward, rotated_up, *_ = quat_rotate_vec(self.orientation,
-                                                      [forward, self.up])
-        rotated_eye = rotated_forward + self.target
-        self.view_mat = self._look_at(rotated_eye , self.target, rotated_up)
+        self.view_mat = self._look_at(self.eye , self.target, self.up)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadMatrixd(self.view_mat)

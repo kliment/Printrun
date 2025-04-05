@@ -441,6 +441,7 @@ class wxGLPanel(BASE_CLASS):
         px = (GLdouble)()
         py = (GLdouble)()
         pz = (GLdouble)()
+        # FIXME: This can be replaced with self.width, self.height
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
         mvmat = self.camera.get_view_matrix()
