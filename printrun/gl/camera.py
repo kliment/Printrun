@@ -23,7 +23,7 @@ from pyglet.gl import GL_PROJECTION, GL_MODELVIEW, \
                       glPushMatrix, glPopMatrix, \
                       glOrtho, gluPerspective
 
-from .mathutils import trackball, np_to_gl_mat, \
+from .mathutils import vec_length, trackball, np_to_gl_mat, \
                        mulquat, axis_to_quat, quat_rotate_vec
 
 # for type hints
@@ -37,7 +37,8 @@ if TYPE_CHECKING:
 
 class Camera():
 
-    rot_lock = Lock()
+    LOCK = Lock()
+    CTYPE_IDENTITY = np_to_gl_mat(np.identity(4))
 
     def __init__(self, parent: 'wxGLPanel', build_dimensions: Build_Dims,
                  ortho: bool = True) -> None:
@@ -60,12 +61,11 @@ class Camera():
         self.target = np.array((0.0, 0.0, 0.0))
         self.up = np.array((0.0, 1.0, 0.0))
         self.x_axis = np.array((-1.0, 0.0, 0.0))
-        self.zoom_factor = 1.0
+        self.dolly_factor = 1.0
 
         self.init_rot_pos = None
         self.init_trans_pos = None
-        self.gl_identity = np_to_gl_mat(np.identity(4))
-        self.view_mat = self.gl_identity
+        self.view_mat = self.CTYPE_IDENTITY
         self.proj_mat = np.identity(4)
 
     def update_size(self, width: int, height: int, scalefactor: float) -> None:
@@ -77,7 +77,7 @@ class Camera():
                           setview: bool = True) -> None:
         """
         Update the printer dimensions which the 3D view uses to set the
-        initial view and the size of the print platform
+        initial view and the dolly distance to the print platform.
         """
         dims = build_dimensions
         self.platformcenter = (-dims[3] - dims[0] / 2,
@@ -100,21 +100,21 @@ class Camera():
 
     def reset_view_matrix(self) -> None:
         glMatrixMode(GL_MODELVIEW)
-        glLoadMatrixd(self.gl_identity)
+        glLoadMatrixd(self.CTYPE_IDENTITY)
         self.up = np.array((0.0, 1.0, 0.0))
         self.x_axis = np.array((-1.0, 0.0, 0.0))
         self._set_initial_view()
 
         if self.width / self.platform[0] < self.height / self.platform[1]:
             min_side = self.width * self.display_ppi_factor
-            zoom_length = self.platform[0]
+            dolly_length = self.platform[0]
         else:
             min_side = self.height * self.display_ppi_factor
-            zoom_length = self.platform[1]
+            dolly_length = self.platform[1]
 
         # conversion between millimeter and pixel
-        zoom_constant = 1.05 * self.display_ppi_factor
-        self.zoom_factor = zoom_length / min_side * zoom_constant
+        dolly_constant = 1.05 * self.display_ppi_factor
+        self.dolly_factor = dolly_length / min_side * dolly_constant
         self.create_projection_matrix()
 
         self._rebuild_view_mat()
@@ -122,13 +122,13 @@ class Camera():
 
     def create_projection_matrix(self) -> None:
         glMatrixMode(GL_PROJECTION)
-        glLoadMatrixd(self.gl_identity)
+        glLoadMatrixd(self.CTYPE_IDENTITY)
 
         if self.is_orthographic:
-            glOrtho(-self.width / 2 * self.zoom_factor,
-                    self.width / 2 * self.zoom_factor,
-                    -self.height / 2 * self.zoom_factor,
-                    self.height / 2 * self.zoom_factor,
+            glOrtho(-self.width / 2 * self.dolly_factor,
+                    self.width / 2 * self.dolly_factor,
+                    -self.height / 2 * self.dolly_factor,
+                    self.height / 2 * self.dolly_factor,
                     0.01, 3 * self.dist)
         else:
             gluPerspective(45.0, self.width / self.height,
@@ -141,17 +141,16 @@ class Camera():
 
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()  # backup and clear MODELVIEW
-        glLoadMatrixd(self.gl_identity)
+        glLoadMatrixd(self.CTYPE_IDENTITY)
 
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()  # backup and clear PROJECTION
-        glLoadMatrixd(self.gl_identity)
+        glLoadMatrixd(self.CTYPE_IDENTITY)
 
         glOrtho(0.0, self.width, 0.0, self.height, -1.0, 1.0)
 
     def revert_pseudo2d_matrix(self) -> None:
-        '''Revert current matrices back to the normal,
-        saved matrices'''
+        '''Revert current matrices back to the normal, saved matrices'''
 
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()  # restore PROJECTION
@@ -162,7 +161,11 @@ class Camera():
     def get_view_matrix(self) -> Array:
         return self.view_mat
 
-    def move_rel(self, x: float, y: float, z: float):
+    def move_rel(self, x: float, y: float, z: float) -> None:
+        """
+        Translate the camera by (x, y, z) in the global coordinate system of
+        the scene.
+        """
         delta = np.array((x, y, z))
 
         self.eye = delta + self.eye
@@ -175,11 +178,11 @@ class Camera():
              rebuild_mat: bool = True) -> None:
 
         if self.is_orthographic:
-            zf = self.zoom_factor * 1 / factor
-            if zf >= 0.8 or zf <= 0.01:
+            df = self.dolly_factor * 1 / factor
+            if df >= 0.8 or df <= 0.01:
                 return
 
-            self.zoom_factor = zf
+            self.dolly_factor = df
             self.create_projection_matrix()
 
             if to_cursor:
@@ -195,10 +198,10 @@ class Camera():
                 cursor_vec = np.array(self.canvas.mouse_to_3d(to_cursor[0],
                                                               to_cursor[1]))
                 cursor_dir = self.eye - cursor_vec
-                cursor_udir = cursor_dir / np.sqrt(sum(a * a for a in cursor_dir))
+                cursor_udir = cursor_dir / vec_length(cursor_dir)
 
                 forward = self.target - self.eye
-                length = np.sqrt(sum(a * a for a in forward))
+                length = vec_length(forward)
                 uforward = forward / length
 
                 delta_vec = cursor_udir * length * (1.0 - factor)
@@ -218,7 +221,7 @@ class Camera():
             else:
                 eye = self.target + (self.eye - self.target) * 1 / factor
                 forward = eye - self.target
-                new_length = np.sqrt(sum(a * a for a in forward))
+                new_length = vec_length(forward)
 
                 if new_length > 5 * self.dist or new_length < 6.0:
                     return
@@ -267,7 +270,7 @@ class Camera():
             p2x = p2[0] / (self.width / 2) - 1
             p2y = 1 - p2[1] / (self.height / 2)
 
-            with self.rot_lock:
+            with self.LOCK:
                 if self.orbit_control:
                     delta_quat = self._orbit(p1x, p1y, p2x, p2y)
                 else:
@@ -292,14 +295,28 @@ class Camera():
             vec1 = np.array(self.canvas.mouse_to_3d(p1[0], p1[1]))
             vec2 = np.array(self.canvas.mouse_to_3d(p2[0], p2[1]))
 
-            delta = (vec1 - vec2) if self.is_orthographic \
-                                  else (vec1 - vec2) / 15.0
+            if self.is_orthographic:
+                delta = vec1 - vec2
+            else:
+                df = self._current_dolly_factor()
+                delta = (vec1 - vec2) * df
 
             self.eye = delta + self.eye
             self.target = delta + self.target
 
             self._rebuild_view_mat()
             self.init_trans_pos = p2
+
+    def _current_dolly_factor(self) -> float:
+        """
+        Returns a factor of the current dolly distance relativ to
+        the max. dolly distance.
+        """
+        forward = self.eye - self.target
+        dolly_dist = vec_length(forward)
+        dolly_limits = 5 * self.dist - 6.0
+
+        return dolly_dist / dolly_limits
 
     def _rebuild_view_mat(self) -> None:
         self.view_mat = self._look_at(self.eye , self.target, self.up)

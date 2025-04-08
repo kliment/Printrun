@@ -26,6 +26,10 @@ def vec(*args: float) -> Array:
     '''Returns an array of GLfloat values'''
     return (gl.GLfloat * len(args))(*args)
 
+def vec_length(vector: np.ndarray) -> float:
+    '''Return the length of a given vector'''
+    return np.sqrt(sum(a * a for a in vector))
+
 def cross(v1: List[float], v2: List[float]) -> List[float]:
     return [v1[1] * v2[2] - v1[2] * v2[1],
             v1[2] * v2[0] - v1[0] * v2[2],
@@ -54,7 +58,7 @@ def trackball(p1x: float, p1y: float,
 
 def axis_to_quat(a: np.ndarray,
                  phi: float) -> Tuple[float, float, float, float]:
-    lena = math.sqrt(sum(x * x for x in a))
+    lena = vec_length(a)
     q = [x * (1 / lena) for x in a]
     q = [x * math.sin(phi / 2.0) for x in q]
     q.append(math.cos(phi / 2.0))
@@ -125,7 +129,7 @@ def quat_rotate_vec_dev(quat: Tuple[float, float, float, float],
         vec_in = (v[0], v[1], v[2], 0.0)
         a = mulquat(quat_inv, vec_in)
         b = mulquat(a, quat)
-        vecs_out.append(b[:3])
+        vecs_out.append(np.array(b[:3]))
 
     return vecs_out
 

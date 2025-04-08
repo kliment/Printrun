@@ -325,8 +325,8 @@ class MouseCursor:
     """
     def __init__(self) -> None:
         self.position = (0.0, 0.0, 0.0)
-        self.vertices = []
-        self.indices = []
+        self.vertices: List[Tuple[float, float, float]] = []
+        self.indices: List[int] = []
         self.color = (225 / 255, 0 / 255, 45 / 255, 1.0)  # Red
         self._initialise_data()
 
@@ -343,7 +343,7 @@ class MouseCursor:
         z_height = 0.01
         vertices = [(0.0, 0.0, z_height),  # this is the center point
                     (0.0, radius, z_height)]  # this is first point on the top
-        indices = []
+        indices: List[int] = []
 
         vert_n = 0
         for i in range(segments):
