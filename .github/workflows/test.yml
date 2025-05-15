@@ -16,8 +16,8 @@ jobs:
         python-version: ["3.8", "3.11", "3.13"]
         include:
           - python-version: "3.8"
-            os: "ubuntu-20.04"
-            wxpython-wheel: "ubuntu-20.04/wxPython-4.2.0-cp38-cp38-linux_x86_64.whl"
+            os: "ubuntu-22.04"
+            wxpython-wheel: "ubuntu-22.04/wxPython-4.2.0-cp38-cp38-linux_x86_64.whl"
           - python-version: "3.11"
             os: "ubuntu-22.04"
             wxpython-wheel: "ubuntu-22.04/wxPython-4.2.1-cp311-cp311-linux_x86_64.whl"
