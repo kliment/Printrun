@@ -31,6 +31,8 @@ def patch_method(obj, method, replacement):
     setattr(obj, method, types.MethodType(wrapped, obj))
 
 class PlaterPanel(wx.Panel):
+    gl_bg_colour = (200 / 255, 225 / 255, 250 / 255, 1.0)
+
     def __init__(self, **kwargs):
         self.destroy_on_done = False
         parent = kwargs.get("parent", None)
@@ -40,6 +42,13 @@ class PlaterPanel(wx.Panel):
     def prepare_ui(self, filenames = [], callback = None, parent = None, build_dimensions = None, cutting_tool = True):
         self.filenames = filenames
         self.cut_axis_buttons = []
+
+        # Load the background colour from settings
+        if parent and hasattr(parent.settings, "gcview_color_background"):
+            col = wx.Colour(parent.settings.gcview_color_background)
+            self.gl_bg_colour = (col.GetRed() / 255,
+                                 col.GetGreen() / 255,
+                                 col.GetBlue() / 255, 1.0)
 
         menu_sizer = self.menu_sizer = wx.BoxSizer(wx.VERTICAL)
         list_sizer = wx.StaticBoxSizer(wx.VERTICAL, self, label = "Models")
@@ -134,6 +143,8 @@ class PlaterPanel(wx.Panel):
             self.Bind(wx.EVT_BUTTON, lambda e: self.done(e, callback), id=wx.ID_OK)
             self.Bind(wx.EVT_BUTTON, lambda e: self.Destroy(), id=wx.ID_CANCEL)
 
+        self.Bind(wx.EVT_CHAR_HOOK, self.keypress)
+
         self.topsizer.AddGrowableRow(0)
         self.topsizer.AddGrowableCol(1)
         self.SetSizer(self.topsizer)
@@ -141,21 +152,28 @@ class PlaterPanel(wx.Panel):
 
     def set_viewer(self, viewer):
         # Patch handle_rotation on the fly
-        if hasattr(viewer, "handle_rotation"):
+        if hasattr(viewer.camera, "handle_rotation"):
             def handle_rotation(self, event, orig_handler):
-                if self.initpos is None:
-                    self.initpos = event.GetPosition()
+                if self.init_rot_pos is None:
+                    self.init_rot_pos = event.GetPosition() * self.display_ppi_factor
                 else:
                     if event.ShiftDown():
-                        p1 = self.initpos
-                        p2 = event.GetPosition()
-                        x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                        x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                        self.parent.move_shape((x2 - x1, y2 - y1))
-                        self.initpos = p2
+                        p1 = self.init_rot_pos
+                        init_position = self.canvas.mouse_to_plane(p1[0], p1[1],
+                                                    plane_normal = (0, 0, 1), plane_offset = 0)
+
+                        p2 = event.GetPosition() * self.display_ppi_factor
+
+                        drag_position = self.canvas.mouse_to_plane(p2[0], p2[1],
+                                                    plane_normal = (0, 0, 1), plane_offset = 0)
+
+                        if drag_position is not None:
+                            self.canvas.parent.move_shape((drag_position[0] - init_position[0],
+                                                           drag_position[1] - init_position[1]))
+                            self.init_rot_pos = p2
                     else:
                         orig_handler(event)
-            patch_method(viewer, "handle_rotation", handle_rotation)
+            patch_method(viewer.camera, "handle_rotation", handle_rotation)
         # Patch handle_wheel on the fly
         if hasattr(viewer, "handle_wheel"):
             def handle_wheel(self, event, orig_handler):
@@ -167,9 +185,47 @@ class PlaterPanel(wx.Panel):
                 else:
                     orig_handler(event)
             patch_method(viewer, "handle_wheel", handle_wheel)
+
+        viewer.color_background = self.gl_bg_colour
+        viewer.focus.update_colour(self.gl_bg_colour)
+        viewer.platform.update_colour(self.gl_bg_colour)
+
         self.s = viewer
+
         self.s.SetMinSize((150, 150))
         self.topsizer.Add(self.s, pos = (0, 1), span = (1, 1), flag = wx.EXPAND)
+
+    def keypress(self, event: wx.KeyEvent) -> None:
+        """gets keypress events and moves/rotates active shape"""
+        keycode = event.GetUnicodeKey()
+        if keycode == wx.WXK_NONE:
+            keycode = event.GetKeyCode()
+
+        if event.GetModifiers() in (wx.MOD_CONTROL, wx.MOD_SHIFT):
+            step, angle = (1, 1)
+        else:
+            step, angle = (5, 18)
+
+        if keycode == ord('H'):
+            self.move_shape((-step, 0))
+
+        elif keycode == ord('L'):
+            self.move_shape((step, 0))
+
+        elif keycode == ord('J'):
+            self.move_shape((0, step))
+
+        elif keycode == ord('K'):
+            self.move_shape((0, -step))
+
+        elif keycode == ord('['):
+            self.rotate_shape(-angle)
+
+        elif keycode == ord(']'):
+            self.rotate_shape(angle)
+
+        event.Skip()
+        wx.CallAfter(self.Refresh)
 
     def move_shape(self, delta):
         """moves shape (selected in l, which is list ListBox of shapes)

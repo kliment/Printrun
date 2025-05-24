@@ -68,7 +68,6 @@ class showstl(wx.Window):
         self.Bind(wx.EVT_MOUSEWHEEL, self.rot)
         self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
         self.Bind(wx.EVT_PAINT, self.repaint)
-        self.Bind(wx.EVT_KEY_DOWN, self.keypress)
         self.triggered = 0
         self.initpos = None
         self.prevsel = -1
@@ -133,34 +132,6 @@ class showstl(wx.Window):
         if not self.triggered:
             self.triggered = 1
             threading.Thread(target = self.cr).start()
-
-    def keypress(self, event):
-        """gets keypress events and moves/rotates active shape"""
-        keycode = event.GetKeyCode()
-        step = 5
-        angle = 18
-        if event.ControlDown():
-            step = 1
-            angle = 1
-        # h
-        if keycode == 72:
-            self.move_shape((-step, 0))
-        # l
-        if keycode == 76:
-            self.move_shape((step, 0))
-        # j
-        if keycode == 75:
-            self.move_shape((0, step))
-        # k
-        if keycode == 74:
-            self.move_shape((0, -step))
-        # [
-        if keycode == 91:
-            self.rotate_shape(-angle)
-        # ]
-        if keycode == 93:
-            self.rotate_shape(angle)
-        event.Skip()
 
     def rotateafter(self):
         if self.i != self.previ:
@@ -301,14 +272,13 @@ class StlPlaterPanel(PlaterPanel):
 
     def clickcb_cut(self, event):
         axis = self.cutting_axis
-        self.cutting_dist, _, _ = self.s.get_cutting_plane(axis, None,
-                                                           local_transform = True)
+        self.cutting_dist = self.s.get_cutting_dist(axis, None)
         if self.cutting_dist is not None:
             self.enable_cut_button(True)
 
     def clickcb_rebase(self, event):
         x, y = event.GetPosition()
-        ray_near, ray_far = self.s.mouse_to_ray(x, y, local_transform = True)
+        ray_near, ray_far = self.s.mouse_to_ray(x, y)
         best_match = None
         best_facet = None
         best_dist = float("inf")

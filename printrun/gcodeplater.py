@@ -26,7 +26,7 @@ import logging
 
 from printrun import gcoder
 from printrun.objectplater import make_plater, PlaterPanel
-from printrun.gl.libtatlin import actors
+from printrun.gl import actors
 import printrun.gui.viz  # NOQA
 from printrun import gcview
 
@@ -86,18 +86,16 @@ class GcodePlaterPanel(PlaterPanel):
                    grid = (1, 10)):
         super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
-                                       antialias_samples = antialias_samples)
+                                       antialias_samples = antialias_samples,
+                                       circular = circular_platform,
+                                       grid = grid)
         self.set_viewer(viewer)
-        self.platform = actors.Platform(self.build_dimensions,
-                                        circular = circular_platform,
-                                        grid = grid)
-        self.platform_object = gcview.GCObject(self.platform)
         self.Layout()
         self.SetMinClientSize(self.topsizer.CalcMin())
         self.SetTitle(_("G-Code Plate Builder"))
 
     def get_objects(self):
-        return [self.platform_object] + list(self.models.values())
+        return list(self.models.values())
     objects = property(get_objects)
 
     def load_file(self, filename):
