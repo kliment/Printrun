@@ -212,11 +212,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.loading_gcode = False
         self.loading_gcode_message = ""
         self.mini = False
-        self.p.sendcb = self.sentcb
-        self.p.preprintsendcb = self.preprintsendcb
-        self.p.printsendcb = self.printsentcb
-        self.p.startcb = self.startcb
-        self.p.endcb = self.endcb
+        self.p.callback.send = self.sentcb
+        self.p.callback.printpresend = self.preprintsendcb
+        self.p.callback.printsend = self.printsentcb
+        self.p.callback.start = self.startcb
+        self.p.callback.end = self.endcb
         self.cur_button = None
         self.predisconnect_mainqueue = None
         self.predisconnect_queueindex = None
@@ -381,7 +381,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         pronsole.pronsole.kill(self)
         global pronterface_quitting
         pronterface_quitting = True
-        self.p.recvcb = None
+        self.p.callback.recv = None
         self.p.disconnect()
         if hasattr(self, "feedrates_changed"):
             self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
@@ -1440,7 +1440,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if "Writing to file" in l:
             self.uploading = True
             self.p.startprint(self.fgcode)
-            self.p.endcb = self.endupload
+            self.p.callback.end = self.endupload
             self.recvlisteners.remove(self.uploadtrigger)
         elif "open failed, File" in l:
             self.recvlisteners.remove(self.uploadtrigger)
@@ -1918,7 +1918,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 return True
         return False
 
-    def preprintsendcb(self, gline, next_gline):
+    def preprintsendcb(self, gline, next_gline, index):
         """Callback when a printer gcode is about to be sent. We use it to
         exclude moves defined by the part excluder tool"""
         if not self.is_excluded_move(gline):
