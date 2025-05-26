@@ -16,7 +16,7 @@
 import wx
 
 # for type hints
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from .panel import wxGLPanel
 
@@ -92,9 +92,9 @@ class KeyboardInput():
         event.Skip()
         wx.CallAfter(self.canvas.Refresh)
 
-    def register(self, layerup: Callable | None = None,
-                 layerdown: Callable | None = None,
-                 currentlayer: Callable | None = None) -> None:
+    def register(self, layerup: Optional[Callable] = None,
+                 layerdown: Optional[Callable] = None,
+                 currentlayer: Optional[Callable] = None) -> None:
 
         if layerup:
             self.layer_up = layerup

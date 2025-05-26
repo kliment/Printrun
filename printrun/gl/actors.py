@@ -154,7 +154,7 @@ class Platform:
 
         self._initialise_data()
 
-    def _color(self, i: float) -> tuple:
+    def _color(self, i: float) -> Tuple:
         if i % self.grid[1] == 0:
             return self.color_major
         if i % (self.grid[1] // 2) == 0:
@@ -173,7 +173,7 @@ class Platform:
         else:
             self._load_rectangular()
 
-    def _origin_arrows(self) -> tuple[float, float, float]:
+    def _origin_arrows(self) -> Tuple[float, float, float]:
         arrow_offset = self.width * 0.01
         arrow_side_length = self.width * 0.015
         arrow_height = arrow_side_length * 0.866

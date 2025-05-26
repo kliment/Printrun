@@ -104,7 +104,7 @@ def mulquat(q1: Tuple[float, float, float, float],
             q1[3] * rq[3] - q1[0] * rq[0] - q1[1] * rq[1] - q1[2] * rq[2])
 
 def quat_rotate_vec(quat: Tuple[float, float, float, float],
-                     vector_list: list[np.ndarray]) -> list[np.ndarray]:
+                     vector_list: List[np.ndarray]) -> List[np.ndarray]:
     """
     Apply the rotation of a given quaterion on all of the given vectors.
     This implementation uses a rotation matrix.
@@ -118,7 +118,7 @@ def quat_rotate_vec(quat: Tuple[float, float, float, float],
     return vecs_out
 
 def quat_rotate_vec_dev(quat: Tuple[float, float, float, float],
-                        vector_list: list[np.ndarray]) -> list[np.ndarray]:
+                        vector_list: List[np.ndarray]) -> List[np.ndarray]:
     """
     Apply the rotation of a given quaterion on all of the given vectors.
     This implementation uses quaternion multiplication.
@@ -179,7 +179,7 @@ def mat4_scaling(x_val: float, y_val: float, z_val: float) -> np.ndarray:
 
     return matrix
 
-def pyg_to_gl_mat4(pyg_matrix) -> Array[c_double]:
+def pyg_to_gl_mat4(pyg_matrix) -> Array:
     """
     Converts a pyglet Mat4() matrix into a c_types_Array which
     can be directly passed into OpenGL calls.
@@ -190,7 +190,7 @@ def pyg_to_gl_mat4(pyg_matrix) -> Array[c_double]:
                       *pyg_matrix.column(2),
                       *pyg_matrix.column(3))
 
-def np_to_gl_mat(np_matrix: np.ndarray) -> Array[c_double]:
+def np_to_gl_mat(np_matrix: np.ndarray) -> Array:
     """
     Converts a numpy matrix into a c_types_Array which
     can be directly passed into OpenGL calls.
@@ -199,8 +199,8 @@ def np_to_gl_mat(np_matrix: np.ndarray) -> Array[c_double]:
     return array_type(*np_matrix.reshape((np_matrix.size, 1)))
 
 def np_unproject(winx: float, winy: float, winz: float,
-                 mv_mat: Array[c_double], p_mat: Array[c_double],
-                 viewport: Array[c_int], pointx: c_double,
+                 mv_mat: Array, p_mat: Array,
+                 viewport: Array, pointx: c_double,
                  pointy: c_double, pointz: c_double) -> bool:
     '''
     gluUnProject in Python with numpy. This is a direct
