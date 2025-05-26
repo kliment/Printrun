@@ -84,6 +84,8 @@ class GcodeViewPanel(wxGLPanel):
                                layerdown=self.layerdown,
                                currentlayer=self.currentlayer)
 
+        logging.debug(_("GL: Initialised gcview"))
+
     def inject(self) -> None:
         l = self.parent.model.num_layers_to_draw
         filtered = [k for k, v in self.parent.model.layer_idxs_map.items() if v == l]

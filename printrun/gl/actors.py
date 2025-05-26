@@ -49,6 +49,9 @@ from pyglet.graphics import Batch
 
 from . import camera
 
+from printrun.utils import install_locale
+install_locale("pronterface")
+
 # for type hints
 from typing import Union, Any, Tuple, List, Iterator
 from ctypes import Array
@@ -933,7 +936,7 @@ class GcodeModel(Model):
                                 # if not enough room for another 100 points now,
                                 # allocate enough and 50% extra to minimize separate allocations
                                 ratio = (travel_vertex_k + 100 * 6) / self.travels.size * 1.5
-                                logging.debug("gl realloc travel %d -> %d" % \
+                                logging.debug(_("GL: Reallocate GCode travel buffer %d -> %d") % \
                                               (self.travels.size, int(self.travels.size * ratio)))
                                 self.travels.resize(int(self.travels.size * ratio),
                                                     refcheck = False)
@@ -1060,7 +1063,7 @@ class GcodeModel(Model):
                                 # arc interpolation extra points allocation
                                 ratio = (index_k + len(new_indices) +
                                          100 * indicesperline) / self.indices.size * 1.5
-                                logging.debug("gl realloc print %d -> %d" % \
+                                logging.debug(_("GL: Reallocate GCode print buffer %d -> %d") % \
                                               (self.vertices.size, int(self.vertices.size * ratio)))
                                 self.vertices.resize(int(self.vertices.size * ratio),
                                                      refcheck = False)
@@ -1142,8 +1145,8 @@ class GcodeModel(Model):
 
         t_end = time.time()
 
-        logging.debug('Initialized 3D visualization in %.2f seconds' % (t_end - t_start))
-        logging.debug('Vertex count: %d' % ((len(self.vertices) + len(self.travels)) // 3))
+        logging.debug(_('GL: Initialized GCode model in %.2f seconds') % (t_end - t_start))
+        logging.debug(_('GL: GCode model vertex count: %d') % ((len(self.vertices) + len(self.travels)) // 3))
         yield None
 
     def copy(self) -> 'GcodeModel':
@@ -1397,7 +1400,7 @@ class GcodeModelLight(Model):
                         if self.vertices.size < (vertex_k + 100 * 6):
                             # arc interpolation extra points allocation
                             ratio = (vertex_k + 100 * 6) / self.vertices.size * 1.5
-                            logging.debug("gl realloc lite %d -> %d" % \
+                            logging.debug(_("GL: Reallocate GCode lite buffer %d -> %d") % \
                                           (self.vertices.size, int(self.vertices.size * ratio)))
                             self.vertices.resize(int(self.vertices.size * ratio), refcheck = False)
                             self.colors.resize(int(self.colors.size * ratio), refcheck = False)
@@ -1454,8 +1457,8 @@ class GcodeModelLight(Model):
 
         t_end = time.time()
 
-        logging.debug('Initialized 3D visualization in %.2f seconds' % (t_end - t_start))
-        logging.debug('Vertex count: %d' % (len(self.vertices) // 3))
+        logging.debug(_('GL: Initialized GCode model lite in %.2f seconds') % (t_end - t_start))
+        logging.debug(_('GL: GCode model lite vertex count: %d') % (len(self.vertices) // 3))
         yield None
 
     def update_colors(self) -> None:

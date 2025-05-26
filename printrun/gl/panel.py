@@ -48,6 +48,9 @@ from . import actors
 from . import camera
 from . import keyboardinput as kbi
 
+from printrun.utils import install_locale
+install_locale("pronterface")
+
 # for type hints
 from typing import TYPE_CHECKING, Any, Tuple, Union, Callable, Optional
 from printrun import stltool
@@ -206,7 +209,7 @@ class wxGLPanel(BASE_CLASS):
                 self.DrawCanvas()
             except pyglet.gl.GLException:
                 self.gl_broken = True
-                logging.error("OpenGL failed, disabling it:"
+                logging.error(_("GL: OpenGL failed, disabling it:")
                               + "\n" + traceback.format_exc())
         event.Skip()
 

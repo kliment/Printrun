@@ -18,6 +18,7 @@
 import wx
 import time
 import sys
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,9 @@ import numpy as np
 from . import stltool
 from .gl.panel import wxGLPanel
 from .gl import actors
+
+from .utils import install_locale
+install_locale("pronterface")
 
 # for type hints
 from typing import Tuple, Union
@@ -58,6 +62,8 @@ class StlViewPanel(wxGLPanel):
 
         self.gl_cursor = actors.MouseCursor()
         self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
+
+        logging.debug(_("GL: Initialised stlview"))
 
     def Destroy(self) -> None:
         # Clean up vertex lists
