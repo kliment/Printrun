@@ -43,6 +43,8 @@ class PlaterPanel(wx.Panel):
         self.filenames = filenames
         self.cut_axis_buttons = []
 
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+
         # Load the background colour from settings
         if parent and hasattr(parent.settings, "gcview_color_background"):
             col = wx.Colour(parent.settings.gcview_color_background)
@@ -150,9 +152,12 @@ class PlaterPanel(wx.Panel):
         self.SetSizer(self.topsizer)
         self.build_dimensions = build_dimensions or [200, 200, 100, 0, 0, 0]
 
+    def on_close(self, event):
+        self.Destroy()
+
     def set_viewer(self, viewer):
         # Patch handle_rotation on the fly
-        if hasattr(viewer.camera, "handle_rotation"):
+        if hasattr(viewer, "camera") and hasattr(viewer.camera, "handle_rotation"):
             def handle_rotation(self, event, orig_handler):
                 if self.init_rot_pos is None:
                     self.init_rot_pos = event.GetPosition() * self.display_ppi_factor
@@ -174,6 +179,9 @@ class PlaterPanel(wx.Panel):
                     else:
                         orig_handler(event)
             patch_method(viewer.camera, "handle_rotation", handle_rotation)
+            viewer.focus.update_colour(self.gl_bg_colour)
+            viewer.platform.update_colour(self.gl_bg_colour)
+
         # Patch handle_wheel on the fly
         if hasattr(viewer, "handle_wheel"):
             def handle_wheel(self, event, orig_handler):
@@ -187,11 +195,8 @@ class PlaterPanel(wx.Panel):
             patch_method(viewer, "handle_wheel", handle_wheel)
 
         viewer.color_background = self.gl_bg_colour
-        viewer.focus.update_colour(self.gl_bg_colour)
-        viewer.platform.update_colour(self.gl_bg_colour)
 
         self.s = viewer
-
         self.s.SetMinSize((150, 150))
         self.topsizer.Add(self.s, pos = (0, 1), span = (1, 1), flag = wx.EXPAND)
 

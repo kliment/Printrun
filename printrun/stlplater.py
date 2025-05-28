@@ -33,8 +33,6 @@ from printrun.objectplater import make_plater, PlaterPanel
 
 from .utils import install_locale
 install_locale('pronterface')
-# Set up Internationalization using gettext
-# searching for installed locales on /usr/share; uses relative folder if not found (windows)
 
 glview = '--no-gl' not in sys.argv
 if glview:
@@ -65,23 +63,28 @@ class showstl(wx.Window):
         self.i = 0
         self.parent = parent
         self.previ = 0
-        self.Bind(wx.EVT_MOUSEWHEEL, self.rot)
-        self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
-        self.Bind(wx.EVT_PAINT, self.repaint)
         self.triggered = 0
         self.initpos = None
         self.prevsel = -1
+        self.short_side = 400
+        self.redraw_timer = None
+        self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
+
+        self.Bind(wx.EVT_MOUSEWHEEL, self.rot)
+        self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
+        self.Bind(wx.EVT_PAINT, self.repaint)
+        self.Bind(wx.EVT_SIZE, self.resize)
 
     def prepare_model(self, m, scale):
-        m.bitmap = wx.Bitmap(800, 800, 32)
+        sz = self.short_side
+        scale = sz / 400 * scale
+        m.bitmap = wx.Bitmap(2 * sz, 2 * sz, 32)
         dc = wx.MemoryDC()
         dc.SelectObject(m.bitmap)
-        dc.SetBackground(wx.Brush((0, 0, 0, 0)))
-        dc.SetBrush(wx.Brush((0, 0, 0, 255)))
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
         for i in m.facets:
-            dc.DrawPolygon([wx.Point(400 + scale * p[0], (400 - scale * p[1])) for p in i[1]])
+            dc.DrawPolygon([wx.Point(sz + scale * p[0], (sz - scale * p[1])) for p in i[1]])
         dc.SelectObject(wx.NullBitmap)
         m.bitmap.SetMask(wx.Mask(m.bitmap, wx.Colour(0, 0, 0, 255)))
 
@@ -154,35 +157,65 @@ class showstl(wx.Window):
             self.prevsel = s
         self.rotate_shape(-1 if z < 0 else 1)
 
+    def resize(self, event):
+        height, width = event.GetSize()
+        self.short_side = height if height < width else width
+
+        # This makes sure that we don't constantly redraw all models
+        delay_ms = 250
+        if self.redraw_timer:
+            self.redraw_timer.Start(delay_ms)
+        else:
+            self.redraw_timer = wx.CallLater(delay_ms, self.redraw_models)
+
+        self.Refresh()
+        event.Skip()
+
+    def redraw_models(self):
+        for m in self.parent.models.values():
+            self.prepare_model(m ,2)
+
+        self.redraw_timer = None
+        self.Refresh()
+
     def repaint(self, event):
-        dc = wx.PaintDC(self)
+        dc = wx.AutoBufferedPaintDC(self)
         self.paint(dc = dc)
 
     def paint(self, coord1 = "x", coord2 = "y", dc = None):
         if dc is None:
             dc = wx.ClientDC(self)
-        scale = 2
-        dc.SetPen(wx.Pen(wx.Colour(100, 100, 100)))
-        for i in range(20):
-            dc.DrawLine(0, i * scale * 10, 400, i * scale * 10)
-            dc.DrawLine(i * scale * 10, 0, i * scale * 10, 400)
-        dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
-        for i in range(4):
-            dc.DrawLine(0, i * scale * 50, 400, i * scale * 50)
-            dc.DrawLine(i * scale * 50, 0, i * scale * 50, 400)
-        dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
-        dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
+        scale = 2 * self.short_side / 400
+
+        dc.SetBackground(wx.Brush((240, 240, 240, 0)))
+        dc.Clear()
+        self._draw_grid(dc, scale)
+
         dcs = wx.MemoryDC()
         for m in self.parent.models.values():
             b = m.bitmap
             im = b.ConvertToImage()
             imgc = wx.Point(im.GetWidth() / 2, im.GetHeight() / 2)
             im = im.Rotate(math.radians(m.rot), imgc, 0)
-            bm = wx.BitmapFromImage(im)
+            bm = wx.Bitmap(im)
             dcs.SelectObject(bm)
             bsz = bm.GetSize()
-            dc.Blit(scale * m.offsets[0] - bsz[0] / 2, 400 - (scale * m.offsets[1] + bsz[1] / 2), bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
+            dc.Blit(scale * m.offsets[0] - bsz[0] / 2,
+                    self.short_side - (scale * m.offsets[1] + bsz[1] / 2),
+                    bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
         del dc
+
+    def _draw_grid(self, dc, scale):
+        dc.SetPen(wx.Pen(wx.Colour(160, 160, 160)))
+        for i in range(20):
+            dc.DrawLine(0, i * scale * 10, self.short_side, i * scale * 10)
+            dc.DrawLine(i * scale * 10, 0, i * scale * 10, self.short_side)
+
+        dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
+        for i in range(5):
+            dc.DrawLine(0, i * scale * 50, self.short_side, i * scale * 50)
+            dc.DrawLine(i * scale * 50, 0, i * scale * 50, self.short_side)
+
 
 class StlPlaterPanel(PlaterPanel):
 
@@ -307,6 +340,12 @@ class StlPlaterPanel(PlaterPanel):
             self.s.prepare_model(newmodel, 2)
             self.models[best_match] = newmodel
             wx.CallAfter(self.Refresh)
+
+    def right(self, event):
+        """
+        Dummy method for 'showstl' viewer
+        """
+        return
 
     def done(self, event, cb):
         if not os.path.exists("tempstl"):

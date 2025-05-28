@@ -23,17 +23,26 @@ import types
 import re
 import math
 import logging
+import traceback
 
 from printrun import gcoder
 from printrun.objectplater import make_plater, PlaterPanel
-from printrun.gl import actors
 import printrun.gui.viz  # NOQA
-from printrun import gcview
+from printrun import gviz
 
 from .utils import install_locale, get_home_pos
 install_locale('pronterface')
-# Set up Internationalization using gettext
-# searching for installed locales on /usr/share; uses relative folder if not found (windows)
+
+glview = '--no-gl' not in sys.argv
+if glview:
+    try:
+        from printrun import gcview
+        from printrun.gl import actors
+    except ImportError:
+        glview = False
+        logging.warning(_("Could not load 3D viewer for plater:") +
+                        "\n" + traceback.format_exc())
+
 
 def extrusion_only(gline):
     return gline.e is not None \
@@ -85,10 +94,22 @@ class GcodePlaterPanel(PlaterPanel):
                    antialias_samples = 0,
                    grid = (1, 10)):
         super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
-        viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
-                                       antialias_samples = antialias_samples,
-                                       circular = circular_platform,
-                                       grid = grid)
+        if glview:
+            viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
+                                           antialias_samples = antialias_samples,
+                                           circular = circular_platform,
+                                           grid = grid)
+        else:
+            message = "3D visualisation failed to open.\n2D visualisation is unfortunately not yet implemented.\nClick 'OK' to exit."
+            answer = wx.MessageBox(message, "GCode Plater", wx.OK, self)
+            if answer == wx.OK:
+                self.DestroyLater()
+            return
+            # This works but no features are implemented
+            #viewer = gviz.Gviz(self, (580, 580),
+            #                   build_dimensions = self.build_dimensions,
+            #                   grid = grid)
+
         self.set_viewer(viewer)
         self.Layout()
         self.SetMinClientSize(self.topsizer.CalcMin())
@@ -101,23 +122,29 @@ class GcodePlaterPanel(PlaterPanel):
     def load_file(self, filename):
         with open(filename, "r") as file:
             gcode = gcoder.GCode(file, get_home_pos(self.build_dimensions))
-        model = actors.GcodeModel()
-        if gcode.filament_length > 0:
-            model.display_travels = False
-        generator = model.load_data(gcode)
-        generator_output = next(generator)
-        while generator_output is not None:
+
+        if glview:
+            model = actors.GcodeModel()
+            if gcode.filament_length > 0:
+                model.display_travels = False
+            generator = model.load_data(gcode)
             generator_output = next(generator)
-        obj = gcview.GCObject(model)
-        obj.offsets = [self.build_dimensions[3], self.build_dimensions[4], 0]
-        obj.gcode = gcode
-        obj.dims = [gcode.xmin, gcode.xmax,
-                    gcode.ymin, gcode.ymax,
-                    gcode.zmin, gcode.zmax]
-        obj.centeroffset = [-(obj.dims[1] + obj.dims[0]) / 2,
-                            -(obj.dims[3] + obj.dims[2]) / 2,
-                            0]
-        self.add_model(filename, obj)
+            while generator_output is not None:
+                generator_output = next(generator)
+            obj = gcview.GCObject(model)
+            obj.offsets = [self.build_dimensions[3], self.build_dimensions[4], 0]
+            obj.gcode = gcode
+            obj.dims = [gcode.xmin, gcode.xmax,
+                        gcode.ymin, gcode.ymax,
+                        gcode.zmin, gcode.zmax]
+            obj.centeroffset = [-(obj.dims[1] + obj.dims[0]) / 2,
+                                -(obj.dims[3] + obj.dims[2]) / 2,
+                                0]
+            self.add_model(filename, obj)
+        else:
+            model = self.s.addfile(gcode)
+
+
         wx.CallAfter(self.Refresh)
 
     def done(self, event, cb):
