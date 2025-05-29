@@ -84,7 +84,7 @@ class showstl(wx.Window):
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
         for i in m.facets:
-            dc.DrawPolygon([wx.Point(sz + scale * p[0], (sz - scale * p[1])) for p in i[1]])
+            dc.DrawPolygon([(int(sz + scale * p[0]), int(sz - scale * p[1])) for p in i[1]])
         dc.SelectObject(wx.NullBitmap)
         m.bitmap.SetMask(wx.Mask(m.bitmap, wx.Colour(0, 0, 0, 255)))
 
@@ -122,6 +122,7 @@ class showstl(wx.Window):
             self.Refresh()
             dc = wx.ClientDC(self)
             p = event.GetPosition()
+            dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
             dc.DrawLine(self.initpos[0], self.initpos[1], p[0], p[1])
             del dc
         else:
@@ -187,7 +188,7 @@ class showstl(wx.Window):
             dc = wx.ClientDC(self)
         scale = 2 * self.short_side / 400
 
-        dc.SetBackground(wx.Brush((240, 240, 240, 0)))
+        dc.SetBackground(wx.Brush((240, 240, 240)))
         dc.Clear()
         self._draw_grid(dc, scale)
 
@@ -195,26 +196,28 @@ class showstl(wx.Window):
         for m in self.parent.models.values():
             b = m.bitmap
             im = b.ConvertToImage()
-            imgc = wx.Point(im.GetWidth() / 2, im.GetHeight() / 2)
+            imgc = (int(im.GetWidth() / 2), int(im.GetHeight() / 2))
             im = im.Rotate(math.radians(m.rot), imgc, 0)
             bm = wx.Bitmap(im)
             dcs.SelectObject(bm)
             bsz = bm.GetSize()
-            dc.Blit(scale * m.offsets[0] - bsz[0] / 2,
-                    self.short_side - (scale * m.offsets[1] + bsz[1] / 2),
+            dc.Blit(int(scale * m.offsets[0] - bsz[0] / 2),
+                    self.short_side - int(scale * m.offsets[1] + bsz[1] / 2),
                     bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
         del dc
 
     def _draw_grid(self, dc, scale):
         dc.SetPen(wx.Pen(wx.Colour(160, 160, 160)))
         for i in range(20):
-            dc.DrawLine(0, i * scale * 10, self.short_side, i * scale * 10)
-            dc.DrawLine(i * scale * 10, 0, i * scale * 10, self.short_side)
+            j = int(i * scale * 10)
+            dc.DrawLine(0, j, self.short_side, j)
+            dc.DrawLine(j, 0, j, self.short_side)
 
         dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
         for i in range(5):
-            dc.DrawLine(0, i * scale * 50, self.short_side, i * scale * 50)
-            dc.DrawLine(i * scale * 50, 0, i * scale * 50, self.short_side)
+            j = int(i * scale * 50)
+            dc.DrawLine(0, j, self.short_side, j)
+            dc.DrawLine(j, 0, j, self.short_side)
 
 
 class StlPlaterPanel(PlaterPanel):
