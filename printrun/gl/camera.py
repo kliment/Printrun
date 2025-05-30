@@ -177,9 +177,14 @@ class Camera():
              to_cursor: Optional[Tuple[float, float]] = None,
              rebuild_mat: bool = True) -> None:
 
+        # FIXME: Setting boundaries for min and max zoom distance proofed to
+        # have side effects. Consider implementing a better approach later.
+        # Hint: Correlation between canvas resolution, aspect ratio, etc ?
+        limit_zoom = False
+
         if self.is_orthographic:
             df = self.dolly_factor * 1 / factor
-            if df >= 0.8 or df <= 0.01:
+            if limit_zoom and (df >= 0.8 or df <= 0.01):
                 return
 
             self.dolly_factor = df
@@ -207,7 +212,8 @@ class Camera():
                 delta_vec = cursor_udir * length * (1.0 - factor)
                 new_length = length * 1 / factor
 
-                if new_length > 5 * self.dist or new_length < 6.0:
+                if limit_zoom and \
+                    (new_length > 5 * self.dist or new_length < 6.0):
                     return
 
                 self.eye = self.eye + delta_vec
@@ -223,7 +229,8 @@ class Camera():
                 forward = eye - self.target
                 new_length = vec_length(forward)
 
-                if new_length > 5 * self.dist or new_length < 6.0:
+                if limit_zoom and \
+                    (new_length > 5 * self.dist or new_length < 6.0):
                     return
 
                 self.eye = eye
