@@ -73,12 +73,8 @@ class GcodeViewPanel(wxGLPanel):
                          grid = grid,
                          perspective = perspective)
 
-        self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
-        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
-        self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
-
-        self.initialized = False
         self.parent = realparent or parent
+        self.initialized = False
 
         self.keyinput.register(layerup=self.layerup,
                                layerdown=self.layerdown,
@@ -122,7 +118,6 @@ class GcodeViewPanel(wxGLPanel):
         for obj in self.parent.objects:
             if obj.model and obj.model.loaded and not obj.model.initialized:
                 obj.model.init()
-
 
     def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
@@ -176,17 +171,17 @@ class GcodeViewPanel(wxGLPanel):
         self.parent.model.only_current = not self.parent.model.only_current
         wx.CallAfter(self.Refresh)
 
-    def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
+    def handle_wheel_shift(self, event: wx.MouseEvent) -> None:
         '''This runs when Mousewheel + Shift is used'''
         if not self.parent.model:
             return
-        count = 10 if event.ControlDown() else 1
+
+        count = 10 if event.GetModifiers() == wx.MOD_CONTROL else 1
         for i in range(count):
-            if wheel_delta > 0:
+            if event.GetWheelRotation() > 0:
                 self.layerup()
             else:
                 self.layerdown()
-        return
 
 
 class GCObject:

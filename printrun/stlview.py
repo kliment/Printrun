@@ -51,17 +51,12 @@ class StlViewPanel(wxGLPanel):
                          grid = grid,
                          perspective = perspective)
 
-        self.meshmodels = []
-        self.rot = 0.0
-        self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
-        self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
-        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
-
-        self.initialized = False
         self.parent = parent
+        self.initialized = False
 
         self.gl_cursor = actors.MouseCursor()
         self.cutting_plane = actors.CuttingPlane(self.build_dimensions)
+        self.meshmodels = []
 
         logging.debug(_("GL: Initialised stlview"))
 
@@ -98,7 +93,7 @@ class StlViewPanel(wxGLPanel):
         self.SetClientSize((x, y))
         self.initialized = False
 
-    def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
+    def handle_wheel_shift(self, event: wx.MouseEvent) -> None:
         '''This runs when Mousewheel + Shift is used'''
         pass
 

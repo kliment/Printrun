@@ -162,7 +162,7 @@ class PlaterPanel(wx.Panel):
                 if self.init_rot_pos is None:
                     self.init_rot_pos = event.GetPosition() * self.display_ppi_factor
                 else:
-                    if event.ShiftDown():
+                    if event.GetModifiers() == wx.MOD_SHIFT:
                         p1 = self.init_rot_pos
                         init_position = self.canvas.mouse_to_plane(p1[0], p1[1],
                                                     plane_normal = (0, 0, 1), plane_offset = 0)
@@ -183,16 +183,12 @@ class PlaterPanel(wx.Panel):
             viewer.platform.update_colour(self.gl_bg_colour)
 
         # Patch handle_wheel on the fly
-        if hasattr(viewer, "handle_wheel"):
-            def handle_wheel(self, event, orig_handler):
-                if event.ShiftDown():
-                    angle = 10
-                    if event.GetWheelRotation() < 0:
-                        angle = -angle
-                    self.parent.rotate_shape(angle / 2)
-                else:
-                    orig_handler(event)
-            patch_method(viewer, "handle_wheel", handle_wheel)
+        if hasattr(viewer, "handle_wheel_shift"):
+            def handle_wheel_shift(self, event, orig_handler):
+                angle = -5 if event.GetWheelRotation() < 0 else 5
+                self.parent.rotate_shape(angle)
+
+            patch_method(viewer, "handle_wheel_shift", handle_wheel_shift)
 
         viewer.color_background = self.gl_bg_colour
 

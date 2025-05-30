@@ -151,6 +151,9 @@ class wxGLPanel(BASE_CLASS):
         self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
         self.canvas.Bind(wx.EVT_SET_FOCUS, self.processFocus)
         self.canvas.Bind(wx.EVT_KILL_FOCUS, self.processKillFocus)
+        self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
+        self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
+        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
 
     def set_current_context(self) -> None:
         '''Set the GL context of this panel as current'''
@@ -485,7 +488,6 @@ class wxGLPanel(BASE_CLASS):
         RMB: move viewport
         RMB: + Shift: None
         """
-
         if event.Entering():
             # This makes sure we only set focus on a panel that is
             # in the currently active window and not any other window
@@ -510,7 +512,6 @@ class wxGLPanel(BASE_CLASS):
             self.camera.init_rot_pos = None
             self.camera.init_trans_pos = None
 
-
         wx.CallAfter(self.Refresh)
         event.Skip()
 
@@ -519,37 +520,41 @@ class wxGLPanel(BASE_CLASS):
         self.camera.zoom(factor)
         wx.CallAfter(self.Refresh)
 
-    def handle_wheel_shift(self, event: wx.MouseEvent, wheel_delta: int) -> None:
+    def handle_wheel_shift(self, event: wx.MouseEvent) -> None:
         '''This runs when Mousewheel + Shift is used'''
         pass
 
     def handle_wheel(self, event: wx.MouseEvent) -> None:
         '''This runs when Mousewheel is used'''
-
-        if self.wheelTimestamp == event.Timestamp:
-            # filter duplicate event delivery in Ubuntu, Debian issue #1110
-            return
-        self.wheelTimestamp = event.Timestamp
-
-        delta = event.GetWheelRotation()
-        if event.ShiftDown():
-            self.handle_wheel_shift(event, delta)
-            return
-
         x, y = event.GetPosition() * self.GetContentScaleFactor()
-        factor = 1.02 if event.ControlDown() else 1.05
-        if delta > 0:
+        factor = 1.02 if event.GetModifiers() == wx.MOD_CONTROL else 1.05
+
+        if event.GetWheelRotation() > 0:
             self.camera.zoom(factor, (x, y))
         else:
             self.camera.zoom(1 / factor, (x, y))
+
+        event.Skip()
 
     def wheel(self, event: wx.MouseEvent) -> None:
         """React to mouse wheel actions:
             without shift: zoom viewport
             with shift: run handle_wheel_shift
         """
+        if self.wheelTimestamp == event.Timestamp:
+            # filter duplicate event delivery in Ubuntu, Debian issue #1110
+            event.Skip()
+            return
+        self.wheelTimestamp = event.Timestamp
+
         self.set_current_context()
-        self.handle_wheel(event)
+
+        if event.GetModifiers() == wx.MOD_SHIFT:
+            self.handle_wheel_shift(event)
+        else:
+            self.handle_wheel(event)
+
+        event.Skip()
         wx.CallAfter(self.Refresh)
 
     def fit(self) -> None:
