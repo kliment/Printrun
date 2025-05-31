@@ -119,6 +119,7 @@ class StlViewPanel(wxGLPanel):
         obj.scale[2] = 1.0
 
     def prepare_model(self, m: stltool.stl, scale: float) -> None:
+        self.set_current_context()
         mesh = actors.MeshModel(m)
         self.meshmodels.append(mesh)
         # m.animoffset = 300

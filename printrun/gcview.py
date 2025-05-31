@@ -117,6 +117,7 @@ class GcodeViewPanel(wxGLPanel):
         '''create opengl objects when opengl is initialized'''
         for obj in self.parent.objects:
             if obj.model and obj.model.loaded and not obj.model.initialized:
+                self.set_current_context()
                 obj.model.init()
 
     def draw_objects(self) -> None:
