@@ -84,10 +84,12 @@ def high_luminance(bg_color: Tuple[float, float, float]) -> bool:
         return True
     return False
 
-def mix_colors(color_a, alpha_a, color_b, alpha_b):
-    r = color_a[0] * alpha_a + color_b[0] * alpha_b
-    g = color_a[1] * alpha_a + color_b[1] * alpha_b
-    b = color_a[2] * alpha_a + color_b[2] * alpha_b
+def blend_colors(color_a: Tuple[float, float, float],
+                 color_b: Tuple[float, float, float], blend: float
+                 ) -> Tuple[float, float, float, float]:
+    r = color_a[0] * (1 - blend) + color_b[0] * blend
+    g = color_a[1] * (1 - blend) + color_b[1] * blend
+    b = color_a[2] * (1 - blend) + color_b[2] * blend
     return (r, g, b, 1.0)
 
 
@@ -157,9 +159,9 @@ class Platform:
         else:
             base_color = self.COLOR_LIGHT  # Bright lines
 
-        self.color_minor = mix_colors(bg_color, 1.0, base_color, 0.1)
-        self.color_interm = mix_colors(bg_color, 1.0, base_color, 0.2)
-        self.color_major = mix_colors(bg_color, 1.0, base_color, 0.33)
+        self.color_minor = blend_colors(bg_color, base_color, 0.1)
+        self.color_interm = blend_colors(bg_color, base_color, 0.2)
+        self.color_major = blend_colors(bg_color, base_color, 0.33)
 
         self._initialise_data()
 
