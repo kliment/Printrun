@@ -239,7 +239,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.custombuttons_widgets = []
 
     def reload_ui(self, *args):
-        if not self.window_ready: return
+        if not self.window_ready:
+            return
+
         temp_monitor = self.settings.monitor
         self.settings.monitor = False
         self.update_monitor()
@@ -260,8 +262,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             for control in self.statefulControls:
                 control.GetContainingSizer().Detach(control)
                 control.Reparent(temppanel)
-            self.panel.DestroyChildren()
-            self.gwindow.Destroy()
+            for child in self.panel.GetChildren():
+                child.DestroyLater()
+            self.gwindow.DestroyLater()
             self.reset_ui()
 
         # Create UI
