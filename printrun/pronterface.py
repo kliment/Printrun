@@ -145,6 +145,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.app = app
         self.window_ready = False
         self.ui_ready = False
+        self.ui_reload_timeout = None
         self._add_settings(size)
 
         self.pauseScript = None  # "pause.gcode"
@@ -297,7 +298,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.gui_set_connected()
         if self.ui_ready:
             self.logbox.SetValue(logcontent)
-            temppanel.Destroy()
+            temppanel.DestroyLater()
             self.panel.Layout()
             if self.fgcode:
                 self.start_viz_thread()
@@ -308,6 +309,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.Thaw()
         if self.settings.monitor:
             self.update_monitor()
+
+        self.ui_reload_timeout = None
 
     def on_resize(self, event):
         wx.CallAfter(self.on_resize_real)
@@ -331,6 +334,18 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def on_settings_change(self, changed_settings):
         if self.gviz:
             self.gviz.on_settings_change(changed_settings)
+
+    def on_ui_reload(self, *args):
+        """
+        Multiple settings changes may cause the UI to reload repeatedly.
+        Therefore, we wait 1 ms to collect any consecutive calls.
+        """
+        if not self.ui_reload_timeout or self.ui_reload_timeout.HasRun():
+            self.ui_reload_timeout = wx.CallLater(1, self.reload_ui)
+            return
+
+        if self.ui_reload_timeout.IsRunning():
+            self.ui_reload_timeout.Start(1)
 
     def on_key(self, event):
         if not isinstance(event.EventObject, (wx.TextCtrl, wx.ComboBox)) \
@@ -1065,23 +1080,23 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(BooleanSetting("display_progress_on_printer", False, _("Display progress on printer"), _("Show progress on printers display (sent via M117, might not be supported by all printers)"), "Printer"))
         self.settings._add(SpinSetting("printer_progress_update_interval", 10., 0, 120, _("Printer progress update interval"), _("Interval in which pronterface sends the progress to the printer if enabled, in seconds"), "Printer"))
         self.settings._add(BooleanSetting("cutting_as_extrusion", True, _("Display cutting moves"), _("Show moves where spindle is active as printing moves"), "Printer"))
-        self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), ], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
-        # self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), _("Tabbed"), _("Tabbed with platers")], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.reload_ui)
-        self.settings._add(ComboSetting("controlsmode", _("Standard"), (_("Standard"), _("Mini"), ), _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"), self.reload_ui)
+        self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), ], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.on_ui_reload)
+        # self.settings._add(ComboSetting("uimode", _("Standard"), [_("Standard"), _("Compact"), _("Tabbed"), _("Tabbed with platers")], _("Interface mode"), _("Standard interface is a one-page, three columns layout with controls/visualization/log\nCompact mode is a one-page, two columns layout with controls + log/visualization"), "UI"), self.on_ui_reload)
+        self.settings._add(ComboSetting("controlsmode", _("Standard"), (_("Standard"), _("Mini"), ), _("Controls mode"), _("Standard controls include all controls needed for printer setup and calibration, while Mini controls are limited to the ones needed for daily printing"), "UI"), self.on_ui_reload)
+        self.settings._add(BooleanSetting("slic3rintegration", False, _("Enable Slic3r integration"), _("Add a menu to select Slic3r profiles directly from Pronterface"), "UI"), self.on_ui_reload)
         self.settings._add(BooleanSetting("slic3rupdate", False, _("Update Slic3r default presets"), _("When selecting a profile in Slic3r integration menu, also save it as the default Slic3r preset"), "UI"))
-        self.settings._add(ComboSetting("mainviz", "3D", ("2D", "3D", _("None")), _("Main visualization"), _("Select visualization for main window."), "Viewer", 4*get_space('settings')), self.reload_ui)
-        self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "Viewer"), self.reload_ui)
+        self.settings._add(ComboSetting("mainviz", "3D", ("2D", "3D", _("None")), _("Main visualization"), _("Select visualization for main window."), "Viewer", 4*get_space('settings')), self.on_ui_reload)
+        self.settings._add(BooleanSetting("viz3d", False, _("Use 3D in GCode viewer window"), _("Use 3D mode instead of 2D layered mode in the visualization window"), "Viewer"), self.on_ui_reload)
         self.settings._add(StaticTextSetting("separator_3d_viewer", _("3D viewer options"), "", group = "Viewer"))
-        self.settings._add(BooleanSetting("light3d", False, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "Viewer"), self.reload_ui)
-        self.settings._add(BooleanSetting("perspective", False, _("Use a perspective view instead of orthographic"), _("A perspective view looks more realistic, but is a bit more confusing to navigate"), "Viewer"), self.reload_ui)
-        self.settings._add(ComboSetting("antialias3dsamples", "0", ("0", "2", "4", "8"), _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "Viewer", 4*get_space('settings')), self.reload_ui)
+        self.settings._add(BooleanSetting("light3d", False, _("Use a lighter 3D visualization"), _("Use a lighter visualization with simple lines instead of extruded paths for 3D viewer"), "Viewer"), self.on_ui_reload)
+        self.settings._add(BooleanSetting("perspective", False, _("Use a perspective view instead of orthographic"), _("A perspective view looks more realistic, but is a bit more confusing to navigate"), "Viewer"), self.on_ui_reload)
+        self.settings._add(ComboSetting("antialias3dsamples", "0", ("0", "2", "4", "8"), _("Number of anti-aliasing samples"), _("Amount of anti-aliasing samples used in the 3D viewer"), "Viewer", 4*get_space('settings')), self.on_ui_reload)
         self.settings._add(BooleanSetting("trackcurrentlayer3d", False, _("Track current layer in main 3D view"), _("Track the currently printing layer in the main 3D visualization"), "Viewer"))
         self.settings._add(FloatSpinSetting("gcview_path_width", 0.4, 0.01, 2, _("Extrusion width for 3D viewer"), _("Width of printed path in 3D viewer"), "Viewer", increment = 0.05), self.update_gcview_params)
         self.settings._add(FloatSpinSetting("gcview_path_height", 0.3, 0.01, 2, _("Layer height for 3D viewer"), _("Height of printed path in 3D viewer"), "Viewer", increment = 0.05), self.update_gcview_params)
-        self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"), self.reload_ui)
-        self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"), self.reload_ui)
+        self.settings._add(BooleanSetting("tempgraph", True, _("Display temperature graph"), _("Display time-lapse temperature graph"), "UI"), self.on_ui_reload)
+        self.settings._add(BooleanSetting("tempgauges", False, _("Display temperature gauges"), _("Display graphical gauges for temperatures visualization"), "UI"), self.on_ui_reload)
+        self.settings._add(BooleanSetting("lockbox", False, _("Display interface lock checkbox"), _("Display a checkbox that, when check, locks most of Pronterface"), "UI"), self.on_ui_reload)
         self.settings._add(BooleanSetting("lockonstart", False, _("Lock interface upon print start"), _("If lock checkbox is enabled, lock the interface when starting a print"), "UI"))
         self.settings._add(BooleanSetting("refreshwhenloading", True, _("Update UI during G-Code load"), _("Regularly update visualization during the load of a G-Code file"), "UI"))
         self.settings._add(HiddenSetting("last_window_width", size[0]))
@@ -1097,18 +1112,18 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         self.settings._add(SpinSetting("preview_grid_step1", 10., 0, 200, _("Fine grid spacing"), _("Fine Grid Spacing"), "Viewer"), self.update_gviz_params)
         self.settings._add(SpinSetting("preview_grid_step2", 50., 0, 200, _("Coarse grid spacing"), _("Coarse Grid Spacing"), "Viewer"), self.update_gviz_params)
         self.settings._add(StaticTextSetting("separator_colors1", _("General"), "", group = "Colors"))
-        self.settings._add(ColorSetting("bgcolor", self._preferred_bgcolour_hex(), _("Background color"), _("Pronterface background color"), "Colors", isRGBA=False), self.reload_ui)
+        self.settings._add(ColorSetting("bgcolor", self._preferred_bgcolour_hex(), _("Background color"), _("Pronterface background color"), "Colors", isRGBA=False), self.on_ui_reload)
         self.settings._add(StaticTextSetting("separator_colors2", _("Temperature Graph"), "", group = "Colors"))
-        self.settings._add(ColorSetting("graph_color_background", "#FAFAC7", _("Graph background color"), _("Color of the temperature graph background"), "Colors", isRGBA=False), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_text", "#172C2C", _("Graph text color"), _("Color of the temperature graph text"), "Colors", isRGBA=False), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_grid", "#5A5A5A", _("Graph grid color"), _("Color of the temperature graph grid"), "Colors", isRGBA=False), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_fan", "#00000080", _("Graph fan line color"), _("Color of the temperature graph fan speed line"), "Colors"), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_bedtemp", "#FF000080", _("Graph bed line color"), _("Color of the temperature graph bed temperature line"), "Colors"), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_bedtarget", "#FF780080", _("Graph bed target line color"), _("Color of the temperature graph bed temperature target line"), "Colors"), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_ex0temp", "#009BFF80", _("Graph ex0 line color"), _("Color of the temperature graph extruder 0 temperature line"), "Colors"), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_ex0target", "#0005FF80", _("Graph ex0 target line color"), _("Color of the temperature graph extruder 0 target temperature line"), "Colors"), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_ex1temp", "#37370080", _("Graph ex1 line color color"), _("Color of the temperature graph extruder 1 temperature line"), "Colors"), self.reload_ui)
-        self.settings._add(ColorSetting("graph_color_ex1target", "#37370080", _("Graph ex1 target line color"), _("Color of the temperature graph extruder 1 temperature target line"), "Colors"), self.reload_ui)
+        self.settings._add(ColorSetting("graph_color_background", "#FAFAC7", _("Graph background color"), _("Color of the temperature graph background"), "Colors", isRGBA=False), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_text", "#172C2C", _("Graph text color"), _("Color of the temperature graph text"), "Colors", isRGBA=False), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_grid", "#5A5A5A", _("Graph grid color"), _("Color of the temperature graph grid"), "Colors", isRGBA=False), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_fan", "#00000080", _("Graph fan line color"), _("Color of the temperature graph fan speed line"), "Colors"), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_bedtemp", "#FF000080", _("Graph bed line color"), _("Color of the temperature graph bed temperature line"), "Colors"), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_bedtarget", "#FF780080", _("Graph bed target line color"), _("Color of the temperature graph bed temperature target line"), "Colors"), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_ex0temp", "#009BFF80", _("Graph ex0 line color"), _("Color of the temperature graph extruder 0 temperature line"), "Colors"), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_ex0target", "#0005FF80", _("Graph ex0 target line color"), _("Color of the temperature graph extruder 0 target temperature line"), "Colors"), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_ex1temp", "#37370080", _("Graph ex1 line color color"), _("Color of the temperature graph extruder 1 temperature line"), "Colors"), self.on_ui_reload)
+        self.settings._add(ColorSetting("graph_color_ex1target", "#37370080", _("Graph ex1 target line color"), _("Color of the temperature graph extruder 1 temperature target line"), "Colors"), self.on_ui_reload)
         self.settings._add(StaticTextSetting("separator_colors3", _("3D Viewer"), "", group = "Colors"))
         self.settings._add(ColorSetting("gcview_color_background", "#FAFAC7FF", _("3D view background color"), _("Color of the 3D view background"), "Colors"), self.update_gcview_colors)
         self.settings._add(ColorSetting("gcview_color_travel", "#99999999", _("3D view travel moves color"), _("Color of travel moves in 3D view"), "Colors"), self.update_gcview_colors)
