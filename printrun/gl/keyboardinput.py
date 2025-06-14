@@ -105,7 +105,3 @@ class KeyboardInput():
         if currentlayer:
             self.current_layer = currentlayer
 
-
-if __name__ == '__main__':
-    pass
-

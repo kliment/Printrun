@@ -247,9 +247,10 @@ class wxGLPanel(BASE_CLASS):
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
-        # Uncomment this line to see information about the created context
-        # print(f"OpenGL context version: {self.pygletcontext.get_info().get_version()},\n",
-        #      self.pygletcontext.get_info().get_renderer())
+        glinfo = self.pygletcontext.get_info()
+        logging.debug("OpenGL Context Version: %s, Vendor: %s - %s" %
+                     (glinfo.get_version(), glinfo.get_vendor(),
+                      glinfo.get_renderer()))
 
         # normal gl init
         glClearColor(*self.color_background)
@@ -281,7 +282,6 @@ class wxGLPanel(BASE_CLASS):
         self.camera.update_size(width, height, self.GetContentScaleFactor())
         self.focus.update_size()
         self.OnInitGL(call_reshape = False)
-        # print('glViewport: ', width, height)
         glViewport(0, 0, width, height)
         self.camera.create_projection_matrix()
 

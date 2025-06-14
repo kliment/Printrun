@@ -557,48 +557,9 @@ class CuttingPlane:
         glPopMatrix()
 
 
-'''
-# TODO: A 3D printhead vis is currently not implemented. Would be nice to have.
-class PrintHead:
-    """
-    A representation of the printhead.
-    This is currently not used.
-    """
-    def __init__(self) -> None:
-        self.color = (43 / 255, 0.0, 175 / 255, 1.0)
-        self.scale = 5
-        self.height = 5
-
-        self.initialized = False
-        self.loaded = True
-        self.display_list = None
-
-    def init(self) -> None:
-        self.display_list = compile_display_list(self.draw)
-        self.initialized = True
-
-    def draw(self) -> None:
-        glPushMatrix()
-
-        glBegin(GL_LINES)
-        glColor3f(*self.color[:-1])
-        for di in [-1, 1]:
-            for dj in [-1, 1]:
-                glVertex3f(0, 0, 0)
-                glVertex3f(self.scale * di, self.scale * dj, self.height)
-        glEnd()
-
-        glPopMatrix()
-
-    def display(self, mode_2d: bool = False) -> None:
-        glEnable(GL_LINE_SMOOTH)
-        orig_linewidth = (GLfloat)()
-        glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
-        glLineWidth(3.0)
-        glCallList(self.display_list)
-        glLineWidth(orig_linewidth)
-        glDisable(GL_LINE_SMOOTH)
-'''
+# TODO: It would be nice to have a visual representation of the printhead
+# or the nozzle. Due to different printer configurations this would need
+# to be adjustable by the user.
 
 
 class MeshModel:
@@ -623,19 +584,6 @@ class MeshModel:
             for coords in facet[1]:
                 vertices.extend(coords)
                 normals.extend(facet[0])
-
-        """
-        if hasattr(model, 'indices') and model.indices:
-            # Some file formats provide indexed vertices,
-            # which is more efficient for rendering
-            self.vertex_list = self.batch.add_indexed(len(vertices) // 3,
-                                                GL_TRIANGLES,
-                                                None,  # group
-                                                model.indices,
-                                                ('v3f/static', vertices),
-                                                ('n3f/static', normals),
-                                                ('c3f/static', self.color[:-1] * (len(vertices) // 3)))
-        """
 
         self.vl = self.batch.add(len(vertices) // 3,
                                 GL_TRIANGLES,
