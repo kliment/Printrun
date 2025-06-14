@@ -105,10 +105,6 @@ class GcodePlaterPanel(PlaterPanel):
             if answer == wx.OK:
                 self.DestroyLater()
             return
-            # This works but no features are implemented
-            #viewer = gviz.Gviz(self, (580, 580),
-            #                   build_dimensions = self.build_dimensions,
-            #                   grid = grid)
 
         self.set_viewer(viewer)
         self.Layout()
