@@ -229,7 +229,8 @@ class StlPlaterPanel(PlaterPanel):
                    parent = None, build_dimensions = None,
                    circular_platform = False,
                    simarrange_path = None,
-                   antialias_samples = 0):
+                   antialias_samples = 0,
+                   perspective = False):
         super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = True)
         self.cutting = False
         self.cutting_axis = None
@@ -238,7 +239,8 @@ class StlPlaterPanel(PlaterPanel):
             viewer = stlview.StlViewPanel(self, wx.DefaultSize,
                                           build_dimensions = self.build_dimensions,
                                           circular = circular_platform,
-                                          antialias_samples = antialias_samples)
+                                          antialias_samples = antialias_samples,
+                                          perspective = perspective)
 
         else:
             viewer = showstl(self, (580, 580), (0, 0))

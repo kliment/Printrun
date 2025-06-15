@@ -559,28 +559,38 @@ class wxGLPanel(BASE_CLASS):
 
     def fit(self) -> None:
         '''Zoom to fit models to screen'''
-        #FIXME: The models in the Platers are organised differently than in
-        # the in the main view. So fit() is currently not implemented here.
+        offsets = [0.0, 0.0, 0.0]
         if hasattr(self.parent, 'l'):
             # Parent is of class objectplater
-            self.resetview()
-            return
+            model = self.parent.get_selected_model()
+            if model:
+                offsets[0] = -model.offsets[0] - model.centeroffset[0]
+                offsets[1] = -model.offsets[1] - model.centeroffset[1]
+                offsets[2] = -model.offsets[2] - model.centeroffset[2]
+                if not isinstance(model, stltool.stl):
+                    model = model.model
+            else:
+                return
 
-        if self.parent.model and self.parent.model.loaded:
+        elif self.parent.model and self.parent.model.loaded:
             model = self.parent.model
 
         else:
-            self.resetview()
             return
 
         self.set_current_context()
-        dims = gcode_dims(model.gcode)
+        if isinstance(model, stltool.stl):
+            dm = model.dims
+            dims = ((dm[0], dm[1], dm[1] - dm[0]),
+                    (dm[2], dm[3], dm[3] - dm[2]))
+        else:
+            dims = gcode_dims(model.gcode)
         self.camera.reset_view_matrix()
 
         center_x = (dims[0][0] + dims[0][1]) / 2
         center_y = (dims[1][0] + dims[1][1]) / 2
-        center_x = self.build_dimensions[0] / 2 - center_x
-        center_y = self.build_dimensions[1] / 2 - center_y
+        center_x = offsets[0] + self.build_dimensions[0] / 2 - center_x
+        center_y = offsets[1] + self.build_dimensions[1] / 2 - center_y
 
         if self.camera.is_orthographic:
             ratio = float(self.camera.dist) / max(dims[0][2], dims[1][2])

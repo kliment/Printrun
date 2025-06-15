@@ -607,7 +607,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                          build_dimensions = self.build_dimensions_list,
                          circular_platform = self.settings.circular_bed,
                          simarrange_path = self.settings.simarrange_path,
-                         antialias_samples = int(self.settings.antialias3dsamples)).Show()
+                         antialias_samples = int(self.settings.antialias3dsamples),
+                         perspective = self.settings.perspective).Show()
 
     def plate_gcode(self, e):
         from . import gcodeplater as plater
@@ -616,7 +617,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                            parent = self,
                            build_dimensions = self.build_dimensions_list,
                            circular_platform = self.settings.circular_bed,
-                           antialias_samples = int(self.settings.antialias3dsamples)).Show()
+                           antialias_samples = int(self.settings.antialias3dsamples),
+                           perspective = self.settings.perspective).Show()
 
     def platecb(self, name):
         self.log(_("Plated %s") % name)

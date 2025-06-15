@@ -39,7 +39,8 @@ class PlaterPanel(wx.Panel):
         super().__init__(parent = parent)
         self.prepare_ui(**kwargs)
 
-    def prepare_ui(self, filenames = [], callback = None, parent = None, build_dimensions = None, cutting_tool = True):
+    def prepare_ui(self, filenames = [], callback = None, parent = None,
+                   build_dimensions = None, cutting_tool = True):
         self.filenames = filenames
         self.cut_axis_buttons = []
 
@@ -228,34 +229,36 @@ class PlaterPanel(wx.Panel):
         event.Skip()
         wx.CallAfter(self.Refresh)
 
+    def get_selected_model(self):
+        i = self.l.GetSelection()
+        if i == wx.NOT_FOUND:
+            return None
+
+        name = self.l.GetString(i)
+        return self.models[name]
+
     def move_shape(self, delta):
         """moves shape (selected in l, which is list ListBox of shapes)
         by an offset specified in tuple delta.
         Positive numbers move to (rigt, down)"""
-        name = self.l.GetSelection()
-        if name == wx.NOT_FOUND:
-            return False
-
-        name = self.l.GetString(name)
-
-        model = self.models[name]
-        model.offsets = [model.offsets[0] + delta[0],
-                         model.offsets[1] + delta[1],
-                         model.offsets[2]
-                         ]
-        return True
+        model = self.get_selected_model()
+        if model:
+            model.offsets = [model.offsets[0] + delta[0],
+                            model.offsets[1] + delta[1],
+                            model.offsets[2]
+                            ]
+            return True
+        return False
 
     def rotate_shape(self, angle):
         """rotates active shape
         positive angle is clockwise
         """
-        name = self.l.GetSelection()
-        if name == wx.NOT_FOUND:
-            return False
-        name = self.l.GetString(name)
-        model = self.models[name]
-        model.rot += angle
-        return True
+        model = self.get_selected_model()
+        if model:
+            model.rot += angle
+            return True
+        return False
 
     def autoplate(self, event = None):
         logging.info(_("Autoplating"))
@@ -345,24 +348,22 @@ class PlaterPanel(wx.Panel):
         self.Refresh()
 
     def center(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            m = self.models[self.l.GetString(i)]
+        model = self.get_selected_model()
+        if model:
             centerx = self.build_dimensions[0] / 2 + self.build_dimensions[3]
             centery = self.build_dimensions[1] / 2 + self.build_dimensions[4]
-            m.offsets = [centerx, centery, m.offsets[2]]
+            model.offsets = [centerx, centery, model.offsets[2]]
             self.Refresh()
 
     def snap(self, event):
-        i = self.l.GetSelection()
-        if i != -1:
-            m = self.models[self.l.GetString(i)]
-            m.offsets[2] = -m.dims[4]
+        model = self.get_selected_model()
+        if model:
+            model.offsets[2] = -model.dims[4]
             self.Refresh()
 
     def delete(self, event):
         i = self.l.GetSelection()
-        if i != -1:
+        if i != wx.NOT_FOUND:
             del self.models[self.l.GetString(i)]
             self.l.Delete(i)
             self.l.Select(self.l.GetCount() - 1)

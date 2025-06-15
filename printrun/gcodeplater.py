@@ -92,13 +92,15 @@ class GcodePlaterPanel(PlaterPanel):
                    parent = None, build_dimensions = None,
                    circular_platform = False,
                    antialias_samples = 0,
-                   grid = (1, 10)):
+                   grid = (1, 10),
+                   perspective = False):
         super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
         if glview:
             viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
                                            antialias_samples = antialias_samples,
                                            circular = circular_platform,
-                                           grid = grid)
+                                           grid = grid,
+                                           perspective = perspective)
         else:
             message = "3D visualisation failed to open.\n2D visualisation is unfortunately not yet implemented.\nClick 'OK' to exit."
             answer = wx.MessageBox(message, "GCode Plater", wx.OK, self)
