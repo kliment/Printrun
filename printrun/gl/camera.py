@@ -39,6 +39,7 @@ class Camera():
 
     LOCK = Lock()
     CTYPE_IDENTITY = np_to_gl_mat(np.identity(4))
+    FOV = 45.0
 
     def __init__(self, parent: 'wxGLPanel', build_dimensions: Build_Dims,
                  ortho: bool = True) -> None:
@@ -131,7 +132,7 @@ class Camera():
                     self.height / 2 * self.dolly_factor,
                     0.01, 3 * self.dist)
         else:
-            gluPerspective(45.0, self.width / self.height,
+            gluPerspective(self.FOV, self.width / self.height,
                            0.1, 5.5 * self.dist)
 
     def create_pseudo2d_matrix(self) -> None:
@@ -170,6 +171,37 @@ class Camera():
 
         self.eye = delta + self.eye
         self.target = delta + self.target
+
+        self._rebuild_view_mat()
+
+    def fit_to_model(self,
+                     bounding_sphere: Tuple[Tuple[float, float, float], float]
+                     ) -> None:
+        """
+        Takes the bounding sphere of a model (center, radius) and zooms / moves
+        the current view so that the view focues on the model.
+        """
+        forward = self.target - self.eye
+        uforward = forward / vec_length(forward)
+        aspect = self.width / self.height
+
+        half_min_fov_rad = 0.5 * (self.FOV * np.pi / 180)
+        if aspect < 1.0:
+            half_min_fov_rad = np.atan(aspect * np.tan(half_min_fov_rad))
+
+        distance_to_center = bounding_sphere[1] / np.sin(half_min_fov_rad)
+        self.target = bounding_sphere[0]
+        self.eye = self.target - uforward * distance_to_center
+
+        if self.is_orthographic:
+            if aspect < 1.0:
+                min_side = self.width * self.display_ppi_factor
+            else:
+                min_side = self.height * self.display_ppi_factor
+
+            dolly_constant = 0.95 * self.display_ppi_factor
+            self.dolly_factor = 2 * bounding_sphere[1] / min_side * dolly_constant
+            self.create_projection_matrix()
 
         self._rebuild_view_mat()
 

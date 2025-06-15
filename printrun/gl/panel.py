@@ -564,9 +564,9 @@ class wxGLPanel(BASE_CLASS):
             # Parent is of class objectplater
             model = self.parent.get_selected_model()
             if model:
-                offsets[0] = -model.offsets[0] - model.centeroffset[0]
-                offsets[1] = -model.offsets[1] - model.centeroffset[1]
-                offsets[2] = -model.offsets[2] - model.centeroffset[2]
+                offsets[0] = model.offsets[0] + model.centeroffset[0]
+                offsets[1] = model.offsets[1] + model.centeroffset[1]
+                offsets[2] = model.offsets[2] + model.centeroffset[2]
                 if not isinstance(model, stltool.stl):
                     model = model.model
             else:
@@ -582,23 +582,26 @@ class wxGLPanel(BASE_CLASS):
         if isinstance(model, stltool.stl):
             dm = model.dims
             dims = ((dm[0], dm[1], dm[1] - dm[0]),
-                    (dm[2], dm[3], dm[3] - dm[2]))
+                    (dm[2], dm[3], dm[3] - dm[2]),
+                    (dm[4], dm[5], dm[5] - dm[4]))
         else:
             dims = gcode_dims(model.gcode)
-        self.camera.reset_view_matrix()
 
-        center_x = (dims[0][0] + dims[0][1]) / 2
-        center_y = (dims[1][0] + dims[1][1]) / 2
-        center_x = offsets[0] + self.build_dimensions[0] / 2 - center_x
-        center_y = offsets[1] + self.build_dimensions[1] / 2 - center_y
+        center_x = (dims[0][0] + dims[0][1]) / 2 + offsets[0]
+        center_y = (dims[1][0] + dims[1][1]) / 2 + offsets[1]
+        center_z = (dims[2][0] + dims[2][1]) / 2 + offsets[2]
 
-        if self.camera.is_orthographic:
-            ratio = float(self.camera.dist) / max(dims[0][2], dims[1][2])
-            self.camera.zoom(ratio, rebuild_mat=False)
-
-        self.camera.move_rel(-center_x, -center_y, 0.0)
+        radius = self._calc_bounding_radius(dims)
+        bounding_sphere = ((center_x, center_y, center_z), radius)
+        self.camera.fit_to_model(bounding_sphere)
 
         wx.CallAfter(self.Refresh)
+
+    def _calc_bounding_radius(self, dims):
+        xc = dims[0][2] / 2
+        yc = dims[1][2] / 2
+        zc = dims[2][2] / 2
+        return np.sqrt(xc * xc + yc * yc + zc * zc)
 
 
 class FrameTime:
