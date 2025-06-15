@@ -393,24 +393,26 @@ class PlaterPanel(wx.Panel):
         self.enable_buttons(True)
 
     def load(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        dlg.SetWildcard(self.load_wildcard)
-        if dlg.ShowModal() == wx.ID_OK:
-            name = dlg.GetPath()
-            self.enable_buttons(True)
-            self.load_file(name)
-        dlg.Destroy()
+        with wx.FileDialog(self, _("Pick file to load"),
+                           defaultDir=self.basedir,
+                           wildcard=self.load_wildcard,
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
+                file = dlg.GetPath()
+                self.load_file(file)
+                self.enable_buttons(True)
 
     def load_file(self, filename):
         raise NotImplementedError
 
     def export(self, event):
-        dlg = wx.FileDialog(self, _("Pick file to save to"), self.basedir, style = wx.FD_SAVE)
-        dlg.SetWildcard(self.save_wildcard)
-        if dlg.ShowModal() == wx.ID_OK:
-            name = dlg.GetPath()
-            self.export_to(name)
-        dlg.Destroy()
+        with wx.FileDialog(self, _("Pick file to save to"),
+                           defaultDir=self.basedir,
+                           wildcard=self.save_wildcard,
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
+                file = dlg.GetPath()
+                self.export_to(file)
 
     def export_to(self, name):
         raise NotImplementedError

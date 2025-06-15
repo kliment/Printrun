@@ -222,8 +222,9 @@ class showstl(wx.Window):
 
 class StlPlaterPanel(PlaterPanel):
 
-    load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
-    save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
+    load_wildcard = _("STL and OpenSCAD Files") + \
+                    " (*.stl;*.STL;*.scad)|*.stl;*.STL;*.scad"
+    save_wildcard = _("STL Files") + " (*.stl;*.STL)|*.stl;*.STL"
 
     def prepare_ui(self, filenames = [], callback = None,
                    parent = None, build_dimensions = None,
@@ -231,7 +232,8 @@ class StlPlaterPanel(PlaterPanel):
                    simarrange_path = None,
                    antialias_samples = 0,
                    perspective = False):
-        super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = True)
+        super().prepare_ui(filenames, callback, parent, build_dimensions,
+                           cutting_tool = True)
         self.cutting = False
         self.cutting_axis = None
         self.cutting_dist = None

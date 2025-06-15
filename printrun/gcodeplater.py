@@ -27,9 +27,6 @@ import traceback
 
 from printrun import gcoder
 from printrun.objectplater import make_plater, PlaterPanel
-import printrun.gui.viz  # NOQA
-from printrun import gviz
-
 from .utils import install_locale, get_home_pos
 install_locale('pronterface')
 
@@ -85,7 +82,8 @@ def rewrite_gline(centeroffset, gline, cosr, sinr):
 
 class GcodePlaterPanel(PlaterPanel):
 
-    load_wildcard = _("GCODE files") + " (*.gcode;*.GCODE;*.g)|*.gcode;*.gco;*.g"
+    load_wildcard = _("G-Code Files") + \
+                    " (*.gcode;*.GCODE;*.gco;*.g)|*.gcode;*.GCODE;*.gco;*.g"
     save_wildcard = load_wildcard
 
     def prepare_ui(self, filenames = [], callback = None,
