@@ -358,7 +358,7 @@ class MouseCursor:
 
         vert_n = 0
         for i in range(segments):
-            alpha = 2 * math.pi / segments * i
+            alpha = math.tau / segments * i
             new_x = radius * math.sin(alpha)
             new_y = radius * math.cos(alpha)
             # Add one new vertex coordinate
@@ -732,9 +732,9 @@ def interpolate_arcs(gline, prev_gline) -> Iterator[Tuple[Tuple[float, float, fl
         a_delta = a_end - a_start
 
         if gline.command == "G3" and a_delta <= 0:
-            a_delta += math.pi * 2
+            a_delta += math.tau
         elif gline.command == "G2" and a_delta >= 0:
-            a_delta -= math.pi * 2
+            a_delta -= math.tau
 
         z0 = prev_gline.current_z
         dz = gline.current_z - z0
@@ -953,7 +953,7 @@ class GcodeModel(Model):
                                     avg_move_normal_x /= norm
                                     avg_move_normal_y /= norm
                                 delta_angle = move_angle - prev_move_angle
-                                delta_angle = (delta_angle + 2 * math.pi) % (2 * math.pi)
+                                delta_angle = (delta_angle + math.tau) % math.tau
                                 fact = abs(math.cos(delta_angle / 2))
                                 # If move is turning too much, avoid creating a big peak
                                 # by adding an intermediate box

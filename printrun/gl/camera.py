@@ -185,7 +185,7 @@ class Camera():
         uforward = forward / vec_length(forward)
         aspect = self.width / self.height
 
-        half_min_fov_rad = 0.5 * (self.FOV * np.pi / 180)
+        half_min_fov_rad = 0.5 * np.radians(self.FOV)
         if aspect < 1.0:
             half_min_fov_rad = np.atan(aspect * np.tan(half_min_fov_rad))
 
