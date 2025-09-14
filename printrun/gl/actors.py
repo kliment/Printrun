@@ -17,86 +17,121 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import time
-import numpy
 import array
 import math
 import logging
 import threading
+import numpy as np
 
 from ctypes import sizeof
 
-from pyglet.gl import glPushMatrix, glPopMatrix, glTranslatef, \
-    glGenLists, glNewList, GL_COMPILE, glEndList, glCallList, \
-    GL_ELEMENT_ARRAY_BUFFER, GL_UNSIGNED_INT, GL_TRIANGLES, GL_LINE_LOOP, \
-    GL_ARRAY_BUFFER, GL_STATIC_DRAW, glColor4f, glVertex3f, \
-    glBegin, glEnd, GL_LINES, glEnable, glDisable, glGetFloatv, \
-    GL_LINE_SMOOTH, glLineWidth, GL_LINE_WIDTH, GLfloat, GL_FLOAT, GLuint, \
-    glVertexPointer, glColorPointer, glDrawArrays, glDrawRangeElements, \
-    glEnableClientState, glDisableClientState, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, \
-    GL_FRONT_AND_BACK, GL_FRONT, glMaterialfv, GL_SPECULAR, GL_EMISSION, \
-    glColorMaterial, GL_AMBIENT_AND_DIFFUSE, glMaterialf, GL_SHININESS, \
-    GL_NORMAL_ARRAY, glNormalPointer, GL_LIGHTING, glColor3f
-from pyglet.graphics.vertexbuffer import create_buffer, VertexBufferObject
+from pyglet.gl import GLfloat, GLuint, \
+                      glEnable, glDisable, glGetFloatv, glLineWidth, \
+                      glDrawArrays, glDrawRangeElements, \
+                      GL_VERTEX_ARRAY, GL_ELEMENT_ARRAY_BUFFER, \
+                      GL_UNSIGNED_INT, GL_FLOAT, GL_TRIANGLES, GL_LINES, \
+                      GL_ARRAY_BUFFER, GL_STATIC_DRAW,\
+                      GL_CULL_FACE, GL_LINE_SMOOTH, GL_LINE_WIDTH
+
+# those are legacy calls which need to be replaced
+from pyglet.gl import glPushMatrix, glPopMatrix, glMultMatrixd, \
+                        glColor4f, glVertex3f, glBegin, glEnd, \
+                        glVertexPointer, glColorPointer, glEnableClientState, \
+                        glDisableClientState, glNormalPointer, glColor3f, \
+                        glNormal3f, glLineStipple, \
+                        GL_LINE_STIPPLE, GL_NORMAL_ARRAY, \
+                        GL_LIGHTING, GL_COLOR_ARRAY
+
+from .mathutils import mat4_translation, mat4_rotation, np_to_gl_mat
+
+from pyglet.graphics.vertexbuffer import VertexBufferObject as BufferObject
+from pyglet.graphics import Batch
+
+from . import camera
 
 from printrun.utils import install_locale
-install_locale('pronterface')
+install_locale("pronterface")
 
-def vec(*args):
-    return (GLfloat * len(args))(*args)
+# for type hints
+from typing import Union, Any, Tuple, List, Iterator
+from ctypes import Array
+from printrun import stltool
+from printrun import gcoder
+Build_Dims = Tuple[int, int, int, int, int, int]
 
-def compile_display_list(func, *options):
-    display_list = glGenLists(1)
-    glNewList(display_list, GL_COMPILE)
-    func(*options)
-    glEndList()
-    return display_list
+def numpy2vbo(nparray: np.ndarray, target = GL_ARRAY_BUFFER,
+              usage = GL_STATIC_DRAW) -> BufferObject:
 
-def numpy2vbo(nparray, target = GL_ARRAY_BUFFER, usage = GL_STATIC_DRAW, use_vbos = True):
-    vbo = create_buffer(nparray.nbytes, target = target, usage = usage, vbo = use_vbos)
+    vbo = BufferObject(nparray.nbytes, usage=usage, target=target)
     vbo.bind()
     vbo.set_data(nparray.ctypes.data)
     return vbo
 
-def triangulate_rectangle(i1, i2, i3, i4):
+def triangulate_rectangle(i1: int, i2: int, i3: int, i4: int) -> List[int]:
     return [i1, i4, i3, i3, i2, i1]
 
-def triangulate_box(i1, i2, i3, i4,
-                    j1, j2, j3, j4):
+def triangulate_box(i1: int, i2: int, i3: int, i4: int,
+                    j1: int, j2: int, j3: int, j4: int) -> List[int]:
     return [i1, i2, j2, j2, j1, i1, i2, i3, j3, j3, j2, i2,
             i3, i4, j4, j4, j3, i3, i4, i1, j1, j1, j4, i4]
+
+def high_luminance(bg_color: Tuple[float, float, float]) -> bool:
+    '''Returns True (bright) or False (dark) based on the
+    luminance (brightness) of the background.'''
+    # Calcualte luminance of the current background color
+    lum = 0.299 * bg_color[0] + 0.587 * bg_color[1] + 0.114 * bg_color[2]
+    if lum > 0.5:  # Bright background
+        return True
+    return False
+
+def blend_colors(color_a: Tuple[float, float, float],
+                 color_b: Tuple[float, float, float], blend: float
+                 ) -> Tuple[float, float, float, float]:
+    r = color_a[0] * (1 - blend) + color_b[0] * blend
+    g = color_a[1] * (1 - blend) + color_b[1] * blend
+    b = color_a[2] * (1 - blend) + color_b[2] * blend
+    return (r, g, b, 1.0)
+
 
 class BoundingBox:
     """
     A rectangular box (cuboid) enclosing a 3D model, defined by lower and upper corners.
     """
-    def __init__(self, upper_corner, lower_corner):
+    def __init__(self, upper_corner: Tuple[float, float, float],
+                 lower_corner: Tuple[float, float, float]) -> None:
         self.upper_corner = upper_corner
         self.lower_corner = lower_corner
 
     @property
-    def width(self):
+    def width(self) -> float:
         width = abs(self.upper_corner[0] - self.lower_corner[0])
         return round(width, 2)
 
     @property
-    def depth(self):
+    def depth(self) -> float:
         depth = abs(self.upper_corner[1] - self.lower_corner[1])
         return round(depth, 2)
 
     @property
-    def height(self):
+    def height(self) -> float:
         height = abs(self.upper_corner[2] - self.lower_corner[2])
         return round(height, 2)
 
 
 class Platform:
     """
-    Platform on which models are placed.
+    Platform grid on which models are placed.
     """
 
-    def __init__(self, build_dimensions, light = False, circular = False, grid = (1, 10)):
+    COLOR_LIGHT = (172 / 255, 172 / 255, 172 / 255)
+    COLOR_DARK = (64 / 255, 64 / 255, 64 / 255)
+
+    def __init__(self, build_dimensions: Build_Dims,
+                 light: bool = False,
+                 circular: bool = False,
+                 grid: Tuple[int, int] = (1, 10)) -> None:
         self.light = light
-        self.circular = circular
+        self.is_circular = circular
         self.width = build_dimensions[0]
         self.depth = build_dimensions[1]
         self.height = build_dimensions[2]
@@ -105,109 +140,468 @@ class Platform:
         self.zoffset = build_dimensions[5]
         self.grid = grid
 
-        self.color_grads_minor = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
-        self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
-        self.color_grads_major = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
+        self.color_minor = (*self.COLOR_DARK, 0.1)
+        self.color_interm = (*self.COLOR_DARK, 0.2)
+        self.color_major = (*self.COLOR_DARK, 0.33)
 
-        self.initialized = False
+        self.vertices = ()
+        self.indices = ()
+        self.colors = ()
+        self._initialise_data()
+
         self.loaded = True
 
-    def init(self):
-        self.display_list = compile_display_list(self.draw)
-        self.initialized = True
+    def update_colour(self, bg_color: Tuple[float, float, float]) -> None:
+        '''Update the color of the platform grid based on the
+        luminance (brightness) of the background.'''
+        if high_luminance(bg_color):
+            base_color = self.COLOR_DARK  # Dark lines
+        else:
+            base_color = self.COLOR_LIGHT  # Bright lines
 
-    def draw(self):
-        glPushMatrix()
+        self.color_minor = blend_colors(bg_color, base_color, 0.1)
+        self.color_interm = blend_colors(bg_color, base_color, 0.2)
+        self.color_major = blend_colors(bg_color, base_color, 0.33)
 
-        glTranslatef(self.xoffset, self.yoffset, self.zoffset)
+        self._initialise_data()
 
-        def color(i):
-            if i % self.grid[1] == 0:
-                glColor4f(*self.color_grads_major)
-            elif i % (self.grid[1] // 2) == 0:
-                glColor4f(*self.color_grads_interm)
+    def _color(self, i: float) -> Tuple:
+        if i % self.grid[1] == 0:
+            return self.color_major
+        if i % (self.grid[1] // 2) == 0:
+            return self.color_interm
+        if self.light:
+            return ()
+        return self.color_minor
+
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(self.xoffset, self.yoffset, self.zoffset)
+        return np_to_gl_mat(mat)
+
+    def _initialise_data(self):
+        if self.is_circular:
+            self._load_circular()
+        else:
+            self._load_rectangular()
+
+    def _origin_arrows(self) -> Tuple[float, float, float]:
+        arrow_offset = self.width * 0.01
+        arrow_side_length = self.width * 0.015
+        arrow_height = arrow_side_length * 0.866
+
+        return (arrow_offset, arrow_side_length, arrow_height)
+
+    def _load_grid(self, z_val):
+        vertices = []
+        indices = []
+        colors = []
+        x_half = self.width / 2
+        y_half = self.depth / 2
+
+        # Grid lines in X
+        for x_val in np.arange(self.grid[0], int(math.ceil(x_half)),
+                               self.grid[0], dtype=float):
+            if self.is_circular:
+                k_val = x_val / x_half
+                y_val = y_half * math.sqrt(1 - (k_val * k_val))
             else:
-                if self.light: return False
-                glColor4f(*self.color_grads_minor)
-            return True
+                y_val = y_half
+
+            col = self._color(x_val)
+            if col:
+                colors.extend(4 * [col])
+                vertices.append((x_half + x_val, y_half + y_val, z_val))
+                vertices.append((x_half + x_val, y_half - y_val, z_val))
+                vertices.append((x_half - x_val, y_half + y_val, z_val))
+                vertices.append((x_half - x_val, y_half - y_val, z_val))
+
+        # Grid lines in Y
+        for y_val in np.arange(self.grid[0], int(math.ceil(y_half)),
+                               self.grid[0], dtype=float):
+            if self.is_circular:
+                k_val = y_val / y_half
+                x_val = x_half * math.sqrt(1 - (k_val * k_val))
+            else:
+                x_val = x_half
+
+            col = self._color(y_val)
+            if col:
+                colors.extend(4 * [col])
+                vertices.append((x_half + x_val, y_half + y_val, z_val))
+                vertices.append((x_half - x_val, y_half + y_val, z_val))
+                vertices.append((x_half + x_val, y_half - y_val, z_val))
+                vertices.append((x_half - x_val, y_half - y_val, z_val))
+
+        # Center lines
+        colors.extend(4 * [self.color_major])
+        vertices.append((2 * x_half, y_half, z_val))
+        vertices.append((0.0, y_half, z_val))
+        vertices.append((x_half, 2 * y_half, z_val))
+        vertices.append((x_half, 0.0, z_val))
+
+        indices.extend(range(0, len(vertices)))
+
+        return (vertices, indices, colors)
+
+    def _load_circular(self):
+        x_half = self.width / 2
+        y_half = self.depth / 2
+        z_height = -0.01
+
+        # Grid
+        vertices, indices, colors = self._load_grid(z_height)
+
+        # Circle outline
+        for deg in range(0, 361):
+            rad = math.radians(deg)
+            colors.append(self.color_major)
+            vertices.append(((math.cos(rad) + 1) * x_half,
+                             (math.sin(rad) + 1) * y_half,
+                             z_height))
+            if deg != 360:
+                indices.extend((len(vertices) - 1, len(vertices)))
+
+        # Triangle to indicate front
+        ao, al, ah = self._origin_arrows()
+        vertices.extend(((x_half, -ao, z_height),
+                         (x_half - al / 2, -(ao + ah), z_height),
+                         (x_half + al / 2, -(ao + ah), z_height)))
+        colors.extend(3 * [self.color_major])
+        idx = len(vertices)
+        indices.extend((idx - 3, idx - 2, idx - 2, idx - 1, idx - 1, idx - 3))
+
+        self.vertices = vertices
+        self.indices = indices
+        self.colors = colors
+
+    def _load_rectangular(self):
+        z_height = -0.01
+        # Grid
+        vertices, indices, colors = self._load_grid(z_height)
+
+        # Arrows at origin point
+        ao, al, ah = self._origin_arrows()
+        op_verts = [(ao / 4, -ao, z_height),
+                   (ao / 4 + ah, -(ao + al / 2), z_height),
+                   (ao / 4, -(ao + al), z_height),
+                   (-ao, ao / 4, z_height),
+                   (-(ao + al / 2), ao / 4 + ah, z_height),
+                   (-(ao + al), ao / 4, z_height),
+                   (0.0, -ao, z_height),
+                   (0.0, -(ao + al), z_height),
+                   (-ao, 0.0, z_height),
+                   (-(ao + al), 0.0, z_height),
+                   # Outline
+                   (0.0, 0.0, z_height),
+                   (0.0, self.depth, z_height),
+                   (self.width, self.depth, z_height),
+                   (self.width, 0.0, z_height)]
+
+        op_cols = len(op_verts) * [self.color_major]
+
+        rel_idxs = (0, 1, 1, 2, 2, 0,
+                    3, 4, 4, 5, 5, 3,
+                    6, 7, 8, 9,
+                    10, 11, 11, 12, 12, 13, 13, 10)
+
+        abs_idxs = [i + len(vertices) for i in rel_idxs]
+
+        vertices.extend(op_verts)
+        self.vertices = vertices
+        indices.extend(abs_idxs)
+        self.indices = indices
+        colors.extend(op_cols)
+        self.colors = colors
+
+    def draw(self) -> None:
+        glPushMatrix()
+        glMultMatrixd(self._get_transformation())
 
         # draw the grid
+        glDisable(GL_LIGHTING)
+
         glBegin(GL_LINES)
-        if self.circular:  # Draw a circular grid
-            for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
-                angle = math.asin(2 * float(i) / self.width - 1)
-                x = (math.cos(angle) + 1) * self.depth / 2
-                if color(i):
-                    glVertex3f(float(i), self.depth - x, 0.0)
-                    glVertex3f(float(i), x, 0.0)
-
-            for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
-                angle = math.acos(2 * float(i) / self.depth - 1)
-                x = (math.sin(angle) + 1) * self.width / 2
-                if color(i):
-                    glVertex3f(self.width - x, float(i), 0.0)
-                    glVertex3f(x, float(i), 0.0)
-        else:  # Draw a rectangular grid
-            for i in numpy.arange(0, int(math.ceil(self.width + 1)), self.grid[0]):
-                if color(i):
-                    glVertex3f(float(i), 0.0, 0.0)
-                    glVertex3f(float(i), self.depth, 0.0)
-
-            for i in numpy.arange(0, int(math.ceil(self.depth + 1)), self.grid[0]):
-                if color(i):
-                    glVertex3f(0, float(i), 0.0)
-                    glVertex3f(self.width, float(i), 0.0)
+        for index in self.indices:
+            glColor4f(*self.colors[index])
+            glVertex3f(*self.vertices[index])
         glEnd()
 
-        if self.circular:
-            glBegin(GL_LINE_LOOP)
-            for i in range(0, 360):
-                angle = math.radians(i)
-                glVertex3f((math.cos(angle) + 1) * self.width / 2,
-                           (math.sin(angle) + 1) * self.depth / 2, 0.0)
-            glEnd()
-
         glPopMatrix()
+        glEnable(GL_LIGHTING)
 
-    def display(self, mode_2d=False):
-        # FIXME: using the list sometimes results in graphical corruptions
-        # glCallList(self.display_list)
-        self.draw()
 
-class PrintHead:
-    def __init__(self):
-        self.color = (43. / 255, 0., 175. / 255, 1.0)
-        self.scale = 5
-        self.height = 5
+class MouseCursor:
+    """
+    Cursor where the mouse should be in 3D space.
+    """
+    def __init__(self) -> None:
+        self.position = (0.0, 0.0, 0.0)
+        self.vertices: List[Tuple[float, float, float]] = []
+        self.indices: List[int] = []
+        self.color = (225 / 255, 0 / 255, 45 / 255, 1.0)  # Red
+        self._initialise_data()
 
-        self.initialized = False
-        self.loaded = True
+    def update_position(self, position_3d: Tuple[float, float, float]) -> None:
+        self.position = position_3d
 
-    def init(self):
-        self.display_list = compile_display_list(self.draw)
-        self.initialized = True
+    def _initialise_data(self) -> None:
+        self.vertices, self.indices = self._circle()
+        #self.vertices, self.indices = self._rectangle()
 
-    def draw(self):
+    def _circle(self) -> Tuple[List[Tuple[float, float, float]], List[int]]:
+        radius = 2.0
+        segments = 32  #  Resolution of the circle.
+        z_height = 0.01
+        vertices = [(0.0, 0.0, z_height),  # this is the center point
+                    (0.0, radius, z_height)]  # this is first point on the top
+        indices: List[int] = []
+
+        vert_n = 0
+        for i in range(segments):
+            alpha = math.tau / segments * i
+            new_x = radius * math.sin(alpha)
+            new_y = radius * math.cos(alpha)
+            # Add one new vertex coordinate
+            vertices.append((new_x, new_y, z_height))
+            vert_n = len(vertices) - 1
+            # Add three new indices
+            indices.extend((0, vert_n - 1, vert_n))
+        # Add last triangle
+        indices.extend((0, vert_n, 1))
+
+        return (vertices, indices)
+
+    def _rectangle(self) -> Tuple[List[Tuple[float, float, float]], List[int]]:
+        half_a = 2.0  # Half of the rectangle side length
+        z_height = 0.01
+
+        vertices = [(half_a, half_a, z_height),
+                    (-half_a, half_a, z_height),
+                    (-half_a, -half_a, z_height),
+                    (half_a, -half_a, z_height)]
+
+        indices = [0, 1, 2,
+                   2, 3, 0]
+
+        return (vertices, indices)
+
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(*self.position)
+        return np_to_gl_mat(mat)
+
+    def draw(self) -> None:
         glPushMatrix()
 
-        glBegin(GL_LINES)
+        glMultMatrixd(self._get_transformation())
+
+        glDisable(GL_CULL_FACE)
+
         glColor4f(*self.color)
-        for di in [-1, 1]:
-            for dj in [-1, 1]:
-                glVertex3f(0, 0, 0)
-                glVertex3f(self.scale * di, self.scale * dj, self.height)
+        glNormal3f(0.0, 0.0, 1.0)
+
+        glBegin(GL_TRIANGLES)
+        for index in self.indices:
+            glVertex3f(*self.vertices[index])
         glEnd()
 
+        glEnable(GL_CULL_FACE)
         glPopMatrix()
 
-    def display(self, mode_2d=False):
+
+class Focus:
+    """
+    Outline around the currently active OpenGL panel.
+    """
+
+    COLOR_LIGHT = (205 / 255, 205 / 255, 205 / 255)
+    COLOR_DARK = (15 / 255, 15 / 255, 15 / 255)
+
+    def __init__(self, cam: camera.Camera) -> None:
+        self.camera = cam
+        self.vertices = ()
+        self.indices = ()
+        self.color = (15 / 255, 15 / 255, 15 / 255, 0.6)  # Black Transparent
+        self._initialise_data()
+
+    def _initialise_data(self) -> None:
+        # Starts at the lower left corner, x, y
+        offset = 2.0 * self.camera.display_ppi_factor
+        self.vertices = ((offset, offset, 0.0),
+                         (self.camera.width - offset, offset, 0.0),
+                         (self.camera.width - offset, self.camera.height - offset, 0.0),
+                         (offset, self.camera.height - offset, 0.0))
+        self.indices = (0, 1, 1, 2, 2, 3, 3, 0)
+
+    def update_size(self) -> None:
+        self._initialise_data()
+
+    def update_colour(self, bg_color: Tuple[float, float, float]) -> None:
+        '''Update the color of the focus based on the
+        luminance (brightness) of the background.'''
+        if high_luminance(bg_color):
+            self.color = (*self.COLOR_DARK, 0.6)  # Dark Transparent
+        else:
+            self.color = (*self.COLOR_LIGHT, 0.4)  # Light Transparent
+
+    def draw(self) -> None:
+        self.camera.create_pseudo2d_matrix()
+
+        glDisable(GL_LIGHTING)
+        # Draw a stippled line around the vertices
+        glLineStipple(1, 0xff00)
+        glColor4f(*self.color)
+        glEnable(GL_LINE_STIPPLE)
+
+        glBegin(GL_LINES)
+        for index in self.indices:
+            glVertex3f(*self.vertices[index])
+        glEnd()
+
+        glDisable(GL_LINE_STIPPLE)
+        glEnable(GL_LIGHTING)
+
+        self.camera.revert_pseudo2d_matrix()
+
+
+class CuttingPlane:
+    """
+    A plane that indicates the axis and position
+    on which the stl model will be cut.
+    """
+    def __init__(self, build_dimensions: Build_Dims) -> None:
+        self.width = build_dimensions[0]
+        self.depth = build_dimensions[1]
+        self.height = build_dimensions[2]
+        self.cutplane_sizes = {"x": (self.depth, self.height),
+                                    "y": (self.width, self.height),
+                                    "z": (self.width, self.depth)}
+        self.axis = ''
+        self.dist = 0.0
+        self.cutting_direction = -1
+        self.plane_width = 0.0
+        self.plane_height = 0.0
+
+        self.vertices = ()
+        self.indices = ()
+        self.color = (0 / 255, 229 / 255, 38 / 255, 0.3)  # Light Green
+        self.color_outline = (0 / 255, 204 / 255, 38 / 255, 1.0)  # Green
+
+    def _initialise_data(self) -> None:
+        self.vertices = ((self.plane_width, self.plane_height, 0.0),
+                         (0.0, self.plane_height, 0.0),
+                         (0.0, 0.0, 0.0),
+                         (self.plane_width, 0.0, 0.0))
+
+        self.indices = (0, 1, 2, 3, 0, 2,
+                        2, 1, 1, 0, 0, 3, 3, 2)
+
+    def update_plane(self, axis: str, cutting_direction: int) -> None:
+        self.axis = axis
+        self.cutting_direction = cutting_direction
+        self.plane_width, self.plane_height = self.cutplane_sizes[axis]
+        self._initialise_data()
+
+    def update_position(self, dist: float) -> None:
+        self.dist = dist
+
+    def _get_transformation(self) -> Array:
+        if self.axis == "x":
+            rm1 = mat4_rotation(0.0, 1.0, 0.0, 90.0)
+            rm2 = mat4_rotation(0.0, 0.0, 1.0, 90.0)
+            tm = mat4_translation(0.0, 0.0, self.dist)
+            mat = tm @ rm2 @ rm1
+        elif self.axis == "y":
+            rm = mat4_rotation(1.0, 0.0, 0.0, 90.0)
+            tm = mat4_translation(0.0, 0.0, -self.dist)
+            mat = tm @ rm
+        elif self.axis == "z":
+            mat = mat4_translation(0.0, 0.0, self.dist)
+        else:
+            mat = np.identity(4)
+
+        return np_to_gl_mat(mat)
+
+    def draw(self) -> None:
+        if self.dist is None:
+            return
+
+        glPushMatrix()
+        glMultMatrixd(self._get_transformation())
+        glDisable(GL_CULL_FACE)
+        # Draw the plane
+        glColor4f(*self.color)
+        glNormal3f(0.0, 0.0, self.cutting_direction)
+
+        glBegin(GL_TRIANGLES)
+        for index in self.indices[:6]:
+            glVertex3f(*self.vertices[index])
+        glEnd()
+
+        glEnable(GL_CULL_FACE)
         glEnable(GL_LINE_SMOOTH)
+
+        # Save the current linewidth and insert a new value
         orig_linewidth = (GLfloat)()
         glGetFloatv(GL_LINE_WIDTH, orig_linewidth)
-        glLineWidth(3.0)
-        glCallList(self.display_list)
+        glLineWidth(4.0)
+        # Draw the outline on the plane
+        glColor4f(*self.color_outline)
+
+        glBegin(GL_LINES)
+        for index in self.indices[6:]:
+            glVertex3f(*self.vertices[index])
+        glEnd()
+        # Restore the original linewidth
         glLineWidth(orig_linewidth)
         glDisable(GL_LINE_SMOOTH)
+        glPopMatrix()
+
+
+# TODO: It would be nice to have a visual representation of the printhead
+# or the nozzle. Due to different printer configurations this would need
+# to be adjustable by the user.
+
+
+class MeshModel:
+    """
+    Model geometries based on triangulated
+    meshes such as .stl, .obj, .3mf etc.
+    """
+    def __init__(self, model: stltool.stl) -> None:
+        self.color = (77 / 255, 178 / 255, 128 / 255, 1.0)  # Greenish
+        # Every model is placed into it's own batch.
+        # This is not ideal, but good enough for the moment.
+        self.batch = Batch()
+        self.vl = None
+        self._initialise_data(model)
+
+    def _initialise_data(self, model: stltool.stl) -> None:
+        # Create the vertex and normal arrays.
+        vertices = []
+        normals = []
+
+        for facet in model.facets:
+            for coords in facet[1]:
+                vertices.extend(coords)
+                normals.extend(facet[0])
+
+        self.vl = self.batch.add(len(vertices) // 3,
+                                GL_TRIANGLES,
+                                None,  # group
+                                ('v3f/static', vertices),
+                                ('n3f/static', normals),
+                                ('c3f/static', self.color[:-1] * (len(vertices) // 3)))
+
+        model.batch = self.batch  # type: ignore
+
+    def delete(self) -> None:
+        if self.vl:
+            self.vl.delete()
+
+    def draw(self) -> None:
+        if self.vl:
+            self.vl.draw(GL_TRIANGLES)
+
 
 class Model:
     """
@@ -223,30 +617,38 @@ class Model:
         'z': AXIS_Z,
     }
 
-    axis_letter_map = dict([(v, k) for k, v in letter_axis_map.items()])
+    color_tool0 = (1.0, 0.0, 0.0, 1.0)
+    color_tool1 = (1.0, 0.0, 0.0, 1.0)
+    color_tool2 = (1.0, 0.0, 0.0, 1.0)
+    color_tool3 = (1.0, 0.0, 0.0, 1.0)
+    color_tool4 = (1.0, 0.0, 0.0, 1.0)
+    color_travel = (1.0, 0.0, 0.0, 1.0)
 
-    lock = None
+    axis_letter_map = {(v, k) for k, v in letter_axis_map.items()}
 
-    def __init__(self, offset_x=0, offset_y=0):
+    def __init__(self, offset_x: float = 0.0, offset_y: float = 0.0) -> None:
         self.offset_x = offset_x
         self.offset_y = offset_y
+        self._bounding_box = None
 
         self.lock = threading.Lock()
 
         self.init_model_attributes()
 
-    def init_model_attributes(self):
+        self.vertices = np.zeros(0, dtype = GLfloat)
+
+    def init_model_attributes(self) -> None:
         """
         Set/reset saved properties.
         """
         self.invalidate_bounding_box()
         self.modified = False
 
-    def invalidate_bounding_box(self):
+    def invalidate_bounding_box(self) -> None:
         self._bounding_box = None
 
     @property
-    def bounding_box(self):
+    def bounding_box(self) -> BoundingBox:
         """
         Get a bounding box for the model.
         """
@@ -254,7 +656,7 @@ class Model:
             self._bounding_box = self._calculate_bounding_box()
         return self._bounding_box
 
-    def _calculate_bounding_box(self):
+    def _calculate_bounding_box(self) -> BoundingBox:
         """
         Calculate an axis-aligned box enclosing the model.
         """
@@ -267,42 +669,41 @@ class Model:
         return box
 
     @property
-    def width(self):
+    def width(self) -> float:
         return self.bounding_box.width
 
     @property
-    def depth(self):
+    def depth(self) -> float:
         return self.bounding_box.depth
 
     @property
-    def height(self):
+    def height(self) -> float:
         return self.bounding_box.height
 
-    def movement_color(self, move):
+    def movement_color(self, move) -> Tuple[float, float, float, float]:
         """
         Return the color to use for particular type of movement.
         """
         if move.extruding:
             if move.current_tool == 0:
                 return self.color_tool0
-            elif move.current_tool == 1:
+            if move.current_tool == 1:
                 return self.color_tool1
-            elif move.current_tool == 2:
+            if move.current_tool == 2:
                 return self.color_tool2
-            elif move.current_tool == 3:
+            if move.current_tool == 3:
                 return self.color_tool3
-            else:
-                return self.color_tool4
+            return self.color_tool4
 
         return self.color_travel
 
-def movement_angle(src, dst, precision=0):
+def movement_angle(src: List[float], dst: List[float], precision: int = 0) -> float:
     x = dst[0] - src[0]
     y = dst[1] - src[1]
     angle = math.degrees(math.atan2(y, -x))  # negate x for clockwise rotation angle
     return round(angle, precision)
 
-def get_next_move(gcode, layer_idx, gline_idx):
+def get_next_move(gcode, layer_idx: int, gline_idx: int) -> Union[Any, None]:
     gline_idx += 1
     while layer_idx < len(gcode.all_layers):
         layer = gcode.all_layers[layer_idx]
@@ -315,10 +716,10 @@ def get_next_move(gcode, layer_idx, gline_idx):
         gline_idx = 0
     return None
 
-def interpolate_arcs(gline, prev_gline):
-    if gline.command == "G2" or gline.command == "G3":
-        rx = gline.i if gline.i is not None else 0
-        ry = gline.j if gline.j is not None else 0
+def interpolate_arcs(gline, prev_gline) -> Iterator[Tuple[Tuple[float, float, float], bool]]:
+    if gline.command in ('G2', 'G3'):
+        rx = gline.i if gline.i is not None else 0.0
+        ry = gline.j if gline.j is not None else 0.0
         r = math.sqrt(rx*rx + ry*ry)
 
         cx = prev_gline.current_x + rx
@@ -331,17 +732,16 @@ def interpolate_arcs(gline, prev_gline):
         a_delta = a_end - a_start
 
         if gline.command == "G3" and a_delta <= 0:
-            a_delta += math.pi * 2
+            a_delta += math.tau
         elif gline.command == "G2" and a_delta >= 0:
-            a_delta -= math.pi * 2
+            a_delta -= math.tau
 
         z0 = prev_gline.current_z
         dz = gline.current_z - z0
 
         # max segment size: 0.5mm, max num of segments: 100
         segments = math.ceil(abs(a_delta) * r * 2 / 0.5)
-        if segments > 100:
-            segments = 100
+        segments = min(segments, 100)
 
         for t in range(segments):
             a = t / segments * a_delta + a_start
@@ -351,9 +751,11 @@ def interpolate_arcs(gline, prev_gline):
                 cy + math.sin(a) * r,
                 z0 + t / segments * dz
             ), True)
+
             yield mid
 
-    yield ((gline.current_x, gline.current_y, gline.current_z), False) # last segment of this line
+    # last segment of this line
+    yield ((gline.current_x, gline.current_y, gline.current_z), False)
 
 
 class GcodeModel(Model):
@@ -374,21 +776,19 @@ class GcodeModel(Model):
     display_travels = True
 
     buffers_created = False
-    use_vbos = True
     loaded = False
     fully_loaded = False
-
-    gcode = None
 
     path_halfwidth = 0.2
     path_halfheight = 0.2
 
-    def set_path_size(self, path_halfwidth, path_halfheight):
+    def set_path_size(self, path_halfwidth: float, path_halfheight: float) -> None:
         with self.lock:
             self.path_halfwidth = path_halfwidth
             self.path_halfheight = path_halfheight
 
-    def load_data(self, model_data, callback=None):
+    def load_data(self, model_data: gcoder.GCode,
+                  callback = None) -> Iterator[Union[int, None]]:
         t_start = time.time()
         self.gcode = model_data
 
@@ -407,11 +807,15 @@ class GcodeModel(Model):
         buffered_color_len = 3  # 4th color component (alpha) is ignored
         verticesperline = 8
         coordsperline = coordspervertex * verticesperline
-        coords_count = lambda nlines: nlines * coordsperline
+
+        def coords_count(line_count: int) -> int:
+            return line_count * coordsperline
 
         travelverticesperline = 2
         travelcoordsperline = coordspervertex * travelverticesperline
-        travel_coords_count = lambda nlines: nlines * travelcoordsperline
+
+        def travel_coords_count(line_count: int) -> int:
+            return line_count * travelcoordsperline
 
         trianglesperface = 2
         facesperbox = 4
@@ -420,28 +824,32 @@ class GcodeModel(Model):
         indicesperbox = verticespertriangle * trianglesperbox
         boxperline = 2
         indicesperline = indicesperbox * boxperline
-        indices_count = lambda nlines: nlines * indicesperline
+
+        def indices_count(line_count: int) -> int:
+            return line_count * indicesperline
 
         nlines = len(model_data)
+
         ntravelcoords = travel_coords_count(nlines)
         ncoords = coords_count(nlines)
         nindices = indices_count(nlines)
-        travel_vertices = self.travels = numpy.zeros(ntravelcoords, dtype = GLfloat)
+
+        travel_vertices = self.travels = np.zeros(ntravelcoords, dtype = GLfloat)
         travel_vertex_k = 0
-        vertices = self.vertices = numpy.zeros(ncoords, dtype = GLfloat)
+        vertices = self.vertices = np.zeros(ncoords, dtype = GLfloat)
         vertex_k = 0
-        colors = self.colors = numpy.zeros(ncoords, dtype = GLfloat)
+        colors = self.colors = np.zeros(ncoords, dtype = GLfloat)
 
         color_k = 0
-        normals = self.normals = numpy.zeros(ncoords, dtype = GLfloat)
-        indices = self.indices = numpy.zeros(nindices, dtype = GLuint)
+        normals = self.normals = np.zeros(ncoords, dtype = GLfloat)
+        indices = self.indices = np.zeros(nindices, dtype = GLuint)
         index_k = 0
         self.layer_idxs_map = {}
         self.layer_stops = [0]
 
-        prev_move_normal_x = None
-        prev_move_normal_y = None
-        prev_move_angle = None
+        prev_move_normal_x = 0.0
+        prev_move_normal_y = 0.0
+        prev_move_angle = 0.0
         prev_pos = (0, 0, 0)
         prev_gline = None
         prev_extruding = False
@@ -449,8 +857,6 @@ class GcodeModel(Model):
 
         self.printed_until = 0
         self.only_current = False
-
-        twopi = 2 * math.pi
 
         processed_lines = 0
 
@@ -460,7 +866,7 @@ class GcodeModel(Model):
                 remaining_lines = nlines - processed_lines
                 # Only reallocate memory which might be needed, not memory
                 # for everything
-                ntravelcoords = coords_count(remaining_lines) + travel_vertex_k
+                ntravelcoords = travel_coords_count(remaining_lines) + travel_vertex_k
                 ncoords = coords_count(remaining_lines) + vertex_k
                 nindices = indices_count(remaining_lines) + index_k
                 if ncoords > vertices.size:
@@ -474,7 +880,9 @@ class GcodeModel(Model):
                 for gline_idx, gline in enumerate(layer):
                     if not gline.is_move:
                         continue
-                    if gline.x is None and gline.y is None and gline.z is None and gline.j is None and gline.i is None:
+                    if gline.x is None and gline.y is None \
+                        and gline.z is None and gline.j is None \
+                            and gline.i is None:
                         continue
                     has_movement = True
                     for (current_pos, interpolated) in interpolate_arcs(gline, prev_gline):
@@ -484,11 +892,13 @@ class GcodeModel(Model):
                                 # if not enough room for another 100 points now,
                                 # allocate enough and 50% extra to minimize separate allocations
                                 ratio = (travel_vertex_k + 100 * 6) / self.travels.size * 1.5
-                                # print(f"gl realloc travel {self.travels.size} -> {int(self.travels.size * ratio)}")
-                                self.travels.resize(int(self.travels.size * ratio), refcheck = False)
+                                logging.debug(_("GL: Reallocate GCode travel buffer %d -> %d") % \
+                                              (self.travels.size, int(self.travels.size * ratio)))
+                                self.travels.resize(int(self.travels.size * ratio),
+                                                    refcheck = False)
 
-                            travel_vertices[travel_vertex_k:travel_vertex_k+3] = prev_pos
-                            travel_vertices[travel_vertex_k + 3:travel_vertex_k + 6] = current_pos
+                            travel_vertices[travel_vertex_k : travel_vertex_k+3] = prev_pos
+                            travel_vertices[travel_vertex_k + 3 : travel_vertex_k + 6] = current_pos
                             travel_vertex_k += 6
                         else:
                             delta_x = current_pos[0] - prev_pos[0]
@@ -508,12 +918,33 @@ class GcodeModel(Model):
                             new_indices = []
                             new_vertices = []
                             new_normals = []
+
+                            def compute_vertices(move_x, move_y, new_verts, new_norms,
+                                                 pos = prev_pos, divisor: float = 1.0,
+                                                 path_hw: float = path_halfwidth,
+                                                 path_hh: float = path_halfheight) -> None:
+
+                                hw = path_hw / divisor
+                                p1x = pos[0] - hw * move_x
+                                p2x = pos[0] + hw * move_x
+                                p1y = pos[1] - hw * move_y
+                                p2y = pos[1] + hw * move_y
+                                new_verts.extend((pos[0], pos[1], pos[2] + path_hh))
+                                new_verts.extend((p1x, p1y, pos[2]))
+                                new_verts.extend((pos[0], pos[1], pos[2] - path_hh))
+                                new_verts.extend((p2x, p2y, pos[2]))
+                                new_norms.extend((0, 0, 1))
+                                new_norms.extend((-move_x, -move_y, 0))
+                                new_norms.extend((0, 0, -1))
+                                new_norms.extend((move_x, move_y, 0))
+
                             if prev_gline and prev_gline.extruding or prev_extruding:
                                 # Store previous vertices indices
                                 prev_id = vertex_k // 3 - 4
                                 avg_move_normal_x = (prev_move_normal_x + move_normal_x) / 2
                                 avg_move_normal_y = (prev_move_normal_y + move_normal_y) / 2
-                                norm = avg_move_normal_x * avg_move_normal_x + avg_move_normal_y * avg_move_normal_y
+                                norm = avg_move_normal_x * avg_move_normal_x + \
+                                       avg_move_normal_y * avg_move_normal_y
                                 if norm == 0:
                                     avg_move_normal_x = move_normal_x
                                     avg_move_normal_y = move_normal_y
@@ -522,43 +953,22 @@ class GcodeModel(Model):
                                     avg_move_normal_x /= norm
                                     avg_move_normal_y /= norm
                                 delta_angle = move_angle - prev_move_angle
-                                delta_angle = (delta_angle + twopi) % twopi
+                                delta_angle = (delta_angle + math.tau) % math.tau
                                 fact = abs(math.cos(delta_angle / 2))
                                 # If move is turning too much, avoid creating a big peak
                                 # by adding an intermediate box
                                 if fact < 0.5:
-                                    # FIXME: It looks like there's some heavy code duplication here...
-                                    hw = path_halfwidth
-                                    p1x = prev_pos[0] - hw * prev_move_normal_x
-                                    p2x = prev_pos[0] + hw * prev_move_normal_x
-                                    p1y = prev_pos[1] - hw * prev_move_normal_y
-                                    p2y = prev_pos[1] + hw * prev_move_normal_y
-                                    new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
-                                    new_vertices.extend((p1x, p1y, prev_pos[2]))
-                                    new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
-                                    new_vertices.extend((p2x, p2y, prev_pos[2]))
-                                    new_normals.extend((0, 0, 1))
-                                    new_normals.extend((-prev_move_normal_x, -prev_move_normal_y, 0))
-                                    new_normals.extend((0, 0, -1))
-                                    new_normals.extend((prev_move_normal_x, prev_move_normal_y, 0))
+                                    compute_vertices(prev_move_normal_x, prev_move_normal_y,
+                                                     new_vertices, new_normals)
                                     first = vertex_k // 3
                                     # Link to previous
                                     new_indices += triangulate_box(prev_id, prev_id + 1,
                                                                 prev_id + 2, prev_id + 3,
                                                                 first, first + 1,
                                                                 first + 2, first + 3)
-                                    p1x = prev_pos[0] - hw * move_normal_x
-                                    p2x = prev_pos[0] + hw * move_normal_x
-                                    p1y = prev_pos[1] - hw * move_normal_y
-                                    p2y = prev_pos[1] + hw * move_normal_y
-                                    new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
-                                    new_vertices.extend((p1x, p1y, prev_pos[2]))
-                                    new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
-                                    new_vertices.extend((p2x, p2y, prev_pos[2]))
-                                    new_normals.extend((0, 0, 1))
-                                    new_normals.extend((-move_normal_x, -move_normal_y, 0))
-                                    new_normals.extend((0, 0, -1))
-                                    new_normals.extend((move_normal_x, move_normal_y, 0))
+
+                                    compute_vertices(move_normal_x, move_normal_y,
+                                                     new_vertices, new_normals)
                                     prev_id += 4
                                     first += 4
                                     # Link to previous
@@ -567,20 +977,9 @@ class GcodeModel(Model):
                                                                 first, first + 1,
                                                                 first + 2, first + 3)
                                 else:
-                                    hw = path_halfwidth / fact
                                     # Compute vertices
-                                    p1x = prev_pos[0] - hw * avg_move_normal_x
-                                    p2x = prev_pos[0] + hw * avg_move_normal_x
-                                    p1y = prev_pos[1] - hw * avg_move_normal_y
-                                    p2y = prev_pos[1] + hw * avg_move_normal_y
-                                    new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
-                                    new_vertices.extend((p1x, p1y, prev_pos[2]))
-                                    new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
-                                    new_vertices.extend((p2x, p2y, prev_pos[2]))
-                                    new_normals.extend((0, 0, 1))
-                                    new_normals.extend((-avg_move_normal_x, -avg_move_normal_y, 0))
-                                    new_normals.extend((0, 0, -1))
-                                    new_normals.extend((avg_move_normal_x, avg_move_normal_y, 0))
+                                    compute_vertices(avg_move_normal_x, avg_move_normal_y,
+                                                     new_vertices, new_normals, divisor = fact)
                                     first = vertex_k // 3
                                     # Link to previous
                                     new_indices += triangulate_box(prev_id, prev_id + 1,
@@ -589,18 +988,8 @@ class GcodeModel(Model):
                                                                 first + 2, first + 3)
                             else:
                                 # Compute vertices normal to the current move and cap it
-                                p1x = prev_pos[0] - path_halfwidth * move_normal_x
-                                p2x = prev_pos[0] + path_halfwidth * move_normal_x
-                                p1y = prev_pos[1] - path_halfwidth * move_normal_y
-                                p2y = prev_pos[1] + path_halfwidth * move_normal_y
-                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] + path_halfheight))
-                                new_vertices.extend((p1x, p1y, prev_pos[2]))
-                                new_vertices.extend((prev_pos[0], prev_pos[1], prev_pos[2] - path_halfheight))
-                                new_vertices.extend((p2x, p2y, prev_pos[2]))
-                                new_normals.extend((0, 0, 1))
-                                new_normals.extend((-move_normal_x, -move_normal_y, 0))
-                                new_normals.extend((0, 0, -1))
-                                new_normals.extend((move_normal_x, move_normal_y, 0))
+                                compute_vertices(move_normal_x, move_normal_y,
+                                                 new_vertices, new_normals)
                                 first = vertex_k // 3
                                 new_indices = triangulate_rectangle(first, first + 1,
                                                                     first + 2, first + 3)
@@ -609,49 +998,52 @@ class GcodeModel(Model):
                             next_is_extruding = interpolated or next_move and next_move.extruding
                             if not next_is_extruding:
                                 # Compute caps and link everything
-                                p1x = current_pos[0] - path_halfwidth * move_normal_x
-                                p2x = current_pos[0] + path_halfwidth * move_normal_x
-                                p1y = current_pos[1] - path_halfwidth * move_normal_y
-                                p2y = current_pos[1] + path_halfwidth * move_normal_y
-                                new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] + path_halfheight))
-                                new_vertices.extend((p1x, p1y, current_pos[2]))
-                                new_vertices.extend((current_pos[0], current_pos[1], current_pos[2] - path_halfheight))
-                                new_vertices.extend((p2x, p2y, current_pos[2]))
-                                new_normals.extend((0, 0, 1))
-                                new_normals.extend((-move_normal_x, -move_normal_y, 0))
-                                new_normals.extend((0, 0, -1))
-                                new_normals.extend((move_normal_x, move_normal_y, 0))
+                                compute_vertices(move_normal_x, move_normal_y,
+                                                 new_vertices, new_normals, pos = current_pos)
                                 end_first = vertex_k // 3 + len(new_vertices) // 3 - 4
-                                new_indices += triangulate_rectangle(end_first + 3, end_first + 2,
-                                                                    end_first + 1, end_first)
-                                new_indices += triangulate_box(first, first + 1,
-                                                            first + 2, first + 3,
-                                                            end_first, end_first + 1,
-                                                            end_first + 2, end_first + 3)
 
-                            if self.indices.size < (index_k + len(new_indices) + 100 * indicesperline):
+                                new_indices += triangulate_rectangle(end_first + 3,
+                                                                     end_first + 2,
+                                                                     end_first + 1,
+                                                                     end_first)
+
+                                new_indices += triangulate_box(first, first + 1,
+                                                               first + 2, first + 3,
+                                                               end_first,
+                                                               end_first + 1,
+                                                               end_first + 2,
+                                                               end_first + 3)
+
+                            if self.indices.size < (index_k + len(new_indices) +
+                                                    100 * indicesperline):
                                 # arc interpolation extra points allocation
-                                ratio = (index_k + len(new_indices) + 100 * indicesperline) / self.indices.size * 1.5
-                                # print(f"gl realloc print {self.vertices.size} -> {int(self.vertices.size * ratio)}")
-                                self.vertices.resize(int(self.vertices.size * ratio), refcheck = False)
-                                self.colors.resize(int(self.colors.size * ratio), refcheck = False)
-                                self.normals.resize(int(self.normals.size * ratio), refcheck = False)
-                                self.indices.resize(int(self.indices.size * ratio), refcheck = False)
+                                ratio = (index_k + len(new_indices) +
+                                         100 * indicesperline) / self.indices.size * 1.5
+                                logging.debug(_("GL: Reallocate GCode print buffer %d -> %d") % \
+                                              (self.vertices.size, int(self.vertices.size * ratio)))
+                                self.vertices.resize(int(self.vertices.size * ratio),
+                                                     refcheck = False)
+                                self.colors.resize(int(self.colors.size * ratio),
+                                                   refcheck = False)
+                                self.normals.resize(int(self.normals.size * ratio),
+                                                    refcheck = False)
+                                self.indices.resize(int(self.indices.size * ratio),
+                                                    refcheck = False)
 
                             for new_i, item in enumerate(new_indices):
                                 indices[index_k + new_i] = item
                             index_k += len(new_indices)
 
                             new_vertices_len = len(new_vertices)
-                            vertices[vertex_k:vertex_k+new_vertices_len] = new_vertices
-                            normals[vertex_k:vertex_k+new_vertices_len] = new_normals
+                            vertices[vertex_k : vertex_k + new_vertices_len] = new_vertices
+                            normals[vertex_k : vertex_k + new_vertices_len] = new_normals
                             vertex_k += new_vertices_len
 
-                            new_vertices_count = new_vertices_len//coordspervertex
+                            new_vertices_count = new_vertices_len // coordspervertex
                             # settings support alpha (transparency), but it is ignored here
                             gline_color = self.movement_color(gline)[:buffered_color_len]
                             for vi in range(new_vertices_count):
-                                colors[color_k:color_k+buffered_color_len] = gline_color
+                                colors[color_k : color_k + buffered_color_len] = gline_color
                                 color_k += buffered_color_len
 
                             prev_move_normal_x = move_normal_x
@@ -709,11 +1101,11 @@ class GcodeModel(Model):
 
         t_end = time.time()
 
-        logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
-        logging.debug(_('Vertex count: %d') % ((len(self.vertices) + len(self.travels)) // 3))
+        logging.debug(_('GL: Initialized GCode model in %.2f seconds') % (t_end - t_start))
+        logging.debug(_('GL: GCode model vertex count: %d') % ((len(self.vertices) + len(self.travels)) // 3))
         yield None
 
-    def copy(self):
+    def copy(self) -> 'GcodeModel':
         copy = GcodeModel()
         for var in ["vertices", "colors", "travels", "indices", "normals",
                     "max_layers", "num_layers_to_draw", "printed_until",
@@ -728,10 +1120,10 @@ class GcodeModel(Model):
         copy.initialized = False
         return copy
 
-    def update_colors(self):
+    def update_colors(self) -> None:
         """Rebuild gl color buffer without loading. Used after color settings edit"""
         ncoords = self.count_print_vertices[-1]
-        colors = numpy.empty(ncoords*3, dtype = GLfloat)
+        colors = np.empty(ncoords * 3, dtype = GLfloat)
         cur_vertex = 0
         gline_i = 1
         for gline in self.gcode.lines:
@@ -740,17 +1132,17 @@ class GcodeModel(Model):
                 last_vertex = self.count_print_vertices[gline_i]
                 gline_i += 1
                 while cur_vertex < last_vertex:
-                    colors[cur_vertex*3:cur_vertex*3+3] = gline_color
+                    colors[cur_vertex * 3 : cur_vertex * 3 + 3] = gline_color
                     cur_vertex += 1
         if self.vertex_color_buffer:
             self.vertex_color_buffer.delete()
-        self.vertex_color_buffer = numpy2vbo(colors, use_vbos = self.use_vbos)
+        self.vertex_color_buffer = numpy2vbo(colors)
 
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
 
-    def init(self):
+    def init(self) -> None:
         with self.lock:
             self.layers_loaded = self.max_layers
             self.initialized = True
@@ -760,40 +1152,40 @@ class GcodeModel(Model):
                 self.vertex_buffer.delete()
                 self.vertex_color_buffer.delete()
                 self.vertex_normal_buffer.delete()
-            self.travel_buffer = numpy2vbo(self.travels, use_vbos = self.use_vbos)
-            self.index_buffer = numpy2vbo(self.indices, use_vbos = self.use_vbos,
+            self.travel_buffer = numpy2vbo(self.travels)
+            self.index_buffer = numpy2vbo(self.indices,
                                           target = GL_ELEMENT_ARRAY_BUFFER)
-            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)
-            self.vertex_normal_buffer = numpy2vbo(self.normals, use_vbos = self.use_vbos)
+            self.vertex_buffer = numpy2vbo(self.vertices)
+            self.vertex_color_buffer = numpy2vbo(self.colors)
+            self.vertex_normal_buffer = numpy2vbo(self.normals)
             if self.fully_loaded:
                 # Delete numpy arrays after creating VBOs after full load
-                self.travels = None
-                self.indices = None
-                self.vertices = None
-                self.colors = None
-                self.normals = None
+                self.travels = np.zeros(0, dtype = GLfloat)
+                self.indices = np.zeros(0, dtype = GLuint)
+                self.vertices = np.zeros(0, dtype = GLfloat)
+                self.colors = np.zeros(0, dtype = GLfloat)
+                self.normals = np.zeros(0, dtype = GLfloat)
             self.buffers_created = True
 
-    def display(self, mode_2d=False):
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(self.offset_x, self.offset_y, 0.0)
+        return np_to_gl_mat(mat)
+
+    def display(self, mode_2d: bool = False) -> None:
         with self.lock:
             glPushMatrix()
-            glTranslatef(self.offset_x, self.offset_y, 0)
+            glMultMatrixd(self._get_transformation())
+
             glEnableClientState(GL_VERTEX_ARRAY)
 
-            has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
             if self.display_travels:
-                self._display_travels(has_vbo)
+                self._display_travels()
 
             glEnable(GL_LIGHTING)
             glEnableClientState(GL_NORMAL_ARRAY)
             glEnableClientState(GL_COLOR_ARRAY)
-            glMaterialfv(GL_FRONT, GL_SPECULAR, vec(1, 1, 1, 1))
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0, 0, 0, 0))
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50)
 
-            glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-            self._display_movements(has_vbo)
+            self._display_movements()
 
             glDisable(GL_LIGHTING)
 
@@ -803,7 +1195,7 @@ class GcodeModel(Model):
 
             glPopMatrix()
 
-    def _display_travels(self, has_vbo):
+    def _display_travels(self) -> None:
         self.travel_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, self.travel_buffer.ptr)
 
@@ -823,7 +1215,7 @@ class GcodeModel(Model):
 
         self.travel_buffer.unbind()
 
-    def _draw_elements(self, start, end, draw_type = GL_TRIANGLES):
+    def _draw_elements(self, start: int, end: int, draw_type = GL_TRIANGLES) -> None:
         # Don't attempt printing empty layer
         if self.count_print_indices[end] == self.count_print_indices[start - 1]:
             return
@@ -834,7 +1226,7 @@ class GcodeModel(Model):
                             GL_UNSIGNED_INT,
                             sizeof(GLuint) * self.count_print_indices[start - 1])
 
-    def _display_movements(self, has_vbo):
+    def _display_movements(self) -> None:
         self.vertex_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
 
@@ -844,6 +1236,7 @@ class GcodeModel(Model):
         self.vertex_normal_buffer.bind()
         glNormalPointer(GL_FLOAT, 0, self.vertex_normal_buffer.ptr)
 
+        # Pyglet 2.0: target=GL_ELEMENT_ARRAY_BUFFER
         self.index_buffer.bind()
 
         # Prevent race condition by using the number of currently loaded layers
@@ -920,13 +1313,13 @@ class GcodeModelLight(Model):
     color_current_printed = (0.1, 0.4, 0, 0.8)
 
     buffers_created = False
-    use_vbos = True
     loaded = False
     fully_loaded = False
 
     gcode = None
 
-    def load_data(self, model_data, callback=None):
+    def load_data(self, model_data: gcoder.GCode,
+                  callback = None) -> Iterator[Union[int, None]]:
         t_start = time.time()
         self.gcode = model_data
 
@@ -936,9 +1329,9 @@ class GcodeModelLight(Model):
         prev_pos = (0, 0, 0)
         layer_idx = 0
         nlines = len(model_data)
-        vertices = self.vertices = numpy.zeros(nlines * 6, dtype = GLfloat)
+        vertices = self.vertices = np.zeros(nlines * 6, dtype = GLfloat)
         vertex_k = 0
-        colors = self.colors = numpy.zeros(nlines * 8, dtype = GLfloat)
+        colors = self.colors = np.zeros(nlines * 8, dtype = GLfloat)
         color_k = 0
         self.printed_until = -1
         self.only_current = False
@@ -963,10 +1356,10 @@ class GcodeModelLight(Model):
                         if self.vertices.size < (vertex_k + 100 * 6):
                             # arc interpolation extra points allocation
                             ratio = (vertex_k + 100 * 6) / self.vertices.size * 1.5
-                            # print(f"gl realloc lite {self.vertices.size} -> {int(self.vertices.size * ratio)}")
+                            logging.debug(_("GL: Reallocate GCode lite buffer %d -> %d") % \
+                                          (self.vertices.size, int(self.vertices.size * ratio)))
                             self.vertices.resize(int(self.vertices.size * ratio), refcheck = False)
                             self.colors.resize(int(self.colors.size * ratio), refcheck = False)
-
 
                         vertices[vertex_k] = prev_pos[0]
                         vertices[vertex_k + 1] = prev_pos[1]
@@ -1020,11 +1413,14 @@ class GcodeModelLight(Model):
 
         t_end = time.time()
 
-        logging.debug(_('Initialized 3D visualization in %.2f seconds') % (t_end - t_start))
-        logging.debug(_('Vertex count: %d') % (len(self.vertices) // 3))
+        logging.debug(_('GL: Initialized GCode model lite in %.2f seconds') % (t_end - t_start))
+        logging.debug(_('GL: GCode model lite vertex count: %d') % (len(self.vertices) // 3))
         yield None
 
-    def copy(self):
+    def update_colors(self) -> None:
+        pass
+
+    def copy(self) -> 'GcodeModelLight':
         copy = GcodeModelLight()
         for var in ["vertices", "colors", "max_layers",
                     "num_layers_to_draw", "printed_until",
@@ -1040,25 +1436,31 @@ class GcodeModelLight(Model):
     # DRAWING
     # ------------------------------------------------------------------------
 
-    def init(self):
+    def init(self) -> None:
         with self.lock:
             self.layers_loaded = self.max_layers
             self.initialized = True
             if self.buffers_created:
                 self.vertex_buffer.delete()
                 self.vertex_color_buffer.delete()
-            self.vertex_buffer = numpy2vbo(self.vertices, use_vbos = self.use_vbos)
-            self.vertex_color_buffer = numpy2vbo(self.colors, use_vbos = self.use_vbos)  # each pair of vertices shares the color
+            self.vertex_buffer = numpy2vbo(self.vertices)
+            # each pair of vertices shares the color
+            self.vertex_color_buffer = numpy2vbo(self.colors)
             if self.fully_loaded:
                 # Delete numpy arrays after creating VBOs after full load
-                self.vertices = None
-                self.colors = None
+                self.vertices = np.zeros(0, dtype = GLfloat)
+                self.colors = np.zeros(0, dtype = GLfloat)
             self.buffers_created = True
 
-    def display(self, mode_2d=False):
+    def _get_transformation(self) -> Array:
+        mat = mat4_translation(self.offset_x, self.offset_y, 0.0)
+        return np_to_gl_mat(mat)
+
+    def display(self, mode_2d: bool = False) -> None:
         with self.lock:
             glPushMatrix()
-            glTranslatef(self.offset_x, self.offset_y, 0)
+            glMultMatrixd(self._get_transformation())
+
             glEnableClientState(GL_VERTEX_ARRAY)
             glEnableClientState(GL_COLOR_ARRAY)
 
@@ -1068,19 +1470,12 @@ class GcodeModelLight(Model):
             glDisableClientState(GL_VERTEX_ARRAY)
             glPopMatrix()
 
-    def _display_movements(self, mode_2d=False):
+    def _display_movements(self, mode_2d: bool = False) -> None:
         self.vertex_buffer.bind()
-        has_vbo = isinstance(self.vertex_buffer, VertexBufferObject)
-        if has_vbo:
-            glVertexPointer(3, GL_FLOAT, 0, None)
-        else:
-            glVertexPointer(3, GL_FLOAT, 0, self.vertex_buffer.ptr)
+        glVertexPointer(3, GL_FLOAT, 0, None)
 
         self.vertex_color_buffer.bind()
-        if has_vbo:
-            glColorPointer(4, GL_FLOAT, 0, None)
-        else:
-            glColorPointer(4, GL_FLOAT, 0, self.vertex_color_buffer.ptr)
+        glColorPointer(4, GL_FLOAT, 0, None)
 
         # Prevent race condition by using the number of currently loaded layers
         max_layers = self.layers_loaded
@@ -1140,7 +1535,7 @@ class GcodeModelLight(Model):
         # Draw non printed stuff until end (if not ending at a given layer)
         start = max(self.printed_until, 0)
         end = end - start
-        if end_prev_layer < 0 and end > 0 and not self.only_current:
+        if end_prev_layer < 0 < end and not self.only_current:
             glDrawArrays(GL_LINES, start, end)
 
         self.vertex_buffer.unbind()

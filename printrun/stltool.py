@@ -154,10 +154,18 @@ class stl:
     def __init__(self, filename = None):
         self.facet = (numpy.zeros(3), (numpy.zeros(3), numpy.zeros(3), numpy.zeros(3)))
         self.facets = []
+        self.indices = []
         self.facetsminz = []
         self.facetsmaxz = []
 
-        self.name = ""
+        self.name = ''
+        self.filename = ''
+        self.batch = None
+        self.offsets = [0.0, 0.0, 0.0]
+        self.rot = 0.0
+        self.centeroffset = [0.0, 0.0, 0.0]
+        self.scale = [1.0, 1.0, 1.0]
+
         self.insolid = 0
         self.infacet = 0
         self.inloop = 0
@@ -317,7 +325,7 @@ class stl:
                   ]
         return numpy.array(matrix)
 
-    def scale(self, v = [0, 0, 0]):
+    def scale_model(self, v = [0, 0, 0]):
         return self.transform(self.scale_matrix(v))
 
     def transform(self, m = I):

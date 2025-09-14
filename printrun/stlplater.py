@@ -33,8 +33,6 @@ from printrun.objectplater import make_plater, PlaterPanel
 
 from .utils import install_locale
 install_locale('pronterface')
-# Set up Internationalization using gettext
-# searching for installed locales on /usr/share; uses relative folder if not found (windows)
 
 glview = '--no-gl' not in sys.argv
 if glview:
@@ -65,24 +63,28 @@ class showstl(wx.Window):
         self.i = 0
         self.parent = parent
         self.previ = 0
-        self.Bind(wx.EVT_MOUSEWHEEL, self.rot)
-        self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
-        self.Bind(wx.EVT_PAINT, self.repaint)
-        self.Bind(wx.EVT_KEY_DOWN, self.keypress)
         self.triggered = 0
         self.initpos = None
         self.prevsel = -1
+        self.short_side = 400
+        self.redraw_timer = None
+        self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
+
+        self.Bind(wx.EVT_MOUSEWHEEL, self.rot)
+        self.Bind(wx.EVT_MOUSE_EVENTS, self.move)
+        self.Bind(wx.EVT_PAINT, self.repaint)
+        self.Bind(wx.EVT_SIZE, self.resize)
 
     def prepare_model(self, m, scale):
-        m.bitmap = wx.Bitmap(800, 800, 32)
+        sz = self.short_side
+        scale = sz / 400 * scale
+        m.bitmap = wx.Bitmap(2 * sz, 2 * sz, 32)
         dc = wx.MemoryDC()
         dc.SelectObject(m.bitmap)
-        dc.SetBackground(wx.Brush((0, 0, 0, 0)))
-        dc.SetBrush(wx.Brush((0, 0, 0, 255)))
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
         for i in m.facets:
-            dc.DrawPolygon([wx.Point(400 + scale * p[0], (400 - scale * p[1])) for p in i[1]])
+            dc.DrawPolygon([(int(sz + scale * p[0]), int(sz - scale * p[1])) for p in i[1]])
         dc.SelectObject(wx.NullBitmap)
         m.bitmap.SetMask(wx.Mask(m.bitmap, wx.Colour(0, 0, 0, 255)))
 
@@ -120,6 +122,7 @@ class showstl(wx.Window):
             self.Refresh()
             dc = wx.ClientDC(self)
             p = event.GetPosition()
+            dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
             dc.DrawLine(self.initpos[0], self.initpos[1], p[0], p[1])
             del dc
         else:
@@ -133,34 +136,6 @@ class showstl(wx.Window):
         if not self.triggered:
             self.triggered = 1
             threading.Thread(target = self.cr).start()
-
-    def keypress(self, event):
-        """gets keypress events and moves/rotates active shape"""
-        keycode = event.GetKeyCode()
-        step = 5
-        angle = 18
-        if event.ControlDown():
-            step = 1
-            angle = 1
-        # h
-        if keycode == 72:
-            self.move_shape((-step, 0))
-        # l
-        if keycode == 76:
-            self.move_shape((step, 0))
-        # j
-        if keycode == 75:
-            self.move_shape((0, step))
-        # k
-        if keycode == 74:
-            self.move_shape((0, -step))
-        # [
-        if keycode == 91:
-            self.rotate_shape(-angle)
-        # ]
-        if keycode == 93:
-            self.rotate_shape(angle)
-        event.Skip()
 
     def rotateafter(self):
         if self.i != self.previ:
@@ -183,47 +158,82 @@ class showstl(wx.Window):
             self.prevsel = s
         self.rotate_shape(-1 if z < 0 else 1)
 
+    def resize(self, event):
+        height, width = event.GetSize()
+        self.short_side = height if height < width else width
+
+        # This makes sure that we don't constantly redraw all models
+        delay_ms = 250
+        if self.redraw_timer:
+            self.redraw_timer.Start(delay_ms)
+        else:
+            self.redraw_timer = wx.CallLater(delay_ms, self.redraw_models)
+
+        self.Refresh()
+        event.Skip()
+
+    def redraw_models(self):
+        for m in self.parent.models.values():
+            self.prepare_model(m ,2)
+
+        self.redraw_timer = None
+        self.Refresh()
+
     def repaint(self, event):
-        dc = wx.PaintDC(self)
+        dc = wx.AutoBufferedPaintDC(self)
         self.paint(dc = dc)
 
     def paint(self, coord1 = "x", coord2 = "y", dc = None):
         if dc is None:
             dc = wx.ClientDC(self)
-        scale = 2
-        dc.SetPen(wx.Pen(wx.Colour(100, 100, 100)))
-        for i in range(20):
-            dc.DrawLine(0, i * scale * 10, 400, i * scale * 10)
-            dc.DrawLine(i * scale * 10, 0, i * scale * 10, 400)
-        dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
-        for i in range(4):
-            dc.DrawLine(0, i * scale * 50, 400, i * scale * 50)
-            dc.DrawLine(i * scale * 50, 0, i * scale * 50, 400)
-        dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
-        dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
+        scale = 2 * self.short_side / 400
+
+        dc.SetBackground(wx.Brush((240, 240, 240)))
+        dc.Clear()
+        self._draw_grid(dc, scale)
+
         dcs = wx.MemoryDC()
         for m in self.parent.models.values():
             b = m.bitmap
             im = b.ConvertToImage()
-            imgc = wx.Point(im.GetWidth() / 2, im.GetHeight() / 2)
+            imgc = (int(im.GetWidth() / 2), int(im.GetHeight() / 2))
             im = im.Rotate(math.radians(m.rot), imgc, 0)
-            bm = wx.BitmapFromImage(im)
+            bm = wx.Bitmap(im)
             dcs.SelectObject(bm)
             bsz = bm.GetSize()
-            dc.Blit(scale * m.offsets[0] - bsz[0] / 2, 400 - (scale * m.offsets[1] + bsz[1] / 2), bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
+            dc.Blit(int(scale * m.offsets[0] - bsz[0] / 2),
+                    self.short_side - int(scale * m.offsets[1] + bsz[1] / 2),
+                    bsz[0], bsz[1], dcs, 0, 0, useMask = 1)
         del dc
+
+    def _draw_grid(self, dc, scale):
+        dc.SetPen(wx.Pen(wx.Colour(160, 160, 160)))
+        for i in range(20):
+            j = int(i * scale * 10)
+            dc.DrawLine(0, j, self.short_side, j)
+            dc.DrawLine(j, 0, j, self.short_side)
+
+        dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
+        for i in range(5):
+            j = int(i * scale * 50)
+            dc.DrawLine(0, j, self.short_side, j)
+            dc.DrawLine(j, 0, j, self.short_side)
+
 
 class StlPlaterPanel(PlaterPanel):
 
-    load_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL|OpenSCAD files (*.scad)|*.scad")
-    save_wildcard = _("STL files (*.stl;*.STL)|*.stl;*.STL")
+    load_wildcard = _("STL and OpenSCAD Files") + \
+                    " (*.stl;*.STL;*.scad)|*.stl;*.STL;*.scad"
+    save_wildcard = _("STL Files") + " (*.stl;*.STL)|*.stl;*.STL"
 
     def prepare_ui(self, filenames = [], callback = None,
                    parent = None, build_dimensions = None,
                    circular_platform = False,
                    simarrange_path = None,
-                   antialias_samples = 0):
-        super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = True)
+                   antialias_samples = 0,
+                   perspective = False):
+        super().prepare_ui(filenames, callback, parent, build_dimensions,
+                           cutting_tool = True)
         self.cutting = False
         self.cutting_axis = None
         self.cutting_dist = None
@@ -231,7 +241,8 @@ class StlPlaterPanel(PlaterPanel):
             viewer = stlview.StlViewPanel(self, wx.DefaultSize,
                                           build_dimensions = self.build_dimensions,
                                           circular = circular_platform,
-                                          antialias_samples = antialias_samples)
+                                          antialias_samples = antialias_samples,
+                                          perspective = perspective)
 
         else:
             viewer = showstl(self, (580, 580), (0, 0))
@@ -301,14 +312,13 @@ class StlPlaterPanel(PlaterPanel):
 
     def clickcb_cut(self, event):
         axis = self.cutting_axis
-        self.cutting_dist, _, _ = self.s.get_cutting_plane(axis, None,
-                                                           local_transform = True)
+        self.cutting_dist = self.s.get_cutting_dist(axis, None)
         if self.cutting_dist is not None:
             self.enable_cut_button(True)
 
     def clickcb_rebase(self, event):
         x, y = event.GetPosition()
-        ray_near, ray_far = self.s.mouse_to_ray(x, y, local_transform = True)
+        ray_near, ray_far = self.s.mouse_to_ray(x, y)
         best_match = None
         best_facet = None
         best_dist = float("inf")
@@ -337,6 +347,12 @@ class StlPlaterPanel(PlaterPanel):
             self.s.prepare_model(newmodel, 2)
             self.models[best_match] = newmodel
             wx.CallAfter(self.Refresh)
+
+    def right(self, event):
+        """
+        Dummy method for 'showstl' viewer
+        """
+        return
 
     def done(self, event, cb):
         if not os.path.exists("tempstl"):
