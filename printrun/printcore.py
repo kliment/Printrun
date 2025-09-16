@@ -255,7 +255,7 @@ class printcore():
                                " line_bytes is None")
                 self.stop_read_thread = True
                 return PR_EOF
-            line = line_bytes.decode('utf-8')
+            line = line_bytes.decode('utf-8', errors='replace')
 
             if len(line) > 1:
                 self.log.append(line)
