@@ -25,7 +25,7 @@ jobs:
           platforms: all
 
       - name: Build ${{ matrix.os }} wheels
-        uses: pypa/cibuildwheel@v3.1.4
+        uses: pypa/cibuildwheel@v3.3.0
         env:
           # we only support what's supported by wxPython, therefore we skip:
           #  * PyPy Python implementation
