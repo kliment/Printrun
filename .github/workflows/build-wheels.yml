@@ -16,7 +16,7 @@ jobs:
         os: [ubuntu-22.04, windows-2022, macos-13]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
@@ -47,7 +47,7 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Build sdist
         run: pipx run build --sdist
