@@ -17,7 +17,7 @@ jobs:
       statuses: read
     steps:
       - name: Get artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: printrun-*
           path: upload
