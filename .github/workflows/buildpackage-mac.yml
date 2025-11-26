@@ -79,7 +79,7 @@ jobs:
         echo "EXE_NAME=printrun-test_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}" >> $GITHUB_ENV
 
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ env.EXE_NAME }}
         path: |
