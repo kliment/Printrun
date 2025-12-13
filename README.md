@@ -80,7 +80,7 @@ Or only the apps you need: `sudo apt install pronsole` or `pronterface` or
 
 <table>
 <tr>
-<td bgcolor="#4f8175ff">
+<td style="background-color: #4f8175ff;">
 
 ### 📦 Direct Download for Debian-based Systems
 
