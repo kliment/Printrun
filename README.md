@@ -78,19 +78,13 @@ Install the full suite: `sudo apt install printrun`
 Or only the apps you need: `sudo apt install pronsole` or `pronterface` or
 `plater`
 
-<table>
-<tr>
-<td bgcolor="#4f8175ff">
+### Debian Package
 
-### 📦 Direct Download for Debian-based Systems
+A community-provided Debian package is available here:
 
-**Download:** [printrun_1.0_all.deb](packages/printrun_1.0_all.deb)
+[Download printrun_1.0_all.deb](packages/printrun_1.0_all.deb)
 
-**Install with:** `sudo dpkg -i printrun_1.0_all.deb`
-
-</td>
-</tr>
-</table>
+Install with: `sudo dpkg -i printrun_1.0_all.deb`
 
 
 #### Chrome OS
