@@ -78,7 +78,7 @@ Install the full suite: `sudo apt install printrun`
 Or only the apps you need: `sudo apt install pronsole` or `pronterface` or
 `plater`
 
-### Debian Package
+#### Debian Package
 
 A community-provided Debian package is available here:
 
