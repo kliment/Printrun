@@ -195,8 +195,7 @@ def np_to_gl_mat(np_matrix: np.ndarray) -> Array:
     Converts a numpy matrix into a c_types_Array which
     can be directly passed into OpenGL calls.
     """
-    array_type = c_double * np_matrix.size
-    return array_type(*np_matrix.reshape((np_matrix.size, 1)))
+    return (c_double * np_matrix.size)(*np_matrix.ravel())
 
 def np_unproject(winx: float, winy: float, winz: float,
                  mv_mat: Array, p_mat: Array,
