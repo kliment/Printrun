@@ -33,11 +33,11 @@ from . import pronsole
 from . import printcore
 from printrun.spoolmanager import spoolmanager_gui
 
+from .gui.utils import get_iconbundle, get_scaled_icon
 from .utils import install_locale, setup_logging, dosify, \
     format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
-    prepare_command, compile_file, write_history_to, read_history_from, \
-    get_iconbundle, get_scaled_icon
+    prepare_command, compile_file, write_history_to, read_history_from
 install_locale('pronterface')
 
 try:

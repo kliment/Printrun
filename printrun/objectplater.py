@@ -18,8 +18,8 @@ import os
 import types
 import wx
 from .gui.widgets import get_space
-
-from .utils import install_locale, get_iconbundle
+from .gui.utils import get_iconbundle
+from .utils import install_locale
 install_locale('pronterface')
 
 def patch_method(obj, method, replacement):

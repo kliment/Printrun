@@ -22,8 +22,8 @@ from . import gcoder
 from .injectgcode import injector, injector_edit
 from printrun.gui.viz import BaseViz
 from .gui.widgets import get_space
-
-from .utils import install_locale, get_home_pos, toolbaricon, get_iconbundle
+from .gui.utils import toolbaricon, get_iconbundle
+from .utils import install_locale, get_home_pos
 install_locale('pronterface')
 
 class GvizBaseFrame(wx.Frame):

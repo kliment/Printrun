@@ -19,7 +19,7 @@ import platform  # Used by get_space() for platform specific spacing
 import logging
 import wx
 
-from printrun.utils import get_iconbundle
+from .utils import get_iconbundle
 
 
 def get_space(key: str) -> int:
