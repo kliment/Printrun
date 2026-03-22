@@ -13,92 +13,130 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-from threading import Lock
 import logging
+import time
 import traceback
-import numpy
-import numpy.linalg
 
 import wx
 from wx import glcanvas
+import numpy as np
 
 import pyglet
 pyglet.options['debug_gl'] = True
 pyglet.options['shadow_window'] = False
 
-from pyglet.gl import glEnable, glDisable, GL_LIGHTING, glLightfv, \
-    GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_POSITION, GL_DIFFUSE, \
-    GL_AMBIENT, GL_SPECULAR, GL_COLOR_MATERIAL, \
-    glShadeModel, GL_SMOOTH, GL_NORMALIZE, \
-    GL_BLEND, glBlendFunc, glClear, glClearColor, \
-    glClearDepth, GL_COLOR_BUFFER_BIT, GL_CULL_FACE, \
-    GL_DEPTH_BUFFER_BIT, glDepthFunc, GL_DEPTH_TEST, \
-    GLdouble, glGetDoublev, glGetIntegerv, GLint, \
-    GL_LEQUAL, glLoadIdentity, glMatrixMode, GL_MODELVIEW, \
-    GL_MODELVIEW_MATRIX, GL_ONE_MINUS_SRC_ALPHA, glOrtho, \
-    GL_PROJECTION, GL_PROJECTION_MATRIX, glScalef, \
-    GL_SRC_ALPHA, glTranslatef, gluPerspective, gluUnProject, \
-    glViewport, GL_VIEWPORT, glPushMatrix, glPopMatrix, \
-    glBegin, glVertex2f, glVertex3f, glEnd, GL_LINE_LOOP, glColor3f, \
-    GL_LINE_STIPPLE, glColor4f, glLineStipple
+from pyglet.gl import GLint, GLdouble, glEnable,glBlendFunc,glViewport, \
+    glClear, glClearColor, glClearDepth, glDepthFunc, glGetDoublev, \
+    glGetIntegerv, glPolygonMode, \
+    GL_LEQUAL, GL_ONE_MINUS_SRC_ALPHA,GL_DEPTH_BUFFER_BIT, \
+    GL_SRC_ALPHA, GL_BLEND, GL_COLOR_BUFFER_BIT, GL_CULL_FACE, \
+    GL_VIEWPORT, GL_FRONT_AND_BACK,GL_DEPTH_TEST, GL_FILL
+
+# those are legacy calls which need to be replaced
+from pyglet.gl import GL_LIGHTING, GL_LIGHT0, GL_LIGHT1, GL_POSITION, \
+    GL_DIFFUSE, GL_AMBIENT, GL_SPECULAR, GL_COLOR_MATERIAL, GL_SMOOTH, \
+    GL_NORMALIZE, GL_PROJECTION_MATRIX, GL_AMBIENT_AND_DIFFUSE, \
+    GL_SHININESS, GL_EMISSION, GL_MODELVIEW, \
+    glMaterialf, glColorMaterial, glMaterialfv, glLightfv, glShadeModel, \
+    glPushMatrix, glPopMatrix, glMultMatrixd, glMatrixMode
 
 from pyglet import gl
-from .trackball import trackball, mulquat, axis_to_quat
-from .libtatlin.actors import vec
-from pyglet.gl.glu import gluOrtho2D
+
+from .mathutils import vec, np_unproject, np_to_gl_mat, \
+                       mat4_translation, mat4_rotation, mat4_scaling
+from . import actors
+from . import camera
+from . import keyboardinput as kbi
+
+from printrun.utils import install_locale
+install_locale("pronterface")
+
+# for type hints
+from typing import TYPE_CHECKING, Any, Tuple, Union, Callable, Optional
+from printrun import stltool
+from printrun import gcoder
+Build_Dims = Tuple[int, int, int, int, int, int]
+Gcode_Dims = Tuple[Tuple[float , float, float],
+                   Tuple[float , float, float],
+                   Tuple[float , float, float]]
+if TYPE_CHECKING:
+    from printrun.gcview import GCObject
+
+def gcode_dims(g: gcoder.GCode) -> Gcode_Dims:
+    return ((g.xmin, g.xmax, g.width),
+            (g.ymin, g.ymax, g.depth),
+            (g.zmin, g.zmax, g.height))
 
 # When Subclassing wx.Window in Windows the focus goes to the wx.Window
 # instead of GLCanvas and it does not draw the focus rectangle and
 # does not consume used keystrokes
 # BASE_CLASS = wx.Window
 # Subclassing Panel solves problem In Windows
-BASE_CLASS = wx.Panel
+# BASE_CLASS = wx.Panel
 # BASE_CLASS = wx.ScrolledWindow
-# BASE_CLASS = glcanvas.GLCanvas
+BASE_CLASS = glcanvas.GLCanvas
+
 class wxGLPanel(BASE_CLASS):
     '''A simple class for using OpenGL with wxPython.'''
 
-    orbit_control = True
-    orthographic = True
-    color_background = (0.98, 0.98, 0.78, 1)
-    do_lights = True
+    color_background = (200 / 255, 225 / 255, 250 / 255, 1.0)  # Light Blue
 
-    def __init__(self, parent, pos = wx.DefaultPosition,
-                 size = wx.DefaultSize, style = 0,
-                 antialias_samples = 0):
+    wheelTimestamp = None
+    show_frametime = False
+
+    def __init__(self, parent, pos: wx.Point = wx.DefaultPosition,
+                 size: wx.Size = wx.DefaultSize, style = 0,
+                 antialias_samples: int = 0,
+                 build_dimensions: Build_Dims = (200, 200, 100, 0, 0, 0),
+                 circular: bool = False,
+                 grid: Tuple[int, int] = (1, 10),
+                 perspective: bool = False
+                 ) -> None:
         # Full repaint should not be a performance problem
-        #TODO: test on windows, tested in Ubuntu
         style = style | wx.FULL_REPAINT_ON_RESIZE
 
         self.GLinitialized = False
-        self.mview_initialized = False
-        attribList = [glcanvas.WX_GL_RGBA,  # RGBA
-                      glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
-                      glcanvas.WX_GL_DEPTH_SIZE, 24  # 24 bit
-                      ]
 
+        attribList = glcanvas.GLAttributes()
+        # Set a 24bit depth buffer and activate double buffering for the canvas
+        attribList.PlatformDefaults().DoubleBuffer().Depth(24)
+
+        # Enable multi-sampling support (antialiasing) if it is active in the settings
         if antialias_samples > 0 and hasattr(glcanvas, "WX_GL_SAMPLE_BUFFERS"):
-            attribList += (glcanvas.WX_GL_SAMPLE_BUFFERS, 1,
-                           glcanvas.WX_GL_SAMPLES, antialias_samples)
+            attribList.SampleBuffers(1).Samplers(antialias_samples)
 
-        attribList.append(0)
+        attribList.EndList()
 
         if BASE_CLASS is glcanvas.GLCanvas:
-            super().__init__(parent, wx.ID_ANY, attribList, pos, size, style)
-            self.canvas = self
+            super().__init__(parent, attribList, wx.ID_ANY, pos, size, style)
+            self.canvas: glcanvas.GLCanvas = self  # type: ignore
         else:
             super().__init__(parent, wx.ID_ANY, pos, size, style)
-            self.canvas = glcanvas.GLCanvas(self, wx.ID_ANY, attribList, pos, size, style)
+            self.canvas = glcanvas.GLCanvas(self, attribList, wx.ID_ANY, pos, size, style)
 
-        self.width = self.height = None
+        self.width = 1.0
+        self.height = 1.0
 
-        self.context = glcanvas.GLContext(self.canvas)
+        self.camera = camera.Camera(self, build_dimensions, ortho = not perspective)
+        self.focus = actors.Focus(self.camera)
+        self.platform = actors.Platform(build_dimensions, circular = circular, grid = grid)
+        self.keyinput = kbi.KeyboardInput(self.canvas, self.zoom_to_center,
+                                      self.fit, self.resetview)
 
-        self.rot_lock = Lock()
-        self.basequat = [0, 0, 0, 1]
-        self.zoom_factor = 1.0
-        self.angle_z = 0
-        self.angle_x = 0
+        if self.show_frametime:
+            self.init_frametime()
+
+        ctx_attrs = glcanvas.GLContextAttrs()
+        # FIXME: Pronterface supports only OpenGL 2.1 and compability mode at the moment
+        # ctx_attrs.PlatformDefaults().CoreProfile().MajorVersion(3).MinorVersion(3).EndList()
+        ctx_attrs.PlatformDefaults().EndList()
+        self.context = glcanvas.GLContext(self.canvas, ctxAttrs = ctx_attrs)
+        # initialised with pyglet during glinit
+        self.pygletcontext: Optional[gl.Context] = None
+
+        self.mousepos = (0, 0)
+        self.parent = parent
+        self.build_dimensions = build_dimensions
 
         self.gl_broken = False
 
@@ -110,80 +148,97 @@ class wxGLPanel(BASE_CLASS):
             self.SetCanFocus(False)
 
         self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.processEraseBackgroundEvent)
-        # In wxWidgets 3.0.x there is a clipping bug during resizing
-        # which could be affected by painting the container
-        # self.Bind(wx.EVT_PAINT, self.processPaintEvent)
-        # Upgrade to wxPython 4.1 recommended
         self.canvas.Bind(wx.EVT_PAINT, self.processPaintEvent)
-
         self.canvas.Bind(wx.EVT_SET_FOCUS, self.processFocus)
         self.canvas.Bind(wx.EVT_KILL_FOCUS, self.processKillFocus)
+        self.canvas.Bind(wx.EVT_MOUSE_EVENTS, self.move)
+        self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.wheel)
+        self.canvas.Bind(wx.EVT_LEFT_DCLICK, self.double_click)
 
-    def processFocus(self, ev):
+    def set_current_context(self) -> None:
+        '''Set the GL context of this panel as current'''
+        if not self.gl_broken:
+            self.canvas.SetCurrent(self.context)
+
+    def processFocus(self, event: wx.FocusEvent) -> None:
         # print('processFocus')
         self.Refresh(False)
-        ev.Skip()
+        event.Skip()
 
-    def processKillFocus(self, ev):
+    def processKillFocus(self, event: wx.FocusEvent) -> None:
         # print('processKillFocus')
         self.Refresh(False)
-        ev.Skip()
+        event.Skip()
+
     # def processIdle(self, event):
     #     print('processIdle')
     #     event.Skip()
 
-    def Layout(self):
+    def Layout(self) -> Any:
         return super().Layout()
 
-    def Refresh(self, eraseback=True):
+    def Refresh(self, eraseback: bool = True) -> Any:
         # print('Refresh')
         return super().Refresh(eraseback)
 
-    def OnScrollSize(self, event):
+    def OnScrollSize(self, event: wx.SizeEvent) -> None:
         self.canvas.SetSize(event.Size)
 
-    def processEraseBackgroundEvent(self, event):
+    def processEraseBackgroundEvent(self, event: wx.EraseEvent) -> None:
         '''Process the erase background event.'''
         pass  # Do nothing, to avoid flashing on MSWin
 
-    def processSizeEvent(self, event):
+    def processSizeEvent(self, event: wx.SizeEvent) -> None:
         '''Process the resize event.'''
 
         # print('processSizeEvent frozen', self.IsFrozen(), event.Size.x, self.ClientSize.x)
         if not self.IsFrozen() and self.canvas.IsShownOnScreen():
             # Make sure the frame is shown before calling SetCurrent.
-            self.canvas.SetCurrent(self.context)
+            self.set_current_context()
             self.OnReshape()
 
             # self.Refresh(False)
             # print('Refresh')
         event.Skip()
 
-    def processPaintEvent(self, event):
+    def processPaintEvent(self, event: wx.PaintEvent) -> None:
         '''Process the drawing event.'''
         # print('wxGLPanel.processPaintEvent', self.ClientSize.Width)
-        self.canvas.SetCurrent(self.context)
+        self.set_current_context()
 
         if not self.gl_broken:
             try:
                 self.OnInitGL()
                 self.DrawCanvas()
-            except pyglet.gl.lib.GLException:
+            except pyglet.gl.GLException:
                 self.gl_broken = True
-                logging.error(_("OpenGL failed, disabling it:")
+                logging.error(_("GL: OpenGL failed, disabling it:")
                               + "\n" + traceback.format_exc())
         event.Skip()
 
-    def Destroy(self):
+    def Destroy(self) -> None:
         # clean up the pyglet OpenGL context
+        assert self.pygletcontext is not None
         self.pygletcontext.destroy()
         # call the super method
         super().Destroy()
 
+    def init_frametime(self) -> None:
+        self.frametime = FrameTime()
+        self.frametime_counter = wx.StaticText(self, -1, '')
+        font = wx.Font(12, family = wx.FONTFAMILY_MODERN, style = 0, weight = 90,
+                       encoding = wx.FONTENCODING_DEFAULT)
+        self.frametime_counter.SetFont(font)
+        self.frametime_counter.SetForegroundColour(wx.WHITE)
+        self.frametime_counter.SetBackgroundColour(wx.Colour('DIM GREY'))
+        sizer = wx.BoxSizer()
+        sizer.Add(self.frametime_counter, 0, wx.ALIGN_BOTTOM | wx.ALL, 4)
+        self.SetSizer(sizer)
+
     # ==========================================================================
     # GLFrame OpenGL Event Handlers
     # ==========================================================================
-    def OnInitGL(self, call_reshape = True):
+    def OnInitGL(self, call_reshape: bool = True) -> None:
         '''Initialize OpenGL for use in the window.'''
         if self.GLinitialized:
             return
@@ -192,176 +247,198 @@ class wxGLPanel(BASE_CLASS):
         self.pygletcontext = gl.Context(gl.current_context)
         self.pygletcontext.canvas = self
         self.pygletcontext.set_current()
+        glinfo = self.pygletcontext.get_info()
+        logging.debug("OpenGL Context Version: %s, Vendor: %s - %s" %
+                     (glinfo.get_version(), glinfo.get_vendor(),
+                      glinfo.get_renderer()))
+
         # normal gl init
         glClearColor(*self.color_background)
-        glClearDepth(1.0)                # set depth value to 1
+        glClearDepth(1.0)  # set depth value to 1
         glDepthFunc(GL_LEQUAL)
-        glEnable(GL_COLOR_MATERIAL)
+
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        self._setup_lights()
+        self._setup_material()
+
         if call_reshape:
             self.OnReshape()
 
-    def OnReshape(self):
+    def OnReshape(self) -> None:
         """Reshape the OpenGL viewport based on the size of the window"""
-        size = self.GetClientSize() * self.GetContentScaleFactor()
-        oldwidth, oldheight = self.width, self.height
-        width, height = size.width, size.height
+        self.set_current_context()
+        old_width, old_height = self.width, self.height
+
+        new_size = self.GetClientSize() * self.GetContentScaleFactor()
+        width, height = new_size.width, new_size.height
+
         if width < 1 or height < 1:
             return
+
+        self.camera.update_size(width, height, self.GetContentScaleFactor())
+        self.focus.update_size()
+        self.OnInitGL(call_reshape = False)
+        glViewport(0, 0, width, height)
+        self.camera.create_projection_matrix()
+
         self.width = max(float(width), 1.0)
         self.height = max(float(height), 1.0)
-        self.OnInitGL(call_reshape = False)
-        # print('glViewport', width)
-        glViewport(0, 0, width, height)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        if self.orthographic:
-            glOrtho(-width / 2, width / 2, -height / 2, height / 2,
-                    -5 * self.dist, 5 * self.dist)
-        else:
-            gluPerspective(60., float(width) / height, 10.0, 3 * self.dist)
-            glTranslatef(0, 0, -self.dist)  # Move back
-        glMatrixMode(GL_MODELVIEW)
 
-        if not self.mview_initialized:
-            self.reset_mview(0.9)
-            self.mview_initialized = True
-        elif oldwidth is not None and oldheight is not None:
-            wratio = self.width / oldwidth
-            hratio = self.height / oldheight
+        if not self.camera.view_matrix_initialized:
+            self.camera.reset_view_matrix()
 
-            factor = min(wratio * self.zoomed_width, hratio * self.zoomed_height)
-            x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
-            self.zoom(factor, (x, y))
-            self.zoomed_width *= wratio / factor
-            self.zoomed_height *= hratio / factor
+        elif old_width is not None and old_height is not None:
+            wratio = self.width / old_width
+            hratio = self.height / old_height
 
-        # Wrap text to the width of the window
-        if self.GLinitialized:
-            self.pygletcontext.set_current()
-            self.update_object_resize()
+            if wratio < 1.0 and hratio < 1.0:
+                factor = min(wratio, hratio)
+            elif hratio == 1.0:
+                factor = wratio
+            elif wratio == 1.0:
+                factor = hratio
+            elif wratio > 1.0 and hratio > 1.0:
+                factor = max(wratio, hratio)
+            else:
+                factor = 1.0
 
-    def setup_lights(self):
-        if not self.do_lights:
-            return
+            self.camera.zoom(factor)
+
+    def _setup_lights(self) -> None:
+        '''Sets the lightscene for gcode and stl models'''
         glEnable(GL_LIGHTING)
-        glDisable(GL_LIGHT0)
-        glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.4, 0.4, 0.4, 1.0))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0, 0, 0, 0))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0, 0, 0, 0))
+
+        glEnable(GL_LIGHT0)
+        glLightfv(GL_LIGHT0, GL_AMBIENT, vec(0.0, 0.0, 0.0, 1.0))
+        glLightfv(GL_LIGHT0, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, vec(0.7, 0.7, 0.7, 1.0))
+        glLightfv(GL_LIGHT0, GL_POSITION, vec(0.9, 2.8, 1.7, 0.0))
+
         glEnable(GL_LIGHT1)
-        glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0, 0, 0, 1.0))
+        glLightfv(GL_LIGHT1, GL_AMBIENT, vec(0.0, 0.0, 0.0, 1.0))
         glLightfv(GL_LIGHT1, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
-        glLightfv(GL_LIGHT1, GL_POSITION, vec(1, 2, 3, 0))
-        glEnable(GL_LIGHT2)
-        glLightfv(GL_LIGHT2, GL_AMBIENT, vec(0, 0, 0, 1.0))
-        glLightfv(GL_LIGHT2, GL_SPECULAR, vec(0.6, 0.6, 0.6, 1.0))
-        glLightfv(GL_LIGHT2, GL_DIFFUSE, vec(0.8, 0.8, 0.8, 1))
-        glLightfv(GL_LIGHT2, GL_POSITION, vec(-1, -1, 3, 0))
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, vec(0.7, 0.7, 0.7, 1.0))
+        glLightfv(GL_LIGHT1, GL_POSITION, vec(-1.2, -1.0, 2.2, 0.0))
+
         glEnable(GL_NORMALIZE)
         glShadeModel(GL_SMOOTH)
 
-    def reset_mview(self, factor):
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        self.setup_lights()
+    def _setup_material(self) -> None:
+        '''Sets the material attributes for all objects'''
 
-        wratio = self.width / self.dist
-        hratio = self.height / self.dist
-        minratio = float(min(wratio, hratio))
-        self.zoom_factor = 1.0
-        self.zoomed_width = wratio / minratio
-        self.zoomed_height = hratio / minratio
-        glScalef(factor * minratio, factor * minratio, 1)
+        # Switch this two lines to show models as wireframe
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
-    def DrawCanvas(self):
+        # Material specs are set here once and only the
+        # the material colour is changed later
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.1, 0.3, 1.0))
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, vec(0.35, 0.35, 0.35, 1.0))
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, vec(0.0, 0.0, 0.0, 1.0))
+
+        # This enables tracking of the material colour,
+        # now it can be changed only by calling glColor
+        glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+
+    def resetview(self) -> None:
+        self.set_current_context()
+        self.camera.reset_view_matrix()
+        wx.CallAfter(self.Refresh)
+
+    def recreate_platform(self, build_dimensions: Build_Dims,
+                          circular: bool, grid: Tuple[int, int],
+                          colour: Tuple[float, float, float]) -> None:
+
+        self.platform = actors.Platform(build_dimensions,
+                                 circular = circular,
+                                 grid = grid)
+        self.platform.update_colour(colour)
+        self.camera.update_build_dims(build_dimensions)
+        wx.CallAfter(self.Refresh)
+
+    def DrawCanvas(self) -> None:
         """Draw the window."""
-        #import time
-        #start = time.perf_counter()
-        # print('DrawCanvas', self.canvas.GetClientRect())
-        self.pygletcontext.set_current()
+        self.set_current_context()
+
+        if self.show_frametime:
+            self.frametime.start_frame()
+
         glClearColor(*self.color_background)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        self.platform.draw()
         self.draw_objects()
 
         if self.canvas.HasFocus():
-            self.drawFocus()
+            self.focus.draw()
+
         self.canvas.SwapBuffers()
-        #print('Draw took', '%.2f'%(time.perf_counter()-start))
 
-    def drawFocus(self):
-        glColor4f(0, 0, 0, 0.4)
+        if self.show_frametime:
+            self.frametime.end_frame()
+            self.frametime_counter.SetLabel(self.frametime.get())
 
-        glPushMatrix()
-        glLoadIdentity()
-
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        gluOrtho2D(0, self.width, 0, self.height)
-
-        glLineStipple(1, 0xf0f0)
-        glEnable(GL_LINE_STIPPLE)
-        glBegin(GL_LINE_LOOP)
-        glVertex2f(1, 0)
-        glVertex2f(self.width, 0)
-        glVertex2f(self.width, self.height-1)
-        glVertex2f(1, self.height-1)
-        glEnd()
-        glDisable(GL_LINE_STIPPLE)
-
-        glPopMatrix() # restore PROJECTION
-
+    def transform_and_draw(self, model: Union['GCObject', stltool.stl],
+                           draw_function: Callable[[], None]) -> None:
+        '''Apply transformations to the model and then
+        draw it with the given draw function'''
         glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        self._load_model_matrix(model)
+        # Draw the models
+        draw_function()
         glPopMatrix()
+
+    def _load_model_matrix(self, model: Union['GCObject', stltool.stl]) -> None:
+        tm = mat4_translation(*model.offsets)
+        rm = mat4_rotation(0.0, 0.0, 1.0, model.rot)
+        tc = mat4_translation(*model.centeroffset)
+        sm = mat4_scaling(*model.scale)
+        mat = sm @ tc @ rm @ tm
+
+        glMultMatrixd(np_to_gl_mat(mat))
 
     # ==========================================================================
     # To be implemented by a sub class
     # ==========================================================================
-    def create_objects(self):
+    def create_objects(self) -> None:
         '''create opengl objects when opengl is initialized'''
         pass
 
-    def update_object_resize(self):
-        '''called when the window receives only if opengl is initialized'''
-        pass
-
-    def draw_objects(self):
+    def draw_objects(self) -> None:
         '''called in the middle of ondraw after the buffer has been cleared'''
         pass
 
     # ==========================================================================
-    # Utils
+    # Mouse and Utilities
     # ==========================================================================
-    def get_modelview_mat(self, local_transform):
-        mvmat = (GLdouble * 16)()
-        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-        return mvmat
-
-    def mouse_to_3d(self, x, y, z = 1.0, local_transform = False):
+    def mouse_to_3d(self, x: float, y: float, z = 1.0
+                    ) -> Tuple[float, float, float]:
         x = float(x)
         y = self.height - float(y)
-        # The following could work if we were not initially scaling to zoom on
-        # the bed
-        # if self.orthographic:
-        #    return (x - self.width / 2, y - self.height / 2, 0)
+
         pmat = (GLdouble * 16)()
-        mvmat = self.get_modelview_mat(local_transform)
+        mvmat = self.camera.get_view_matrix()
         viewport = (GLint * 4)()
         px = (GLdouble)()
         py = (GLdouble)()
         pz = (GLdouble)()
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
-        glGetDoublev(GL_MODELVIEW_MATRIX, mvmat)
-        gluUnProject(x, y, z, mvmat, pmat, viewport, px, py, pz)
-        return (px.value, py.value, pz.value)
 
-    def mouse_to_ray(self, x, y, local_transform = False):
+        np_unproject(x, y, z, mvmat, pmat, viewport, px, py, pz)
+
+        return px.value, py.value, pz.value
+
+    def mouse_to_ray(self, x: float, y: float,
+                     ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+        # Ray from z-depth 1.0 to 0.0
         x = float(x)
         y = self.height - float(y)
         pmat = (GLdouble * 16)()
@@ -370,95 +447,188 @@ class wxGLPanel(BASE_CLASS):
         px = (GLdouble)()
         py = (GLdouble)()
         pz = (GLdouble)()
+        # FIXME: This can be replaced with self.width, self.height
         glGetIntegerv(GL_VIEWPORT, viewport)
         glGetDoublev(GL_PROJECTION_MATRIX, pmat)
-        mvmat = self.get_modelview_mat(local_transform)
-        gluUnProject(x, y, 1, mvmat, pmat, viewport, px, py, pz)
+        mvmat = self.camera.get_view_matrix()
+        np_unproject(x, y, 1.0, mvmat, pmat, viewport, px, py, pz)
         ray_far = (px.value, py.value, pz.value)
-        gluUnProject(x, y, 0., mvmat, pmat, viewport, px, py, pz)
+        np_unproject(x, y, 0.0, mvmat, pmat, viewport, px, py, pz)
         ray_near = (px.value, py.value, pz.value)
         return ray_near, ray_far
 
-    def mouse_to_plane(self, x, y, plane_normal, plane_offset, local_transform = False):
+    def mouse_to_plane(self, x: float, y: float,
+                       plane_normal: Tuple[float, float, float],
+                       plane_offset: float
+                       ) -> Union[Tuple[float, float, float], None]:
         # Ray/plane intersection
-        ray_near, ray_far = self.mouse_to_ray(x, y, local_transform)
-        ray_near = numpy.array(ray_near)
-        ray_far = numpy.array(ray_far)
+        ray_near, ray_far = self.mouse_to_ray(x, y)
+        ray_near = np.array(ray_near)
+        ray_far = np.array(ray_far)
         ray_dir = ray_far - ray_near
-        ray_dir = ray_dir / numpy.linalg.norm(ray_dir)
-        plane_normal = numpy.array(plane_normal)
-        q = ray_dir.dot(plane_normal)
+        ray_dir = ray_dir / np.linalg.norm(ray_dir)
+        plane_normal_np = np.array(plane_normal)
+        q = ray_dir.dot(plane_normal_np)
         if q == 0:
             return None
-        t = - (ray_near.dot(plane_normal) + plane_offset) / q
+        t = - (ray_near.dot(plane_normal_np) + plane_offset) / q
         if t < 0:
             return None
         return ray_near + t * ray_dir
 
-    def zoom(self, factor, to = None):
-        glMatrixMode(GL_MODELVIEW)
-        if to:
-            delta_x = to[0]
-            delta_y = to[1]
-            glTranslatef(delta_x, delta_y, 0)
-        glScalef(factor, factor, 1)
-        self.zoom_factor *= factor
-        if to:
-            glTranslatef(-delta_x, -delta_y, 0)
-        # For wxPython (<4.1) and GTK:
-        # when you resize (enlarge) 3d view fast towards the log pane
-        # sash garbage may remain in GLCanvas
-        # The following refresh clears it at the cost of
-        # doubled frame draws.
-        # wx.CallAfter(self.Refresh)
-        self.Refresh(False)
+    def double_click(self, event: wx.MouseEvent) -> None:
+        if hasattr(self.parent, "clickcb") and self.parent.clickcb:
+            self.parent.clickcb(event)
 
-    def zoom_to_center(self, factor):
-        self.canvas.SetCurrent(self.context)
-        x, y, _ = self.mouse_to_3d(self.width / 2, self.height / 2)
-        self.zoom(factor, (x, y))
+    def move(self, event: wx.MouseEvent) -> None:
+        """React to mouse actions:
+        no mouse: show red mousedrop
+        LMB: rotate viewport
+        LMB + Shift: move active object
+        RMB: move viewport
+        RMB: + Shift: None
+        """
+        if event.Entering():
+            # This makes sure we only set focus on a panel that is
+            # in the currently active window and not any other window
+            current_focus = self.FindFocus()
+            if current_focus:
+                if self.TopLevelParent == current_focus.TopLevelParent:
+                    self.canvas.SetFocus()
+            event.Skip()
+            return
 
-    def orbit(self, p1x, p1y, p2x, p2y):
-        rz = p2x-p1x
-        self.angle_z-=rz
-        rotz = axis_to_quat([0.0,0.0,1.0],self.angle_z)
+        self.set_current_context()
+        self.mousepos = event.GetPosition() * self.GetContentScaleFactor()
 
-        rx = p2y-p1y
-        self.angle_x+=rx
-        rota = axis_to_quat([1.0,0.0,0.0],self.angle_x)
-        return mulquat(rotz,rota)
+        if event.Dragging():
+            if event.LeftIsDown():
+                self.camera.handle_rotation(event)
+            elif event.RightIsDown():
+                self.camera.handle_translation(event)
+            self.Refresh(False)
 
-    def handle_rotation(self, event):
-        content_scale_factor = self.GetContentScaleFactor()
-        if self.initpos is None:
-            self.initpos = event.GetPosition() * content_scale_factor
+        elif event.LeftUp() or event.RightUp():
+            self.camera.init_rot_pos = None
+            self.camera.init_trans_pos = None
+
+        wx.CallAfter(self.Refresh)
+        event.Skip()
+
+    def zoom_to_center(self, factor: float) -> None:
+        self.set_current_context()
+        self.camera.zoom(factor)
+        wx.CallAfter(self.Refresh)
+
+    def handle_wheel_shift(self, event: wx.MouseEvent) -> None:
+        '''This runs when Mousewheel + Shift is used'''
+        pass
+
+    def handle_wheel(self, event: wx.MouseEvent) -> None:
+        '''This runs when Mousewheel is used'''
+        x, y = event.GetPosition() * self.GetContentScaleFactor()
+        factor = 1.02 if event.GetModifiers() == wx.MOD_CONTROL else 1.05
+
+        if event.GetWheelRotation() > 0:
+            self.camera.zoom(factor, (x, y))
         else:
-            p1 = self.initpos
-            p2 = event.GetPosition() * content_scale_factor
-            sz = self.GetClientSize() * content_scale_factor
-            p1x = p1[0] / (sz[0] / 2) - 1
-            p1y = 1 - p1[1] / (sz[1] / 2)
-            p2x = p2[0] / (sz[0] / 2) - 1
-            p2y = 1 - p2[1] / (sz[1] / 2)
-            quat = trackball(p1x, p1y, p2x, p2y, self.dist / 250.0)
-            with self.rot_lock:
-                if self.orbit_control:
-                    self.basequat = self.orbit(p1x, p1y, p2x, p2y)
-                else:
-                    self.basequat = mulquat(self.basequat, quat)
-            self.initpos = p2
+            self.camera.zoom(1 / factor, (x, y))
 
-    def handle_translation(self, event):
-        content_scale_factor = self.GetContentScaleFactor()
-        if self.initpos is None:
-            self.initpos = event.GetPosition() * content_scale_factor
+        event.Skip()
+
+    def wheel(self, event: wx.MouseEvent) -> None:
+        """React to mouse wheel actions:
+            without shift: zoom viewport
+            with shift: run handle_wheel_shift
+        """
+        if self.wheelTimestamp == event.Timestamp:
+            # filter duplicate event delivery in Ubuntu, Debian issue #1110
+            event.Skip()
+            return
+        self.wheelTimestamp = event.Timestamp
+
+        self.set_current_context()
+
+        if event.GetModifiers() == wx.MOD_SHIFT:
+            self.handle_wheel_shift(event)
         else:
-            p1 = self.initpos
-            p2 = event.GetPosition() * content_scale_factor
-            if self.orthographic:
-                x1, y1, _ = self.mouse_to_3d(p1[0], p1[1])
-                x2, y2, _ = self.mouse_to_3d(p2[0], p2[1])
-                glTranslatef(x2 - x1, y2 - y1, 0)
+            self.handle_wheel(event)
+
+        event.Skip()
+        wx.CallAfter(self.Refresh)
+
+    def fit(self) -> None:
+        '''Zoom to fit models to screen'''
+        offsets = [0.0, 0.0, 0.0]
+        if hasattr(self.parent, 'l'):
+            # Parent is of class objectplater
+            model = self.parent.get_selected_model()
+            if model:
+                offsets[0] = model.offsets[0] + model.centeroffset[0]
+                offsets[1] = model.offsets[1] + model.centeroffset[1]
+                offsets[2] = model.offsets[2] + model.centeroffset[2]
+                if not isinstance(model, stltool.stl):
+                    model = model.model
             else:
-                glTranslatef(p2[0] - p1[0], -(p2[1] - p1[1]), 0)
-            self.initpos = p2
+                return
+
+        elif self.parent.model and self.parent.model.loaded:
+            model = self.parent.model
+
+        else:
+            return
+
+        self.set_current_context()
+        if isinstance(model, stltool.stl):
+            dm = model.dims
+            dims = ((dm[0], dm[1], dm[1] - dm[0]),
+                    (dm[2], dm[3], dm[3] - dm[2]),
+                    (dm[4], dm[5], dm[5] - dm[4]))
+        else:
+            dims = gcode_dims(model.gcode)
+
+        center_x = (dims[0][0] + dims[0][1]) / 2 + offsets[0]
+        center_y = (dims[1][0] + dims[1][1]) / 2 + offsets[1]
+        center_z = (dims[2][0] + dims[2][1]) / 2 + offsets[2]
+
+        radius = self._calc_bounding_radius(dims)
+        bounding_sphere = ((center_x, center_y, center_z), radius)
+        self.camera.fit_to_model(bounding_sphere)
+
+        wx.CallAfter(self.Refresh)
+
+    def _calc_bounding_radius(self, dims):
+        xc = dims[0][2] / 2
+        yc = dims[1][2] / 2
+        zc = dims[2][2] / 2
+        return np.sqrt(xc * xc + yc * yc + zc * zc)
+
+
+class FrameTime:
+
+    FRAME_MIDDLE = 20
+
+    def __init__(self) -> None:
+        self.t_frame_start = 0.0
+        self.framecount = 0
+        self.timesum = 0.0
+        self.avg_frametime = 0.0
+        self.avg_fps = 0
+
+    def start_frame(self) -> None:
+        self.t_frame_start = time.perf_counter()
+
+    def end_frame(self) -> None:
+        self.framecount += 1
+        self.timesum += time.perf_counter() - self.t_frame_start
+
+        if self.framecount >= self.FRAME_MIDDLE:
+            self.avg_frametime = self.timesum / self.framecount
+            self.avg_fps = int(self.framecount / self.timesum)
+
+            self.framecount = 0
+            self.timesum = 0.0
+
+    def get(self) -> str:
+        return f" avg. {self.avg_frametime * 1000:4.2f} ms ({self.avg_fps:4d} FPS) "
+
