@@ -13,20 +13,21 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-13,macos-14]
-        architecture: [x64]
-        python-version: ['3.11','3.13']
-        exclude:
-          - os: macos-13
-            python-version: '3.13'
-          - os: macos-14
+        include:
+          # build for Intel x64
+          - os: macos-15-intel
+            architecture: x64
             python-version: '3.11'
+          # build for Apple Silicon arm64
+          - os: macos-14
+            architecture: arm64
+            python-version: '3.13'
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         architecture: ${{ matrix.architecture }}
         python-version: ${{ matrix.python-version }}
@@ -38,13 +39,17 @@ jobs:
         python setup.py build_ext --inplace
     - name: Make pyinstaller spec
       run: |
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --add-data images/\*:images --add-data \*.png:. --add-data \*.ico:. --name Pronterface -w -i P-face.icns pronterface.py
+        pyi-makespec --windowed --name "Pronterface" --target-architecture "${{ matrix.architecture == 'arm64' && 'arm64' || 'x86_64' }}" --add-data "printrun/assets:printrun/assets" --icon "./assets_raw/icons/pronterface.icns" pronterface.py
         # Edit spec file
-        export git_hash=$(git rev-parse --short "$GITHUB_SHA")
+        export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+        export VERSION="$(python3 -c 'import printrun.printcore as core; print(core.__version__)' 2>/dev/null)"
+        export YEAR=$(date +%Y)
         sed -i '' '$ s/.$//' Pronterface.spec
         cat >> Pronterface.spec <<EOL
         info_plist={
-            'CFBundleShortVersionString': '$git_hash',
+            'CFBundleVersion': '$GIT_HASH',
+            'CFBundleShortVersionString': "$VERSION",
+            'NSHumanReadableCopyright': "FOSS © $YEAR, GPL-3.0 licensed",
             'NSPrincipalClass': 'NSApplication',
             'NSAppleScriptEnabled': False,
             'NSAppSleepDisabled': True,
@@ -79,7 +84,7 @@ jobs:
         echo "EXE_NAME=printrun-test_${{ matrix.os }}_${{ matrix.architecture }}_py${{ matrix.python-version }}" >> $GITHUB_ENV
 
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ env.EXE_NAME }}
         path: |

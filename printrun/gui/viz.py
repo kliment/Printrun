@@ -118,6 +118,9 @@ class VizPane(wx.BoxSizer):
                                            grid = (root.settings.preview_grid_step1, root.settings.preview_grid_step2),
                                            extrusion_width = root.settings.preview_extrusion_width,
                                            bgcolor = root.bgcolor)
+
         root.gwindow.Bind(wx.EVT_CLOSE, lambda x: root.gwindow.Hide())
+        root.gwindow.Bind(wx.EVT_SYS_COLOUR_CHANGED, root.gwindow.update_toolbar_icons)
+
         if not isinstance(root.gviz, NoViz):
             self.Add(root.gviz.widget, 1, flag = wx.EXPAND)

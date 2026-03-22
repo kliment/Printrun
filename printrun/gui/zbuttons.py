@@ -13,14 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+from pathlib import Path
+
 import wx
 from printrun.gui.xybuttons import FocusCanvas
 from printrun.utils import imagefile
 
 def sign(n):
-    if n < 0: return -1
-    elif n > 0: return 1
-    else: return 0
+    if n < 0:
+        return -1
+    if n > 0:
+        return 1
+    return 0
 
 class ZButtons(FocusCanvas):
     button_ydistances = [7, 30, 55, 83]  # ,112
@@ -31,10 +35,12 @@ class ZButtons(FocusCanvas):
         1: (1.1, 41.5, 10.6),
         2: (1.1, 68, 13),
     }
+    imagedir = Path("printrun", "assets", "controls")
     imagename = "control_z.png"
 
     def __init__(self, parent, moveCallback = None, bgcolor = "#FFFFFF", ID=-1):
-        self.bg_bmp = wx.Image(imagefile(self.imagename), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        imagepath = imagefile(self.imagename, self.imagedir)
+        self.bg_bmp = wx.BitmapBundle().FromFiles(str(imagepath.parent), str(imagepath.stem), extension="png")
         self.range = None
         self.direction = None
         self.orderOfMagnitudeIdx = 0  # 0 means '1', 1 means '10', 2 means '100', etc.
@@ -49,7 +55,7 @@ class ZButtons(FocusCanvas):
 
         # On MS Windows super(style=WANTS_CHARS) prevents tab cycling
         # pass empty style explicitly
-        super().__init__(parent, ID, size=self.bg_bmp.GetSize(), style=0)
+        super().__init__(parent, ID, size=self.bg_bmp.GetPreferredLogicalSizeFor(parent), style=0)
 
         # Set up mouse and keyboard event capture
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -112,8 +118,8 @@ class ZButtons(FocusCanvas):
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         if self.bg_bmp:
-            w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
-            gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+            w, h = self.bg_bmp.GetPreferredLogicalSizeFor(self)
+            gc.DrawBitmap(self.bg_bmp.GetBitmapFor(self), 0, 0, w, h)
 
         if self.enabled and self.IsEnabled():
             # Draw label overlays

@@ -17,7 +17,7 @@
 
 import ast
 import glob
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension, find_namespace_packages, setup
 
 
 def get_install_requires():
@@ -41,18 +41,34 @@ def multiglob(*globs):
 
 
 def get_data_files():
+    # FIXME: Does this even work to install the desktop entries?
+    # Quote from setuptools.com: >>data_files is deprecated and should be
+    # avoided. Please check 'Data Files Support' for more information.<<
     data_files = [
-        ('share/pixmaps', multiglob('*.png')),
-        ('share/applications', multiglob('*.desktop')),
-        ('share/metainfo', multiglob('*.appdata.xml')),
-        ('share/pronterface/images', multiglob('images/*.png',
-                                               'images/*.svg')),
+        ('share/icons/hicolor/256x256/apps',
+         multiglob('assets_raw/icons/*.png')),
+        ('share/applications',
+         multiglob('assets_raw/desktop_entries/applications/*.desktop')),
+        ('share/metainfo',
+         multiglob('assets_raw/desktop_entries/metainfo/*.appdata.xml')),
     ]
 
     for locale in glob.glob('locale/*/LC_MESSAGES/'):
         data_files.append((f'share/{locale}', glob.glob(f'{locale}/*.mo')))
 
     return data_files
+
+
+def get_packagedata():
+    """bdist-wheels only copy data files into the wheel when they
+    are in a subdirectory of the package (printrun in this case)!"""
+    package_data = {
+        "printrun.assets.toolbar": ["*.svg"],
+        "printrun.assets.controls": ["*.png", ".svg"],
+        "printrun.assets.icons.pronterface": ["*.png"],
+    }
+
+    return package_data
 
 
 def get_extensions():
@@ -65,10 +81,13 @@ def get_extensions():
 
 setup(
     version=get_version(),
+    packages=find_namespace_packages(include=["printrun*",]),
+    package_data=get_packagedata(),
+    include_package_data=False,
     data_files=get_data_files(),
-    packages=find_packages(),
     scripts=["pronsole.py", "pronterface.py", "plater.py", "printcore.py"],
     ext_modules=get_extensions(),
     install_requires=get_install_requires(),
     zip_safe=False,
 )
+

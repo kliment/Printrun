@@ -23,9 +23,9 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         architecture: ${{ matrix.architecture }}
         python-version: ${{ matrix.python-version }}
@@ -55,8 +55,8 @@ jobs:
     
     - name: Make pyinstaller spec
       run: |
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --name "Pronterface" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -w -i pronterface.ico pronterface.py
-        pyi-makespec --hidden-import="pkg_resources.py2_warn" -F --name "Pronsole" --add-data "images/*;images" --add-data "*.png;." --add-data "*.ico;." -c -i pronsole.ico pronsole.py
+        pyi-makespec -F --name "Pronterface" --add-data "printrun/assets;printrun/assets" -w -i "./assets_raw/icons/pronterface.ico" pronterface.py
+        pyi-makespec -F --name "Pronsole" -c -i "./assets_raw/icons/pronsole.ico" pronsole.py
     - name: Make pyinstaller build
       run: |
         pyinstaller --clean Pronterface.spec -y
@@ -83,7 +83,7 @@ jobs:
         "EXE_NAME=printrun-test" >> $env:GITHUB_ENV
 
     - name: Upload artifacts for inspection
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ env.EXE_NAME }}_windows_${{ matrix.architecture }}_py${{ matrix.python-version }}
         path: |

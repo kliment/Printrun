@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Printrun"
 description = "Host software for 3D printers"
+license = { file = "COPYING" }
 authors = [
     {name = "Kliment Yanev"},
     {name = "Guillaume Seguin"},
@@ -16,7 +17,6 @@ classifiers=[
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: Manufacturing",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
@@ -39,3 +39,6 @@ dynamic = [  # these variables are dynamically set at `setup.py`
 Homepage = "https://github.com/kliment/Printrun/"
 Issues = "https://github.com/kliment/Printrun/issues"
 Changelog = "https://github.com/kliment/Printrun/blob/master/NEWS.md"
+
+[tool.setuptools]
+include-package-data = false

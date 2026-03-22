@@ -13,15 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import wx
+from pathlib import Path
 import math
+
+import wx
 from .bufferedcanvas import BufferedCanvas
 from printrun.utils import imagefile
 
 def sign(n):
-    if n < 0: return -1
-    elif n > 0: return 1
-    else: return 0
+    if n < 0:
+        return -1
+    if n > 0:
+        return 1
+    return 0
 
 DASHES = [4, 7]
 # Brush and pen for grey overlay when mouse hovers over
@@ -32,7 +36,7 @@ class FocusCanvas(BufferedCanvas):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
         self.Bind(wx.EVT_SET_FOCUS, self.onFocus)
-    
+
     def onFocus(self, evt):
         self.Refresh()
         evt.Skip()
@@ -65,6 +69,7 @@ class XYButtons(FocusCanvas):
     concentric_inset = 11
     center = (124, 121)
     spacer = 7
+    imagedir = Path("printrun", "assets", "controls")
     imagename = "control_xy.png"
     corner_to_axis = {
         -1: "center",
@@ -75,8 +80,9 @@ class XYButtons(FocusCanvas):
     }
 
     def __init__(self, parent, moveCallback = None, cornerCallback = None, spacebarCallback = None, bgcolor = "#FFFFFF", ID=-1, zcallback=None):
-        self.bg_bmp = wx.Image(imagefile(self.imagename), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        self.keypad_bmp = wx.Image(imagefile("arrow_keys.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        imagepath = imagefile(self.imagename, self.imagedir)
+        self.bg_bmp = wx.BitmapBundle().FromFiles(str(imagepath.parent), str(imagepath.stem), extension="png")
+        self.keypad_bmp = wx.BitmapBundle().FromSVGFile(str(imagefile("arrow_keys.svg", self.imagedir)), (33, 23))
         self.keypad_idx = -1
         self.hovered_keypad = None
         self.quadrant = None
@@ -95,7 +101,7 @@ class XYButtons(FocusCanvas):
         self.bgcolor.Set(bgcolor)
         self.bgcolormask = wx.Colour(self.bgcolor.Red(), self.bgcolor.Green(), self.bgcolor.Blue(), 128)
 
-        super().__init__(parent, ID, size=self.bg_bmp.GetSize())
+        super().__init__(parent, ID, size=self.bg_bmp.GetPreferredLogicalSizeFor(parent))
 
         self.bind_events()
 
@@ -274,8 +280,8 @@ class XYButtons(FocusCanvas):
         gc = wx.GraphicsContext.Create(dc)
 
         if self.bg_bmp:
-            w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
-            gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+            w, h = self.bg_bmp.GetPreferredLogicalSizeFor(self)
+            gc.DrawBitmap(self.bg_bmp.GetBitmapFor(self), 0, 0, w, h)
 
         if self.enabled and self.IsEnabled():
             gc.SetPen(wx.Pen(HOVER_PEN_COLOR, 4))
@@ -291,10 +297,10 @@ class XYButtons(FocusCanvas):
                     self.highlightCorner(gc, self.corner)
 
             if self.keypad_idx >= 0:
-                padw, padh = (self.keypad_bmp.GetWidth(), self.keypad_bmp.GetHeight())
+                padw, padh = self.keypad_bmp.GetPreferredLogicalSizeFor(self)
                 pos = self.keypad_positions[self.keypad_idx]
                 pos = (pos[0] - padw / 2 - 3, pos[1] - padh / 2 - 3)
-                gc.DrawBitmap(self.keypad_bmp, pos[0], pos[1], padw, padh)
+                gc.DrawBitmap(self.keypad_bmp.GetBitmapFor(self), pos[0], pos[1], padw, padh)
 
             if self.hovered_keypad is not None and self.hovered_keypad != self.keypad_idx:
                 pos = self.keypad_positions[self.hovered_keypad]
@@ -533,8 +539,8 @@ class XYButtonsMini(XYButtons):
         gc = wx.GraphicsContext.Create(dc)
 
         if self.bg_bmp:
-            w, h = (self.bg_bmp.GetWidth(), self.bg_bmp.GetHeight())
-            gc.DrawBitmap(self.bg_bmp, 0, 0, w, h)
+            w, h = self.bg_bmp.GetPreferredLogicalSizeFor(self)
+            gc.DrawBitmap(self.bg_bmp.GetBitmapFor(self), 0, 0, w, h)
 
         if self.enabled and self.IsEnabled():
             gc.SetPen(wx.Pen(HOVER_PEN_COLOR, 4))

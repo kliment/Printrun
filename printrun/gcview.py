@@ -32,7 +32,7 @@ Build_Dims = Tuple[int, int, int, int, int, int]
 GCodeActor = Union[actors.GcodeModelLight, actors.GcodeModel]
 
 from .gui.widgets import get_space
-from .utils import imagefile, install_locale, get_home_pos
+from .utils import install_locale, get_home_pos, toolbaricon
 install_locale('pronterface')
 
 def create_model(light: bool) -> GCodeActor:
@@ -320,10 +320,9 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.model = objects[0].model if objects else None
         self.objects = [GCObject(None)]
 
-        fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         tool_pos = self.toolbar.GetToolPos(3) + 1
-        self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to view"), fit_image,
-                                shortHelp = _("Fit to view [F]"), longHelp = _("Fit view to display entire print"))
+        self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to View"), toolbaricon('fit'),
+                                shortHelp = _("Fit to View [F]"), longHelp = _("Fit view to display entire print"))
         self.toolbar.Realize()
 
         if self.root and hasattr(self.root, "gcview_color_background"):

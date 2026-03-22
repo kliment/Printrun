@@ -34,10 +34,10 @@ from . import printcore
 from printrun.spoolmanager import spoolmanager_gui
 
 from .utils import install_locale, setup_logging, dosify, \
-    iconfile, format_time, format_duration, \
+    format_time, format_duration, \
     hexcolor_to_float, parse_temperature_report, \
-    prepare_command, check_rgb_color, check_rgba_color, compile_file, \
-    write_history_to, read_history_from
+    prepare_command, compile_file, write_history_to, read_history_from, \
+    get_iconbundle, get_scaled_icon
 install_locale('pronterface')
 
 try:
@@ -189,7 +189,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
         if self.settings.last_window_maximized:
             self.Maximize()
-        self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+        self.SetIcons(get_iconbundle("pronterface"))
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.window_ready = True
@@ -213,11 +213,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.loading_gcode = False
         self.loading_gcode_message = ""
         self.mini = False
-        self.p.sendcb = self.sentcb
-        self.p.preprintsendcb = self.preprintsendcb
-        self.p.printsendcb = self.printsentcb
-        self.p.startcb = self.startcb
-        self.p.endcb = self.endcb
+        self.p.callback.send = self.sentcb
+        self.p.callback.printpresend = self.preprintsendcb
+        self.p.callback.printsend = self.printsentcb
+        self.p.callback.start = self.startcb
+        self.p.callback.end = self.endcb
         self.cur_button = None
         self.predisconnect_mainqueue = None
         self.predisconnect_queueindex = None
@@ -399,7 +399,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         pronsole.pronsole.kill(self)
         global pronterface_quitting
         pronterface_quitting = True
-        self.p.recvcb = None
+        self.p.callback.recv = None
         self.p.disconnect()
         if hasattr(self, "feedrates_changed"):
             self.save_in_rc("set xy_feedrate", "set xy_feedrate %d" % self.settings.xy_feedrate)
@@ -608,7 +608,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                          circular_platform = self.settings.circular_bed,
                          simarrange_path = self.settings.simarrange_path,
                          antialias_samples = int(self.settings.antialias3dsamples),
-                         perspective = self.settings.perspective).Show()
+                         perspective = self.settings.perspective,
+                         iconbundle = self.GetIcons()).Show()
 
     def plate_gcode(self, e):
         from . import gcodeplater as plater
@@ -618,7 +619,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                            build_dimensions = self.build_dimensions_list,
                            circular_platform = self.settings.circular_bed,
                            antialias_samples = int(self.settings.antialias3dsamples),
-                           perspective = self.settings.perspective).Show()
+                           perspective = self.settings.perspective,
+                           iconbundle = self.GetIcons()).Show()
 
     def platecb(self, name):
         self.log(_("Plated %s") % name)
@@ -914,7 +916,9 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         info = wx.adv.AboutDialogInfo()
 
-        info.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+        icon = get_scaled_icon("pronterface", 128, self, iconbundle=self.GetIcons())
+        info.SetIcon(icon)
+
         info.SetName('Printrun')
         info.SetVersion(printcore.__version__)
 
@@ -1468,7 +1472,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         if "Writing to file" in l:
             self.uploading = True
             self.p.startprint(self.fgcode)
-            self.p.endcb = self.endupload
+            self.p.callback.end = self.endupload
             self.recvlisteners.remove(self.uploadtrigger)
         elif "open failed, File" in l:
             self.recvlisteners.remove(self.uploadtrigger)
@@ -1946,7 +1950,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                 return True
         return False
 
-    def preprintsendcb(self, gline, next_gline):
+    def preprintsendcb(self, gline, next_gline, index):
         """Callback when a printer gcode is about to be sent. We use it to
         exclude moves defined by the part excluder tool"""
         if not self.is_excluded_move(gline):
@@ -2436,6 +2440,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def new_macro(self, e = None):
         dialog = wx.Dialog(self, -1, _("Enter macro name"))
+        dialog.SetIcons(self.GetIcons())
         panel = wx.Panel(dialog)
         textsizer = wx.BoxSizer(wx.HORIZONTAL)
         text = wx.StaticText(panel, -1, _("Macro name:"))
