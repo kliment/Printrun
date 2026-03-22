@@ -16,7 +16,7 @@
 import wx
 from printrun import gviz
 
-from .utils import imagefile, install_locale
+from .utils import install_locale, toolbaricon
 install_locale('pronterface')
 
 class ExcluderWindow(gviz.GvizWindow):
@@ -27,9 +27,9 @@ class ExcluderWindow(gviz.GvizWindow):
         self.parent = excluder
 
         tool_pos = self.toolbar.GetToolPos(6)
-        self.toolbar.InsertTool(tool_pos, 8, _('Reset Selection'),
-                                wx.Image(imagefile('reset.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
-                                shortHelp = _("Reset Selection"))
+        self.toolbar.InsertTool(tool_pos, 8, _("Clear Selection"),
+                                toolbaricon("clear"),
+                                shortHelp = _("Clear Selection"))
         self.toolbar.DeleteTool(6)
         self.toolbar.DeleteTool(7)
         self.toolbar.Realize()

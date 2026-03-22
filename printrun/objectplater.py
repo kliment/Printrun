@@ -19,7 +19,7 @@ import types
 import wx
 from .gui.widgets import get_space
 
-from .utils import install_locale, iconfile
+from .utils import install_locale, get_iconbundle
 install_locale('pronterface')
 
 def patch_method(obj, method, replacement):
@@ -362,11 +362,18 @@ class Plater(wx.Dialog):
         self.destroy_on_done = True
         parent = kwargs.get("parent", None)
         size = kwargs.get("size", (800, 580))
+        icons = kwargs.get("iconbundle", None)
         if "size" in kwargs:
             del kwargs["size"]
+
         wx.Dialog.__init__(self, parent, title = _("STL Plate Builder"),
                            size = size, style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
-        self.SetIcon(wx.Icon(iconfile("plater.png"), wx.BITMAP_TYPE_PNG))
+
+        if icons:
+            self.SetIcons(icons)
+        else:
+            self.SetIcons(get_iconbundle("pronterface"))
+
         self.prepare_ui(**kwargs)
         self.CenterOnParent()
 

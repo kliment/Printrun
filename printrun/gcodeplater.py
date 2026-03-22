@@ -83,7 +83,8 @@ class GcodePlaterPanel(PlaterPanel):
                    parent = None, build_dimensions = None,
                    circular_platform = False,
                    antialias_samples = 0,
-                   grid = (1, 10)):
+                   grid = (1, 10),
+                   iconbundle = None):
         super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = False)
         viewer = gcview.GcodeViewPanel(self, build_dimensions = self.build_dimensions,
                                        antialias_samples = antialias_samples)
@@ -93,6 +94,8 @@ class GcodePlaterPanel(PlaterPanel):
                                         grid = grid)
         self.platform_object = gcview.GCObject(self.platform)
         self.Layout()
+        if iconbundle:
+            self.SetIcons(iconbundle)
         self.SetMinClientSize(self.topsizer.CalcMin())
         self.SetTitle(_("G-Code Plate Builder"))
 

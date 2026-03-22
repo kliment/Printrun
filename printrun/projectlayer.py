@@ -36,6 +36,7 @@ class DisplayFrame(wx.Frame):
     def __init__(self, parent, statusbar, title, res = (1024, 768), printer = None, scale = 1.0, offset = (0, 0)):
         super().__init__(parent = parent, title = title, size = res)
 
+        self.SetIcons(parent.GetIcons())
         self.printer = printer
         self.control_frame = parent
         self.slicer = 'Bitmap'
@@ -311,6 +312,7 @@ class SettingsFrame(wx.Dialog):
     def __init__(self, parent, printer = None):
         super().__init__(parent, title = _("Layer Projector Control"),
                          style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT)
+        self.SetIcons(parent.GetIcons())
         self.pronterface = parent
         self.image_dir = ''
         self.current_filename = ''

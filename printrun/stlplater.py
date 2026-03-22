@@ -222,7 +222,8 @@ class StlPlaterPanel(PlaterPanel):
                    parent = None, build_dimensions = None,
                    circular_platform = False,
                    simarrange_path = None,
-                   antialias_samples = 0):
+                   antialias_samples = 0,
+                   iconbundle = None):
         super().prepare_ui(filenames, callback, parent, build_dimensions, cutting_tool = True)
         self.cutting = False
         self.cutting_axis = None
@@ -238,6 +239,8 @@ class StlPlaterPanel(PlaterPanel):
         self.simarrange_path = simarrange_path
         self.set_viewer(viewer)
         self.enable_cut_button(False)
+        if iconbundle:
+            self.SetIcons(iconbundle)
         self.SetMinClientSize(self.topsizer.CalcMin())
 
     def start_cutting_tool(self, event, axis, direction):

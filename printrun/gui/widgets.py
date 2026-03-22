@@ -19,6 +19,9 @@ import platform  # Used by get_space() for platform specific spacing
 import logging
 import wx
 
+from printrun.utils import get_iconbundle
+
+
 def get_space(key: str) -> int:
     '''
     Takes key (str), returns spacing value (int).
@@ -61,8 +64,12 @@ class MacroEditor(wx.Dialog):
         title = "%s" if gcode else "Macro %s"
         self.gcode = gcode
         self.fr_settings = (False, False, True, '')
+
         wx.Dialog.__init__(self, None, title = title % macro_name,
                            style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+
+        parent = wx.GetTopLevelParent(self)
+        self.SetIcons(get_iconbundle("pronterface"))
         self.callback = callback
         panel = wx.Panel(self)
         panelsizer = wx.BoxSizer(wx.VERTICAL)
@@ -445,6 +452,8 @@ class PronterOptionsDialog(wx.Dialog):
     def __init__(self, pronterface):
         wx.Dialog.__init__(self, parent = None, title = _("Edit Settings"),
                            size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE)
+
+        self.SetIcons(pronterface.GetIcons())
         self.notebook = notebook = wx.Notebook(self)
         all_settings = pronterface.settings._all_settings()
         group_list = []
@@ -526,7 +535,9 @@ class ButtonEdit(wx.Dialog):
     def __init__(self, pronterface):
         wx.Dialog.__init__(self, None, title = _("Custom Button"),
                            style = wx.DEFAULT_DIALOG_STYLE)
+
         self.pronterface = pronterface
+        self.SetIcons(pronterface.GetIcons())
         panel = wx.Panel(self)
         grid = wx.FlexGridSizer(rows = 0, cols = 2, hgap = get_space('minor'), vgap = get_space('minor'))
         grid.AddGrowableCol(1, 1)

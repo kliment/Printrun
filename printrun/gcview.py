@@ -31,7 +31,7 @@ from pyglet.gl import glPushMatrix, glPopMatrix, \
 from .gviz import GvizBaseFrame
 
 from .gui.widgets import get_space
-from .utils import imagefile, install_locale, get_home_pos
+from .utils import install_locale, get_home_pos, toolbaricon
 install_locale('pronterface')
 
 def create_model(light):
@@ -438,10 +438,9 @@ class GcodeViewFrame(GvizBaseFrame, GcodeViewLoader):
         self.model = objects[1].model if objects else None
         self.objects = [GCObject(self.platform), GCObject(None)]
 
-        fit_image = wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         tool_pos = self.toolbar.GetToolPos(3) + 1
-        self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to view"), fit_image,
-                                shortHelp = _("Fit to view [F]"), longHelp = _("Fit view to display entire print"))
+        self.toolbar.InsertTool(tool_pos, 10, " " + _("Fit to View"), toolbaricon('fit'),
+                                shortHelp = _("Fit to View [F]"), longHelp = _("Fit view to display entire print"))
         self.toolbar.Realize()
         self.glpanel = GcodeViewPanel(panel,
                                       build_dimensions = build_dimensions,

@@ -23,7 +23,7 @@ from .injectgcode import injector, injector_edit
 from printrun.gui.viz import BaseViz
 from .gui.widgets import get_space
 
-from .utils import imagefile, install_locale, get_home_pos
+from .utils import install_locale, get_home_pos, toolbaricon, get_iconbundle
 install_locale('pronterface')
 
 class GvizBaseFrame(wx.Frame):
@@ -31,6 +31,9 @@ class GvizBaseFrame(wx.Frame):
     def create_base_ui(self):
         self.CreateStatusBar(1)
         self.SetStatusText(_("Layer number and Z position show here when you scroll"))
+
+        parent = wx.GetTopLevelParent(self)
+        self.SetIcons(get_iconbundle("pronterface"))
 
         panel = wx.Panel(self, -1)
         v_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -51,22 +54,38 @@ class GvizBaseFrame(wx.Frame):
     def build_toolbar(self):
         self.toolbar.SetMargins(get_space('minor'), get_space('mini'))
         self.toolbar.SetToolPacking(get_space('minor'))
-        self.toolbar.AddTool(1, '', wx.Image(imagefile('zoom_out.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom Out [-]"))
-        self.toolbar.AddTool(2, '', wx.Image(imagefile('zoom_in.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Zoom In [+]"),)
-        self.toolbar.AddTool(3, _("Reset View"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+        self.toolbar.AddTool(1, '', toolbaricon('zoom_out'), _("Zoom Out [-]"))
+        self.toolbar.AddTool(2, '', toolbaricon('zoom_in'), _("Zoom In [+]"),)
+        self.toolbar.AddTool(3, _("Reset View"), toolbaricon('reset'),
                              shortHelp = _("Reset View [R]"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(4, '', wx.Image(imagefile('arrow_down.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Down a Layer [D]"))
-        self.toolbar.AddTool(5, '', wx.Image(imagefile('arrow_up.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(), _("Move Up a Layer [U]"))
+        self.toolbar.AddTool(4, '', toolbaricon('layer_down'),
+                             _("Move Down a Layer [D]"))
+        self.toolbar.AddTool(5, '', toolbaricon('layer_up'),
+                             _("Move Up a Layer [U]"))
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(6, _("Inject"), wx.Image(imagefile('inject.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
-                             wx.NullBitmap, shortHelp = _("Inject G-Code"), longHelp = _("Insert code at the beginning of this layer"))
-        self.toolbar.AddTool(7, _("Edit"), wx.Image(imagefile('edit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
-                             wx.NullBitmap, shortHelp = _("Edit Layer"), longHelp = _("Edit the G-Code of this layer"))
+        self.toolbar.AddTool(6, _("Inject"), toolbaricon('inject'),
+                             wx.NullBitmap, shortHelp = _("Inject G-Code"),
+                             longHelp = _("Insert code at the beginning of this layer"))
+        self.toolbar.AddTool(7, _("Edit"), toolbaricon('edit'), wx.NullBitmap,
+                             shortHelp = _("Edit Layer"),
+                             longHelp = _("Edit the G-Code of this layer"))
         self.toolbar.AddStretchableSpace()
         self.toolbar.AddSeparator()
-        self.toolbar.AddTool(9, _("Close"), wx.Image(imagefile('fit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap(),
+        self.toolbar.AddTool(9, _("Close"), toolbaricon('exit'),
                              shortHelp = _("Close Window"))
+
+    def update_toolbar_icons(self, event):
+        self.toolbar.SetToolNormalBitmap(1, toolbaricon('zoom_out'))
+        self.toolbar.SetToolNormalBitmap(2, toolbaricon('zoom_in'))
+        self.toolbar.SetToolNormalBitmap(3, toolbaricon('reset'))
+        self.toolbar.SetToolNormalBitmap(4, toolbaricon('layer_down'))
+        self.toolbar.SetToolNormalBitmap(5, toolbaricon('layer_up'))
+        self.toolbar.SetToolNormalBitmap(6, toolbaricon('inject'))
+        self.toolbar.SetToolNormalBitmap(7, toolbaricon('edit'))
+        self.toolbar.SetToolNormalBitmap(8, toolbaricon('clear'))
+        self.toolbar.SetToolNormalBitmap(9, toolbaricon('exit'))
+        self.toolbar.SetToolNormalBitmap(10, toolbaricon('fit'))
 
     def setlayercb(self, layer):
         self.layerslider.SetValue(layer)
@@ -104,6 +123,7 @@ class GvizWindow(GvizBaseFrame):
         self.Bind(wx.EVT_TOOL, lambda x: self.p.editlayer(), id = 7)
         self.Bind(wx.EVT_TOOL, self.reset_selection, id = 8)
         self.Bind(wx.EVT_TOOL, lambda x: self.Close(), id = 9)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, self.update_toolbar_icons)
 
         self.initpos = None
         self.p.Bind(wx.EVT_KEY_DOWN, self.key)

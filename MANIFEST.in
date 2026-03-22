@@ -1,7 +1,9 @@
 include COPYING
 include README.*
+include buildinstructions.md
+include release_windows.bat
 include requirements.txt
-include *.ico
-include *.icns
+include assets_raw/icons/*.png 
+recursive-include assets_raw *.ico *.icns *.desktop *.appdata.xml
 recursive-include locale *.pot *.po *.mo
 recursive-include printrun *.pyx *.c *.h
