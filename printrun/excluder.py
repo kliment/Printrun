@@ -15,8 +15,8 @@
 
 import wx
 from printrun import gviz
-
-from .utils import install_locale, toolbaricon
+from .gui.utils import toolbaricon
+from .utils import install_locale
 install_locale('pronterface')
 
 class ExcluderWindow(gviz.GvizWindow):

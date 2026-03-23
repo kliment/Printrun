@@ -32,7 +32,8 @@ Build_Dims = Tuple[int, int, int, int, int, int]
 GCodeActor = Union[actors.GcodeModelLight, actors.GcodeModel]
 
 from .gui.widgets import get_space
-from .utils import install_locale, get_home_pos, toolbaricon
+from .gui.utils import toolbaricon
+from .utils import install_locale, get_home_pos
 install_locale('pronterface')
 
 def create_model(light: bool) -> GCodeActor:
