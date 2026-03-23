@@ -23,7 +23,7 @@ jobs:
             wxpython-wheel: "ubuntu-22.04/wxPython-4.2.1-cp311-cp311-linux_x86_64.whl"
           - python-version: "3.13"
             os: "ubuntu-24.04"
-            wxpython-wheel: "ubuntu-24.04/wxPython-4.2.2-cp313-cp313-linux_x86_64.whl"
+            wxpython-wheel: "ubuntu-24.04/wxpython-4.2.5-cp314-cp314-linux_x86_64.whl"
 
     steps:
       - uses: actions/checkout@v6
@@ -56,8 +56,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Unit testing uses functions not available on Python < 3.11
-        python-version: ["3.11", "3.13", "3.14"]
+        # The idea is to test:
+        #  * The oldest supported Python (to check for regressions, testing
+        #    suite only works on 3.11+)
+        #  * The newest (to check current code feasibility)
+        #  * An experimental/development version (to check future
+        #    compatibility)
+        python-version: ["3.11", "3.14", "3.15"]
 
     steps:
       - uses: actions/checkout@v6
