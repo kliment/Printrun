@@ -21,7 +21,7 @@ jobs:
           - python-version: "3.11"
             os: "ubuntu-22.04"
             wxpython-wheel: "ubuntu-22.04/wxPython-4.2.1-cp311-cp311-linux_x86_64.whl"
-          - python-version: "3.13"
+          - python-version: "3.14"
             os: "ubuntu-24.04"
             wxpython-wheel: "ubuntu-24.04/wxpython-4.2.5-cp314-cp314-linux_x86_64.whl"
 
