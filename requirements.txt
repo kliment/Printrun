@@ -2,7 +2,7 @@ pyserial (>= 3.0)
 pillow ; sys_platform == 'win32'
 wxPython >= 4.2.0
 numpy (>= 1.8.2)
-pyglet >= 1.1, < 2.0
+pyglet >= 1.5.31, < 2.0
 psutil (>= 2.1)
 lxml (>= 2.9.1)
 platformdirs
