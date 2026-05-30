@@ -6,7 +6,7 @@ Minor release with code refactoring and user interface modernization.
 
  * Added support for Python 3.14 wheels
  * Removed wheels for macOS 13 (#1543)
- * Modernized code to enable OpenGL 3.3+ (#1498)
+ * Modernized 3D code to prepare for OpenGL 3.3+ (#1498)
  * Modernized icons and file structure (#1530)
  * New printcore callback functionality (#1487)
     > **WARNING**: Old callback system is now deprecated and will be removed
