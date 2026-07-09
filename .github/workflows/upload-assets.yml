@@ -33,7 +33,7 @@ jobs:
           done
 
       - name: Upload assets
-        uses: alexellis/upload-assets@0.4.1
+        uses: alexellis/upload-assets@0.5.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
