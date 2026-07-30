@@ -19,11 +19,14 @@ import os
 import sys
 
 from functools import wraps
-
-import wx
 from pathlib import Path
+
 from .utils import parse_build_dimensions, check_rgb_color, check_rgba_color
-from .gui.widgets import get_space
+
+def _get_space(name):
+    from .gui.widgets import get_space
+    return get_space(name)
+
 
 def setting_add_tooltip(func):
     @wraps(func)
@@ -71,6 +74,7 @@ class Setting:
 
     @setting_add_tooltip
     def get_label(self, parent):
+        import wx
         widget = wx.StaticText(parent, -1, self.label or self.name)
         widget.set_default = self.set_default
         return widget
@@ -124,6 +128,7 @@ class wxSetting(Setting):
 class StringSetting(wxSetting):
 
     def get_specific_widget(self, parent):
+        import wx
         self.widget = wx.TextCtrl(parent, -1, str(self.value))
         return self.widget
 
@@ -138,6 +143,7 @@ class DirSetting(wxSetting):
     an additional 'Browse' button that opens an directory chooser dialog.'''
 
     def get_widget(self, parent):
+        import wx
         # Create the text control
         self.text_ctrl = wx.TextCtrl(parent, -1, str(self.value))
 
@@ -147,11 +153,12 @@ class DirSetting(wxSetting):
 
         self.widget = wx.BoxSizer(wx.HORIZONTAL)
         self.widget.Add(self.text_ctrl, 1)
-        self.widget.Add(button, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, get_space('mini'))
+        self.widget.Add(button, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, _get_space('mini'))
 
         return self.widget
 
     def on_browse(self, event = None):
+        import wx
         # Going to browse for file...
         directory = self.text_ctrl.GetValue()
         if not os.path.isdir(directory):
@@ -187,6 +194,7 @@ class ColorSetting(wxSetting):
         validate(value)
 
     def get_specific_widget(self, parent):
+        import wx
         self.widget = wx.ColourPickerCtrl(parent, colour=wx.Colour(self.value),
                                           style=wx.CLRP_USE_TEXTCTRL)
         self.widget.SetValue = self.widget.SetColour
@@ -199,23 +207,28 @@ class ColorSetting(wxSetting):
 class ComboSetting(wxSetting):
 
     def __init__(self, name, default, choices, label = None, help = None,
-                 group = None, size = 7 * get_space('settings')):
+                 group = None, size = None):
         # size: Default length is set here, can be overwritten on creation.
         super().__init__(name, default, label, help, group)
         self.choices = choices
         self.size = size
 
     def get_specific_widget(self, parent):
+        import wx
+        size = self.size
+        if size is None:
+            size = 7 * _get_space('settings')
+
         readonly = isinstance(self.choices, tuple)
         if readonly:
             # wx.Choice drops its list on click, no need to click down arrow
-            self.widget = wx.Choice(parent, -1, choices = self.choices, size = (self.size, -1))
+            self.widget = wx.Choice(parent, -1, choices = self.choices, size = (size, -1))
             self.widget.GetValue = lambda: self.choices[self.widget.Selection]
             self.widget.SetValue = lambda v: self.widget.SetSelection(self.choices.index(v))
             self.widget.SetValue(self.value)
         else:
             self.widget = wx.ComboBox(parent, -1, str(self.value), choices = self.choices,
-                                      style = wx.CB_DROPDOWN, size = (self.size, -1))
+                                      style = wx.CB_DROPDOWN, size = (size, -1))
         return self.widget
 
 class SpinSetting(wxSetting):
@@ -228,8 +241,9 @@ class SpinSetting(wxSetting):
         self.increment = increment
 
     def get_specific_widget(self, parent):
+        import wx
         self.widget = wx.SpinCtrlDouble(parent, -1, min = self.min, max = self.max,
-                                        size = (4 * get_space('settings'), -1))
+                                        size = (4 * _get_space('settings'), -1))
         self.widget.SetDigits(0)
         self.widget.SetValue(self.value)
         orig = self.widget.GetValue
@@ -237,6 +251,7 @@ class SpinSetting(wxSetting):
         return self.widget
 
 def MySpin(parent, digits, *args, **kw):
+    import wx
     # in GTK 3.[01], spinner is not large enough to fit text
     # Could be a class, but use function to avoid load errors if wx
     # not installed
@@ -268,7 +283,7 @@ class FloatSpinSetting(SpinSetting):
     def get_specific_widget(self, parent):
         self.widget = MySpin(parent, 2, initial = self.value, min = self.min,
                              max = self.max, inc = self.increment,
-                             size = (4 * get_space('settings'), -1))
+                             size = (4 * _get_space('settings'), -1))
         return self.widget
 
 class BooleanSetting(wxSetting):
@@ -284,6 +299,7 @@ class BooleanSetting(wxSetting):
     value = property(_get_value, _set_value)
 
     def get_specific_widget(self, parent):
+        import wx
         self.widget = wx.CheckBox(parent, -1)
         self.widget.SetValue(bool(self.value))
         return self.widget
@@ -304,6 +320,7 @@ class StaticTextSetting(wxSetting):
         pass
 
     def get_specific_widget(self, parent):
+        import wx
         self.widget = wx.StaticText(parent, -1, self.text)
         return self.widget
 
@@ -323,23 +340,24 @@ class BuildDimensionsSetting(wxSetting):
             widget.SetValue(build_dimensions_list[i])
 
     def get_widget(self, parent):
+        import wx
         build_dimensions = parse_build_dimensions(self.value)
         self.widgets = []
 
         def w(val, m, M):
             self.widgets.append(MySpin(parent, 2, initial = val, min = m,
-                                       max = M, size = (5 * get_space('settings'), -1)))
+                                       max = M, size = (5 * _get_space('settings'), -1)))
 
         def addlabel(name, pos):
             self.widget.Add(wx.StaticText(parent, -1, name), pos = pos,
                             flag = wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.ALIGN_RIGHT,
-                            border = get_space('mini'))
+                            border = _get_space('mini'))
 
         def addwidget(*pos):
             self.widget.Add(self.widgets[-1], pos = pos,
-                            flag = wx.RIGHT | wx.EXPAND, border = get_space('mini'))
+                            flag = wx.RIGHT | wx.EXPAND, border = _get_space('mini'))
 
-        self.widget = wx.GridBagSizer(vgap = get_space('mini'), hgap = get_space('mini'))
+        self.widget = wx.GridBagSizer(vgap = _get_space('mini'), hgap = _get_space('mini'))
         addlabel(_("Width:"), (0, 0))
         w(build_dimensions[0], 0, 2000)
         addwidget(0, 1)
