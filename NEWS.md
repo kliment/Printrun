@@ -1,3 +1,36 @@
+Printrun - 2.3.0
+================
+Minor release with code refactoring and user interface modernization.
+
+### New Features
+
+ * Added support for Python 3.14 wheels
+ * Removed wheels for macOS 13 (#1543)
+ * Modernized 3D code to prepare for OpenGL 3.3+ (#1498)
+ * Modernized icons and file structure (#1530)
+ * New printcore callback functionality (#1487)
+    > **WARNING**: Old callback system is now deprecated and will be removed
+    > on future releases
+ * Added support for Python 3.12 and 3.13 on Windows binaries (#1465)
+    - Removed support for Python 3.7
+    - Translation brought up to date to match latest code
+ * Translation for German is 100% completed (#1465)
+ * Enhanced wiki regarding macOS usage (#1479)
+ * Added an option to log to stdout (#1473)
+
+### Fixed Bugs
+
+ * Fixed syntax warnings in regex sequences (#1465)
+ * Dropped legacy `custombtn.txt` which caused issues (#1483)
+ * Fixed `pronsole` failure when loading configuration files (#1480)
+ * Fixed typos on failure messages (#1478)
+ * Fixed 3D rendering for some drivers (#1314)
+
+### Administrative
+
+ * Enabled core testing on CLI machines (#1542)
+
+
 Printrun - 2.2.0
 ================
 Minor release. Added support for Python 3.13.
