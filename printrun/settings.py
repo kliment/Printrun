@@ -387,6 +387,7 @@ class Settings:
                                    "This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
         self._add(BooleanSetting("rpc_server", True, _("RPC Server:"), _("Enable RPC server to allow remotely querying print status")), root.update_rpc_server)
         self._add(BooleanSetting("dtr", True, _("DTR:"), _("Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"), "Printer"))
+        self._add(BooleanSetting("disable_heater_on_exit", True, _("Disable Printer on Exit:"), _("Turns off extrusion and bed heaters upon exit"), "Printer"))
         if sys.platform != "win32":
             self._add(StringSetting("devicepath", "", _("Device Name Pattern:"), _("Custom device pattern: for example /dev/3DP_* "), "Printer"))
         self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed Temperature for ABS:"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"), root.set_temp_preset)
@@ -412,6 +413,7 @@ class Settings:
         self._add(DirSetting("log_path", str(Path.home()), _("Log Path:"),
                              _("Path to the log file. If the path is a directory the file will be named 'printrun.log'"), "UI"))
         self._add(BooleanSetting("log_stdout", False, _("Log to console:"), _("Duplicate log messages to stdout"), "UI"))
+        self._add(BooleanSetting("gui_warn_disable_heater_exit", True, _("Prompt to disable heaters on exit:"), _("If enabled, Printrun will prompt you to disable heaters on exit"), "UI"))
 
         self._add(HiddenSetting("project_offset_x", 0.0))
         self._add(HiddenSetting("project_offset_y", 0.0))

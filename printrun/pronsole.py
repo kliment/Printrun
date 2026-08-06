@@ -401,19 +401,32 @@ class pronsole(cmd.Cmd):
             else:
                 self.log(_("Unknown command '{}'".format(l)))
 
-    def do_exit(self, l):
-        if self.p.printing and l != "force":
-            self.log(_("Are you sure you want to exit while printing?\n\
-Disables all heaters upon exit."))
-            if not self.confirm():
-                return
+    def _turn_off_heaters(self):
         if self.status.extruder_temp_target != 0:
             self.log(_("Setting extruder temp to 0"))
         self.p.send_now("M104 S0.0")
-        if self.status.bed_enabled:
-            if self.status.bed_temp_target != 0:
-                self.log(_("Setting bed temp to 0"))
-            self.p.send_now("M140 S0.0")
+        if self.status.bed_temp_target != 0:
+            self.log(_("Setting bed temp to 0"))
+        self.p.send_now("M140 S0.0")
+
+    def exit_inhibition_reason(self):
+        if self.settings.disable_heater_on_exit and self.p.printing:
+            return _("Are you sure you want to exit while printing?\n\
+Disables all heaters upon exit.")
+        return None
+
+    def do_exit(self, l):
+        if l != "force":
+            exit_inhibition = self.exit_inhibition_reason()
+            if l == "check":
+                return exit_inhibition
+            if exit_inhibition:
+                self.log(exit_inhibition)
+                if not self.confirm():
+                    return
+        if self.settings.disable_heater_on_exit:
+            self._turn_off_heaters()
+
         self.log(_("Disconnecting from printer..."))
 
         self.log(_("Exiting program. Goodbye!"))

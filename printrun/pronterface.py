@@ -382,8 +382,20 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
         event.Skip()
 
+    def warn_turning_off_heaters(self):
+        if self.p.printer and self.settings.gui_warn_disable_heater_exit and self.settings.disable_heater_on_exit:
+            return _("Printrun is configured to turn off heaters on exit. If you want to keep the heaters on, disable this option in Settings > Printer. You can also disable this warning in Settings > UI. Proceed to turn off heaters and exit?")
+        return None
+
     def closewin(self, e):
         e.StopPropagation()
+        inhibition_reason_arr = [self.do_exit("check"), self.warn_turning_off_heaters()]
+        for inhibition_reason in inhibition_reason_arr:
+            if inhibition_reason:
+                dlg = wx.MessageDialog(self, inhibition_reason, _("Exit"), wx.YES_NO | wx.ICON_WARNING)
+                if dlg.ShowModal() == wx.ID_NO:
+                    return
+
         self.do_exit("force")
 
     def kill(self, e=None):
