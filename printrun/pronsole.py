@@ -931,22 +931,33 @@ Disables all heaters upon exit."))
             self.logError(_("No file name given."))
             return
         self.log(_("Loading file: %s") % filename)
-        if not os.path.exists(filename):
-            self.logError(_("File not found!"))
-            return
-        self.load_gcode(filename)
-        self.log(_("Loaded %s, %d lines.") % (filename, len(self.fgcode)))
-        self.log(_("Estimated duration: %d layers, %s") % self.fgcode.estimate_duration())
+        try:
+            self.load_gcode(filename)
+        except PronsoleError as e:
+            self.logError(e)
+        else:
+            self.log(_("Loaded %s, %d lines.") % (filename, len(self.fgcode)))
+            self.log(_("Estimated duration: %d layers, %s") %
+                     self.fgcode.estimate_duration())
 
     def load_gcode(self, filename, layer_callback = None, gcode = None):
         if gcode is None:
-            self.fgcode = gcoder.LightGCode(deferred = True)
+            self.fgcode = gcoder.LightGCode(deferred=True)
         else:
             self.fgcode = gcode
-        self.fgcode.prepare(open(filename, "r", encoding="utf-8"),
-                            get_home_pos(self.build_dimensions_list),
-                            layer_callback = layer_callback)
-        self.fgcode.estimate_duration()
+        filepath = Path(filename)
+        try:
+            with filepath.open("r", encoding="utf-8") as data:
+                self.fgcode.prepare(data,
+                                    get_home_pos(self.build_dimensions_list),
+                                    layer_callback = layer_callback)
+        except FileNotFoundError:
+            raise PronsoleError(_("File not found!"))
+        except UnicodeDecodeError as e:
+            self.fgcode.prepare([";empty"])
+            raise PronsoleError(
+                _("Unable to read file. Unsupported file format"))
+
         self.filename = filename
 
     def complete_load(self, text, line, begidx, endidx):
@@ -1766,3 +1777,24 @@ Disables all heaters upon exit."))
         res = [((f + sep) if os.path.isdir(f) else f)[prefix_len:] #skip unskipped prefix_len
                 for f in glob.glob(corrected_text + '*')]
         return res
+
+
+class PronsoleError(Exception):
+    """Raised on any Pronsole error.
+
+    Parameters
+    ----------
+    msg : str
+        Error message.
+    cause : Exception, optional
+        Underlying error.
+
+    Attributes
+    ----------
+    cause
+
+    """
+
+    def __init__(self, msg, cause=None):
+        super().__init__(msg)
+        self.cause = cause
