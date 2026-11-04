@@ -166,7 +166,7 @@ class pronsole(cmd.Cmd):
         self.sdfiles = []
         self.paused = False
         self.sdprinting = 0
-        self.uploading = 0  # Unused, just for pronterface generalization
+        self.uploading = False
         self.temps = {"PLA": "185", "ABS": "230", "Off": "0"}
         self.bedtemps = {"PLA": "60", "ABS": "110", "Off": "0"}
         self.percentdone = 0
@@ -894,7 +894,9 @@ Disables all heaters upon exit."))
                 self.status_thread = None
                 self.p.disconnect()
                 return
-            if do_monitoring:
+            # While uploading to SD the firmware rejects lines without a line
+            # number, and would write numbered ones to the file
+            if do_monitoring and not self.uploading:
                 if self.sdprinting and not self.paused:
                     self.p.send_now("M27")
                 if self.m105_waitcycles % 10 == 0:
@@ -1027,6 +1029,7 @@ Disables all heaters upon exit."))
         self._do_load(filename)
         self.log(_("Uploading as %s") % targetname)
         self.log(_("Uploading %s") % self.filename)
+        self.uploading = True
         self.p.send_now("M28 " + targetname)
         self.log(_("Press Ctrl-C to interrupt upload."))
         self.p.startprint(self.fgcode)
@@ -1039,6 +1042,7 @@ Disables all heaters upon exit."))
                 sys.stdout.flush()
             self.p.send_now("M29 " + targetname)
             time.sleep(0.2)
+            self.uploading = False
             self.p.clear = True
             self._do_ls(False)
             self.log("\b\b\b\b\b100%.")
@@ -1053,6 +1057,7 @@ Disables all heaters upon exit."))
             self.p.pause()
             self.p.send_now("M29 " + targetname)
             time.sleep(0.2)
+            self.uploading = False
             self.p.cancelprint()
             self.logError(_("A partial file named %s may have been written to the sd card.") % targetname)
 
