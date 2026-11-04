@@ -118,6 +118,7 @@ class printcore():
         self.online = False
         # is a print currently running, true if printing, false if paused
         self.printing = False
+        self.sd_upload = False  # the current print is an upload to SD
         self.mainqueue = None
         self.priqueue = Queue(0)
         self.queueindex = 0
@@ -370,7 +371,7 @@ class printcore():
     def _checksum(self, command):
         return reduce(lambda x, y: x ^ y, map(ord, command))
 
-    def startprint(self, gcode, startindex = 0):
+    def startprint(self, gcode, startindex = 0, upload = False):
         """Start a print.
 
         The `mainqueue` is populated and then commands are gradually sent to
@@ -387,6 +388,10 @@ class printcore():
         startindex : int, default: 0
             The index from the `gcode` array from which the printing will be
             started.
+        upload : bool, default: False
+            True if the firmware is storing the lines in a file instead of
+            running them. No line number reset is sent, as it would be stored
+            too, so the caller has to send one before opening the file.
 
         Returns
         -------
@@ -405,8 +410,10 @@ class printcore():
         if not gcode or not gcode.lines:
             return True
 
-        self.clear = False
-        self._send("M110 N-1", -1, True)
+        self.sd_upload = upload
+        if not upload:
+            self.clear = False
+            self._send("M110 N-1", -1, True)
 
         resuming = (startindex != 0)
         self.print_thread = threading.Thread(target = self._print,
@@ -633,7 +640,8 @@ class printcore():
             if not self.paused:
                 self.queueindex = 0
                 self.lineno = 0
-                self._send("M110 N-1", -1, True)
+                if not self.sd_upload:
+                    self._send("M110 N-1", -1, True)
 
     def _send(self, command, lineno = 0, calcchecksum = False):
         # Only add checksums if over serial (tcp does the flow control itself)

@@ -392,6 +392,34 @@ class TestPrint(unittest.TestCase):
         self.start_cb = mock_callback(self, self.core, "startcb")
         self.end_cb = mock_callback(self, self.core, "endcb")
 
+    def run_to_end(self, **kwargs):
+        """Run the whole print and return the bytes written during it"""
+        self.mocked_serial.return_value.write.reset_mock()
+        self.core.startprint(self.print_code, **kwargs)
+        limit = time.monotonic() + 5
+        while self.core.printing and time.monotonic() < limit:
+            time.sleep(0.01)
+        self.assertFalse(self.core.printing)
+        return b"".join(c.args[0] for c
+                        in self.mocked_serial.return_value.write.call_args_list)
+
+    def test_print_resets_line_number(self):
+        """Test a print resets the line number at its start and end"""
+        written = self.run_to_end()
+        self.assertEqual(written.count(b"M110 N-1"), 2)
+        self.assertTrue(written.startswith(checksum_command("M110 N-1", -1)))
+
+    def test_upload_sends_only_its_lines(self):
+        """Test an upload doesn't add lines to the file being written"""
+        written = self.run_to_end(upload=True)
+        self.assertNotIn(b"M110", written)
+        self.assertEqual(written, b"".join(self.parsed_print_code))
+
+    def test_print_after_upload_resets_line_number(self):
+        """Test a normal print still resets the line number after an upload"""
+        self.run_to_end(upload=True)
+        self.assertEqual(self.run_to_end().count(b"M110 N-1"), 2)
+
     def check_unfinished_print(self):
         """Check the first command was sent but the last wasn't"""
         first_call = mock.call(self.parsed_print_code[0])
