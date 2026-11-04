@@ -1464,6 +1464,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         dlg = wx.TextEntryDialog(self, _("Enter a target filename in 8.3 format:"), _("Pick SD filename"), dosify(self.filename))
         if dlg.ShowModal() == wx.ID_OK:
             self.p.send_now("M21")
+            self.p.send_now("M110 N-1")
             self.p.send_now("M28 " + str(dlg.GetValue()))
             self.recvlisteners.append(self.uploadtrigger)
         dlg.Destroy()
@@ -1471,7 +1472,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
     def uploadtrigger(self, l):
         if "Writing to file" in l:
             self.uploading = True
-            self.p.startprint(self.fgcode)
+            self.p.startprint(self.fgcode, upload = True)
             self.p.callback.end = self.endupload
             self.recvlisteners.remove(self.uploadtrigger)
         elif "open failed, File" in l:
