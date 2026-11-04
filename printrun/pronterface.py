@@ -1912,7 +1912,8 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def sentcb(self, line, gline):
         """Callback when a printer gcode has been sent"""
-        if not gline:
+        if not gline or self.uploading:
+            # Lines being uploaded go to the SD card. The printer doesn't run them.
             pass
         elif gline.command in ["M104", "M109"]:
             gline_s = gcoder.S(gline)
