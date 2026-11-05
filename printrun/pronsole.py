@@ -184,6 +184,8 @@ class pronsole(cmd.Cmd):
         self.settings._port_list = self.scanserial
         self.update_build_dimensions(None, self.settings.build_dimensions)
         self.update_tcp_streaming_mode(None, self.settings.tcp_streaming_mode)
+        self.update_advanced_ok(None, self.settings.advanced_ok)
+        self.update_meatpack(None, self.settings.meatpack)
         self.monitoring = 0
         self.starttime = 0
         self.extra_print_time = 0
@@ -200,7 +202,7 @@ class pronsole(cmd.Cmd):
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.history_file = self.cache_dir / "history"
         self.history_file.touch(exist_ok=True)
-        self.lineignorepattern = re.compile(r"ok ?\d*$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
+        self.lineignorepattern = re.compile(r"ok ?\d*$|ok( N-?\d+)? P\d+ B\d+$|.*busy: ?processing|.*busy: ?heating|.*Active Extruder: ?\d*$")
 
     #  --------------------------------------------------------------
     #  General console handling
@@ -721,6 +723,11 @@ Disables all heaters upon exit."))
 
     def update_tcp_streaming_mode(self, param, value):
         self.p.tcp_streaming_mode = self.settings.tcp_streaming_mode
+
+    def update_advanced_ok(self, param, value):
+        self.p.advanced_ok = self.settings.advanced_ok
+    def update_meatpack(self, param, value):
+        self.p.meatpack = self.settings.meatpack
 
     def update_rpc_server(self, param, value):
         if value:
@@ -1411,6 +1418,19 @@ Disables all heaters upon exit."))
 
     def help_gettemp(self):
         self.log(_("Read the extruder and bed temperature."))
+
+    def do_meatpack(self, l):
+        if not self.p.online:
+            self.logError(_("Printer is not online."))
+            return
+        self.log(_("MeatPack setting: %s, packing lines: %s") %
+                 (_("on") if self.p.meatpack else _("off"),
+                  _("yes") if self.p.meatpack_active else _("no")))
+        self.log(_("Asking the firmware, which replies with [MP] and its state if it supports MeatPack on this port."))
+        self.p.meatpack_query()
+
+    def help_meatpack(self):
+        self.log(_("Show whether Printrun is packing lines with MeatPack, and ask the firmware for its MeatPack state."))
 
     def do_settemp(self, l):
         l = l.lower().replace(", ", ".")
