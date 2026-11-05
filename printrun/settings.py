@@ -387,6 +387,8 @@ class Settings:
                                    "This will break things such as ETA prediction, but can result in smoother prints.")), root.update_tcp_streaming_mode)
         self._add(BooleanSetting("rpc_server", True, _("RPC Server:"), _("Enable RPC server to allow remotely querying print status")), root.update_rpc_server)
         self._add(BooleanSetting("dtr", True, _("DTR:"), _("Disabling DTR would prevent Arduino (RAMPS) from resetting upon connection"), "Printer"))
+        self._add(BooleanSetting("advanced_ok", False, _("Advanced OK:"), _("Send lines ahead of the replies to them, if the firmware reports its free queue space (Marlin's ADVANCED_OK). This keeps its queue full, which helps when waiting for replies limits print speed. Serial connections only. Takes effect on the next connection."), "Printer"), root.update_advanced_ok)
+        self._add(BooleanSetting("meatpack", False, _("MeatPack:"), _("Compress G-code sent to the printer, if its firmware reports MeatPack support. Sends fewer bytes, which helps when the serial connection limits print speed. Takes effect on the next connection."), "Printer"), root.update_meatpack)
         if sys.platform != "win32":
             self._add(StringSetting("devicepath", "", _("Device Name Pattern:"), _("Custom device pattern: for example /dev/3DP_* "), "Printer"))
         self._add(SpinSetting("bedtemp_abs", 110, 0, 400, _("Bed Temperature for ABS:"), _("Heated Build Platform temp for ABS (deg C)"), "Printer"), root.set_temp_preset)

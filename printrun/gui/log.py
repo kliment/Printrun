@@ -13,9 +13,46 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 import wx
 
 from .utils import make_button
+
+class SendModeIndicator(wx.StaticBitmap):
+    """A dot showing how lines are being sent to the printer"""
+    SIZE = 12
+    # (MeatPack packing, Advanced OK sending ahead)
+    COLORS = {(False, False): (150, 150, 150),
+              (True, False): (60, 130, 230),
+              (False, True): (235, 160, 30),
+              (True, True): (40, 190, 80)}
+    TIPS = {(False, False): _("Normal: lines are plain text, one at a time"),
+            (True, False): _("MeatPack: lines are packed"),
+            (False, True): _("Advanced OK: lines are sent ahead of replies"),
+            (True, True): _("MeatPack and Advanced OK: lines are packed and sent ahead of replies")}
+
+    def __init__(self, parent):
+        super().__init__(parent, bitmap = self.dot(self.COLORS[(False, False)]))
+        self.set_state(False, False)
+
+    @classmethod
+    def dot(cls, color):
+        """Make a round dot with a smooth edge"""
+        middle = cls.SIZE / 2
+        data = bytearray()
+        for y in range(cls.SIZE):
+            for x in range(cls.SIZE):
+                distance = math.hypot(x + 0.5 - middle, y + 0.5 - middle)
+                coverage = min(max(middle - distance, 0), 1)
+                data.extend((*color, int(255 * coverage)))
+        return wx.Bitmap.FromBufferRGBA(cls.SIZE, cls.SIZE, bytes(data))
+
+    def set_state(self, packing, sending_ahead):
+        state = (bool(packing), bool(sending_ahead))
+        self.SetBitmap(self.dot(self.COLORS[state]))
+        self.SetToolTip(wx.ToolTip(self.TIPS[state]))
+
 
 class LogPane(wx.BoxSizer):
 
@@ -42,6 +79,9 @@ class LogPane(wx.BoxSizer):
         root.commandbox.Bind(wx.EVT_SET_FOCUS, deselect)
         root.commandbox.history = [""]
         root.commandbox.histindex = 1
+        root.send_mode_indicator = SendModeIndicator(bottom_panel)
+        lbrs.Add(root.send_mode_indicator, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT | wx.RIGHT, 4)
+        root.update_send_mode_indicator()
         lbrs.Add(root.commandbox, 1)
         root.sendbtn = make_button(bottom_panel, _("Send"), root.sendline, _("Send Command to Printer"), style = wx.BU_EXACTFIT, container = lbrs)
         bottom_panel.SetSizer(lbrs)

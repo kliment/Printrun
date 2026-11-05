@@ -24,11 +24,13 @@ import threading
 from queue import Queue, Empty as QueueEmpty
 import time
 import logging
+import re
 import traceback
 from functools import wraps, reduce
 from collections import deque
 from printrun import gcoder
 from printrun import device
+from printrun import meatpack
 from .utils import set_utf8_locale, install_locale, decode_utf8
 try:
     set_utf8_locale()
@@ -45,6 +47,20 @@ def locked(f):
     inner.lock = threading.Lock()
     return inner
 
+
+# An ok from firmware with ADVANCED_OK, reporting its free queue space
+OK_EXP = re.compile(r"ok(?: N(-?\d+))?(?: P\d+ B(\d+))?")
+LINE_NUMBER_EXP = re.compile(r"N(-?\d+)")
+# Firmware's serial receive buffer is 128 bytes by default, and it may not read
+# from it for some time. Leave room for another line as long as the longest so
+# far within what it can hold.
+RX_BYTES_LIMIT = 127
+RX_BYTES_PER_LINE = 40
+# With this long of silence from the firmware, assume that an ok was lost
+OK_TIMEOUT = 30
+# Firmware discards unread lines when it asks for a resend, so there will never
+# be a reply to some of the lines sent. This long of silence means it's done.
+RESEND_TIMEOUT = 0.5
 
 PR_EOF = None  #printrun's marker for EOF
 PR_AGAIN = b'' #printrun's marker for timeout/no data
@@ -147,6 +163,20 @@ class printcore():
 
         self.loud = False  # emit sent and received lines to terminal
         self.tcp_streaming_mode = False
+        self.advanced_ok = False  # send ahead if the firmware reports queue space
+        self.flow_control = False  # advanced_ok is in effect for this connection
+        self.flow_lock = threading.Lock()
+        self.unacked = deque()  # (line number, bytes) of lines without an ok
+        self.last_acked = None  # line number in the last ok that had one
+        self.unacked_bytes = 0
+        self.line_bytes = RX_BYTES_PER_LINE  # room to leave for the next line
+        self.queue_lines = 0  # lines the firmware can queue, 0 until reported
+        self.resend_pending = False  # waiting for oks before resending
+        self.last_received = 0
+        self.meatpack = False  # use MeatPack if the firmware reports it
+        self.meatpack_active = False  # lines are being packed
+        self.meatpack_resync = False  # the firmware's unpacking may be out of step
+        self.write_lock = threading.Lock()
         self.greetings = ['start', 'Grbl ']
         self.wait = 0  # default wait period for send(), send_now()
         self.read_thread = None
@@ -197,6 +227,8 @@ class printcore():
                 self.printing = False
                 self.print_thread.join()
             self._stop_sender()
+            self._meatpack_stop()
+            self._flow_reset()
             try:
                 self.printer.disconnect()
             except device.DeviceError:
@@ -229,6 +261,12 @@ class printcore():
                 self._logError("Connection error: %s" % e)
                 self.printer = None
                 return
+            self.flow_control = (self.advanced_ok
+                                 and not self.printer.has_flow_control)
+            self._flow_reset()
+            self._meatpack_plain()
+            if self.meatpack:
+                self._meatpack_reset()
             self._callback('connect')
             self.stop_read_thread = False
             self.read_thread = threading.Thread(target = self._listen,
@@ -304,8 +342,164 @@ class printcore():
                 if line.startswith(tuple(self.greetings)) \
                    or line.startswith('ok') or "T:" in line:
                     self.online = True
+                    self._flow_reset()
                     self._callback('online')
+                    if self.meatpack:
+                        self._send("M115")
                     return
+
+    def _flow_reset(self):
+        with self.flow_lock:
+            self.unacked.clear()
+            self.unacked_bytes = 0
+            self.line_bytes = RX_BYTES_PER_LINE
+            self.last_acked = None
+            active = self.queue_lines > 0
+            self.queue_lines = 0
+            self.resend_pending = False
+        if active:
+            self._callback('advancedok', False)
+
+    def _flow_sent(self, command, size):
+        """Count a line as sent and waiting for its ok"""
+        match = LINE_NUMBER_EXP.match(command)
+        with self.flow_lock:
+            self.unacked.append((int(match[1]) if match else None, size))
+            self.unacked_bytes += size
+            self.line_bytes = max(self.line_bytes, size)
+
+    def _flow_ack(self, number):
+        """Remove the line an ok is for. An ok with a line number also covers
+        the lines before it. An ok without one is for a line without one, or
+        for a line that was refused.
+        """
+        lines = [line for line, _size in self.unacked]
+        if number is not None and number in lines:
+            count = lines.index(number) + 1
+        elif None in lines:
+            count = 0
+            _line, size = self.unacked[lines.index(None)]
+            del self.unacked[lines.index(None)]
+            self.unacked_bytes -= size
+        else:
+            count = 1 if lines else 0
+        for _i in range(count):
+            self.unacked_bytes -= self.unacked.popleft()[1]
+
+    def _flow_ok(self, line):
+        """Count a line as done, and learn how many lines the firmware can
+        queue. It reports its free space while still holding the line it just
+        finished, so the most it reports is one less than it can hold.
+        """
+        match = OK_EXP.match(line)
+        number = int(match[1]) if match[1] else None
+        started = False
+        with self.flow_lock:
+            self._flow_ack(number)
+            if number is not None:
+                self.last_acked = number
+            if match[2]:
+                started = not self.queue_lines
+                self.queue_lines = max(self.queue_lines, int(match[2]) + 1)
+        if started:
+            self._callback('advancedok', True)
+
+    def _flow_resend(self, lineno):
+        """Note a resend request. Lines already on their way will each be
+        refused with a request for this same line, so let those finish first.
+        """
+        with self.flow_lock:
+            if not self.resend_pending:
+                self.resend_pending = True
+                self.resendfrom = lineno
+
+    def _can_send(self):
+        """Tell if another line may be sent to the printer now"""
+        if not self.queue_lines:
+            return self.clear
+        with self.flow_lock:
+            silence = time.monotonic() - self.last_received
+            if self.unacked and silence > OK_TIMEOUT:
+                logging.warning(_("No reply from the printer, assuming that an ok was lost."))
+            if self.unacked and (silence > OK_TIMEOUT
+                                 or (self.resend_pending
+                                     and silence > RESEND_TIMEOUT)):
+                self.unacked.clear()
+                self.unacked_bytes = 0
+            if not self.unacked:
+                if self.resend_pending:
+                    self.resend_pending = False
+                    # The firmware may have asked for a line it then received
+                    if (self.last_acked is not None
+                            and self.resendfrom <= self.last_acked):
+                        self.resendfrom = self.last_acked + 1
+                return True
+            return (not self.resend_pending
+                    and len(self.unacked) < self.queue_lines
+                    and self.unacked_bytes + self.line_bytes <= RX_BYTES_LIMIT)
+    def _write_meatpack_command(self, command):
+        try:
+            self.printer.write(command)
+            self.writefailures = 0
+        except device.DeviceError as e:
+            self._logError("Can't write to printer (disconnected?)"
+                           " {0}".format(e))
+            self.writefailures += 1
+
+    def _meatpack_reset(self):
+        """Return the firmware to plain text, in case a previous connection
+        didn't get to do it. The newline ends the line that firmware without
+        MeatPack will make of the command bytes.
+        """
+        self._write_meatpack_command(meatpack.RESET_ALL
+                                     + meatpack.DISABLE_NO_SPACES + b"\n")
+
+    def _meatpack_start(self):
+        with self.write_lock:
+            if self.meatpack_active:
+                return
+            self._write_meatpack_command(meatpack.ENABLE_NO_SPACES
+                                         + meatpack.ENABLE_PACKING)
+            self.meatpack_active = True
+        logging.info(_("MeatPack enabled"))
+        self._callback('meatpack', True)
+
+    def _meatpack_stop(self):
+        with self.write_lock:
+            if not self.meatpack_active:
+                return
+            self.meatpack_active = False
+            self._write_meatpack_command(meatpack.DISABLE_PACKING
+                                         + meatpack.DISABLE_NO_SPACES)
+        self._callback('meatpack', False)
+
+    def _meatpack_plain(self):
+        """Note that the firmware is reading plain text"""
+        if self.meatpack_active:
+            self.meatpack_active = False
+            self._callback('meatpack', False)
+
+    def meatpack_query(self):
+        """Ask the firmware to report its MeatPack state. The reply is a line
+        like `[MP] PV01 ON NSP`. A newline can only be sent in plain text,
+        where it ends the line that firmware without MeatPack will make of the
+        command bytes.
+        """
+        with self.write_lock:
+            self._write_meatpack_command(
+                meatpack.QUERY_CONFIG
+                + (b"" if self.meatpack_active else b"\n"))
+
+    def _meatpack_listen(self, line):
+        """Follow the firmware's MeatPack state from what it reports
+        """
+        if line.strip() == "start":
+            # The firmware restarted, so it's reading plain text again
+            self._meatpack_plain()
+            if self.meatpack:
+                self._send("M115")
+        elif self.meatpack and line.startswith("Cap:MEATPACK:1"):
+            self._meatpack_start()
 
     def _listen(self):
         """This function acts on messages from the firmware
@@ -320,8 +514,16 @@ class printcore():
                 break
             if line.startswith('DEBUG_'):
                 continue
+            if line:
+                self.last_received = time.monotonic()
+            self._meatpack_listen(line)
             if line.startswith(tuple(self.greetings)) or line.startswith('ok'):
                 self.clear = True
+                if self.flow_control:
+                    if line.startswith('ok'):
+                        self._flow_ok(line)
+                    else:
+                        self._flow_reset()
             if line.startswith('ok') and "T:" in line:
                 self._callback('temp', line)
             elif line.startswith('Error'):
@@ -329,13 +531,17 @@ class printcore():
             # Teststrings for resend parsing       # Firmware     exp. result
             # line="rs N2 Expected checksum 67"    # Teacup       2
             if line.lower().startswith("resend") or line.startswith("rs"):
+                self.meatpack_resync = True
                 for haystack in ["N:", "N", ":"]:
                     line = line.replace(haystack, " ")
                 linewords = line.split()
                 while len(linewords) != 0:
                     try:
                         toresend = int(linewords.pop(0))
-                        self.resendfrom = toresend
+                        if self.flow_control:
+                            self._flow_resend(toresend)
+                        else:
+                            self.resendfrom = toresend
                         break
                     except:
                         pass
@@ -361,10 +567,10 @@ class printcore():
                 command = self.priqueue.get(True, 0.1)
             except QueueEmpty:
                 continue
-            while self.printer and self.printing and not self.clear:
+            while self.printer and self.printing and not self._can_send():
                 time.sleep(0.001)
             self._send(command)
-            while self.printer and self.printing and not self.clear:
+            while self.printer and self.printing and not self._can_send():
                 time.sleep(0.001)
 
     def _checksum(self, command):
@@ -575,7 +781,7 @@ class printcore():
     def _sendnext(self):
         if not self.printer:
             return
-        while self.printer and self.printing and not self.clear:
+        while self.printer and self.printing and not self._can_send():
             time.sleep(0.001)
         # Only wait for oks when using serial connections or when not using tcp
         # in streaming mode
@@ -635,7 +841,31 @@ class printcore():
                 self.lineno = 0
                 self._send("M110 N-1", -1, True)
 
+    def _encode(self, command):
+        """Make the bytes that send a command in the current MeatPack state
+        """
+        line = (command + "\n").encode('ascii')
+        if not self.meatpack_active:
+            return line
+        prefix = b""
+        if self.meatpack_resync:
+            # A corrupted line, or the unread data the firmware discards when
+            # it asks for a resend, can leave it waiting for a byte that won't
+            # come. Commands are read ahead of the unpacking, so they can reset it.
+            self.meatpack_resync = False
+            prefix = (meatpack.RESET_ALL + meatpack.ENABLE_NO_SPACES
+                      + meatpack.ENABLE_PACKING)
+        if meatpack.is_emergency(command):
+            # Send it unpacked so the firmware's emergency parser can see it.
+            # That parser ignores everything up to a newline.
+            return (prefix + meatpack.DISABLE_PACKING + b"\n" + line
+                    + meatpack.ENABLE_PACKING)
+        return prefix + meatpack.pack(line)
+
     def _send(self, command, lineno = 0, calcchecksum = False):
+        # The checksum has to match the line without its spaces
+        if self.meatpack_active:
+            command = meatpack.strip_spaces(command)
         # Only add checksums if over serial (tcp does the flow control itself)
         if calcchecksum and not self.printer.has_flow_control:
             prefix = "N" + str(lineno) + " " + command
@@ -656,7 +886,11 @@ class printcore():
 
             self._callback('send', command, gline)
             try:
-                self.printer.write((command + "\n").encode('ascii'))
+                with self.write_lock:
+                    data = self._encode(command)
+                    if self.flow_control:
+                        self._flow_sent(command, len(data))
+                    self.printer.write(data)
                 self.writefailures = 0
             except device.DeviceError as e:
                 self._logError("Can't write to printer (disconnected?)"
@@ -782,6 +1016,28 @@ class Callback():
         layer : int
             Index of the new layer within printcore's `mainqueue`.
             See `printrun.printcore.printcore.mainqueue`.
+
+        """
+        pass
+
+    def meatpack(self, active):
+        """Called when MeatPack packing of sent lines starts or stops.
+
+        Parameters:
+        -----------
+        active : bool
+            True if lines are now being packed.
+
+        """
+        pass
+
+    def advancedok(self, active):
+        """Called when sending ahead of replies starts or stops.
+
+        Parameters:
+        -----------
+        active : bool
+            True if lines are now being sent ahead of the replies to them.
 
         """
         pass

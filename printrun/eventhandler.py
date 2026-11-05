@@ -69,6 +69,12 @@ class PrinterEventHandler:
     def on_layerchange(self, layer):
         pass
 
+    def on_meatpack(self, active):
+        pass
+
+    def on_advancedok(self, active):
+        pass
+
     def on_printpresend(self, gline, next_gline, index):
         pass
 

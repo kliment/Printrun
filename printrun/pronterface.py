@@ -218,6 +218,8 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.p.callback.printsend = self.printsentcb
         self.p.callback.start = self.startcb
         self.p.callback.end = self.endcb
+        self.p.callback.meatpack = lambda active: wx.CallAfter(self.update_send_mode_indicator)
+        self.p.callback.advancedok = lambda active: wx.CallAfter(self.update_send_mode_indicator)
         self.cur_button = None
         self.predisconnect_mainqueue = None
         self.predisconnect_queueindex = None
@@ -330,6 +332,25 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def on_exit(self, event):
         self.Close()
+
+    def update_meatpack(self, param, value):
+        super().update_meatpack(param, value)
+        self.update_send_mode_indicator()
+
+    def update_advanced_ok(self, param, value):
+        super().update_advanced_ok(param, value)
+        self.update_send_mode_indicator()
+
+    def update_send_mode_indicator(self):
+        """Show the dot while an option for sending is enabled or still in use, nothing otherwise"""
+        indicator = getattr(self, "send_mode_indicator", None)
+        if not indicator:
+            return
+        packing = self.p.meatpack_active
+        sending_ahead = self.p.queue_lines > 0
+        indicator.set_state(packing, sending_ahead)
+        indicator.Show(self.p.meatpack or self.p.advanced_ok or packing or sending_ahead)
+        indicator.GetParent().Layout()
 
     def on_settings_change(self, changed_settings):
         if self.gviz:
