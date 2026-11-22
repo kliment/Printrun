@@ -820,7 +820,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filehistory.UseMenu(recent)
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
-        m.Append(wx.ID_ANY, _("&Recent Files"), recent)
+        m.AppendSubMenu(recent, _("&Recent Files"))
         self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console")+"\tCtrl+L", _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
