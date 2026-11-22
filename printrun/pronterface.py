@@ -2595,11 +2595,19 @@ class PronterApp(wx.App):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.SetAppName("Pronterface")
+
+        if sys.platform == "darwin":
+            # Explicitly turn off macOS automatic window tabbing, so that
+            # child windows open as windows and not as tabs of the main window.
+            self.OSXEnableAutomaticTabbing(False)
+
         lang = wx.Locale.GetSystemLanguage()
         # Fall back to English if unable to determine language
         if lang == wx.LANGUAGE_UNKNOWN:
             lang = wx.LANGUAGE_ENGLISH_US
         self.locale = wx.Locale(lang)
+
         self.mainwindow = PronterWindow(self)
         self.mainwindow.Show()
