@@ -89,7 +89,18 @@ class KeyboardInput():
         elif keycode in KEYS['currentlayer']:
             self.current_layer()
 
-        event.Skip()
+        elif mods in (wx.MOD_NONE, wx.MOD_SHIFT) and \
+             keycode not in (wx.WXK_NONE, wx.WXK_TAB, wx.WXK_RETURN,
+                             wx.WXK_ESCAPE, wx.WXK_BACK, wx.WXK_DELETE):
+            # Accept all regular printable keys to
+            # avoid "unhandled key" system sound
+            return
+
+        else:
+            # Not ours: let navigation keys and menu shortcuts propagate
+            event.Skip()
+            return
+
         wx.CallAfter(self.canvas.Refresh)
 
     def register(self, layerup: Optional[Callable] = None,
