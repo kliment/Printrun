@@ -241,12 +241,18 @@ class SpoolListView(wx.ListView):
         self.populateList(spool_manager)
 
     def onResizeList(self, event):
-        list_size = self.GetSize()
-        self.SetColumnWidth(1, -2)
-        filament_column_width = self.GetColumnWidth(1)
-        self.SetColumnWidth(col = 0,
-                            width = list_size.width - filament_column_width)
+        # Changing column widths while handling a size event breaks the native
+        # control on Windows, since wxWidgets >= 3.3, so adjust the columns
+        # after the list resize
+        wx.CallAfter(self.resizeColumns)
         event.Skip()
+
+    def resizeColumns(self):
+        if not self:  # the window may have been destroyed in the meantime
+            return
+        self.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
+        filament_column_width = self.GetColumnWidth(1)
+        self.SetColumnWidth(0, max(self.GetClientSize().width - filament_column_width, 0))
 
     def onItemSelect(self, event):
         self.Parent.edit_button.Enable()
