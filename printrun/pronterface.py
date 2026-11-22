@@ -2152,7 +2152,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     b.SetToolTip(wx.ToolTip(_("Click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
                 else:
-                    b = wx.StaticText(self.panel, -1, "")
+                    b = wx.StaticText(self.centerpanel, -1, "")
             else:
                 b = wx.Button(self.centerpanel, -1, btndef.label, style = wx.BU_EXACTFIT)
                 b.SetToolTip(wx.ToolTip(_("Execute command: ") + btndef.command))
@@ -2171,7 +2171,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             else:
                 self.cbuttonssizer.Add(b, flag = wx.EXPAND)
         self.centerpanel.Layout()
-        self.centerpanel.GetContainingSizer().Layout()
 
     def help_button(self):
         self.log(_('Defines custom button. Usage: button <num> "title" [/c "colour"] command'))
