@@ -820,7 +820,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.filehistory.UseMenu(recent)
         self.Bind(wx.EVT_MENU_RANGE, self.load_recent_file,
                   id = wx.ID_FILE1, id2 = wx.ID_FILE9)
-        m.Append(wx.ID_ANY, _("&Recent Files"), recent)
+        m.AppendSubMenu(recent, _("&Recent Files"))
         self.Bind(wx.EVT_MENU, self.clear_log, m.Append(-1, _("Clear console")+"\tCtrl+L", _(" Clear output console")))
         self.Bind(wx.EVT_MENU, self.on_exit, m.Append(wx.ID_EXIT, _("E&xit"), _(" Closes the Window")))
         self.menustrip.Append(m, _("&File"))
@@ -2152,7 +2152,7 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
                     b.SetToolTip(wx.ToolTip(_("Click to add new custom button")))
                     b.Bind(wx.EVT_BUTTON, self.cbutton_edit)
                 else:
-                    b = wx.StaticText(self.panel, -1, "")
+                    b = wx.StaticText(self.centerpanel, -1, "")
             else:
                 b = wx.Button(self.centerpanel, -1, btndef.label, style = wx.BU_EXACTFIT)
                 b.SetToolTip(wx.ToolTip(_("Execute command: ") + btndef.command))
@@ -2171,7 +2171,6 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
             else:
                 self.cbuttonssizer.Add(b, flag = wx.EXPAND)
         self.centerpanel.Layout()
-        self.centerpanel.GetContainingSizer().Layout()
 
     def help_button(self):
         self.log(_('Defines custom button. Usage: button <num> "title" [/c "colour"] command'))
@@ -2596,11 +2595,40 @@ class PronterApp(wx.App):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.SetAppName("Pronterface")
-        lang = wx.Locale.GetSystemLanguage()
-        # Fall back to English if unable to determine language
-        if lang == wx.LANGUAGE_UNKNOWN:
-            lang = wx.LANGUAGE_ENGLISH_US
-        self.locale = wx.Locale(lang)
+
+        if sys.platform == "darwin":
+            # Explicitly turn off macOS automatic window tabbing, so that
+            # child windows open as windows and not as tabs of the main window.
+            self.OSXEnableAutomaticTabbing(False)
+
+        self.locale = self.init_locale()
+
         self.mainwindow = PronterWindow(self)
         self.mainwindow.Show()
+
+    def init_locale(self):
+        # The system language may not exist as a C locale, e.g. English with
+        # the region set to Austria (en_AT) on macOS. In this case we  fall back
+        # to the language without region or fall back to English, instead of
+        # showing a "Cannot set locale" popup on every start, Issue #1321.
+        candidates = []
+        lang = wx.Locale.GetSystemLanguage()
+        if lang != wx.LANGUAGE_UNKNOWN:
+            candidates.append(lang)
+            info = wx.Locale.GetLanguageInfo(lang)
+            base_info = wx.Locale.FindLanguageInfo(info.CanonicalName.split("_")[0])
+            if base_info and base_info.Language != lang:
+                candidates.append(base_info.Language)
+        candidates.append(wx.LANGUAGE_ENGLISH_US)
+
+        for lang in candidates:
+            with wx.LogNull():
+                locale = wx.Locale(lang)
+            if locale.IsOk():
+                return locale
+            # Release the failed locale right away, its destructor restores
+            # the previously active locale
+            del locale
+        return None

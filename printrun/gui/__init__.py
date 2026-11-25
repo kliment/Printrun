@@ -206,10 +206,9 @@ class MainWindow(wx.Frame):
         self.panel.Bind(wx.EVT_MOUSE_EVENTS, self.editbutton)
 
         # Custom buttons
-        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
-        self.centerpanel = self.newPanel(page1panel2)
-        self.centerpanel.SetSizer(self.cbuttonssizer)
-        rightsizer.Add(self.centerpanel, 0, wx.ALIGN_CENTER)
+        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL, wx.REMOVE_LEADING_SPACES)
+        self.centerpanel = page1panel2
+        rightsizer.Add(self.cbuttonssizer, 0, wx.ALIGN_CENTER)
         rightsizer.AddStretchSpacer()
 
         self.panel.SetSizerAndFit(self.notesizer)
@@ -258,10 +257,12 @@ class MainWindow(wx.Frame):
             self.splitterwindow.shrinked = False
         viz_pane = VizPane(self, vizpanel)
         # Custom buttons
-        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL)
-        self.centerpanel = self.newPanel(vizpanel)
-        self.centerpanel.SetSizer(self.cbuttonssizer)
-        viz_pane.Add(self.centerpanel, 0, flag = wx.ALIGN_CENTER)
+        # The WrapSizer is added directly to the parent sizer without an extra
+        # panel, otherwise wxWidgets >= 3.3.4 never passes the available width
+        # down to it and all buttons end up on top of each other, Issue #1574
+        self.cbuttonssizer = wx.WrapSizer(wx.HORIZONTAL, wx.REMOVE_LEADING_SPACES)
+        self.centerpanel = vizpanel
+        viz_pane.Add(self.cbuttonssizer, 0, flag = wx.ALIGN_CENTER)
         vizpanel.SetSizer(viz_pane)
         if compact:
             log_pane = LogPane(self, logpanel)

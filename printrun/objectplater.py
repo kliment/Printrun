@@ -55,41 +55,43 @@ class PlaterPanel(wx.Panel):
 
         menu_sizer = self.menu_sizer = wx.BoxSizer(wx.VERTICAL)
         list_sizer = wx.StaticBoxSizer(wx.VERTICAL, self, label = "Models")
+        list_sbox = list_sizer.GetStaticBox()
         # Load button
-        loadbutton = wx.Button(self, label = _("+ Add Model"))
+        loadbutton = wx.Button(list_sbox, label = _("+ Add Model"))
         loadbutton.Bind(wx.EVT_BUTTON, self.load)
         list_sizer.Add(loadbutton, 0, wx.EXPAND | wx.BOTTOM, get_space('mini'))
         # Model list
-        self.l = wx.ListBox(self)
+        self.l = wx.ListBox(list_sbox)
         list_sizer.Add(self.l, 1, wx.EXPAND | wx.BOTTOM, get_space('mini'))
         # Auto arrange button
-        autobutton = wx.Button(self, label = _("Auto Arrange"))
+        autobutton = wx.Button(list_sbox, label = _("Auto Arrange"))
         autobutton.Bind(wx.EVT_BUTTON, self.autoplate)
         list_sizer.Add(autobutton, 0, wx.EXPAND | wx.BOTTOM, get_space('mini'))
         h_sizer = wx.BoxSizer(wx.HORIZONTAL)
         # Clear button
-        clearbutton = wx.Button(self, label = _("Clear All"))
+        clearbutton = wx.Button(list_sbox, label = _("Clear All"))
         clearbutton.Bind(wx.EVT_BUTTON, self.clear)
         h_sizer.Add(clearbutton, 1, wx.EXPAND | wx.RIGHT, get_space('mini'))
         # Export button
-        exportbutton = wx.Button(self, label = _("Export"))
+        exportbutton = wx.Button(list_sbox, label = _("Export"))
         exportbutton.Bind(wx.EVT_BUTTON, self.export)
         h_sizer.Add(exportbutton, 1, wx.EXPAND)
         list_sizer.Add(h_sizer, 0, wx.EXPAND)
 
         selection_sizer = wx.StaticBoxSizer(wx.VERTICAL, self, label = "Selection")
+        selection_sbox = selection_sizer.GetStaticBox()
         # Snap to Z = 0 button
-        snapbutton = wx.Button(self, label = _("Snap to Zero"))
+        snapbutton = wx.Button(selection_sbox, label = _("Snap to Zero"))
         snapbutton.Bind(wx.EVT_BUTTON, self.snap)
         h2_sizer = wx.BoxSizer(wx.HORIZONTAL)
         h2_sizer.Add(snapbutton, 1, wx.EXPAND | wx.RIGHT, get_space('mini'))
         # Put at center button
-        centerbutton = wx.Button(self, label = _("Put at Center"))
+        centerbutton = wx.Button(selection_sbox, label = _("Put at Center"))
         centerbutton.Bind(wx.EVT_BUTTON, self.center)
         h2_sizer.Add(centerbutton, 1, wx.EXPAND)
         selection_sizer.Add(h2_sizer, 0, wx.EXPAND | wx.BOTTOM, get_space('mini'))
         # Delete button
-        deletebutton = wx.Button(self, label = _("Delete"))
+        deletebutton = wx.Button(selection_sbox, label = _("Delete"))
         deletebutton.Bind(wx.EVT_BUTTON, self.delete)
         selection_sizer.Add(deletebutton, 0, wx.EXPAND | wx.ALL, get_space('none'))
 
@@ -100,34 +102,35 @@ class PlaterPanel(wx.Panel):
         if cutting_tool:
             # Insert Cutting tool (only for STL Plater)
             cut_sizer = wx.StaticBoxSizer(wx.VERTICAL, self, label = _("Cutting Tool"))
+            cut_sbox = cut_sizer.GetStaticBox()
             # Prepare buttons for all cut axis
             axis_sizer = self.axis_sizer = wx.BoxSizer(wx.HORIZONTAL)
-            cutxplusbutton = wx.ToggleButton(self, label = _("+X"), style = wx.BU_EXACTFIT)
+            cutxplusbutton = wx.ToggleButton(cut_sbox, label = _("+X"), style = wx.BU_EXACTFIT)
             cutxplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "x", 1))
             axis_sizer.Add(cutxplusbutton, 1, wx.EXPAND | wx.RIGHT, get_space('mini'))
-            cutyplusbutton = wx.ToggleButton(self, label = _("+Y"), style = wx.BU_EXACTFIT)
+            cutyplusbutton = wx.ToggleButton(cut_sbox, label = _("+Y"), style = wx.BU_EXACTFIT)
             cutyplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", 1))
             axis_sizer.Add(cutyplusbutton, 1, wx.EXPAND | wx.RIGHT, get_space('mini'))
-            cutzplusbutton = wx.ToggleButton(self, label = _("+Z"), style = wx.BU_EXACTFIT)
+            cutzplusbutton = wx.ToggleButton(cut_sbox, label = _("+Z"), style = wx.BU_EXACTFIT)
             cutzplusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "z", 1))
             axis_sizer.Add(cutzplusbutton, 1, wx.EXPAND | wx.RIGHT, get_space('mini'))
-            cutxminusbutton = wx.ToggleButton(self, label = _("-X"), style = wx.BU_EXACTFIT)
+            cutxminusbutton = wx.ToggleButton(cut_sbox, label = _("-X"), style = wx.BU_EXACTFIT)
             cutxminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "x", -1))
             axis_sizer.Add(cutxminusbutton, 1, wx.EXPAND | wx.RIGHT, get_space('mini'))
-            cutyminusbutton = wx.ToggleButton(self, label = _("-Y"), style = wx.BU_EXACTFIT)
+            cutyminusbutton = wx.ToggleButton(cut_sbox, label = _("-Y"), style = wx.BU_EXACTFIT)
             cutyminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "y", -1))
             axis_sizer.Add(cutyminusbutton, 1, wx.EXPAND | wx.RIGHT, get_space('mini'))
-            cutzminusbutton = wx.ToggleButton(self, label = _("-Z"), style = wx.BU_EXACTFIT)
+            cutzminusbutton = wx.ToggleButton(cut_sbox, label = _("-Z"), style = wx.BU_EXACTFIT)
             cutzminusbutton.Bind(wx.EVT_TOGGLEBUTTON, lambda event: self.start_cutting_tool(event, "z", -1))
             axis_sizer.Add(cutzminusbutton, 1, flag = wx.EXPAND)
             self.cut_axis_buttons = [cutxplusbutton, cutyplusbutton, cutzplusbutton,
                                      cutxminusbutton, cutyminusbutton, cutzminusbutton]
 
-            cut_sizer.Add(wx.StaticText(self, -1, _("Choose axis to cut along:")), 0, wx.BOTTOM, get_space('mini'))
+            cut_sizer.Add(wx.StaticText(cut_sbox, -1, _("Choose axis to cut along:")), 0, wx.BOTTOM, get_space('mini'))
             cut_sizer.Add(axis_sizer, 0, wx.EXPAND, wx.BOTTOM, get_space('minor'))
-            cut_sizer.Add(wx.StaticText(self, -1, _("Doubleclick to set the cutting plane.")), 0, wx.TOP | wx.BOTTOM, get_space('mini'))
+            cut_sizer.Add(wx.StaticText(cut_sbox, -1, _("Doubleclick to set the cutting plane.")), 0, wx.TOP | wx.BOTTOM, get_space('mini'))
             # Process cut button
-            self.cut_processbutton = wx.Button(self, label = _("Process Cut"))
+            self.cut_processbutton = wx.Button(cut_sbox, label = _("Process Cut"))
             self.cut_processbutton.Bind(wx.EVT_BUTTON, lambda event: self.cut_confirm(event))
             cut_sizer.Add(self.cut_processbutton, 0, flag = wx.EXPAND)
             menu_sizer.Add(cut_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, get_space('minor'))

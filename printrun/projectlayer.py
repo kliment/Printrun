@@ -584,7 +584,7 @@ class SettingsFrame(wx.Dialog):
         statuslabel = wx.StaticText(infoGroup, -1, _("Status:"))
         statuslabel.SetToolTip(_("Latest activity, information and error messages."))
         infofieldsizer.Add(statuslabel, pos=(4, 0), flag = wx.ALIGN_RIGHT)
-        self.statusbar = wx.StaticText(infoGroup, -1, "", style = wx.ELLIPSIZE_END)
+        self.statusbar = wx.StaticText(infoGroup, -1, "", style = wx.ST_ELLIPSIZE_END)
         infofieldsizer.Add(self.statusbar, pos = (4, 1), flag = wx.EXPAND)
 
         infofieldsizer.AddGrowableCol(1)
